@@ -16,8 +16,10 @@ gz:
 	for i in man?; do gzip $$i/*; done
 
 install:
-	test ! -d $(MANDIR) || install -d -m 755 $(MANDIR)
+	test -d $(MANDIR) || install -d -m 755 $(MANDIR)
 	for i in man?; do \
-		test ! -d $(MANDIR)/$$i || install -d -m 755 $(MANDIR)/$$i; \
-		install -m 644 $$i/* $(MANDIR)/$$i; \
+	  test -d $(MANDIR)/$$i || install -d -m 755 $(MANDIR)/$$i; \
+	  for m in $$i/*; do \
+	    test -f $(MANDIR)/$$m || install -m 644 $$m $(MANDIR)/$$i; \
+	  done; \
 	done
