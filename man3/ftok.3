@@ -1,0 +1,84 @@
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" Translated into german Tue 31 Dec 20:00:00 1996 by Martin Schulze (joey@linux.de)
+.\"
+.TH FTOK 3 "31. Dezember 1996" "Linux 0.99.13" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+ftok \- konvertiere einen Pfadnamen und einen Projektbezeichner in einen IPC-Schlüssel
+.SH ÜBERSICHT
+.nf
+.B
+# include <sys/types.h>
+.B
+# include <sys/ipc.h>
+.fi
+.sp
+.BI "key_t ftok ( char *" pathname ,
+.BI "char " proj " )"
+.SH BESCHREIBUNG
+Die Funktion
+.B ftok()
+wandelt den Pfadnamen einer existierenden und "anfaßbaren" Datei
+zusammen mit einem Projektbezeichner in einen IPC-Systemschlüssel
+vom Typ
+.B key_t
+um.
+.SH "RÜCKGABEWERT"
+Bei Erfolg wird der umgewandelte Wert vom Typ
+.B key_t
+zurückgegeben, ansonsten \-1 und der Fehlerindikator
+.I errno
+wird wie beim
+.BR stat (2)
+Systemaufruf gesetzt.
+.SH FEHLER
+Der Algorithmus zur Berechnung des
+.BR key_t \-Wertes
+garantiert keinen eindeutigen Schlüssel.
+Zur Berechnung wird der
+.BR stat() \-Systemaufruf
+verwendet, um die Inode-Nummer der Datei sowie die Minor Device Nummer
+des beinhaltenden Dateisystems zu erhalten.  Die unteren 16 Bit der
+Inode-Nummer wird nun verknüpft mit den 8 Bit des Projektbezeichners
+.I proj
+und den 8 Bit der Minor Device Nummer.
+
+.TP
+\-
+Zwei unterschiedliche Namen, die dieselbe Datei bezeichnen (Hardlink),
+ergeben gleiche Schlüssel.
+.TP
+\-
+Da die unteren 16 bit der Inode-Nummer verwendet werden, besteht die
+geringe Chance, den gleichen Schlüssel für Dateien zu erhalten, die
+auf unterschiedliche Inodes verweisen.
+.TP
+\-
+Da nicht zwischen Major Device Nummern unterschieden wird, besteht
+bei Systemen mit mehreren Festplattenkontrollern die geringe Gefahr
+einer Kollision.
+.SH "SIEHE AUCH"
+.BR ipc (5),
+.BR msgget (2),
+.BR semget (2),
+.BR shmget (2),
+.BR stat (2).

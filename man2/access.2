@@ -27,12 +27,12 @@
 .\" Modified 21 Aug 1994 by Michael Chastain (mec@shell.portal.com):
 .\"   Removed note about old kernel (pre-1.1.44) using wrong id on path.
 .\" German Translation Tue Feb 26 21:22:00 1996 Elmar Jansen (ej@pumuckel.gun.de)
+.\" Modified Mon Jun 10 00:55:48 1996 by Martin Schulze (joey@linux.de)
 .\"
-.TH ACCESS 2 "26 Februar 1996" "Linux 1.1.46" "Systemaufrufe"
-.SH NAME
-access \- check user's permissions for a file
-access \- prüft dir Rechte eines Users an einer Datei
-.SH SYNOPSIS
+.TH ACCESS 2 "10. Juni 1996" "Linux 1.1.46" "Systemaufrufe"
+.SH BEZEICHNUNG
+access \- prüft die Zugriffsrechte eines Users an einer Datei
+.SH "ÜBERSICHT"
 .nf
 .B #include <unistd.h>
 .sp
@@ -40,80 +40,100 @@ access \- prüft dir Rechte eines Users an einer Datei
 .fi
 .SH BESCHREIBUNG
 .B access
-prüft ob der Prozess die Rechte hat die Datei 
-(oder das Dateisystem) 
-.IR pathname 
-zu lesen, zu schreiben oder die
-Existenz zu prüfen.
+prüft ob es dem Prozeß erlaubt wäre, auf die Datei
+.I pathname
+(oder ein anderes Dateisystemobjekt) lesend, schreibend oder testend
+zuzugreifen.  Wenn
+.I pathname
+ein symbolischer Verweis ist, werden die Zugriffsrechte der
+referenzierten Datei geprüft.
 
-.I mode
-ist eine Maske die eines oder mehrere der Werte
-.BR R_OK ", " W_OK ", " X_OK " and " F_OK .
+.I Mode
+ist eine Bitmaske die aus einem oder mehrerer der Werte
+.BR R_OK ", " W_OK ", " X_OK " and " F_OK besteht.
 
 .BR R_OK ", " W_OK " and " X_OK
-enthält. Sie prüft die Schreib- Lese- oder Ausführungsrechte.
+verlangt prüft die Schreib- Lese- bzw. Ausführungsrechte.
 .B F_OK
-prüft ob weitere Tests für die Existenz der Datei erlaubt sind
-(Dies hängt von den Rechten der Directory's ab die im Pfad der
-Datei vorkommen).
+prüft ob weitere Tests für die Existenz der Datei erlaubt sind.
+Dieses hängt von den Zugriffsrechten der Verzeichnisse ab, die im
+Pfad
+.I pathname
+vorkommen, und von den Zugriffsrechten der Verzeichnisse und Dateien,
+die durch symbolische Verweise referenziert werden.
 
-The check is done with the process's
 Dieser Test wird mit der
 .I realen
 uid und gid des Prozesses durchgeführt, nicht mit den effektiven Id's.
-Dadurch haben set-UID Programme die Möglichkeit die wahre Identität
+Dadurch haben set-UID Programme die Möglichkeit die wahren Zugriffsrechte 
 des Aufrufers festzustellen.
 
 Es werden nur die Zugriffsrechte geprüft, nicht der Dateityp oder dessen
-Inhalt. Dies bedeutet für Directory's folgendes. Ist ein Directory
-beschreibbar, so können in ihm Dateien angelegt werden, aber das Directory
-kann nicht wie eine Datei beschreiben werden. Eine DOS-Datei kann als
-Ausführbar gekennzeichnet sein aber ein
+Inhalt.  Dies bedeutet für Verzeichnisse, daß in einem Verzeichnis,
+das als "beschreibbar" erkannt wurde, Dateien angelegt werden können,
+aber das Verzeichnis selbst nicht wie eine Datei beschreiben werden
+kann.  Eine DOS-Datei kann als "ausführbar" gekennzeichnet sein,
+jedoch wird ein Aufruf von
 .BR execve (2)
-kann trotzdem fehlschlagen.
+trotzdem fehlschlagen.
+
 .SH "RÜCKGABEWERT"
-Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1
-zurückgegeben und
+Bei Erfolg (alle angeforderten Zugriffsrechte passen) wird Null
+zurückgegeben.  Bei einem Fehler (mindestens eine in
+.I mode
+angeforderte Zugriffsart wurde verboten, oder ein anderer Fehler ist
+aufgetreten) wird \-1 zurückgegeben und
 .I errno
 entsprechend gesetzt.
 .SH ERRORS
-.TP 0.8i
+.TP
 .B EACCES
-Der gewünschte Zugriff wurde verboten, entweder auf die Datei oder
-auf eines der Diractory's in
+Der gewünschte Zugriff würde verboten werden, entweder auf die Datei
+selbst oder auf eines der Verzichnisse in
 .IR pathname .
 .TP
 .B EFAULT
-.IR pathname " points outside your accessible address space."
-.IR pathname " zeigt außerhalb des Benutzer-Adressraums."
+.I pathname
+zeit auf eine Adresse außerhalb des Benutzer-Adressraums.
 .TP
 .B EINVAL
-.IR mode " was incorrectly specified."
-.IR mode " wurde falsch angegeben."   
+.I mode
+wurde falsch angegeben.
 .TP
 .B ENAMETOOLONG
-.IR pathname " ist zu lang."
+.I pathname
+ist zu lang.
 .TP
 .B ENOENT
-Eine Komponente des Directory's 
+Eine Verzeichnis-Komponente von
 .I pathname
-existiert nicht oder ist ein kreisender symbolisher Link.
+wuerde zwar zugreifbar bein, existiert jedoch nicht, oder ist ein
+toter symbolischer Verweis.
 .TP
 .B ENOTDIR
 Ein Teil von
 .I pathname
-wird als Directory benutzt obwohl es keines ist.
+wird als Verzeichnis benutzt obwohl es keines ist.
 .TP
 .B ENOMEM
 Es war nicht genügend Kernel-Memory verfügbar.
 .TP
 .B ELOOP
 .I pathname
-beinhaltet einen Verweis auf einen kreisenden symbolischen Link,
-beziehungsweise auf einen symbolischen Link der auf sich selbst
+beinhaltet einen Verweis auf einen zirkulären symbolischen Link,
+beziehungsweise auf einen symbolischen Link der wieder auf sich selbst
 verweist.
+.SH WARNUNG
+.B access
+gibt einen Fehler zurück, wenn einer der angeforderten
+Zugriffsrechnte nicht paßt, unabhängig davon, daß andere Typen
+vielleicht erfolgreich wären.
 .SH "KONFORM ZU"
 SVID, AT&T, POSIX, X/OPEN, BSD 4.3
 .SH "SIEHE AUCH"
-.BR stat "(2), " open "(2), " chmod "(2), " chown "(2), "
-.BR setuid "(2), " setgid (2).
+.BR stat (2),
+.BR open (2),
+.BR chmod (2),
+.BR chown (2),
+.BR setuid (2),
+.BR setgid (2).

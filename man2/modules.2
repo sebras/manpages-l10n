@@ -1,0 +1,240 @@
+.\" Copyright (c) 1994 Bjorn Ekwall <bj0rn@blox.se>
+.\" This program is distributed according to the Gnu General Public License.
+.\" See the file COPYING in the kernel source directory /linux
+.\"
+.\" Translated to German Mon Sep 30 20:00:00 1996 by Patrick Rother 
+.\"                                                            (krd@gulu.net)
+.\"
+.TH MODULES 2 "30. September 1996" Linux "Linux Modul-Support"
+.SH NAME
+get_kernel_syms, create_module, init_module, delete_module
+\- Unterstützung für ladbare Module
+.SH ÜBERSICHT
+.B #include <linux/module.h>
+.PP
+.BI "int get_kernel_syms(struct kernel_sym " *table );
+.PP
+.BI "int create_module(char " *module_name ", unsigned long " size );
+.PP
+.BI "int init_module(char " *module_name ", char " *code ,
+.br
+.BI "\ \ \ \ unsigned " codesize ", struct mod_routines " *routines ,
+.br
+.BI "\ \ \ \ struct symbol_table " *symtab );
+.PP
+.BI "int delete_module(char " *module_name );
+.PP
+.nf
+struct kernel_sym {
+	unsigned long value;
+	char name[SYM_MAX_NAME];
+};
+
+struct mod_routines {
+	int (*init)(void);
+	void (*cleanup)(void);
+};
+
+struct module_ref {
+	struct module *module;
+	struct module_ref *next;
+};
+
+struct internal_symbol {
+	void *addr;
+	char *name;
+};
+
+struct symbol_table {
+	int size; /* insgesamt, einschliesslich Stringtabelle!!! */
+	int n_symbols;
+	int n_refs;
+	struct internal_symbol symbol[0];
+	struct module_ref ref[0];
+};
+.fi
+.SH BESCHREIBUNG
+Diese Systemaufrufe sind noch nicht in eine Bibliothek eingebunden,
+das heisst sie müssen durch den Mechanismus
+.B syscall(__NR_function)
+aufgerufen werden.
+.PP
+.TB
+.BI get_kernel_syms( table );
+hat zwei Aufgaben: Zum einen, wenn
+.I table
+NULL ist, gibt dieser Aufruf nur die Anzahl der Symbole,
+einschließlich Modulnamen, zurück, die verfügbar sind.
+Diese Anzahl sollte benutzt werden um Speicher zu reservieren für diese
+Anzahl von Einträgen von
+.B struct kernel_sym.
+.br
+Wenn
+.I table
+nicht NULL ist kopiert dieser Aufruf alle Kernel-Symbole und Modulnamen
+(und Versionsinformationen) vom Kernel in der Bereich, auf den 
+.I table
+zeigt.
+Die Einträge sind nach LIFO-Prinzip geordnet.
+Für jedes Modul wird ein Eintrag, der das Modul beschreibt, gefolgt von
+Einträgen, die die Symbole beschreiben, die von diesem Modul exportiert
+werden, erzeugt.
+.PP
+Beachte, daß für Symbole die ein Modul beschreiben, der Wert-Teil
+.I value
+der Struktur die
+.I kernel
+Adresse der Struktur enthält, die das Modul beschreibt.
+.br
+Im Teil
+.I name
+der Struktur ist dem Modul-Namen ein
+.B #
+vorausgestellt, wie in
+.BR #my_module .
+Das Symbol, daß ein Modul beschreibt erscheint vor den Symbolen, die durch
+dieses Modul definiert werden.
+.br
+Vor den residenten Symbolen des Kernels erscheint ein Modulnamen-Symbol
+mit dem Dummynamen
+.BR # .
+Diese Information kann benutzt werden um eine Tabelle von Modulreferenzen
+aufzubauen, wenn Module gestapelt (oder geschichtet) werden.
+
+.BI create_module( module_name ", " size );
+belegt
+.I size
+Byte Kernelspeicher für ein Modul, und erzeugt die nötigen Kernelstrukturen
+für das neue Modul
+.IR name .
+Das Modul existiert nun im Kernelspeicher, mit dem Status
+.BR MOD_UNINITIALIZED .
+
+.BI init_module( module_name ", " code ", "codesize ", " routines ", " symtab );
+.br
+Dies ist der wirkliche "module loader", der das Modul
+.I name
+in den Kernel lädt.
+Die Parameter
+.I code
+und
+.I codesize
+beziehen sich auf das verschobene Binärobjektmodul, welches
+.I codesize
+Byte groß ist.
+
+Wenn der Parameter
+.I codesize
+oder-verknüpft mit MOD_AUTOCLEAN ist, wird das
+Modul für "autocleaning" vorgesehen, d.h. für das regelmäßige entfernen
+ungenutzter Module.
+
+Beachte, daß die ersten 4 Byte in der Moduldatei als Referenzzähler im
+Kernelbereich benutzt werden und von den Makros MOD_INC_USE_COUNT und
+MOD_DEC_USE_COUNT aktualisiert werden.
+Dieser Zähler enthält auch die Kennzeichenbits MOD_AUTOCLEAN sowie
+MOD_VISITED, die für "autocleaning" benutzt werden.
+
+Die Funktionen, die in
+.I routines
+beschrieben werden, werden zum Starten und Stoppen des Moduls benutzt.
+Diese Zeiger sollten daher die Addressen der Funktionen
+.B init_module()
+und
+.B cleanup_module()
+enthalten, die für jedes ladbare Modul definiert sein müssen.
+
+Wenn ein Modul Symbole für die Benutzung durch andere Module exportieren
+will, oder wenn das Modul Referenzen erstellt zu Symbolen, die durch andere
+Module definiert wird, dann hat der Parameter
+.I symtab
+auf eine Struktur zu zeigen, die dies beschreibt.
+Ein NULL-Wert für
+.I symtab
+bedeutet, daß keine Symbole exportiert werden und keine Referenzen zu anderen
+Modulen gemacht werden.
+
+Die
+.IR symtab ,
+die in den Kernel hinein kopiert wird, enthält eine Struktur
+.B symbol_table
+direkt gefolgt von einer Stringtabelle, die die Namen der Symbole
+enthält, die von dem Modul definiert werden.
+Das Element
+.I size
+muß auch die Größe dieser Tabelle enthalten.
+
+Besondere Überlegungen:
+.br
+Die Elemente
+.I n_symbols
+und
+.I n_refs
+sagen aus, wieviele Symbole und wie viele Mudolreferenzen in der Struktur
+.I symbol_table
+enthalten sind.
+Direkt nach diesen Ganzzahlen folgen die Felder mit den Symboldefinitionen.
+Das Element
+.I name
+in jeder
+.B struct internal_symbol
+sollte kein gewöhnlicher Pointer sein, sondern der
+.I offset
+zu dem zugehörigen Eintrag in der Stringtabelle relativ zum Start der 
+Struktur symbol_table.
+
+Wenn alle definierten Symbole aufgelistet sind, folgt das Feld der
+Modulreferenzen wie in den Elementen
+.B struct module_ref
+Beschrieben.
+Nur das Feld
+.B module
+dieser Struktur muß initialisiert sein.
+Die Moduladressen, die durch einen früheren Aufrufe von
+.B get_kernel_syms
+erhalten wurden, von Elementen deren Namen mit
+.B #
+beginnen, sollte in dieses Feld kopiert werden.
+.PP
+Wenn das Modul erfolgreich geladen werden konnte und wenn der Aufruf der
+Modulfunktion
+.B init_module()
+auch Erfolg hatte,
+dann wird der Status des Moduls nach MOD_RUNNING geändert.
+Anderenfalls wird der Kernelspeicher, der von dem Modul belegt wird,
+freigegeben.
+
+.BI delete_module( module_name );
+.br
+Diese Routine sollte benutzt werden um ein Modul zu entladen.
+Wenn der Modulreferenzzähler anzeigt, daß das Modul nicht aktiv ist, und wenn
+es keine Referenzen zu diesem Modul von anderen Modulen gibt, wird
+die Modulfunktion
+.B cleanup_module()
+aufgerufen.
+
+Wenn all diese Schritt erfolgreich sind wird der Kernelspeicher, der durch
+das Modul und seine Strukturen belegt ist, freigegeben.
+
+Beachte, daß wenn NULL als Argument für
+.B delete_module
+benutzt wird, der Kernel alle Module entfernt.
+.SH DIAGNOSE
+Wenn Fehler auftreten geben diese Funktionen den Wert -1 zurück und setzen
+die globale Variable
+.B errno
+mit der Fehlernummer.
+Auch wird ein beschreibender Text auf der Konsole ausgegeben.
+.SH SIEHE AUCH
+.BR insmod (1),
+.BR rmmod (1),
+.BR lsmod (1),
+.BR ksyms (1),
+.BR genksyms (8).
+.SH GESCHICHTE
+Modul-Support wurde von A. Nonym eingeführt.
+Die Linux-Version stammt u.a. von Bas Laarhoven <bas@vimec.nl>,
+Version 0.99.14 von Jon Tombs <jon@gtex02.us.es>,
+erweitert durch Bjorn Ekwall <bj0rn@blox.se>.
+.SH BUGS
+Naah...

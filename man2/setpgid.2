@@ -1,0 +1,130 @@
+.\" Copyright (c) 1983, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)getpgrp.2	6.4 (Berkeley) 3/10/91
+.\"
+.\" Modified Sat Jul 24 01:15:33 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 15 April 1995 by Michael Chastain (mec@shell.portal.com):
+.\"   Added 'getpgid'.
+.\" Translated to German Sun Oct 13 1996 by Patrick Rother (krd@gulu.net)
+.\"
+.TH SETPGID 2 "13. Oktober 1996" "Linux 1.2.4" "Systemaufrufe"
+.SH NAME
+setpgid, getpgid, setpgrp, getpgrp \- setze/hole Prozeßgruppe
+.SH ÜBERSICHT
+.B #include <unistd.h>
+.sp
+.BI "int setpgid(pid_t " pid ", pid_t " pgid );
+.br
+.BI "pid_t getpgid(pid_t " pid );
+.br
+.B int setpgrp(void);
+.br
+.B pid_t getpgrp(void);
+.SH BESCHREIBUNG
+.B setpgid
+setzt die Prozeßgruppenkennung (Process Group ID) des durch
+.I pid
+angegebenen Prozesses auf
+.IR pgid .
+Wenn
+.I pid
+Null ist wird die aktuelle Prozeßkennung benutzt.  Wenn
+.I pgid
+Null ist wird die Prozeßkennung des durch
+.I pid
+angegebenen Prozesses benutzt.
+
+.B getpgid
+gibt die Prozeßgruppenkennung des Prozesses zurück, der durch
+.IR pid
+angegeben ist.
+Wenn 
+.I pid
+Null ist wird die Prozeßkennung des des aktuellen Prozesses benutzt.
+
+In der Bibliothek Linux DLL 4.4.1 ruft
+.B setpgrp
+einfach
+.BR setpgid(0,0)
+auf.
+
+.B getpgrp
+ist äquivalent zu
+.BR getpgid(0) .
+
+Prozeßgruppen werden benutzt zur Verbreitung von Signalen und von Terminals
+zum Verteilen von Eingabeanforderungen: Prozesses, die die gleiche
+Prozeßgruppe haben wie das Terminal, sind im Vordergrund und dürfen lesen,
+während andere mit einem Signal blockiert sind, wenn sie versuchen zu lesen.
+
+Diese Aufrufe sind werden also benutzt von Programmen wie
+.BR csh (1),
+um Prozeßgruppen zu erzeugen, um Job-Kontrolle zu realisieren.  Die Aufrufe
+.B TIOCGPGRP
+und
+.BR TIOCSPGRP ,
+die in 
+.BR termios (4)
+beschrieben sind, werden benutzt, um die Prozeßgruppe des kontrollierenden
+Terminals zu lesen/zu setzen.
+.SH "RÜCKGABEWERT"
+Bei Erfolg geben
+.BR setpgid " and " setpgrp
+Null zurück.  Im Fehlerfall wird \-1 zurückgegeben und
+.I errno
+entsprechend gesetzt.
+
+.B getpgid
+gibt bei Erfolg eine Prozeßgruppe zurück.
+Im Fehlerfall wird \-1 zurückgegeben und
+.I errno
+entsprechend gesetzt.
+
+.B getpgrp
+gibt immer die aktuelle Prozeßgruppe zurück.
+.SH FEHLER
+.TP
+.B EINVAL
+.I pgid
+ist kleiner als 0.
+.TP
+.B EPERM
+Verschiedene Zugriffsrechteprobleme.
+.TP
+.B ESRCH
+.I pid
+entspricht keinem Prozeß.
+.SH "SIEHE AUCH"
+.BR getuid (2),
+.BR setsid (2),
+.BR tcsetpgrp (3),
+.BR termios (4).

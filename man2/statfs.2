@@ -1,0 +1,157 @@
+.\" Copyright (c) 1989, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"	@(#)statfs.2	6.5 (Berkeley) 7/23/91
+.\"
+.\" Modified Sat Jul 24 11:27:31 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Translated to German Sun Oct 20 1996 by Patrick Rother (krd@gulu.net)
+.\"
+.TH STATFS 2 "20. Oktober 1996" "Linux 0.99.11" "Systemaufrufe"
+.SH NAME
+statfs, fstatfs \- hole Dateisystemstatistiken
+.SH ÜBERSICHT
+.B #include <sys/vfs.h>
+.sp
+.BI "int statfs(const char *" path ", struct statfs *" buf );
+.br
+.BI "int fstatfs(int " fd ", struct statfs *" buf );
+.SH BESCHREIBUNG
+.N Statfs
+gibt Informationen über ein aufgesetztes Dateisystem zurück.
+.I Path
+ist der Pfadname einer Datei in dem aufgesetzten Dateisystem.
+.I Buf
+ist ein Zeiger auf eine Struktur
+.IR statfs ,
+die wie folgt definiert ist:
+
+.RS
+.nf
+struct statfs {
+   long    f_type;     /* Typ des Dateisystems (siehe unten) */
+   long    f_bsize;    /* optimale Übertragungsblockgröße */
+   long    f_blocks;   /* gesammte Datenblöcke im Dateisystem */
+   long    f_bfree;    /* freie Blöcke im Dateisystem */
+   long    f_bavail;   /* freie Blöcke verfügbar für nicht-Superuser */
+   long    f_files;    /* gesammte I-Nodes im Dateisystem */
+   long    f_ffree;    /* freie I-Nodes im Dateisystem */
+   fsid_t  f_fsid;     /* Dateisystemkennung */
+   long    f_namelen;  /* maximale Dateinamenlänge */
+   long    f_spare[6]; /* Reserve */
+};
+
+Dateisystemtypen:
+
+linux/ext2_fs.h:  EXT2_OLD_SUPER_MAGIC  0xEF51
+linux/ext2_fs.h:  EXT2_SUPER_MAGIC      0xEF53
+linux/ext_fs.h:   EXT_SUPER_MAGIC       0x137D
+linux/iso_fs.h:   ISOFS_SUPER_MAGIC     0x9660
+linux/minix_fs.h: MINIX_SUPER_MAGIC     0x137F /* orig. minix */
+linux/minix_fs.h: MINIX_SUPER_MAGIC2    0x138F /* 30 Zeichen minix */
+linux/minix_fs.h: NEW_MINIX_SUPER_MAGIC 0x2468 /* minix V2 */
+linux/msdos_fs.h: MSDOS_SUPER_MAGIC     0x4d44
+linux/nfs_fs.h:   NFS_SUPER_MAGIC       0x6969
+linux/proc_fs.h:  PROC_SUPER_MAGIC      0x9fa0
+linux/xia_fs.h:   _XIAFS_SUPER_MAGIC    0x012FD16D
+.fi
+.RE
+.PP
+Felder, die für ein bestimmtes Dateisystem nicht definiert sind, sind
+auf \-1 gesetzt.
+.B Fstatfs
+gibt die gleichen Informationen über eine offene Datei zurück, die über
+den Deskriptor
+.IR fd
+definiert ist.
+.SH "RÜCKGABEWERT"
+Bei Erfolg wird Null zurückgegeben.  Im Fehlerfall wird \-1 zurückgegeben und
+.I errno
+entsprechend gesetzt.
+.SH FEHLER
+Für
+.BR statfs :
+.TP
+.B ENOTDIR
+Eine Komponente des Pfadpräfixes von
+.I Path
+ist kein Verzeichnis.
+.TP
+.B EINVAL
+.I path
+enthält ein Zeichen mit dem hochwerten Bit gesetzt (z.B. Umlaute).
+.TP
+.B ENAMETOOLONG
+Die Länge eine Komponente von
+.I path
+überschreitet 255 Zeichen, oder die Gesamtlänge von
+.I path
+überschreitet 1023 Zeichen. [Sind diese Werte korrekt für Linux??]
+.TP
+.B ENOENT
+Die Datei, auf die sich
+.I path
+bezieht, existiert nicht.
+.TP
+.B EACCES
+Sucheberechtigung existiert für eine Komponente des Pfadpräfixes von
+.IR path
+nicht.
+.TP
+.B ELOOP
+Zu viele symbolische Links traten auf bei der Übersetzung von
+.IR path .
+.TP
+.B EFAULT
+.I Buf
+oder
+.I path
+zeigt auf eine ungültige Adresse.
+.TP
+.B EIO
+Ein E/A-Fehler trat auf während des Lesens von oder des Schreibens auf das
+Dateisystem.
+.PP
+Für
+.BR fstatfs :
+.TP 0.8i
+.B EBADF
+.I Fd
+ist kein gültiger Dateideskriptor.
+.TP
+.B EFAULT
+.I Buf
+zeigt auf eine ungültige Adresse.
+.TP
+.B EIO
+Ein E/A-Fehler trat auf während des Lesens von oder des Schreibens auf das
+Dateisystem.
+.SH "SIEHE AUCH"
+.BR stat (2).

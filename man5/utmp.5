@@ -1,0 +1,213 @@
+.\" Copyright (c) 1993 Michael Haardt (michael@cantor.informatik.rwth-aachen.de), Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\" 
+.\" Modified Sun Jul 25 10:44:50 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Thu Feb 26 16:08:49 MET 1995 by Michael Haardt
+.\" Modified Sat Jul 20 14:39:03 MET DST 1996 by Michael Haardt
+.\" Modified Sat Aug 10 15:26:25 MET DST 1996 by Michael Haardt
+.\"
+.TH UTMP 5 "10. August 1996" "" "Dateiformate"
+.SH BEZEICHNUNG
+utmp, wtmp \- login Einträge
+.SH ÜBERSICHT
+#include <utmp.h>
+.SH BESCHREIBUNG
+Die
+.I utmp
+Datei gibt Auskunft darüber, wer das System im Moment benutzt.  Da nicht alle Programme
+.I utmp
+benutzen, kann es jedoch noch mehr Benutzer im System geben.
+
+.B Warnung:
+.I utmp
+darf nicht allgemein schreibbar sein, weil viele Systemprogramme von
+der Korrektheit dieser Datei abhängig sind.  Falls Sie
+.I utmp
+für jeden schreibbar lassen, riskieren Sie falsche Einträge in
+Systemlogdateien und Modifikationen von Systemdateien.
+
+Die Datei besteht aus einer Sequenz von Einträgen der folgenden Struktur,
+die in der Include-Datei deklariert ist:
+.RS
+.nf
+.sp
+.ta 3i
+#define UT_UNKNOWN	0
+#define RUN_LVL		1
+#define BOOT_TIME	2
+#define NEW_TIME	3
+#define OLD_TIME	4
+#define INIT_PROCESS	5
+#define LOGIN_PROCESS	6
+#define USER_PROCESS	7
+#define DEAD_PROCESS	8
+
+#define UT_LINESIZE	12
+#define UT_NAMESIZE	8
+#define UT_HOSTSIZE	16
+
+struct utmp {
+  short ut_type;	/* Typ des Eintrags */
+  pid_t ut_pid;		/* Prozeßnummer */
+  char ut_line[UT_LINESIZE];	/* Gerätename \- "/dev/" */
+  char ut_id[2];	/* init id or abgek. Leitungsname */
+  time_t ut_time;	/* Zeit */
+  char ut_user[UT_NAMESIZE];	/* Benutzer login-Name */
+  char ut_host[UT_HOSTSIZE];	/* Rechner-Name bei remote login */
+  long ut_addr;	/* IP Adresse des remote Rechners */
+};
+.sp
+.fi
+.RE
+Diese Struktur enthält den Namen der Gerätedatei für das Terminal des
+Benutzers, seinen Login-Namen und den Zeitpunkt im Format von
+.BR time (2),
+an dem er sich eingeloggt hat.  Zeichenketten sind mit \fB'\e0'\fP
+terminiert, falls sie kürzer als das Feld sind, das sie enthält.
+
+Die ersten Einträge, die je erstellt werden, entstehen durch
+.BR init (8),
+der
+.BR inittab (5)
+verarbeitet.  Bevor ein solcher Eintrag verarbeitet wird, räumt
+.BR init (8)
+.I utmp
+auf, indem bei jedem Eintrag dessen \fBut_type\fP nicht
+\fBDEAD_PROCESS\fP oder \fBRUN_LVL\fP 
+ist und für den kein Prozeß mit der PID \fBut_pid\fP existiert,
+\fBut_type\fP auf \fBDEAD_PROCESS\fP gesetzt wird und \fBut_user\fP,
+\fBut_host\fP und \fBut_time\fP mit Null-Bytes gefüllt werden.  Falls
+kein leerer Eintrag mit der benötigten \fBut_id\fP gefunden wird,
+erstellt init einen.  Dabei wird \fBut_id\fP von inittab übernommen,
+\fBut_pid\fP und \fBut_time\fP auf die aktuellen Werte und \fBut_type\fP
+auf \fBINIT_PROCESS\fP gesetzt wird.
+
+.BR getty (8)
+findet den Eintrag mittels der PID, ändert \fBut_type\fP
+zu \fBLOGIN_PROCESS\fP, ändert \fBut_time\fP, setzt \fBut_line\fP und
+wartet darauf, daß eine Verbindung hergestellt wird.  Nachdem
+.BR login (8)
+einen Benutzer authentifizieren konnte, ändert es
+\fBut_type\fP zu \fBUSER_PROCESS\fP, ändert \fBut_time\fP und setzt
+\fBut_host\fP und \fBut_addr\fP.  Je nach 
+.BR getty (8)
+und
+.BR login (8)
+könnten Einträge auch mittels \fBut_line\fP anstatt der
+vorzuziehenden \fBut_pid\fP gefunden werden.
+
+Wenn
+.BR init (8)
+feststellt, daß ein Prozeß beendet wurde, lokalisiert
+es den entsprechenden utmp Eintrag mittels \fBut_pid\fP, setzt
+\fBut_type\fP auf \fBDEAD_PROCESS\fP und füllt \fBut_user\fP,
+\fBut_host\fP und \fBut_time\fP mit Null-Bytes.
+
+.BR xterm (1)
+und andere Terminal-Emulatoren erstellen direkt einen
+\fBUSER_PROCESS\fP Eintrag und erzeugen die \fBut_id\fP entweder durch
+die letzten beiden Zeichen von \fB/dev/ttyp\fP\fI%c\fP oder durch
+\fBp\fP\fI%d\fP bei \fB/dev/pts/\fP\fI%d\fP.  Falls sie einen
+\fBDEAD_PROCESS\fP Eintrag für diese ID finden, wird er wieder benutzt,
+ansonsten wird ein neuer Eintrag erstellt.  Falls möglich, markieren sie
+vor Beendigung den Eintrag als \fBDEAD_PROCESS\fP und es wird geraten,
+daß sie \fBut_line\fP, \fBut_time\fP, \fBut_user\fP und \fBut_host\fP
+mit Nullen füllen.
+
+.BR xdm (8)
+sollte keinen utmp Eintrag erstellen, weil es kein
+zugeordnetes Terminal gibt.  Falls es trotzdem gemacht wird, werden
+Fehlermledungen wie finger: can not stat /dev/machine.dom die Folge
+sein.  Es sollte jedoch ein wtmp Eintrag erzeugt werden, genau wie es
+auch bei
+.BR ftpd (8)
+geschieht.
+
+.BR telnetd (8)
+erzeugt einen \fBLOGIN_PROCESS\fP Eintrag und läßt
+.BR login (8)
+den Rest erledigen.  Nachdem die telnet-Sitzung beendet ist, markiert
+.BR telnetd (8)
+den
+.I utmp
+Eintrag in der oben
+beschriebenen Art und Weise.
+
+Die \fIwtmp\fP Datei zeichnet alle An- und Abmeldungen im System auf.
+Das Format gleicht \fButmp\fP, mit der Ausnahme, daß ein leerer Benutzername eine
+Abmeldung vom angegebenen Terminal anzeigt.  Weiterhin bedeutet die
+Terminalleitung \fB"~"\fP mit dem Benutzernamen \fB"shutdown"\fP oder
+\fB"reboot"\fP ein Herunterfahren bzw. den Neustart des Systems und das
+Paar der Terminalleitungen \fB"|"\fP/\fB"}"\fP zeichnet die alte/neue
+Systemzeit auf, wenn diese durch
+.BR date (1)
+geändert wird.
+.I wtmp
+wird durch
+.BR login (1),
+.BR init (8)
+und
+.BR getty (1)
+verwaltet.  Keins dieser Programme erstellt die Datei, so daß, falls sie
+gelöscht wird, keine Aufzeichnungen mehr gemacht werden.
+.SH DATEIEN
+.I /var/run/utmp
+.br
+.I /var/log/wtmp
+.SH "KONFORM ZU"
+Linux utmp Einträge sind weder zu v7/BSD noch zu SYSV konform: Sie sind
+eine Vereinigung von beidem.  v7/BSD hat weniger Felder, vor allem fehlt
+\fBut_type\fP, was ursprüngliche v7/BSD-ähnliche Programme veranlaßt,
+tote und login-Einträge anzuzeigen.  Weiterhin gibt es keine
+Konfigurationsdatei, die jeder Session eine Eintragsnummer zuordnet.
+Dies wird in BSD gemacht, weil dort \fBut_id\fP fehlt.  In Linux (wie in
+SYSV), wird das \fBut_id\fP Feld eines Eintrags nach dem initialen
+Setzen nie wieder geändert, wodurch diese Eintragnummer ohne jede
+Konfigurationsdatei reserviert wird.  \fBut_id\fP zu löschen führt zu
+race conditions und resultiert in beschädigten utmp Einträgen und
+potentiellen Sicherheitslöchern.  Die SYSV Semantik verlangt nicht, die
+oben angegebenen Felder mit Null-Bytes zu löschen, aber es erlaubt viele
+Programme zu benutzen, die die BSD Semantik benutzen und utmp nicht
+verändern.  Wie beschrieben, benutzt Linux die BSD Konventionen fuer
+Leitungsnamen.  SYSV benutzt nut das Typ-Feld um solche Einträge zu
+markieren und zeichnet Meldungen wie \fB"new time"\fP im Leitungs-Feld
+auf.  SYSV hat ein Feld mehr, um den Exit-Status von beendeten Prozessen
+aufzuzeichnen.  \fBUT_UNKNOWN\fP scheint eine Linux Erfindung zu sein.
+In Linux gibt es keinen \fBACCOUNTING\fP Typ.  SYSV hat kein
+\fBut_host\fP oder \fBut_addr\fP Feld.  Anders als bei verschiedenen
+anderen Systemen, wo utmp Aufzeichnungen durch Löschen der Datei
+abgeschaltet werden können, muß utmp bei Linux immer vorhanden sein.
+Falls
+.BR who (1)
+verboten werden soll, dann kann man utmp einfach
+nicht allgemein lesbar machen.
+.SH EINSCHRÄNKUNGEN
+Das Dateiformat ist maschinengebunden.  Es wird daher empfohlen, daß
+es nur auf der Architektur verarbeitet wird, auf der es erstellt wurde.
+.SH "SIEHE AUCH"
+.BR ac (1),
+.BR date (1),
+.BR last (1),
+.BR login (1),
+.BR who (1),
+.BR getutent (3),
+.BR init (8).

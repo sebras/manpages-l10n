@@ -1,0 +1,117 @@
+.\" (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.\" Modified Wed Jul 21 22:35:42 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 18 Mar 1996 by Martin Schulze (joey@infodrom.north.de):
+.\"   Corrected description of getwd().
+.\" Translated into german Wed 1 Jan 13:30:25 1997 by Martin Schulze (joey@linux.de)
+.\"
+.TH GETCWD 3 "1. Januar 1997" "GNU" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+getcwd, get_current_dir_name, getwd \- Gib das aktuelle Verzeichnis zurück
+.SH SYNOPSIS
+.nf
+.B #include <unistd.h>
+.sp
+.BI "char *getcwd(char *" buf ", size_t " size ");"
+.B "char *get_current_working_dir_name(void);"
+.BI "char *getwd(char *" buf );
+.fi
+.SH BESCHREIBUNG
+Die Funktion
+.B getcwd()
+kopiert den absoluten Pfadnamen des aktuellen Arbeitsverzeichnisses
+in das Array, auf das
+.I buf
+zeigt und das
+.I size
+Bytes lang ist.
+
+Wenn der aktuelle absolute Pfadname einen Puffer erfordern würde, der
+größer als
+.I size
+Bytes ist, wird
+.B NULL
+zurückgegeben und
+.I errno
+auf
+.BR ERANGE
+gesetzt.  Eine Anwendung sollte dieses abfangen und den Aufruf mit einem
+größeren Puffer wiederholen.
+
+Als eine Erweiterung des POSIX.1 Standards alloziiert
+.B getcwd()
+den Puffer dynamisch durch Verwendung von
+.BR malloc (3),
+wenn
+.I buf
+beim Aufruf
+.B NULL
+ist.  In diesem Fall hat der alloziierte Puffer die Länge
+.IR size ,
+es sei denn
+.I size
+ist kleiner als null, wenn
+.I buf
+so groß wie nötig alloziiert wird.  Es ist möglich (und, in der Tat
+ratsam), den so erhaltenen Puffer mit
+.BR free(3)
+wieder freizugeben, wenn er nicht mehr benötigt wird.
+
+Die Funktion
+.BR get_current_dir_name ,
+die nur einen Prototypen hat, wenn 
+.B __USE_GNU
+definiert ist, alloziiert mit
+.BR malloc (3)
+ein Array, das ausreichend groß für den aktuellen Verzeichnisnamen ist.
+Wenn die Umgebungsvariable
+.B PWD
+gesetzt ist und ihr Wert korrekt ist, wird dieser zurückgegeben.
+
+Die Funktion
+.BR getwd ,
+die nur einen Prototypen hat, wenn
+.B __USE_BSD
+definiert ist, wird keinen Puffer alloziieren.  Das Argument
+.I buf
+sollte ein Zeiger auf ein Array sein, das zumindest
+.B PATH_MAX
+Bytes groß ist.
+.BR getwd
+gibt nur die ersten
+.B PATH_MAX
+Zeichen des aktuellen Pfadnamens zurück.
+.SH RÜCKGABEWERT
+.B NULL
+wenn ein Fehler aufgetreten ist (zum Beispiel, wenn das aktuelle
+Verzeichnis nicht lesbar ist), wobei
+.I errno
+entsprechend gesetzt wird, und
+.I buf
+bei Erfolg.
+.SH "KONFORM ZU"
+POSIX.1
+.SH "SIEHE AUCH"
+.BR chdir (2),
+.BR free (3),
+.BR malloc (3).

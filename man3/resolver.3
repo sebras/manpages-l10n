@@ -1,0 +1,206 @@
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 11:01:53 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Translated to German Sun Nov 10 1996 by Patrick Rother (krd@gulu.net)
+.\"
+.TH RESOLVER 3  "10. November 1996" "BSD" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+res_init, res_query, res_search, res_querydomain, res_mkquery, res_send, 
+dn_comp, dn_expand \- Resolverroutinen
+.SH ÜBERSICHT
+.nf
+.B #include <netinet/in.h>
+.B #include <arpa/nameser.h>
+.B #include <resolv.h>
+.B extern struct state _res;
+.sp
+.B int res_init(void);
+.sp
+.BI "int res_query(const char *" dname ", int " class ", int " type ,
+.RS
+.BI "unsigned char *" answer ", int " anslen );
+.RE
+.sp
+.BI "int res_search(const char *" dname ", int " class ", int " type ,
+.RS
+.BI "unsigned char *" answer ", int " anslen );
+.RE
+.sp
+.BI "int res_querydomain(const char *" name ", const char *" domain ,
+.RS
+.BI "int " class ", int " type ", unsigned char *" answer ", int " anslen );
+.RE
+.sp
+.BI "int res_mkquery(int " op ", const char *" dname ", int " class ", int " type ,
+.RS
+.BI "char *" data ", int " datalen ", struct rrec *" newrr ", char *" buf , 
+.BI "int " buflen );
+.RE
+.sp
+.BI "int res_send(const char *" msg ", int " msglen ", char *" answer , 
+.RS
+.BI "int " anslen );
+.RE
+.sp
+.BI "int dn_comp(unsigned char *" exp_dn ", unsigned char *" comp_dn ,
+.RS
+.BI "int " length ", unsigned char **" dnptrs ", unsigned char *" exp_dn ,
+.BI "unsigned char **" lastdnptr );
+.RE
+.sp
+.BI "int dn_expand(unsigned char *" msg ", unsigned char *" eomorig ,
+.RS
+.BI "unsigned char *" comp_dn ", unsigned char *" exp_dn ", int " length );
+.RE
+.fi
+.SH BESCHREIBUNG
+Diese Funktionen machen Anfragen an Internet Domain Nameserver und
+interpretieren die Rückmeldungen.
+.PP
+Die Funktion \fBres_init()\fP liest die Konfigurationsdateien (siehe
+.BR resolv+ (8)),
+um den vorgegebenen Domainnamen, ide Suchreihenfolge und 
+Nameserveradresse(n) zu erhalten.  Wenn kein Server angegeben ist, wird
+der lokale Host verwendet.  Wenn keine Domain angegeben ist, wird diejenige
+benutzt, die mit dem lokalen Host in Verbindung gebracht wird.
+Dies kann mit der Umgebungsvariable LOCALDOMAIN überschrieben werden .
+\fBres_init()\fP wird normalerweise durch den ersten Aufruf von
+einer der anderen Funktionen ausgeführt.
+.PP
+Die Funktion \fBres_query()\fP fragt den Nameserver nach dem vollständigen
+Host- und Domainnamen von \fIname\fP vom spezifizierten \fItype\fP und
+\fIclass\fP.  Die Antwort verbleibt im Puffer \fIanswer\fP der Länge
+\fIanslen\fP, der von Aufrufer angegeben ist.
+.PP
+Die Funktion \fBres_search()\fP macht eine Anfrage und wartet auf die Antwort
+wie \fBres_query()\fP, implementiert jedoch zusätzlich die Vorgabe-
+und Such-Regeln, die durch RES_DEFNAMES und RES_DNSRCH kontrolliert werden
+(siehe Beschreibung von \fI_res\fP-Optionen unten).
+.PP
+Die Funktion \fBres_querydomain()\fP macht eine Anfrage über \fBres_query()\fP
+auf die Verkettung von \fIname\fP und \fIdomain\fP.
+.PP
+Die folgenden Funktionen sind Routinen tieferer Ebene, die von \fBres_query()\fP
+benutzt werden.
+.PP
+Die Funktion \fBres_mkquery()\fP konstruiert eine Anfrage-Nachricht für
+den Domainnamen \fIdname\fP in \fIbuf\fP der Länge \fIbuflen\fP.  Der Anfragetyp
+\fIop\fP ist gewöhnlich QUERY, kann aber jeder der in \fI<arpa/nameser.h>\fP
+definierten Typen sein.  \fInewrr\fP ist momentan unbenutzt.
+.PP
+Die Funktion \fBres_send()\fP sendet eine vorformatierte Anfrage, die in 
+\fImsg\fP gegeben ist und die Länge \fImsglen\fP hat, und gibt die Antwort
+in \fIanswer\fP zurück, die die Länge \fIanslen\fP hat.  Sie ruft 
+\fBres_init()\fP auf, wenn es noch nicht aufgerufen wurde.
+.PP
+Die Funktion \fBdn_comp()\fP komprimiert den Domainnamen \fIexp_dn\fP
+und speichert ihn in dem Puffer \fIcomp_dn\fP der Länge \fIlength\fP.
+Die Komprimierung benutzt ein Feld von Zeigern \fIdnptrs\fP auf bereits
+komprimierte Namen in der aktuellen Nachricht.  Der erste Zeiger zeigt
+auf den Anfang der Nachricht und die Liste endet mit NULL.  Die Grenze
+des Feldes ist angegeben durch \fIlastdnptr\fP.  Wenn \fIdnptr\fP NULL ist,
+dann sind Domainnamen nicht komprimiert.  Wenn \fIlastdnptr\fP NULL ist,
+dann ist die Liste der Namen nicht aktualisiert.
+.PP
+Die Funktion \fBdn_expand()\fP expandiert den komprimierten Domainnamen
+\fIcomp_dn\fP zu einem vollen Domainnamen, welcher in dem Puffer
+\fIexp_dn\fP der Größe \fIlength\fP plaziert ist.  Der komprimierte Name
+ist enthalten in einer Anfrage- oder Antwortnachricht, und \fImsg\fP zeigt
+auf den Anfang der Nachicht.
+.PP
+Die Resolverroutinen benutzen globale Konfigurations- und Statusinformationen,
+die in der Struktur \fI_res\fP enthalten sind, welche in \fI<resolv.h>\fP
+definiert ist.  Das einzige Feld, das normalerweise vom Benutzer manipuliert
+wird, ist \fI_res.options\fP.  Dieses Feld kann bitweise oder-Verknüpfungen
+der folgenden Optionen enthaltenn:
+.sp
+.TP
+.B RES_INIT
+Wahr wenn \fBres_init()\fP aufgerufen wurde.
+.TP
+.B RES_DEBUG
+Drucke Debugnachrichten.
+.TP
+.B RES_AAONLY
+Akzeptiere nur authoritative Antworten.  \fBres_send()\fP fährt fort bis es
+eine authoritative Antwort findet, oder gibt einen Fehler zurück.
+[Noch nicht implementiert.]
+.TP
+.B RES_USEVC
+Benutze TCP-Verbindungen für Anfragen, nicht UDP-Datagramme.
+.TP
+.B RES_PRIMARY
+Frage nur primäre Domainnameserver.
+.TP
+.B RES_IGNTC
+Ignoriere Fehler bei verstümmelten Antworten.  Versuche es nicht
+erneut mit TCP.  [Noch nicht implementiert.]
+.TP
+.B RES_RECURSE
+Setze das Rekursionswunsch-Bit in Anfragen.  Rekursion wird von dem
+Domainnameserver ausgeführt, nicht von \fBres_send()\fP.
+[Eingeschaltet durch Vorgabe.]
+.TP
+.B RES_DEFNAMES
+Wenn gesetzt, fügt \fBres_search()\fP den Vorgabedomainnamen an Einzelnamen
+an, d.h. an solche, die keinen Punkt enthalten.
+[Eingeschaltet durch Vorgabe.]
+.TP
+.B RES_STAYOPEN
+Benutzt mit RES_USEVC um die TCP-Verbindung zwischen Anfragen geöffnet
+zu halten.
+.TP
+.B RES_DNSRCH
+Wenn gesetzt, sucht \fBres_search()\fP nach Hostnamen in der aktuellen
+und in übergeordneten Domains.  Diese Option wird von 
+.BR gethostbyname (3)
+benutzt.  [Eingeschaltet durch Vorgabe.]
+.SH "RÜCKGABEWERT"
+Die Funktion \fBres_init()\fP gibt 0 zurück be Erfolg, oder \-1 wenn
+ein Fehler auftritt.
+.PP
+Die Funktionen \fBres_query()\fP, \fBres_search()\fP, \fBres_querydomain()\fP,
+\fBres_mkquery()\fP und \fBres_send()\fP geben die Länge der Antwort zurück,
+oder \-1 wenn ein Fehler auftritt.
+.PP
+Die Funktionen \fBdn_comp()\fP und \fBdn_expand()\fP geben die Länge des
+komprimierten Namens zurück, oder \-1 wenn ein Fehler auftritt.
+.SH DATEIEN
+.TP
+.I /etc/resolv.conf
+Resolverkonfigurationsdatei
+.TP
+.I /etc/host.conf
+Resolverkonfigurationsdatei
+.fi
+.SH "KONFORM ZU"
+BSD 4.3
+.SH "SIEHE AUCH"
+.BR gethostbyname (3),
+.BR hostname (7),
+.BR named (8),
+.BR resolv+ (8).

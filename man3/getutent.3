@@ -1,0 +1,115 @@
+.\" Copyright 1995 Mark D. Roth (roth@uiuc.edu)
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Solaris manpages
+.\"
+.\" Translated to German Fri Nov 1 1996 by Patrick Rother (krd@gulu.net)
+.\"
+.TH getutent 3 "1. November 1996" "Linux libc 5.0.0" "Bibliotheksfunktionen"
+.SH NAME
+getutent, getutid, getutline, pututline, setutent, endutent, utmpname \- greife auf Einträge der utmp-Datei zu
+.SH ÜBERSICHT
+.B #include <utmp.h>
+.sp
+.B struct utmp *getutent(void);
+.br
+.BI "struct utmp *getutid(struct utmp *" ut ");"
+.br
+.BI "struct utmp *getutline(struct utmp *" ut ");"
+.sp
+.BI "void pututline(struct utmp *" ut ");"
+.sp
+.B void setutent(void);
+.br
+.B void endutent(void);
+.sp
+.BI "void utmpname(const char *" file ");"
+.SH BESCHREIBUNG
+.B utmpname()
+setzt den Namen der Datei im utmp-Format für die anderen
+utmp-Funktionen.  Wenn
+.B utmpname()
+nicht benutzt wird um den Dateinamen zu
+setzen bevor die anderen Funktionen benutzt werden, wird von diesen
+\fB_PATH_UTMP\fP angenommen wie in \fI<paths.h>\fP definiert.
+
+.B setutent()
+setzt den Dateizeiger auf den Anfang des utmp-Datei zurück.
+Es ist allgemein eine gute Idee dies vor Gebrauch der anderen Funktionen
+aufzurufen.
+
+.B endutent()
+schließt die utmp-Datei.  Sie sollte benutzt werden wenn die Benutzung
+der anderen Funktionen beendet ist.
+
+.B getutent()
+liest eine Zeile ab der aktuellen Dateiposition der utmp-Datei.
+Es wird ein Zeiger auf eine Struktur zurückgegeben, die die Felder der
+Zeile enthält.
+
+.B getutid()
+sucht vorwärts ab der aktuellen Dateiposition in der utmp-Datei
+basierend auf \fIut\fP.  Wenn \fIut\fP->ut_type gleich \fBRUN_LVL\fP,
+\fBBOOT_TIME\fP, \fBNEW_TIME\fP oder \fBOLD_TIME\fP ist, wird
+.B getutid()
+den ersten Eintrag finden, dessen Feld ut_type \fIut\fP->ut_type entspricht.
+Wenn \fIut\fP->ut_type gleich \fBINIT_PROCESS\fP, \fBLOGIN_PROCESS\fP,
+\fBUSER_PROCESS\fP oder \fBDEAD_PROCESS\fP ist, wird
+.B getutid()
+den ersten Eintrag finden, dessen Feld ut_id \fIut\fP->ut_id entspricht.
+
+.B getutline()
+sucht vorwärts ab der aktuellen Dateiposition in der utmp-Datei.
+Die Funktion überprüft Einträge deren Feld ut_type gleich \fBUSER_PROCESS\fP
+oder \fBLOGIN_PROCESS\fP ist und gibt den ersten Eintrag zurück, dessen
+Feld ut_line \fIut\fP->ut_line entspricht.
+
+.B pututline()
+schreibt eine utmp-Struktur \fIut\fP in die utmp-Datei.
+Die Funktion benutzt
+.B getutid()
+um einen geeigneten Platz in der Datei zu
+finden um den neuen Eintrag einzufügen. Wenn die einen geeigneten Platz
+für \fIut\fP nicht finden kann, hängt
+.B pututline()
+den neuen Eintrag an 
+die Datei an.
+.SH "RÜCKGABEWERT"
+.BR getutent() ,
+.B getutid()
+und
+.B getutline()
+geben einen Zeiger auf eine Struktur
+\fBstruct utmp\fP zurück, die in \fI<utmp.h>\fP definiert ist.
+.SH DATEIEN
+.TP
+.I /var/run/utmp
+Datenbank der gerade angemeldeten Benutzer
+.TP
+.I /var/log/wtmp
+Datenbank der früheren Benutzeranmeldungen
+.SH "KONFORM ZU"
+XPG 2, SVID 2, Linux FSSTND 1.2
+.SH "SIEHE AUCH"
+.BR utmp (5).
