@@ -13,87 +13,168 @@
 .\"  along with this program;  if not, write to the Free Software
 .\"  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111, USA.
 .\"
-.TH GETDATE 3
+.\"  2001-12-29: Updated to upstream 2001-12-26 by Martin Schulze <joey@infodrom.org>
+.\"
+.TH GETDATE 3 "26. Dezember 2001" "" "Bibliotheksfunktionen"
 .SH BEZEICHNUNG
 getdate \- Berechnet aus einer Zeichenkette eine struct tm
 .br
 .SH ÜBERSICHT
-.BR"#define __USE_XOPEN_EXTENDED"
+.B "#define _XOPEN_SOURCE"
+.br
+.B "#define _XOPEN_SOURCE_EXTENDED
 .br
 .B "#include <time.h>"
 .sp
-.BI "struct tm *getdate (const char *" string );
+.BI "struct tm *getdate (const char *" string ");"
 .sp
 .BI "extern int getdate_err;"
 .sp 2
-.B "#define __USE_GNU"
-.sp
-.BI "int getdate_r (const char *" string ", struct tm *" resbufp );
+.B "#define _GNU_SOURCE"
 .br
-
-.SH BESCHREIBUNG
-.B getdate()
-ist eine Schnittstelle zu
-.BR strptime() .
-Diese Funktion berechnet aus einer Zeichenkette einen struct tm.
-Im Gegensatz zu
-.B strptime()
-wird der Formatstring für
-.B getdate()
-aus einer Datei gelesen, zu der die Variable
-.B DATEMSK
-zeigt.  Es ist auch möglich dort mehrere Formate zu speichern.
-Existiert die mit
-.B DATEMSK
-bezeichnete Datei nicht, kommt es zu einem Fehler.  Die
-Formatbeschreibung verwendet die gleichen Symbole wie
-.BR strptime (3).
-
-Fehler werden über die globale Variable
-.B getdate_err
-zurückgegeben:
-.RS
-.nf
-.in 8
-.ta 1n 40n
-1  DATEMSK ist NULL oder nicht definiert,
-2  Die Datei kann nicht gelesen werden,
-3  Der Dateistatus kann nicht ermittelt werden,
-4  Die Datei ist keine richtige Datei,
-5  Es ist ein Lesefehler aufgetreten,
-6  Es gibt nicht mehr genügend Speicher,
-7  Keine Zeile in der Datei paßt zur Zeichenkette,
-8  falsche Eingabe.  Z.B:
-   31 Februar oder eine Zeit die sich nicht als time_t
-   dargestellen läßt (Sekunden seit 01.01.1970 00:00:00 UTC)
-.ta
+.B "#include <time.h>"
 .sp
-.fi
-.RE
-.B getdate()
-kann nicht in Threads benutzt werden, wg.
-.B getdate_err
-und dem statischen Buffer in dem das Ergebnis geliefert wird.
-GNU stellt daher eine thread-sichere Variante zur Verfügung.  Die Funktion ist gleich.
-Das Ergebis wird in den Buffer RESBUFP geschrieben und Falle eines
-Fehlers wird dort der selbe Wert (!=0) geschrieben, den man sonst in
-.B getdate_err
-findet.
+.BI "int getdate_r (const char *" string ", struct tm *" res ");"
+.br
+.SH BESCHREIBUNG
+Die Funktion
+.B getdate() 
+übersetzt die Zeichenkette, auf die
+.I string
+zeigt, in eine Struktur tm, die zurückgegeben wird.
+Diese tm-Struktur kann in statischem Speicher liegen, so daß sie beim
+nächsten Aufruf überschrieben wird.
 
-.SH UMGEBUNG
-Die Variable
-.B DATEMSK
-ist wichtig und enthält den Namen der Datei mit der Formatspezifikation.
-.B TZ
-und
-.B LC_TIME
-werden von strptime() benutzt.
-
-.SH "KONFORM ZU"
-ISO 9899.
-
-.SH "SIEHE AUCH"
+Im Gegensatz zu
 .BR strptime (3),
+(die ein Argument
+.I format
+hat),
+verwendet
+.B getdate()
+die Formate, die es in der Datei findet, dessen vollständiger Pfadname
+in der Umgebungsvariable
+.B DATEMSK
+angegeben ist.
+Die erste Zeile in dieser Datei, die auf die angegebene Zeichenkette
+paßt, wird für die Übersetzung verwendet.
+
+Dabei wird nicht zwischen Groß- und Kleinbuchstaben unterschieden.
+Überflüssige Leerzeichen, sowohl in den Mustern in der Datei als auch
+in der Zeichenkette, die konvertiert werden soll, werden ignoriert.
+
+Die Übersetzungs-Spezifikationen, die ein Muster enthalten darf,
+entsprechen den bei
+.BR strptime (3)
+angegebenen.
+Eine weitere Spezifikation, die akzeptiert wird, ist:
+.TP
+.B %Z
+Name der Zeitzone
+.LP
+Wenn
+.B %Z
+verwendet wird, wird der Rückgabewert mit der heruntergebrochenen Zeit
+der aktuellen Zeit in der derzeitigen Zeitzone initialisiert,.
+Ansonsten wird er mit der heruntergebrochenen Zeit der aktuellen
+lokalen Zeit initialisiert.
+.LP
+Wenn nur ein Wochentag angegeben wurde, wird er als erster solcher Tag
+nach dem heutigen Tag angesehen.
+.LP
+Wenn ausschließlich der Monat angegeben wird (und kein Jahr), wird der
+erste gleichnamige Monat genommen, der dem aktuellen Monat entspricht
+oder einem nachfolgenden.
+Wenn kein Tag angegeben wird, wird der erste Tag des Monats angenommen.
+.LP
+Wenn keine Stunde, Minute und Sekunde angegeben wird, werden die
+aktuelle Stunde, Minute und Sekunden genommen.
+.LP
+Wenn kein Datum angegeben wird, jedoch die Stunde bekannt ist, dann
+wird die Stunde genommen, die der aktuellen oder einer späteren entspricht.
+.SH "RÜCKGABEWERT"
+Wenn die Funktion erfolgreich war, gibt sie einen Zeiger zu einem
+.B "struct tm"
+zurück.
+Ansonsten wird NULL zurückgegeben und die globale Variable
+.B getdate_err
+gesetzt.
+Änderungen an
+.I errno
+sind nicht spezifiziert.  Die folgenden Werte für
+.B getdate_err
+sind definiert:
+.TP 4n
+.B 1
+Die Umgebungsvariable DATEMSK ist NULL oder nicht definiert.
+.TP
+.B 2
+Die Datei konnte nicht gelesen werden.
+.TP
+.B 3
+Der Dateistatus konnte nicht ermittelt werden.
+.TP
+.B 4
+Die Datei ist keine reguläre Datei.
+.TP
+.B 5
+Es ist ein Lesefehler aufgetreten.
+.TP
+.B 6
+Es ist nicht ausreichend Speicher verfügbar.
+.TP
+.B 7
+Keine Zeile in der Datei paßt zur Zeichenkette.
+.TP
+.B 8
+Ungültige Eingabe wie z.B. 31 Februar oder eine Zeit die sich nicht
+als time_t dargestellen läßt (Sekunden seit 01.01.1970 00:00:00 UTC)
+.SH BEMERKUNGEN
+Da
+.B getdate() 
+nicht reentrant ist, da
+.B getdate_err
+verwendt wird sowie ein statischer Speicherplatz als Rückgabewert
+genommen wird, bietet die glibc eine Thread-sichere Variante.
+Die Funktionalität ist die gleiche.  Das Ergebnis wird ein einem
+Puffer zurückgegeben, auf den
+.I res
+zeigt.
+Im Fall eines Fehlers, ist der Rückgabewert nicht-null mit den
+gleichen Werten wie oben für
+.I getdate_err
+angegeben.
+.LP
+Die Spezifikation POSIX 1003.1-2001 für
+.B strptime()
+enthält Übersetzungs-Spezifikationen, die die Modifizierer
+.B %E
+und
+.B %O
+verwenden, während solche Spezifikationen nicht für
+.B getdate()
+angegeben sind.
+Die Implementierung von
+.B getdate()
+der glibc verwendet
+.BR strptime() ,
+so daß automatisch genau die gleiche Übersetzung von beiden
+unterstützt wird.
+.LP
+Die glibc-Implementierung unterstÜtzt die Übersetzungs-Spezifikation
+.B %Z
+nicht.
+.SH UMGEBUNG
+.TP
+.B DATEMSK 
+Datei, die Format-Muster enthält.
+.TP
+.BR TZ ", " LC_TIME 
+Variablen, die von \fBstrptime()\fP verwendet werden.
+.SH "KONFORM ZU"
+ISO 9899, POSIX 1003.1-2001
+.SH "SIEHE AUCH"
+.BR localtime (3),
 .BR strftime (3),
-.BR time (3),
-.BR localtime (3).
+.BR strptime (3),
+.BR time (3).
