@@ -24,10 +24,15 @@
 .\"     Linux libc source code
 .\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
 .\"     386BSD man pages
+.\"     GNU texinfo documentation on glibc date/time functions.
 .\" Modified Sat Jul 24 18:03:44 1993 by Rik Faith (faith@cs.unc.edu)
 .\" Translated into german by Markus Schmitt (fw@vieta.math.uni-sb.de)
+.\" Applied fix by Wolfgang Franke, aeb, 961011
+.\" Corrected return value, aeb, 970307
+.\" Added Single Unix Spec conversions and %z, aeb/esr, 990329.
+.\" Updated translation, Michael Piefel <piefel@informatik.hu-berlin.de>
 .\"
-.TH STRFTIM 3 "1. Septemper 1996" "" "Bibliotheksfunktionen"
+.TH STRFTIME 3 "März 1999" "" "Bibliotheksfunktionen"
 .SH BEZEICHNUNG
 strftime \- formatiert Datum und Uhrzeit 
 .SH "ÜBERSICHT"
@@ -46,72 +51,145 @@ in das Format
 .I format
 und schreibt das Format in das Feld
 .I s 
-der Große 
+der Größe 
 .I max.
 .PP
-Normale Zahlen im Format werden ohne Konvertierung in 
+Normale Zeichen im Format werden ohne Konvertierung in 
 .I s
-kopiert. Konvertierungsanweisungen  werden durch `%' charakterisiert und in
+kopiert. Konvertierungsanweisungen werden durch »%« charakterisiert und in
 .I s
 folgendermaßen geschrieben:
 .TP
 .B %a
-Der abgekürzte Wochentag abhängig von der momentanen locale Umgebung.
+Der abgekürzte Wochentag abhängig von der momentanen Locale.
 .TP
 .B %A
-Der gesamte Wochentag abhängig von der momentanen locale Umgebung.
+Der gesamte Wochentag abhängig von der momentanen Locale.
 .TP
 .B %b
-Der abgekürzte Monatsname abhängig von der momentanen locale Umgebung.
+Der abgekürzte Monatsname abhängig von der momentanen Locale.
 .TP
 .B %B
-Der volle Monatsname abhängig von der momentanen locale Umgebung.
+Der volle Monatsname abhängig von der momentanen Locale.
 .TP
 .B %c
-Das bevorzugte Datum und die bevorzugte Uhrzeit laut Einstellungen der
-momentanen locale Umgebung.
+Das bevorzugte Datums- und Uhrzeit-Repräsentation laut Einstellungen der
+momentanen Locale.
+.TP
+.B %C
+Das Jahrhundert als zweistellige Zahl.
 .TP
 .B %d
-Der Tag im Monat als ganze Zahl (1 - 31).
+Der Tag im Monat als ganze Zahl (01 - 31).
+.TP
+.B %D
+Äquivalent zu %m/%d/%y. (US-amerikanisches Format. In internationalem
+Kontext mehrdeutig, nicht benutzen.) (SU)
+.TP
+.B %e
+Wie %d, der Tag im Monat als ganze Zahl, aber eine führende Null
+ist durch ein Leerzeichen ersetzt. (SU)
+.TP
+.B %E
+Modifikator: Alternatives Format benutzen, s. u. (SU)
+.TP
+.B %g
+Wie %G, aber ohne das Jahrhundert, also mit zweistelligem Jahr (00-99). (TZ)
+.TP
+.B %G
+Das Jahr laut ISO 8601 mit dem Jahrhundert als Dezimalzahl.
+Das vierstellige Jahr, das zu ISO-Wochennummer (siehe %V) passt.
+Es hat dasselbe Format und denselben Wert wie %y, nur dass, wenn die
+ISO-Wochennummer zum vorhergehenden oder nächsten Jahr gehört, dieses
+Jahr stattdessen benutzt wird. (TZ)
+.TP
+.B %h
+Äquivalent zu %b. (SU)
 .TP
 .B %H
-Die Stunde als ganze Zahl (00 - 23).
+Die Stunde im 24h-Format als ganze Zahl (00 - 23).
 .TP
 .B %I
-Die Stunde als ganze Zahl (01 - 12).
+Die Stunde im 12h-Format als ganze Zahl (01 - 12).
 .TP
 .B %j
 Der Tag im Jahr als ganze Zahl (001 - 366).
+.TP
+.B %k
+Die Stunde im 24h-Format als ganze Zahl (0 - 23);
+einzelne Ziffern haben ein vorangestelltes Leerzeichen. (Siehe %H.) (TZ)
+.TP
+.B %l
+Die Stunde im 12h-Format als ganze Zahl (0 - 12);
+einzelne Ziffern haben ein vorangestelltes Leerzeichen. (Siehe %I.) (TZ)
 .TP
 .B %m
 Der Monat als ganze Zahl (01 - 12).
 .TP
 .B %M
-Die Minute als ganze Zahl.
+Die Minute als ganze Zahl (00 - 59).
+.TP
+.B %n
+Ein Zeilenvorschub. (SU)
+.TP
+.B %O
+Modifikator: Alternatives Format benutzen, s. u. (SU)
 .TP
 .B %p
-Entweder `am' oder `pm' je nach der übergebenen Uhrzeit oder nach
-der zugehörigen Zeichenkette in der momentanen locale Umgebung.
+Entweder »AM« oder »PM«, je nach der übergebenen Uhrzeit, oder
+die zugehörigen Zeichenketten in der momentanen Locale.
+Mittag erhält »PM«, Mitternacht »AM«.
+.TP
+.B %p
+Wie %P, aber in Kleinbuchstaben. (GNU)
+.TP
+.B %r
+Zeit in AM/PM-Notation; in der POSIX-Locale ist das äquivalent zu
+»%I:%M:%S %p«. (SU)
+.TP
+.B %R
+Zeit in 24h-Notation (%H:%M). (SU)
+Für eine Version mit Sekunden siehe %T.
+.TP
+.B %s
+Die Zahl der Sekunden seit der Epoche, also seit 1970-01-01 00:00:00 UTC. (TZ)
 .TP
 .B %S
-Die Sekunde als ganze Zahl.
+Die Sekunde als ganze Zahl (00 - 61).
+.TP
+.B %t
+Ein Tabulatorzeichen. (SU)
+.TP
+.B %T
+Zeit in 24h-Notation (%H:%M:%S). (SU)
+.TP
+.B %u
+Der Tag der Woche als Zahl von 1 bis 7, mit Montag als 1.
+Siehe auch %w. (SU)
 .TP
 .B %U
-Die Wochennummer des aktuellen Jahres als ganze Zahl, beginnend mit
-dem ersten Sonntag als erster Tag der ersten Woche.
+Die Wochennummer des aktuellen Jahres als ganze Zahl von 00 bis 53,
+beginnend mit dem ersten Sonntag als erster Tag der ersten Woche.
+Siehe auch %V und %W.
 .TP
-.B %W
-Die Wochennummer des aktuellen Jahres als ganze Zahl, beginnend mit
-dem ersten Montag als erster Tag der ersten Woche.
+.B %V
+Die Wochennummer nach ISO 8601:1988 als Dezimalzahl von 01 bis 53, wobei
+Woche 1 die erste Woche ist, die wenigstens 4 Tage im laufenden Jahr hat,
+mit Montag als dem ersten Tag der Woche. Siehe auch %U und %W. (SU)
 .TP
 .B %w
-Der Wochentag als ganze Zahl, Sonntag beginnt mit 0.
+Der Tag der Woche als Zahl von 0 bis 6, mit Sonntag als 0.
+Siehe auch %u.
+.TP
+.B %W
+Die Wochennummer des aktuellen Jahres als ganze Zahl von 00 bis 53,
+beginnend mit dem ersten Montag als erster Tag der ersten Woche.
 .TP
 .B %x
-Das bevorzugte Datum ohne die Zeit in der momentanen locale Umgebung.
+Die bevorzugte Datums-Repräsentation ohne die Zeit in der momentanen Locale.
 .TP
 .B %X
-Die bevorzugte Uhrzeit ohne das Datum in der momentanen locale Umgebung.
+Die bevorzugte Uhrzeit-Repräsentation ohne das Datum in der momentanen Locale.
 .TP
 .B %y
 Das Jahr als ganze Zahl ohne das Jahrhundert (00 - 99).
@@ -119,86 +197,70 @@ Das Jahr als ganze Zahl ohne das Jahrhundert (00 - 99).
 .B %Y
 Das Jahr als ganze Zahl mit dem Jahrhundert.
 .TP
+.B %z
+Die Zeitzone als Stundendifferenz zu GMT.
+Benötigt, um RFC822-konforme Datumsangaben zu erhalten
+(mit »%a, %d %b %Y %H:%M:%S %z«). (GNU)
+.TP
 .B %Z
 Die Zeitzone oder der Name oder die Abkürzung.
 .TP
+.B %+
+Datum und Zeit im Format von \fBdate\fR(1). (TZ)
+.TP
 .B %%
-Der Buchstabe `%'
+Das Zeichen »%«.
 .PP
-Die Struktur der Zeit
+Einige Konvertierungsanweisungen können durch vorangestelltes E oder
+O modifiziert werden, um anzufordern, dass ein alternatives Format
+benutzt werden soll.
+Existiert das alternative Format in der momentanen Locale nicht, ist
+das Verhalten so, als ob es keine Modifikation gibt. (SU)
+.PP
+Die Single Unix Specification erwähnt %Ec, %EC, %Ex, %EX,
+%Ry, %EY, %Od, %Oe, %OH, %OI, %Om, %OM, %OS, %Ou, %OU, %OV,
+%Ow, %OW, %Oy, wobei der Effekt von O ist, alternative numerische
+Symbole zu benutzen (etwa römische Zahlen), und der von E, eine
+Locale-abhängige alternative Repräsentation zu wählen.
+.PP
+Die genaue Struktur der Zeit
 .I tm
 ist in
 .I <time.h>
-folgendermaßen definiert.
-.sp
-.RS
-.nf
-.ne 12
-.ta 8n 16n 32n
-struct tm
-{
-	int	tm_sec;			/* Sekunden */
-	int	tm_min;			/* Minuten */
-	int	tm_hour;		/* Stunden */
-	int	tm_mday;		/* Tag im Monat */
-	int	tm_mon;			/* Monat */
-	int	tm_year;		/* Jahr */
-	int	tm_wday;		/* Tag in der Woche */
-	int	tm_yday;		/* Tag im Jahr */
-	int	tm_isdst;		/* Sommerzeit */
-};
-.ta
-.fi
-.RE
-.PP
-Die Struktur
-.I tm
-besteht aus:
-.TP
-.I tm_sec
-Die Anzahl der Sekunden im Bereich von 0 bis 59, kann aber auch bis 61 
-gehn, um Sprungsekunden zuzulassen.
-.TP
-.I tm_min
-Die Anzahl der Minuten im Bereich von 0 bis 59.
-.TP
-.I tm_hour
-Die Anzahl der Stunden nach Mitternacht im Bereich von 0 bis 23.
-.TP
-.I tm_mday
-Der Tag im Monat im Bereich von 1 bis 31.
-.TP
-.I tm_mon
-Die Anzahl der Monat seit Januar im Bereich von 0 bis 11.
-.TP
-.I tm_year
-Die Anzahl der Jahre seit 1900.
-.TP
-.I tm_wday
-Die Anzahl der Tage seit Sonntag im Bereich von 0 bis 6.
-.TP
-.I tm_yday
-Die Anzahl der Tage seit dem 1.Januar im Bereich von 0 bis 365.
-.TP
-.I tm_isdst
-Dies zeigt an, ob Sommerzeit ist oder nicht. Der Wert ist positiv, wenn
-Sommerzeit ist, Null, wenn nicht und negativ, wenn keine Informationen
-darüber vorliegen.
+definiert.
+Siehe auch
+.BR ctime (3).
+
 .SH "RÜCKGABEWERT"
 Die Funktion
 .B strftime()
 liefert die Anzahl der Buchstaben zurück, die in das Feld
 .I s
-geschrieben wurden, allerdings ohne die NULL Zeichen am Ende.
-Wenn der Wert gleich
+geschrieben wurden, allerdings ohne das NULL-Zeichen am Ende,
+vorausgesetzt, die Zeichenkette, einschließlich des NULL-Zeichens,
+passt. Anderenfalls wird 0 zurückgegeben, und der Inhalt des Feldes
+ist undefiniert. (Zumindest seit libc 4.4.4; sehr alte Versionen von
+libc, wie etwa 4.4.1, gaben 
 .I max
-ist, bedeutet das, daß das Feld zu klein war.
+zurück, wenn das Feld zu klein war.)
+.LP
+Beachten Sie, dass der Rückgabewert 0 nicht notwendigerweise auf einen
+Fehler hinweist; zum Beispiel ist häufig %p eine leere Zeichenkette.
+.SH UMGEBUNG
+Die Umgebungsvariablen TZ und LC_CTIME werden benutzt.
 .SH "KONFORM ZU"
-SVID 3, POSIX, BSD 4.3, ISO 9899
-.SH ANMERKUNGEN
-Die Funktion unterstützt nur die Umgebungen, die in
-.BR locale (7)
-spezifiziert werden.
+ANSI C, SVID 3, ISO 9899.
+Es gibt strikte Teilmengenbeziehungen zwischen den Konvertierungen
+aus ANSI C (nicht markiert), diesen aus der Single Unix Specification
+(markiert als SU), diesen aus dem Timezone-Paket von Olson (TZ) und
+denen aus der glibc (GNU), außer dass %+ in der glibc2 nicht unterstützt
+wird. Andererseits hat glibc2 einige Erweiterungen.
+.PP
+POSIX.1 bezieht sich nur auf ANSI C; POSIX.2 beschreibt unter
+.BR date (1)
+mehrere Erweiterungen, die auch auf
+.B strftime
+zutreffen könnten.
 .SH "SIEHE AUCH"
 .BR date (1),
 .BR time (2),
