@@ -1,0 +1,141 @@
+.\" Michael Haardt (michael@cantor.informatik.rwth.aachen.de) Sat Sep  3 22:00:30 MET DST 1994
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" Sun Feb 19 21:32:25 1995, faith@cs.unc.edu edited details away
+.\"
+.\" TO DO: This manual page should go more into detail how DES is perturbed, 
+.\" which string will be encrypted, and what determines the repetition factor.
+.\" Is a simple repetition using ECB used, or something more advanced?  I hope
+.\" the presented explanations are at least better than nothing, but by no
+.\" means enough.
+.\"
+.\" added _XOPEN_SOURCE, aeb, 970705
+.\" "
+.TH CRYPT 3 "3. September 1994" "" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+crypt \- Paßwort- und Datenverschlüsselung
+.SH ÜBERSICHT
+.B #include <crypt.h>
+.sp
+.BI "char *crypt(const char *" key ", const char *" salt );
+.SH BESCHREIBUNG
+.B crypt
+bietet Zugriff auf zwei Algorithmen für die Verschlüsselung von
+Paßwörtern.  Eines ist basiert auf dem Algorithmus Data Encryption
+Standard (DES) mit Variationen, die dazu dienen (unter anderem),
+Hardware-Implementierungen von Schlüsselsuchen zu verhindern.
+
+.I key
+ist ein vom Benutzer eingegebenes Paßwort.
+
+.I salt
+ist eine zwei Zeichen lange Zeichenkette bestehend aus Zeichen der Menge
+[\fBa\fP\(en\fBzA\fP\(en\fBZ0\fP\(en\fB9./\fP].  Die Zeichenkette wird
+dafür verwendet, den Algorithmus auf 4096 unterschiedliche Arten zu
+beeinflussen.
+
+Von den untersten 7 Bit jedes Zeichens von
+.I key
+wird ein 56-Bit Schlüssel genommen.  Dieser 56-Bit Schlüssel wird
+verwendet umd mehrfach eine konstante Zeichenkette zu verschlüsseln
+(üblicherweise eine Zeichenkette aus lauter Nullen).  Der
+zurückgegebene Wert zeigt auf das verschlüsselte Paßwort, eine Reihe
+von 13 druckbaren ASCII-Zeichen (die ersten beiden Zeichen
+repräsentieren den
+.I salt
+selbst).  Der Rückgabewert zeit auf statische Daten, die bei einem
+weiteren Aufruf überschrieben werden.
+
+Warnung: Der Schlüsselraum besteht aus 
+.if t 2\s-2\u56\s0\d
+.if n 2**56
+gleich 7.2e16 möglichen Werten.  Eine vollständige Suche über diesem
+Schlüsselraum ist möglich mit massiv parallelen Computern.  Software
+wie
+.BR crack (1)
+ist verfügbar und durchsucht den Teil, der normalerweise von Menschen
+für Paßwörter benutzt wird.  Daher sollten Paßwörder wenigstens
+übliche Namen und Wörter vermeiden.  Die Verwendung des Programms
+.BR passwd (1),
+das automatisch auf leicht zu knackende Paßwörter während der
+Eingabe prüft, wird empfohlen.
+
+Der DES-Algorithmus selbst hat ein paar Eigenarten, mit denen die
+Verwendung von
+.BR crypt (3)
+für etwas anders als Paßwortverschlüsselung eine schlechte Wahl wird.
+Wenn Sie vorhaben, die Schnittstelle
+.BR crypt (3)
+für ein kryptografisches Projekt zu verwenden, tun Sie es nicht: holen
+Sie sich ein gutes Buch über Verschlüsselung und eine der weitläufig
+verfügbaren DES-Bibliotheken.
+.\" This level of detail is not necessary in this man page. . .
+.\" .PP
+.\" When encrypting a plain text P using DES with the key K results in the
+.\" encrypted text C, then the complementary plain text P' being encrypted
+.\" using the complementary key K' will result in the complementary encrypted
+.\" text C'.
+.\" .PP
+.\" Weak keys are keys which stay invariant under the DES key transformation.
+.\" The four known weak keys 0101010101010101, fefefefefefefefe, 1f1f1f1f0e0e0e0e
+.\" and e0e0e0e0f1f1f1f1 must be avoided.
+.\" .PP
+.\" There are six known half weak key pairs, which keys lead to the same
+.\" encrypted data.  Keys which are part of such key clusters should be
+.\" avoided.
+.\" Sorry, I could not find out what they are.
+.\""
+.\" .PP
+.\" Heavily redundant data causes trouble with DES encryption, when used in the
+.\" .I codebook
+.\" mode that
+.\" .BR crypt (3)
+.\" implements.  The
+.\" .BR crypt (3)
+.\" interface should be used only for its intended purpose of password
+.\" verification, and should not be used at part of a data encryption tool.
+.\" .PP
+.\" The first and last three output bits of the fourth S-box can be
+.\" represented as function of their input bits.  Empiric studies have
+.\" shown that S-boxes partially compute the same output for similar input.
+.\" It is suspected that this may contain a back door which could allow the
+.\" NSA to decrypt DES encrypted data.
+.\" .PP
+.\" Making encrypted data computed using crypt() publically available has
+.\" to be considered insecure for the given reasons.
+.PP
+Wenn der
+.I salt
+mit \fI$1$\fR 
+beginnt, wird ein MD5-basierter Paßwort-Hash-Algorithmus verwendet.  Der
+.I salt
+sollte aus \fI$1$\fR bestehen, gefolgt von acht Zeichen.
+
+Programme, die diese Funktion verwenden, müssen mit -lcrypt gelinkt werden.
+.SH "KONFORM ZU"
+SVID, X/OPEN, BSD 4.3
+.SH "SIEHE AUCH"
+.BR login (1),
+.BR passwd (1),
+.BR encrypt (3),
+.BR getpass (3),
+.BR passwd (5).
