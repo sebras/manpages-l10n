@@ -1,0 +1,345 @@
+.\" Copyright (c) 1998  Sören Todt (Todt@pad.de)
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111, USA.
+.\"
+.\" Translated into German by Sören Todt (Todt@pad.de)
+.\"
+.TH HISAX 0 "1. Dezember 1998" "" "Verschiedenes"
+.SH BEZEICHNUNG
+HiSax \- der (HL) Gerätetreiber für passive ISDN Karten.
+.SH BESCHREIBUNG
+.B HiSax 
+ist ein 'hardware-level' Gerätetreiber (device-driver) für passive ISDN
+Karten, die mit einem Siemens Chipsatz bestückt sind (ISAC_S 2085/2986/2186,
+HSCX SAB 82525). Der ursprüngliche Teles-Treiber wurde von Jan den Gulden erdacht und
+wird zur Zeit von Karsten Keil gepflegt und weiterentwickelt.
+.br
+Er ist am nützlichsten in Verbindung mit dem isdn4linux ISDN link-level (LL) Modul von
+Fritz Elfert. 
+.SH KONFIGURATION 
+HiSax wird entweder als Modul oder feste in den Kernel kompiliert. Letzteres kann bei
+manchen Karten zu Problemen führen (siehe weiter unten). 
+.br
+Wird mit 'loadlin' oder 'lilo' gestartet, kann er über die Kommandozeile, als Modul per
+Parameterübergabe mit 'insmod' oder 'modprobe' konfiguriert werden.  
+.LP
+Bitte nicht vergessen:
+.br
+.B vor
+dem Kompilieren des Kernel und/oder der Module, müssen in 'make
+[menu][x]config' im Abschnitt ISDN noch einige Einstellungen vorgenommen werden. Zum
+Beispiel 
+.br
+.B das richtige D-Channel Protokoll auswählen!
+.PP
+Ausserdem beachten:
+alle
+.B PnP
+Karten, müssen mit
+.B 'isapnp'
+konfiguriert werden.
+Solche Karten (sie sind in der zweiten Tabelle weiter unten mit 'NUR ALS MODUL'
+gekennzeichnet) arbeiten am besten als Solches.
+Natürlich kann man sie direkt in den Kernel einbinden. Dann solltest Du allerdings
+wissen, wie Dein BIOS PnP Karten einstellt. Und bei späteren Änderungen oder zusätzlichen
+Karten, muß eventuell der Kernel neu uebersetzt werden. 
+.SH HISAX ALS MODUL 
+.BR "
+.br
+Insmod/modprobe
+hisax.o
+.I io= irq= mem= type= protocol= id=
+.LP
+io=iobase irq=IRQ mem=membase type=card_type
+.br
+protocol=D_channel_protokcol1 id=idstring.
+.LP
+Bei Einbau einer zweiten oder Nten Karte, die jeweiligen Werte, getrennt durch
+ein Komma, hintereinander schreiben. Beispiel:
+.br
+insmod hisax.o io=iobase1,iobase2,iobaseN irq=IRQ1,IRQ2 usw.
+.br
+Eine Ausnahme gibt es: id. Dort wird anstelle des Kommas ein "%" (Prozentzeichen)
+genommen. Das hat den Grund, daß das aktuell Modulpaket nicht mit Kommas
+zusammenarbeitet. Es sieht bei id also folgendermaßen aus:
+.br
+.BR ""id=idstring1 "%"idstring2 "%"idstringN.
+.PP
+Ausser in einer Gruppe (irq, mem, io usw.) können die Angaben in beliebiger Reihenfolge
+stehen. Die Wertelisten mehrerer Karten muß konsistent sein.
+.LP
+Es müssen nur die Werte angegeben werden, die für die jeweilige Karte relevant sind.
+Beispiel: die Teles 16.3 benötigt keine mem Angaben. Diese werden also weggelassen.
+Sollten mehrere Karten verschiedenen Typs eingebaut werden, kann dies die Angabe von
+sogenannten 'dummy' Werten(Platzhalter) nötig machen, da eine Karte z.B. mem benötigt, die andere
+hingegen nicht.
+.br
+Beispiel: wenn eine Teles 16.3 gefolgt von einer Teles 16.0 Karte konfiguriert werden
+soll, muß fuer Letztere ein mem 'dummy' 0 (Null)angegeben werden.
+.br
+mem=0,0xd0000
+.br
+Oder der Wert wird einfach übersprungen:
+.br
+mem=,0xd0000
+.LP
+Der D-Channel Wert (protocol) kann weggelassen werden, wenn er vor dem Kompilieren
+angegeben wurde.
+.br
+Gültige Werte sind:
+.IP
+.BR "1 " "- deutsches 1TR6
+.br
+.BR "2 " "- EDSS1 (Euro ISDN)
+.br
+.BR "3 " "- Standleitungen (leased lines, kein D-channel)
+.LP
+.SH UNTERSTÜTZTE KARTEN (bis jetzt)
+.BR "
+.RE
+.PP
+.TS 
+l | l | l
+_ | _ | _
+l |  l |.
+Typ	Kartentyp	benötigte Parameter
+1  	Teles 16.0	irq, mem, io
+2	Teles  8.0	irq, mem
+3	Teles 16.3 (nicht PnP)	irq, io
+4	Creatix/Teles PnP	irq, io0 (ISAC), io1 (HSCX)
+5	AVM A1 (Fritz!)	irq, io
+6	ELSA PCC/PCF cards	io nur bei > 2 Karten
+7	ELSA Quickstep 1000	irq, io (mit isapnp)
+8	Teles 16.3 PCMCIA	irq, io
+9	ITK ix1-micro Rev.2	irq, io
+10	ELSA PCMCIA	irq, io (cardmanager)
+11	Eicon.Diehl DivaISA PnP	irq, io
+11	Eicon.Diehl Diva PCI	keine Parameter
+12	ASUS COM ISDNLink	irq, io (mit isapnp)
+13	HFC-2BS0 based cards	irq, io
+14	Teles 16.3c PnP	irq, io
+15	Sedlbauer Speed card	irq, io
+15	Sedlbauer PC/104	irq, io
+15	Sedlbauer Speed PCI	keine Parameters
+16	USR Sportster int.	irq, io
+17	MIC card	irq, io
+18	ELSA Q.step 1000 PCI	keine Parameters
+19	Compaq ISDN S0 ISA	irq, io0, io1 (mit isapnp)
+20	NETjet PCI card	keine Parameter
+21	Teles PCI	keine Parameter
+22	Sedlbauer SpeedStar PCMCIA	irq, io(cardmanager)
+24	Dr.Neuhaus Niccy PnP	irq, io0, io1 (mit isapnp)
+24	Dr.Neuhaus Niccy PCI	keine Parameter
+25	Teles S0 Box	irq, io (vom lpt Port)
+26	AVM A1(Fritz!)PCMCIA	irq, io (cardmanager)
+27	AVM PnP (Fritz!PnP)	irq, io (mit isapnp)
+27	AVM PCI (Fritz!PCI)	keine Parameters
+28	Sedlbauer Speed Fax+	irq, io (mit isapnp)
+29	Siemens I-Surf	irq, io, mem (mit isapnp) 
+--	--------------------	-----------------------------
+.TE
+.PP
+.PP
+.B
+Weitere, unterstützte Karten:
+.PP
+Teles S0Box
+.br
+Creatix S0Box
+.br
+Compaq ISDN S0 ISA card
+.br
+Teledat 150 (Fritz! A1)
+.br
+ELSA Microlink PCC-16, PCF, PCF-Pro, PCC-8
+.br
+ELSA Quickstep 3000 (gleiche Einstellungen wie: QS1000)
+.br
+ELSA Quickstep 3000 PCI
+.br
+Eicon Diehl DIVA Piccola
+.br
+ASUSCOM NETWORK INC. ISDNlink 128k PC adapter (Best.Nr.: I-IN100-ST-D)
+.br
+Dynalink IS64PH (OEM of ASUSCOM 128k PC-adapter)
+.br
+PCBIT-DP (OEM of ASUSCOM 128k)
+.br
+ith Kommunikationstechnik GmbH MIC PCI S0 card
+.IP
+Im Moment ist IRQ 'sharing', also das Teilen eines Interruptes zwischen mehreren Geräten,
+nur mit PCI Karten möglich. Bitte sicherstellen, daß der IRQ frei und für ISA
+benutzbar ist.
+.PP
+.B
+Bitte beachten:
+.br
+PCF, PCF-Pro: wird nur der ISDN Teil unterstützt
+.br
+PCC-8: ungetestet
+.br
+Folgende gelten als EXPERIMENTELL:
+.br
+Teles PCMCIA, 16.3c, PCI & S0Box
+.br
+Eicon.Diehl Diva U Interface nicht getestet 
+.LP
+.PP
+.B Beispiele für das Laden per Modul
+.LP
+1. Teles 16.3, Euro ISDN, I/Obase 0x280, IRQ 10
+.br
+modprobe hisax type=3 protocol=2 io=0x280 irq=10
+.LP
+2. Teles 16.0, 1TR6 ISDN, I/Obase 0xd80, IRQ 5, memory 0xd0000
+.br
+modprobe hisax protocol=1 type=1 io=0xd80 mem=0xd0000 irq=5
+.LP
+3. Fritz A1, Euro ISDN, I/O 0x340, IRQ 10 and ELSA PCF, Euro ISDN
+.br
+modprobe hisax type=5,6 protocol=2,2 io=0x340 irq=10 id=Fritz%Elsa
+.LP
+4. Irgendeine ELSA PCC/PCF Karte, Euro ISDN
+.br
+modprobe hisax type=6 protocol=2
+.LP
+5. Teles 16.3 PnP, Euro ISDN, mit isapnp konfiguriert
+.br
+isapnp config: (INT 0 (IRQ 10 (MODE +E)))
+.RS
+.RS
+.RS
+(IO 0 (BASE 0x0580))
+.br
+(IO 1 (BASE 0x0180))
+.RE
+.RE
+.RE
+modprobe hisax type=4 protocol=2 irq=10 io0=0x580 io1=0x180
+.LP
+6. Teles 16.3, Euro ISDN, I/O 0x280, IRQ 12 and
+.br
+Teles 16.0 1TR6, IRQ , memory 0xd0000
+.br
+modprobe hisax type=3,1 protocol=2,1 io=0x280 mem=0,0xd0000
+.LP
+Bitte beachten: 'dummy' Platzhalter 0 für Teles 16.3 PnP
+.LP
+7. Teles PCMCIA, Euro ISDN, I/O 0x180, IRQ 15 (default values)
+.br
+modprobe hisax type=8 protocol=2 io=0x180 irq=15
+.LP
+.SH HISAX fest im KERNEL mit LILO/LOADLIN konfiguriert
+.BR "
+.br
+hisax=typ1,dp1,pa_1,pb_1,pc_1[,typ2,dp2,pa_2 ...[,idstring1[,idstring2, ....]]
+.br
+.RE
+wobei
+.RS
+typ1 = Typ der ersten Karte (abhängig von kernel-Einstellungen)
+.br
+dp1 = D-channel Protokoll der ersten Karte.
+.br
+Zur Erinnerung:
+.RS
+.PP
+.BR "1 " "= 1TR6
+.br
+.BR "2 " "= EDSS1
+.br
+.BR "3 " "= Standleitung
+.RE
+.PP
+pa_1 = 1ter Parameter (abhängig von kernel-Einstellungen)
+.br
+pb_1 = 2ter Parameter (abhängig von kernel-Einstellungen)
+.br
+pc_1 = 3ter Parameter (abhängig von kernel-Einstellungen)
+.LP
+.RE
+type2,dp2,pa_2,pb_2,pc_2 = Parameter der 2ten Karte (Voreinstellung: keine)
+.br
+typeN,dpN,pa_N,pb_N,pc_N = Parameter der N`ten Karte (bis zu 16)
+.LP
+.RS
+.B idstring 
+= Treiber ID, mit der Hilfprogramme arbeiten und zur Identifikation für Leitungs
+Monitore. 
+.br
+Voreinstellung: 
+.B HiSax
+.br
+Beachte: der ID String muß mit einem Buchstaben beginnen!
+.PP
+.SH UNTERSTÜTZTE KARTEN
+.PP
+.TS 
+l | l | l
+_ | _ | _
+l |  l |.
+Typ	Karte	benötigte Parameter
+1	Teles 16.0	pa=irq pb=membase pc=iobase
+2	Teles  8.0	pa=irq pb=membase
+3	Teles 16.3 (not PnP)	pa=irq pb=iobase
+4	Creatix/Teles PnP	NUR ALS MODUL!
+5	VM A1 (Fritz!)	a=irq pb=iobase
+6	LSA PCC/PCF cards	=iobase or nothing
+7	ELSA Quickstep 1000	NUR ALS MODUL!
+8	Teles 16.3 PCMCIA	pa=irq pb=iobase
+9	ITK ix1-micro Rev.2	pa=irq pb=iobase
+10	ELSA PCMCIA	pa=irq pb=io (cardmanager)
+11	Eicon.Diehl Diva ISA PnP	NUR ALS MODUL!
+11	Eicon.Diehl Diva PCI	keine Parameter
+12	ASUS COM ISDNLink	NUR ALS MODUL!
+13	HFC-2BS0 based cards	pa=irq pb=io
+14	Teles 16.3c PnP	NUR ALS MODUL!
+15	Sedlbauer Speed card	pa=irq pb=io (Sp.Win=Modul)
+15	Sedlbauer PC/104	pa=irq pb=io
+15	Sedlbauer Speed PCI	no parameters
+16	USR Sportster int.	pa=irq pb=io
+17	MIC card	pa=irq pb=io	
+18	ELSA Q.step 1000 PCI	keine Parameter
+19	Compaq ISDN S0 ISA	NUR ALS MODUL!
+20	NETjet PCI card	no parameters
+21	Teles PCI	no parameters
+22	Sedlbauer Speed Star PCMCIA	pa=irq pb=io (cardmanager)
+24	Dr.Neuhaus Niccy PnP	NUR ALS MODUL!
+24	Dr.Neuhaus Niccy PCI	no parameters
+25	Teles S0 Box	irq io (of the used lpt port)
+26	AVM A1(Fritz!)PCMCIA 	irq, io (cardmanager)
+27	AVM PnP (Fritz!PnP)	NUR ALS MODUL!
+27	AVM PCI (Fritz!PCI)	keine Parameter
+28	Sedlbauer Speed Fax+	NUR ALS MODUL!
+29	Siemens I-Surf	NUR ALS MODUL ! 
+.TE
+.PP
+.RE
+Anhang: Teles PCMCIA Treiber
+.br
+-----------------------------
+.br
+Siehe:
+.PP
+.br
+   http://www.stud.uni-wuppertal.de/~ea0141/pcmcia.html
+.br
+.IP              
+.SH AUTOR 
+\(co 1997-98 by Karsten Keil <isdn4@temic-ech.spacenet.de>
+.LP
+.SH "SIEHE AUCH"
+.BR isdnctrl "(8), " telesctrl "(8), " isdn_cause "(7), " isdninfo "(4), " hisaxctrl (8).
+
