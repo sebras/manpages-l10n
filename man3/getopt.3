@@ -1,0 +1,295 @@
+.\" (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.\" Modified Sat Jul 24 19:27:50 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon Aug 30 22:02:34 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" longindex is a pointer, has_arg can take 3 values, using consistent
+.\" names for optstring and longindex, "\n" in formats fixed.  Documenting
+.\" opterr and getopt_long_only.  Clarified explanations (borrowing heavily
+.\" from the source code).
+.\" 
+.\" Modified Mon May 27 21:37:47 1996 by Martin Schulze (joey@linux.de)
+.\" Translated to German Fri Jan 03 1997 by Patrick Rother (krd@gulu.net)
+.\" 
+.TH GETOPT 3  "31. Dezember 1996" "GNU" "Bibliotheksfunktionen"
+.SH NAME
+getopt \- werte Kommandozeilenoptionen aus
+.SH ÜBERSICHT
+.nf
+.B #include <unistd.h>
+.sp
+.BI "int getopt(int " argc ", char * const " argv[] ","
+.BI "           const char *" optstring ");"
+.sp
+.BI "extern char *" optarg ;
+.BI "extern int " optind ", " opterr ", " optopt ;
+.sp
+.B #include <getopt.h>
+.sp
+.BI "int getopt_long(int " argc ", char * const " argv[] ",
+.BI "           const char *" optstring ,
+.BI "           const struct option *" longopts ", int *" longindex ");"
+.sp
+.BI "int getopt_long_only(int " argc ", char * const " argv[] ",
+.BI "           const char *" optstring ,
+.BI "           const struct option *" longopts ", int *" longindex ");"
+.fi
+.SH BESCHREIBUNG
+Die Funktion
+.B getopt()
+wertet die Kommandozeilenoptionen aus.  Ihre Argumente
+.I argc
+und
+.I argv
+sind die Argumentanzahl und das Argumentenfeld wie zur Funktion
+.B main()
+bei Programmaufruf übergeben.
+Ein Element von \fIargv\fP , dass mit `-' beginnt (und nicht exact "-" or
+"--") ist, ist ein Optionselement.  Die Zeichen dieses Elementes (ohne das
+einleitende `-') sind Optionszeichen.  Wenn \fBgetopt()\fP wiederholt
+aufgerufen wird, gibt sie gibt sie aufeinanderfolgend jedes der Optionszeichen
+von jedem Optionselement zurück.
+.PP
+Wenn \fBgetopt()\fP ein weiteres Optionszeichen findet, gibt sie
+dieses Zeichen zurück, wobei die externe Variable \fIoptind\fP und eine
+statische Variable \fInextchar\fP auf neuen Stand gesetzt werden, so daß
+der nächste Aufruf von \fBgetopt()\fP die Suche mit dem folgenden 
+Optionszeichen oder \fIargv\fP-Element fortsetzen kann.
+.PP
+Wenn es keine weiteren Optionszeichen gibt, gibt \fBgetopt()\fP 
+\fBEOF\fP zurück.  Dann ist \fIoptind\fP der Index in \fIargv\fP des ersten
+\fIargv\fP-Elementes, das keine Option ist.
+.PP
+.I optstring
+ist ein String, der die gültigen Optionszeichen enthält.  Wenn solche ein
+Zeichen von einem Doppelpunkt gefolgt wird, benötigt diese Option ein
+Argument, weswegen \fBgetopt\fP einen Zeiger auf den folgenden Text in 
+dem selben \fIargv\fP-Element oder den Text des folgenden \fIargv\fP-Elementes
+in
+.IR optarg
+plaziert.
+Zwei Doppelpunkte bedeuten, daß diese Option ein Optionales Argument
+nimmt; wenn es Text im aktuellen \fIargv\fP-Element, wird er in
+\fIoptarg\fP zurückgegeben, anderenfalls wird \fIoptarg\fP auf Null gesetzt.
+.PP
+Per Vorgabe vertauscht \fBgetopt()\fP den Inhalt von \fIargv\fP bei
+durchsuchen, so daß eventuell alle Nichtoptionen am Ende stehen.  Zwei andere
+Modi sind ebenfalls implementiert.  Wenn das erste Zeichen von \fIoptstring\fP
+ein `+' ist, oder die Umgebungsvariable POSIXLY_CORRECT gesetzt ist, dann
+stoppt die Optionsbearbeitung sobald ein Argument auftritt, dass keine Option
+ist.  Wenn das erste Zeichen von \fIoptstring\fP ein `-' ist, dann wird
+jedes Argument von \fIargv\fP, dass keine Option ist, behandelt als wenn
+es Argument einer Option mit dem Zeichencode 1 waere.  (Dies wird benutzt
+von Programmen, die Optionen und andere \fIargv\fP-Elemente in einer
+Reihenfolge erwarten, und die Wert auf die Reihenfolge der beiden legen.)
+Das spezielle Argument `--' erzwingt die Beendigung der Suche nach Optionen
+unabhängig von der Suchmethode.
+.PP
+Wenn \fBgetopt()\fP ein Optionszeichen nicht erkennt, wird eine
+Fehlernachricht nach stderr ausgegeben, das Zeichen in \fIoptopt\fP
+gespeichert und `?' zurückgegeben.  Das aufrufende Programm kann die 
+Fehlernachricht verhindern durch setzen von \fIopterr\fP auf 0.
+.PP
+Die Funktion
+.B getopt_long()
+arbeitet wie
+.B getopt() ,
+ausser dass sie auch lange Optionsnamen unterstützt, die mit zwei Minuszeichen
+beginnen.  Lange Optionsnamen dürfen abgekürzt werden, wenn die Abkürzung
+eindeutig ist, oder exact einer definierten Option entspricht.  Eine
+lange Option darf einen Parameter der Form
+.B --arg=param
+oder
+.BR "--arg param"
+nehmen.
+.PP
+.I longopts
+ist ein Zeiger auf das ersten Element eines Feldes der Struktur
+.B struct option ,
+die in
+.B <getopt.h>
+deklariert ist als
+.nf
+.sp
+.in 10
+struct option {
+.in 14
+const char *name;
+int has_arg;
+int *flag;
+int val;
+.in 10
+};
+.fi
+.PP
+Die Bedeutungen der einzelnen Felder sind:
+.TP
+.I name
+ist der Name der langen Option.
+.TP
+.I has_arg
+ist:
+\fBno_argument\fP (or 0) wenn die Option kein Argument nimmt,
+\fBrequired_argument\fP (or 1) wenn die Option ein Argument braucht, oder
+\fBoptional_argument\fP (or 2) wenn die Option ein optionales Argument nimmt.
+.TP
+.I flag
+gibt an wie Ergebnisse zurückgegeben werden für eine lange Option.
+Wenn \fIflag\fP \fBNULL\fP ist, dann gibt \fBgetopt_long()\fP \fIval\fP
+zurück.  (Zum Beispiel kann das aufrufende Programm \fIval\fP auf das
+Zeichen der äquivalenten Kurzoption setzen.)  Anderenfalls gibt
+\fBgetopt_long()\fP 0 zurück, und \fIflag\fP zeigt auf eine Variable,
+die auf \fIval\fP gesetzt wird, wenn die Option gefunden wird, und die
+unverändert gelassen wird, wenn die Option nicht gefunden wird.
+.TP
+\fIval\fP 
+ist der Wert, der zurückzugeben oder in die Variable zu laden ist, auf die
+\fIflag\fP zeigt.
+.PP
+Das letzte Element des Feldes muss mit Nullen gefüllt werden.
+.PP
+Wenn \fIlongindex\fP nicht \fBNULL\fP ist, zeigt er auf eine Variable, welche
+auf den Index der langen Option relativ zu
+.IR longopts
+gesetzt wird.
+.PP
+\fBgetopt_long_only()\fP ist wie \fBgetopt_long()\fP, jedoch kann `-' 
+genau wie `--' eine lange Option anzeigen.  Wenn eine Option, die mit `-'
+anfängt (,not `--'), zu keiner langen Option passt, jedoch zu einer kurzen
+Option, so wird sie wie eine kurze Option behandelt.
+.SH RÜCKGABEWERT
+Die Funktion
+.B getopt()
+gibt das Optionszeichen zurück wenn die Option gefunden wurde, `:' wenn
+ein Parameter fehlte für eine der Optionen, `?' für ein unbekanntes
+Optionszeichen, oder \fBEOF\fP für das Ende der Optionsliste.
+.PP
+\fBgetopt_long()\fP und \fBgetopt_long_only()\fP geben auch das
+Optionszeichen zurück wenn eine kurze Option gefunden wurde.  Für eine
+lange Option geben sie sie \fIval\fP zurück wenn \fIflag\fP \fBNULL\fP ist,
+anderenfalls 0.  Fehler- und EOF-Rückgaben sind wie bei \fBgetopt()\fP,
+zusätzlich jedoch `?' für eine unzureichende Übereinstimmung oder einen
+überzähligen Parameter.
+.SH UMGEBUNGSVARIABLEN
+.TP
+.SM
+.B POSIXLY_CORRECT
+Wenn dies gesetzt ist, dann stoppt die Optionsbearbeitung sobald eine Argument
+auftritt, das keine Option ist.
+.SH BEISPIEL
+Das folgende Beispielprogramm veranschaulicht die Benutzung von
+.BR getopt_long()
+mit der meisten ihrer Eigenschaften.
+.nf
+.sp
+#include <stdio.h>
+
+int
+main (argc, argv)
+     int argc;
+     char **argv;
+{
+  int c;
+  int digit_optind = 0;
+
+  while (1)
+    {
+      int this_option_optind = optind ? optind : 1;
+      int option_index = 0;
+      static struct option long_options[] =
+      {
+        {"add", 1, 0, 0},
+        {"append", 0, 0, 0},
+        {"delete", 1, 0, 0},
+        {"verbose", 0, 0, 0},
+        {"create", 1, 0, 'c'},
+        {"file", 1, 0, 0},
+        {0, 0, 0, 0}
+      };
+
+      c = getopt_long (argc, argv, "abc:d:012",
+		       long_options, &option_index);
+      if (c == -1)
+	break;
+
+      switch (c)
+        {
+        case 0:
+          printf ("Option %s", long_options[option_index].name);
+          if (optarg)
+            printf (" mit Argument %s", optarg);
+          printf ("\\n");
+          break;
+
+        case '0':
+        case '1':
+        case '2':
+          if (digit_optind != 0 && digit_optind != this_option_optind)
+            printf ("digits occur in two different argv-elements.\\n");
+          digit_optind = this_option_optind;
+          printf ("Option %c\\n", c);
+          break;
+
+        case 'a':
+          printf ("Option a\\n");
+          break;
+
+        case 'b':
+          printf ("Option b\\n");
+          break;
+
+        case 'c':
+          printf ("Option c mit Wert `%s'\\n", optarg);
+          break;
+
+        case 'd':
+          printf ("Option d mit Wert `%s'\\n", optarg);
+          break;
+
+        case '?':
+          break;
+
+        default:
+          printf ("?? getopt lieferte Zeichcode 0%o zurück ??\\n", c);
+        }
+    }
+
+  if (optind < argc)
+    {
+      printf ("Nichtoptionselemente von ARGV: ");
+      while (optind < argc)
+      printf ("%s ", argv[optind++]);
+      printf ("\\n");
+    }
+
+  exit (0);
+}
+.fi
+.SH "BUGS"
+Diese Handbuchseite ist verwirrend.
+.SH "KONFORM ZU"
+.TP
+\fBgetopt()\fP:
+POSIX.1, vorausgesetzt, die Umgebungsvariable POSIXLY_CORRECT ist gesetzt.
+Anderenfalls sind die Elemente von \fIargv\fP nicht wirklich konstant,
+da wir sie vertauschen.  Wir geben vor, sie seien konstant, um kompatibel
+zu anderen Systemen zu sein.
