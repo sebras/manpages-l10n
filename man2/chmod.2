@@ -1,0 +1,208 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified by Michael Haardt (michael@moria.de)
+.\" Modified Wed Jul 21 20:18:11 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Jan 12 14:31:17 MET 1997 by Michael Haardt
+.\"   (michael@cantor.informatik.rwth-aachen.de): NFS details
+.\" Translated into german by Daniel Kobras (kobras@linux.de)
+.\"
+.TH CHMOD 2 "23. Januar 2001" "Linux 2.0.32" "Systemaufrufe"
+.SH BEZEICHNUNG
+chmod, fchmod \- Zugriffsrechte einer Datei ändern.
+.SH "ÜBERSICHT"
+.B #include <sys/types.h>
+.br
+.B #include <sys/stat.h>
+.sp
+.BI "int chmod(const char *" Pfad ", mode_t " Rechte );
+.br
+.BI "int fchmod(int " fd ", mode_t " Rechte );
+.SH BESCHREIBUNG
+Die Zugriffsrechte der durch
+.I Pfad
+beziehungsweise
+.I fd
+angegebenen Datei oder des Verzeichnisses werden geändert.  Die
+.I Rechte
+werden angegeben durch bitweises Oder der folgenden Werte:
+.RS
+.sp
+.TP 1.0i
+S_ISUID
+04000 Setze Benutzerkennung bei Ausführung;
+.TP
+S_ISGID
+02000 Setze Gruppenkennung bei Ausführung;
+.TP
+S_ISVTX
+01000 'Sticky-Bit' (Erklärung siehe unten);
+.TP
+S_IRUSR (S_IREAD)
+00400 Leserechte für Eigentümer;
+.TP
+S_IWUSR (S_IWRITE)
+00200 Schreibrechte für Eigentümer;
+.TP
+S_IXUSR (S_IEXEC)
+00100 Ausführrechte für Eigentümer, bei Verzeichnissen: Eigentümer darf
+Verzeichnis durchsuchen;
+.TP
+S_IRGRP
+00040 Leserechte für Gruppe;
+.TP
+S_IWGRP
+00020 Schreibrechte für Gruppe;
+.TP
+S_IXGRP
+00010 Ausführrechte für Gruppe, bei Verzeichnissen: Gruppe darf
+Verzeichnis durchsuchen;
+.TP
+S_IROTH
+00004 Leserechte für andere;
+.TP
+S_IWOTH
+00002 Schreibrechte für Gruppe;
+.TP
+S_IXOTH
+00001 Ausführrechte für andere, bei Verzeichnissen: andere dürfen
+Verzeichnis durchsuchen;
+.sp
+.RE
+Die effektive Benutzerkennung des Prozesses muß entweder null sein, oder sie
+muß mit der Kennung des Dateieigentümers übereinstimmen.
+.PP
+Ist die effektive Benutzerkennung des Prozesses nicht null und entspricht
+die Gruppenzugehörigkeit der Datei nicht einer der Gruppen des
+aufrufenden Prozesses, so wird das S_ISGID-Bit abgeschaltet, ohne daß ein
+Fehler zurückgeliefert wird.
+Abhängig vom verwendeten Dateisystem können die S_ISUID- und S_ISGID-Bits
+gelöscht werden, sobald die Datei beschrieben wird.
+.PP
+Auf manchen Dateisystemen
+darf lediglich der Administrator das Sticky-Bit setzen. Das Sticky-Bit kann
+verschiedene Bedeutungen haben, beispielsweise kann in Verzeichnissen
+mit gesetztem Sticky-Bit eine Datei nur vom Dateieigentümer oder dem
+Administrator (root) gelöscht werden.
+.PP
+Auf NFS-Dateisystemen findet die Zugriffskontrolle auf dem Server statt,
+während der Klient selbst seine offenen Dateien verwaltet. Verschärfte
+Zugriffsrechte treten somit augenblicklich in Kraft. Erweiterte Zugriffsrechte
+hingegen werden erst nach und nach an andere Klienten weitergegeben.
+.SH "RÜCKGABEWERT"
+Sind die Zugriffsrechte erfolgreich geändert, wird 0 zurückgegeben.
+Tritt ein Fehler auf, wird \-1 zurückgegeben und
+.I errno
+entsprechend der Fehlerursache gesetzt.
+.SH FEHLER
+Welche Fehler im einzelnen zurückgeliefert werden, hängt ab vom verwendeten
+Dateisystem. Die folgenden Auflistungen nennen lediglich die allgemein
+üblichen.
+.PP
+Zunächste die Fehler für
+.BR chmod :
+.TP
+.B EPERM
+Die effektive Benutzerkennung ist weder null, noch entspricht sie dem
+Eigentümer der Datei.
+.TP
+.B EROFS
+Die angegebene Datei befindet sich auf einem Dateisystem, das nur lesbar ist.
+.TP
+.B EFAULT
+.I Pfad
+zeigt auf einen Speicherbereich außerhalb des erlaubten Adreßraums des
+Prozesses.
+.TP
+.B ENAMETOOLONG
+.I Pfad
+ist zu lang.
+.TP
+.B ENOENT
+Der angegebene Pfadname existiert nicht.
+.TP
+.B ENOMEM
+Das Betriebssystem verfügt nicht über ausreichend Speicher, um die Anweisung
+auszuführen.
+.TP
+.B ENOTDIR
+Eine Komponente von
+.I Pfad
+ist kein Verzeichnis.
+.TP
+.B EACCES
+Dem Prozeß ist nicht erlaubt, eine Komponente von
+.I Pfad
+zu durchsuchen.
+.TP
+.B ELOOP
+.I Pfad
+enthält zu viele symbolische Verweise.
+.TP
+.B EIO
+Ein Ein-/Ausgabefehler ist aufgetreten.
+.PP
+Übliche Fehler bei
+.BR fchmod :
+.TP
+.B EBADF
+.I fd
+ist kein gültiger Dateideskriptor.
+.TP
+.B EROFS
+Siehe oben.
+.TP
+.B EPERM
+Siehe oben.
+.TP
+.B EIO
+Siehe oben.
+.SH "KONFORM ZU"
+Der
+.BR chmod -Aufruf
+ist vereinbar mit SVr4, SVID, POSIX, X/OPEN und 4.4BSD.
+SVr4 legt die zusätzlichen Fehler EINTR, ENOLINK and EMULTIHOP fest, jedoch
+kein ENOMEM.  In POSIX.1 fehlen die EFAULT, ENOMEM, ELOOP und EIO
+Fehlerbedingungen sowie die Makros
+\fBS_IREAD\fP, \fBS_IWRITE\fP and \fBS_IEXEC\fP.
+.PP
+Der
+.BR fchmod -Aufruf
+ist vereinbar mit 4.4BSD und SVr4.
+SVr4 legt die zusätzlichen Fehler EINTR und ENOLINK fest.
+POSIX verlangt die
+.BR fchmod -Funktion,
+sofern zumindest eines von
+.B _POSIX_MAPPED_FILES
+und
+.B _POSIX_SHARED_MEMORY_OBJECTS
+definiert ist. Zudem beschreibt es die zusätzlichen Fehler ENOSYS und
+EINVAL, nicht jedoch EIO.
+.PP
+Weder POSIX, noch X/OPEN dokumentieren das Sticky-Bit.
+.SH "SIEHE AUCH"
+.BR open (2),
+.BR chown (2),
+.BR execve (2),
+.BR stat (2),
