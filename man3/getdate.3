@@ -1,0 +1,84 @@
+.TH GETDATE 3
+.SH NAME
+	getdate() \- Rechnet aus einem String eine struct tm 
+.br
+.SH SYNOPSIS
+.BR"#define __USE_XOPEN_EXTENDED"
+.br
+.B "#include <time.h>"
+.sp
+.BI "struct tm *getdate (const char *string);"
+.sp
+.BI "extern int getdate_err;"
+.sp 2
+.B "#define __USE_GNU"
+.sp
+.BI "int getdate_r (const char *string,struct tm *resbufp);"
+.br
+
+.SH DESCRIPTION
+.B getdate() 
+is ein Interface zu
+.B strptime(). 
+Diese Funktion berechnet aus einem String ebenfall ein struct tm.
+Aber anders als
+.B strptime() 
+wird der Formatstring fuer
+.B getdate() 
+aus einer Datei gelesen zu der die Variable
+.B DATEMSK
+zeigt. Es ist auch möglich dort mehrere Formate zu speichern.
+Existiert 
+.B DATEMSK
+nicht kommt es zu einem Fehler.  Die Formatbeschreibung erfolgt mit den
+gleichen Symbolen wie bei
+.B strptime(). 
+
+Die Fehler werden über die globale Variable 
+.B getdate_err 
+zurueckgegen:
+.RS
+.nf
+.in 8
+.ta 1n 40n
+1  DATEMSK ist NULL oder nicht definiert,
+2  Die Datei kann nicht gelesen werden,
+3  Dateistatus kann nicht ermittelt werden,
+4  Die Datei ist keine richtige Datei,
+5  Es ist ein Lesefehler aufgetreten
+6  Es gibt nicht mehr genuegend Speicher
+7  Keine Zeile in der Datei passt zum String
+8  falsche Eingabe. Z.B:
+   31 Februar oder eine Zeit die sich nicht als time_t 
+   dargestellen laesst ( Sekunden seit 01.01.1970 00:00:00 UTC)
+.ta
+.sp
+.fi
+.RE
+.B getdate() 
+kann nicht in Threads benutzt werden, wg.
+.B getdate_err
+und dem statischen Buffer in dem das Ergebnis geliefert wird.
+GNU stellt daher eine thread-sicher Variant.  Die Funktion ist gleich.
+Das Ergebis wird in den Buffer RESBUFP geschrieben und falle eines 
+Fehlers wird dort der selbe Wert ( !=0 ) geschrieben, den man sonst in
+.B getdate_err
+findet.
+
+.SH ENVIRONMENT
+Die Variable
+.B DATEMSK 
+ist wichtig.
+.B TZ 
+und 
+.B LC_TIME 
+werden von strptime() benutzt.
+
+.SH CONFORMING TO
+.BR	ISO 9899
+
+.SH SEE ALSO
+.BR strptime (3),
+.BR strftime (3),
+.BR time (3),
+.BR localtime (3)
