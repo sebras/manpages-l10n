@@ -1,0 +1,119 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"                               1993 Michael Haardt, Ian Jackson.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Wed Jul 21 19:36:29 1993, Rik Faith (faith@cs.unc.edu)
+.\" Modified 21 Aug 1994 by Michael Chastain (mec@shell.portal.com):
+.\"   Removed note about old kernel (pre-1.1.44) using wrong id on path.
+.\" German Translation Tue Feb 26 21:22:00 1996 Elmar Jansen (ej@pumuckel.gun.de)
+.\"
+.TH ACCESS 2 "26 Februar 1996" "Linux 1.1.46" "Systemaufrufe"
+.SH NAME
+access \- check user's permissions for a file
+access \- prüft dir Rechte eines Users an einer Datei
+.SH SYNOPSIS
+.nf
+.B #include <unistd.h>
+.sp
+.BI "int access(const char *" pathname ", int " mode );
+.fi
+.SH BESCHREIBUNG
+.B access
+prüft ob der Prozess die Rechte hat die Datei 
+(oder das Dateisystem) 
+.IR pathname 
+zu lesen, zu schreiben oder die
+Existenz zu prüfen.
+
+.I mode
+ist eine Maske die eines oder mehrere der Werte
+.BR R_OK ", " W_OK ", " X_OK " and " F_OK .
+
+.BR R_OK ", " W_OK " and " X_OK
+enthält. Sie prüft die Schreib- Lese- oder Ausführungsrechte.
+.B F_OK
+prüft ob weitere Tests für die Existenz der Datei erlaubt sind
+(Dies hängt von den Rechten der Directory's ab die im Pfad der
+Datei vorkommen).
+
+The check is done with the process's
+Dieser Test wird mit der
+.I realen
+uid und gid des Prozesses durchgeführt, nicht mit den effektiven Id's.
+Dadurch haben set-UID Programme die Möglichkeit die wahre Identität
+des Aufrufers festzustellen.
+
+Es werden nur die Zugriffsrechte geprüft, nicht der Dateityp oder dessen
+Inhalt. Dies bedeutet für Directory's folgendes. Ist ein Directory
+beschreibbar, so können in ihm Dateien angelegt werden, aber das Directory
+kann nicht wie eine Datei beschreiben werden. Eine DOS-Datei kann als
+Ausführbar gekennzeichnet sein aber ein
+.BR execve (2)
+kann trotzdem fehlschlagen.
+.SH "RÜCKGABEWERT"
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1
+zurückgegeben und
+.I errno
+entsprechend gesetzt.
+.SH ERRORS
+.TP 0.8i
+.B EACCES
+Der gewünschte Zugriff wurde verboten, entweder auf die Datei oder
+auf eines der Diractory's in
+.IR pathname .
+.TP
+.B EFAULT
+.IR pathname " points outside your accessible address space."
+.IR pathname " zeigt außerhalb des Benutzer-Adressraums."
+.TP
+.B EINVAL
+.IR mode " was incorrectly specified."
+.IR mode " wurde falsch angegeben."   
+.TP
+.B ENAMETOOLONG
+.IR pathname " ist zu lang."
+.TP
+.B ENOENT
+Eine Komponente des Directory's 
+.I pathname
+existiert nicht oder ist ein kreisender symbolisher Link.
+.TP
+.B ENOTDIR
+Ein Teil von
+.I pathname
+wird als Directory benutzt obwohl es keines ist.
+.TP
+.B ENOMEM
+Es war nicht genügend Kernel-Memory verfügbar.
+.TP
+.B ELOOP
+.I pathname
+beinhaltet einen Verweis auf einen kreisenden symbolischen Link,
+beziehungsweise auf einen symbolischen Link der auf sich selbst
+verweist.
+.SH "KONFORM ZU"
+SVID, AT&T, POSIX, X/OPEN, BSD 4.3
+.SH "SIEHE AUCH"
+.BR stat "(2), " open "(2), " chmod "(2), " chown "(2), "
+.BR setuid "(2), " setgid (2).
