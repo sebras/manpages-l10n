@@ -1,4 +1,11 @@
+.\" Copyright for original english version
+.\" This file is in the public domain, so clarified as of
+.\" 1996-06-05 by Arthur David Olson (arthur_david_olson@nih.gov).
+.\"
+.\" The following applies only to the german translation
+.\"
 .\"  Copyright (c) 2001 Walter Harms <walter.harms@informatik.uni-oldenburg.de>
+.\"                2001 Martin Schulze <joey@infodrom.org>
 .\"
 .\"  This program is free software; you can redistribute it and/or modify
 .\"  it under the terms of the GNU General Public License as published by
@@ -32,7 +39,7 @@ verwendet werden, beginnen mit den magischen Zeichen "TZif", um sie
 als Zeitzonen-Dateien zu identifizieren.  Die darauf folgenden 16 Byte
 sind für zukünftige Dinge reserviert.
 Anschließend folgen sechs 32bit-Werte (long).  (Wichtig: Die Daten kommen
-in natürlicher Reihenfolge: Highbyte zu erst). Die sechs Werte bedeuten:
+in natürlicher Bytefolge: Highbyte zu erst). Die sechs Werte bedeuten:
 .TP
 .I tzh_ttisgmtcnt  
 Anzahl der hinterlegten UTC/lokal-Indikatoren in der Datei.
@@ -54,49 +61,96 @@ gespeichert sind (darf nicht null sein).
 Anzahl der Buchstaben für die Abkürzungen der Zeitzone.
 .PP
 
-Nachdem Header folgen tzh_timecnt 32bit Werte (long) in steigender Wertigkeit. 
+Nachdem Header folgen
+.I tzh_timecnt
+32bit-Werte vom Typ
+.B long
+in steigender Wertigkeit.  Auch sie werden in natürlicher Bytefolge geschrieben.
 Jeder Wert ist als Epochen-Wert (Sekunden seit 01.01.1970) zu interpretieren.
-Zu jedem dieser Zeitpunkte gibt es einen Wechsel Sommer-Winterzeit
+Zu jedem dieser Zeitpunkte gibt es einen Wechsel der Sommer- bzw. Winterzeit
 (der auch von
 .BR time (2)
 zurückgegeben wird).
-Als nächstes kommen tzh_timecnt unsigned char Werte. Diese sind Indizes für die
-nachfolgenden ttinfo Strukturen.
-
+Darauf folgen
+.I tzh_timecnt Werte vom Typ
+.BR unsigned char .
+Jeder dieser Werte besagt, welcher der verschiedenen lokalen
+Zeit-Typen, die in der Datei beschrieben werden, mit dem
+Zeitberechnungs-Wechsel an der gleichen Positiion verknüpft ist.  Die
+Werte sind als Indizes für die nachfolgenden
+.BR ttinfo \-Strukturen
+zu verstehen, die als nächstes in der Datei stehen.  Diese Strukturen
+sind wie folgt definiert.
+.in +.5i
+.sp
+.nf
+.ta .5i +\w'unsigned int\0\0'u
 struct ttinfo {
-                 long          tt_gmtoff;
-                 int           tt_isdst;    /* wirklich 1 char ? */
-                 unsigned int  tt_abbrind;  /* wirklich 1 char ? */
-            };
-.TP
-.I tt_gmtof 
-  Abstand in Sekunden zu UTC
-.TP
-.I tt_isdst 
-  Marker für Sommerzeit (genutzt für tm_isdst in struct tm)
-.TP
-.I tt_abbrind 
-  Index für den Zonennamen
-
-Danach folgen ein oder mehrere Strings mit der Gesamtlänge tzh_charcnt.
- 
-Nachschließen folgen tzh_leapcnt paare von 32Bit Werten.
-Der erste Wert gibt an wan die Schaltzeit ist, der Zweite die Anzahl der Sekunden. Die
-Werte kommen in aufsteigender Reihenfolge.
-
-Nun kommen tzh_ttisstdcnt standard/wall Marker, jeweils ein 8Bit Wert. Sie
-besagen ob die Schaltzeiten als standard Zeil oder als Wallzeit zu interpretieren sind.
-Das wird benötigt, wenn Zeitzonen Files für POSIX Zeitzonenvariablen benutzt werden.
-(Was heist das ??)
-
-Zum Schluß kommen tzh_ttisgmtcnt 8bit UTC/Local Indikatoren. Sie besagen ob die
-Schaltzeiten als lokale Zeit oder als UTC interpretiert werden müssen.
-Das wird benötigt, wenn Zeitzonen Files für POSIX Zeitzonenvariablen benutzt werden.
-
-Falls tzh_timecnt Null ist oder die Zeit ist frühre als die erste Schaltzeit benutzt 
-localtime(3) die erste Standardzeit ttinfo Struktur im File. Falls keine existiert,
- die erste ttinfo Struktur. 
-
+	long	tt_gmtoff;
+	int	tt_isdst;
+	unsigned int	tt_abbrind;
+};
+.in -.5i
+.fi
+.sp
+Jede derartige Struktur besteht aus einem 4-Byte-Wert für
+.I tt_gmtoff
+vom Typ
+.BR long ,
+geschrieben in natürlicher Bytefolge, gefolgt von einem 1-Byte-Wert für
+.I tt_isdst
+und einem 1-Byte-Wert für
+.IR tt_abbrind .
+In jeder Struktur legt
+.I tt_gmtoff
+die Anzahl Sekunden fest, die zu UTC hinzugefügt werden,
+.I tt_isdst
+bestimmt, ob
+.I tm_isdst
+von 
+.BR localtime (3)
+gesetzt werden soll und
+.I tt_abbrind
+entspricht dem Index im Array der Abkürzungszeichen für Zeitzonen, die den
+.IR ttinfo \-Strukturen
+in der Datei folgen.
+.PP
+Als nächstes gibt es
+.I tzh_leapcnt
+Paare von 4-Byte-Werten, geschrieben in natürlicher Bytefolge.  Der
+erste Wert jedes Paares bezeichnet die Zeit (zurückgegeben von
+.BR time (2)),
+an dem die Schaltsekunden auftreten.  Der zweite bestimmt die
+.I gesamte
+Anzahl der Schaltsekunden, die nach der angegebenen Zeit verwendet
+werden sollen.  Die Wertepaare sind in aufsteigender folge nach der
+Zeit sortiert.
+.PP
+Nun folgen
+.I tzh_ttisstdcnt
+standard/wall-Indikatoren, jeder wird als 1-Byte-Wert gespeichert.
+Sie geben an, ob die Umstellungszeiten, die mit den lokalen Zeit-Typen
+zusammenhängen, als Standard-Zeit oder als "wall clock time" angegeben
+wurden.  Sie werden verwendet, wenn eine Zonendatei dafür benutzt
+wird, POSIX-artige Umgebungsvariablen für Zeitzonen zu verarbeiten.
+.PP
+Schließlich gibt es
+.I tzh_ttisgmtcnt
+UTC/local-Indikatoren, jeder als 1-Byte-Wert gespeichert.  Sie
+besagen, ob die Umstellungszeit, die mit den lokalen Zeit-Typen
+zusammenhängen, als UTC oder als lokale Zeit angegeben wurden.  Sie
+werden verwendet, wenn eine Zonendatei dafür benutzt wird,
+POSIX-artige Umgebungsvariablen für Zeitzonen zu verarbeiten.
+.PP
+.I Localtime
+verwendet die ersten
+.IR ttinfo \-Eintrag
+für Standard-Zeit in der Datei (oder einfach den ersten
+.I- ttinfo \-Eintrag,
+wenn kein Standard-Zeit-Eintrag existiert),
+wenn
+.I tzh_timecnt
+null ist oder das Zeit-Argument kleiner ist als der erste
+Umstellungszeitpunkt, der in der Datei beschrieben wird.
 .SH "SIEHE AUCH"
-.BR localtime (3),
-.BR tzset (3).
+.BR newctime (3).
