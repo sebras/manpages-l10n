@@ -27,11 +27,11 @@
 .\" opterr and getopt_long_only.  Clarified explanations (borrowing heavily
 .\" from the source code).
 .\" 
-.\" Modified Mon May 27 21:37:47 1996 by Martin Schulze (joey@linux.de)
-.\" Translated to German Fri Jan 03 1997 by Patrick Rother (krd@gulu.net)
+.\" Modified Mon May 27 21:37:47 1996 by Martin Schulze <joey@linux.de>
+.\" Translated to German Fri Jan 03 1997 by Patrick Rother <krd@gulu.net>
 .\" 
 .TH GETOPT 3  "31. Dezember 1996" "GNU" "Bibliotheksfunktionen"
-.SH NAME
+.SH BEZEICHNUNG
 getopt \- werte Kommandozeilenoptionen aus
 .SH ÜBERSICHT
 .nf
@@ -43,6 +43,7 @@ getopt \- werte Kommandozeilenoptionen aus
 .BI "extern char *" optarg ;
 .BI "extern int " optind ", " opterr ", " optopt ;
 .sp
+.B #define _GNU_SOURCE
 .B #include <getopt.h>
 .sp
 .BI "int getopt_long(int " argc ", char * const " argv[] ",
@@ -76,7 +77,7 @@ der nächste Aufruf von \fBgetopt()\fP die Suche mit dem folgenden
 Optionszeichen oder \fIargv\fP-Element fortsetzen kann.
 .PP
 Wenn es keine weiteren Optionszeichen gibt, gibt \fBgetopt()\fP 
-\fBEOF\fP zurück.  Dann ist \fIoptind\fP der Index in \fIargv\fP des ersten
+-1 zurück.  Dann ist \fIoptind\fP der Index in \fIargv\fP des ersten
 \fIargv\fP-Elementes, das keine Option ist.
 .PP
 .I optstring
@@ -87,12 +88,24 @@ dem selben \fIargv\fP-Element oder den Text des folgenden \fIargv\fP-Elementes
 in
 .IR optarg
 plaziert.
-Zwei Doppelpunkte bedeuten, daß diese Option ein Optionales Argument
+Zwei Doppelpunkte bedeuten, daß diese Option ein optionales Argument
 nimmt; wenn es Text im aktuellen \fIargv\fP-Element, wird er in
 \fIoptarg\fP zurückgegeben, anderenfalls wird \fIoptarg\fP auf Null gesetzt.
-.PP
-Per Vorgabe vertauscht \fBgetopt()\fP den Inhalt von \fIargv\fP bei
-durchsuchen, so daß eventuell alle Nichtoptionen am Ende stehen.  Zwei andere
+Dieses ist eine GNU-Erweiterung.  Wenn
+.I optstring
+.B W
+gefolgt von einem Semikolon enthält, wird
+.B \-W foo
+wie
+.B \-\-foo
+interpretiert.  (Die Option
+.B \-W
+ist reserviert von POSIX.2 für die Implementierung von Erweiterungen.)
+Dieses Verhalten ist eine GNU-Erweiterung, die nicht verfügbar war in
+Bibliotheken vor GNU libc 2.
+
+Per Vorgabe vertauscht \fBgetopt()\fP den Inhalt von \fIargv\fP beim
+Durchsuchen, so daß eventuell alle Nichtoptionen am Ende stehen.  Zwei andere
 Modi sind ebenfalls implementiert.  Wenn das erste Zeichen von \fIoptstring\fP
 ein `+' ist, oder die Umgebungsvariable POSIXLY_CORRECT gesetzt ist, dann
 stoppt die Optionsbearbeitung sobald ein Argument auftritt, dass keine Option
@@ -112,8 +125,8 @@ Fehlernachricht verhindern durch setzen von \fIopterr\fP auf 0.
 Die Funktion
 .B getopt_long()
 arbeitet wie
-.B getopt() ,
-ausser dass sie auch lange Optionsnamen unterstützt, die mit zwei Minuszeichen
+.BR getopt() ,
+bis auf daß sie auch lange Optionsnamen unterstützt, die mit zwei Minuszeichen
 beginnen.  Lange Optionsnamen dürfen abgekürzt werden, wenn die Abkürzung
 eindeutig ist, oder exact einer definierten Option entspricht.  Eine
 lange Option darf einen Parameter der Form
@@ -124,7 +137,7 @@ nehmen.
 .PP
 .I longopts
 ist ein Zeiger auf das ersten Element eines Feldes der Struktur
-.B struct option ,
+.BR "struct option" ,
 die in
 .B <getopt.h>
 deklariert ist als
@@ -181,7 +194,7 @@ Die Funktion
 .B getopt()
 gibt das Optionszeichen zurück wenn die Option gefunden wurde, `:' wenn
 ein Parameter fehlte für eine der Optionen, `?' für ein unbekanntes
-Optionszeichen, oder \fBEOF\fP für das Ende der Optionsliste.
+Optionszeichen, oder -1 für das Ende der Optionsliste.
 .PP
 \fBgetopt_long()\fP und \fBgetopt_long_only()\fP geben auch das
 Optionszeichen zurück wenn eine kurze Option gefunden wurde.  Für eine
@@ -195,6 +208,17 @@ zusätzlich jedoch `?' für eine unzureichende Übereinstimmung oder einen
 .B POSIXLY_CORRECT
 Wenn dies gesetzt ist, dann stoppt die Optionsbearbeitung sobald eine Argument
 auftritt, das keine Option ist.
+.TP
+.B _<PID>_GNU_nonoption_argv_flags_
+Diese Variable wurde in
+.B bash
+2.0 verwendet, um mit der GNU libc zu kommunizieren und ihr
+mitzuteilen, welche Argumente die Ergebnisse von
+Wildcard-Expandierungen sind und daher nicht als Optionen verstanden
+werden sollten.  Dieses Verhalten wurde in
+.B bash
+2.01
+wieder gelöscht, der Support dafür bleibt jedoch in der GNU libc enthalten.
 .SH BEISPIEL
 Das folgende Beispielprogramm veranschaulicht die Benutzung von
 .BR getopt_long()
@@ -284,12 +308,18 @@ main (argc, argv)
   exit (0);
 }
 .fi
-.SH "BUGS"
-Diese Handbuchseite ist verwirrend.
+.SH "FEHLER"
+Die POSIX.2-Spezifikation von
+.B getopt()
+enthält einen technischen Fehler, der in der POSIX.2-Interpretation
+150 beschrieben wird.  Die GNU-Implementierung (und wahrscheinlich
+auch alle anderen Implementierungen) unterstützen das korrekte
+Verhalten anstatt des spezifizierten.
+
 .SH "KONFORM ZU"
 .TP
 \fBgetopt()\fP:
-POSIX.1, vorausgesetzt, die Umgebungsvariable POSIXLY_CORRECT ist gesetzt.
+POSIX.2, vorausgesetzt, die Umgebungsvariable POSIXLY_CORRECT ist gesetzt.
 Anderenfalls sind die Elemente von \fIargv\fP nicht wirklich konstant,
-da wir sie vertauschen.  Wir geben vor, sie seien konstant, um kompatibel
+da wir sie vertauschen.  Wir geben im Prototypen vor, sie seien konstant, um kompatibel
 zu anderen Systemen zu sein.

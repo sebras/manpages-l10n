@@ -38,7 +38,8 @@
 .\" Converted for Linux, Mon Nov 29 14:55:24 1993, faith@cs.unc.edu
 .\" Added section to BUGS, Sun Mar 12 22:28:33 MET 1995,
 .\"                   Thomas.Koenig@ciw.uni-karlsruhe.de
-.\" Translated into german by Roland Krause (Rokrause@aol.com)
+.\" Translated into german by Roland Krause <Rokrause@aol.com>
+.\" Fri Jan 12 18:01:33 2001: Modified by Martin Schulze <joey@infodrom.north.de>
 .\"
 .TH SETBUF 3 "26. Januar 1997" "BSD MANPAGE" "Bibliotheksfunktionen"
 .SH BEZEICHNUNG
@@ -49,48 +50,37 @@ setbuf, setvbuf \- Stream-Puffer Funktionen
 .sp
 .BI "int setbuf( FILE *" stream ", char *" buf );
 .br
+.BI "void setbuffer(FILE *" stream ", char *" buf ", size_t"  size );
+.br
+.BI "void setlinebuf(FILE *" stream );
+.br
 .BI "int setvbuf( FILE *" stream ", char *" buf ", int " mode
 .BI ", size_t " size );
 .ad
 .SH BESCHREIBUNG
-Die Standard I/O Bibliothek
-.B STDIO
-puffert standardmäßig alle Daten, die von einem Stream gelesen oder in
-einem Stream geschrieben werden. Die einzige Ausnahme bilden hier Streams,
-die einem Terminal zugeordnet sind wie zum Beispiel
-.IR stdin .
-Die Größe dieses Puffers ist in
-.I stdio.h
-festgelegt und beträgt
-.B BUFSIZ
-Byte. Die Art der Pufferung kann mit den hier beschriebenen Funktionen
-modifiziert werden.
-.br
-Drei Arten der Pufferung sind möglich: Nicht gepuffert, Blockpufferung
-und Zeilenpufferung. Bei einem ungepufferten Ausgabe-Stream erscheinen
-die Informationen in einer Datei oder auf einem Terminal unmittelbar nach
-dem Schreiben. Bei einer Blockpufferung werden die geschriebenen Zeichen
-in einem Puffer gesammelt und erst geschrieben, wenn dieser Puffer voll ist.
-Bei einer Zeilenpufferung werden Zeichen bis zu einem Zeilenvorschub
-(LF, 0x0A) in einem Puffer gesammelt und dann ausgegeben.
-.PP
-Die Funktion
+
+Die drei Typen der verfügbaren Pufferungen sind nicht-gepuffert,
+block-gepuffert und zeilen-gepuffert.  Wenn ein Ausgabe-Stream
+ungepuffert ist, erscheinen die Informationen in der Zieldatei oder
+auf dem Terminal direkt nachdem sie geschrieben wurden.  Wenn die
+Ausgabe block-gepuffert ist, werden viele Zeichen erst einmal
+gesammelt und dann in einem Rutsch ausgegeben.  Wenn die Ausgabe
+zeilen-gepuffert ist, werden die Zeichen bis zu einem Newline-Zeichen
+gesammelt und erst dann ausgegeben, oder Eingaben wurden von einem
+beliebigen Datenstrom gelesen, der mit dem Eingabegerät verbunden ist
+(üblicherweise stdin).  Die Funktion
 .BR fflush (3)
-wird genutzt, um einen Stream-Puffer zu leeren und bewirkt ein
-sofortiges Schreiben der Daten
-(siehe auch
-.BR fclose (3)).
-.PP
-Im Normalfall verwenden alle Datei-Streams einen Blockpuffer. Bei
-der ersten I/O Operation auf eine Datei wird ein
+darf dazu verwendet werden, ein Leeren des Puffers zu erzwingen.
+(Siehe auch
+.BR fclose (3))
+Normalerweise sind alle Dateien block-gepuffert.  Wenn die erste
+I/O-Operation auf einer Datei durchgeführt wird, wird
 .BR malloc (3)
-aufgerufen, um einen Puffer zu belegen. 
-Wenn ein Stream einem Terminal zugeordnet ist (wie im Normalfall
-.IR stdout )
-wird Zeilenpufferung verwendet. Der Stream für die Fehlerausgabe
-.I stderr
-ist immer ungepuffert.
-.PP
+aufgerufen und ein Puffer wird angelegt.  Wenn ein Datenstrom mit
+einem Terminal verbunden ist (wie stdout normalerweise), ist er
+zeilen-gepuffert.  Der normale Fehlerstrom (stderr) ist per default
+immer nicht-gepuffert.
+
 Die Funktion
 .B setvbuf
 wird genutzt, um zu jedem beliebigen Zeitpunkt die Pufferung eines
@@ -110,7 +100,7 @@ Zeilenpufferung
 Blockpufferung
 .RE
 .PP
-Außer bei ungepufferten Dateien sollte mit
+Mit Ausnahme von ungepufferten Dateien sollte mit
 .I buf
 ein Zeiger auf einen Puffer angegeben werden, der mindestens
 .I size
@@ -128,52 +118,54 @@ kann nur dann auf einen geöffneten Stream angewendet werden, wenn er nicht
 ``aktiv'' ist. Das heißt, vor der ersten Ein- bzw. Ausgabe oder unmittelbar
 nach einem
 .BR fflush .
-.PP
+
+Die anderen drei Funktionen sind im Endeffekt einfache Aliase für
+Aufrufe von
+.BR setvbuf .
 Die Funktion
 .B setbuf
-entspricht folgendem Aufruf:
+entspricht genau dem folgendem Aufruf:
 .PP
   setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
-.PP
-Diese Funktion initialisiert Blockpufferung mit einem
-.B BUFSIZ
-großen Puffer für den Stream
-.IR stream ,
-wenn
-.I buf
-ungleich NULL ist. Wenn
-.I buf
-gleich NULL ist, wird ungepufferter Betrieb initialisiert.
-.SH HINWEIS
-Die Beschreibung der Funktionen
+
+Die Funktion
 .B setbuffer
-und
+ist die gleichen, bis auf die Tatsache, daß die Größe des Puffers vom
+Aufrufer bestimmt wird anstatt von der Voreinstellung
+.B BUFSIZ
+übernommen wird.  Die Funktion
 .B setlinebuf
-wurden nicht aus der englischsprachigen Version dieses Manuals übernommen.
-Diese Funktionen sind unter LINUX nicht verfügbar und entsprechen auch sonst
-keinem Standard.
-.SH STANDARDS
+entspricht genau dem folgendem Aufruf:
+.PP
+  setvbuf(stream, (char *)NULL, _IOLBF, 0);
+
+.SH KONFORM ZU
 Die Funktionen
 .B setbuf
 und
 .B setvbuf
 sind konform zu ANSI C3.159-1989 (ANSI C).
-.SH BUGS
+.SH Fehler
+Die Funktionen
+.B setbuffer
+und
+.B setlinebuf
+sind keine portablen Versionen von BSD vor 4.2BSD,
 .B setbuf
 nutzt immer eine nichtoptimale Puffergröße und sollte deshalb
 vermieden werden.
-.P
+
 Es muß sichergestellt sein, daß der Puffer
 .I buf
 zu dem Zeitpunkt, zu dem der Stream
 .I stream
-geschlossen wird, noch exisitiert.
+geschlossen wird, noch exisitiert, was ebenfalls bei Programmende geschieht.
 .P
 Im folgenden Beispiel wird der Stream
 .I stdin
 erst geschlossen wenn
 .I buf
-nicht mehr existiert:
+nicht mehr existiert.  Dieser Code ist nicht zulässig:
 .nf
 .sp
 #include <stdio.h>
@@ -188,8 +180,9 @@ int main()
 .sp
 .SH "SIEHE AUCH"
 .BR fopen (3),
+.BR fflush (3),
 .BR fclose (3),
 .BR fread (3),
 .BR malloc (3),
 .BR puts (3),
-.BR printf (3),
+.BR printf (3).
