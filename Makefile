@@ -10,7 +10,7 @@ MANDIR=$(prefix)/man/de
 example: remove gz install
 
 remove:
-	for i in man?; do for j in $$i/*; do rm -f $(MANDIR)/$$i/$$j; done; done
+	for i in man?; do for j in $$i/*; do rm -f $(MANDIR)/$$j; done; done
 
 gz:
 	for i in man?; do gzip $$i/*; done
