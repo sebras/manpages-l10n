@@ -1,0 +1,197 @@
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single Unix specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\" Translated by Walter Harms <walter.harms@informatik.uni-oldenburg.de>
+.\"
+.\"
+.TH WPRINTF 3  "November 20, 1999" "GNU" "Linux Programmer's Manual"
+.SH NAME
+wprintf, fwprintf, swprintf, vwprintf, vfwprintf, vswprintf \- Formatierte Ausgabe mit "wide characters" 
+.SH SYNOPSIS
+.nf
+.B #include <stdio.h>
+.B #include <wchar.h>
+.sp
+.BI "int wprintf (const wchar_t* " format ", ...);"
+.BI "int fwprintf (FILE* " stream ", const wchar_t* " format ", ...);"
+.BI "int swprintf (wchar_t* " wcs ", size_t " maxlen ,
+.BI "              const wchar_t* " format ", ...);"
+.sp
+.B #include <stdarg.h>
+.sp
+.BI "int vwprintf (const wchar_t* " format ", va_list " args );
+.BI "int vfwprintf (FILE* " stream ", const wchar_t* " format ", va_list " args );
+.BI "int vswprintf (wchar_t* " wcs ", size_t " maxlen ,
+.BI "               const wchar_t* " format ", va_list " args );
+.fi
+.SH DESCRIPTION
+The Gruppe der 
+.B wprintf
+Funktionen ist die "wide-character" Variante der
+.B printf
+Funktionen. Sie produzieren eine formatierte "wide-character" Ausgabe.
+.PP
+Die Funktionen
+.B wprintf 
+und
+.B vwprintf
+schicken ihre Ausgabe als "wide-character" nach
+.B STDOUT.
+Dazu darf STDOUT nicht byte-orientiert sein (Vergleiche
+.B fwide
+fuer mehr Informationen).
+.PP
+Die Funktionen
+.B fwprintf 
+und
+.B vfwprintf
+schicken ihre Ausgabe als "wide-character" nach
+.B ISTREAM.
+Dazu darf ISTREAM nicht byte-orientiert sein (Vergleiche
+.B fwide
+fuer mehr Informationen).
+.PP
+Die Funktionen
+.B swprintf 
+und
+.B vswprintf
+schicken ihre Ausgabe in ein Feld aus "wide-characters".
+Es ist Aufgabe des Programmierers dafuer zu sorgen, dass mindestens fuer
+.I maxlen
+"wide-charakters" Platz ist.
+.PP
+Diese Funktionen entsprechen
+.B printf,
+.B vprintf,
+.B fprintf,
+.B vfprintf,
+.B snprintf,
+.B vsprintf
+mit den folgenden Aenderungen:
+
+.TP
+.B \(bu
+Der 
+.I Formatstring
+besteht aus "wide-characters".
+.TP
+.B \(bu
+Die Ausgabe besteht auch aus "wide-characters".
+.TP
+.B \(bu
+.B swprintf 
+und
+.B vswprintf
+benutzen ein
+.I maxlen
+Argumente,
+.B sprintf 
+und
+.B svprintf
+machen das nicht.
+.B snprintf
+und
+.B vsnprint
+nehmen so ein Argument, aber diese Funktionen geben im
+Falle eines Ueberlaufs nicht -1 zureuck   (unter Linux).
+.PP
+Die Behandlung der Platzhalter %c und %s ist anders:
+.TP
+.B c
+Wenn kein
+.B l
+Marker vorhanden ist, wird das 
+.I int
+Argument durch die Funktion
+.B btowc
+nach "wide character" konvertiert, diese werden geschrieben. 
+Ist ein
+.B l
+Marker vorhanden, wird ein
+.I wint_t
+(Wide-character) Argument geschrieben.
+.TP
+.B s
+Wenn kein
+.B l
+Marker vorhanden ist, wird ein
+.IR "" `` "const char *" ''
+Argument erwartet; ein Zeiger auf ein Character-Feld
+(Zeiger auf einen String) aus multibyte-characters. Beginnend mit dem
+"initial shift state" werden die multibyte.Characters in dem Feld mittels
+.B mbrtowc
+in "wide characters" gewandelt (jeder Aufruf der Funktion beginnt mit dem
+Status vor dem ersten Byte). Die "wide-characters" werden bis zum Endcode
+"Null" (aber nicht er) geschrieben. Wird eine Genauigkeit angegeben so werden
+nicht mehr als die angegebene Anzahl geschrieben. Man beachte, dass das
+.I die Zahl der "wide-characters"
+und nicht die Anzahl der 
+.I Bytes
+oder
+.I "screen positions" .
+
+Das Feld muss eine "Null" als Endbyte beinhalten, ausser eine Genauigkeit
+ist angegeben und diese ist so klein, dass die Anzahl der "wide-characters"
+groesser ist, als die vorgesehene Breite. --
+Wenn der
+.B I
+Marker vorhanden ist, wird ein
+.IR "" `` "const wchar_t *" ''
+Argument erwartet; ein Zeiger auf ein Feld von "wide-characters".
+Das "wide-charakter" Feld wird bis zum Endzeichen (aber nicht das) geschrieben.
+Wird eine Genauigkeit angegeben, wird nicht mehr als die angegebe Anzahl
+von Zeichen geschrieben. Das Feld muss ein Endzeichen beinhalten, ausser es
+ist eine Genauigkeit angegeben und diese ist kleiner oder gleich der Anzahl
+der "Wide-Charakters" in dem Feld.
+
+.SH "RUECKGABE WERT"
+Die Funktionen geben die Anzahl der geschrieben "wide charakters" zurueck,
+ausschlieﬂlich der terminierenden "wide-NULL". Im Fall der Funktionen
+.B swprintf
+und
+.B vswprintf.
+kommt -1 im Fehlerfall zurueck.
+.SH NOTES
+Das Verhalten von
+.B wprintf 
+haengt u.a. von LC_TYPE der aktuellen Laendereinstellung ab.
+.PP
+Falls der
+.I Formatstring
+non-ASCII "wide-characters" enthaelt, wird das Programm nur dann richtig
+bearbeiten, wenn der LC_CTYPE  der Laendereinstellung waehrend der Laufzeit die
+gleiche ist, wie der LC_CTYPE waehrend des Compilierens. Das passiert, weil der
+.B wchar_t
+Platform und Laender abhaengig ist. Die GNU Libc speichert "wide charakters"
+als Unicode (ISO-10646), andere Plattformen haben andere Loesungen. Auch die
+verwendung von ISO C99 "universal character names" der Form \\unnnn helfen
+nicht. Daher sollte der 
+.I Formatstring
+nur aus ASCII "wide characters" bestehen oder waerend der Laufzeit konstruiert
+werden (z.B. durch
+.B gettext
+oder
+.B iconv
+gefolgt von einem
+.B mbstows
+).
+.sh "KONFORM ZU"
+ISO/ANSI C, UNIX98
+.SH "SIEHE AUCH"
+.BR printf (3),
+.BR fprintf (3),
+.BR snprintf (3),
+.BR fputwc (3),
+.BR fwide (3),
+.BR wscanf (3)
+
