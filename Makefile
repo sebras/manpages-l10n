@@ -3,7 +3,9 @@
 # Do "make remove" before "make gz" if you may have uncompressed
 # source pages around.
 
-MANDIR=/usr/man/de
+prefix=/usr
+
+MANDIR=$(prefix)/man/de
 
 example: remove gz install
 
@@ -14,7 +16,8 @@ gz:
 	for i in man?; do gzip $$i/*; done
 
 install:
+	test ! -d $(MANDIR) || install -d -m 755 $(MANDIR)
 	for i in man?; do \
-		install -d -m 755 $(MANDIR)/$$i; \
+		test ! -d $(MANDIR)/$$i || install -d -m 755 $(MANDIR)/$$i; \
 		install -m 644 $$i/* $(MANDIR)/$$i; \
 	done
