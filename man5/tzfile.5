@@ -1,0 +1,81 @@
+.TH TZFILE 5 
+.SH NAME
+tzfile \- Beschreibung des Zeitzonen Datenfile 
+.sh SYNOPSIS
+.nf
+.B      #include <tzfile.h>
+.sp
+.fi
+.SH DESCRIPTION
+Wo sich die Datenfiles befinden ist abhängig von der verwendeten (g)libc Version.
+Libc4/5 benutzen \fI/usr/lin/zoneinfo\fP aber seid libc-5.4.6 befindet es sich in
+\fI/usr/share/zoneinfo\fP.
+.PP
+Das Datenfile für Zeitzonen wird von \fBtzset(3)\fP benutzt. Die ersten 4 Byte bilden das
+Magiccockie "TZif". Daran wird das File als Zeitzonen Datenfile erkannt. Die
+darauf folgenden 16 Byte sind reserviert für Dinge, die da kommen werden.
+Anschließend kommen sechs 32bit (long) Werte. (Wichtig: Die Daten kommen
+in natürlicher Reihenfolge: Highbyte zu erst). Die sechs Werte sind:
+.TP
+.I tzh_ttisgmtcnt  
+Anzahl der hinterlegten UTC/lokal Indikatoren
+.TP
+.I tzh_ttisstdcnt  
+Anzahl der standard Indikatoren
+.TP
+.I tzh_leapcnt     
+Anzahl der Schaltsekunden im File
+.TP
+.I tzh_timecnt     
+Anzahl der Übergangszeiten
+.TP
+.I tzh_typecnt     
+Anzahl der "local time types" (immer größer Null)
+.TP
+.I tzh_charcnt    
+Anzahl der Buchstaben für die Zeitzone 
+.PP
+
+Nachdem Header kommen tzh_timecnt 32bit Werte (long) in steigender Wertigkeit. 
+Jeder Wert ist als Epoch-Wert (Sekunden seit 01.01.1970) zu interpretieren. Zu
+jedem dieser Zeitpunkt gibt es einen Wechsel Sommer-Winterzeit.
+Als nächstes kommen tzh_timecnt unsigned char Werte. Diese sind Indizes für die
+nachfolgenden ttinfo Strukturen.
+
+struct ttinfo {
+                 long          tt_gmtoff;
+                 int           tt_isdst;    /* wirklich 1 char ? */
+                 unsigned int  tt_abbrind;  /* wirklich 1 char ? */
+            };
+.TP
+.I tt_gmtof 
+  Abstand in Sekunden zu UTC
+.TP
+.I tt_isdst 
+  Marker für Sommerzeit (genutzt für tm_isdst in struct tm)
+.TP
+.I tt_abbrind 
+  Index für den Zonennamen
+
+Danach folgen ein oder mehrere Strings mit der Gesamtlänge tzh_charcnt.
+ 
+Nachschließen folgen tzh_leapcnt paare von 32Bit Werten.
+Der erste Wert gibt an wan die Schaltzeit ist, der Zweite die Anzahl der Sekunden. Die
+Werte kommen in aufsteigender Reihenfolge.
+
+Nun kommen tzh_ttisstdcnt standard/wall Marker, jeweils ein 8Bit Wert. Sie
+besagen ob die Schaltzeiten als standard Zeil oder als Wallzeit zu interpretieren sind.
+Das wird benötigt, wenn Zeitzonen Files für POSIX Zeitzonenvariablen benutzt werden.
+(Was heist das ??)
+
+Zum Schluß kommen tzh_ttisgmtcnt 8bit UTC/Local Indikatoren. Sie besagen ob die
+Schaltzeiten als lokale Zeit oder als UTC interpretiert werden müssen.
+Das wird benötigt, wenn Zeitzonen Files für POSIX Zeitzonenvariablen benutzt werden.
+
+Falls tzh_timecnt Null ist oder die Zeit ist frühre als die erste Schaltzeit benutzt 
+localtime(3) die erste Standardzeit ttinfo Struktur im File. Falls keine existiert,
+ die erste ttinfo Struktur. 
+
+.SH SEE ALSO
+.BR localtime(3) 
+.BR tzset(3) 
