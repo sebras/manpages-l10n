@@ -1,0 +1,221 @@
+.TH INIT 8 "6. Mai 1996" "" "Dienstprogramme zur Systemverwaltung" 
+.SH NAME
+init, telinit \-  Initialisierung der Kontrolle über Prozesse und runlevel ( 
+process control initialisation )
+.SH SYNTAX
+\fB/sbin/init [ -t sec ] [ 0123456SsQq]
+ /sbin/telinit [ -t sec] [0123456SsQqabc]\fP
+.SH BESCHREIBUNG
+.SS init
+.B Init
+ist der Vater aller Prozesse. Seine Hauptaufgabe ist es Prozesse nach 
+einem Skrpit in der Datei \fB/etc/inittab\fP zu erzeugen (siehe auch 
+\fIinittab\fP (5)). Diese Datei hat normalerweise bestimmte  Einträge, die 
+\fBinit\fP dazu veranlassen auf jeder Leitung \fBgetty\fPs zu erzeugen, auf 
+der sich ein Benutzer einloggen kann. Er kontrolliert 
+auch alle autonomen Prozesse, die von einem bestimmten System benötigt  
+werden.
+.PP
+Ein \fIrun level\fP ist eine Softwarezustand des Systems, der es nur 
+einer bestimmten Gruppe von Prozessen erlaubt ausgeführt zu werden.
+.PP
+Die Prozesse, die von \fBinit\fP für jeden dieser \fIrun level\fP erzeugt 
+werden, sind in der Datei \fB/etc/inittab\fP definiert. \fBInit\fP kann 
+sich in einem von acht \fIrun level\fP befinden, \fB0\-6\fP und \fBS\fP 
+oder \fBs\fP. \fBInit\fP wechselt den \fIrun level\fP wenn ein 
+priviligierter User das Programm \fB/sbin/telinit\fP startet, das 
+\fBinit\fP bestimmte Signale sendet, die ihm sagen, in welchen \fIrun 
+level\fP er wechseln soll.
+.PP
+Wenn \fBinit\fP im letzten Schritt des Kernelboots aufgerufen wird, 
+sucht er nach der Datei \fB/etc/inittab\fP und sieht nach, ob es dort 
+einen \fBinitdefault\fP\-Eintrag gibt (siehe \fIinittab\fP(5)). 
+\fBinitdefault\fP bestimmt den Anfangs\-\fIrun level\fP des Systems. 
+Falls es dort keine derartige Eintragung gibt, oder gar keine 
+\fBInittab\fP\-Datei existiert, so muß an der Systemkonsole ein \fIrun  
+level\fP eingegeben werden.
+.PP
+\fIRun level\fP \fBS\fP oder \fBs\fP bringen das System in den 
+Single-user Modus, und benötigen keine \fB/etc/inittab\fP\-Datei. Im 
+Single-user 
+Modus wird auf \fB/dev/console\fP die \fBsh-Shell\fP aufgerufen.
+.PP
+Wenn das System in den Single-user Modus übergeht, liest \fBinit\fP die 
+\fIioctl\fP(2)\-Zustände der Konsole in \fBetc/ioctl.save\fP. Existiert 
+diese Datei nicht, initialisiert \fBinit\fP die Leitung mit \fB9600 
+BAUD\fP und mit \fB CLOCAL\fP Einstellungen. Wenn \fBinit\fP den 
+Single-user Modus verläßt, schreibt es die \fIioctl\fP\-Einstellungen in 
+diese Datei, so daß diese Einträge bei der nächsten Single-user Sitzung 
+wiederverwendet werden können.
+.PP
+Wenn \fBinit\fP das erste mal in einen Multi-user Modus eintritt, führt 
+er die \fBboot\fP und \fBbootwait\fP\-Einträge der \fB/etc/inittab\fP aus, 
+die es erlauben, 
+daß die Dateisysteme gemountet werden können, bevor sich ein Benutzer 
+einloggen kann. Danach werden alle  die \fIrun level\fP betreffenden 
+Einträge ausgeführt.
+.PP
+Immer wenn \fBinit\fP einen neuen Prozess startet, schaut er erst nach, 
+ob die Datei \fB/etc/initscript\fP existiert. Wenn es sie gibt, benutzt 
+\fBinit\fP das Skript dieser Datei um den Prozess zu starten.
+.PP
+Jedes mal, wenn ein Kindprozess terminiert, hält \fBinit\fP diese 
+Tatsache und den Grund, weshalb der Kindprozess gestorben ist, in den 
+Dateien \fB/var/run/utmp\fP und \fB/var/log/wtmp\fP fest, falls diese 
+Dateien existieren.
+.PP
+Sobald alle vorgesehenen Prozesse erzeugt worden sind, wartet \fBinit\fP  
+darauf, daß ein Kindprozess stirbt, auf ein Stromausfallsignal 
+oder auf eine Anweisung von \fB/sbin/telinit\fP, in welchen \fIrun 
+level\fP er wechseln soll. Wenn eine der drei oben genannten Bedingungen  
+erfüllt 
+ist, untersucht \fBinit\fP nochmals die \fB/etc/inittab\fP\-Datei, da dieser 
+Datei jederzeit neue Einträge hinzugefügt werden können. Man kann den 
+schlafenden \fBinit\fP\-Prozess auch mit den Kommandos \fBQ\fP oder 
+\fBq\fP aufwecken, was ihn dazu veranlaßt, nochmals die 
+\fB/etc/inittab\fP\-Datei zu examinieren.
+.PP
+Wenn \fBinit\fP sich nicht im Single-user Modus befindet, und ein 
+Stromausfallsignal empfängt, werden spezielle Stromausfalleinträge 
+ausgeführt.
+.PP
+Wenn \fBinit\fP angewiesen wird den \fIrun level\fP zu wechseln, wird 
+das Warnsignal \fBSIGTERM\fP an alle Prozesse gesandt, die nicht in der 
+\fB/etc/inittab\fP \-Datei für den  neuen \fIrun level\fP vorgesehen sind.
+\fBInit\fP wartet dann 5 Sekunden bevor er diese Prozesse mit dem 
+kill-Signal 
+\fBSIGKILL\fP gewaltsam terminiert. Achtung: \fBinit\fP nimmt an, daß 
+alle diese Prozesse (und deren Abkömmlinge)in der selben Prozessgruppe  
+verblieben sind, die \fBinit\fP ursprünglich für sie erzeugt hat (siehe 
+\fIsetpgrp\fP(2)). Wenn irgendeiner dieser Prozesse seine 
+Prozessguppenzugehörigkeit geändert hat, wird er diese Signale nicht  
+erhalten! Solche Prozesse müssen einzeln terminiert werden!
+.PP
+.SS telinit
+Der Prozess \fB/sbin/telinit\fP ist eng mit \fB/sbin/init\fP vebunden. Er 
+wird mit Argumenten, die aus nur einem Buchstaben bestehen gesteuert, und 
+sendet \fBinit\fP Anweisungen (Signale), welche Aktionen dieser auszuführen 
+hat. Die folgenden Argumente dienen als Anweisungen für \fBtelinit\fP:
+.PP
+.TP
+\fB0,1,2,3,4,5\fP oder \fB6\fP
+befehlen \fBinit\fP in den angegebenen runlevel zu wechseln.
+.TP
+\fBa,b,c\fP
+befehlen \fB/sbin/init\fP nur die Einträge der \fB/etc/inittab\fP\-Datei 
+auszuführen, die den \fIrun level\fP \fBa,b\fP oder \fBc\fP haben.
+.TP
+\fBQ\fP oder \fBq\fP
+befehlen \fB/sbin/telinit\fP nocheinmal die \fB/etc/inittab\fP\-Datei 
+einzulesen.
+.TP
+\fBS\fP oder \fBs\fP
+befehlen \fB/sbin/telinit\fP in den Single-user Modus zu schalten.
+.PP
+\fB/sbin/telinit\fP kann den \fBinit\fP\-Prozess auch anweisen, wieviel 
+Zeit dieser zwischen dem Senden des TERM und des KILL Signals warten 
+soll; die Standardeinstellung ist 5 Sekunden, kann aber durch die 
+Option \fB\-t sec\fP verändert werden.
+.PP
+\fB/sbin/telinit\fP kann nur von Usern mit einer entsprechenden 
+Berechtigung aufgerufen werden.
+.SH RUNLEVEL
+Die \fIrun level\fP \fB0, 1 \fPund\fB 6\fP sind reserviert. Der run level 
+\fB0\fP wird benutzt um das System anzuhalten,  \fIrun level\fP \fB6\fP bootet
+ das System neu (siehe \fIhalt\fP(8), \fIreboot(8)\fP). Der \fIrun level\fP 
+\fB1\fP bringt das System in den Single-user Modus; allerdings bietet er  
+\- anders als \fIrun level\fP \fBS\fP \- den Vorzug mehrere Konsolen zur  
+Verfügung zu haben, und wird deshalb manchmal auch als  "Multi-user 
+Modus ohne Netzwerk" bezeichnet. Der \fIrun level\fP \fBS\fP ist eigentlich 
+nicht dazu gedacht
+direkt benutzt zu werden, sondern dient mehr dem Ausführen der Skripte, 
+wenn das System in \fIrun level\fP \fB1\fP übergeht. Weitere 
+Informationen sind in den Manpages zu \fIshutdown\fP(8) und 
+\fIinittab\fP(5) zu finden.
+.PP
+Die \fIrun level\fP \fB7\-9\fP sind zwar gültig, aber weder dokumentiert, 
+noch in 
+der \fB/etc/inittab\fP\-Datei eingetragen. Das liegt daran, daß die 
+"traditionellen" UNIX\-Varianten diese nicht benutzen. Manche werden sich 
+vielleicht auch wundern, daß es zwischen den \fIrun level\fP \fBS\fP und 
+\fBs\fP keinen ersichtlichen Unterschied gibt. Tatsächlich sind beide 
+Optionen lediglich ein Alias für ein und den selben \fIrun level\fP \- das 
+ist noch ein Relikt von  Systemen aus der Zeit, als der Systemautor 
+\fBsysvinit\fP geschrieben hat.
+.SH DATEIEN
+.nf
+/etc/inittab
+/etc/initscript
+/dev/console
+/etc/ioctl.save
+/var/run/utmp
+/var/log/wtmp
+/dev/initctl
+.fi
+.SH UMGEBUNG
+\fBInit\fP setzt folgende Umgebungsvariablen für alle seine Kindprozesse:
+.TP 
+\fBPATH\fP
+Wird standarmäßig auf \fI/bin:/usr/bin:\fP gesetzt.
+.TP
+\fBINIT_VERSION\fP
+Wie der Name schon sagt. Nützlich, wenn ein Skript direkt von init 
+ausgeführt werden soll.
+.TP
+\fBRUNLEVEL\fP
+Der augenblickliche \fIrun level\fP des Systems.
+.TP
+\fBPREVLEVEL\fP
+Der vorherige \fIrun level\fP (nützlich nach einer \fIrun 
+level\fP\-Änderung). 
+.SH BOOTSIGNALE
+Es ist möglich \fBinit\fP eine Reihe von Bootsignalen (bootflags) vom 
+Bootmonitor aus (d.h. vom LILO aus) zu übergeben. \fBInit\fP akzeptiert 
+folgende Signale:
+.TP
+\fBS, single\fP
+Bootet im Single-user Modus. In diesem Modus wird zuerst die 
+\fB/etc/inittab\fP\-Datei eingelesen; danach werden, noch bevor die 
+Single-user Shell gestartet wird, die Bootskripte der 
+\fB/sbin/init.d/boot\fP\-Datei ausgeführt.
+.TP
+\fB1,2,3,4 oder 5\fP
+Weist \fBinit\fP an, in welchen run level gebootet werden soll.
+.TP
+\fB\-b, emergency\fP
+Gibt \fBinit\fP die Anweisung direkt in den Single-user Modus zu booten,  
+ohne irgendwelche andere startup-Skripte auszuführen.
+.SH ÜBEREINSTIMMUNGEN
+\fBInit\fP ist kompatibel zum \fISystem V init\fP. Er arbeitet eng mit 
+den Skripten zusammen, die in den Verzeichnissen \fB/sbin/init.d\fP und 
+\fB/sbin/init.d/rc{runlevel 1\-6}.d\fP untergebracht sind. Wenn das 
+System dieser Konvention folgt, sollte sich in diesem Verzeichniss eine 
+\fBREADME\fP\-Datei befinden, die erklärt wie diese Skripte funktionieren.
+
+.SH WARNUNGEN
+\fBInit\fP geht davon aus, daß alle Prozesse und Kindprozesse 
+in der selben Prozessgruppe verbleiben, die ursprünglich für 
+sie eingerichtet worden ist. Wenn einer dieser Prozesse in eine andere 
+Gruppe wechselt, kann \fBinit\fP ihn nicht mehr beenden, und es kann 
+passieren,daß man in einem Zustand landet,in dem \fBzwei\fP Prozesse von 
+\fBeiner\fP Terminalleitung Befehle einlesen wollen.
+.PP
+\fIRun level\fP \fB1\fP sollte auf einem System, dessen 
+\fB/usr\fP\-Partition via \fBNFS\fP gemountet ist, nicht verwendet werden! 
+.SH DIAGNOSEN
+Wenn \fB/sbin/init\fP feststellt, daß er einen Eintrag kontinuierlich 
+mehr als 10 mal in 2 Minuten ausführt, nimmt er an, daß in der 
+Kommandofolge ein Fehler ist. \fBInit\fP gibt dann eine Fehlermeldung auf 
+der Konsole aus, weigert sich diesen Eintrag in den nächsten 5 Minuten  
+nochmals auszuführen, und wartet auf ein Signal. Dadurch wird verhindert, 
+daß 
+die Systemressourcen aufgebraucht werden, nur weil sich jemand bei einem  
+Eintrag in der \fB/etc/inittab\fP\-Datei vertippt hat, oder das Programm, 
+das vom Eintrag aufgerufen wird, entfernt worden ist. 
+.SH AUTOR
+Miquel van Smoorenburg (miquels@cistron.nl), ursprüngliche Manpage von  
+Michael Haardt (u31b3hs@pool.informatik.rwth-aachen.de), Übersetzung 
+Martin Okrslar (okrslar@informatik.uni-muenchen.de).
+.SH "SIEHE AUCH"
+getty(1), login(1), sh(1), who(1), shutdown(1), kill(2), inittab(5), 
+inscript(5), utmp(5)
