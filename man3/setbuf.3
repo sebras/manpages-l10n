@@ -1,0 +1,195 @@
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the American National Standards Committee X3, on Information
+.\" Processing Systems.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)setbuf.3	6.10 (Berkeley) 6/29/91
+.\"
+.\" Converted for Linux, Mon Nov 29 14:55:24 1993, faith@cs.unc.edu
+.\" Added section to BUGS, Sun Mar 12 22:28:33 MET 1995,
+.\"                   Thomas.Koenig@ciw.uni-karlsruhe.de
+.\" Translated into german by Roland Krause (Rokrause@aol.com)
+.\"
+.TH SETBUF 3 "26. Januar 1997" "BSD MANPAGE" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+setbuf, setvbuf \- Stream-Puffer Funktionen
+.SH "ÜBERSICHT"
+.na
+.B #include <stdio.h>
+.sp
+.BI "int setbuf( FILE *" stream ", char *" buf );
+.br
+.BI "int setvbuf( FILE *" stream ", char *" buf ", int " mode
+.BI ", size_t " size );
+.ad
+.SH BESCHREIBUNG
+Die Standard I/O Bibliothek
+.B STDIO
+puffert standardmäßig alle Daten, die von einem Stream gelesen oder in
+einem Stream geschrieben werden. Die einzige Ausnahme bilden hier Streams,
+die einem Terminal zugeordnet sind wie zum Beispiel
+.IR stdin .
+Die Größe dieses Puffers ist in
+.I stdio.h
+festgelegt und beträgt
+.B BUFSIZ
+Byte. Die Art der Pufferung kann mit den hier beschriebenen Funktionen
+modifiziert werden.
+.br
+Drei Arten der Pufferung sind möglich: Nicht gepuffert, Blockpufferung
+und Zeilenpufferung. Bei einem ungepufferten Ausgabe-Stream erscheinen
+die Informationen in einer Datei oder auf einem Terminal unmittelbar nach
+dem Schreiben. Bei einer Blockpufferung werden die geschriebenen Zeichen
+in einem Puffer gesammelt und erst geschrieben, wenn dieser Puffer voll ist.
+Bei einer Zeilenpufferung werden Zeichen bis zu einem Zeilenvorschub
+(LF, 0x0A) in einem Puffer gesammelt und dann ausgegeben.
+.PP
+Die Funktion
+.BR fflush (3)
+wird genutzt, um einen Stream-Puffer zu leeren und bewirkt ein
+sofortiges Schreiben der Daten
+(siehe auch
+.BR fclose (3)).
+.PP
+Im Normalfall verwenden alle Datei-Streams einen Blockpuffer. Bei
+der ersten I/O Operation auf eine Datei wird ein
+.BR malloc (3)
+aufgerufen, um einen Puffer zu belegen. 
+Wenn ein Stream einem Terminal zugeordnet ist (wie im Normalfall
+.IR stdout )
+wird Zeilenpufferung verwendet. Der Stream für die Fehlerausgabe
+.I stderr
+ist immer ungepuffert.
+.PP
+Die Funktion
+.B setvbuf
+wird genutzt, um zu jedem beliebigen Zeitpunkt die Pufferung eines
+geöffneten Streams zu ändern.
+Als
+.I mode
+- Parameter wird einer der drei folgenden Konstanten verwendet:
+.RS
+.TP
+.B _IONBF
+Nicht gepuffert
+.TP
+.B _IOLBF
+Zeilenpufferung
+.TP
+.B _IOFBF
+Blockpufferung
+.RE
+.PP
+Außer bei ungepufferten Dateien sollte mit
+.I buf
+ein Zeiger auf einen Puffer angegeben werden, der mindestens
+.I size
+Byte groß ist. Dieser Puffer wird anstelle des momentanen Puffers verwendet.
+Wenn für
+.I buf
+.BR NULL ,
+angegeben wird, wird nur
+.I mode 
+modifiziert. Bei der naechsten Schreib- oder Leseoperation wird ein neuer
+Puffer allokiert.
+Die Funktion
+.I setvbuf
+kann nur dann auf einen geöffneten Stream angewendet werden, wenn er nicht
+``aktiv'' ist. Das heißt, vor der ersten Ein- bzw. Ausgabe oder unmittelbar
+nach einem
+.BR fflush .
+.PP
+Die Funktion
+.B setbuf
+entspricht folgendem Aufruf:
+.PP
+  setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
+.PP
+Diese Funktion initialisiert Blockpufferung mit einem
+.B BUFSIZ
+großen Puffer für den Stream
+.IR stream ,
+wenn
+.I buf
+ungleich NULL ist. Wenn
+.I buf
+gleich NULL ist, wird ungepufferter Betrieb initialisiert.
+.SH HINWEIS
+Die Beschreibung der Funktionen
+.B setbuffer
+und
+.B setlinebuf
+wurden nicht aus der englischsprachigen Version dieses Manuals übernommen.
+Diese Funktionen sind unter LINUX nicht verfügbar und entsprechen auch sonst
+keinem Standard.
+.SH STANDARDS
+Die Funktionen
+.B setbuf
+und
+.B setvbuf
+sind konform zu ANSI C3.159-1989 (ANSI C).
+.SH BUGS
+.B setbuf
+nutzt immer eine nichtoptimale Puffergröße und sollte deshalb
+vermieden werden.
+.P
+Es muß sichergestellt sein, daß der Puffer
+.I buf
+zu dem Zeitpunkt, zu dem der Stream
+.I stream
+geschlossen wird, noch exisitiert.
+.P
+Im folgenden Beispiel wird der Stream
+.I stdin
+erst geschlossen wenn
+.I buf
+nicht mehr existiert:
+.nf
+.sp
+#include <stdio.h>
+int main()
+{
+    char buf[BUFSIZ];
+    setbuf(stdin, buf);
+    printf("Hello, world!\\n");
+    return 0;
+}
+.fi
+.sp
+.SH "SIEHE AUCH"
+.BR fopen (3),
+.BR fclose (3),
+.BR fread (3),
+.BR malloc (3),
+.BR puts (3),
+.BR printf (3),
