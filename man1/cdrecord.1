@@ -1,0 +1,1054 @@
+.\" @(#)cdrecord.1      1.25 98/03/31 Copyright 1996 J. Schilling
+.\" Translated into german by Eduard Bloch (edi@gmx.de) 98/09/12
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.if t .ds a \v'-0.55m'\h'0.00n'\z.\h'0.40n'\z.\v'0.55m'\h'-0.40n'a
+.if t .ds o \v'-0.55m'\h'0.00n'\z.\h'0.45n'\z.\v'0.55m'\h'-0.45n'o
+.if t .ds u \v'-0.55m'\h'0.00n'\z.\h'0.40n'\z.\v'0.55m'\h'-0.40n'u
+.if t .ds A \v'-0.77m'\h'0.25n'\z.\h'0.45n'\z.\v'0.77m'\h'-0.70n'A
+.if t .ds O \v'-0.77m'\h'0.25n'\z.\h'0.45n'\z.\v'0.77m'\h'-0.70n'O
+.if t .ds U \v'-0.77m'\h'0.30n'\z.\h'0.45n'\z.\v'0.77m'\h'-0.75n'U
+.if t .ds s \\(*b
+.if t .ds S SS
+.if n .ds a ae
+.if n .ds o oe
+.if n .ds u ue
+.if n .ds s sz
+.TH CDRECORD 1 "Version 1.6" "J\*org Schilling" "Dienstprogramme für Benutzer"
+Der Übersetzer übernimmt keine Verantwortung für die Richtigkeit 
+oder Vollständikeit dieses Dokuments.
+Diese Version gilt nur für cdrecord, Version 1.6.
+.SH NAME
+cdrecord \- schreibt Audio- oder Daten-CDs aus Image-Datei(en).
+.SH ÜBERSICHT
+.B cdrecord
+[
+.I "Grundoptionen
+]
+.BI dev= Gerät
+[
+.I Track-Optionen
+]
+.IR track1 .\|.\|. trackn
+
+.SH BESCHREIBUNG 
+.B Cdrecord
+wird verwendet, um Daten- oder Audio-CDs mit einem "Orange-Book"-kompatiblen
+CD-Recorder zu erstellen.
+.PP
+Das zu verwendende
+.I Gerät
+wird durch 
+.IR scsibus / target / lun
+des CD-Recorders angegeben. Kommunikation auf 
+.I SunOS
+wird mit dem SCSI-Generaltreiber 
+.B sgc
+bewerkstelligt.
+Andere Betriebssysteme benutzen eine Simulation dieses Treibers.
+Mögliche Syntax dafür ist:
+.B dev=
+.IR scsibus , target , lun
+oder
+.B dev=
+.IR target , lun .
+Im letzteren Fall muß der CD-Recorder an dem primären SCSI-Bus des Rechners
+angeschloßen sein.
+.PP
+.IR Scsibus ,
+.I target 
+and 
+.I lun
+sind Ganzzahlen.   
+Aus Gründen der Portabilität zu anderen  \s-2UNIX\s0-Platformen ist die
+Angabe eines realen Geräte-Dateinamen an dieser Stelle nicht möglich.
+Beobachten Sie die Boot-Meldungen
+oder werfen Sie einen Blick in
+.B /var/adm/messages 
+für mehr Informationen über die SCSI-Konfiguration ihres Computers.
+
+Falls Sie dennoch Probleme haben, die richtigen Werte für
+.IR scsibus , target , lun
+herauszufinden, kann die Option
+.B -scanbus
+verwendet werden (s. Beschreibung unten). 
+.PP
+Im 
+.I "Track At Once" 
+- Modus entsteht jeder
+.I Track
+aus einer Datei, die vorgefertige Daten für diesen Track enthält.
+
+Bei angegebener Option 
+.RB ` \- '
+wird die Standardeingabe für diesen Track verwendet.
+Nur ein einziger Track wird von der
+.IR Standardeingabe
+gelesen.
+
+.SH "GRUNDOPTIONEN
+.PP
+Grundoptionen müssen vor den Tracks oder Trackoptionen angegeben werden.
+
+.TP
+.B \-version
+Gibt die Versionsnummer aus und beendet das 
+Programm.
+.TP
+.B \-v (verbose - informationsreich, geschwätzig)
+Gibt Laufzeit-Informationen während des Brennvorgangs aus. Jedes weitere v
+erhöht die Anzahl und Informationsreichtum der Meldungen.
+
+
+.TP
+.B \-V
+Falls Sie nicht nachvollziehbare Probleme während des
+Brennvorgangs bekommen, benutzen Sie diese Option um den Fehler zu
+identifizieren.
+.B \-VV
+.\will show data buffer content in addition.
+zeigt zusätlich den Puffer-Inhalt an.
+Benutzung von
+.B \-V
+oder
+.B \-VV
+verlangsamt den Prozeß und kann dadurch zur Ursache eines Buffer-Underruns
+werden.
+.TP
+.B \-debug
+Gibt zusätzliche Informationen für Fehlersuche/behebung aus. Es kann
+sehr hilfreich sein, vor allem bei der Suche nach Problemen mit Sektor-Größen
+und Sektor-Typen.
+Benutzung von
+.B \-debug
+verlangsamt den Prozeß und kann dadurch zur Ursache eines Buffer-Underruns
+werden.
+.TP
+.B \-dummy (Simulation)
+Der CD-Brenner passiert alle Schritte des Brennvorgangs
+ohne den Laser zu aktivieren. Es wird empfohlen, vor dem richigen Brennvorgang 
+mehrere Tests damit durchzuführen, falls die Geschwindigkeit des Systems nicht
+ausreichend bekannt ist.
+
+.TP
+.B \-multi
+Erlaubt die Herstellung von Multisession-CDs. Diese Option muss bei allen
+Sessions angeben werden, außsser bei der letzten Session der CD.  Die Art
+der Fixierung erlaubt den späteren Anschluß mehrerer Sessions.  Auf diese
+Weise erstellte CDs sind zu den industriel hergestellten CDs nicht mehr
+100%ig kompatibel.  Benutze Sie es nur für die Erstellung einer
+Multisession-CD.  Bei der Benutzung dieser Option wird standardmäßig der
+Track-Typ
+.BR "CD-ROM XA mode 2"
+ausgewählt.
+Die
+.IR Sony -Brenner
+haben keine Hardware-Untertützung für
+.BR "CD-ROM XA mode 2" .
+Verwenden Sie in diesem Fall die Option
+.B \-data .
+.TP
+.B \-msinfo
+Liest Multisession-Informatinen aus, in einer Form, wie sie von
+.B "mkisofs-1.10" 
+gelesen werden kann.
+.sp
+Diese Option ist nur mit CD's sinnvoll, die mindestens eine abgeschloßene
+Session enthalten und noch nicht richtig abgeschloßen sind. 
+Einige Laufwerke produzieren Fehlermeldungen falls es versucht wird,
+Multisession-Info von einer abgeschloßenen CD-ROM auszulesen.
+.TP
+.B \-toc
+Liest und gibt die Inhaltstabelle 
+.I (table of content)
+oder PMA der CD aus.
+Diese Funktion funktioniert sowohl mit CD-Brennern als auch mit einfachen
+CD-ROM-Laufwerken.
+.TP
+.B \-fix
+Die CD wird abschloßen (u.a. wird die TOC für die CD-ROM-Laufwerke
+geschrieben).  Es ist nützlich, wenn die CD bereits beschrieben, aber
+noch nicht abgeschloßen ist.  Diese Option funktioniert z.Z. nicht mit
+TEAC-Laufwerken.
+.TP
+.B \-nofix
+Die CD wird nach der Fertigstellung nicht abgeschloßen.  Dies könnte nützlich
+sein, um eine Audio-CD in mehreren Schritten zu beschreiben.  Eine nicht
+abgeschloßene CD kann i.d.R. nicht mit einem einfachen CD-Laufwerk gelesen
+werden, es gibt aber Audio-CD-Player, die damit keine Probleme haben.
+.TP
+.B \-load
+Zieht die CD ein und beendet das Programm.  Dies funktioniert nur mit
+Schubladen-Mechanismen, kann sich aber auch bei einem Kodak-Disk-Transporter
+als nützlich erweisen.
+.TP
+.B \-eject
+Wirft die CD aus, sobald die Arbeit beendet ist.  Einige Geräte
+(u.a. Philips) brauchen einen Auswurf des Mediums, bevor sie mit einem
+neuen arbeiten können.  Die Ausführung eines \-dummy-Testlaufes mit
+anschließendem Brennvorgang wird bei diesen Geräten nicht funktionieren.
+.TP
+.B "speed=#
+Setzt die Geschwindigkeit (x-Faktor) für den Schreibprozeß auf #.
+# ist eine Ganzzahl und entspricht dem Multiplikator im Vergleich zu der
+normalen Audio-Geschwindkeit (etwa 150 KB/s bei CD-ROM bzw. 172 KB/s bei
+Audio-CD).  Wenn die 
+.B speed
+-Option nicht angegeben ist, versucht
+.B cdrecord
+Sie aus der Umgebungsvariable
+.B CDR_SPEED
+zu lesen.
+Falls ihr Laufwerk Probleme mit 
+.I "speed=2 
+oder 
+.IR "speed=4" , 
+hat, versuchen Sie
+.IR "speed=0" .
+.TP
+.BI blank= type
+Löscht eine CD-RW und beendet das Programm oder löscht eine CD-RW, bevor Sie
+beschrieben wird.  Es kann mit einer der folgenden Methoden gelöscht werden:
+.\" Die Art des Löschens kann eine folgende sein:
+.RS
+.TP 12
+help
+Zeigt eine Liste mit allen möglichen Methoden.
+.TP
+all
+Löscht die ganze CD.  Dies könnte eine Zeit lang dauern.
+.TP
+fast
+Schnelles Löschen.  Dabei werden nur PMA, TOC und das Pregap gelöscht.
+.TP
+track
+Löscht einen Track.
+.TP
+unreserve
+Gibt einen reservierten Track wieder frei.
+.TP
+trtail
+Löscht das Ende eines Tracks.
+.TP
+unclose
+Gibt die letzte Session wieder frei.
+.TP
+session
+Löscht die letzte Session.
+
+.RE
+.TP
+.BR fs= #
+Setzt die FIFO-Größe (Puffer-Größe) auf #.  Die Syntax der Angabe ist die
+gleiche wie bei
+.BR dd (1),
+.BR sdd (1)
+oder
+.BR star (1) bzw. tar (1).
+Die Nummer repräsentiert die Größe in Bytes, sofern es nicht anderswo
+spezifiziert ist.  Wenn in Anschluß an die Zahl ein Buchstabe wie
+`b', `k', `m', `s' oder `f' folgt, wird die Größe mit 512, 1024, 1024*1024,
+2048 oder 2352 multipliziert.  Wenn die Größe aus mehreren, durch `x' oder
+`*' getrennten Zahlen besteht, wird die Multiplikation dieser Zahlen
+ausgeführt, z.B. ergibt
+.I "fs=10x63k
+eine Puffer-Größe von 630\ kBytes.
+.sp
+Die mit
+.I fs=
+angegebene Größe beinhaltet den geteilten Arbeitsspeicher, der für die 
+Verwaltung benötigt wird.  Es ist mindestens eine Seite des Speichers.
+Wenn die
+.IR fs =
+Option nicht vorhanden ist, versucht
+.B cdrecord
+denn Wert der fifo-Größe aus der Umgebungsvariable
+.B CDR_FIFOSIZE
+zu bestimmen.
+Die voreingestellte fifo-Größe ist zur Zeit 4 MB.
+.sp
+Das FIFO wird benutzt, um die Pufferung für echtzeit Schreibprozess zu erhöhen. z.B.
+ermöglicht es die Benutzung einer Pipe von
+.B mkisofs
+oder 
+.B mkhybrid
+direkt in
+.BR cdrecord .
+Wenn der FIFO aktiv ist und eine Pipe von
+.B mkisofs
+zu 
+.B cdrecord
+führt, und 
+.B mkisofs 
+vor dem Brennanfang abbricht, wird 
+.B cdrecord
+anhalten, bevor auf die CD geschrieben wird.
+.B mkisofs 
+Die empfohlene Größe liegt irgendwo zwischen 4 und 32 MByte.  Als
+Faustregel gilt: FIFO sollte mindestens so groß wie der interne Puffer
+des Brenners sein und nicht mehr als die Hälfte des vorhandenen
+Arbeitsspeichers belegen.  Wenn die FIFO-Größe groß genug ist, sollte die
+Statistik keine Leerzustände (empty count) aufweisen und der schlechteste
+Wert (min fill) sollte nicht unter 20% liegen.  Es ist aber auch nicht
+empfehlenswert, zu viel Speicher für FIFO zu reservieren.  Wenn Sie mehr
+als 8 MB auf einer schwachen Maschine brauchen, ist ihr Rechner überlastet,
+hat Hardware-Probleme oder ist schlecht konfiguriert.  Die sun4c-Architektur
+(z.B. eine Sparcstation-2) hat nur MMU-Page Einträge für max. 16 MB pro
+Prozess.  FIFO-Größen von mehr als 14 MB bringen das System möglicherweise
+dazu, viel Zeit mit dem Neuladen der MMU-Tabelen zu verbringen.  Neuere
+Sun-Systeme haben dieses Hardware-Problem nicht.  Ich weiss nichts von
+derartigen Problemen auf PC-Hardware.
+.sp
+Wenn Sie Buffer-Underruns oder ähnliche Probleme haben und dabei keinen
+.IR "fifo empty count" erhalten,
+dann haben Sie echte Hardware-Probleme.  Die FIFO-Größe ist in diesem Fall
+ausreichend.
+.TP
+.BI dev= target
+Gibt das SCSI-Zielgerät füer den Recorder an, s. oben.  Wenn die Option
+.I dev
+ nicht vorhanden ist, versucht 
+.B cdrecord
+sie aus der Umgebungsvariable
+.B CDR_DEVICE
+zu bestimmen.
+.TP
+.BI timeout= #
+Setzt die voreingestellte Zeit der SCSI-Timeouts auf
+.IR # .
+Die voreingestellte SCSI-Auszeit (Timeout) ist die kürzeste Zeit, die für
+die Übertragung der SCSI-Kommandos benutzt wird.  Wenn ein SCSI-Befehl
+aufgrund der Zeitüberschreitung versagt, können Sie die normale Zeit durch
+einen Wert ersetzen, der etwas höher als der Timeout des fehlgeschlagenen
+Befehls liegt.  Wenn ein Befehl mit dem erhöhten Timeout korrekt abgearbeitet
+wird, berichten Sie bitte diesen Wert und den entsprechenden Befehl dem Autor
+des Programms.  Wenn keine 
+.I timeout 
+Option angegeben ist, wird der voreingestellte Timeout (40s) benutzt.
+.TP
+.BI driver= name
+Erlaubt die Benutzung eines anderen Treibers.  Um eine Liste aller
+verfügbaren Treiber zu bekommen, geben Sie bitte
+.BR "driver=help" 
+ein.
+Der Grund für die Existenz dieser Option ist es, dem Anwender die Benutzung
+von
+.B cdrecord
+mit einem anderen Gerät zu erlauben, der zwar ähnlich einem unterstützen ist,
+aber von 
+.BR cdrecord 
+nicht automatisch erkannt wird.  Benutzen Sie diese Option mit extremer
+Vorsicht! Die Gefahr, den Datenträger unwiderruflich zu beschädigen ist
+bei der Benutzung eines anderen Treibers sehr gross.  Das kleinste Übel,
+dass dabei auftreten kann ist die Fehlfunktion der Schalter
+.B \-speed
+oder 
+.B \-dummy .
+.TP
+.B \-checkdrive
+Überprüft das Vorhandensein eines passenden Treibers und beendet das
+Programm.  Wenn das Gerät bekannt ist, gibt
+.B cdrecord
+dann exit code 0 aus.
+.TP
+.B \-prcap
+Gibt Infos über die Fähigkeiten eines SCSI-3/mmc-kompatiblen Laufwerks,
+die von der mode page 0x2A gelesen wurden.  Werte, die mit
+.I kB
+markiert sind, benutzen 1000 Bytes als Kilobyte, die mit 
+.I KB
+markierten Werte benutzen 1024 Byte als Kilobyte.
+.TP
+.B \-inq
+"Befragt" das Gerät und gibt die Infos aus.
+.TP
+.B \-scanbus
+Scannt alle SCSI-Geräten des SCSI-Buses und gibt die abgefragten Strings aus.
+Diese Option kann benutzt werden, um die SCSI-Adresse des CD-Brenners
+herauszufinden.  Die ausgegebenen Nummern erscheinen in der Form:
+.B "bus * 100 + target * 10 + lun
+.TP
+.B \-reset (zurücksetzen)
+Führt einen SCSI-Reset auf dem Bus aus, der den CD-Recorder ansteuert. Es
+funktioniert nicht auf allen Betriebssystemen.
+.TP
+.BR defpregap =#
+Setzt die Pausenlänge für die Pause zw. den Tracks (mit Ausnahme von dem
+Ersten).  Diese Option funktioniert z.Z. nur mit dem TEAC-Laufwerk, weil
+dieser auch im Track-at-once-Modus ohne den 2-Sekunden-Pausen vor jedem
+Track arbeiten kann.
+.br
+Diese Option wird in der Zukunft möglicherweise verschwinden.
+.TP
+.B \-packet
+Aktiviert den Paket-Schreibmodus. Dies ist eine experimentelle Funktion.
+.TP
+.BR pktsize =#
+Stellt die Paket-Größe auf # ein und erzwingt Fixed-Paket-Modus. Dies ist 
+eine experimentelle Funktion.
+.TP
+.B \-noclose
+Schließt den aktuellen Track nicht ab, nützlich im Paket-Schreibmodus. Dies
+ist eine experimentelle Funktion.
+
+.SH "TRACKOPTIONEN
+.PP
+Trackoptionen können zwischen den Track-Dateinamen angebracht werden.
+.TP
+.B \-audio
+Wenn dieser Schalter vorhanden ist, werden alle nachfolgenden Tracks im
+.B "CD-DA
+-Format (=Audioformat, ähnlich dem Red-Book-Format) geschrieben.
+Die Image-Datei(en) sollten Audio-Daten in Stereo, 16-bit, 44100 sample/s
+enthalten.  Die Anordnung der Bytes sollte etwa so aussehen: MSB links, LSB
+links, MSB rechts, LSB rechts, MSB links u.s.w.  Die Tracks sollten aus einer
+Anzahl von 2325-byte großen Blöcken bestehen.  Es ist nicht immer möglich,
+ein exaktes Image eines Audio-Tracks auf eine CDR zu schreiben, weil die
+Daten in 2353-byte-Blöcken während des Brennprozesses gelesen werden.
+.sp
+Wenn der Dateiname mit 
+.I .au
+oder
+.I .wav
+endet, wird die Datei wie eine strukturierte Audio-Datei behandelt.
+.B Cdrecord
+nimmt an, daß es sich in diesem Fall um einen Sun Audiodatei oder eine
+Microsoft .WAV-Datei handelt und extrahiert die Audio-Daten aus diesen
+Dateien.  Es überspringt dabei die Nicht-Audio-Informationen im Kopf der
+Datei.  In allen anderen Fällen wird 
+.B cdrecord
+nur richtig funktionieren, wenn der Datenstrom keinen Kopf enthält.
+Weil viele Audio-Dateien nicht in eine feste Anzahl von Blöcken (1/75s
+bzw. 2352 Byte) strukturiert sind, ist es oft notwendig, die Option 
+.B \-pad
+anzugegen.
+.B Cdrecord
+erkennt automatisch, ob die Audiodaten in der .WAV-Datei in Intels
+(little-endian) Format gespeichert sind, und wird automatisch die Umkehrung
+einleiten, wenn der CD-Brenner die Daten mit big-endian-Format erwartet.
+.B Cdrecord
+wird alle Audio-Dateien zurückweisen, die nicht den Red-Book-Voraussetzungen
+entsprechen (16-bit Stereosamples in PCM Kodierung mit 44100 Samples/s).
+.sp
+Andere strukturierte Audio-Formate können ebenfalls von
+.B cdrecord
+benutzt werden, solange die Datenstruktur den oben beschriebenen
+Voraussetzungen entspricht (rohe PCM-Daten in big-endian Byte-Anordnung).
+Wenn die Datei allerdings einen Kopf enthält, wird dieser als Knackgeräusch
+am Anfang des Tracks zu höhren sein.
+.TP
+.B \-swab
+Bei der Verwendung dieses Schalters wird angenomen, daß die Audiodaten
+im byteumgekehrter (little-endian) Anordnung vorliegen. Einige neue CD-Brenner
+u.a. Yamaha, Sony und die neueren SCSI-3/mmc-Geräte verlangen die Audiodaten
+in der little-endian-Ordnung, während sie von anderen Geräten die Audiodaten
+in big-endian-Ordnung erwartet werden, so wie es normallerweise beim
+SCSI-Protokol verwendet wird.
+.B Cdrecord
+weis, ob der Recorder die Daten im big-endian oder little-endian-Ordnung
+erwartet und korrigiert den Datenstrom automatisch, wenn das Format nicht
+dem des Recorders entspricht.  Sie werden die Option 
+.I \-swab 
+nur benötigen, wenn die Daten in Intel (little-endian) Byte-Ordnung vorliegen.
+.sp
+Die detaillierte Ausgaben (-verbose) von
+.B cdrecord
+zeigen ihnen, ob -swab benötigt wird, um die Byteordnung auf den Recorder
+anzupassen.
+.B Cdrecord
+wird es nicht anzeigen, wenn der
+.I \-swab
+-Schalter bereits für einen Track angegeben ist.
+.TP
+.B \-data
+Wenn dieser Schalter vorhanden ist, werden alle nachfolgenden Tracks im
+.B "CD-ROM mode 1
+(Yellow Book) Format geschrieben. Die Daten entsprechen einer Anzahl von 
+2048-Byte-Blöcken.  Die Datei für diesen Track sollte
+.BR ISO-9660 " oder " "Rock Ridge-
+Dateisystem-Image enthalten (s. mkisofs(8) für mehr Details).  Wenn der
+Daten-Track ein 
+.B ufs
+-Dateisystem-Image ist, sollte die Fragmentgröße 2 KB oder höher sein,
+um den CD-Laufwerken mit 2KB-Sektorgröße das Lesen zu ermöglichen.
+.TP
+.I " "
+\-data ist standardmässig aktiviert, solange kein anderer Schalter vorhanden
+ist.
+.TP
+.B \-mode2
+Wenn dieser Schalter angegeben wird, werden alle nachfolgenden Tracks im
+.B "CD-ROM mode 2
+-Format geschrieben. Die Daten entsprechen einer Anzahl von 2048-Bytes.
+.TP
+.B \-xa1
+Wenn dieser Schalter vorhanden ist, werden alle nachfolgenden Tracks im
+.B "CD-ROM XA mode 1
+-Format geschrieben. Die Daten entsprechen einer Anzahl von 2048-Bytes.
+.TP
+.B \-xa2
+Wenn dieser Schalter vorhanden ist, werden alle nachfolgenden Tracks im
+.B "CD-ROM XA mode 2
+-Format geschrieben. Die Daten entsprechen einer Anzahl von 2048-Bytes.
+.TP
+.B \-cdi
+Wenn dieser Schalter vorhanden ist, werden alle nachfolgenden Tracks im
+.B "CDI
+-Format geschrieben. Die Daten entsprechen einer Anzahl von 2048-Bytes.
+.B \-isosize
+Benutzt die Größe des
+.B "ISO-9660
+Dateisystems als die Größe des nächsten Tracks.  Diese Option wird benötigt,
+wenn Sie das Image von einer "rohen" Partition oder direkt von einer
+Quell-CD lesen. Im ersten Fall begrenzt die Option
+.B \-isosize
+die Größe der CD auf die Größe des Dateisystems. Im zweiten Fall wird die
+Option 
+.B \-isosize
+gebraucht, damit 
+.B cdrecord
+das Einlesen der letzten 2 Auslaufblöcke verhindert, die jeder CD-Recorder
+im Track-at-once-Modus hinzufügt. Diese 2 Blöcke können von dem Quellgerät
+nicht gelesen werden und verursachen so einen Buffer-Underrun.  Benutzen
+Sie diese Option nicht, wenn
+.B cdrecord
+die Trackdaten direkt von der
+.IR Standardeingabe
+einliest.
+Diese Größe kann zur Zeit nicht verwendet werden, um die Größe eines
+Dateisystems zu bestimmen, wenn die Multisession-Option angegeben wurde.
+.TP
+.B \-pad
+Wenn es sich um einen Datentrack handelt, werden zu diesem und den folgenden
+Datentracks je 15 Sektoren null-Daten hinzugefügt.  In diesem Fall wird die
+.B \-pad 
+-Option auch durch die 
+.B padsize=
+-Option verdrängt.
+.B -pad
+gilt dann als eine Abkürzung für
+.BI padsize=15s.
+Wenn sich die 
+.I \-pad 
+-Option auf ein Audiotrack bezieht, wird 
+.B cdrecord 
+die Audiodaten zu einer Anzahl aus 2352-Bytes-Blöcken erweitern. Dabei wird
+der letzte (unvollständige) Block mit 0-Bytes (absolute Stille) aufgefüllt.
+.TP
+.BR padsize= #
+Gibt die Menge der Daten an, die zum jeweils nächsten Track angehängt werden.
+Im Gegensatz zum Verhalten der 
+.B \-pad
+-Option wird dieser Wert für die restlichen nachfolgenden Tracks auf 0
+zurückgesetzt.
+Siehe
+.BR fs =
+-Option für mögliche Argumente.
+Benutzen Sie diese Option, wenn ihr CD-Laufwerk die letzten Sektoren
+eines Tracks nicht lesen kann, oder wenn die CD auf einem 
+.B Linux 
+-System mit dem "ISO-9660 filesystem read ahead bug" verwendet werden
+soll.  Wenn eine leere Datei als Quelle dienen soll, kann es diese Option auch
+dazu genutzt werden, eine Disk nur aus den "padding"-Daten zu schreiben.
+.TP
+.B \-nopad
+Die nachfolgenden Tracks nicht ausfüllen \- das ist die Standardeinstellung.
+.TP
+.BR pregap=#
+Setzt die Pausenlänge für die Pause vor dem nächsten Track.  Diese Option
+funktioniert z.Z. nur mit den TEAC-Laufweren, wenn Track-At-Once-CDs ohne
+der 2 Sekunden Pause vor jeder Track erstellt werden sollen.
+.br
+Diese Funktion verschwindet möglicherweise in den zukünftigen Versionen.
+.TP
+.B \-preemp
+Wenn dieser Schalter vorhanden ist, werden alle TOC-Einträge für die
+nachfolgenden Audiotracks als gesampelt mit 50/15 µsec preemphfasis
+angezeigt.  Die Daten werden jedoch nicht während des Datentransfers zw.
+der Datei und dem Recorder geändert.  Diese Option hat keine Wirkung auf
+die Datentracks.
+.TP
+.B \-nopreemp
+Wenn dieser Schalter vorhanden ist, zeigen alle TOC-Einträge, daß die
+Audio-Daten mit linearen Daten gemastert sind \-  dies ist der Normalfall.
+.TP
+.B bytes=#
+Eine veralterte Option, die die Trackgröße angibt. Sie sollte nicht benutzt
+werden, da sie in cdrecord-1.7+ nicht mehr vorhanden sein wird.
+.TP
+.B tsize=#
+Wenn das Image des nachfolgenden Tracks direkt auf einer Partition vorliegt,
+gibt diese Option die Menge der Daten auf dieser Disk an.  Wenn das Image
+des nachfolgenden Tracks in einer Datei gespeichert ist, wird die Trackgröße
+durch die Größe dieser Datei bestimmt.  Wenn der Track ein ISO 9660 -
+Dateisystem enthalten soll, sollte die Option
+.I \-isosize
+zum bestimmen der Länge verwendet werden.
+.br
+Im Disk-at-Once-Modus (noch nicht implentiert) und mit einigen Laufwerken,
+die TEAC's Programmschnittstelle verwenden (trotz des Track-at-Once-Modus), muß
+.B cdrecord
+die Länge des Tracks schon vor dem Schreiben bekannt sein.  Cdrecord prüft
+das vor dem Schreiben und bricht ab.  Wenn das passiert, sollten Sie zunächst
+.B "mkisofs -print-size
+ausführen und die Ausgabe als Argument für die Option
+.BR tsize =
+benutzen.
+.br
+Siehe
+.BR fs =
+-Option für die möglichen Argumente.
+.SH BEISPIELE
+.PP
+Für alle unten aufgeführte Beispiele wird angenommen, daß der CD-Recorder
+an dem primären SCSI-Bus des Rechners angeschloßen ist.  Die SCSI-ID sei 2.
+.PP
+Aufnahme einer einfachen CD-ROM mit Double-Speed mit Daten aus der Datei 
+.IR cdimage.raw :
+.PP
+    cdrecord \-v speed=2 dev=2,0 cdimage.raw
+.PP
+Erstellungen einer Image-Datei mit ISO9660-Dateisystem und
+Rock-Ridge-Erweiterungen:
+.PP
+    mkisofs \-R \-o cdimage.raw /home/joerg/master/tree
+.PP
+Erstellungen einer Image-Datei mit ISO9660-Dateisystems und
+Joliet-Erweiterungen (kompatibel zu Windows 95/NT):
+.PP
+    mkisofs \-a \-R \-J \-V "Eine_CD" \-o cdimage.raw "~/backup"
+.PP
+(Dies benötigt eine aktuelle Version von mkisofs oder mkhybrid).
+
+Ein Test der erstellten Datei vor dem Schreiben auf die CD, mit Solaris:
+.PP
+    mount \-r \-F fbk \-o type=hsfs /dev/fbk0:cdimage.raw /mnt
+.PP
+Und mit Linux:
+.PP
+    mount cdimage.raw \-r \-t iso9660 \-o loop /mnt
+.PP
+Nun kann es nochmal mit:
+.PP
+    ls \-lR /mnt
+.PP
+überprüft und mit
+.PP
+    umount /mnt
+.PP
+wieder "umounted" werden.  Wenn die Gesamtleistung des System ausreichend
+und die Dateistruktur nicht zu komlex ist, kann cdrecord auch ohne einen
+CD-Image auskommen. Benutzen Sie einfach die pipeline:
+.PP
+    mkisofs \-R /master/tree | cdrecord \-v fs=6m speed=2 dev=2,0 -
+.PP
+Die empfohlene FIFO-Größe für die Ausführung einer solcher pipeline ist 4 MB.
+Da diese Größe bereits voreingestellt ist, wird die Angabe der Option
+.B fs=
+nur dann benötigt, wenn Sie eine andere Größe verwenden möchten.  Falls ihr
+System bereits ausgelastet ist, sollten Sie auch mkisofs in Echtzeit ausführen:
+Um die Priorität von
+.B mkisofs
+zu erhöhen, ersetzen Sie den Befehl 
+.PP
+    mkisofs \-R /master/tree
+.br
+durch 
+.br
+    priocntl \-e \-c RT \-p 59 mkisofs \-R /master/tree
+.sp
+auf Solaris bzw. durch
+.sp
+    nice --18 mkisofs \-R /master/tree
+.sp
+auf Systemen, die
+.B "UNIX International compliant realtime scheduling 
+nicht unterstützen (z.B. Linux).
+.PP
+Cdrecord läuft mit der Priorität 59 auf Solaris und Sie sollten mkisofs
+nicht mit einer Priorität höher als 58 ausführen.  Auf anderen Systemen
+sollten Sie mkisofs mit wenigstens nice --18 ausführen.
+.PP
+Herstellung einer CD-ROM ohne einer Image-Datei wurde auf einer
+Sparcstation-2 mit Yamaha CDR-400 erfolgreich getestet.  Es funktionierte
+mit bis zu 4-facher Geschwindigkeit, solange der Rechner nicht belastet
+wurde.  Ein schnellerer Rechner wäre vermutlich in der Lage, mit 4-facher
+Geschwindigkeit auch unter Last zu schreiben.
+
+Aufnahme einer reinen CD-DA (Audio-CD) mit einfacher Geschwindigkeit (jeder
+Track ist in der Datei mit dem Namen wie 
+.IR track01.cdaudio ,
+.IR track02.cdaudio ,
+etc. enthalten):
+.PP
+    cdrecord \-v speed=1 dev=2,0 -audio track*.cdaudio
+.PP
+Eine Simulation, um den fehlerfreien Betrieb mit Doble-Speed zu gewährleisten
+(Option -dummy wird benutzt):
+.PP
+    cdrecord \-v \-dummy speed=2 dev=2,0 \-audio track*.cdaudio
+.PP
+Herstellung einer Mixed-Mode-CD mit einem ISO9660-Dateisystem aus der Datei
+.I cdimage.raw
+als erstes Track, die restlichen Audiotracks werden aus den Dateien
+.IR track01.cdaudio ,
+.IR track02.cdaudio ,
+etc. erstellt:
+.PP
+    cdrecord \-v \-dummy dev=2,0 cdimage.raw \-audio track*.cdaudio
+.PP
+Vorgensweise mit einem Brenner, der auf der Angabe der Trackgröße vor dem
+Schreibvorgang besteht:
+.PP
+    mkisofs -R -q -print-size /master/tree
+.PP
+gibt die Größe aus, die dann durch 
+XXX in
+.PP
+    mkisofs -R /master/tree | cdrecord speed=2 dev=2,0 tsize=XXXs -
+.PP
+übergeben wird.
+
+.SH SIEHE AUCH
+.BR mkisofs (1),
+.BR scg (7),
+.BR fbk (7).
+
+.SH ANMERKUNGEN
+Die aktuelle Version von 
+.B cdrecord
+arbeitet ausschließlich im 
+.B "track at once
+Modus.
+Falls die auf diese Weise erstellten CDs mehr als ein Track beinhalten,
+sind sie als Vorlage für eine industrielle Massenproduktion ungeeignet.
+Für solche Projekte wird die Option 
+.B "disk at once
+benötigt. Trotzdem können mit
+.B cdrecord
+erstellte CDs normalerweise in allen CD-Laufwerken abgespielt werden.
+Einige ältere Audio-CD-Player könnten jedoch einen 2 Sekunden langen
+Klick zwischen 2 Audio-Tracks produzieren.
+.PP
+Die kleinste Größe eines Tracks ist 4 Sekunden bzw. 300 Sektoren. Wenn Sie es
+dennoch mit kleineren Tracks versuchen, wird der CD-Recorder die restlichen
+Sektoren mit Nullen auffühlen. Es ist kein Fehler, auch wenn die SCSI-Meldung
+dabei wie ein Fehler aussieht.
+.PP
+.B Cdrecord
+wurde mit einem aufgerüsteten Philips CDD-521 Recorder sowohl mit Single- als
+auch mit Double-Speed auf einer SparcStation 20/502 problemlos getestet,
+langsamere Systeme sollten ebenfalls funktionieren.  Neuere
+Philips/HP/Plasmon/Grundig-Laufwerke, Yamaha CDR-100 und CDR-102 sollten
+ebenfalls funktionieren.  Der Plasmon RF-4100 läuft, wurde aber noch nicht
+im Multisession-Betrieb getestet.  Ein Philips CDD-521, der noch nicht
+aufgerüstet ist, wird nicht funktionieren.  Der Sony CDU-924 wurde getestet,
+hat aber noch keine Hardwareunterstützung für XA-mode2 und kann deswegen
+keine standardkonforme Multisession-CDs erstellen.  Der Ricoh RO-1420C
+läuft, aber einige Anwender haben anscheinend Probleme mit der Option
+speed=2, versuchen Sie bitte speed=0 in diesem Fall.
+.PP
+Yamaha CDR-400 und alle neueren SCSI-3/mmc-konforme Geräte sind sowohl mit
+Single- als auch mit Multisession unterstützt.
+.PP
+Sie sollten mehrere Tests mit allen verfügbaren Geschwindigkeiten mit der
+Option
+.B \-dummy
+durchführen, wenn 
+.B cdrecord auf einem unbekannten System ausgeführt wird. Das Brennen ist ein
+Echtzeit-Prozeß!
+.B NFS
+kann den konstanten Datenstrom nicht garantieren!  Wenn Sie 
+.B cdrecord 
+dennoch mit Images, die auf einem per 
+.B NFS
+gemounteten Dateisystem befinden, einsetzen wollen, sollte der FIFO möglichst
+groß sein.  Ich benutzte 
+.B cdrecord 
+mit durchschnittlicher Belastung auf einer SS20/502 und sogar noch mit
+vierfacher Geschwindigkeit auf einer gut ausgelasteten Sparcstation-2 , es
+wird aber trotzdem empfohlen, die Systemlast während des Schreibvorgangs
+so niedrig wie möglich zu halten.  Wenn Sie sichergehen wollen, daß die
+Buffer-Underruns nicht von dem Quell-Laufwerk verursacht werden, kann das
+Kommando
+.PP
+.B "    cdrecord -dummy dev=2,0 padsize=600m /dev/null
+.PP
+eine CD mit Nullen zu beschreiben (simulieren).
+.B Cdrecord
+muss als root ausgeführt werden, um direkten Zugriff zu
+.B /dev/scg?
+zu bekommen und sich den Arbeitsspeicher reservieren zu können.
+.PP
+Wenn andere Benutzer den root-Zugang nicht bekommen dürfen, kann
+.B cdrecord
+auch als suid-root installiert werden. Dies erlaubt allen Benutzern, oder
+einer bestimmten Benutzergruppe, die keine root-Privilegien haben,
+.B cdrecord
+auszuführen.
+.B Cdrecord
+prüft in diesem Fall, ob der reale Benutzer Zugriffsrechte auf die angegebenen
+Dateien besitzt. Um allen Benutzern die Benutzung von 
+.B cdrecord,
+zu gestatten, geben Sie folgendes ein:
+.PP
+	chmod 4711 /usr/local/bin/cdrecord
+.PP
+
+Um einer geschlossenen Benutzergruppe Ausführungsberechtigung zu geben, geben
+Sie folgendes ein:
+.PP
+	chmod 4710 /usr/local/bin/cdrecord
+.br
+	chgrp cdburners /usr/local/bin/cdrecord
+.PP
+Ausserdem müssen Sie die Gruppe 
+.I cdburners
+auf dem System einrichten und die Personen ihres Vertrauens in diese aufnehmen.
+.PP
+Geben Sie niemals Schreibrechte für Nicht-root-Benutzer füer die 
+.I /dev/scg?
+Geräte, weil dann jeder ihre gesammten Festplatten formatieren
+kann !!!
+.PP
+Sie sollten keine älteren Geräte, die mit disconnect/reconnect nicht umgehen
+können, an den selben SCSI-Bus wie der CD-Brenner oder die Quell-Festplatte
+anschließen.
+.PP
+Eine CD kann nicht mehr als 99 Tracks beinhalten.
+.PP
+Bei der Erstellung einer CD mit Audio- und Daten-Tracks sollte nur der erste
+Track Daten beinhalten, da sonst eine CDplus erstellt wird (Multisession-CD
+mit Audio-Tracks innerhalb der ersten Session und einem angeschlossenen
+Daten-Track).
+.PP
+Viele Betriesbsysteme sind aber nicht in der Lage, mehr als einen (ersten)
+Daten-Track zu lesen, oder sie brauchen spezielle Software für diese Zwecke.
+.PP
+Mehr Informationen über den SCSI-Befehlssatz eines HP CD-Recorders befinden
+sich unter:
+.PP
+	http://www.hp.com/isgsupport/cdr/index.html
+.PP
+Falls Sie mehr Informationen über den SCSI-Befehlssatz eines nicht
+unterstützten Recorders besitzen, kontaktieren sich bitte den Autor (s.u.).
+.PP
+Der Philips CDD 521 CD-Recorder (selbst in der aufgerüsteten Version)
+hat mehrere Firmware-Bugs. Einige davon machen es notwendig, dem Gerät
+mehrmals den Saft abzudrehen oder neuzubooten.
+.PP
+Benutzung von 
+
+.B cdrecord
+mit dem schlecht entworfenen
+
+.B "Linux SCSI generic Treiber."
+Sie sollten wissen, daß
+
+.B cdrecord
+einen Hack benutzt, daß die Funktionalität des scg-Treiber emuliert.
+
+.B Linux
+mehrere Bugs:
+.TP
+\(bu
+Es kann kann nicht prüfen, ob ein SCSI-Kommando komplett gesendet ist.
+
+.TP
+\(bu
+Es kann das SCSI-Stabusbyte nicht auslesen.
+
+Aus diesem Grund meldet 
+.B Cdrecord
+die fehlgeschlagenen Kommandos nicht in jedem Fall.
+
+
+.TP
+\(bu
+Es kann nicht den realen DMA-Count des Transfers zurückgeben.
+
+.B Cdrecord
+kann nicht sagen, ob es hier DMA residual count verblieb.
+
+.TP
+\(bu
+Es kann die Anzahl der gültigen Bytes in "auto-sense-data" nicht bestimmen.
+.B Cdrecord
+kann nicht sagen, ob der Gerät überhaupt irgendwelche Sense-Daten
+übermittelt.
+.TP
+\(bu
+Es holt zu wenige Daten in der  Auto-Abfrage (CCS/SCSI-2/SCSI-3 braucht >= 18).
+.PP
+Die FIFO-Prozentangabe wird berechnet, bevor der Datenblock geschrieben ist.
+Aus diesem Grund wird hier niemals 100%-FIFO angezeigt, solange FIFO benutzt
+wird.
+
+.SH DIAGNOSE
+.PP
+Sobald die Meldung
+.PP
+Starting to write CD at speed %d in %s mode for %s session.
+.PP
+erschienen ist, können Sie den Start innerhalb von 9 Sekunden mit ^C abbrechen.
+Eine typische Fehlermeldung auf ein SCSI-Befehl sieht in etwa so aus:
+.sp
+.RS
+.nf
+cdrecord: I/O error. test unit ready: scsi sendcmd: no error
+status: 0x2 (CHECK CONDITION)
+Sense Bytes: 70 00 05 00 00 00 00 0A 00 00 00 00 25 00 00 00 00 00
+Sense Key: 0x5 Illegal Request, Segment 0
+Sense Code: 0x25 Qual 0x00 (logical unit not supported) Fru 0x0
+Sense flags: Blk 0 (not valid)
+.fi
+.sp
+.RE
+Die erste Zeile gibt die Information über den Transport des Befehls.
+Der Text nach der ersten Spalte ist der fehlerhafte Systemaufruf aus der
+Sicht des Kernels. Es ist i.d.R. ein
+.B "I/O error
+(Ein/Ausgabe-Fehler),
+solange kein anderes Problem aufgetreten ist. Die nächsten Wörter enthalten
+eine knappe Beschreibung des fehlgeschlagenen SCSI-Befehls.  Der restliche
+Text informiert über Probleme, die bei der Übertragung im SCSI-Bus aufgetreten
+sind.
+.B "fatal error
+bedeutet, daß es nicht möglich war, den Befehl zu übertragen (z.B. weil kein 
+Gerät an der angesprochen Adresse vorhanden ist).
+.PP
+Die zweite Zeile enthält Informationen über den SCSI-Statuscode, der
+zurückgegeben wurde, falls die Übertragung gelungen ist. Es ist der
+Fehlercode, den das Gerät ausgibt.
+.PP
+Die dritte Zeile ist ein hex-dump der auf den Befehl automatisch 
+zurückgegebenen Sense-Informationen.
+.PP
+Die vierte Zeile ist der Fehlertext für den Sense-Schlüssel, sofern dieser
+verfügbar ist, gefolgt von einer Segment-Nummer, die ausschliesslich für
+.I copy
+-Befehl gültig ist. Wenn die Fehlermeldung sich nicht direkt auf den
+nachfolgenden Befehl bezieht, wird der Text
+.I deferred error
+angehängt.
+.PP
+Die fünfte Zeile ist der Fehlertext für den Sense-Code und das Sense-Stichwort,
+sofern dieses bekannt ist. Wenn der Typ des Gerätes bekannt ist, werden die
+Sense-Codes anhand der Datentabelle 
+in
+.IR scsierrs.c " 
+ausgewertet.
+Diesem Text folgt eine Fehlernummer für eine vor Ort tauschbare Ersatzeinheit.
+.PP
+Die sechste Zeile enthält die Blocknummer, die den fehlgeschlagenen Befehl
+widergibt, sowie einen Text über bestimmte Fehler. 
+Die Blocknummer ist nicht immer korrekt.
+.PP
+Die folgende Meldung ist kein Fehler:
+..sp
+.RS
+.nf
+Track 01: Total bytes read/written: 2048/2048 (1 sectors).
+cdrecord: I/O error. flush cache: scsi sendcmd: no error
+status: 0x2 (CHECK CONDITION)
+Sense Bytes: F0 00 05 80 00 00 27 0A 00 00 00 00 B5 00 00 00 00 00
+Sense Key: 0x5 Illegal Request, Segment 0
+Sense Code: 0xB5 Qual 0x00 (dummy data blocks added) Fru 0x0
+Sense flags: Blk -2147483609 (valid)
+.fi
+.sp
+.RE
+Es informiert nur, daß ein Track zu klein ist und auf 300 Sektoren erweitert
+wurde.
+.SH BUGS
+.PP
+.B Cdrecord
+hat sogar mehr Optionen als 
+.BR ls .
+.PP
+.B Cdrecord
+sollte überprüfen, ob die Quelldaten auf das Medium passen.
+Zur Zeit bekommen Sie in diesem Fall unvorhersehbare Ergebnisse.
+.PP
+Es sollte eine Option fürs Schreiben der Index-Nummern für Audio-Tracks geben.
+.PP
+Es sollte eine Recover-Option geben, die CD wiederherstellt, die während eines
+Stromausfalls beschädigt worden sind.
+
+.SH CREDITS
+.PP
+.TP 15
+Bill Swartz	(Bill_Swartz@twolf.com)
+.br
+Für die Hilfe mit der Treiber-Unterstützung für TEAC-Laufwerke.
+.TP
+Aaron Newsome	(aaron.d.newsome@wdc.com)
+.br
+Für die Erlaubnis, an seinem Sony-Laufwerk entwickeln zu dürfen.
+.TP
+Eric Youngdale	(eric@andante.jic.com)
+.br
+Für die Unterstützung durch mkisofs.
+.TP
+Gadi Oxman	(gadio@netvision.net.il)
+.br
+Für die Tips bezüglich des ATAPI-Standards.
+.TP
+Finn Arne Gangstad	(finnag@guardian.no)
+.br
+Für die erste Implementierung des FIFOs.
+.TP
+Dave Platt	(dplatt@feghoot.ml.org)
+.br
+Für die Erstellung einer experimentellen Packet-Writing-Unterstützung, die
+erste Implementation der CD-RW-Unterstützung, den ersten .WAV-Decoder und
+viele nette Diskussionen über cdrecord.
+
+.SH ÜBERSETZUNG
+.PP
+.TP 15
+Eduard Bloch (eb@zombie.inka.de)
+.br
+
+Neuere Versionen dieses Dokumentes, sowie die aktuellste Übersetzung der
+README-Dateien aus dem cdrecord-Paket finden Sie unter
+http://www.cdr.notrix.de .
+
+.SH AUTOR
+.nf
+J\*org Schilling
+Seestr. 110
+D-13353 Berlin
+Deutschland
+.fi
+.PP
+Berichten Sie Fehler und Vorschläge an:
+.PP
+.B
+joerg@schily.isdn.cs.tu-berlin.de
+oder
+.B
+js@cs.tu-berlin.de
+oder
+.B
+schilling@fokus.gmd.de
+
