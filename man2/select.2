@@ -28,10 +28,13 @@
 .\"
 .\" Sun Feb 11 14:07:00 MET 1996  Martin Schulze  <joey@linux.de>
 .\"	* translated from english to german
+.\" Mon Dec  3 16:47:05 CET 2001  Daniel Kobras <kobras@linux.de>
+.\"	* Typo fix.
+.\"	* Document glibc2.1 addition pselect().
 .\"
-.TH SELECT 2 "27. April 1996" "Linux" "Systemaufrufe"
+.TH SELECT 2 "3. Dezember 2001" "Linux" "Systemaufrufe"
 .SH BEZEICHNUNG
-select \- Synchrone I/O-Multiplexsteuerung
+select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \- Synchrone I/O-Multiplexsteuerung
 .SH ÜBERSICHT
 .B #include <sys/time.h>
 .br
@@ -39,8 +42,13 @@ select \- Synchrone I/O-Multiplexsteuerung
 .br
 .B #include <unistd.h>
 .sp
-.BI "int select(int " n ", fd_set *" readfds ", fd_set *"
-.IB writefds ", fd_set *" exceptfds ", struct timeval " timeout ");"
+\fBint select(int \fIn\fB, fd_set *\fIreadfds\fB,
+fd_set *\fIwritefds\fB, fd_set *\fIexceptfds\fB,
+struct timeval *\fItimeout\fB);
+.sp
+\fBint pselect(int \fIn\fB, fd_set *\fIreadfds\fB,
+fd_set *\fIwritefds\fB, fd_set *\fIexceptfds\fB,
+const struct timespec *\fItimeout\fB, sigset_t * \fIsigmask\fB);
 .sp
 .BI "FD_CLR(int " fd ", fd_set *" set );
 .br
@@ -51,124 +59,163 @@ select \- Synchrone I/O-Multiplexsteuerung
 .BI "FD_ZERO(fd_set *" set );
 .fi
 .SH BESCHREIBUNG
-.B select()
-wartet für eine Reihe von Dateideskriptoren, daß sich deren Status
-ändert.
+Die Funktionen \fBselect\fR und \fBpselect\fR
+überwachen den Dateistatus für eine Reihe von Dateideskriptoren.
+.PP
+Die Funktionsweise der beiden Varianten ist identisch, abgesehen von
+drei Unterschieden:
+.TP
+(i)
+The \fBselect\fR-Funktion verwendet zur Angabe von Zeitlimits eine Struktur
+vom Typ \fIstruct timeval\fR (mit Sekunden und Mikrosekunden), \fBpselect\fR
+hingegen den Typ \fIstruct timespec\fR (mit Sekunden und Nanosekunden).
+Die Strukturen sind über /usr/include/sys/time.h definiert als:
+.sp
+.nf
+struct timeval { 
+.in +8
+long    tv_sec;         /* Sekunden */
+long    tv_usec;        /* Mikrosekunden */
+.in -8
+};
 
+und
+
+.nf
+struct timespec {
+.in +8
+long    tv_sec;         /* Sekunden */
+long    tv_nsec;        /* Nanosekunden */
+.in -8
+};
+.fi
+.TP
+(ii)
+Während \fBselect\fR den Parameter \fItimeout\fR mitunter verändert, um
+anzuzeigen, wieviel Zeit des Limits noch verblieben ist, lässt \fBpselect\fR
+den Wert immer unverändert.
+.TP
+(iii)
+Die \fBselect\fR-Funktion besitzt keinen \fIsigmask\fR-Parameter und
+verhält sich wie \fBpselect\fR, das mit einer \fIsigmask\fR von NULL
+aufgerufen wurde.
+.PP
 Es werden drei voneinander unabhängige Mengen von Deskriptoren
 behandelt.  Bei den in
 .I readfds
-enthaltenen wird darauf geachtet, daß neue Zeichen zum Lesen
-ankommen, bei den in
+enthaltenen wird darauf geachtet, ob neue Zeichen zum Lesen
+ankommen. (Genauer, es wird kontrolliert, ob ein nachfolgender
+\fBread\fR-Systemaufruf sofort zurückkehren würde. Diese Bedingung ist
+insbesondere auch dann erfüllt, wenn der Deskriptor auf das Dateiende
+verweist.) Bei den in
 .I writefds
-angegebenen wird reagiert, wenn weitere Zeichen geschrieben werden
-können, und bei den in
+angegebenen Deskriptoren wird reagiert, wenn weitere Zeichen geschrieben
+werden können, und bei den in
 .I exceptfds
-angegebenen Deskriptoren wird reagiert, wenn etwas außergewöhnliches
-passiert ist.  Wenn die Routine beendet wird, werden die übergebenen
-Mengen so verändert, daß sie anzeigen, welcher Deskriptor seinen
+angegebenen Deskriptoren, wenn etwas außergewöhnliches
+passiert ist.  Kehrt der Systemaufruf zurück, sind die übergebenen
+Mengen so verändert, dass sie anzeigen, welcher Deskriptor seinen
 Status geändert hat.
-
-Vier Makros werden bereitgestellt, um mit diesen Mengen zu arbeiten.
+.PP
+Vier Makros stehen bereit, um mit diesen Mengen zu arbeiten.
 .B FD_ZERO
 löscht eine Menge,
 .B FD_SET
 und
 .B FD_CLR
-fügt einen Deskriptor zur Menge hinzu bzw. löscht diesen,
+fügen einen Deskriptor zur Menge hinzu bzw. löschen diesen,
 .B FD_ISSET
-prüft, ob der Deskriptor in der Menge enthalten ist.  Dieses ist
-insbesondere nach einem
-.BR "select()" -Aufruf
+prüft, ob der Deskriptor in der Menge enthalten ist.  Das ist
+insbesondere nach einem \fBselect\fR- oder \fBpselect\fR-Aufruf
 sinnvoll.
-
+.PP
 .I n
 entspricht der Zahl des am höchsten nummerierten Datei-Deskriptors in allen
 drei Mengen, plus 1.
-
+.PP
 .I timeout
-ist eine obere zeitliche Grenze, die
-.B select()
-wartet, bis es weitergeht.  Ist der Wert null, kehrt
-.B select()
-sofort zurück.  Wenn
-.I timeout
-.B NULL
-ist (kein timeout), kann
-.B select()
-unendlich lang blockieren.
-
+gibt ein Zeitlimit an, das \fBselect\fR und \fBpselect\fR
+maximal verstreichen lassen, bevor sie zurückkehren. Ist das Zeitlimit null,
+so kehren die Funktionen sofort zurück. Besitzt
+\fItimeout\fR selbst den Wert NULL, so wird kein Limit gesetzt, und
+die Funktionen können unendlich lange blockieren.
+.PP
+.I sigmask
+ist entweder NULL oder ein Zeiger auf eine Signalmaske wie in
+\fBsigprocmask\fR(2) beschrieben. Im zweiten Fall ersetzt \fBpselect\fR
+die aktuelle Signalmaske durch \fIsigmask\fR, führt dann den
+\fBselect\fR-Aufruf aus und stellt anschließend die ursprüngliche Maske
+wieder her.
+.PP
+Die Idee hinter \fBpselect\fR geht zurück auf folgende Situation: Ein
+Programm wartet gleichzeitig auf ein Signal oder eine
+Veränderung an einem Dateideskriptor. Trifft das Signal ein, so setzt der
+Signalhandler eine globale Variable. Im Hauptprogramm wird zunächst getestet,
+ob die Variable gesetzt ist und andernfalls ein \fBselect\fR-Aufruf
+gestartet. Trifft das Signal zwischen dem Test und dem \fBselect\fR-Aufruf
+ein, so kann das dazu führen, dass das Programm nicht mehr beendet wird.
+\fBpselect\fR hingegen erlaubt es, diese sogenannte Race Condition zu
+umgehen, indem das Signal zunächst geblockt, getestet und erst unmittelbar
+mit dem \fBselect\fR-Aufruf wieder freigegeben wird. Da der Linux-Kernel
+bislang keinen speziellen \fBpselect\fR-Systemaufruf bereit stellt, muss
+die aktuelle glibc2 ihn durch mehrere Aufrufe emulieren. Die Fehlerquelle
+ist daher auch mit \fBpselect\fR nach wie vor vorhanden.
+.PP
 .SH "RÜCKGABEWERTE"
-Bei Erfolg gibt
-.B select()
+Bei Erfolg geben \fBselect\fR und \fBpselect\fR
 die Anzahl der Deskriptoren zurück, deren Status sich geändert hat.
+Der Rückgabewert kann auch null sein, wenn das Zeitlimit erreicht wurde,
+bevor etwas interessantes passiert ist.
 Wenn ein Fehler aufgetreten ist, wird \-1 zurückgegeben und 
 .I errno
 entsprechend gesetzt.  Die Mengen und
 .I timeout
-befinden sich in einem undefinierten Zustand, auf deren Inhalt sollte
-sich also bei einem Fehler nicht mehr verlassen werden.
-
+befinden sich dann in einem undefinierten Zustand. Auf ihren Inhalt sollte
+man sich folglich bei einem Fehler nicht mehr verlassen.
+.PP
 .SH FEHLER
 .TP 0.8i
 .B EBADF
-In einer der Mengen wurde ein ungültiger Datei-Deskriptor angegeben.
+In einer der Mengen wurde ein ungültiger Dateideskriptor angegeben.
 .TP
 .B EINTR 
-Ein nicht-blockierendes Signal wurde empfangen.
+Ein nicht-blockiertes Signal wurde empfangen.
 .TP
 .B EINVAL 
 .I n
 ist negativ.
 .TP
 .B ENOMEM
-.B select()
-ist nicht in der Lage, Speicher für die internen Tabellen zu
-bekommen.
-
+.B select
+war nicht in der Lage, Speicher für die internen Tabellen zu bekommen.
+.PP
 .SH ANMERKUNGEN
 Einige Programme rufen
-.B select()
+.B select
 mit drei leeren Mengen,
 .I n
 gleich null und einem von null verschiedenen
 .I timeout
 auf, um eine portable Möglichkeit zu haben, ein
-.B sleep()
+.B sleep
 mit der Präzision von Bruchteilen einer Sekunde zu benutzen.
-
-Bei Linux wird
-.I timeout
-derart verändert, daß es der nicht verstrichenen Zeit
-entspricht (relativ zum vorherigen
-.IR timeout ).
-Die meisten anderen Implementierungen unterlassen dieses, was Probleme
-mit sich bringt, wenn unter Linux geschriebener Quellcode, der
-.I timeout
-auswertet, auf andere Betriebssysteme portiert wird, und wenn Quellcode
-von anderen Betriebssystemen auf Linux portiert wird, der das struct
-timeval für mehrere
-.BR select() s
-in einer Schleife ohne Reinitialisierung verwendet.  Portabler Code
-sollte daher annehmen, daß
-.I timeout
-undefiniert ist, nachdem
-.B select()
-beendet ist.
-
-Nachdem der einzige Schreiber eine named Pipe schließt, wird
-.B select()
-zurückkehren und angeben, daß etwas von der Pipe gelesen werden kann.
-Wenn dann von dieser gelesen wird, wird 
-.BR read (2)
-0 zurückliefern, was das Dateiende markiert.  Code, der annimmt, daß
-.B select()
-blockiert, sollte die Pipe mit
-.B O_RDWR
-statt
-.B O_RDONLY
-öffnen.
-
+.PP
+Bei Linux wird \fItimeout\fR derart verändert, dass es dem noch nicht
+verstrichenen Teil des Zeitlimits entspricht. Die meisten Implementierungen
+anderer Betriebssysteme unterlassen dies. Das bringt Probleme mit sich, wenn
+unter Linux geschriebener Quellcode, der \fItimeout\fR auswertet, auf andere
+Betriebssysteme portiert wird, und wenn Quellcode von anderen Betriebssystemen
+auf Linux portiert wird, der das struct timeval für mehrere \fBselect\fRs in
+einer Schleife verwendet, ohne ihn jedesmal neu zu initialisieren. Portabler
+Code sollte daher annehmen, dass \fItimeout\fR undefiniert ist, nachdem
+\fBselect\fR beendet wurde.
+.PP
+Wenn der einzige Schreiber eine Named-Pipe geschlossen hat, kehrt \fBselect\fR
+zurück und signalisiert, dass etwas von der Pipe gelesen werden kann.  Ein
+anschließender \fBread\fR-Aufruf liefert jedoch null zurück, da das Dateiende
+erreicht ist. Code, der annimmt, dass \fBselect\fR in diesem Fall blockiert,
+sollte die Pipe mit \fBO_RDWR\fR statt \fBO_RDONLY\fR öffnen.
+.PP
 .SH BEISPIEL
 .nf
 #include <stdio.h>
@@ -176,7 +223,7 @@ statt
 #include <sys/types.h>
 #include <unistd.h>
 
-int main(int argc, char *argv[])
+int main(void)
 {
     fd_set rfds;
     struct timeval tv;
@@ -202,12 +249,24 @@ int main(int argc, char *argv[])
 
     exit(0);
 }
+.SH "KONFORM ZU"
+4.4BSD. (Die \fBselect\fR-Funktion trat das erste Mal in 4.2BSD auf.)
+Gewöhnlich auch portierbar auf Nicht-BSD-Systeme (System V-Varianten
+eingeschlossen), die eine Schnittstelle vom Typ des BSD-Socketlayers
+unterstützen. Zu beachten ist jedoch, dass die System V-Varianten
+typischerweise die timeout-Variable vor der Rückkehr setzen. Bei den
+BSD-Varianten ist das nicht üblich.
+.PP
+Die \fBpselect\fR-Funktion ist in IEEE Std 1003.1g-2000 (POSIX.1g) definiert.
+Sie ist seit glibc2.1 implementiert. Auch glibc2.0 besitzt eine Funktion
+dieses Namens, die jedoch keinen Parameter \fIsigmask\fR verwendet.
 .fi
 .SH "SIEHE AUCH"
 .BR accept (2),
 .BR connect (2),
+.BR poll (2),
 .BR read (2),
 .BR recv (2),
 .BR send (2),
+.BR sigprocmask (2),
 .BR write (2).
-
