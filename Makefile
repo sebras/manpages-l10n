@@ -5,7 +5,7 @@
 
 prefix=/usr
 
-MANDIR=$(prefix)/man/de
+MANDIR=$(prefix)/share/man/de
 
 example: remove gz install
 
