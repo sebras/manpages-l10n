@@ -36,144 +36,182 @@
 .\" Sat Nov 20 20:47:38 1993: hpfs documentation added
 .\" Sat Nov 27 20:23:32 1993: Updated authorship information
 .\" Wed Jul 26 00:00:00 1995: Updated some nfs stuff, joey@infodrom.north.de
+.\" Tue Apr  2 00:38:28 1996: added info about "noauto", "user", etc.
+.\" Tue Jun 15 20:02:18 1999: added LABEL and UUID
+.\" Sat Jul 14 2001: Michael K. Johnson <johnsonm@redhat.com> added -O
 .\" German translation, Aldo Valente, aldo@dagobar.rhein.de, 951224
 .\" Sun Feb 11 14:07:00 MET 1996  Martin Schulze  <joey@linux.de>
 .\"	* slightly modified
 .\" Modified Mon Jun 10 00:01:47 1996 by Martin Schulze (joey@linux.de)
+.\" Modified Tue Dec 30 23:56:26 2003 by Jens Seidel <tux-master@web.de>
+.\"	* update to version 2.12 (of util-linux package, available at
+.\"       http://freshmeat.net/projects/util-linux/)
 .\"
-.TH FSTAB 5 "11. Februar 1996" "Linux" "Dateiformate"
+.TH FSTAB 5 "15. Juni 1999" "Linux 2.2" "Dateiformate"
 .SH BEZEICHNUNG
-fstab \- statische Informationen über das Dateisystem
+fstab \- statische Informationen über Dateisysteme
 .SH ÜBERSICHT
 .B #include <fstab.h>
 .SH BESCHREIBUNG
 Die Datei
 .B fstab
-enthält Informationen über die Dateisysteme.
+enthält Informationen über die verschiedenen Dateisysteme.
 Programme greifen nur lesend, nicht schreibend darauf zu.  Es obliegt dem 
 Systemadministrator, diese Datei zu erstellen und zu pflegen.  Jedes Dateisystem
-wird durch eine separate Zeile in der
+wird durch eine separate Zeile in
 .B fstab
 repräsentiert; innerhalb einer Zeile werden die Felder durch Tabs oder
-Leerzeichen getrennt.  Die Reihenfolge der Zeilen in der
+Leerzeichen getrennt.  Zeilen die mit '#' beginnen sind Kommentare.  Die
+Reihenfolge der Zeilen in
 .B fstab
 ist wichtig, da 
-.BR fsck "(8), " mount "(8), und " umount "(8)
+.BR fsck (8),
+.BR mount (8)
+und
+.BR umount (8)
 diese Datei sequentiell abarbeiten.
-
 
 Das erste Feld,
 .RI ( fs_spec ),
-beschreibt das zu mountende blockorientierte Device oder
-remote filesystem.
+beschreibt das zu mountende blockorientierte Gerät oder
+das entfernte Dateisystem.
+.LP
+Zum üblichen Mounten enthält dies für das zu mountende Gerät (einen Link auf)
+ein blockorientiertes Gerät (wie es von
+.BR mknod (8)
+erzeugt wird), wie `/dev/cdrom' oder `/dev/sdb7'.
+Für NFS-Dateisysteme wird <host>:<dir>, z.B. `knuth.aeb.nl:/' verwendet.
+Für procfs sollte `proc' eingetragen werden.
+.LP
+Anstatt das Gerät explizit anzugeben, kann man das zu mountende (ext2- oder
+xfs-) Dateisystem durch die UUID oder die Datenträgerbezeichnung (volume
+label) angeben (man vergleiche mit
+.BR e2label (8)
+oder
+.BR xfs_admin (8)).
+Es wird dann LABEL=<label> oder UUID=<uuid> verwendet, z.B.
+`LABEL=Boot' oder `UUID=3e6be9de\%-8139\%-11d1\%-9106\%-a43f08d823a6'.
+Dies macht das System robuster: das Hinzufügen oder Entfernen einer
+SCSI-Platte ändert den Gerätenamen, aber nicht die Bezeichnung des
+Dateisystems.
 
 Das zweite Feld,
 .RI ( fs_file ),
 gibt den Mountpunkt für das Dateisystem an.  Bei Swap-Partitionen sollte
-hier ``none'' stehen.
+hier `none' stehen.  Wenn der Name des Mountpunkts Leerzeichen enthält,
+können diese mit `\\040' angegeben werden.
 
 Das dritte Feld,
 .RI ( fs_vfstype ),
-beschreibt den Typ des Dateisystems.  Unterstützt werden zur Zeit drei
-verschiedene Typen von Dateisystemen:
-.TP
-.I minix
-ein lokales Dateisystem, das bis zu 14 oder 30 Zeichen lange Dateinamen unterstützt.
-.TP
-.I ext
-ein lokales Dateisystem mit längeren Dateinamen und größeren inodes.
-Es wurde ersetzt durch das 
-.I ext2
-Dateisystem und wird nicht mehr benutzt.
-.TP
-.I ext2
-ein lokales Dateisystem mit längeren Dateinamen, größeren inodes und vielen
-anderen Features.
-.TP
-.I xiafs
-ein lokales Dateisystem mit längeren Dateinamen, größeren inodes und vielen
-anderen Features.
-.TP
-.I msdos
-ein lokales Dateisystem für MS-DOS-Partitionen.
-.TP
-.I hpfs
-ein lokales Dateisystem für HPFS-Partitionen.
-.TP
-.I iso9660
-ein lokales Dateisystem für CD-ROM-Laufwerke.
-.TP
-.I nfs
-ein Dateisystem, um Partitionen von anderen Systemen zu mounten.
-.TP
-.I swap 
-eine Disk-Partition, die zum Swappen benutzt wird.
-.PP
-Wenn 
-.I vfs_fstype
-als ``ignore'' angegeben ist,  wird der Eintrag ignoriert.  Dies ist nützlich,
-wenn unbenutzte Partitionen angezeigt werden sollen.
+beschreibt den Typ des Dateisystems.  Linux unterstützt viele verschiedene
+Typen von Dateisystemen, z.B.
+.IR adfs ,
+.IR affs ,
+.IR autofs ,
+.IR coda ,
+.IR coherent ,
+.IR cramfs ,
+.IR devpts ,
+.IR efs ,
+.IR ext2 ,
+.IR ext3 ,
+.IR hfs ,
+.IR hpfs ,
+.IR iso9660 ,
+.IR jfs ,
+.IR minix ,
+.IR msdos ,
+.IR ncpfs ,
+.IR nfs ,
+.IR ntfs ,
+.IR proc ,
+.IR qnx4 ,
+.IR reiserfs ,
+.IR romfs ,
+.IR smbfs ,
+.IR sysv ,
+.IR tmpfs ,
+.IR udf ,
+.IR ufs ,
+.IR umsdos ,
+.IR vfat ,
+.IR xenix ,
+.I xfs
+und möglicherweise andere.  Für weitere Details wird auf
+.BR mount (8)
+verwiesen.  Die durch den aktuell laufenden Kernel unterstützten Dateisysteme
+sind in
+.I /proc/filesystems
+aufgeführt.  Ein Eintrag
+.I swap
+kennzeichnet eine Swap-Datei oder -Partition, näheres dazu ist in
+.BR swapon (8)
+zu finden.  Wenn
+.I ignore
+angegeben ist, wird die Zeile ignoriert.  Dies ist nützlich, wenn
+unbenutzte Partitionen angezeigt werden sollen.      
 
 Das vierte Feld,
 .RI ( fs_mntops ),
 beschreibt die zum Dateisystem gehörenden Mountoptionen.
 
-Es gestaltet sich als eine durch Kommata getrennte Liste von Optionen.  Sie
-enthält zumindest den Mount-Typ und zusätzliche, Dateisystemspezifische, 
-Optionen.  Optionen für nicht-nfs-Dateisyteme sind in 
+Es ist eine durch Kommata getrennte Liste von Optionen.  Sie enthält zumindest
+die Art des Mountens (auto, noauto, ...) und eventuell zusätzliche
+dateisystemspezifische Optionen.  Optionen für nicht-nfs-Dateisysteme sind in
 .BR mount (8)
 dokumentiert.
 nfs-spezifische Optionen sind nachzulesen in
 .BR nfs (5).
+Für alle Dateisysteme können die Optionen `noauto' (nicht mounten bei
+"mount -a", z.B. während des Bootens), `user' (erlaubt Nutzern das Mounten),
+`owner' (erlaubt dem Besitzer des Geräts das Mounten) und `_netdev'
+(Gerät erfordert ein verfügbares Netzwerk) verwendet werden.
+Die Optionen `owner' und `_netdev' sind Linux-spezifisch.
+Weitere Details sind in
+.BR mount (8)
+zu finden.
 
 Das fünfte Feld,
 .RI ( fs_freq ),
-wird von 
+wird von
 .BR dump (8)
-benutzt um zu entscheiden welche Dateisysteme gedumpt werden müssen.  Ist das
-fünfte Feld nicht vorhanden,  wird für diesen Wert Null angenommen und 
+benutzt, um zu entscheiden, welche Dateisysteme gedumpt werden müssen.  Ist das
+fünfte Feld nicht vorhanden, wird für diesen Wert Null angenommen und
 .B dump
-geht davon aus, daß das Dateisystem nicht gedumpt werden muß.
+geht davon aus, dass das Dateisystem nicht gedumpt werden muss.
 
 Das sechste Feld,
 .RI ( fs_passno ),
-wird von 
+wird von
 .BR fsck (8)
-benutzt um die Reihenfolge, in der die Dateisysteme während des Reboots
-geprüft werden, festzulegen.  Das root Dateisystem sollte mit einer
-.I fs_passno
-von 1 versehen sein, andere Dateisysteme mit einer 
-.I fs_passno
-von 2. Dateisysteme innerhalb eines Laufwerks werden sequentiell geprüft,
+benutzt, um die Reihenfolge, in der die Dateisysteme während eines Neustarts
+geprüft werden, festzulegen.  Das root-Dateisystem sollte mit einem
+.IR fs_passno -Wert
+von 1 versehen sein, andere Dateisysteme mit einem 
+.IR fs_passno -Wert
+von 2.  Dateisysteme innerhalb eines Laufwerks werden sequentiell geprüft,
 Dateisysteme auf verschiedenen Laufwerken jedoch gleichzeitig, um parallel
-arbeitende Hardware zu unterstützen.  Ist das sechste Feld nicht vorhanden
-oder Null, wird sinnigerweise eine Null zurückgegeben und
+arbeitende Hardware auszunutzen.  Ist das sechste Feld nicht vorhanden
+oder Null, wird Null verwendet und
 .B fsck
-geht davon aus, daß das Dateisystem keiner Prüfung bedarf.
+geht davon aus, dass das Dateisystem keiner Prüfung bedarf.
 
-Die korrekte Methode, um Einträge aus der 
+Die korrekte Methode, um Einträge aus
 .B fstab
 zu lesen, ist, die Routinen von
-.BR getmntent (3).
+.BR getmntent (3)
 zu benutzen.  
-
 .SH DATEIEN
-.TP
 .I /etc/fstab
-Die Datei
-.B fstab
-liegt im Verzeichnis 
-.IR /etc .
-.SH FEHLER
-Zumeist ist die Dokumentation in 
-.BR mount (8)
-die aktuellste.
-.SH GESCHICHTE
-Das 
-.B fstab
-Dateiformat erschien in 4.0BSD.
 .SH "SIEHE AUCH"
 .BR getmntent (3),
 .BR mount (8),
 .BR swapon (8),
-.BR nfs (5).
+.BR fs (5),
+.BR nfs (5)
+.SH GESCHICHTE
+Der Urahn des
+.BR fstab -Dateiformats
+erschien in 4.0BSD.
+.\" But without comment convention, and options and vfs_type.
+.\" Instead there was a type rw/ro/rq/sw/xx, where xx is the present 'ignore'.
