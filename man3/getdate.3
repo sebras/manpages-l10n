@@ -171,6 +171,62 @@ Datei, die Format-Muster enthält.
 .TP
 .BR TZ ", " LC_TIME 
 Variablen, die von \fBstrptime()\fP verwendet werden.
+.SH BEISPIEL
+Dieses Beispiel verdeutlicht die Anwendung, es ist nicht in der
+originalen Manpage enthalten.
+
+.nf
+#!/bin/sh
+#
+# sample script to create a file wirh possible
+# date representations
+#
+cat >.date <<EOF 
+%m
+%A %B %d, %Y, %H:%M:%S
+%A
+%B
+%m/%d/%y %I %p
+%d, %m, %Y %H:%M
+at %A the %dst of %B in %Y
+run job at %I %p, %B %dnd
+&A den %d. %B %Y %H.%M Uhr
+EOF
+DATEMSK=.date
+export DATEMSK
+
+#include <stdio.h>
+#include <time.h>
+
+void daterr(int err)
+{
+  switch(err) {
+    case 1:  printf ("The DATEMSK environment variable is null or undefined.\n");break;
+    case 2:  printf ("The template file cannot be opened for reading.\n");break;
+    case 3:  printf ("Failed to get file status information.\n");break;
+    case 4:  printf ("The template file is not a regular file.\n");break;
+    case 5:  printf ("An error is encountered while reading the template file.\n");break;
+    case 6:  printf ("Memory allocation failed (not enough memory available.\n");break;
+    case 7:  printf ("There is no line in the template that matches the input.\n");break;
+    case 8:  printf ("Invalid input specification\n");break;
+    default: printf ("unknown error\n");
+  }
+  exit(1);
+}
+
+int main()
+{
+  struct tm *tm;
+  char buf[512];
+
+  tm = getdate ("11/27/86");
+
+  if (getdate_err != 0) daterr (getdate_err);
+
+  strftime (buf, sizeof (buf)/sizeof (buf[0]), "%a %Y %H:%M:%S\n",tm);
+  printf ("%s", buf);
+}
+.fi
 .SH "KONFORM ZU"
 ISO 9899, POSIX 1003.1-2001
 .SH "SIEHE AUCH"
