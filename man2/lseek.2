@@ -42,48 +42,45 @@
 .TH LSEEK 2 "January 17, 1998" "Linux" "Systemaufrufe"
 .SH BEZEICHNUNG
 lseek \- read/write Datei offset verändern
-.SH SYNOPSIS
+.SH "ÜBERSICHT"
 .nf
 .B #include <sys/types.h>
 .br
 .B #include <unistd.h>
 .sp
-.BI "off_t lseek(int " fd ", off_t " offset ", int " flag );
+.BI "off_t lseek(int " filedes ", off_t " offset ", int " whence );
 .SH BESCHREIBUNG
 Die Funktion
 .B lseek
-ermöglicht es, sich beliebig in der Datei
-.I fp
-zu positionieren.
-Das Argument
-.I offset
-beschreibt die Bewegung in Bytes, abhängig von
-.I flag
-, welches folgende Werte enthalten kann:
+setzt den Offset des Dateideskriptors
+.I filedes
+auf
+.IR offset ,
+gemäß des Wertes von
+.IR whence ,
+der sich wie folgt zusammensetzt:
 .TP
 .B SEEK_SET
-Die neue Position ist
+Der neue Offset wird auf
 .I offset
-Bytes vom ersten Zeichen der Datei
-.I fp
-aus.
+Bytes gesetzt.
 .TP
 .B SEEK_CUR
-Die neue Position ist die aktuelle Position plus
+Der neue Offset ist die aktuelle Position plus
 .I offset
 Bytes.
 .TP
 .B SEEK_END
-Die neue Position ist die Datei Größe plus
+Der neue Offset ist die Datei Größe plus
 .I offset
 Bytes.
 .PP
 Die Funktion
 .B lseek
-erlaubt es den offset einer Datei hinter ihr end-of-file zu setzen. Wenn
-später Daten geschrieben werden, ergeben Leseversuche auf
+erlaubt es, den Offset einer Datei hinter ihr end-of-file zu setzen.  Wenn
+später Daten geschrieben werden, ergeben Lesezugriffe auf
 die Lücke zwischen der eigentlichen Datei und den neuen Daten einen 
-Rückgabewert von Null (bis die Lücke mit Daten gefüllt ist).
+Rückgabewert von Null (bis tatsächlich Daten in die Lücke geschrieben werden).
 .SH "RÜCKGABEWERT"
 Bei Erfolg liefert
 .B lseek
@@ -94,34 +91,33 @@ gesetzt.
 .SH FEHLER
 .TP
 .B EBADF
-.I fp
+.I Filedes
 ist kein geöffneter Datei Zeiger.
 .TP
 .B ESPIPE
-.I fp
-beschreibt eine pipe, einen Socket oder ein FIFO.
+.I Filedes
+beschreibt eine Pipe, einen Socket oder ein FIFO.
 .TP
 .B EINVAL
-.I flag
+.I Whence
 hat einen falschen Wert.
 .SH "KONFORM ZU"
 SVr4, POSIX, BSD 4.3
 .SH EINSCHRÄNKUNGEN
-Manche Geräte unterstützen kein Suchen. POSIX spezifiziert nicht,
+Manche Geräte unterstützen kein Vor- und Zurückspulen und POSIX spezifiziert nicht,
 welche es unterstützen müssen.
 
 Einschränkung unter Linux: 
-.br
-Wendet man \fBlseek\fP auf ein tty\-Device an gibt es \fBESPIPE\fP zurück.
+Wendet man \fBlseek\fP auf ein tty\-Device an, gibt es \fBESPIPE\fP zurück.
 Andere Systeme liefern die Anzahl der
-geschriebenen Bytes, wenn man SEEK_SET als Zähler benutzt.
+geschriebenen Bytes und verwenden SEEK_SET als Zähler.
 Manche Devices wie \fB/dev/null\fP verursachen den Fehler \fBESPIPE\fP
-nicht, aber liefern einen Zeiger dessen Wert nicht definiert ist zurück.
+nicht, aber liefern einen Zeiger zurück, dessen Wert nicht definiert ist.
 .SH ANMERKUNGEN
 
-In früheren Zeiten wurden für
-.I flag 
-folgende Werte benutzt:
+Wenn alter Code konvertiert wird, ersetzen Sie die Werte von
+.I whence
+durch die folgenden Makros:
 .PP
 .TS
 c c
@@ -135,10 +131,19 @@ L_INCR	SEEK_CUR
 L_XTND	SEEK_END
 .TE
 .PP
-SVR1-3 liefert \fBlong\fP statt \fBoff_t\fP.
-.br
-BSD gibt \fBint\fP zurück.
+SVR1-3 liefert \fBlong\fP statt \fBoff_t\fP, BSD liefert \fBint\fP.
+
+Beachten Sie, daß Datei-Deskriptoren, die mit
+.BR dup (2)
+oder
+.BR fork (2)
+erstellt wurden, den aktuellen Positions-Zeiger gemeinsam nutzen.
+Wenn
+.B lseek
+bei solchen Dateien verwendet wird, kann es zu unerwarteten
+Race-Bedingungen kommen.
 .SH "SIEHE AUCH"
 .BR dup (2),
+.BR fork (2),
 .BR open (2),
-.BR fseek (3)
+.BR fseek (3).
