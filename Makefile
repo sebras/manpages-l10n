@@ -15,6 +15,9 @@ remove:
 gz:
 	for i in man?; do gzip $$i/*; done
 
+ungz:
+	for i in man?; do gunzip $$i/*.gz; done
+
 install:
 	test -d $(MANDIR) || install -d -m 755 $(MANDIR)
 	for i in man?; do \
