@@ -42,29 +42,33 @@ truncate, ftruncate \- kürzt eine Datei auf eine bestimmte Länge
 .SH "ÜBERSICHT"
 .B #include <unistd.h>
 .sp
-.BI "int truncate(const char *" pfad ", off_t " laenge );
+.BI "int truncate(const char *" path ", off_t " length );
 .br
-.BI "int ftruncate(int " fd ", off_t " laenge );
+.BI "int ftruncate(int " fd ", off_t " length );
 .SH BESCHREIBUNG
-.B Truncate
-kürzt die Datei, übergeben als String mittels
-.I pfad
-oder als Dateideskriptor
-.IR fd ,
-auf höchstens
-.I laenge
-Bytes.
-War die Datei vorher größer als
-.IR laenge ,
-gehen die Daten darüber verlohren.
-War die Datei dagegen kleiner als 
-.IR laenge ,
-ist nicht festgelegt, ob die Datei aufgefüllt wird oder unberührt bleibt. 
-Im Normalfall wird die Datei mit 0 (0-Bytes) gefüllt.
-.PP
-Wird
-.BR ftruncate 
-benutzt, muss die Datei zum schreiben geöffnet sein.
+Die Funktionen
+.B truncate
+und
+.B ftruncate
+bewirken, daß die reguläre Datei, die durch
+.I path
+oder
+.I fd
+angegeben ist, auf eine Größe von exakt
+.I length
+Bytes abgeschnitten wird.
+.LP
+Wenn die Datei vorher größer war, gehen überschüssige Daten verloren.
+Wenn die Datei vorher kleiner war, wird sie vergrößert und die
+zusätzlichen Bytes werden als Nullen gelesen.
+.LP
+Der Dateizeiger wird nicht verändert.
+.LP
+Für
+.B ftruncate
+muß die Datei zum Schreiben geöffnet sein, für 
+.B truncate
+muß die Datei schreibbar sein.
 .SH RÜCKGABEWERT
 Bei Erfolg gibt die Funktion 0 zurück.  Bei Fehlern wird \-1 zurückgegeben und
 .I errno
@@ -73,8 +77,36 @@ entsprechend gesetzt.
 Für
 .BR truncate :
 .TP
-.B ENOTDIR
-Ein Teil des Pfades ist kein Verzeichnis.
+.B EACCES
+Ein Teil des Pfades kann nicht gelesen werden oder die Datei kann vom
+Benutzer nicht beschrieben werden.
+.TP
+.B EFAULT
+.I pfad
+liegt außerhalb des Programmspeichers.
+.TP
+.B EFBIG
+Der Parameter
+.I length
+ist größer als die maximale Dateigröße. (XSI)
+.TP
+.B EINTR
+Während der Ausführung wurde ein Signal empfangen.
+.TP
+.B EINVAL
+Der Parameter
+.I length
+ist negativ oder größer als die maximale Dateigröße.
+.TP
+.B EIO
+Ein I/O Fehler ist beim aktualisieren der Inode aufgetreten.
+.TP
+.B EISDIR
+.I pfad
+ist ein Verzeichnis, keine Datei.
+.TP
+.B ELOOP
+Zu viele Symbolische Links wurden im Pfad gefunden.
 .TP
 .B ENAMETOOLONG
 Ein Teil des Pfades ist größer als 255 Zeichen oder der komplette Pfad
@@ -83,64 +115,60 @@ Ein Teil des Pfades ist größer als 255 Zeichen oder der komplette Pfad
 .B ENOENT
 Die angegebene Datei existiert nicht.
 .TP
-.B EACCES
-Ein Teil des Pfades kann nicht gelesen werden.
-.TP
-.B EACCES
-Der Benutzer hat keinen Schreibzugriff auf die Datei.
-.TP
-.B ELOOP
-Zu viele Symbolische Links wurden im Pfad gefunden.
-.TP
-.B EISDIR
-.I pfad
-ist ein Verzeichnis, keine Datei.
+.B ENOTDIR
+Ein Teil des Pfades ist kein Verzeichnis.
 .TP
 .B EROFS
 Die Datei befindet sich in einem read-only Dateisystem.
 .TP
 .B ETXTBSY
 Die Datei ist eine Prozedur, die ausgeführt wird.
-.TP
-.B EIO
-Ein I/O Fehler ist beim aktualisieren der Inode aufgetreten.
-.TP
-.B EFAULT
-.I pfad
-liegt außerhalb des Programmspeichers.
 .PP
 Für
-.BR ftruncate :
+.BR ftruncate
+gelten die gleichen Fehlermeldungen.  Anstelle von Dingen, die mit
+.B path
+schieflaufen können, gibt es jetzt Dinge, die mit
+.B fd
+schiefgehen können:
 .TP
 .B EBADF
 .I fd
 ist kein gültiger Dateideskriptor.
 .TP
-.B EINVAL
+.BR EINVAL " oder " EBADF
 .I fd
-referenziert auf einen Socket, nicht auf eine Datei.
+ist nicht zum Schreiben geöffnet.
 .TP
 .B EINVAL
 .I fd
-ist nicht zum Schreiben geöffnet.
-.SH KONFORM ZU
-4.4BSD, SVr4 (die Funktionen traten erstmals in BSD4.2 auf).
-SVr4 beinhaltet noch weitere Fehler für
-.BR truncate :
-EINTR, EMFILE, EMULTIHP, ENAMETOOLONG, ENFILE,
-ENOLINK, ENOTDIR sowie weitere Fehler für 
-.BR ftruncate :
-EAGAIN und EINTR.
-POSIX kennt nur
-.IR ftruncate ,
-aber kein
-.IR truncate .
-.PP
-In POSIX ist nicht festgelegt, was passiert wenn die Datei weniger als
-.IR laenge
-Bytes hat.
-.SH BUGS
-Diese Funktionen sollten benutzt werden um die Maximale Größe von 
-Dateien zu begrenzen.
-.SH SIEHE AUCH
-.BR open (2)
+referenziert einen Socket, nicht eine Datei.
+.SH "KONFORM ZU"
+4.4BSD, SVr4 (diese Funktionsaufrufe traten zuerst in BSD 4.2 auf).
+POSIX 1003.1-1996 beschreibt
+.BR ftruncate .
+POSIX 1003.1-2001 beschreibt ebenfalls
+.IR truncate
+als eine XSI-Erweiterung.
+.LP
+SVr4 beschreibt zusätzlich die Fehler EMFILE, EMULTIHP, ENFILE und
+ENOLINK für
+.BR truncate .
+SVr4 dokumentiert für
+.B ftruncate
+den zusätzlichen Fehler EAGAIN.
+.SH BERMERKUNGEN
+Die Beschreibung oben ist für XSI-kompatible Systeme gedacht.  Für
+nicht-XSI-kompatible Systeme erlaubt der POSIX-Standard zwei Verhalten von
+.BR ftruncate ,
+wenn
+.I length
+größer ist als die Dateilänge
+(beachten Sie, daß
+.B truncate
+is für eine derartige Umgebung nicht spezifiziert):
+entweder wird ein Fehler zurückgeliefert oder die Datei wird vergrößert.
+(Die meisten Unixe folgen den XSI-Anforderungen.)
+.\" At the very least: OSF/1, Solaris 7, and FreeBSD conform, mtk, Jan 2002
+.SH "SEE ALSO"
+.BR open (2).
