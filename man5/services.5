@@ -1,0 +1,209 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1996 Austin Donnelly <and1000@cam.ac.uk>,
+.\"  with additional material (c) 1995 Martin Schulze <joey@infodrom.north.de>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\"   This manpage was made by merging two independently written manpages,
+.\"   one written by Martin Schulze (18 Oct 95), the other written by
+.\"   Austin Donnelly, (9 Jan 96).
+.\"
+.\" Thu Jan 11 12:14:41 1996 Austin Donnelly  <and1000@cam.ac.uk>
+.\"   * Merged two services(5) manpages
+.\" Translated into German by Mike Fengler (mike@krt3.krt-soft.de)
+.\"
+.TH SERVICES 5 "4. Januar 1999" "Linux" "Dateiformate"
+.SH BEZEICHNUNG
+services \- Internet network Dienste - Liste
+.SH BESCHREIBUNG
+.B services
+ist eine einfache ASCII - Datei zur Umsetzung einfach lesbarer Namen
+für Internet - Dienste in die zugrundeliegenden zugehörigen
+Portnummern und Protokolltypen.  Jedes Netzwerkprogramm sollte sich
+seine Portnummer (und das Protokoll) aus dieser Datei holen.
+Die C Bibliotheksroutinen
+.BR getservent (3),
+.BR getservbyname (3),
+.BR getservbyport (3),
+.BR setservent (3),
+und 
+.BR endservent (3)
+dienen dem Auslesen dieser Datei aus einem Programm heraus.
+
+Portnummern werden von der IANA (Internet Assigned Numbers Authority)
+vergeben. Deren derzeitige Politik ist es, jeder Portnummer
+sowohl das TCP als auch das UDP Protokoll zuzuordnen. Daher werden
+die meisten Eintragungen zweifach vorhanden sein, selbst bei
+reinen TCP - Diensten.
+
+Portnummern unterhalb 1024 (sogenannte "niedrige Portnummern")
+können nur vom Systemverwalter (root) eingebunden werden (siehe auch
+.BR bind "(2), " tcp "(7), and " udp "(7).)"
+Das deshalb, damit Clients, die sich über niedrige Ports mit
+dem System verbinden, sicher sein können, daß an diesem Port ein
+Standard - Dienst läuft und nicht irgend eine "wilde" Implementierung
+eines Benutzers.  Von der IANA veröffentlichte Portnummern 
+(well-known port numbers) liegen normalerweise in diesem, nur root
+zugänglichen Bereich.
+
+Das Vorhandensein eines Eintrags für einen Dienst in die
+.B services
+- Datei bedeutet noch nicht, daß dieser Dienst derzeit auch zur
+Verfügung steht. Siehe 
+.BR inetd.conf "(5)"
+zur Konfiguration der angebotenen Internet - Dienste.  Beachten
+Sie jedoch, daß nicht alle Netzwerk - Dienste von
+.BR inetd "(8), "
+gestartet werden, also auch nicht in 
+.BR inetd.conf "(5). "
+auftauchen.  Insbesondere News (NNTP) und Mail (SMTP) Server werden
+häufig von Skripts während des Hochfahren des Systems gestartet.
+
+Wo die 
+.B services
+- Datei zu finden ist, steht in
+.B _PATH_SERVICES
+in
+.IR /usr/include/netdb.h "."
+Das ist üblicherweise
+.IR /etc/services "."
+
+Jede Zeile beschreibt einen Dienst und hat folgende Form:
+.IP
+.IR "Dienst-Name Port" / "Protokoll " [ "Aliasse ..." ]
+.TP
+Dabei bedeuten:
+.TP 10
+.I Dienst-Name
+Die leicht lesbare Bezeichnung für den Dienst, unter der er bekannt
+ist und mit der er gefunden wird.  Groß / Kleinschreibung werden
+beachtet. Häufig hat das Client - Programm den gleichen Namen wie
+.IR Dienst-Name .
+.TP
+.I Port
+ist die dezimale Portnummer, die für diesen Dienst vorgesehen ist.
+.TP
+.I Protokoll
+ist die Art des zu verwendenden Protokolls.  Dieses Feld sollte
+einem Eintrag in der
+.BR protocols (5)
+- Datei gleichen.  Typische Werte sind
+.B tcp
+und
+.BR udp .
+.TP
+.I Aliasse
+ist eine optionale Liste weiterer Namen für diesen Dienst.  Als
+Trennzeichen dienen Leerzeichen oder Tabulatoren.  (Beachten Sie aber
+den Hinweis unter BUGS)  Auch hier wird zwischen Großschrift und
+Kleinschrift unterschieden.
+.PP
+
+Zum Trennen der Felder können Leer- oder Tabulatorzeichen
+verwendet werden.
+
+Kommentare beginnen mit dem Zeichen # und erstrecken sich bis ans 
+Zeilenende. Leerzeilen werden ignoriert.
+
+Der
+.I Dienst-Name
+sollte in der ersten Spalte beginnen, da führende Leerzeichen
+nicht entfernt werden.
+.I Dienst-Namen
+können aus allen druckbaren Zeichen außer Leer- und Tabulatorzeichen
+bestehen.  Jedoch sollte die Auswahl konservativ erfolgen, um 
+Probleme zu vermeiden, die bei der Verbindung unterschiedlicher
+Systeme auftreten können.  Sinnvoll wäre z.B. die Verwendung von
+a-z, 0-9 und Bindestrich (\-) .
+
+Anders aufgebaute Zeilen sollten nicht in der Datei stehen.  (Derzeit
+werden solche von
+.BR getservent "(3), " getservbyname "(3), and " getservbyport "(3)"
+stillschweigend übergangen.  Darauf sollte man sich aber nicht
+verlassen.)
+
+Aus Gründen der Verträglichkeit mit alten Systemen kann der
+Schrägstrich (/) zwischen
+.I Port
+und
+.I Protokoll
+auch durch ein Komma (,) ersetzt werden.  Von der Verwendung des 
+Kommas wird aber bei modernen Installationen abgeraten.
+
+Diese Datei kann netzwerk - weit genutzt werden, wenn netzwerk - weite
+Namensdienste wie Yellow Pages/NIS oder BIND/Hesiod eingesetzt werden.
+
+Eine Beispiel - 
+.B services
+könnte so aussehen:
+.RS
+.nf
+.sp
+.ta 3i
+netstat         15/tcp
+qotd            17/tcp          quote
+msp             18/tcp          # message send protocol
+msp             18/udp          # message send protocol
+chargen         19/tcp          ttytst source
+chargen         19/udp          ttytst source
+ftp             21/tcp
+# 22 - keine Zuordnung
+telnet          23/tcp
+.sp
+.fi
+.RE
+.SH BUGS
+Wegen der Arbeitsweise von
+.BR getservent (3)
+dürfen maximal 35 Aliasse verwendet werden.
+
+Zeilen, die länger sind als
+.B BUFSIZ
+(derzeit 1024) Zeichen, werden von
+.BR getservent "(3), " getservbyname "(3), and " getservbyport "(3)."
+ignoriert.  Das führt allerdings auch dazu, daß die nächste Zeile
+fehlerhaft ausgewertet wird.
+.SH DATEIEN
+.TP
+.I /etc/services
+The Internet network services list
+.TP
+.I /usr/include/netdb.h
+Definition von
+.B _PATH_SERVICES
+.SH "SIEHE AUCH"
+.BR getservent (3),
+.BR getservbyname (3),
+.BR getservbyport (3),
+.BR setservent (3),
+.BR endservent (3),
+.BR protocols (5),
+.BR listen (2),
+.BR inetd.conf (5),
+.BR inetd (8).
+
+Assigned Numbers RFC zuletzt RFC .BR 1700 (auch bekannt als STD0002)
+
+Guide to Yellow Pages Service 
+
+Guide to BIND/Hesiod Service 
+

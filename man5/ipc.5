@@ -1,0 +1,388 @@
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" Translated into German by Mike Fengler (mike@krt3.krt-soft.de)
+.\"
+.TH IPC 5 "27. Dezember 1998" "Linux 0.99.13" "Dateiformate"
+.SH BEZEICHNUNG
+ipc \- System V Mechanismen für Kommunikation zwischen Prozessen
+.SH "ÜBERSICHT"
+.nf
+.B
+# include <sys/types.h>
+.B
+# include <sys/ipc.h>
+.B
+# include <sys/msg.h>
+.B
+# include <sys/sem.h>
+.B
+# include <sys/shm.h>
+.SH BESCHREIBUNG
+Diese Handbuchseite bezieht sich auf die System V Mechanismen für 
+Kommunikation zwischen Prozessen, wie sie in Linux verwirklicht
+wurden: message queues, semaphore sets und shared memory segments.
+(Zumindest einmal soll denn doch eine Übersetzung versucht werden:
+Nachrichten - Warteschlangen, Semaphoren (Sperr/Frei - Vermerke)
+und gemeinsam genutzte Speicherbereiche. Oh Himmel. A.d.Üb.)
+Im folgenden bedeutet das Wort 
+.B Resource
+eine konkrete Erscheinung (instantiation) einer dieser Mechanismen.
+.SS Resource Zugriffsrechte
+Für jede Resource verwaltet das System in einer allgemeinen
+Struktur des Typs
+.BR "struct ipc_perm"
+die Informationen, die zur Bestimmung der Rechte auf eine ipc - 
+Operation notwendig sind.
+Die
+.B ipc_perm
+Structur, definiert von der
+.I <sys/ipc.h>
+system header Datei, enthält folgende Elemente:
+.sp
+.B
+	ushort cuid;	
+/* Benutzerkennung des Erzeugers */
+.br
+.B
+	ushort cgid;	
+/* Gruppenkennung des Erzeugers */
+.br
+.B
+	ushort uid;
+/* Kennung des Eigentümers */
+.br
+.B
+	ushort gid;
+/* Gruppenkennung des Eigentümers */
+.br
+.B
+	ushort mode;
+/* Lese/Schreib - Rechte */
+.PP
+Das
+.B mode
+Element der
+.B ipc_perm
+Struktur bestimmt mit seinen 9 niedrigstwertigen Bits die
+Zugriffsrechte auf die Resource für einen Prozeß, der einen
+ipc Systemaufruf ausführt.  Die Rechte werden wie folgt interpretiert:
+.sp
+.nf
+	0400	Eigentümer darf lesen
+	0200	Eigentümer darf schreiben
+.sp .5
+	0040	Gruppe darf lesen
+	0020	Gruppe darf schreiben
+.sp .5
+	0004	Andere dürfen lesen
+	0002	Andere dürfen schreiben
+.fi
+.PP
+Bits 0100, 0010 und 0001 (die Ausführungsbits) werden nicht benutzt.
+Darüberhinaus bedeutet "schreiben" eigentlich "verändern", soweit
+es sich auf ein semaphore set bezieht.
+.PP
+Die selbe system header Datei definiert auch folgende symbolische
+Konstanten:
+.TP 14
+.B IPC_CREAT
+Eintrag erzeugen, wenn Schlüssel nicht vorhanden.
+.TP
+.B IPC_EXCL
+Mißerfolg, wenn Schlüssel vorhanden.
+.TP
+.B IPC_NOWAIT
+Fehlermeldung, wenn die Anforderung warten muß.
+.TP
+.B IPC_PRIVATE
+Privater Schlüssel.
+.TP
+.B IPC_RMID
+Resource beseitigen.
+.TP
+.B IPC_SET
+Setzen von Optionen der Resource.
+.TP
+.B IPC_STAT
+Ansehen der Optionen der Resource.
+.PP
+Beachten Sie, daß
+.B IPC_PRIVATE
+vom Typ
+.B key_t
+ist. Alle anderen symbolischen Konstanten sind Flag - Felder, die
+mit Variablen des Typs
+.B int
+ODER - verknüpft werden können.
+.SS Message Queues
+Eine message queue wird eindeutig identifiziert über einen
+positiven Integerwert
+.RI "(ihre " msqid )
+und ist mit einer Datenstruktur verbunden, die vom Typ
+.BR "struct msquid_ds" 
+ist, definiert in
+.IR <sys/msg.h> .
+Diese hat folgende Elemente:
+.sp
+.B
+	struct ipc_perm msg_perm;
+.br
+.B
+	ushort msg_qnum;	
+/* Anzahl wartende messages */
+.br
+.B
+	ushort msg_qbytes;	
+/* Bytes max in einer queue */
+.br
+.B
+	ushort msg_lspid;	
+/* pid des letzten msgsnd */
+.br
+.B
+	ushort msg_lrpid;	
+/* pid des letzten msgrcv */
+.br
+.B
+	time_t msg_stime;	
+/* Zeit des letzten msgsnd */
+.br
+.B
+	time_t msg_rtime;	
+/* Zeit des letzten  msgrcv */
+.br
+.B
+	time_t msg_ctime;	
+/* Zeit der letzten Änderung */
+.TP 11
+.B msg_perm
+.B ipc_perm
+Struktur, die die Zugriffsrechte auf die message queue angibt.
+.TP
+.B msg_qnum
+derzeitige Anzahl der Messages in der Queue.
+.TP
+.B msg_qbytes
+Maximale Anzahl an Bytes Messagetext, die in der Message Queue
+erlaubt sind.
+.TP
+.B msg_lspid
+ID des Prozesses, der zuetzt den
+.B msgsnd
+Systemaufruf getätigt hat.
+.TP
+.B msg_lrpid
+ID des Prozesses, der zuetzt den
+.B msgrcv
+Systemaufruf getätigt hat.
+.TP
+.B msg_stime
+Zeitpunkt des letzten
+.B msgsnd
+Systemaufrufs.
+.TP
+.B msg_rtime
+Zeitpunkt des letzten
+.B msgcv
+Systemaufrufs.
+.TP
+.B msg_ctime
+Zeitpunkt des letzten Systemaufrufs, bei dem ein Element der
+.B msqid_ds
+Struktur geändert wurde.
+.SS Semaphore Sets
+Ein Semaphore Set wird eindeutig identifiziert durch einen
+positiven Integerwert
+.RI "(seine " semid )
+und ist mit einer Datenstruktur vom Typ
+.BR "struct semid_ds" ,
+verbunden, definiert in
+.IR <sys/sem.h> ,
+die folgende Elemente enthält:
+.sp
+.B
+	struct ipc_perm sem_perm;
+.br
+.B
+	time_t sem_otime;	
+/* Zeit des letzten Aufrufs */
+.br
+.B
+	time_t sem_ctime;	
+/* Zeit der letzten Äderung */
+.br
+.B
+	ushort sem_nsems;	
+/* Anzahl Semaphoren im Set */
+.TP 11
+.B sem_perm
+.B ipc_perm
+Struktur für die Zugriffsrechte auf das Semphorenset.
+.TP
+.B sem_otime
+Zeitpunkt des letzten
+.B semop
+Systemaufrufs.
+.TP
+.B sem_ctime
+Zeitpunkt des letzten
+.B semctl
+Systemaufrufs, der einen Eintrag o.g. Struktur oder eine zum Set 
+gehörende Semaphore geändert hat.
+.TP
+.B sem_nsems
+Anzahl der Semaphoren im Set. Jede Semaphore des Sets wird 
+repräsentiert durch einen nicht negativen Integerwert zwischen
+.B 0
+und
+.BR sem_nsems\-1 .
+.PP
+Eine Semaphore ist eine Datenstruktur des Typs
+.B "struct sem"
+mit folgenden Einträgen:
+.sp
+.B
+	ushort semval;	
+/* Semaphorenwert */
+.br
+.B
+	short sempid;	
+/* pid des letzten Aufrufs */
+.br
+.B
+	ushort semncnt;	
+/* Anzahl Prozesse 1 (s.w.u.) */
+.br
+.B
+	ushort semzcnt;	
+/* Anzahl Prozesse 2 (s.w.u.) */
+.TP 11
+.B semval
+Semaphorenwert: eine nicht - negativea Ganzzahl.
+.TP
+.B sempid
+ID des letzten Prozesses, der mit dieser Semaphore eine
+Semaphorenoperation ausführte.
+.TP
+.B semncnt
+Anzahl Prozesse 1. Gemeint sind die Prozesse, die darauf warten,
+daß
+.B semval
+erhöht wird.
+.TP
+.B semznt
+Anzahl Prozesse 2. Gemeint sind die Prozesse, die darauf warten, daß
+.B semval
+den Wert 0 annimmt.
+.SS Shared Memory Segments
+Ein Shared Memory Segment wird eindeutig identifiziert durch eine
+positive Ganzzahl
+.RI "(seine " shmid )
+und ist verbunden mit einer Datenstruktur vom Typ
+.BR "struct shmid_ds" ,
+definiert in
+.IR <sys/shm.h> ,
+mit folgenden Einträgen:
+.sp
+.B
+	struct ipc_perm shm_perm;
+.br
+.B
+	int shm_segsz;	
+/* Größe des Segments */
+.br
+.B
+	ushort shm_cpid;	
+/* pid des Erzeugers */
+.br
+.B
+	ushort shm_lpid;	
+/* pid, letzte Operation */
+.br
+.B
+	short shm_nattch;	
+/* Anzahl derzeitiger Anbindungen */
+.br
+.B
+	time_t shm_atime;	
+/* Zeit der letzten Anbindung */
+.br
+.B
+	time_t shm_dtime;	
+/* Zeit der letzten Freigabe */
+.br
+.B
+	time_t shm_ctime;	
+/* Zeit der letzten Änderung */
+.TP 11
+.B shm_perm
+.B ipc_perm
+Struktur, die die Zugriffsrechte auf das Shared Memory Segment
+definiert.
+.TP
+.B shm_segsz
+Größe des Segments in Bytes.
+.TP
+.B shm_cpid
+ID des Prozesses, der das Shared Memory Segment erzeugt hat.
+.TP
+.B shm_lpid
+ID des letzten Prozesses, der den
+.B shmat
+oder
+.B shmdt
+Systemaufruf ausgeführt hat.
+.TP
+.B shm_nattch
+Anzahl von Prozessen, die derzeit mit diesem Shared Memory Segment 
+arbeiten (attaches).
+.TP
+.B shm_atime
+Zeit des letzten
+.B shmat
+Systemaufrufs.
+.TP
+.B shm_dtime
+Zeit des letzten
+.B shmdt
+Systemaufrufs.
+.TP
+.B shm_ctime
+Zeit des letzten
+.B shmctl
+Systemaufrufs,der
+.BR shmid_ds 
+verändert hat.
+.SH "SIEHE AUCH"
+.BR ftok (3),
+.BR msgctl (2),
+.BR msgget (2),
+.BR msgrcv (2),
+.BR msgsnd (2),
+.BR semctl (2),
+.BR semget (2),
+.BR semop (2),
+.BR shmat (2),
+.BR shmctl (2),
+.BR shmget (2),
+.BR shmdt (2).
+

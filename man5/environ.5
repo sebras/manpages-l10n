@@ -1,0 +1,166 @@
+.\" Copyright (c) 1993 Michael Haardt (u31b3hs@pool.informatik.rwth-aachen.de),
+.\"   Fri Apr  2 11:32:09 MET DST 1993
+.\" and Andries Brouwer (aeb@cwi.nl), Fri Feb 14 21:47:50 1997.
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\" 
+.\" Modified Sun Jul 25 10:45:30 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Jul 21 21:25:26 1996 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Mon Oct 21 17:47:19 1996 by Eric S. Raymond (esr@thyrsus.com)
+.\" Translated into German by Mike Fengler (mike@krt3.krt-soft.de)
+.\"
+.TH ENVIRON 5 "27. Dezember 1998" "Linux" "Dateiformate"
+.SH BEZEICHNUNG
+environ \- Umgebung des Benutzers
+.SH "ÜBERSICHT"
+.ad l
+.nf
+.B #include <unistd.h>
+.sp
+.B extern char **environ;
+.fi
+.ad b
+.SH BESCHREIBUNG
+Zu Beginn eines Prozesses stellt \fBexec\fP(2) ein String (Zeichenketten)
+Array zur Verfügung.  Dieses Array wird `Umgebung' genannt und enthält
+konventionsgemäß Zeichenketten in der Form von
+.RI ` name = value "'.  Übliche Beispiele sind:"
+.TP
+.B USER
+Der Name des angemeldeten Benutzers (wird von einigen Programmen
+aus der BSD - Welt ausgewertet).
+.TP
+.B LOGNAME
+Der Name des angemeldeten Benutzers (wird von einigen Programmen
+aus der System-V - Welt ausgewertet).
+.TP
+.B HOME
+Das Anmeldeverzeichnis eines Benutzers, gesetzt von
+.BR login (1)
+nach Angaben aus
+.BR passwd (5).
+.TP
+.B LANG
+Eine Variable, anhand derer versucht wird, nationale Besonderheiten
+(Währung, Datumsformat...) zu verarbeiten, wenn diese Steuerung
+nicht durch
+.B LC_ALL
+erfolgt oder durch spezifischere Variablen.
+.TP
+.B PATH
+Die Reihenfolge von Verzeichnisnamen, in denen
+.BR sh (1)
+und viele weitere Programme nach Dateien suchen, deren Pfadname
+unvollständig ist.  Die einzelnen Namen werden durch
+.RB ` : '
+getrennt.  (Gleichermaßen benutzen einige Shells
+.BR CDPATH ,
+um das Ziel eines
+.B cd
+- Kommandos zufinden,
+.BR man (1)
+sucht in
+.B MANPATH
+nach Handbuchseiten, usw.)
+.TP
+.B PWD
+Das aktuelle Arbeitsverzeichnis. Wird von einigen Shells gesetzt.
+.TP
+.B SHELL
+Der Dateiname der Login - Shell des Benutzers.
+.TP
+.B TERM
+Der Terminaltyp, für den Ausgaben aufbereitet werden.
+.PP
+Der Umgebung können weitere Namen hinzugefügt werden.  Dazu benutzt
+man für die
+.BR sh (1)
+das Kommando
+.B export
+und `Name=Inhalt', für die
+.BR csh (1)
+gibt es das
+.B setenv
+- Kommando.  Argumente können auch beim Aufruf von
+.BR exec (2)
+an die Umgebung weitergegeben werden.  C - Programme können ihre
+Umgebung mit den Funktionen
+.BR getenv (),
+.BR putenv (),
+.BR setenv ()
+und 
+.BR unsetenv ()
+beeinflussen.
+
+Bitte beachten Sie, daß das Vehalten vieler Programme und
+Bibliotheks - Routinen vom Vorhandensein oder dem Inhalt bestimmter
+Umgebunsvariablen beeinflußt wird.  Eine Zufallsauswahl:
+.LP
+Die Variablen LANG, LANGUAGE, NLSPATH, LOCPATH,
+LC_ALL, LC_MESSAGES etc. beeinflussen die Verarbeitung 
+landesspezifischer Daten.
+.LP
+TMPDIR liefert die Pfadangabe, die
+.BR tmpnam ()
+beim Anlegen von Dateien benutzt,
+.BR sort (1)
+benutzt es als Übergangsverzeichnis, usw.
+.LP
+LD_LIBRARY_PATH, LD_PRELOAD und andere LD_* Variablen beeinflussen
+das Verhalten der dynamischen Loader / Linker.
+.LP
+POSIXLY_CORRECT veranlaßt gewisse Programme und Bibliotheks - 
+Routinen, sich an die Vorgaben von POSIX zu halten.
+.LP
+Das Verhalten von
+.BR malloc ()
+wird von MALLOC_* Variablen gesteuert.
+.LP
+Die Variable HOSTALIASES enthält den Namen der Datei, in der die
+Alias - Namen für
+.BR gethostbyname ()
+stehen.
+.LP
+TZ und TZDIR geben Zeitzonen - Informationen.
+.LP
+TERMCAP informiert darüber, wie bestimmte Terminals angesteuert werden
+müssen (oder enthält den Namen eine Datei, die diese Informationen
+bereitstellt).
+.LP
+Usw. usw.
+
+Es ist offensichtlich, daß es hier ein Sicherheitsproblem gibt.
+Schon manches System - Kommando hat den Pfad der Tugend verlassen,
+weil ein Benutzer unübliche Werte für IFS oder LD_LIBRARY_PATH 
+angegeben hat.
+
+.SH "SIEHE AUCH"
+.BR login (1),
+.BR sh (1),
+.BR bash (1),
+.BR csh (1),
+.BR tcsh (1),
+.BR exec (2),
+.BR getenv (3),
+.BR putenv (3),
+.BR setenv (3),
+.BR unsetenv (3)
+. 
