@@ -10,42 +10,91 @@
 .\"
 .TH FIND 1 "1. Juli 1993" "LunetIX Linuxhandbuch" "Dienstprogramme für Benutzer"
 .SH BEZEICHNUNG 
-find \- sucht nach bestimmten Dateien
+find \- sucht in einer Verzeichnishierarchie nach Dateien
 .SH SYNTAX 
 .B find
-.RI [ Verzeichnis ]
-.RI [ \-Option ...]
-.RI [ \-Test ...]
-.RI [ \-Aktion ...]
+[\-H] [\-L] [\-P] [Verzeichnis...] [Ausdruck]
 .SH BESCHREIBUNG
+Diese Handbuchseite beschreibt die GNU Version von
+.BR find .
+GNU
 .B find
 durchsucht eine oder mehrere
-Verzeichnishierarchien nach Dateien mit bestimmten Eigenschaften, und
-führt damit bestimmte Aktionen aus.  Die Eigenschaften können durch
-Tests bestimmt werden.
-.PP
-Optionen, Tests und Aktionen können mit Operatoren zusammengefaßt werden.
+Verzeichnishierarchien und bewertet dabei
+den Ausdruck von links nach rechts
+entsprechend den Regeln der Priorität
+(siehe Abschnitt OPERATOREN)
+bis das Ergebnis bekannt ist
+(die linke Seite ist falsch für \fIUND\fR Operatoren,
+wahr für \fIODER\fR Operatoren).
+Anschließend führt
 .B find
-bewertet für jede Datei in den Verzeichnishierarchien die
-Optionen, Tests und Aktionen von links nach rechts, bis ein falscher
-Wahrheitswert auftaucht oder die Kommandozeilenargumente zu Ende sind.
+die Suche mit der nächsten Datei fort.
+
+.SH OPTIONEN
+Die Optionen `\-H', `\-L' and `\-P'
+bestimmen den Umgang mit symbolischen Links.
+Darauf folgende Kommandozeilenparamter
+müssen die Datei\- oder Verzeichnisnamen sein,
+die untersucht werden sollen.
 .PP
 Das erste Argument, das mit einem
 .BR \- ", einer Klammer " ( ", " ) ", einem Komma " ,
 .RB " oder einem Ausrufezeichen " !
-beginnt, wird als Anfang einer Option oder Test interpretiert.  Alle
+beginnt, wird als Anfang eines Ausdrucks interpretiert.  Alle
 Argumente davor werden als Verzeichnisnamen interpretiert.
 .PP
 Wenn kein Verzeichnis angegeben ist, wird das aktuelle Verzeichnis genommen.
 Wenn keine Aktion angegeben ist, wird die Aktion
 .B \-print
-ausgeführt.
+ausgeführt (Es wird statdessen empfohlen `\-print0' zu verwenden).
 .PP
-Der Status von
+In dieser Handbuchseite wird auch im Abschnitt
+AUSDRÜCKE über `Optionen' gesprochen.
+Diese Optionen legen das Verhalten
+innerhalb eines Ausdrucks fest,
+und folgen direkt auf den letzten Verzeichnisnamen.
+Die drei `echten' Optionen `\-H', `\-L' and `\-P'
+müssen vor dem ersten Verzeichnisnamen angegeben werden,
+wenn sie verwendet werden sollen.
+.IP \-P
+Keinen symbolischen Links auflösen.
+Dies ist das Standardverhalten.
+Wenn
 .B find
-ist Null, wenn alle Aktionen erfolgreich waren, im Fehlerfall ist der Status
-größer als Null.
-.SH OPTIONEN
+eine Datei untersucht oder Informationen über diese ausgibt,
+und die Datei ein symbolischer Link ist, dann werden die Informationen
+von dem symbolischen Link selbst verwendet.
+
+.IP \-L
+symbolischen Links auflösen.
+Wenn
+.B find
+eine Datei untersucht
+oder Informationen über diese ausgibt, 
+dann werden die Informationen von der Datei verwendet,
+auf die der symbolische Link verweist
+(Sofern die Datei zugänglich ist).
+Die Verwendung dieser Opton impliziert die Option \-noleaf.
+.SH AUSDRÜCKE
+.PP
+Ein Ausdruck besteht aus Optionen
+(welche das allgemeine Verhalten der Kommandos bestimmen
+und immer wahr zurückgeben),
+Tests (welche wahr oder falsch zurückgeben)
+und Aktionen (welche wahr oder falsch zurückgeben).
+Optionen, Tests und Aktionen
+werden über Operatoren verknüpft.
+Wenn kein Operator explizit angeben ist
+wird der \fIUND\fR\ Operator \-and verwendet. 
+
+Wenn der Ausdruck keine andere Aktion
+als \-prune enthält, wird mit allen Dateien,
+für welche der Ausdruck wahr ergibt,
+die Aktion -print durchgeführt
+
+.SS OPTIONEN
+.P
 Die Optionen bestimmen das allgemeine Verhalten des Kommandos, und
 beziehen sich nicht auf spezielle Dateien. Die Optionen sind immer wahr.
 .TP
@@ -91,6 +140,7 @@ gibt die Versionsnummer auf die Standardfehlerausgabe
 .B \-xdev
 durchsucht keine Verzeichnisse in anderen Dateisystemen
 (auf anderen Partitionen)
+
 .SS Tests:
 Alle numerischen Argumente können auf drei Arten angegeben werden:
 .RS
@@ -541,6 +591,7 @@ angegeben ist, hat keine Auswirkungen.
 .B \-ls
 zeigt das Verzeichnis in dem die getestete Datei gefunden wurde mit
 .BR "ls \-dils " an
+
 .SS Operatoren:
 Die Optionen, Tests und Aktionen können mit Operatoren verknüpft
 werden. Die Bearbeitung erfolgt prinzipiell von links nach rechts.
@@ -574,8 +625,32 @@ auch eine ODER Verknüpfung
 .IB Ausdruck1 " , "Ausdruck2
 Liste; beide Ausdrücke werden immer bewertet (ausgeführt); der Wahrheitswert
 des gesamten Ausdrucks entspricht dem von Ausdruck2
+
+.SH "BEISPIELE"
+.nf
+.B find /tmp \-name core \-type f \-print | xargs /bin/rm -f
+
+.fi
+Finde Dateien mit dem Namen
+.B core
+in oder unterhalb des Verzeichnisses
+.B /tmp
+und lösche diese.
+Achtung, diese Aktion schlägt fehl
+falls die Dateinamen Zeilenvorschübe,
+einfache oder doppelte Anführungszeichen
+oder Leerzeichen enthalten.
+.SH EXIT STATUS
+Der Status von
+.B find
+ist Null, wenn alle Aktionen erfolgreich waren, im Fehlerfall ist der Status
+größer als Null.
 .SH "SIEHE AUCH"
-das LunetIX Linuxhandbuch
+das LunetIX Linuxhandbuch,
+\fBlocate\fP(1), \fBlocatedb\fP(5), \fBupdatedb\fP(1), \fBxargs\fP(1),
+\fBfnmatch\fP(3), \fBregex\fP(7), \fBstat\fP(2), \fBlstat\fP(2),
+\fBls\fP(1), \fBprintf\fP(3), \fBstrftime\fP(3), \fBctime\fP(3),
+\fBFinding Files\fP (on-line in Info, or printed),
 .SH AUTOR
 Eric Decker, David MacKenzie, Jay Plett und Tim Wood
 
