@@ -1,0 +1,339 @@
+.\" Copyright (C) 2006 Justin Pryzby <pryzbyj@justinpryzby.com>
+.\" 
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\" 
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\" 
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\"
+.\" References:
+.\"   glibc manual and source
+.\"   ftp://gee.cs.oswego.edu/pub/misc/malloc.c
+.\"   http://gee.cs.oswego.edu/dl/html/malloc.html
+.TH MALLOPT 3 "21 May 2006" GNU
+.SH NAME
+mallopt, malloc_trim, malloc_usable_size, malloc_stats, \
+malloc_get_state, malloc_set_state, mallinfo \- dynamic allocation tuning
+.SH SYNOPSIS
+\fB#include <malloc.h>\fP
+.sp
+\fBint mallopt (int\fI param,\fB int \fIvalue\fB);\fP
+.br
+\fBint malloc_trim (size_t\fI pad\fB);\fP
+.br
+\fBsize_t malloc_usable_size (void *\fIptr\fB);\fP
+.br
+\fBvoid malloc_stats (void);\fP
+.br
+\fBvoid *malloc_get_state (void);\fP
+.br
+\fBint malloc_set_state (void *\fIptr\fB);\fP
+.br
+\fBstruct mallinfo mallinfo (void);\fP
+.SH DESCRIPTION
+These functions allow glibc-specific interaction with the dynamic
+memory allocation routines.
+
+\fBmallopt\fP() allows tuning of the parameters affecting allocation.
+\fIparam\fP is one of the constants listed below; \fIvalue\fP should
+be specified in bytes.
+.TP
+.B M_MXFAST
+Free chunks not larger than the given value are not joined to adjacent
+free chunks; larger ones are joined.  This is intended to optimize
+future requests for small chunks of the same size as previously freed
+chunks.  Allowed values are in the range [0-80]; a value of 0 causes
+all free chunks to be joined.  Default: 64.
+.TP
+.B M_TRIM_THRESHOLD
+Unused memory is returned to the OS when the size available to be
+returned exceeds the given value.
+
+Note that not all unused memory is able to be returned to the OS; in
+particular, it is not possible to return an unused block when an
+in-use block lies between it and the \*(lqtop\*(rq of the data
+segment.  However, the free block may be used to satisfy future
+allocation requests.
+
+Smaller values for this parameter cause \fBsbrk\fP() to be called more
+frequently with a negative argument, reducing memory usage, but with
+increased overhead of extra syscalls.  A value of \-1 disables
+trimming.  Default: 128*1024.
+
+.TP
+.B M_TOP_PAD
+When \fBsbrk\fP() is called with a positive argument to allocate
+additional address space, the given value specifies an additional
+amount to be allocated, beyond what is necessary to satisfy the
+request.  This value also defines an amount of address space which is
+not released to the OS when \fBsbrk\fP() is called with a negative
+argument.  Again, the intent is to minimize the number of syscalls,
+without needlessly using large usage of memory.  Default: 0
+(allocation requests are internally rounded up to the page size, and
+the extra allocated size is already sufficient to reduce the syscall
+overhead).
+.TP
+.B M_MMAP_THRESHOLD
+When an allocation request larger than the given value cannot be
+satisfied by an existing free chunk, the memory is guaranteed to be
+obtained with \fBmmap\fP().  Smaller requests might be allocated with
+either of \fBmmap\fP() or \fBsbrk\fP().  \fBmmap\fP()-allocated memory
+can be immediately returned to the OS when it is freed, but this is
+not true for all memory allocated with \fBsbrk\fP(); however, memory
+allocated by \fPmmap\fP() and later freed is neither joined nor
+reused, so the overhead is greater.  Default: 128*1024.
+.TP
+.B M_MMAP_MAX
+The given value sets the maximum number of \fBmmap\fP()-allocated
+chunks allowed to be in use at a given time (even if the size of the
+allocation request exceeds the value of the \fBM_MMAP_THRESHOLD\fP
+parameter).  This is useful on systems where the \fBmmap\fP()
+implementation scales poorly.  A value of 0 disables the use of
+\fBmmap\fP().  Default: 65536.
+.TP
+.B M_CHECK_ACTION
+.\" FIXME: glibc and malloc.3 contain the same text (license
+.\" problem??) which says that this is a less efficient
+.\" implementation;  I haven't seen any code that backs this up,
+.\" though.  Why does glibc only output a message if check_action&1,
+.\" instead of if check_action!=0 as I expect?
+The 3 low bits of this value control the behavior when heap corruption
+is detected.
+
+If set to 0, errors are silently ignored (but the behavior of the
+program is undefined).
+
+If the low bit is set, an error message is printed; If the
+third-lowest bit is unset, the message is surrounded by asterisks
+("*") and includes the relevant pointer address.
+
+If the second-lowest bit is set, the program is then terminated with
+\fBabort\fP().
+
+The default value for glibc 2.3.3 and earlier was 1, causing only an
+informative message to be output.  glibc-2.3.4 changes the default to
+3, which also causes the program to abort.
+.LP
+\fBmalloc_trim\fP() explicitly requests that any unused memory space
+be returned to the OS.  Note that this happens automatically when
+\fBfree\fP() is called with a sufficiently large chunk; see the
+\fBM_TRIM_THRESHOLD\fP and \fBM_TOP_PAD\fP parameters, above.
+\fIpad\fP specifies the number of bytes to be retained for use in
+future allocation requests; when called by \fBfree\fP(), this is the
+value of \fBM_TOP_PAD\fP.
+
+\fBmalloc_usable_size\fP() returns the number of bytes available in
+the dynamically allocated buffer \fIptr\fP, which may be greater than
+the requested size (but is guaranteed to be at least as large, if the
+request was successful).  Typically, you should store the requested
+allocation size rather than use this function.
+
+\fBmalloc_stats\fP() outputs to \fBstderr\fP some information about
+the program's usage of dynamic memory.  Information for each arena is
+displayed.
+.sp
+.RS
+.B system bytes
+is the amount of address space obtained from the OS
+.sp
+.B in use bytes
+is the amount of that space which the program has requested and are in
+use.
+.sp
+.B max mmap regions
+is largest number of \fBmmap\fP() regions allocated at a given time.
+.sp
+.B max mmap bytes
+is the largest total amount of address space ever allocated by
+\fBmmap\fP() at a given time.
+.sp
+.B system bytes
+and
+.B in use bytes
+output appears twice, once excluding \fBmmap\fP, and later including
+\fBmmap\fP().
+.RE
+
+\fBmalloc_get_state\fP() returns a ...
+.\" FIXME: WTF are these for??
+\fBmalloc_set_state\fP() 
+
+\fBmallinfo\fP() returns a \fBstruct mallinfo\fP with allocation
+information, similar to what is printed by \fBmalloc_stats\fP().  The
+return value is a structure, not a pointer; it is thread-safe.  Only
+the information for the main arena is returned.  The structure
+contains the following members:
+.RS
+.TP
+.B int arena;
+Address space used by the dynamic allocation routines, not including
+that from \fBmmap\fP()
+.TP
+.B int ordblks;
+Count of independent, unused chunks 
+.TP
+.B int smblks;
+Count of chunks small enough to qualify for fast allocation without
+being joined to adjacent free chunks;
+.\" FIXME: is this the count of all such blocks, or unused ones?
+.\" Ah, well who knows:
+this field is not meaningful in the glibc implementation.
+.TP
+.B int hblks;
+Count of chunks allocated by \fBmmap\fP()
+.TP
+.B int hblkhd;
+Address space allocated by the dynamic allocation routines using
+\fBmmap\fP()
+.TP
+.B int usmblks;
+Largest amount of address space ever used by the process; this field
+is not meaningful in the glibc implementation.
+.TP
+.B int fsmblks;
+Total unused address space in small, non-joined chunks; this field is
+not meaningful in the glibc implementation.
+.TP
+.B int uordblks;
+Dynamically allocated address space used by the program, including
+book-keeping overhead per allocation of \fBsizeof(void *)\fP bytes. 
+.TP
+.B int fordblks;
+Unused address space, including that from \fBmmap\fP()
+.TP
+.B int keepcost;
+Upper bound on the address space available for return to the OS by
+\fBmalloc_trim\fP().
+.RE
+.SH "RETURN VALUE"
+\fBmallopt\fP() returns 1 on success, and 0 on failure.
+
+\fBmalloc_trim\fP() returns 1 if any memory was returned to the OS,
+and 0 otherwise.
+
+\fBmalloc_usable_size\fP() returns the usable size of the allocated
+region beginning at \fIptr\fP, or 0 if \fIptr\fP is NULL.
+
+\fBmalloc_get_state\fP() returns a pointer to a description of the
+state of the allocation routines, or NULL on error.
+
+\fBmalloc_set_state\fP() returns 0 on success, and nonzero on error.
+
+\fBmallinfo\fP() returns a structure containing information about the
+dynamic memory use of the program.
+.SH NOTES
+The glibc malloc implementation is modified to allow use of multiple
+"arenas"; the \fBmalloc_stats\fP() output is not as described in the
+header files and documentation, and the \fBmallinfo()\fP function only
+returns information for the main arena.
+
+The default values listed for the \fBmallopt\fP() parameters may vary
+between installations, and should only serve as a guideline while
+tweaking the values; refer to the source code for your distribution's
+glibc package to establish the real defaults.
+.SH ENVIRONMENT
+Since libc 5.4.23, the \fBmallopt\fP() tuning parameters are
+accessible at runtime through the following environment variables:
+.sp
+.RS
+.B MALLOC_TRIM_THRESHOLD_
+.br
+.B MALLOC_TOP_PAD_
+.br
+.B MALLOC_MMAP_THRESHOLD_
+.br
+.B MALLOC_MMAP_MAX_
+.br
+.B MALLOC_CHECK_
+.RE
+
+Only the first byte of \fBMALLOC_CHECK_\fP is considered; "10" is
+interpreted as 1, and "64" is interpreted as 6.
+.SH "CONFORMING TO"
+\fBmallopt\fP() and \fBmallinfo\fP(), and \fBM_MXFAST\fP are defined
+by SVID/XPG.
+
+That standard also defines the \fBmallopt\fP() parameters
+.BR M_NLBLKS ,
+.BR M_GRAIN ,
+and
+.BR M_KEEP ,
+but these values have no effect in the glibc implementation.
+.\" TODO: some documentation would still be nice
+
+The remainder of these functions and variables are GNU extensions, and
+should not be used in programs intended to be portable.
+.SH AUTHOR
+glibc uses a dynamic allocation routines heavily based on the
+implementation by Doug Lea <dl@cs.oswego.edu>.
+.SH SEE ALSO
+.BR sbrk (2),
+.BR mmap (2),
+.BR stderr (2),
+.BR malloc_hook (3),
+.BR malloc (3),
+.BR cfree (3),
+.BR memalign (3),
+.BR pvalloc (3).
+.\".br TODO
+.\"\fBvoid __malloc_check_init (void);\fP
+.\" void * (*__morecore) ((ptrdiff_t size));
+.\" void * __default_morecore ((ptrdiff_t size));
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\" Hooks
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\".br
+.\"\fBvoid (*\fI__malloc_initialize_hook\fB) (void);\fP
+.\".br
+.\"\fBvoid * (*\fI__malloc_hook\fB) (size_t \fPsize\fB, __const
+.\"void *\fIcaller\fB);
+.\".br
+.\"\fBvoid (*\fI__free_hook\fB) (void * \fIptr,\fB __const void
+.\"*\fIcaller\fB);
+.\".br
+.\"\fBvoid * (*\fI__realloc_hook\fB) (void * \fPptr\fB,
+.\"size_t \fIsize\fB, __const void *\fIcaller\fB);
+.\".br
+.\"\fBvoid * (*\fI__memalign_hook\fB) (size_t \fPalignment\fB,
+.\"size_t \fIsize\fB, __const void *\fIcaller\fB);
+.\".br
+.\"\fBvoid (*\fI__after_morecore_hook\fB) (void);
+.\".\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\".\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\".\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\".\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\".LP
+.\"Alternative allocation routines may be specified by setting the
+.\"\fB*_hook\fP variables to the address of a function to be used as the
+.\"allocation backend.  \fIcaller\fP is the address 
+.\".\" TODO: "of the return address found on the stack when malloc was called"
+.\"
+.\"The hook functions can call the standard functions to do the actual
+.\"work, but this is only safe if the value of all of the allocation
+.\"backend functions are first restored to their initial values; otherwise
+.\"the routines might end up in a recursive loop!  The alternate values
+.\"of the changed hooks should be restored after the normal functions
+.\"return.  
+.\"
+.\"\fI__malloc_initialize_hook\fP is called after the malloc routines
+.\"have been initialized; if one uses the dynamic allocation hooks, it
+.\"should save the initial values of the allocation functions, and then
+.\"store new values to the \fB*_hook\fP variables.
+.\".\" TODO: I don't understand why old_*_hook need to be updated on
+.\".\" every call to *
+.\"
+.\" \fI__malloc_initialize_hook\fP can be defined like: \fB void (*\fI__malloc_initialize_hook\fB) (void) = \fBinit_malloc\fI; where \fIinit_malloc\fB is the custom allocation initialization routine.
+.\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
