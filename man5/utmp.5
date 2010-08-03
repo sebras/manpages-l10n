@@ -24,8 +24,11 @@
 .\" Modified Thu Feb 26 16:08:49 MET 1995 by Michael Haardt
 .\" Modified Sat Jul 20 14:39:03 MET DST 1996 by Michael Haardt
 .\" Modified Sat Aug 10 15:26:25 MET DST 1996 by Michael Haardt
+.\" 2002-09-24	Daniel Kobras <kobras@linux.de>
+.\"	* Typo fixes.
+.\"	* Update example struct to glibc 2.2.5.
 .\"
-.TH UTMP 5 "10. August 1996" "Linux" "Dateiformate"
+.TH UTMP 5 "24. September 2002" "Linux" "Dateiformate"
 .SH BEZEICHNUNG
 utmp, wtmp \- login Einträge
 .SH ÜBERSICHT
@@ -46,8 +49,12 @@ der Korrektheit dieser Datei abhängig sind.  Falls Sie
 für jeden schreibbar lassen, riskieren Sie falsche Einträge in
 Systemlogdateien und Modifikationen von Systemdateien.
 
-Die Datei besteht aus einer Sequenz von Einträgen der folgenden Struktur,
-die in der Include-Datei deklariert ist:
+Die Datei besteht aus einer Sequenz von Einträgen der Struktur
+.IR utmp ,
+die über die Include-Datei deklariert wird.  Das Format von
+.I utmp
+ist nicht strikt festgelegt, sondern hängt ab von der Version der
+verwendeten libc.  Das folgende Beispiel ist glibc 2.2.5 entnommen:
 .RS
 .nf
 .sp
@@ -61,20 +68,35 @@ die in der Include-Datei deklariert ist:
 #define LOGIN_PROCESS	6
 #define USER_PROCESS	7
 #define DEAD_PROCESS	8
+#define ACCOUNTING	9
 
-#define UT_LINESIZE	12
-#define UT_NAMESIZE	8
-#define UT_HOSTSIZE	16
+#define UT_LINESIZE	32
+#define UT_NAMESIZE	32
+#define UT_HOSTSIZE	256
+
+struct exit_status {
+  short int e_termination;    /* Abbruchstatus des Prozesses.  */
+  short int e_exit;           /* Rückgabestatus des Prozesses.  */
+};
+	    
 
 struct utmp {
-  short ut_type;	/* Typ des Eintrags */
-  pid_t ut_pid;		/* Prozessnummer */
+  short int ut_type;	/* Typ des Eintrags */
+  pid_t ut_pid;		/* Kennung des Anmeldeprozesses */
   char ut_line[UT_LINESIZE];	/* Gerätename \- "/dev/" */
-  char ut_id[2];	/* init id or abgek. Leitungsname */
-  time_t ut_time;	/* Zeit */
+  char ut_id[4];	/* init id or abgek. Leitungsname */
   char ut_user[UT_NAMESIZE];	/* Benutzer login-Name */
   char ut_host[UT_HOSTSIZE];	/* Rechner-Name bei remote login */
-  long ut_addr;	/* IP Adresse des remote Rechners */
+  struct exit_status ut_exit;	/* Rückgabestatus eines Prozesses, der
+  				   als DEAD_PROCESS markiert ist. */
+  long int ut_session;		/* Sessionkennung, benutzt, um mehrere
+  				   Fenster zu unterscheiden. */
+  struct timeval ut_tv;		/* Zeit, zu der der Eintrag erstellt
+  				   wurde. */
+  int32_t ut_addr_v6[4];	/* Internetadresse des Ursprungsrechners
+  				   der Login-Verbindung. */
+  char __unused[20];		/* Unbenutzt, reserviert für spätere
+  				   Verwendung. */
 };
 .sp
 .fi
@@ -94,7 +116,7 @@ verarbeitet.  Bevor ein solcher Eintrag verarbeitet wird, räumt
 .I utmp
 auf, indem bei jedem Eintrag dessen
 .BR ut_type " nicht"
-.BR DEAD_PROCESS " oder " BRUN_LVL 
+.BR DEAD_PROCESS " oder " RUN_LVL 
 ist und für den kein Prozess mit der PID
 .BR ut_pid " existiert,"
 .BR ut_type " auf " DEAD_PROCESS
@@ -136,7 +158,7 @@ entsprechenden utmp Eintrag mittels
 
 .BR xterm (1)
 und andere Terminal-Emulatoren erstellen direkt einen
-.B USER_PROCESS
+.BR USER_PROCESS \-
 Eintrag und erzeugen die
 .BR ut_id " entweder durch die letzten beiden Zeichen von"
 .BI /dev/ttyp %c
@@ -145,7 +167,7 @@ oder durch
 bei
 .BI /dev/pts/ %d.
 Falls sie einen
-.B DEAD_PROCESS
+.BR DEAD_PROCESS \-
 Eintrag für diese ID finden, wird er wieder benutzt, ansonsten wird ein
 neuer Eintrag erstellt.  Falls möglich, markieren sie vor Beendigung den
 Eintrag als
@@ -153,7 +175,7 @@ Eintrag als
 .BR ut_line ", " ut_time ", " ut_user " und " ut_host " mit Nullen füllen."
 
 .BR xdm (8)
-sollte keinen utmp Eintrag erstellen, weil es kein
+sollte keinen utmp-Eintrag erstellen, weil es kein
 zugeordnetes Terminal gibt.  Falls es trotzdem gemacht wird, werden
 .\" FIXME testen, dass es wirklich cannot heißt, nicht can not
 Fehlermeldungen wie finger: cannot stat /dev/machine.dom die Folge
@@ -164,12 +186,12 @@ geschieht.
 
 .BR telnetd (8)
 erzeugt einen
-.BR LOGIN_PROCESS " Eintrag und lässt"
+.BR LOGIN_PROCESS "\-Eintrag und lässt"
 .BR login (8)
 den Rest erledigen.  Nachdem die telnet-Sitzung beendet ist, markiert
 .BR telnetd (8)
 den
-.I utmp
+.IR utmp \-
 Eintrag in der oben
 beschriebenen Art und Weise.
 
@@ -209,7 +231,7 @@ weil dort
 Feld eines Eintrags nach dem initialen Setzen nie wieder geändert,
 wodurch diese Eintragnummer ohne jede Konfigurationsdatei reserviert wird.
 .B ut_id
-zu löschen führt zu race conditions und resultiert in beschädigten utmp
+zu löschen führt zu Race-Conditions und resultiert in beschädigten utmp
 Einträgen und potenziellen Sicherheitslöchern.  Die SYSV-Semantik verlangt
 nicht, die oben angegebenen Felder mit Null-Bytes zu löschen, aber es
 erlaubt viele Programme zu benutzen, die die BSD-Semantik benutzen und
@@ -232,6 +254,9 @@ nicht allgemein lesbar machen.
 .SH EINSCHRÄNKUNGEN
 Das Dateiformat ist maschinengebunden.  Es wird daher empfohlen, dass
 es nur auf der Architektur verarbeitet wird, auf der es erstellt wurde.
+.SH FEHLER
+Ein Großteil der obigen Beschreibung basiert auf der libc5.  Aktuelle
+Versionen könnten inzwischen ein anderes Verfahren verwenden.
 .SH "SIEHE AUCH"
 .BR ac (1),
 .BR date (1),
@@ -239,5 +264,6 @@ es nur auf der Architektur verarbeitet wird, auf der es erstellt wurde.
 .BR login (1),
 .BR who (1),
 .BR getutent (3),
+.BR updwtmp (3),
 .BR init (8).
 

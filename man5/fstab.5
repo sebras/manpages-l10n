@@ -46,6 +46,9 @@
 .\" Modified Tue Dec 30 23:56:26 2003 by Jens Seidel <tux-master@web.de>
 .\"	* update to version 2.12 (of util-linux package, available at
 .\"       http://freshmeat.net/projects/util-linux/)
+.\" Modified Sat Dec 23 22:55:32 2006 by Daniel Kobras <kobras@linux.de>
+.\"  * merge with Debian version that synced with English version dated
+.\"    Jul 14, 2001, adding documentation for UUID and volume labels.
 .\"
 .TH FSTAB 5 "15. Juni 1999" "Linux 2.2" "Dateiformate"
 .SH BEZEICHNUNG
@@ -61,7 +64,7 @@ Systemadministrator, diese Datei zu erstellen und zu pflegen.  Jedes Dateisystem
 wird durch eine separate Zeile in
 .B fstab
 repräsentiert; innerhalb einer Zeile werden die Felder durch Tabs oder
-Leerzeichen getrennt.  Zeilen die mit '#' beginnen sind Kommentare.  Die
+Leerzeichen getrennt.  Zeilen, die mit '#' beginnen, sind Kommentare.  Die
 Reihenfolge der Zeilen in
 .B fstab
 ist wichtig, da 
@@ -74,32 +77,34 @@ diese Datei sequentiell abarbeiten.
 Das erste Feld,
 .RI ( fs_spec ),
 beschreibt das zu mountende blockorientierte Gerät oder
-das entfernte Dateisystem.
+Dateisystem auf einem entfernten Rechner.
 .LP
-Zum üblichen Mounten enthält dies für das zu mountende Gerät (einen Link auf)
-ein blockorientiertes Gerät (wie es von
+Im ersten Fall enthält es (einen Verweis auf) den Namen des blockorientierten
+Geräts (wie mittels
 .BR mknod (8)
-erzeugt wird), wie `/dev/cdrom' oder `/dev/sdb7'.
-Für NFS-Dateisysteme wird <host>:<dir>, z.B. `knuth.aeb.nl:/' verwendet.
-Für procfs sollte `proc' eingetragen werden.
+erzeugt) für das einzubindende Gerät, beispielsweise `/dev/cdrom' oder
+`/dev/sdb7'.  Für Dateisysteme, die über NFS eingebunden werden, verwendet
+man <rechner>:<verzeichnis>, zum Beispiel `knuth.aeb.nl:/'.  Für procfs ist
+`proc' anzugeben.
 .LP
-Anstatt das Gerät explizit anzugeben, kann man das zu mountende (ext2- oder
-xfs-) Dateisystem durch die UUID oder die Datenträgerbezeichnung (volume
-label) angeben (siehe
-.BR e2label (8)
-oder
-.BR xfs_admin (8)).
-Es wird dann LABEL=<label> oder UUID=<uuid> verwendet, z.B.
-`LABEL=Boot' oder `UUID=3e6be9de\%-8139\%-11d1\%-9106\%-a43f08d823a6'.
-Dies macht das System robuster: das Hinzufügen oder Entfernen einer
-SCSI-Platte ändert den Gerätenamen, aber nicht die Bezeichnung des
-Dateisystems.
+Dateisysteme im ext2- oder XFS-Format lassen sich statt über den Devicenamen
+auch mit Hilfe ihrer so genannten UUID oder der Gerätekennzeichnung (Volume
+Label) angeben. (Siehe
+.BR e2label (8),
+beziehungsweise
+.BR xfs_admin (8).)
+Dazu verwendet man das Format LABEL=<label> oder UUID=<uuid>,
+beispielsweise `LABEL=Boot' oder
+`UUID=3e6be9de\%-8139\%-11d1\%-9106\%-a43f08d823a6'.  Vor allem Systeme mit
+SCSI-Systemen werden dadurch robuster: Durch hinzufügen oder entfernen einer
+SCSI-Platte können sich die Devicenamen der übrigen Platten verändern, aber
+UUID und Label bleiben gleich.
 
 Das zweite Feld,
 .RI ( fs_file ),
 gibt den Mountpunkt für das Dateisystem an.  Bei Swap-Partitionen sollte
-hier `none' stehen.  Wenn der Name des Mountpunkts Leerzeichen enthält,
-können diese mit `\\040' angegeben werden.
+hier ``none'' stehen.  Leerzeichen im Namen sind durch die Zeichenfolge
+`\\040' zu ersetzen.
 
 Das dritte Feld,
 .RI ( fs_vfstype ),
@@ -137,19 +142,20 @@ Typen von Dateisystemen, z.B.
 .IR vfat ,
 .IR xenix ,
 .I xfs
-und möglicherweise andere.  Für weitere Details wird auf
-.BR mount (8)
-verwiesen.  Die durch den aktuell laufenden Kernel unterstützten Dateisysteme
+und möglicherweise andere.  Weitere Informationen dazu stehen in
+.BR mount (8).
+Die durch den aktuell laufenden Kernel unterstützten Dateisysteme
 sind in
 .I /proc/filesystems
 aufgeführt.  Ein Eintrag
 .I swap
-kennzeichnet eine Swap-Datei oder -Partition, näheres dazu ist in
-.BR swapon (8)
-zu finden.  Wenn
+bezeichnet eine Datei oder Partition, die als virtueller Hauptspeicher (Swap)
+verwendet werden soll, siehe
+.BR swapon (8).
+Zeilen mit dem Eintrag
 .I ignore
-angegeben ist, wird die Zeile ignoriert.  Dies ist nützlich, wenn
-unbenutzte Partitionen angezeigt werden sollen.      
+werden nicht berücksichtigt.  Das ist nützlich, um Partitionen aufzuführen,
+die im Augenblick unbenutzt sind.
 
 Das vierte Feld,
 .RI ( fs_mntops ),
@@ -157,19 +163,19 @@ beschreibt die zum Dateisystem gehörenden Mountoptionen.
 
 Es ist eine durch Kommata getrennte Liste von Optionen.  Sie enthält zumindest
 die Art des Mountens (auto, noauto, ...) und eventuell zusätzliche
-dateisystemspezifische Optionen.  Optionen für nicht-nfs-Dateisysteme sind in
+dateisystemspezifische Optionen.  Optionen für nicht-NFS-Dateisysteme sind in
 .BR mount (8)
 dokumentiert.
-nfs-spezifische Optionen sind nachzulesen in
+NFS-spezifische Optionen sind nachzulesen in
 .BR nfs (5).
-Für alle Dateisysteme können die Optionen `noauto' (nicht mounten bei
-"mount -a", z.B. während des Bootens), `user' (erlaubt Nutzern das Mounten),
-`owner' (erlaubt dem Besitzer des Geräts das Mounten) und `_netdev'
-(Gerät erfordert ein verfügbares Netzwerk) verwendet werden.
-Die Optionen `owner' und `_netdev' sind Linux-spezifisch.
-Weitere Details sind in
-.BR mount (8)
-zu finden.
+Folgende Optionen werden von sämtlichen Dateisystemen unterstützt: ``noauto''
+(soll nicht mit dem Befehl "mount -a" eingebunden werden, beispielsweise
+beim Starten des Systems), ``user'' (jeder Benutzer darf das Dateisystem
+einbinden), ``owner'' (der Eigentümer der Gerätedatei darf einbinden) und
+``_netdev'' (Gerät ist nur bei aktiver Netzwerkverbindung verfügbar).  Die
+Optionen ``owner'' und ``_netdev'' sind Linux-spezifisch.  Für weitere
+Informationen siehe
+.BR mount (8).
 
 Das fünfte Feld,
 .RI ( fs_freq ),
@@ -196,11 +202,12 @@ oder Null, wird Null verwendet und
 .B fsck
 geht davon aus, dass das Dateisystem keiner Prüfung bedarf.
 
-Die korrekte Methode, um Einträge aus
+Korrekterweise werden Einträge aus der 
 .B fstab
-zu lesen, ist, die Routinen von
-.BR getmntent (3)
-zu benutzen.  
+mit Hilfe der Routinen von
+.BR getmntent (3).
+ausgelesen.
+
 .SH DATEIEN
 .I /etc/fstab
 .SH "SIEHE AUCH"
@@ -208,7 +215,7 @@ zu benutzen.
 .BR mount (8),
 .BR swapon (8),
 .BR fs (5),
-.BR nfs (5)
+.BR nfs (5).
 .SH GESCHICHTE
 Der Urahn des
 .BR fstab -Dateiformats
