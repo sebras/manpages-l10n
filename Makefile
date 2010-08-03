@@ -1,28 +1,53 @@
-# Do "make install" to copy the pages to their destination.
-# Do "make gz" before "make install" if you use compressed source pages.
-# Do "make remove" before "make gz" if you may have uncompressed
-# source pages around.
+# Do "make install" to copy the compressed pages to their destination.
+# Do "make uninstall" to remove the installed pages.
 
 prefix=/usr
 
 MANDIR=$(prefix)/share/man/de
 
-example: remove gz install
-
-remove:
-	for i in man?; do for j in $$i/*; do rm -f $(MANDIR)/$$j; done; done
-
-gz:
-	for i in man?; do gzip $$i/*; done
-
-ungz:
-	for i in man?; do gunzip $$i/*.gz; done
+all:
+	echo Please choose a target (install or uninstall)
 
 install:
-	test -d $(MANDIR) || install -d -m 755 $(MANDIR)
+	test -d $(DESTDIR)/$(MANDIR) || install -d -m 755 $(DESTDIR)/$(MANDIR)
+	# Install old manpages
 	for i in man?; do \
-	  test -d $(MANDIR)/$$i || install -d -m 755 $(MANDIR)/$$i; \
+	  test -d $(DESTDIR)/$(MANDIR)/$$i || install -d -m 755 $(DESTDIR)/$(MANDIR)/$$i; \
 	  for m in $$i/*; do \
-	    test -f $(MANDIR)/$$m || install -m 644 $$m $(MANDIR)/$$i; \
+	    test -f $(DESTDIR)/$(MANDIR)/$$m || install -m 644 $$m $(DESTDIR)/$(MANDIR)/$$i; \
+			# Add a warning about possibly outdated manpages \
+			perl add-outdated-warning.pl $(DESTDIR)/$(MANDIR)/$$m > manpage.tmp; \
+			mv manpage.tmp $(DESTDIR)/$(MANDIR)/$$m; \
+			# Compress manpages \
+			gzip $(DESTDIR)/$(MANDIR)/$$m; \
 	  done; \
+	done
+	# Install coreutils manpages
+	for m in coreutils/*; do \
+		file=`basename $$m`; \
+		section=`basename $$m | sed -e "s/.\+\.//"`; \
+    test -d $(DESTDIR)/$(MANDIR)/man$$section || install -d -m 755 $(DESTDIR)/$(MANDIR)/man$$section; \
+    test -f $(DESTDIR)/$(MANDIR)/man$$section/$$file || install -m 644 $$m $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
+		# Compress manpages \
+		gzip $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
+	done
+	# Install links
+	for linkfile in `find -type f -name "*.links"`; do \
+		perl create-links.pl $(DESTDIR)/$(MANDIR) $$linkfile; \
+	done
+
+uninstall:
+	# Remove links
+	for linkfile in `find -type f -name "*.links"`; do \
+		perl remove-links.pl $(DESTDIR)/$(MANDIR) $$linkfile; \
+	done
+	# Remove old manpages
+	for m in man?/*; do \
+		rm -f $(DESTDIR)/$(MANDIR)/$$m.gz; \
+	done
+	# Remove coreutils manpages
+	for m in coreutils/*; do \
+		file=`basename $$m`; \
+		section=`basename $$m | sed -e "s/.\+\.//"`; \
+		rm -f $(DESTDIR)/$(MANDIR)/man$$section/$$file.gz; \
 	done
