@@ -51,3 +51,15 @@ uninstall:
 		section=`basename $$m | sed -e "s/.\+\.//"`; \
 		rm -f $(DESTDIR)/$(MANDIR)/man$$section/$$file.gz; \
 	done
+
+version=`perl -pe "" VERSION`
+
+dist:
+	rm -rf manpages-de-$(version)
+	mkdir manpages-de-$(version)
+	cp -R english/ man?/ coreutils/ \
+	CHANGES COPYRIGHT GPL-3 Makefile README VERSION \
+	add-outdated-warning.pl coreutils.links create-links.pl remove-links.pl \
+	manpages-de-$(version)
+	tar cjf manpages-de-$(version).tar.bz2 manpages-de-$(version)
+	rm -rf manpages-de-$(version)
