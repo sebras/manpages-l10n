@@ -1,0 +1,133 @@
+README für Übersetzer der Handbuchseiten
+========================================
+
+Das Projekt »manpages-de« ist von Joey Schulze kopiert worden und
+wird hier weiterentwickelt. Die Homepage von Joey enthält einige
+erklärende Texte:
+
+<http://www.infodrom.org/projects/manpages-de/>
+
+
+Erstellen einer .po-basierten Übersetzung
+=========================================
+
+Wer eine neue Übersetzung starten möchte, kann die englische
+Handbuchseite ganz leicht in das .po-Format umwandeln, wenn es
+keine vorhandene deutsche Übersetzung gibt. Dann ist anschließend
+sofort die Übersetzung der erstellten .po-Datei möglich.
+
+Falls es bereits eine deutsche Übersetzung gibt, liegt diese im
+groff-Format (Quelltext der Handbuchseiten) vor. Damit bei der
+Umwandlung ins .po-Format möglichst viel der Übersetzung erhalten
+bleibt, müssen die deutsche und englische Handbuchseite in der
+Struktur angepasst werden. Nur so kann das Programm po4a die
+jeweilige deutsche Übersetzung dem englischen Originaltext zuordnen.
+Weil trotzdem eine Unsicherheit bleibt, werden alle erkannten
+Übersetzungen in der .po-Datei als »fuzzy« markiert und müssen
+manuell vom Übersetzer gegengelesen werden.
+
+Die Arbeitsweise ist für die beiden oben beschriebenen Fälle
+gleich und wird exemplarisch für die Handbuchseite »man2/access.2«
+beschrieben:
+
+Wechsel ins Verzeichnis »work« (dort sind alle beötigten Skripte enthalten)
+
+$ cd work
+
+Kopieren der englischen Handbuchseite, gegebenenfalls zusätzlich der
+deutschen Übersetzung. Falls es keine Übersetzung gibt, wird eine Warnung
+ausgegeben, man kann aber natürlich trotzdem weiterarbeiten.
+
+$ ./copy-manpage.sh access.2
+-> Es entstehen die Dateien »access.2« und »access.2.de.2«
+   im Verzeichnis »work«
+
+$ ./create-po.sh access.2
+
+Hier kann es (wie in diesem Beispiel) die Fehlermeldung geben, dass
+die Originaldatei nicht mit der Übersetzung übereinstimmt. Falls keine
+deutsche Übersetzung existiert, gibt es bei diesem Skript keine Fehler.
+Man kann dann direkt mit dem nächsten Skript »update-po.sh« (s.u.)
+weitermachen.
+
+Nun muss man die Dateien »access.2« und »access.2.de.2« nach Belieben
+aneinander angleichen, bis der Aufruf von create-po.sh ohne Fehler
+klappt. Je besser man die Dateien angleicht, desto mehr vorhandene
+Übersetzungen werden in die .po-Datei übernommen. Es ist problemlos
+möglich, dafür auch ganze Teile der englischen Datei zu löschen -- diese
+werden später automatisch wieder hergestellt! Falls die vorhandene
+Übersetzung allerdings so alt ist, dass das Übernehmen sich nicht lohnt
+(das war z.B. bei den »intro.X«-Seiten der Fall), kann man auch die oben
+entstandene Datei »access.2.de.2« einfach löschen -- dann funktioniert
+create-po.sh sofort und gibt nur eine Warnung aus, dass es keine
+deutsche Übersetzung finden konnte.
+
+Der Rest ist nun trivial:
+
+$ ./update-po.sh access.2
+
+Hier werden jetzt die evtl. gelöschten Teile der englischen Seite wieder
+hergestellt und in die .po-Datei übernommen.
+
+$ ./commit-po.sh access.2
+
+Dieser Befehl kopiert die Dateien »access.2.add« und »access.2.po«
+in das entsprechende po/manX-Verzeichnis und übernimmt sie ins
+git-Depot. Anschließend wird »git push« aufgerufen.
+
+Jetzt kann man entweder selbst übersetzen oder aber einen Aufruf
+zur Übersetzung starten. Dafür schickt man eine E-Mail mit dem
+Betreff »[TAF] po://manpages-de/access.2« an die Mailingliste
+<debian-l10n-german@lists.debian.org> und schreibt die URL,
+unter der die beiden Dateien .po und .add heruntergeladen werden
+können, in die E-Mail. Im Beispiel wären dies:
+
+<http://git.debian.org/?p=manpages-de/manpages-de.git;a=blob_plain;f=po/man2/access.2.po;hb=HEAD>
+<http://git.debian.org/?p=manpages-de/manpages-de.git;a=blob_plain;f=po/man2/access.2.add;hb=HEAD>
+
+
+Übersetzen einer umgewandelten Handbuchseite
+============================================
+
+Auf der Seite
+
+<http://i18n.debian.net/debian-l10n/german/de.by_status.html>
+
+sollen die zu bearbeitenden Handbuchseiten aufgelistet werden, allerdings
+gibt es derzeit ein Problem mit dem Darstellen der Übersetzungen,
+die den Status [TAF] besitzen. Als Zwischenlösung kann man die Seite
+
+<http://i18n.debian.net/debian-l10n/german/de.by_package.html#manpages-de>
+
+aufrufen, auf der die Seiten korrekt (allerdings nicht so übersichtlich)
+aufgelistet werden.
+
+Wenn man eine Übersetzung bearbeiten will, muss man unbedingt *vorher*
+eine Antwort an die [TAF]-Mail schreiben, damit keine Arbeit doppelt
+gemacht wird. Falls man auf die [TAF]-Mail nicht antworten kann, ist
+natürlich auch eine neue E-Mail vollkommen in Ordnung. Wichtig ist,
+dass andere Übersetzer Bescheid wissen, wer gerade woran arbeitet.
+Die Mail muss als Betreff »[ITT] po://manpages-de/access.2« haben,
+analog zur [TAF]-Mail.
+
+Wenn man die Übersetung fertig hat, antwortet man wiederum auf die
+[ITT]-Mail mit einer [RFR]-Mail, also z.B.:
+»[RFR] po://manpages-de/access.2«. Nachdem das Korrekturlesen
+beendet wurde, sollten die Dateien als Anhang eines Fehlerberichts
+gegen das Paket »manpages-de« im Debian BTS eingereicht werden.
+Abschließend schreibt man eine Antwort an die [RFR]-Mail mit dem
+Betreff »[BTS#123456] po://manpages-de/access.2« an die Liste.
+
+
+Übernehmen einer fertigen Handbuchseite
+=======================================
+
+Wenn man Schreibrechte für das git-Depot besitzt, sollte man auf den
+Fehlerbericht verzichten und die beiden Dateien direkt ins Depot
+übernehmen. Dann muss man die [RFR]-Mail allerdings noch abschließen,
+indem man eine Antwort mit dem Betreff »[DONE] po://manpages-de/access.2«
+schreibt.
+
+
+Tobias Quathamer
+10. August 2010
