@@ -23,8 +23,31 @@ msgmerge --compendium $1.po tmp tmp-empty.pot > tmp2
 msgattrib --no-obsolete tmp2 > $1.po
 rm -f tmp-empty.pot tmp tmp2
 
+# Determine if there's a recognizable date in the po file
+perl -ne "if (/msgid \"([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])\"/) {
+	print \"\\n\";
+	print;
+	print \"msgstr \\\"\";
+	\$month['01'] = 'Januar';
+	\$month['02'] = 'Februar';
+	\$month['03'] = 'März';
+	\$month['04'] = 'April';
+	\$month['05'] = 'Mai';
+	\$month['06'] = 'Juni';
+	\$month['07'] = 'Juli';
+	\$month['08'] = 'August';
+	\$month['09'] = 'September';
+	\$month['10'] = 'Oktober';
+	\$month['11'] = 'November';
+	\$month['12'] = 'Dezember';
+	printf('%d', \$3);
+	print '. ' . \$month[\$2] . ' ' . \$1;
+	print '\"';
+	print \"\\n\";
+}" $1.po > tmp
+
 # Create a custom compendium for this manpage
-cat > tmp <<END_COMPENDIUM
+cat >> tmp <<END_COMPENDIUM
 
 msgid "UPCASE"
 msgstr "UPCASE"
