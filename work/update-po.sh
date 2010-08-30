@@ -14,6 +14,9 @@ if [ -z $original ]; then \
   exit 1 ; \
 fi
 
+# Update with po4a
+po4a-updatepo -f man -m $original -p $1.po
+
 # Create an empty .po file to be filled with the compendium translations
 msgfilter -i $1.po sed -e "d" > tmp-empty.pot
 
