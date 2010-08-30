@@ -11,7 +11,7 @@ section=`basename $1 | sed -e "s/.\+\.//"`
 original=`find ../english/ -type f -name "$1"`
 if [ -z $original ]; then \
   echo "Die Handbuchseite wurde nicht gefunden." ; \
-  exit ; \
+  exit 1; \
 fi
 cp $original .
 
