@@ -38,5 +38,5 @@ PO4A-HEADER:mode=after;position=^.TH;beginboundary=FakePo4aBoundary
 
 .SH ÜBERSETZUNG
 Deutsche Übersetzung dieser Handbuchseite von
-MEIN NAME.
+MEIN NAME <EMAIL>.
 END_ADDENDUM
