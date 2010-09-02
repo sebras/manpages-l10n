@@ -31,6 +31,15 @@ install:
 		# Compress manpages \
 		gzip $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
 	done
+	# Install generated manpages
+	for m in generated/man?/*; do \
+		file=`basename $$m`; \
+		section=`basename $$m | sed -e "s/.\+\.//"`; \
+		test -d $(DESTDIR)/$(MANDIR)/man$$section || install -d -m 755 $(DESTDIR)/$(MANDIR)/man$$section; \
+		test -f $(DESTDIR)/$(MANDIR)/man$$section/$$file || install -m 644 $$m $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
+		# Compress manpages \
+		gzip $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
+	done
 	# Install links
 	for linkfile in `find -type f -name "*.links"`; do \
 		perl create-links.pl $(DESTDIR)/$(MANDIR) $$linkfile; \
@@ -51,13 +60,19 @@ uninstall:
 		section=`basename $$m | sed -e "s/.\+\.//"`; \
 		rm -f $(DESTDIR)/$(MANDIR)/man$$section/$$file.gz; \
 	done
+	# Remove generated manpages
+	for m in generated/man?/*; do \
+		file=`basename $$m`; \
+		section=`basename $$m | sed -e "s/.\+\.//"`; \
+		rm -f $(DESTDIR)/$(MANDIR)/man$$section/$$file.gz; \
+	done
 
 version=`perl -pe "" VERSION`
 
 dist:
 	rm -rf manpages-de-$(version)
 	mkdir manpages-de-$(version)
-	cp -R english/ man?/ coreutils/ \
+	cp -R english/ man?/ coreutils/ generated/ \
 	CHANGES COPYRIGHT GPL-3 Makefile README VERSION \
 	add-outdated-warning.pl coreutils.links create-links.pl remove-links.pl \
 	manpages-de-$(version)
