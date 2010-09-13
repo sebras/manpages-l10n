@@ -72,7 +72,7 @@ version=`perl -pe "" VERSION`
 dist:
 	rm -rf manpages-de-$(version)
 	mkdir manpages-de-$(version)
-	cp -R english/ man?/ coreutils/ generated/ \
+	cp -R english/*/*links man?/ coreutils/ generated/ \
 	CHANGES COPYRIGHT GPL-3 Makefile README VERSION \
 	add-outdated-warning.pl coreutils.links create-links.pl remove-links.pl \
 	manpages-de-$(version)
