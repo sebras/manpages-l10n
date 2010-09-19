@@ -14,6 +14,7 @@ for translation in po/man?/*.po; do
 	po4a-translate \
 		-f man \
 		-m $original \
+		-M ISO-8859-1 \
 		-p $translation \
 		-a $addendum \
 		-a lizenz.add \
