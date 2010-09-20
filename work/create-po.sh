@@ -37,6 +37,7 @@ cat > $program.$section.add <<END_ADDENDUM
 PO4A-HEADER:mode=after;position=^.TH;beginboundary=FakePo4aBoundary
 
 .SH ÜBERSETZUNG
-Deutsche Übersetzung dieser Handbuchseite von
-MEIN NAME <EMAIL>.
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+MEIN NAME <EMAIL>
+erstellt.
 END_ADDENDUM
