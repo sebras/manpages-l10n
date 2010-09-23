@@ -6,7 +6,7 @@ prefix=/usr
 MANDIR=$(prefix)/share/man/de
 
 all:
-	echo Please choose a target (install or uninstall)
+	echo "Please choose a target (install or uninstall)"
 
 install:
 	test -d $(DESTDIR)/$(MANDIR) || install -d -m 755 $(DESTDIR)/$(MANDIR)
