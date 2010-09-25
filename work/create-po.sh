@@ -16,12 +16,15 @@ else \
 fi
 
 # Generate with po4a
-po4a-gettextize -f man -m $1 $translation -p $program.$section.po
+po4a-gettextize -f man --option groff_code=verbatim -m $1 $translation -p $program.$section.po
 
 # Stop here if po4a fails
 if [ $? -ne 0 ]; then \
   exit 1; \
 fi
+
+# Remove location information
+sed -i -e "/^#: /d" $program.$section.po
 
 # Correct header data to satisfy msg* tools
 date=`date +"%Y-%m-%d %H:%M%z"`

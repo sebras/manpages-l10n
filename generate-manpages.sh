@@ -13,6 +13,7 @@ for translation in po/man?/*.po; do
 	addendum=`echo $translation | sed -e "s/\.po$/.add/"`;
 	po4a-translate \
 		-f man \
+		--option groff_code=verbatim \
 		-m $original \
 		-M ISO-8859-1 \
 		-p $translation \

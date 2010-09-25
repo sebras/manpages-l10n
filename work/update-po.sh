@@ -15,7 +15,7 @@ if [ -z $original ]; then \
 fi
 
 # Update with po4a
-po4a-updatepo -f man -m $original -p $1.po --msgmerge-opt "--no-location"
+po4a-updatepo -f man --option groff_code=verbatim -m $original -p $1.po --msgmerge-opt "--no-location"
 
 # Create an empty .po file to be filled with the compendium translations
 msgfilter -i $1.po sed -e "d" > tmp-empty.pot
@@ -84,7 +84,7 @@ sed -i -e "s/UPCASE/"$upcase"/" tmp
 cat compendium.po tmp > tmp-comp.po
 
 # Update with po4a
-po4a-updatepo -f man -m $original -p $1.po --msgmerge-opt "-C tmp-comp.po --no-location"
+po4a-updatepo -f man --option groff_code=verbatim -m $original -p $1.po --msgmerge-opt "-C tmp-comp.po --no-location"
 
 msgfilter -i $1.po sed -e "d" > tmp-empty.pot
 msgmerge --compendium $1.po tmp-comp.po tmp-empty.pot > tmp2
