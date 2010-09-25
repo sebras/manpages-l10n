@@ -5,6 +5,7 @@
 packages=`find -maxdepth 1 -type d | grep -v "^\.$" | cut -d/ -f2`
 
 for package in $packages; do
+	echo "Updating package $package"
 	latest_deb=`ls $package/$package*.deb 2>/dev/null | tail -n1`
 	if [ -z $latest_deb ]; then
 		echo "Warning: Could not find .deb for package '$package'"
