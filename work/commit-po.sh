@@ -20,4 +20,3 @@ git pull
 git add ../po/man$section/$1.po
 git add ../po/man$section/$1.add
 git commit -m "Initial conversion of $1"
-git push
