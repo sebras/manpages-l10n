@@ -41,7 +41,11 @@ for package in $packages; do
 				done
 			fi
 		done
-		LC_ALL=C sort tmp.links > $package/$package.links
+		if [ -e tmp.links ]; then
+			LC_ALL=C sort tmp.links > $package/$package.links
+		else
+			rm -f $package/$package.links
+		fi
 		rm -rf tmp/ data.tar.gz tmp.links
 	fi
 done
