@@ -28,8 +28,11 @@ for translation in $translations; do
 		print '\"';
 		print \"\\n\";
 	}" $original > tmp.po
-	# Create a custom compendium
-	cat ../work/compendium.po tmp.po > custom.po
+	# Extract header entry for custom compendium (first line until first blank line)
+	sed -n "1,/^$/p" $translation > header.po
+	# Create a custom compendium with the header from the translation
+	msgcat --use-first header.po ../work/compendium.po > tmp-compendium.po
+	cat tmp-compendium.po tmp.po > custom.po
 	# Update .po file from master file
 	po4a-updatepo -f man --option groff_code=verbatim \
 		-m $original -M ISO-8859-1 \
@@ -37,7 +40,9 @@ for translation in $translations; do
 		--po $translation
 	# Remove obsolete strings
 	msgattrib --no-obsolete $translation > tmp.po
-	mv tmp.po $translation
+	# Prefer the translations from the compendium
+	msgmerge --compendium custom.po --no-fuzzy-matching /dev/null tmp.po > result.po
+	mv result.po $translation
 done
 # Cleanup
-rm custom.po
+rm header.po tmp.po tmp-compendium.po custom.po
