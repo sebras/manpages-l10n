@@ -14,18 +14,6 @@ if [ -z $original ]; then \
   exit 1 ; \
 fi
 
-# Update with po4a
-po4a-updatepo -f man --option groff_code=verbatim -m $original -p $1.po --msgmerge-opt "--no-location"
-
-# Create an empty .po file to be filled with the compendium translations
-msgfilter -i $1.po sed -e "d" > tmp-empty.pot
-
-# Fill translation from compendium
-msgmerge compendium.po tmp-empty.pot > tmp
-msgmerge --compendium $1.po tmp tmp-empty.pot > tmp2
-msgattrib --no-obsolete tmp2 > $1.po
-rm -f tmp-empty.pot tmp tmp2
-
 # Determine if there's a recognizable date in the po file
 perl -ne "if (/msgid \"([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])\"/) {
 	print \"\\n\";
@@ -47,10 +35,10 @@ perl -ne "if (/msgid \"([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])\"/) {
 	print '. ' . \$month[\$2] . ' ' . \$1;
 	print '\"';
 	print \"\\n\";
-}" $1.po > tmp
+}" $1.po > tmp.po
 
 # Create a custom compendium for this manpage
-cat >> tmp <<END_COMPENDIUM
+cat >> tmp.po <<END_COMPENDIUM
 
 msgid "UPCASE"
 msgstr "UPCASE"
@@ -79,24 +67,36 @@ msgstr "B<info coreutils \\\\(aqPROGRAM invocation\\\\(aq>"
 END_COMPENDIUM
 # Replace PROGRAM with current program
 upcase=`echo $program | tr [:lower:] [:upper:]`
-sed -i -e "s/PROGRAM/"$program"/" tmp
-sed -i -e "s/UPCASE/"$upcase"/" tmp
-cat compendium.po tmp > tmp-comp.po
+sed -i -e "s/PROGRAM/"$program"/" tmp.po
+sed -i -e "s/UPCASE/"$upcase"/" tmp.po
 
-# Update with po4a
-po4a-updatepo -f man --option groff_code=verbatim -m $original -p $1.po --msgmerge-opt "-C tmp-comp.po --no-location"
+# Create uniform header
+echo "# German translation of manpages" > header.po
+echo "# This file is distributed under the same license as the manpages-de package." >> header.po
+# Extract header entry for custom compendium (msgid line until first blank line)
+sed -n "1,/^$/p" $1.po | grep -v "^#" >> header.po
+# Create a custom compendium with the header from the translation
+msgcat --use-first header.po compendium.po > tmp-compendium.po
+cat tmp-compendium.po tmp.po > custom.po
 
-msgfilter -i $1.po sed -e "d" > tmp-empty.pot
-msgmerge --compendium $1.po tmp-comp.po tmp-empty.pot > tmp2
-msgattrib --no-obsolete tmp2 > $1.po
+# Update .po file from master file
+po4a-updatepo -f man --option groff_code=verbatim \
+	-m $original -M ISO-8859-1 \
+	--msgmerge-opt "--backup=none --no-location --compendium custom.po --previous" \
+	--po $1.po
+# Remove obsolete strings
+msgattrib --no-obsolete $1.po > tmp.po
+# Prefer the translations from the compendium
+msgmerge --compendium custom.po --no-fuzzy-matching /dev/null tmp.po > result.po
+mv result.po $1.po
 
 # Correct header data to satisfy msg* tools
 date=`date +"%Y-%m-%d %H:%M%z"`
 sed -i -e "s/^\"POT-Creation-Date: .*/\"POT-Creation-Date: $date\\\\n\"/" $1.po
 sed -i -e "s/^\"PO-Revision-Date: .*/\"PO-Revision-Date: $date\\\\n\"/" $1.po
-sed -i -e "s/Last-Translator: .*/Last-Translator: Tobias Quathamer <toddy@debian.org>\\\\n\"/" $1.po
+sed -i -e "s/Last-Translator: .*/Last-Translator: MEIN NAME <EMAIL>\\\\n\"/" $1.po
 # Unfuzzy header entry
 sed -i -e "1,3 { /^#, fuzzy/d }" $1.po
 
 # Cleanup
-rm -f tmp-empty.pot tmp-comp.po tmp tmp2 $1.po~ gettextization.failed.po
+rm -f header.po tmp.po tmp-compendium.po custom.po gettextization.failed.po
