@@ -26,15 +26,6 @@ fi
 # Remove location information
 sed -i -e "/^#: /d" $program.$section.po
 
-# Correct header data to satisfy msg* tools
-date=`date +"%Y-%m-%d %H:%M%z"`
-sed -i -e "s/^\"Project-Id-Version: PACKAGE VERSION.*/\"Project-Id-Version: manpages-de\\\\n\"/" $program.$section.po
-sed -i -e "s/^\"POT-Creation-Date: .*/\"POT-Creation-Date: $date\\\\n\"/" $program.$section.po
-sed -i -e "s/^\"PO-Revision-Date: .*/\"PO-Revision-Date: $date\\\\n\"/" $program.$section.po
-sed -i -e "s/^\"Language-Team: LANGUAGE <LL@li.org>.*/\"Language-Team: German <debian-l10n-german@lists.debian.org>\\\\n\"/" $program.$section.po
-sed -i -e "s/^\"Content-Type: text\/plain; charset=CHARSET.*/\"Content-Type: text\/plain; charset=UTF-8\\\\n\"/" $program.$section.po
-sed -i -e "s/^\"Content-Transfer-Encoding: ENCODING.*/\"Content-Transfer-Encoding: 8bit\\\\n\"/" $program.$section.po
-
 # Create addendum to be added at the end of manpages
 cat > $program.$section.add <<END_ADDENDUM
 PO4A-HEADER:mode=after;position=^.TH;beginboundary=FakePo4aBoundary
