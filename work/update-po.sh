@@ -45,13 +45,5 @@ msgattrib --no-obsolete $1.po > tmp.po
 msgmerge --compendium custom.po --no-fuzzy-matching /dev/null tmp.po > result.po
 mv result.po $1.po
 
-# Correct header data to satisfy msg* tools
-date=`date +"%Y-%m-%d %H:%M%z"`
-sed -i -e "s/^\"POT-Creation-Date: .*/\"POT-Creation-Date: $date\\\\n\"/" $1.po
-sed -i -e "s/^\"PO-Revision-Date: .*/\"PO-Revision-Date: $date\\\\n\"/" $1.po
-sed -i -e "s/Last-Translator: .*/Last-Translator: MEIN NAME <EMAIL>\\\\n\"/" $1.po
-# Unfuzzy header entry
-sed -i -e "1,3 { /^#, fuzzy/d }" $1.po
-
 # Cleanup
 rm -f header.po tmp.po tmp-compendium.po custom.po gettextization.failed.po
