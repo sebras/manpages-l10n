@@ -1,10 +1,9 @@
 #!/bin/sh
 
 find man? -type f -exec basename {} \; > tmp.old-pages
-find coreutils -type f -exec basename {} \; > tmp.coreutils-pages
 find generated -type f -exec basename {} \; > tmp.generated-pages
 
-cat tmp.old-pages tmp.coreutils-pages tmp.generated-pages > tmp.all-pages
+cat tmp.old-pages tmp.generated-pages > tmp.all-pages
 sort tmp.all-pages | uniq -d > tmp.double-pages
 
 while read line; do
@@ -12,4 +11,4 @@ while read line; do
 	rm man$section/$line;
 done < tmp.double-pages
 
-rm -f tmp.old-pages tmp.coreutils-pages tmp.generated-pages tmp.all-pages tmp.double-pages
+rm -f tmp.old-pages tmp.generated-pages tmp.all-pages tmp.double-pages
