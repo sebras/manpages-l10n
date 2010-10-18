@@ -40,7 +40,7 @@ msgstr "UPCASE"
 
 msgid "Report PROGRAM bugs to bug-coreutils@gnu.org"
 msgstr ""
-"Berichten Sie Fehler in PROGRAM (auf Englisch) an bug-coreutils@gnu.org"
+"Berichten Sie Fehler in PROGRAM an bug-coreutils@gnu.org (auf Englisch)"
 
 msgid ""
 "Report PROGRAM translation bugs to E<lt>http://translationproject.org/team/E<gt>"
