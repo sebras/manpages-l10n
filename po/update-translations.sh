@@ -9,7 +9,7 @@ for translation in $translations; do
 	# Create a custom compendium
 	./generate-custom-compendium.sh $original
 	# Update .po file from master file
-	po4a-updatepo -f man --option groff_code=verbatim \
+	po4a-updatepo -f man --option groff_code=verbatim --option generated \
 		-m $original -M ISO-8859-1 \
 		--msgmerge-opt "--backup=none --no-location --compendium custom.po --previous" \
 		--po $translation
