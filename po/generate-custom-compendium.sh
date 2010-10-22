@@ -40,7 +40,7 @@ msgstr "UPCASE"
 
 msgid "Report PROGRAM bugs to bug-coreutils@gnu.org"
 msgstr ""
-"Berichten Sie Fehler in PROGRAM an bug-coreutils@gnu.org (auf Englisch)"
+"Berichten Sie Fehler in PROGRAM (auf Englisch) an bug-coreutils@gnu.org"
 
 msgid ""
 "Report PROGRAM translation bugs to E<lt>http://translationproject.org/team/E<gt>"
@@ -59,6 +59,9 @@ msgstr ""
 
 msgid "B<info coreutils \\\\(aqPROGRAM invocation\\\\(aq>"
 msgstr "B<info coreutils \\\\(aqPROGRAM invocation\\\\(aq>"
+
+msgid "should give you access to the complete manual."
+msgstr "auf das vollständige Handbuch zugreifen."
 END_COMPENDIUM
 # Replace PROGRAM with current program
 upcase=`echo "$program" | tr [:lower:] [:upper:]`
