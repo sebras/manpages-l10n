@@ -37,7 +37,7 @@
 .\" 2007-06-08 mtk: Added example program
 .\" 2007-07-05 mtk: Added details on underlying system call interfaces
 .\"
-.TH STAT 2 2009-09-30 "Linux" "Linux Programmer's Manual"
+.TH STAT 2 2010-09-20 "Linux" "Linux Programmer's Manual"
 .SH NAME
 stat, fstat, lstat \- get file status
 .SH SYNOPSIS
@@ -57,9 +57,23 @@ stat, fstat, lstat \- get file status
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .in
+.ad l
+.PD 0
 .sp
 .BR lstat ():
-_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.RS 4
+.TP 4
+Since glibc 2.10
+_POSIX_C_SOURCE\ >=\ 200112L ||
+_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
+_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.TP 4
+Before glibc 2.10
+_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
+_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.RE
+.PD
+.ad
 .SH DESCRIPTION
 .PP
 These functions return information about a file.
@@ -443,24 +457,27 @@ A sticky command appeared in Version 32V AT&T UNIX.
 .SH NOTES
 Since kernel 2.5.48, the
 .I stat
-structure supports nanosecond resolution for the three
-file timestamp fields.
-Glibc exposes the nanosecond component of each field using names either
-of the form
-.IR st_atim.tv_nsec ,
+structure supports nanosecond resolution for the three file timestamp fields.
+Glibc exposes the nanosecond component of each field using names of the form
+.IR st_atim.tv_nsec
 if the
 .B _BSD_SOURCE
 or
 .B _SVID_SOURCE
-feature test macro is defined,
-or of the form
-.IR st_atimensec ,
-if neither of these macros is defined.
+feature test macro is defined.
+These fields are specified in POSIX.1-2008, and, starting with version 2.12,
+glibc also exposes these field names if
+.BR _POSIX_C_SOURCE
+is defined with the value 200809L or greater, or
+.BR _XOPEN_SOURCE
+is defined with the value 700 or greater.
+If none of the aforementioned macros are defined,
+then the nanosecond values are exposed with names of the form
+.IR st_atimensec .
 On file systems that do not support subsecond timestamps,
-these nanosecond fields are returned with the value 0.
+the nanosecond fields are returned with the value 0.
 .\" As at kernel 2.6.25, XFS and JFS support nanosecond timestamps,
 .\" but ext2, ext3, and Reiserfs do not.
-.\" FIXME . SUSv4 specifies nanosecond timestamps.
 
 On Linux,
 .BR lstat ()
@@ -602,7 +619,7 @@ main(int argc, char *argv[])
 .BR capabilities (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 3.25 of the Linux
+This page is part of release 3.27 of the Linux
 .I man-pages
 project.
 A description of the project,
