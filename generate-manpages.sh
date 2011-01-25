@@ -6,6 +6,8 @@ for section in `seq 8`; do
 	mkdir generated/man$section;
 done
 
+cd po && ./generate-addendums.sh && cd ..
+
 for translation in po/man?/*.po; do
 	manpage=`basename $translation .po`;
 	section=`basename $manpage | sed -e "s/.\+\.//"`;
@@ -22,3 +24,5 @@ for translation in po/man?/*.po; do
 		-a lizenz.add \
 		-l generated/man$section/$manpage;
 done
+
+find po/ -name "*add" | xargs rm
