@@ -8,11 +8,6 @@ if [ -z "$1" ]; then \
 fi
 
 pofile="$1"
-# If shell completion is used, there might be the extension "po" missing.
-if [ ! -f "$pofile" ]; then \
-	pofile="$pofile"po
-fi
-
 program=`basename "$pofile" .po | sed -e "s/\.[0-9]//"`
 section=`basename "$pofile" .po | sed -e "s/.\+\.//"`
 
@@ -32,5 +27,5 @@ tmpname=`mktemp`
 msgcat "$pofile" > "$tmpname"
 mv "$tmpname" "$pofile"
 
-git add "$pofile" "$program.$section.add"
+git add "$pofile"
 git commit --author "$translator" -m "$program.$section: $stats"
