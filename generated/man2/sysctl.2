@@ -1,0 +1,168 @@
+.\" Copyright (C) 1996 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Written 11 April 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" 960412: Added comments from Stephen Tweedie
+.\" Modified Tue Oct 22 22:28:41 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Mon Jan  5 20:31:04 1998 by aeb.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSCTL 2 "20. November 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+sysctl \- Systemparameter lesen/schreiben
+.SH ÜBERSICHT
+.nf
+\fB#include <unistd.h>\fP
+.br
+\fB#include <linux/sysctl.h>\fP
+.sp
+\fBint _sysctl(struct __sysctl_args *\fP\fIargs\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+\fBVerwenden Sie diesen Systemaufruf nicht!\fP Siehe ANMERKUNGEN.
+
+Der Aufruf \fB_sysctl\fP() liest und/oder schreibt Kernel\-Parameter, zum
+Beispiel den Rechnernamen oder die maximale Anzahl geöffneter Dateien. Das
+Argument hat die Form
+.PP
+.in +4n
+.nf
+struct __sysctl_args {
+    int    *name;    /* Variable beschreibender Vektor aus Ganzzahlen */
+    int    nlen;     /* Länge dieses Vektors */
+    void   *oldval;  /* 0 oder Adresse, an der der alte Wert gespeichert
+                        werden soll */
+    size_t *oldlenp; /* verfügbarer Platz für den alten Wert, überschrieben
+                        durch die tatsächliche Größe des alten Wertes */
+    void   *newval;  /* 0 oder Adresse des neuen Wertes */
+    size_t  newlen;  /* Größe des neuen Wertes */
+};
+.fi
+.in
+.PP
+Dieser Aufruf sucht in einer Baumstruktur, die möglicherweise einer
+Verzeichnisstruktur unter \fI/proc/sys\fP ähnelt, und ruft, wenn das gewünschte
+Element gefunden wird, eine entsprechende Routine auf, um den Wert zu lesen
+oder zu verändern.
+.SH RÜCKGABEWERT
+Bei erfolgreichem Abschluss gibt \fB_sysctl\fP() 0 zurück. Andernfalls wird ein
+Wert von \-1 zurückgegeben und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+Der Aufruf fragte nach dem vorherigen Wert durch Setzen von \fIoldval\fP auf
+einen Wert ungleich NULL, stellte dafür aber keinen Platz in \fIoldlenp\fP zur
+Verfügung.
+.TP 
+\fBENOTDIR\fP
+\fIname\fP wurde nicht gefunden.
+.TP 
+\fBEPERM\fP
+keine Suchrechte für eines der vorgefundenen »Verzeichnisse«, keine
+Leserechte, wenn \fIoldval\fP nicht null war oder keine Schreibrechte, wenn
+\fInewval\fP nicht null war.
+.SH "KONFORM ZU"
+Dieser Aufruf ist Linux\-spezifisch und sollte nicht in portierbaren
+Programmen benutzt werden. Einen \fBsysctl\fP()\-Aufruf gibt es in Linux seit
+Version 1.3.57.  Er entstammt BSD\-4.4.  Ausschließlich Linux hat das Abbild
+\fI/proc/sys\fP und die Schemata der Objektbenennung unterscheiden sich in
+Linux und 4.4BSD, aber die Deklaration der Funktion \fBsysctl\fP() ist in
+beiden gleich.
+.SH ANMERKUNGEN
+Glibc stellt keinen Wrapper für diesen Systemaufruf bereit. Rufen Sie ihn
+mittels \fBsyscall\fP(2) auf.
+
+.\" See http://lwn.net/Articles/247243/
+Oder ... rufen Sie ihn besser gar nicht auf: Von der Benutzung dieses
+Systemaufrufs wird seit langen abgeraten und er ist so unbeliebt, dass \fBer
+wahrscheinlich in einer künftigen Kernel\-Version verschwinden
+wird\fP. Entfernen Sie ihn aus Ihren Programmen und benutzen Sie stattdessen
+die Schnittstelle \fI/proc/sys\fP.
+.SH FEHLER
+Die Objektnamen verändern sich zwischen Kernel\-Versionen, was diesen
+Systemaufruf für Anwendungen wertlos macht.
+.PP
+Nicht alle verfügbaren Objekte sind richtig dokumentiert.
+.PP
+Es ist noch nicht möglich, das Betriebssystem durch Schreiben nach
+\fI/proc/sys/kernel/ostype\fP zu ändern.
+.SH BEISPIEL
+.nf
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <linux/sysctl.h>
+
+int _sysctl(struct __sysctl_args *args );
+
+#define OSNAMESZ 100
+
+int
+main(void)
+{
+    struct __sysctl_args args;
+    char osname[OSNAMESZ];
+    size_t osnamelth;
+    int name[] = { CTL_KERN, KERN_OSTYPE };
+
+    memset(&args, 0, sizeof(struct __sysctl_args));
+    args.name = name;
+    args.nlen = sizeof(name)/sizeof(name[0]);
+    args.oldval = osname;
+    args.oldlenp = &osnamelth;
+
+    osnamelth = sizeof(osname);
+
+    if (syscall(SYS__sysctl, &args) == \-1) {
+        perror("_sysctl");
+        exit(EXIT_FAILURE);
+    }
+    printf("Auf dieser Maschine läuft %*s\en", osnamelth, osname);
+    exit(EXIT_SUCCESS);
+}
+.fi
+.SH "SIEHE AUCH"
+\fBproc\fP(5)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

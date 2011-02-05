@@ -1,0 +1,149 @@
+.\" Copyright (c) 1998 Andries Brouwer (aeb@cwi.nl), 24 September 1998
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REBOOT 2 "11. Februar 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+reboot \- Neustart oder Strg\-Alt\-Entf ein\-/ausschalten
+.SH ÜBERSICHT
+/* Für Libc4 und Libc5 sind der Bibliotheks\- und der Systemaufruf
+   identisch. Seit Kernel\-Version 2.1.30 gibt es die symbolischen
+   Namen LINUX_REBOOT_* für die Konstanten und ein viertes
+   Argument für den Aufruf: */
+.sp
+\fB#include <unistd.h>\fP
+.br
+\fB#include <linux/reboot.h>\fP
+.sp
+\fBint reboot(int \fP\fImagic\fP\fB, int \fP\fImagic2\fP\fB, int \fP\fIcmd\fP\fB, void
+*\fP\fIarg\fP\fB);\fP
+.sp
+/* Unter Glibc haben einige beteiligte Konstanten symbolische
+   RB_*\-Namen bekommen und der Bibliotheksaufruf ist ein
+   Ein\-Argument\-Wrapper für die drei Argumente des Systemaufrufs: */
+.sp
+\fB#include <unistd.h>\fP
+.br
+\fB#include <sys/reboot.h>\fP
+.sp
+\fBint reboot(int \fP\fIcmd\fP\fB);\fP
+.SH BESCHREIBUNG
+Der \fBreboot\fP()\-Aufruf startet das System neu oder schaltet den Tastendruck
+für den Neustart ein/aus (Strg\-Alt\-Entf, englisch CAD für Ctrl\-Alt\-Delete;
+er kann mittels \fBloadkeys\fP(1) geändert werden).
+.PP
+Dieser Systemaufruf wird (mit \fBEINVAL\fP) fehlschlagen, außer wenn \fImagic\fP
+gleich \fBLINUX_REBOOT_MAGIC1\fP (0xfee1dead) und \fImagic2\fP gleich
+\fBLINUX_REBOOT_MAGIC2\fP (672274793) ist. Seit 2.1.17 ist jedoch auch
+\fBLINUX_REBOOT_MAGIC2A\fP (85072278) und seit 2.1.97 außerdem
+\fBLINUX_REBOOT_MAGIC2B\fP (369367448) und seit 2.5.71 auch
+\fBLINUX_REBOOT_MAGIC2C\fP (537993216) als Wert für \fImagic2\fP erlaubt. (Die
+hexadezimalen Werte dieser Konstanten haben eine Bedeutung.) Das Argument
+\fIcmd\fP kann die folgenden Werte haben:
+.TP 
+\fBLINUX_REBOOT_CMD_RESTART\fP
+(RB_AUTOBOOT, 0x1234567). Die Nachricht »Restarting system.« wird ausgegeben
+und es wird sofort ein Standard\-Neustart ausgeführt. Wenn kein \fBsync\fP(2)
+vorausgeht, werden Daten verlorengehen.
+.TP 
+\fBLINUX_REBOOT_CMD_HALT\fP
+(RB_HALT_SYSTEM, 0xcdef0123; seit 1.1.76). Die Nachricht »System halted.«
+wird ausgegeben und das System wird angehalten. Falls vorhanden, wird die
+Steuerung an den ROM\-Monitor übergeben. Wenn kein \fBsync\fP(2) vorausgeht,
+werden Daten verlorengehen.
+.TP 
+\fBLINUX_REBOOT_CMD_POWER_OFF\fP
+(0x4321fedc; seit 2.1.30). Die Nachricht »Power down.« wird ausgegeben, das
+System wird gestoppt und jegliche Stromzufuhr unterbrochen, wenn
+möglich. Falls kein \fBsync\fP(2) vorausgeht, werden Daten verlorengehen.
+.TP 
+\fBLINUX_REBOOT_CMD_RESTART2\fP
+(0xa1b2c3d4; seit 2.1.30). Die Nachricht »Restarting system with command
+\(aq%s\(aq« wird ausgegeben und sofort ein Neustart ausgeführt (unter
+Verwendung der in \fIarg\fP angegebenen Zeichenkette). Wenn kein \fBsync\fP(2)
+vorausgeht, werden Daten verlorengehen.
+.TP 
+\fBLINUX_REBOOT_CMD_CAD_ON\fP
+(RB_ENABLE_CAD, 0x89abcdef). Strg\-Alt\-Delete wird eingeschaltet. Die
+bedeutet, dass das Tastenkürzel Strg\-Alt\-Delete sofort die mit
+\fBLINUX_REBOOT_CMD_RESTART\fP verbundene Aktion veranlassen wird.
+.TP 
+\fBLINUX_REBOOT_CMD_CAD_OFF\fP
+(RB_DISABLE_CAD, 0). Strg\-Alt\-Delete wird ausgeschaltet. Die bedeutet, dass
+das Tastenkürzel Strg\-Alt\-Delete veranlasst, dass ein \fBSIGINT\fP\-Signal an
+Init (Prozess 1) gesandt wird, woraufhin dieser Prozess über die richtige
+Aktion entscheidet (möglicherweise: alle Prozesse beenden, Platten
+synchronisieren, Neustart).
+.LP
+Nur der Superuser kann \fBreboot\fP() aufrufen.
+.LP
+Die genauen Auswirkungen der vorangehenden Aktionen hängen von der
+Architektur ab. Für die i386\-Architektur bewirkt das zusätzliche Argument
+derzeit nichts (2.1.122), aber der Typ des Neustarts kann durch
+Kernel\-Befehlszeilenargumente (»reboot=...«) festgelegt werden, um entweder
+einen Warm\- oder Kaltstart entweder hart oder über das BIOS durchzuführen.
+.SH RÜCKGABEWERT
+Für die Werte von \fIcmd\fP, die das System stoppen oder neu starten, gibt ein
+erfolgreicher Aufruf von \fBreboot\fP() nichts zurück. Für die anderen
+\fIcmd\fP\-Werte wird bei Erfolg Null zurückgegeben. Bei einem Fehler wird immer
+\-1 zurückgegeben und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+Problem bei der Abfrage von Daten aus dem Adressraum des Benutzers unter
+\fBLINUX_REBOOT_CMD_RESTART2\fP.
+.TP 
+\fBEINVAL\fP
+falsche magische Zahlen oder \fIcmd\fP
+.TP 
+\fBEPERM\fP
+Der aufrufende Prozess verfügt nicht über ausreichende Privilegien, um
+\fBreboot\fP() aufzurufen. Die Fähigkeit \fBCAP_SYS_BOOT\fP wird benötigt.
+.SH "KONFORM ZU"
+\fBreboot\fP() ist Linux\-spezifisch und sollte nicht in portierbaren Programmen
+benutzt werden.
+.SH "SIEHE AUCH"
+\fBsync\fP(2), \fBbootparam\fP(7), \fBcapabilities\fP(7), \fBctrlaltdel\fP(8),
+\fBhalt\fP(8), \fBreboot\fP(8)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

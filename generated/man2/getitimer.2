@@ -1,0 +1,168 @@
+.\" Copyright 7/93 by Darren Senn <sinster@scintilla.santa-clara.ca.us>
+.\" Based on a similar page Copyright 1992 by Rick Faith
+.\" May be freely distributed
+.\" Modified Tue Oct 22 00:22:35 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" 2005-04-06 mtk, Matthias Lang <matthias@corelatus.se>
+.\" 	Noted MAX_SEC_IN_JIFFIES ceiling
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETITIMER 2 "15. März 2009" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+getitimer, setitimer \- Zeit eines Intervall\-Zeitgebers abfragen oder setzen
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/time.h>\fP
+.sp
+\fBint getitimer(int \fP\fIwelcher\fP\fB, struct itimerval *\fP\fIaktueller wert\fP\fB);\fP
+.br
+\fBint setitimer(int \fP\fIwelcher\fP\fB,\fP
+\fB              const struct itimerval *\fP\fIneuer_wert\fP\fB,\fP
+\fB              struct itimerval *\fP\fIalter_wert\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+Das System stellt jedem Prozess drei Intervall\-Zeitgeber zur Verfügung, die
+in verschiedenen Zeitdomänen herunterzählen. Wenn der Zeitgeber abläuft,
+wird ein Signal an den Prozess gesandt und der Zeitgeber startet
+(möglicherweise) von vorne.
+.TP  1.5i
+\fBITIMER_REAL\fP
+zählt in Echtzeit zurück und liefert bei Ablauf \fBSIGALRM\fP.
+.TP 
+\fBITIMER_VIRTUAL\fP
+zählt nur zurück, wenn der Prozess ausgeführt wird und liefert bei Ablauf
+\fBSIGVTALRM\fP.
+.TP 
+\fBITIMER_PROF\fP
+zählt sowohl zurück, wenn der Prozess ausgeführt wird als auch, wenn das
+System für den Prozess tätig ist. Zusammen mit \fBITIMER_VIRTUAL\fP kann dieser
+Zeitgeber ermitteln, wie lange eine Applikation sich im Benutzer\- und im
+Kernel\-Adressraum aufhält. Bei Ablauf wird \fBSIGPROF\fP geliefert.
+.LP
+Zeitgeberwerte sind durch folgende Strukturen definiert:
+.PD 0
+.in +4n
+.nf
+
+struct itimerval
+{
+    struct timeval it_interval; /* nächster Wert */
+    struct timeval it_value;    /* aktueller Wert */
+};
+
+struct timeval
+{
+    long tv_sec;                /* Sekunden */
+    long tv_usec;               /* Mikrosekunden */
+};
+.fi
+.in
+.PD
+.LP
+Die Funktion \fBgetitimer\fP() füllt die Struktur auf die \fIaktueller_wert\fP
+zeigt mit der aktuellen Einstellung für den durch \fIwelcher\fP angegebenen
+Zeitgeber (\fBITIMER_REAL\fP, \fBITIMER_VIRTUAL\fP oder \fBITIMER_PROF\fP). Das
+Element \fIit_value\fP wird auf den Betrag der Zeit gesetzt, die auf dem
+Zeitgeber verblieben ist oder Null, wenn der Zeitgeber ausgeschaltet
+ist. Gleichermaßen wird \fIit_interval\fP auf den Rücksetzwert gesetzt.
+
+Die Funktion \fBsetitimer\fP() setzt den angegebenen Zeitgeber auf den Wert in
+\fIneuer_wert\fP. Falls \fIalter_wert\fP nicht NULL ist, wird der alte Wert dieses
+Zeitgebers dort gespeichert.
+.LP
+Zeitgeber zählen von \fIit_value\fP bis Null herunter, generieren ein Signal
+und werden auf \fIit_interval\fP zurückgesetzt. Ein Zeitgeber,der auf Null
+gesetzt ist (\fIit_value\fP ist Null oder der Zeitgeber läuft ab und
+\fIit_interval\fP ist Null), stoppt.
+.LP
+Sowohl \fItv_sec\fP als auch \fItv_usec\fP sind für das Festlegen der Dauer eines
+Zeitgebers von maßgeblich.
+.LP
+Zeitgeber laufen nie vor der angeforderten Zeit ab, könnten aber eine
+(kurze) Zeit danach ablaufen. Dies hängt von der Zeitgeberauflösung des
+Systems und der Systemauslastung ab; siehe \fBtime\fP(7). (Siehe aber im
+Folgenden den Abschnitt FEHLER.) Bei Ablauf wird ein Signal generiert und
+der Zeitgeber wird zurückgesetzt. Falls ein Zeitgeber abläuft, während der
+Prozess aktiv ist (trifft für \fBITIMER_VIRTUAL\fP immer zu), wird das Signal
+sofort gesandt, wenn es generiert ist. Andernfalls wird das Senden ein wenig
+verzögert, abhängig von der Systemauslastung.
+.SH RÜCKGABEWERT
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+\fIneuer_wert\fP, \fIalter_wert\fP oder \fIaktueller_wert\fP sind keine gültigen
+Zeiger.
+.TP 
+\fBEINVAL\fP
+\fIwelcher\fP ist weder \fBITIMER_REAL\fP, \fBITIMER_VIRTUAL\fP noch \fBITIMER_PROF\fP
+oder (seit Linux 2.6.22) einer der \fItv_usec\fP\-Felder in in der Struktur, auf
+die \fIneuer_wert\fP zeigt, enthält einen Wert, der außerhalb des Bereichs 0
+bis 999999 liegt.
+.SH "KONFORM ZU"
+POSIX.1\-2001, SVr4, 4.4BSD (dieser Aufruf erschien erstmalig in
+4.2BSD). POSIX.1\-2008 kennzeichnet \fBgetitimer\fP() und \fBsetitimer\fP() als
+veraltet und empfiehlt stattdessen die POSIX\-Zeitgeber\-API zu benutzen
+(\fBtimer_gettime\fP(2), \fBtimer_settime\fP(2), etc.).
+.SH ANMERKUNGEN
+Ein Kindprozess, der mittels \fBfork\fP(2) erzeugt wurde. erbt nicht die
+Intervall\-Zeitgeber seines Elternprozesses. Intervall\-Zeitgeber werden über
+ein \fBexecve\fP(2) konserviert.
+
+POSIX.1 beschreibt das Zusammenspiel zwischen \fBsetitimer()\fP und den drei
+Schnittstellen \fBalarm\fP(2), \fBsleep\fP(3) und \fBusleep\fP(3) nicht näher.
+.SH FEHLER
+Das Generieren und Senden eines Signals sind eigenständig und nur eine
+Instanz von jedem der oben aufgelisteten Signale kann für einen Prozess
+anstehen. Unter sehr hoher Systemlast kann ein \fBITIMER_REAL\fP\-Zeitgeber
+ablaufen bevor das Signal von einem vorherigen Ablauf geliefert wurde. Das
+zweite Signal geht bei einem solchen Ereignis verloren.
+
+Auf Linux\-Kerneln vor 2.6.16 wurden Zeitgeberwerte in Jiffies
+dargestellt. Falls eine Anfrage zum Setzen des Zeitgebers gemacht wurde,
+dessen Jiffies\-Entsprechung \fBMAX_SEC_IN_JIFFIES\fP übersteigt (in
+\fIinclude/linux/jiffies.h\fP definiert), dann wurde der Zeitgeber
+stillschweigend auf diese Obergrenze gekürzt. Auf Linux/i386 (wobei seit
+Linux 2.6.13 der Standard\-Jiffy 0,004 Sekunden entspricht), bedeutet dies,
+dass die Obergrenze für einen Zeitgeber zirka 99,42 Tagen entspricht. Seit
+Linux 2.6.16 benutzt der Kernel eine andere interne Entsprechung für Zeiten
+und diese Obergrenze wurde entfernt.
+
+.\" 4 Jul 2005: It looks like this bug may remain in 2.4.x.
+.\"	http://lkml.org/lkml/2005/7/1/165
+Auf bestimmten Systemen (einschließlich i386) haben Linux\-Kernel vor 2.6.12
+einen Fehler, der unter Umständen vorzeitige Zeitgeberabläufe von bis zu
+einem Jiffy produziert. Dieser Fehler wurde in Kernel 2.6.12 behoben.
+
+.\" Bugzilla report 25 Apr 2006:
+.\" http://bugzilla.kernel.org/show_bug.cgi?id=6443
+.\" "setitimer() should reject noncanonical arguments"
+Laut POSIX.1\-2001 sollte \fBsetitimer\fP() fehlschlagen, wenn ein
+\fItv_usec\fP\-Wert angegeben wurde, der außerhalb des Bereichs 0 bis 999999
+liegt. In Kerneln bis einschließlich 2.6.21 gibt Linux jedoch keinen Fehler
+zurück, sondern passt stattdessen stillschweigend den Sekundenwert für den
+Zeitgeber an. Ab Kernel 2.6.22 aufwärts wurde dieser Fehler behoben: Ein
+unpassender \fItv_usec\fP\-Wert führt zu einem \fBEINVAL\fP\-Fehler.
+.SH "SIEHE AUCH"
+\fBgettimeofday\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBtimer_create\fP(2),
+\fBtimerfd_create\fP(2), \fBtime\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

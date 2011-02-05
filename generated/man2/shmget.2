@@ -1,0 +1,229 @@
+.\" Copyright (c) 1993 Luigi P. Bai (lpb@softint.com) July 28, 1993
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Wed Jul 28 10:57:35 1993, Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Nov 28 16:43:30 1993, Rik Faith <faith@cs.unc.edu>
+.\"          with material from Giorgio Ciucci <giorgio@crcc.it>
+.\" Portions Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
+.\" Modified Tue Oct 22 22:03:17 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified, 8 Jan 2003, Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"	Removed EIDRM from errors - that can't happen...
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Added notes on /proc files
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHMGET 2 "2. Mai 2006" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+shmget \- ein gemeinsames Speichersegment reservieren
+.SH ÜBERSICHT
+.ad l
+\fB#include <sys/ipc.h>\fP
+.br
+\fB#include <sys/shm.h>\fP
+.sp
+\fBint shmget(key_t \fP\fIschluessel\fP\fB, size_t \fP\fIgroesse\fP\fB, int
+\fP\fIshmflg\fP\fB);\fP
+.ad b
+.SH BESCHREIBUNG
+\fBshmget\fP() gibt den Bezeichner des gemeinsamen Speichersegments zurück, der
+mit dem Wert des Arguments \fIschluessel\fP verknüpft ist. Es wird ein neues
+gemeinsames Speichersegment erstellt, dessen Größe dem auf ein Vielfaches
+von \fBPAGE_SIZE\fP gerundeten Wert von \fIgroesse\fP entspricht, falls
+\fIschluessel\fP den Wert \fBIPC_PRIVATE\fP hat oder \fIschluessel\fP nicht den Wert
+\fBIPC_PRIVATE\fP hat, kein gemeinsames Speichersegment zu \fIschluessel\fP
+exisitiert und \fBIPC_CREAT\fP in \fIshmflg\fP angegeben wurde.
+.PP
+Wenn \fIshmflg\fP sowohl \fBIPC_CREAT\fP als auch \fBIPC_EXCL\fP angibt und ein
+gemeinsames Speichersegment für \fIschluessel\fP bereits existiert, dann
+schlägt \fBshmget\fP() fehl und \fIerrno\fP wird auf \fBEEXIST\fP gesetzt. (Dies ist
+mit dem Effekt der Kombination von \fBO_CREAT | O_EXCL\fP für \fBopen\fP(2)
+vergleichbar.)
+.PP
+Der Wert \fIshmflg\fP besteht aus:
+.TP  12
+\fBIPC_CREAT\fP
+um ein neues Segment zu erstellen. Wenn dieser Schalter nicht benutzt wird,
+dann wird \fBshmget\fP() das mit \fIschluessel\fP verbundene Segment suchen und
+prüfen, ob der Benutzer auf das Segment zugreifen darf.
+.TP 
+\fBIPC_EXCL\fP
+sorgt im Verbund mit \fBIPC_CREAT\fP für eine Fehlermeldung, falls das Segment
+bereits existiert.
+.TP 
+\fImode_flags\fP
+(niederwertigste 9 Bits) geben die Rechte des Besitzers, der Gruppe und dem
+Rest der Welt an. Diese Bits haben das gleiche Format und die gleiche
+Bedeutung wie das Argument \fImode\fP von \fBopen\fP(2). Zurzeit werden die
+Ausführungsrechte nicht vom System benutzt.
+.TP 
+\fBSHM_HUGETLB\fP (seit Linux 2.6)
+Das Segment unter Benutzung von »huge pages« reservieren. Die
+Kernel\-Quelldatei \fIDocumentation/vm/hugetlbpage.txt\fP enthält weitere
+Informationen.
+.TP 
+\fBSHM_NORESERVE\fP (seit Linux 2.6.15)
+.\" As at 2.6.17-rc2, this flag has no effect if SHM_HUGETLB was also
+.\" specified.
+Dieser Schalter dient dem gleichen Zweck wie der\fBmmap\fP(2)\-Schalter
+\fBMAP_NORESERVE\fP. Reservieren Sie keinen Auslagerungsspeicher für dieses
+Segment. Wenn Auslagerungsspeicher reserviert ist, ist es sicher, dass das
+Segment verändert werden kann. Wenn kein Auslagerungsspeicher reserviert
+ist, könnte \fBSIGSEGV\fP beim Schreiben empfangen werden, falls kein
+physischer Speicher verfügbar ist. Siehe auch die Diskussion der Datei
+\fI/proc/sys/vm/overcommit_memory\fP in \fBproc\fP(5).
+.PP
+Wenn ein neues gemeinsames Speichersegment erstellt wird, wird sein Inhalt
+mit Nullwerten initialisiert und die damit verbundene Datenstruktur
+\fIshmid_ds\fP (siehe \fBshmctl\fP(2)) wie folgt initialisiert:
+.IP
+\fBshm_perm.cuid\fP und \fBshm_perm.uid\fP werden auf die effektive Benutzer\-ID
+des aufrufenden Prozesses gesetzt.
+.IP
+\fBshm_perm.cgid\fP und \fBshm_perm.gid\fP werden auf die effektive Gruppen\-ID des
+aufrufenden Prozesses gesetzt.
+.IP
+Die niederwertigsten 9 Bit von \fBshm_perm.mode\fP werden auf die
+niederwertigsten 9 Bit von \fIshmflg\fP gesetzt.
+.IP
+\fBshm_segsz\fP wird auf den Wert von \fIgroesse\fP gesetzt.
+.IP
+\fBshm_lpid\fP, \fBshm_nattch\fP, \fBshm_atime\fP und \fBshm_dtime\fP werden auf 0
+gesetzt.
+.IP
+\fIshm_ctime\fP wird auf die aktuelle Zeit gesetzt.
+.PP
+Wenn das gemeinsame Speichersegment bereits existiert, werden die
+Zugriffsrechte überprüft und nachgesehen, ob es für die Freigabe markiert
+wurde.
+.SH RÜCKGABEWERT
+Bei Erfolg wird ein gültiger Segment\-Bezeichner, \fIshmid\fP, zurückgegeben,
+bei Auftreten eines Fehlers \-1.
+.SH FEHLER
+Bei Auftreten eines Fehlers enthält \fBerrno\fP einen der folgenden Werte:
+.TP 
+\fBEACCES\fP
+Der Benutzer hat keine Zugriffsrechte auf das gemeinsame Speichersegment und
+keine \fBCAP_IPC_OWNER\fP\-Fähigkeit.
+.TP 
+\fBEEXIST\fP
+\fBIPC_CREAT | IPC_EXCL\fP wurde angegeben und das Segment existiert.
+.TP 
+\fBEINVAL\fP
+Es sollte ein neues Segment erstellt werden und \fIgroesse\fP < \fBSHMMIN\fP
+oder \fIgroesse\fP > \fBSHMMAX\fP oder es sollte kein neues Segment erstellt
+werden, ein Segment mit gegebenem Schlüssel exisitierte, aber \fIgroesse\fP ist
+größer als die Größe dieses Segments.
+.TP 
+\fBENFILE\fP
+.\" [2.6.7] shmem_zero_setup()-->shmem_file_setup()-->get_empty_filp()
+Die Systembeschränkung für die Gesamtzahl offener Dateien wurde erreicht.
+.TP 
+\fBENOENT\fP
+Für den angegebenen \fIschluessel\fP exisitert kein Segment und \fBIPC_CREAT\fP
+wurde nicht angegeben.
+.TP 
+\fBENOMEM\fP
+Es konnte kein Speicher für Segment\-Zuschlag reserviert werden.
+.TP 
+\fBENOSPC\fP
+Alle möglichen gemeinsamen Speicher\-IDs wurden in Anspruch genommen
+(\fBSHMMNI\fP) oder das Reservieren eines Segments der Größe \fIgroesse\fP würde
+dazu führen, dass die systemweite Begrenzung für gemeinsamen Speicher
+(\fBSHMALL\fP) überschritten wird.
+.TP 
+\fBEPERM\fP
+Der Schalter \fBSHM_HUGETLB\fP wurde angegeben, der Aufrufende war aber nicht
+privilegiert (hatte nicht die Fähigkeit \fBCAP_IPC_LOCK\fP).
+.SH "KONFORM ZU"
+.\" SVr4 documents an additional error condition EEXIST.
+SVr4, POSIX.1\-2001.
+
+\fBSHM_HUGETLB\fP ist eine nicht portierbare Linux\-Erweiterung.
+.SH ANMERKUNGEN
+\fBIPC_PRIVATE\fP ist kein Schalterfeld, aber ein \fBkey_t\fP\-Typ. Wenn dieser
+spezielle Wert für \fIschalter\fP verwandt wird, ignoriert der Systemaufruf
+alles bis auf die niederwertigsten 9 Bit von \fIshmflg\fP und erstellt (bei
+Erfolg) ein neues gemeinsames Speichersegment.
+.PP
+Es gelten die folgenden Einschränkungen für die Ressourcen gemeinsamer
+Speichersegmente, die einen \fBshmget\fP()\-Aufruf betreffen:
+.TP 
+\fBSHMALL\fP
+systemweiter Maximalwert für gemeinsame Speicherseiten (auf Linux kann diese
+Einschränkung über \fI/proc/sys/kernel/shmall\fP gelesen und verändert werden).
+.TP 
+\fBSHMMAX\fP
+Maximalgröße eines gemeinsamen Speichersegments in Byte: abhängig vom
+Regelwerk. (Auf Linux kann diese Einschränkung über
+\fI/proc/sys/kernel/shmax\fP gelesen und verändert werden.)
+.TP 
+\fBSHMMIN\fP
+Minimalgröße eines gemeinsamen Speichersegments in Byte: abhängig vom der
+Implementierung (momentan 1 Byte, obwohl \fBPAGE_SIZE\fP die effektive
+Minimalgröße darstellt).
+.TP 
+\fBSHMMNI\fP
+.\" Kernels between 2.4.x and 2.6.8 had an off-by-one error that meant
+.\" that we could create one more segment than SHMMNI -- MTK
+.\" This /proc file is not available in Linux 2.2 and earlier -- MTK
+systemweite maximale Anzahl von gemeinsamen Speichersegmenten: abhängig von
+der Implementierung (derzeit 4096, war 128 vor Linux 2.3.99; auf Linux kann
+diese Einschränkung über \fI/proc/sys/kernel/shmmni\fP gelesen und verändert
+werden).
+.PP
+Die Implementierung hat keine besonderen Einschränkungen für die maximale
+Anzahl gemeinsamer Speichersegmente pro Prozess (\fBSHMSEG\fP).
+.SS Linux\-Anmerkungen
+Bis Version 2.3.30 gab Linux \fBEIDRM\fP für ein \fBshmget\fP() auf einem
+gemeinsamen Speichersegment zurück, das zur Löschung vorgesehen war.
+.SH FEHLER
+Die Wahl des Namens \fBIPC_PRIVATE\fP war vielleicht unglücklich. \fBIPC_NEW\fP
+wäre für diese Funktion besser gewesen.
+.SH "SIEHE AUCH"
+\fBshmat\fP(2), \fBshmctl\fP(2), \fBshmdt\fP(2), \fBftok\fP(3), \fBcapabilities\fP(7),
+\fBshm_overview\fP(7), \fBsvipc\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Ralf Demmer <rdemmer@rdemmer.de>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

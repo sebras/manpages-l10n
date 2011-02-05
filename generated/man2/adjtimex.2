@@ -1,0 +1,149 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1995 Michael Chastain (mec@shell.portal.com), 15 April 1995.
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-07-30 by Paul Slootman <paul@wurtel.demon.nl>
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADJTIMEX 2 "27. Mai 2004" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+adjtimex \- Kernel\-Uhr einstellen
+.SH ÜBERSICHT
+\fB#include <sys/timex.h>\fP
+.sp
+\fBint adjtimex(struct timex *\fP\fIbuf\fP\fB);\fP
+.SH BESCHREIBUNG
+Linux verwendet den Algorithmus von David L. Mills für die Einstellung von
+Uhren (siehe RFC\ 1305). Der Systemaufruf \fBadjtimex\fP() liest und setzt
+optional Einstellparameter für diesen Algorithmus. Ihm wird ein Zeiger auf
+eine Struktur \fItimex\fP übergeben, aus deren Feldwerten er Kernel\-Parameter
+aktualisiert. Abschließend werden die geänderten Parameter in der gleichen
+Struktur zurückgegeben. Die Struktur ist wie folgt deklariert:
+.PP
+.in +4n
+.nf
+.\" FIXME -- what is the scaling unit?  2^16 ?
+struct timex
+{
+    int mode;            /* Auswahl des Modus */
+    long offset;         /* Zeit\-Offset (µsek) */
+    long frequency;      /* Frequenz\-Offset (skalierte ppm) */
+    long maxerror;       /* maximaler Fehler (µsek) */
+    long esterror;       /* geschätzter Fehler (µsek) */
+    int status;          /* Uhrbefehl/\-status */
+    long time_constant;  /* PLL\-Zeitkonstante */
+    long precision;      /* Uhrpräzision (µsek,
+                            nur lesbar) */
+    long tolerance;      /* Toleranz der Uhrfrequenz (ppm,
+                            nur lesbar) */
+    struct timeval time; /* aktuelle Zeit (nur lesbar) */
+    long tick;           /* µsek zwischen Uhrticks */
+};
+.fi
+.in
+.PP
+Das Feld \fImodes\fP bestimmt, welche Parameter, falls vorhanden, zu setzen
+sind. Es darf eine bitweise \fIOder\fP\-Verknüpfung von Null oder mehr der
+folgenden Bits enthalten:
+.PP
+.in +4n
+.nf
+#define ADJ_OFFSET            0x0001 /* Zeit\-Offset */
+#define ADJ_FREQUENCY         0x0002 /* Frequenz\-Offset */
+#define ADJ_MAXERROR          0x0004 /* maximaler Zeitfehler */
+#define ADJ_ESTERROR          0x0008 /* geschätzter Zeitfehler */
+#define ADJ_STATUS            0x0010 /* Uhrstatus */
+#define ADJ_TIMECONST         0x0020 /* PLL\-Zeitkonstante */
+#define ADJ_TICK              0x4000 /* Tickwert */
+#define ADJ_OFFSET_SINGLESHOT 0x8001 /* altmodisches adjtime() */
+.fi
+.in
+.PP
+Normale Benutzer sind eingeschränkt auf einen Nullwert für \fImode\fP. Nur der
+Superuser darf Parameter setzen.
+.br
+.ne 12v
+.SH RÜCKGABEWERT
+Bei Erfolg gibt \fBadjtimex\fP() den Status der Uhr zurück:
+.PP
+.in +4n
+.nf
+#define TIME_OK   0 /* Uhr synchronisiert */
+#define TIME_INS  1 /* fügt Schaltsekunde ein */
+#define TIME_DEL  2 /* löscht Schaltsekunde */
+#define TIME_OOP  3 /* Schaltsekunde in Betrieb */
+#define TIME_WAIT 4 /* Schaltsekunde ist aufgetreten */
+#define TIME_BAD  5 /* Uhr nicht synchronisiert */
+.fi
+.in
+.PP
+Im Fehlerfall gibt \fBadjtimex\fP \-1 zurück und setzt \fIerrno\fP.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP zeigt nicht auf beschreibbaren Speicher.
+.TP 
+\fBEINVAL\fP
+Es wurde versucht,
+\fIbuf.offset\fP auf einen Wert außerhalb des Bereichs von \-131071 bis +131071
+zu setzen,
+\fIbuf.status\fP auf einen nicht oben aufgeführten Wert zu setzen oder
+\fIbuf.tick\fP auf einen Wert außerhalb des Bereichs von 900000/\fBHZ\fP bis
+1100000/\fBHZ\fP zu setzen, wobei \fBHZ\fP die Interruptfrequenz des
+System\-Zeitgebers ist.
+.TP 
+\fBEPERM\fP
+\fIbuf.mode\fP ist ungleich Null und der aufrufende Prozess verfügt nicht über
+ausreichende Privilegien. Unter Linux ist die \fBCAP_SYS_TIME\fP\-Fähigkeit
+erforderlich.
+.SH "KONFORM ZU"
+\fBadjtimex\fP() ist Linux\-spezifisch und sollte nicht für portable Programme
+verwendet werden. \fBadjtime\fP(3) bietet eine besser portierbare, aber weniger
+flexible Methode für die Einstellung der Systemuhr.
+.SH "SIEHE AUCH"
+\fBsettimeofday\fP(2), \fBadjtime\fP(3), \fBcapabilities\fP(7), \fBtime\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
