@@ -12,7 +12,7 @@ program=`basename "$pofile" .po | sed -e "s/\.[0-9]//"`
 section=`basename "$pofile" .po | sed -e "s/.\+\.//"`
 
 # Get translator
-translator=`grep ^\"Last-Translator: "$program.$section.po" |
+translator=`grep ^\"Last-Translator: "$pofile" |
 	sed -e "s/.\+Last-Translator:\s\+\(.\+\)\s\+\(<[^>]\+>\).\+/\1 \2/"`
 
 # Get statistics
