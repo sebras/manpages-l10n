@@ -2,7 +2,7 @@
 # Usage: Put the latest .deb files of the packages into their
 # corresponding directory and run this script.
 
-packages=`find -maxdepth 1 -type d | grep -v "^\.$" | cut -d/ -f2`
+packages=`find -maxdepth 1 -type d | grep -v "^\.$" | cut -d/ -f2 | sort`
 
 for package in $packages; do
 	echo "Updating package $package"
@@ -47,5 +47,11 @@ for package in $packages; do
 			rm -f $package/$package.links
 		fi
 		rm -rf tmp/ data.tar.gz tmp.links
+		git add $package
+		changes=`git status | grep "Changes to be committed:"`
+		if [ -n "$changes" ]; then
+			version=`basename "$latest_deb" | cut -d_ -f2`
+			git commit -m "Update $package $version manpages"
+		fi
 	fi
 done
