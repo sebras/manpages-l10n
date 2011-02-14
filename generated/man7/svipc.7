@@ -1,0 +1,302 @@
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" FIXME There is now duplication of some of the information
+.\" below in semctl.2, msgctl.2, and shmctl.2 -- MTK, Nov 04
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SVIPC 7 "26. Januar 2009" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+svipc \- System\-V\-Mechanismen für Interprozesskommunikation
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+\fB#include <sys/msg.h>\fP
+\fB#include <sys/sem.h>\fP
+\fB#include <sys/shm.h>\fP
+.fi
+.SH BESCHREIBUNG
+Diese Handbuchseite bezieht sich auf die Linux\-Implementierung der
+System\-V\-Mechanismen für Interprozesskommunikation:
+Nachrichten\-Warteschlangen (Message Queues), Sätze von Semaphoren (Semaphore
+Sets) und gemeinsam genutzte Speichersegmente (Shared Memory Segments). Im
+Folgenden bedeutet das Wort \fBRessource\fP eine konkrete Umsetzung
+(Instantiation) eines dieser Mechanismen.
+.SS Ressourcen\-Zugriffsrechte
+Für jede Ressource verwaltet das System in einer allgemeinen Struktur des
+Typs \fIstruct ipc_perm\fP die Informationen, die zur Bestimmung der Rechte für
+eine IPC\-Operation notwendig sind. In der System\-Header\-Datei
+\fI<sys/ipc.h>\fP wird die Struktur \fIipc_perm\fP definiert. Sie enthält
+die folgenden Elemente:
+.in +4n
+.nf
+
+struct ipc_perm {
+    uid_t          cuid;   /* Benutzer\-ID des Urhebers */
+    gid_t          cgid;   /* Gruppen\-ID des Urhebers */
+    uid_t          uid;    /* Benutzer\-ID des Berechtigten */
+    gid_t          gid;    /* Gruppen\-ID des Berechtigten */
+    unsigned short mode;   /* Lese\- und Schreibrechte */
+};
+.fi
+.in
+.PP
+Die 9 niedrigstwertigen Bits des Elements \fImode\fP der Struktur \fIipc_perm\fP
+legen die Zugriffsrechte auf die Ressource für Prozesse fest, die einen
+IPC\-Systemaufruf ausführen. Die Rechte werden wie folgt interpretiert:
+.sp
+.nf
+    0400    Eigentümer darf lesen
+    0200    Eigentümer darf schreiben
+.sp .5
+    0040    Gruppe darf lesen
+    0020    Gruppe darf schreiben
+.sp .5
+    0004    Andere dürfen lesen
+    0002    Andere dürfen schreiben
+.fi
+.PP
+Die Bits 0100, 0010 und 0001 (die Ausführungsbits) werden nicht vom System
+benutzt. Darüber hinaus bedeutet »schreiben« für Sätze von Semaphoren
+tatsächlich »verändern«.
+.PP
+Dieselbe System\-Header\-Datei definiert auch die folgenden symbolischen
+Konstanten:
+.TP  14
+\fBIPC_CREAT\fP
+Eintrag erzeugen, wenn Schlüssel nicht vorhanden.
+.TP 
+\fBIPC_EXCL\fP
+Misserfolg, wenn Schlüssel vorhanden.
+.TP 
+\fBIPC_NOWAIT\fP
+Fehler, wenn die Anforderung warten muss.
+.TP 
+\fBIPC_PRIVATE\fP
+privater Schlüssel
+.TP 
+\fBIPC_RMID\fP
+Ressource entfernen
+.TP 
+\fBIPC_SET\fP
+Optionen für Ressourcen setzen
+.TP 
+\fBIPC_STAT\fP
+Optionen für Ressourcen feststellen
+.PP
+Beachten Sie, dass \fBIPC_PRIVATE\fP vom Typ \fIkey_t\fP ist. Alle anderen
+symbolischen Konstanten sind Felder von Schaltern (Flags), für die eine
+ODER\-Verknüpfung mit einer \fIint\fP\-Variablen als Ergebnis möglich ist.
+.SS "Nachrichten\-Warteschlangen (Message Queues)"
+Eine Nachrichten\-Warteschlange (im Folgenden kurz Queue) wird eindeutig über
+ihre \fImsqid\fP (einen positiven Integer) identifiziert und ist mit einer
+Datenstruktur des Typs \fIstruct msquid_ds\fP verbunden. Die Struktur wird in
+\fI<sys/msg.h>\fP definiert und besteht aus den folgenden Elementen:
+.in +4n
+.nf
+
+struct msqid_ds {
+    struct ipc_perm msg_perm;
+    msgqnum_t       msg_qnum;    /* Anzahl der Nachrichten in */
+                                 /* der Queue */
+    msglen_t        msg_qbytes;  /* maximale Nachrichtenlänge */
+                                 /* für die Queue */
+    pid_t           msg_lspid;   /* PID des letzten Aufrufs von */
+                                 /* msgsnd(2) */
+    pid_t           msg_lrpid;   /* PID des letzten Aufrufs von */
+                                 /* msgrcv(2)\-Aufrufs */
+    time_t          msg_stime;   /* Zeitpunkt des letzten
+                                 /* msgsnd(2)\-Aufrufs */
+    time_t          msg_rtime;   /* Zeitpunkt des letzten
+                                 /* msgrcv(2)\-Aufrufs */
+    time_t          msg_ctime;   /* Zeitpunkt der letzten */
+                                 /* Änderung */
+};
+.fi
+.in
+.TP  11
+\fImsg_perm\fP
+Die Struktur \fIipc_perm\fP legt die Zugriffsrechte auf die Queue fest.
+.TP 
+\fImsg_qnum\fP
+aktuelle Anzahl der Nachrichten in der Queue
+.TP 
+\fImsg_qbytes\fP
+größte erlaubte Nachrichtenlänge in Byte für die Queue
+.TP 
+\fImsg_lspid\fP
+ID des Prozesses, der als letzter \fBmsgsnd\fP(2) aufgerufen hat.
+.TP 
+\fImsg_lrpid\fP
+ID des Prozesses, der als letzter \fBmsgrcv\fP(2) aufgerufen hat.
+.TP 
+\fImsg_stime\fP
+Zeitpunkt des letzten Aufrufs von \fBmsgsnd\fP(2)
+.TP 
+\fImsg_rtime\fP
+Zeitpunkt des letzten Aufrufs von \fBmsgcv\fP(2)
+.TP 
+\fImsg_ctime\fP
+Zeitpunkt des letzten Systemaufrufs, bei dem ein Element von \fImsqid_ds\fP
+geändert wurde.
+.SS "Sätze von Semaphoren (Semaphore Sets)"
+Ein Satz von Semaphoren wird eindeutig durch seine \fIsemid\fP (einen positiven
+Integer) identifiziert und ist mit einer Datenstruktur des Typs \fIstruct
+semid_ds\fP verbunden. Die Struktur wird in \fI<sys/sem.h>\fP definiert
+und enthält die folgenden Elemente:
+.in +4n
+.nf
+
+struct semid_ds {
+    struct ipc_perm sem_perm;
+    time_t          sem_otime; /* Zeitpunkt des letzten Aufrufs */
+                               /* von semop */
+    time_t          sem_ctime; /* Zeitpunkt des letzten Aufrufs */
+                               /* von semctl */
+    unsigned long   sem_nsems; /* Anzahl der Semaphoren im Satz */
+};
+.fi
+.in
+.TP  11
+\fIsem_perm\fP
+Die Struktur \fIipc_perm\fP legt die die Zugriffsrechte für den Semaphoren\-Satz
+fest.
+.TP 
+\fIsem_otime\fP
+Zeitpunkt des letzten Aufrufs von \fBsemop\fP(2)
+.TP 
+\fIsem_ctime\fP
+Zeitpunkt des letzten Aufrufs von \fBsemctl\fP(2), der einen Eintrag der oben
+genannten Struktur oder einen zum Satz gehörenden Semaphor geändert hat.
+.TP 
+\fIsem_nsems\fP
+Anzahl der Semaphoren im Satz. Jeder Semaphor des Satzes wird repräsentiert
+durch einen nicht negativen Integerwert zwischen \fI0\fP und \fIsem_nsems\-1\fP.
+.PP
+Ein Semaphor ist eine Datenstruktur des Typs \fIstruct sem\fP mit folgenden
+Elementen:
+.in +4n
+.nf
+
+.\"    unsigned short semncnt; /* nr awaiting semval to increase */
+.\"    unsigned short semzcnt; /* nr awaiting semval = 0 */
+struct sem {
+    int semval;  /* Wert des Semaphors */
+    int sempid;  /* PID der letzten Semaphorenoperation */
+};
+.fi
+.in
+.TP  11
+\fIsemval\fP
+Wert des Semaphors: eine nicht negative ganze Zahl (nonnegative integer)
+.TP 
+\fIsempid\fP
+.\".TP
+.\".I semncnt
+.\"Number of processes suspended awaiting for
+.\".I semval
+.\"to increase.
+.\".TP
+.\".I semznt
+.\"Number of processes suspended awaiting for
+.\".I semval
+.\"to become zero.
+ID des letzten Prozesses, der auf diesem Semaphor eine Semaphorenoperation
+ausführte.
+.SS "Gemeinsame Speichersegmente"
+Ein gemeinsames Speichersegment wird eindeutig durch seine \fIshmid\fP (einen
+positiven Integer) identifiziert und ist mit einer Datenstruktur des Typs
+\fIstruct shmid_ds\fP verbunden. Die Struktur wird in \fI<sys/shm.h>\fP
+definiert und enthält die folgenden Elemente:
+.in +4n
+.nf
+
+struct shmid_ds {
+    struct ipc_perm shm_perm;
+    size_t          shm_segsz;   /* Segmentgröße */
+    pid_t           shm_cpid;    /* PID des Erzeugers */
+    pid_t           shm_lpid;    /* PID der letzten Operation */
+    shmatt_t        shm_nattch;  /* Anzahl der zugreifenden */
+                                 /* Prozesse */
+    time_t          shm_atime;   /* Zeitpunkt der letzten */
+                                 /* Ankopplung */
+    time_t          shm_dtime;   /* Zeitpunkt der letzten */
+                                 /* Trennung */
+    time_t          shm_ctime;   /* Zeitpunkt der letzten */
+                                 /* Änderung */
+};
+.fi
+.in
+.TP  11
+\fIshm_perm\fP
+Struktur des Typs \fIipc_perm\fP für die Festlegung der Zugriffsrechte auf das
+gemeinsame Speichersegment.
+.TP 
+\fIshm_segsz\fP
+Größe des gemeinsamen Speichersegments in Byte
+.TP 
+\fIshm_cpid\fP
+ID des Prozesses, der das gemeinsame Speichersegment eingerichtet hat.
+.TP 
+\fIshm_lpid\fP
+ID des letzten Prozesses, der \fBshmat\fP(2) oder \fBshmdt\fP(2) aufgerufen hat.
+.TP 
+\fIshm_nattch\fP
+Anzahl von Prozessen (Attaches), die derzeit mit diesem gemeinsamen
+Speichersegment arbeiten.
+.TP 
+\fIshm_atime\fP
+Zeitpunkt des letzten Aufrufs von \fBshmat\fP(2)
+.TP 
+\fIshm_dtime\fP
+Zeitpunkt des letzten Aufrufs von \fBshmdt\fP(2)
+.TP 
+\fIshm_ctime\fP
+Zeitpunkt des letzten Aufrufs von \fBshmctl\fP(2), der \fIshmid_ds\fP verändert
+hat.
+.SH "SIEHE AUCH"
+\fBipc\fP(2), \fBmsgctl\fP(2), \fBmsgget\fP(2), \fBmsgrcv\fP(2), \fBmsgsnd\fP(2),
+\fBsemctl\fP(2), \fBsemget\fP(2), \fBsemop\fP(2), \fBshmat\fP(2), \fBshmctl\fP(2),
+\fBshmdt\fP(2), \fBshmget\fP(2), \fBftok\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Mike Fengler <mike@krt3.krt-soft.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

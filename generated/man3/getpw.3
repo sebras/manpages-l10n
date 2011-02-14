@@ -24,60 +24,75 @@
 .\"     Linux libc source code
 .\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
 .\"     386BSD man pages
-.\" Modified Sat Jul 24 18:43:46 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sat Jul 24 19:23:25 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon May 27 21:37:47 1996 by Martin Schulze (joey@linux.de)
+.\"
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH PUTPWENT 3 "26. Juli 2007" GNU Linux\-Programmierhandbuch
+.TH GETPW 3 "10. September 2010" GNU Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
-putpwent \- schreibt einen Eintrag in die Passwortdatei
+getpw \- den Eintrag einer Passwortzeile rekonstruieren
 .SH ÜBERSICHT
 .nf
-\fB#include <stdio.h>\fP
+\fB#define _GNU_SOURCE\fP             /* siehe feature_test_macros(7) */
 \fB#include <sys/types.h>\fP
 \fB#include <pwd.h>\fP
 .sp
-\fBint putpwent(const struct passwd *\fP\fIp\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+\fBint getpw(uid_t \fP\fIuid\fP\fB, char *\fP\fIpuffer\fP\fB);\fP
 .fi
-.sp
-.in -4n
-Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
-.in
-.sp
-\fBputpwent\fP(): _SVID_SOURCE
 .SH BESCHREIBUNG
-Die Funktion \fBputpwent\fP() schreibt einen Passworteintrag aus der Struktur
-\fIp\fP in die mit \fIstream\fP verbundene Datei.
+Die Funktion \fBgetpw\fP() rekonstruiert eine Zeile in der Passwortdatei im
+Puffer \fIpuffer\fP für die angegebene Benutzer\-ID \fIuid\fP. Der zurückgegebene
+Puffer enthält eine Zeile im folgenden Format:
+.sp
+.RS
+\fBname:passwd:uid:gid:gecos:dir:shell\fP
+.RE
 .PP
 Die Struktur \fIpasswd\fP ist in \fI<pwd.h>\fP wie folgt definiert:
 .sp
 .in +4n
 .nf
 struct passwd {
-        char    *pw_name;		/* Benutzername */
-        char    *pw_passwd;		/* Benutzerpasswort */
-        uid_t   pw_uid;			/* Benutzerkennzahl */
-        gid_t   pw_gid;			/* Gruppenkennzahl */
-        char    *pw_gecos;      	/* wirklicher Name */
-        char    *pw_dir;  		/* Home\-Verzeichnis */
-        char    *pw_shell;      	/* Standard\-Shell des Benutzers */
+    char   *pw_name;       /* Benutzername */
+    char   *pw_passwd;     /* Passwort des Benutzers */
+    uid_t   pw_uid;        /* Benutzer\-ID */
+    gid_t   pw_gid;        /* Gruppen\-ID */
+    char   *pw_gecos;      /* wirklicher Name */
+    char   *pw_dir;        /* Home\-Verzeichnis */
+    char   *pw_shell;      /* Anmelde\-Shell */
 };
 .fi
 .in
 .SH RÜCKGABEWERT
-Die Funktion \fBputpwent\fP() gibt bei Erfolg 0 zurück und bei Auftreten eines
-Fehlers \-1.
+Die Funktion \fBgetpw\fP() gibt bei Erfolg 0 zurück. Bei einem Fehler wird \-1
+zurückgegeben und \fIerrno\fP so gesetzt, dass es den Fehler anzeigt.
 .SH FEHLER
 .TP 
 \fBEINVAL\fP
-Ungültiges Argument (NULL) angegeben.
+\fIpuffer\fP ist NULL.
+.TP 
+\fBENOENT\fP
+Zu \fIuid\fP gibt es keinen dazugehörigen Benutzer.
+.TP 
+\fBENOMEM\fP
+Der Speicher reicht nicht aus, um ihn für die Struktur \fIpasswd\fP zu
+reservieren.
+.SH DATEIEN
+.TP 
+\fI/etc/passwd\fP
+Passwortdatenbank
 .SH "KONFORM ZU"
-SVr4.
+SVr2.
+.SH FEHLER
+Die Funktion \fBgetpw\fP() ist gefährlich, da sie den bereitgestellten Puffer
+\fIpuffer\fP zum Überlauf bringen kann. Sie wurde durch \fBgetpwuid\fP(3) ersetzt.
 .SH "SIEHE AUCH"
-\fBendpwent\fP(3), \fBfgetpwent\fP(3), \fBgetpw\fP(3), \fBgetpwent\fP(3),
-\fBgetpwnam\fP(3), \fBgetpwuid\fP(3), \fBsetpwent\fP(3)
+\fBendpwent\fP(3), \fBfgetpwent\fP(3), \fBgetpwent\fP(3), \fBgetpwnam\fP(3),
+\fBgetpwuid\fP(3), \fBputpwent\fP(3), \fBsetpwent\fP(3), \fBpasswd\fP(5)
 .SH KOLOPHON
 Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
@@ -86,9 +101,9 @@ http://www.kernel.org/doc/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von
-Patrick Rother <krd@gulu.net>
+Martin Schulze <joey@infodrom.org>
 und
-Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+Chris Leick <c.leick@vollbio.de>
 erstellt.
 
 Diese Übersetzung ist Freie Dokumentation; lesen Sie die

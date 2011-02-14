@@ -1,0 +1,131 @@
+.\" t
+.\" Copyright (c) Michael Haardt (michael@cantor.informatik.rwth-aachen.de),
+.\"     Sun Jan 15 19:16:33 1995
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" Modified, Sun Feb 26 15:02:58 1995, faith@cs.unc.edu
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LP 4 "15. Januar 1995" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+lp \- Zeilendrucker (line printer devices)
+.SH ÜBERSICHT
+\fB#include <linux/lp.h>\fP
+.SH CONFIGURATION
+\fBlp\fP[0\(en2] sind zeichenorientierte Geräte für Drucker an der parallelen
+Schnittstelle; ihre Hauptnummer (Major Number) ist 6, ihre Nebennummern
+(Minor Numbers) sind 0\(en2. Die Nebennummern korrespondieren mit den
+Basisadressen 0x03bc, 0x0378 und 0x0278 der Druckerports. Normalerweise sind
+ihre Zugriffsrechte 220, der Besitzer ist root und die Gruppe lp. Die
+Druckerports können entweder im Polling\- oder Interrupt\-Betrieb benutzt
+werden. Falls ein größerer Datendurchsatz erwartet wird, z.B. für
+Laserdrucker, sollten Interrupts benutzt werden. Für normale Matrixdrucker
+sollte Polling ausreichen. Der Vorgabewert ist Polling.
+.SH BESCHREIBUNG
+Die folgenden Aufrufe von \fIioctl\fP(2) werden unterstützt:
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPTIME, int \fP\fIarg\fP\fB)\fP"
+Wenn der Druckerpuffer voll ist, schläft der Treiber für \fIarg\fP
+Hundertstelsekunden, bevor er den Puffer erneut prüft. Für einen schnellen
+Drucker sollte dieser Wert niedrig, für einen langsamen Drucker dagegen hoch
+gewählt werden. Die Vorgabe ist 2, also 0,02 Sekunden. Dies beeinflusst nur
+den abrufenden Treiber (Polling).
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPCHAR, int \fP\fIarg\fP\fB)\fP"
+Setzt die maximale Anzahl der Durchgänge, die der abrufende Treiber wartet,
+bis der Drucker bereit ist, ein Zeichen für \fIarg\fP zu empfangen. Die Zahl
+sollte vergrößert werden, falls das Drucken zu langsam ist und verkleinert
+werden, wenn das System zu langsam wird. Der Standardwert ist 1000. Dies
+beeinflusst nur den abrufenden Treiber (Polling).
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPABORT, int \fP\fIarg\fP\fB)\fP"
+Falls \fIarg\fP 0 ist, wird es der Druckertreiber bei Fehlern erneut versuchen,
+ansonsten aufgeben. Der Standardwert ist 0.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPABORTOPEN, int \fP\fIarg\fP\fB)\fP"
+Falls \fIarg\fP 0 ist, wird \fBopen\fP(2) bei auftretenden Fehlern abgebrochen,
+ansonsten werden Fehler ignoriert. Standardmäßig werden Fehler ignoriert.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPCAREFUL, int \fP\fIarg\fP\fB)\fP"
+Falls \fIarg\fP 0 ist, müssen die Signale »out\-of\-paper«, »offline« und »error«
+bei allen Schreibzugriffen logisch falsch sein, ansonsten werden sie
+ignoriert. Es ist Standard, sie zu ignorieren.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPWAIT, int \fP\fIarg\fP\fB)\fP"
+Setzt die Anzahl von »busy\-wait«\-Iterationen, die ausgeführt werden, bevor
+der Strobe\-Impuls beginnt. (Strobe signalisiert dem Drucker, dass die Daten
+am Datenport stabil anliegen und ein neues Zeichen enthalten.) Es werden
+ebenfalls \fIarg\fP Iterationen ausgeführt, bevor der Strobe\-Impuls beendet
+wird. Die Spezifikation gibt eine Impulslänge von 0,5 Mikrosekunden vor. Die
+Erfahrung hat gezeigt, dass die Verzögerung durch den Code selbst
+ausreicht. Darum ist der Standardwert 0. Er wird für den
+interruptgetriebenen wie für den abrufenden Treiber verwendet.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPSETIRQ, int \fP\fIarg\fP\fB)\fP"
+Dieser \fBioctl\fP(2) benötigt Superuser\-Rechte. Das Argument \fIarg\fP ist die
+Nummer des neuen IRQs. Der Wert 0 schaltet Interrupts ab und Polling ein,
+was auch Standard ist.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPGETIRQ, int *\fP\fIarg\fP\fB)\fP"
+Speichert den zurzeit genutzten IRQ in \fIarg\fP.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPGETSTATUS, int *\fP\fIarg\fP\fB)\fP"
+Speichert den Wert des Statusports in \fIarg\fP. Die Bits haben folgende
+Bedeutung:
+.TS
+l l.
+LP_PBUSY	invertierter Busy\-Eingang, aktiv hoch
+LP_PACK	unveränderter Acknowledge\-Eingang, aktiv niedrig
+LP_POUTPA	unveränderter »out\-of\-paper«\-Eingang, aktiv hoch
+LP_PSELECD	unveränderter Selected\-Eingang, aktiv hoch
+LP_PERRORP	unveränderter Error\-Eingang, aktiv niedrig
+.TE
+.sp
+Lesen Sie auch Ihr Drucker\-Handbuch für die Bedeutung der Signale. Beachten
+Sie, dass abhängig vom Drucker auch undokumentierte Bits gesetzt werden
+können.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPRESET)\fP"
+Setzt den Drucker zurück. Ohne Argument.
+.SH DATEIEN
+.\" .SH AUTHORS
+.\" The printer driver was originally written by Jim Weigand and Linus
+.\" Torvalds.
+.\" It was further improved by Michael K.\& Johnson.
+.\" The interrupt code was written by Nigel Gamble.
+.\" Alan Cox modularized it.
+.\" LPCAREFUL, LPABORT, LPGETSTATUS were added by Chris Metcalf.
+/dev/lp*
+.SH "SIEHE AUCH"
+\fBchmod\fP(1), \fBchown\fP(1), \fBmknod\fP(1), \fBlpcntl\fP(8), \fBtunelp\fP(8)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Michael Haardt <michael@cantor.informatik.rwth-aachen.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

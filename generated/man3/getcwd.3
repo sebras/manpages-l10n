@@ -1,0 +1,194 @@
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.\" Modified Wed Jul 21 22:35:42 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 18 Mar 1996 by Martin Schulze (joey@infodrom.north.de):
+.\"   Corrected description of getwd().
+.\" Modified Sat Aug 21 12:32:12 MET 1999 by aeb - applied fix by aj
+.\" Modified Mon Dec 11 13:32:51 MET 2000 by aeb
+.\" Modified Thu Apr 22 03:49:15 CEST 2002 by Roger Luethi <rl@hellgate.ch>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETCWD 3 "20. September 2010" GNU Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+getcwd, getwd, get_current_dir_name \- das aktuelle Verzeichnis abfragen
+.SH ÜBERSICHT
+.nf
+\fB#include <unistd.h>\fP
+.sp
+\fBchar *getcwd(char *\fP\fIpuffer\fP\fB, size_t \fP\fIgroesse\fP\fB);\fP
+.sp
+\fBchar *getwd(char *\fP\fIpuffer\fP\fB);\fP
+.sp
+\fBchar *get_current_dir_name(void);\fP
+.fi
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.sp
+.in
+\fBget_current_dir_name\fP():
+.RS
+_GNU_SOURCE
+.RE
+.sp
+\fBgetwd\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Seit Glibc 2.12:
+.nf
+_BSD_SOURCE ||
+    (_XOPEN_SOURCE\ >=\ 500 ||
+        _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&
+    !(_POSIX_C_SOURCE\ >=\ 200809L || _XOPEN_SOURCE\ >=\ 700)
+.TP  4
+.fi
+Vor Glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 || _XOPEN_SOURCE\
+&&\ _XOPEN_SOURCE_EXTENDED
+.PD
+.RE
+.ad b
+.SH BESCHREIBUNG
+Diese Funktionen geben eine Zeichenkette mit abschließender Null zurück, die
+einen absoluten Pfadnamen enthält, der dem aktuellen Arbeitsverzeichnis des
+aufrufenden Prozesses entspricht. Der Pfadname wird als das
+Funktionsergebnis und, falls vorhanden, über das Argument \fIpuffer\fP
+zurückgegeben.
+
+Die Funktion \fBgetcwd\fP() kopiert den absoluten Pfadnamen des aktuellen
+Arbeitsverzeichnisses in das Feld, auf das \fIpuffer\fP zeigt und das
+\fIgroesse\fP Byte lang ist.
+.PP
+Falls die Länge des absoluten Pfadnamens des Arbeitsverzeichnisses,
+einschließlich abschließender Null \fIgroesse\fP Byte überschreitet, wird NULL
+zurückgegeben und \fIerrno\fP auf \fBERANGE\fP gesetzt. Eine Anwendung sollte
+prüfen, ob dieser Fehler auftrat und falls nötig einen größeren Puffer
+reservieren.
+.PP
+Als eine Erweiterung des POSIX.1\-Standards reserviert \fBgetcwd\fP() von Linux
+(libc4, libc5, glibc) den Puffer dynamisch durch Verwendung von
+\fBmalloc\fP(3), wenn \fIpuffer\fP NULL ist. In diesem Fall hat der reservierte
+Puffer die Länge \fIgroesse\fP, sofern \fIgroesse\fP nicht Null ist, wenn die für
+\fIpuffer\fP  nötige Größereserviert ist. Der Aufrufende sollte den
+zurückgegebenen Puffer mit \fBfree\fP(3) freigeben.
+
+\fBget_current_dir_name\fP() wird mit \fBmalloc\fP(3) ein Feld reservieren, das
+groß genug ist, um den absoluten Pfadnamen des aktuellen
+Arbeitsverzeichnisses aufzunehmen. Wenn die Umgebungsvariable \fBPWD\fP gesetzt
+ist und ihr Wert stimmt, dann wird dieser Wert zurückgegeben. Der Aufrufende
+sollte den zurückgegebenen Puffer mit \fBfree\fP(3) freigeben.
+
+\fBgetwd\fP() reserviert keinen Speicher mit \fBmalloc\fP(3). Das Argument
+\fIpuffer\fP sollte ein Zeiger auf ein Feld mit einer Mindestlänge von
+\fBPATH_MAX\fP Byte sein. Falls die Länge des absoluten Pfadnamens des
+aktuellen Arbeitsverzeichnisses einschließlich des abschließenden Null\-Bytes
+\fBPATH_MAX\fP Byte überschreitet, wird NULL zurückgegeben und \fIerrno\fP auf
+\fBENAMETOOLONG\fP gesetzt. (Beachten Sie, dass \fBPATH_MAX\fP auf einigen
+Systemen zur Kompilierzeit möglicherweise keine Konstante ist; außerdem
+hängt ihr Wert vom Dateisystem ab – siehe \fBpathconf\fP(3).) Aus Gründen der
+Portierbarkeit und Sicherheit ist die Benutzung von \fBgetwd\fP() missbilligt.
+.SH RÜCKGABEWERT
+Bei Erfolg geben diese Funktionen einen Zeiger auf eine Zeichenkette zurück,
+die den Pfadnamen des aktuellen Arbeitsverzeichnisses enthält. Im Fall von
+\fBgetcwd\fP() und \fBgetwd\fP() ist dies der gleiche Wert wie \fIpuffer\fP.
+
+Bei einem Fehlschlag geben diese Funktionen Null zurück und \fIerrno\fP wird so
+gesetzt, dass es den Fehler anzeigt. Der Inhalt des Feldes, auf den
+\fIpuffer\fP zeigt, ist bei einem Fehler nicht definiert.
+.SH FEHLER
+.TP 
+\fBEACCES\fP
+Lese\- oder Suchberechtigung für einen Bestandteil des Dateinamens wurde
+verweigert.
+.TP 
+\fBEFAULT\fP
+\fIpuffer\fP zeigt auf eine falsche Adresse.
+.TP 
+\fBEINVAL\fP
+Das Argument \fIgroesse\fP ist Null und \fIpuffer\fP ist kein Null\-Zeiger.
+.TP 
+EINVAL
+\fBgetwd\fP(): \fIpuffer\fP ist NULL.
+.TP 
+ENAMETOOLONG
+\fBgetwd\fP(): Die Größe der absoluten Pfadnamens mit abschließender Null
+überschreitet \fBPATH_MAX\fP Byte.
+.TP 
+\fBENOENT\fP
+Der Link auf das aktuelle Arbeitsverzeichnis wurde gelöst.
+.TP 
+\fBERANGE\fP
+Das Argument \fIgroesse\fP ist kleiner als die Länge des absoluten Pfadnamens
+des aktuellen Arbeitsverzeichnisses einschließlich abschließendem
+Null\-Byte. Sie müssen ein größeres Feld reservieren und es erneut versuchen.
+.SH "KONFORM ZU"
+\fBgetcwd\fP() ist konform zu POSIX.1\-2001. Beachten Sie jedoch, dass das
+Verhalten von \fBgetcwd\fP() unter POSIX.1\-2001 nicht spezifiziert ist, wenn
+\fIpuffer\fP NULL ist.
+
+\fBgetwd\fP() ist in POSIX.1\-2001 vorhanden, aber als VERALTET
+markiert. POSIX.1\-2008 entfernt die Spezifikation von \fBgetwd\fP(). Benutzen
+Sie stattdessen \fBgetcwd\fP(). POSIX.1\-2001 definiert keine Fehler für
+\fBgetwd\fP().
+
+\fBget_current_dir_name\fP() ist eine GNU\-Erweiterung.
+.SH ANMERKUNGEN
+Unter Linux ist die Funktion \fBgetcwd\fP() ein Systemaufruf (seit 2.1.92). Auf
+älteren Systemen würde es \fI/proc/self/cwd\fP abfragen. Falls sowohl der
+Systemaufruf, als auch das »proc«\-Dateisystem fehlen, wird eine allgemeine
+Implementierung aufgerufen. Nur in diesem Fall können diese Systemaufrufe
+unter Linux mit \fBEACCES\fP fehlschlagen.
+.LP
+Diese Funktionen werden oft benutzt, um den Ort des aktuellen
+Arbeitsverzeichnisses zum Zweck der späteren Rückkehr zu speichern. Das
+aktuelle Verzeichnis ».« zu öffnen und \fBfchdir\fP(2) zur Rückkehr aufzurufen
+ist normalerweise schneller und eine zuverlässigere Alternative, wenn
+ausreichend viele Dateideskriptoren zur Verfügung stehen, besonders auf
+anderen Plattformen als Linux.
+.SH "SIEHE AUCH"
+\fBchdir\fP(2), \fBfchdir\fP(2), \fBopen\fP(2), \fBunlink\fP(2), \fBfree\fP(3),
+\fBmalloc\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Schulze <joey@infodrom.org>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
