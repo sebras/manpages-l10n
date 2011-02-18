@@ -1,0 +1,124 @@
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" License.
+.\" Modified Sat Jul 24 17:51:15 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 11 May 1998 by Joseph S. Myers (jsm28@cam.ac.uk)
+.\" Modified 14 May 2001, 23 Sep 2001 by aeb
+.\" 2004-12-20, mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSTEM 3 "10. September 2010" "" Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+system \- einen Shell\-Befehl ausführen
+.SH ÜBERSICHT
+.nf
+\fB#include <stdlib.h>\fP
+.sp
+\fBint system(const char *\fP\fIbefehl\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+\fBsystem\fP() führt einen in \fIbefehl\fP angegebenen Befehl durch Aufruf von
+\fB/bin/sh \-c\fP \fIbefehl\fP aus und kehrt zurück nachdem der Befehl
+abgeschlossen wurde. Während der Ausführung des Befehls wird \fBSIGCHLD\fP
+blockiert und sowohl \fBSIGINT\fP als auch \fBSIGQUIT\fP werden ignoriert.
+.SH RÜCKGABEWERT
+Im Fehlerfall wird \-1 (z.B. \fBfork\fP(2) fehlgeschlagen) und andernfalls der
+Status des Befehls zurückgegeben. Dieser letztgenannte Rückgabestatus hat
+das in \fBwait\fP(2) spezifizierte Format. In dem Fall, dass \fI/bin/sh\fP nicht
+ausgeführt werden konnte, wird der Exit\-Status der des Befehls sein, der
+\fIexit(127)\fP aufrief.
+.PP
+Falls der Wert von \fIbefehl\fP NULL ist, gibt \fBsystem\fP() eine Wert ungleich
+Null zurück, wenn die Shell verfügbar ist und Null, wenn nicht.
+.PP
+\fBsystem\fP() beeinflusst nicht den Wartestatus anderer Kindprozesse.
+.SH "KONFORM ZU"
+C89, C99, POSIX.1\-2001.
+.SH ANMERKUNGEN
+.PP
+Falls das Feature\-Test\-Makro \fB_XOPEN_SOURCE\fP definiert wurde (vor dem
+Einbinden \fIirgendwelcher\fP Header\-Dateien), dann werden die in \fBwait\fP(2)
+beschriebenen Makros (\fBWEXITSTATUS\fP(), etc.) durch das Einbinden von
+\fI<stdlib.h>\fP zur Verfügung gestellt.
+.PP
+Wie erwähnt, ignoriert \fBsystem\fP() \fBSIGINT\fP und \fBSIGQUIT\fP. Dies kann dazu
+führen, dass Programme, die es in einer Schleife aufrufen, nicht mehr
+unterbrochen werden können, sofern sie nicht aufpassen, dass sie selbst den
+Exit\-Status des Kindprozesses prüfen. Z.B.
+.br
+.nf
+
+    while (etwas) {
+        int ret = system("foo");
+
+        if (WIFSIGNALED(ret) &&
+            (WTERMSIG(ret) == SIGINT || WTERMSIG(ret) == SIGQUIT))
+                break;
+    }
+.fi
+.PP
+Benutzen Sie \fBsystem\fP() nicht von einem Programm mit SUID\- oder
+SGID\-Rechten, da unbekannte Werte für einige Umgebungsvariablen benutzt
+werden könnten, die möglicherweise die Systemintegrität
+untergraben. Benutzen Sie stattdessen die Funktionen der \fBexec\fP(3)\-Familie,
+jedoch nicht \fBexeclp\fP(3) oder \fBexecvp\fP(3). Genaugenommen wird \fBsystem\fP()
+aus Programmen mit SUID\- oder SGID\-Rechten nicht richtig auf Systemen
+funktionieren, auf denen \fI/bin/sh\fP Bash in der Version 2 vorliegt, da Bash
+2 beim Start Privilegien verwirft. (Debian benutzt eine veränderte Bash, die
+dies unterlässt, wenn sie als \fBsh\fP aufgerufen wird.
+.PP
+In Glibc\-Versionen vor 2.1.3 wurde die Verfügbarkeit von \fI/bin/sh\fP
+genaugenommen nicht überprüft, wenn \fIbefehl\fP NULL war. Stattdessen wurde
+angenommen, es sei verfügbar und \fBsystem\fP() gab in diesem Fall immer 1
+zurück. Seit Glibc 2.1.3 wird diese Überprüfung durchgeführt, da, obwohl
+POSIX.1\-2001 eine entsprechende Implementierung benötigt, um eine Shell zur
+Verfügung zu stellen, diese Shell nicht verfügbar oder ausführbar sein
+könnte, wenn das aufrufende Programm vorher \fBchroot\fP(2) aufrief (was nicht
+durch POSIX.1\-2001 spezifiziert ist).
+.PP
+Es ist möglich, dass der Shell\-Befehl 127 zurückgibt. Dies ist kein
+eindeutiger Indikator dafür, dass der Aufruf von \fBexecve\fP(2) fehlschlug.
+.SH "SIEHE AUCH"
+\fBsh\fP(1), \fBsignal\fP(2), \fBwait\fP(2), \fBexec\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
