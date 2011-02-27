@@ -16,6 +16,7 @@ for translation in po/man?/*.po; do
 	po4a-translate \
 		-f man \
 		--option groff_code=verbatim \
+		--option untranslated="a.RE,\|" \
 		--option generated \
 		-m $original \
 		-M ISO-8859-1 \
