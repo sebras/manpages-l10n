@@ -16,7 +16,11 @@ else \
 fi
 
 # Generate with po4a
-po4a-gettextize -f man --option groff_code=verbatim -m $1 $translation -p $program.$section.po
+po4a-gettextize -f man \
+ --option groff_code=verbatim \
+ --option generated \
+ --option untranslated="a.RE,\|" \
+ -m $1 $translation -p $program.$section.po
 
 # Stop here if po4a fails
 if [ $? -ne 0 ]; then \
@@ -25,13 +29,3 @@ fi
 
 # Remove location information
 sed -i -e "/^#: /d" $program.$section.po
-
-# Create addendum to be added at the end of manpages
-cat > $program.$section.add <<END_ADDENDUM
-PO4A-HEADER:mode=after;position=^.TH;beginboundary=FakePo4aBoundary
-
-.SH ÜBERSETZUNG
-Die deutsche Übersetzung dieser Handbuchseite wurde von
-MEIN NAME <EMAIL>
-erstellt.
-END_ADDENDUM
