@@ -1,0 +1,221 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (C) Markus Kuhn, 1996, 2001
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" 1995-11-26  Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"      First version written
+.\" 2001-05-11  Markus Kuhn <mgk25@cl.cam.ac.uk>
+.\"      Update
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UTF\-8 7 "11. Mai 2001" GNU Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+UTF\-8 \- eine ASCII\-kompatible Multibyte\-Unicode\-Kodierung
+.SH BESCHREIBUNG
+Der \fBUnicode\-3.0\fP\-Zeichensatz ist durch 16\-Bit\-Wörter definiert. Die
+einfachste Unicode\-Kodierung (\fBUCS\-2\fP) besteht aus einer Folge von
+16\-Bit\-Zeichen. Solche Zeichenketten können als Bestandteile viele
+16\-Bit\-Zeichen wie \(aq\e0\(aq oder \(aq/\(aq enthalten, die z. B. in
+Dateinamen und anderen Argumenten von C\-Bibliotheksfunktionen eine besondere
+Bedeutung haben. Außerdem arbeiten die meisten UNIX\-Programme mit
+\fBASCII\fP\-Dateien und können 16\-Bit\-Wörter nicht ohne größere Änderungen
+verarbeiten. Darum ist \fBUCS\-2\fP keine geeignete externe Kodierung von
+\fBUnicode\fP in Dateinamen, Text\-Dateien, Umgebungsvariablen usw. Der \fBISO
+10646 Universal Character Set (UCS)\fP, eine Erweiterung von \fBUnicode\fP, wird
+sogar durch 31\-Bit\-Wörter definiert. Die zugehörige \fBUCS\-4\fP\-Kodierung (eine
+Folge von 32\-Bit\-Wörtern) leidet unter denselben Problemen wie die
+\fBUCS\-2\fP\-Kodierung.
+
+Die \fBUTF\-8\fP\-Kodierung von \fBUnicode\fP und \fBUCS\fP hat diese Probleme
+nicht. Sie ist der gebräuchliche Anwendungsfall des \fBUnicode\fP\-Zeichensatzes
+auf unixoiden Betriebssystemen.
+.SS Eigenschaften
+Die \fBUTF\-8\fP\-Kodierung hat die folgenden netten Eigenschaften:
+.TP  0.2i
+*
+Die \fBUCS\fP\-Zeichen 0x00000000 bis 0x0000007f (die klassischen
+\fBUS\-ASCII\fP\-Zeichen) werden einfach als die Bytes 0x00 bis 0x7f kodiert und
+auf diese Weise die \fBASCII\fP\-Kompatibilität hergestellt. Dateinamen und
+Zeichenketten, die nur aus 7\-Bit\-\fBASCII\fP\-Zeichen bestehen, haben darum
+unter \fBASCII\fP und \fBUTF\-8\fP dieselbe Kodierung.
+.TP 
+*
+Alle \fBUCS\fP\-Zeichen über 0x7f werden als Folge mehrerer Bytes im Bereich
+0x80 bis 0xfd dargestellt, so dass kein \fBASCII\fP\-Byte als Teil eines anderen
+Zeichens auftritt und es keine Probleme z.B. mit \(aq\e0\(aq oder \(aq/\(aq
+gibt.
+.TP 
+*
+Die lexikographische Sortierreihenfolge von \fBUCS\-4\fP\-Zeichenketten bleibt
+erhalten.
+.TP 
+*
+Alle möglichen 2^31 \fBUCS\fP\-Zeichen können mit \fBUTF\-8\fP kodiert werden.
+.TP 
+*
+Die Bytes 0xfe und 0xff werden von der \fBUTF\-8\fP\-Kodierung nicht verwendet.
+.TP 
+*
+Das erste Byte einer Multibyte\-Folge, die ein einzelnes nicht in \fBASCII\fP
+enthaltenes \fBUCS\fP\-Zeichen darstellt, ist grundsätzlich im Bereich 0xc0 bis
+0xfd und zeigt die Länge der Folge an. Alle anderen Bytes der Folge sind im
+Bereich 0x80 bis 0xbf. Dadurch wird eine einfache Neusynchronisierung
+ermöglich, da die Kodierung zustandslos und daher robust gegenüber fehlenden
+oder verloren gegangenen Bytes ist.
+.TP 
+*
+\fBUTF\-8\fP\-kodierte \fBUCS\fP\-Zeichen können bis zu sechs Byte lang sein. Da aber
+die \fBUnicode\fP\-Norm keine Zeichen über 0x10FFFF spezifiziert, können
+Unicode\-Zeichen in \fBUTF\-8\fP nur bis zu vier Byte lang sein.
+.SS Kodierung
+Die folgenden Byte\-Folgen werden für die Darstellung eines Zeichens
+verwendet. Die zu verwendende Folge hängt vom \fBUCS\fP\-Code des Zeichens ab:
+.TP  0.4i
+0x00000000 \- 0x0000007F:
+0\fIxxxxxxx\fP
+.TP 
+0x00000080 \- 0x000007FF:
+110\fIxxxxx\fP 10\fIxxxxxx\fP
+.TP 
+0x00000800 \- 0x0000FFFF:
+1110\fIxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP
+.TP 
+0x00010000 \- 0x001FFFFF:
+11110\fIxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP
+.TP 
+0x00200000 \- 0x03FFFFFF:
+111110\fIxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP
+.TP 
+0x04000000 \- 0x7FFFFFFF:
+1111110\fIx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP 10\fIxxxxxx\fP
+.PP
+Die \fIxxx\fP\-Bits werden durch den Code des Zeichens in Binärdarstellung
+ersetzt. Es wird die jeweils kürzeste Multibyte\-Folge benutzt, die den Code
+des Zeichens darstellen kann.
+.PP
+Die \fBUCS\fP\-Codewerte 0xd800\(en0xdfff (\fBUTF\-16\fP\-Ersatzzeichen) sowie 0xfffe
+und 0xffff (in \fBUCS\fP keinem Zeichen zugeordnet; \fBUCS\fP noncharacters)
+sollten nicht in standardkonformen \fBUTF\-8\fP\-Datenströmen enthalten sein.
+.SS Beispiel
+Das \fBUnicode\fP\-Zeichen 0xa9 = 1010 1001 (das Copyright\-Zeichen) wird in
+\fBUTF\-8\fP als
+.PP
+.RS
+11000010 10101001 = 0xc2 0xa9
+.RE
+.PP
+dargestellt und das Zeichen 0x2260 = 0010 0010 0110 0000 (das
+Ungleich\-Symbol) als:
+.PP
+.RS
+11100010 10001001 10100000 = 0xe2 0x89 0xa0
+.RE
+.SS "Bemerkungen zur Anwendung"
+Anwender müssen, z.B. mit
+.PP
+.RS
+export LANG=en_GB.UTF\-8,
+.RE
+.PP
+eine \fBUTF\-8\fP\-Locale wählen, um die \fBUTF\-8\fP\-Unterstützung in Programmen zu
+aktivieren.
+.PP
+Anwendungs\-Software, die auf den verwendeten Zeichensatz achten muss, sollte
+immer, z. B. mit
+.PP
+.RS
+setlocale(LC_CTYPE, ""),
+.RE
+.PP
+die Locale setzen und Programmierer anschließend den Ausdruck
+.PP
+.RS
+strcmp(nl_langinfo(CODESET), "UTF\-8") == 0
+.RE
+.PP
+auswerten, um festzustellen, ob eine \fBUTF\-8\fP\-Locale ausgewählt wurde und ob
+daher sämtliche Standard\-Klartexteingaben und \-ausgaben,
+Terminalkommunikation, Klartext\-Dateiinhalte, Dateinamen und
+Umgebungsvariablen in \fBUTF\-8\fP kodiert sind.
+.PP
+An Einzel\-Byte\-Kodierungen gewöhnte Programmierer müssen daran denken, dass
+zwei bislang getroffene Annahmen in \fBUTF\-8\fP\-Locales nicht mehr gültig
+sind. Erstens bedeutet ein einziges Byte nicht mehr unbedingt ein einzelnes
+Zeichen. Zweitens, da moderne Terminal\-Emulatoren im \fBUTF\-8\fP\-Modus auch
+chinesische, japanische und koreanische \fBZeichen doppelter Breite\fP sowie
+\fBKombinationszeichen\fP ohne horizontalen Vorschub unterstützen, setzt die
+Ausgabe eines einzelnen Zeichens nicht unbedingt den Cursor um eine Position
+weiter, wie es bei \fBASCII\fP der Fall war. Heutzutage sollten Sie
+Bibliotheksfunktionen wie \fBmbsrtowcs\fP(3) und \fBwcswidth\fP(3) nutzen, um
+Zeichen und Cursorpositionen zählen.
+.PP
+Die offizielle Escape\-Sequenz aus einem \fBISO\-2022\fP\-Kodierungsschema (wie
+zum Beispiel von VT100\-Terminals verwendet) nach \fBUTF\-8\fP ist ESC % G
+("\ex1b%G"). Die entsprechende Sequenz für die Rückkehr von \fBUTF\-8\fP zu
+\fBISO 2022\fP ist ESC % @ ("\ex1b%@"). Andere \fBISO\-2022\fP\-Sequenzen (wie zum
+Umschalten der G0\- und G1\-Sätze) sind im \fBUTF\-8\fP\-Modus nicht anwendbar.
+.PP
+Es ist zu hoffen, dass in absehbarer Zeit \fBUTF\-8\fP \fBASCII\fP und \fBISO 8859\fP
+auf allen Ebenen als gemeinsame Zeichenkodierung auf POSIX\-Systemen ersetzt,
+was diese zu einer wesentlich mächtigeren Umgebung für den Umgang mit
+Klartext macht.
+.SS Sicherheit
+Die Standards \fBUnicode\fP und \fBUCS\fP fordern, dass Erzeuger von \fBUTF\-8\fP die
+kürzeste mögliche Form liefern. Z. B. ist der Erzeugung einer
+Zwei\-Byte\-Sequenz mit dem ersten Byte 0xc0 nicht konform. \fBUnicode 3.1\fP
+fordert, dass konforme Programme in ihrer Eingabe Formen, die nicht die
+kürzesten sind, nicht akzeptieren dürfen. Dies geschieht aus
+Sicherheitsgründen: Wenn Benutzereingaben auf mögliche
+Sicherheitsverletzungen überprüft werden, könnte ein Programm nur nach den
+\fBASCII\fP\-Versionen von "/../" oder ";" oder NUL suchen und übersehen, dass
+es viele Möglichkeiten einer Nicht\-\fBASCII\fP\-Darstellung neben der kürzesten
+\fBUFT\-8\fP\-Kodierung dieser Zeichen gibt.
+.SS Standards
+.\" .SH AUTHOR
+.\" Markus Kuhn <mgk25@cl.cam.ac.uk>
+ISO/IEC 10646\-1:2000, Unicode 3.1, RFC\ 2279, Plan 9.
+.SH "SIEHE AUCH"
+\fBnl_langinfo\fP(3), \fBsetlocale\fP(3), \fBcharsets\fP(7), \fBunicode\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Sebastian Rittau <srittau@jroger.in-berlin.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
