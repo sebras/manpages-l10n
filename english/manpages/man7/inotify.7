@@ -23,7 +23,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\"
-.TH INOTIFY 7 2008-11-18 "Linux" "Linux Programmer's Manual"
+.TH INOTIFY 7 2010-11-12 "Linux" "Linux Programmer's Manual"
 .SH NAME
 inotify \- monitoring file system events
 .SH DESCRIPTION
@@ -239,7 +239,7 @@ Two additional convenience macros are
 which equates to
 IN_MOVED_FROM|IN_MOVED_TO,
 and
-.B IN_CLOSE
+.BR IN_CLOSE ,
 which equates to
 IN_CLOSE_WRITE|IN_CLOSE_NOWRITE.
 .PP
@@ -253,6 +253,22 @@ when calling
 .TP 18
 .BR IN_DONT_FOLLOW " (since Linux 2.6.15)"
 Don't dereference \fIpathname\fP if it is a symbolic link.
+.TP
+.BR IN_EXCL_UNLINK " (since Linux 2.6.36)"
+.\" commit 8c1934c8d70b22ca8333b216aec6c7d09fdbd6a6
+By default, when watching events on the children of a directory,
+events are generated for children even after they have been unlinked
+from the directory.
+This can result in large numbers of uninteresting events for
+some applications (e.g., if watching
+.IR /tmp ,
+in which many applications create temporary files whose
+names are immediately unlinked).
+Specifying
+.B IN_EXCL_UNLINK
+changes the default behavior,
+so that events are not generated for children after
+they have been unlinked from the watched directory.
 .TP
 .B IN_MASK_ADD
 Add (OR) events to watch mask for this pathname if
@@ -377,10 +393,30 @@ The
 .BR ioctl (2)
 returns the number of bytes available to read from an
 inotify file descriptor.
-
+.SS Limitations and caveats
 Inotify monitoring of directories is not recursive:
 to monitor subdirectories under a directory,
 additional watches must be created.
+This can take a significant amount time for large directory trees.
+
+The inotify API provides no information about the user or process that
+triggered the inotify event.
+
+Note that the event queue can overflow.
+In this case, events are lost.
+Robust applications should handle the possibility of
+lost events gracefully.
+
+The inotify API identifies affected files by filename.
+However, by the time an application processes an inotify event,
+the filename may already have been deleted or renamed.
+
+If monitoring an entire directory subtree,
+and a new subdirectory is created in that tree,
+be aware that by the time you create a watch for the new subdirectory,
+new files may already have been created in the subdirectory.
+Therefore, you may want to scan the contents of the subdirectory
+immediately after adding the watch.
 .SH "BUGS"
 In kernels before 2.6.16, the
 .B IN_ONESHOT
@@ -403,7 +439,7 @@ unread event.
 .BR stat (2),
 .IR Documentation/filesystems/inotify.txt .
 .SH COLOPHON
-This page is part of release 3.27 of the Linux
+This page is part of release 3.32 of the Linux
 .I man-pages
 project.
 A description of the project,
