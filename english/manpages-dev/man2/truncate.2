@@ -38,7 +38,7 @@
 .\" Modified 2002-04-06 by Andries Brouwer <aeb@cwi.nl>
 .\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.TH TRUNCATE 2 2010-09-20 "Linux" "Linux Programmer's Manual"
+.TH TRUNCATE 2 2010-11-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 truncate, ftruncate \- truncate a file to a specified length
 .SH SYNOPSIS
@@ -59,36 +59,18 @@ Feature Test Macro Requirements for glibc (see
 .sp
 .BR truncate ():
 .RS 4
-.TP 4
-Since glibc 2.12
-_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
-_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED ||
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Before glibc 2.12:
 _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
 _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.br
+|| /* Since glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
 .RE
 .sp
 .BR ftruncate ():
 .RS 4
-.TP 4
-.TP
-Since glibc 2.12:
-_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
-_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED ||
-.\" FIXME The next piece seems incorrect; see
-.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12037
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Between glibc 2.3.5 and 2.11
-_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
-_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED ||
-_POSIX_C_SOURCE\ >=\ 200112L
-.TP
-Before glibc 2.3.5:
 _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
 _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.br
+|| /* Since glibc 2.3.5: */ _POSIX_C_SOURCE\ >=\ 200112L
 .RE
 .PD
 .ad b
@@ -225,7 +207,7 @@ does not reference a regular file.
 .\" .BR ftruncate ()
 .\" an additional EAGAIN error condition.
 .SH NOTES
-The above description is for XSI-compliant systems.
+The details in DESCRIPTION are for XSI-compliant systems.
 For non-XSI-compliant systems, the POSIX standard allows
 two behaviors for
 .BR ftruncate ()
@@ -236,7 +218,7 @@ exceeds the file length
 .BR truncate ()
 is not specified at all in such an environment):
 either returning an error, or extending the file.
-Like most Unix implementations, Linux follows the XSI requirement
+Like most UNIX implementations, Linux follows the XSI requirement
 when dealing with native file systems.
 However, some nonnative file systems do not permit
 .BR truncate ()
@@ -245,12 +227,34 @@ and
 to be used to extend a file beyond its current length:
 a notable example on Linux is VFAT.
 .\" At the very least: OSF/1, Solaris 7, and FreeBSD conform, mtk, Jan 2002
+
+The original Linux
+.BR truncate ()
+and
+.BR ftruncate ()
+system calls were not designed to handle large file offsets.
+Consequently, Linux 2.4 added
+.BR truncate64 ()
+and
+.BR ftruncate64 ()
+system calls that handle large files.
+However, these details can be ignored by applications using glibc, whose
+wrapper functions transparently employ the more recent system calls
+where they are available.
+.SH BUGS
+A header file bug in glibc 2.12 meant that the minimum value of
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12037
+.BR _POSIX_C_SOURCE
+required to expose the declaration of
+.BR ftruncate ()
+was 200809L instead of 200112L.
+This has been fixed in later glibc versions.
 .SH "SEE ALSO"
 .BR open (2),
 .BR stat (2),
 .BR path_resolution (7)
 .SH COLOPHON
-This page is part of release 3.27 of the Linux
+This page is part of release 3.32 of the Linux
 .I man-pages
 project.
 A description of the project,
