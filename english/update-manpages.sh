@@ -14,6 +14,7 @@ for package in $packages; do
 		mkdir tmp
 		tar xzf data.tar.gz --directory=tmp/
 		rm -rf $package/man?
+		git rm --quiet -r $package
 		for mandir in tmp/usr/share/man/man?/; do
 			section=`echo $mandir | cut -d/ -f5`
 			# Only copy directories with files
