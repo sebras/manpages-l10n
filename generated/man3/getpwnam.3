@@ -37,7 +37,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH GETPWNAM 3 "30. März 2009" GNU Linux\-Programmierhandbuch
+.TH GETPWNAM 3 "21. Oktober 2010" GNU Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
 getpwnam, getpwnam_r, getpwuid, getpwuid_r \- Eintrag in Passwortdatei
 abfragen
@@ -82,32 +82,34 @@ Die Funktion \fBgetpwnam\fP() gibt einen Zeiger auf eine Struktur zurück, die
 aus einem Datensatz herausgelöste Felder aus der Passwort\-Datenbank enthält,
 die zur Benutzer\-ID \fIuid\fP passen.
 .PP
-Die Funktionen \fBgetpwnam_r\fP() und \fBgetpwuid_r\fP() erhalten die gleichen
-Informationen, speichern aber die empfangene \fIpasswd\fP\-Struktur an dem
-Platz, auf den \fIpwd\fP zeigt. Diese \fIpasswd\fP\-Struktur enthält Zeiger auf
-Zeichenketten und diese Zeichenketten werden im Puffer \fIpuffer\fP der Länge
-\fIpufferlaenge\fP gespeichert. Ein Zeiger auf das Ergebnis (im Erfolgsfall)
-oder NULL (im Fall, dass kein Eintrag gefunden wurde oder ein Fehler
-auftrat) wird in \fI*ergebnis\fP gespeichert.
-.PP
 Die Struktur \fIpasswd\fP ist in \fI<pwd.h>\fP wie folgt definiert:
 .sp
 .in +4n
 .nf
 struct passwd {
-    char   *pw_name;       /* Benutzername */
-    char   *pw_passwd;     /* Passwort des Benutzers */
-    uid_t   pw_uid;        /* Benutzer\-ID */
-    gid_t   pw_gid;        /* Gruppen\-ID */
-    char   *pw_gecos;      /* wirklicher Name */
-    char   *pw_dir;        /* Home\-Verzeichnis */
-    char   *pw_shell;      /* Anmelde\-Shell */
+    char   *pw_name;       /* username */
+    char   *pw_passwd;     /* user password */
+    uid_t   pw_uid;        /* user ID */
+    gid_t   pw_gid;        /* group ID */
+    char   *pw_gecos;      /* user information */
+    char   *pw_dir;        /* home directory */
+    char   *pw_shell;      /* shell program */
 };
 .fi
 .in
 .PP
-Die maximal benötigte Größe für \fIpuffer\fP kann herausgefunden werden, indem
-\fBsysconf\fP(3) mit dem Argument \fB_SC_GETPW_R_SIZE_MAX\fP benutzt wird.
+See \fBpasswd\fP(5)  for more information about these fields.
+.PP
+The \fBgetpwnam_r\fP()  and \fBgetpwuid_r\fP()  functions obtain the same
+information as \fBgetpwnam\fP()  and \fBgetpwuid\fP(), but store the retrieved
+\fIpasswd\fP structure in the space pointed to by \fIpwd\fP.  The string fields
+pointed to by the members of the \fIpasswd\fP structure are stored in the
+buffer \fIbuf\fP of size \fIbuflen\fP.  A pointer to the result (in case of
+success) or NULL (in case no entry was found or an error occurred) is stored
+in \fI*result\fP.
+.PP
+The maximum size needed for \fIbuf\fP can be found using \fBsysconf\fP(3)  with
+the argument \fB_SC_GETPW_R_SIZE_MAX\fP.
 .SH RÜCKGABEWERT
 Die Funktionen \fBgetpwnam\fP() und \fBgetpwuid\fP() geben einen Zeiger auf eine
 \fIpasswd\fP\-Struktur oder NULL zurück, falls kein passender Eintrag gefunden
@@ -165,7 +167,8 @@ lokale Passwortdatenbank
 Konfigurationsdatei für Systemdatenbanken und Namens\-Dienst\-Umschalter
 (»Name Service Switch«)
 .SH "KONFORM ZU"
-SVr4, 4.3BSD, POSIX.1\-2001.
+SVr4, 4.3BSD, POSIX.1\-2001.  The \fIpw_gecos\fP field is not specified in
+POSIX, but is present on most implementations.
 .SH ANMERKUNGEN
 .\" more precisely:
 .\" AIX 5.1 - gives ESRCH
@@ -175,14 +178,13 @@ SVr4, 4.3BSD, POSIX.1\-2001.
 .\" FreeBSD 4.8, OpenBSD 3.2, NetBSD 1.6 - give EPERM
 .\" SunOS 5.8 - gives EBADF
 .\" Tru64 5.1b, HP-UX-11i, SunOS 5.7 - give 0
-Die unter »RÜCKGABEWERT« angegebene Formulierung stammt von
-POSIX.1\-2001. Sie lautet nicht Fehler »nicht gefunden« und gibt daher nicht
-an, welchen Wert \fIerrno\fP in dieser Situation haben könnte. Dies macht es
-aber unmöglich Fehler zu erkennen. Es kann argumentiert werden, dass
-\fIerrno\fP von POSIX unverändert bleiben sollte, wenn ein Eintrag nicht
-gefunden wird. Experimente auf verschiedenen Unix\-Systemen zeigen aber, dass
-viele verschieden Werte in dieser Situation auftreten: 0, ENOENT, EBADF,
-ESRCH, EWOULDBLOCK, EPERM und wahrscheinlich andere.
+The formulation given above under "RETURN VALUE" is from POSIX.1\-2001.  It
+does not call "not found" an error, and hence does not specify what value
+\fIerrno\fP might have in this situation.  But that makes it impossible to
+recognize errors.  One might argue that according to POSIX \fIerrno\fP should
+be left unchanged if an entry is not found.  Experiments on various
+UNIX\-like systems show that lots of different values occur in this
+situation: 0, ENOENT, EBADF, ESRCH, EWOULDBLOCK, EPERM and probably others.
 
 Das Feld \fIpw_dir\fP enthält den Namen des anfänglichen Arbeitsverzeichnisses
 des Benutzers. Anmeldeprogramme benutzen diesen Wert, um die
@@ -249,7 +251,7 @@ main(int argc, char *argv[])
 \fBgetpwent\fP(3), \fBgetspnam\fP(3), \fBputpwent\fP(3), \fBsetpwent\fP(3),
 \fBnsswitch.conf\fP(5), \fBpasswd\fP(5)
 .SH KOLOPHON
-Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
 Fehler gemeldet werden können, finden sich unter
 http://www.kernel.org/doc/man\-pages/.

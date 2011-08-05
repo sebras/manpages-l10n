@@ -98,7 +98,7 @@ angegeben wird) und verschiedene Einhängeschalter (wie sie in
 \fI<linux/fs.h>\fP für Libc4 und Libc5 und in \fI<sys/mount.h>\fP
 für Glibc2 definiert wurden) in den unteren 16 Bit:
 .TP 
-\fBMS_BIND\fP (Linux 2.4 aufwärts)
+\fBMS_BIND\fP (Linux 2.4 onward)
 .\" since 2.4.0-test9
 .\" with the exception of the "hidden" MS_REC mountflags bit
 Ein Einhängen per »Bind« macht eine Datei oder ein Unterverzeichnis an einem
@@ -203,11 +203,10 @@ Schreiben auf diesem Dateisystem synchronisieren (als ob der Schalter
 \fBO_SYNC\fP für \fBopen\fP(2) für alle offenen Dateien auf diesem Dateisystem
 angegeben worden wäre).
 .PP
-Von Linux 2.4 aufwärts können die Schalter \fBMS_NODEV\fP, \fBMS_NOEXEC\fP und
-\fBMS_NOSUID\fP pro Einhängepunkt gesetzt werden. Von Linux 2.6.16 aufwärts
-können auch die Schalter \fBMS_NOATIME\fP und \fBMS_NODIRATIME\fP pro
-Einhängepunkt gesetzt werden. Außderdem kann der Schalter \fBMS_RELATIME\fP pro
-Einhängepunkt gesetzt werden.
+From Linux 2.4 onward, the \fBMS_NODEV\fP, \fBMS_NOEXEC\fP, and \fBMS_NOSUID\fP flags
+are settable on a per\-mount\-point basis.  From kernel 2.6.16 onward,
+\fBMS_NOATIME\fP and \fBMS_NODIRATIME\fP are also settable on a per\-mount\-point
+basis.  The \fBMS_RELATIME\fP flag is also settable on a per\-mount\-point basis.
 .PP
 Das Argument \fIdaten\fP wird von den verschiedenen Dateisystemen
 interpretiert. Typischerweise ist es eine Zeichenkette aus Optionen, die
@@ -218,19 +217,17 @@ Optionen für jeden Dateisystemtyp zu erhalten.
 Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
 und \fIerrno\fP entsprechend gesetzt.
 .SH FEHLER
-Die im Folgenden aufgeführten Fehlerwerte resultieren aus
-dateisystemunabhängigen Fehlern. Jeder Dateisystemtyp kann seine eigenen
-speziellen Fehler und sein eigenes spezielles Verhalten aufweisen. Lesen Sie
-den Kernel\-Quellcode, um Einzelheiten zu erfahren.
+The error values given below result from filesystem type independent
+errors.  Each file\-system type may have its own special errors and its own
+special behavior.  See the kernel source code for details.
 .TP 
 \fBEACCES\fP
 .\" mtk: Probably: write permission is required for MS_BIND, with
 .\" the error EPERM if not present; CAP_DAC_OVERRIDE is required.
-Ein Bestandteil eines Pfades kann nicht durchsucht werden. (Siehe auch
-\fBpath_resolution\fP(7).) Oder es wurde versucht, ein Dateisystem mit reinem
-Lesezugriff einzuhängen, ohne den Schalter \fBMS_RDONLY\fP anzugeben. Oder das
-blockorientierte Gerät befindet sich auf einem Dateisystem, das mit der
-Option \fBMS_NODEV\fP eingehängt ist.
+A component of a path was not searchable.  (See also \fBpath_resolution\fP(7).)
+Or, mounting a read\-only file system was attempted without giving the
+\fBMS_RDONLY\fP flag.  Or, the block device \fIsource\fP is located on a file
+system mounted with the \fBMS_NODEV\fP option.
 .TP 
 \fBEBUSY\fP
 \fIquelle\fP ist bereits eingehängt. Oder es kann kann nicht neu mit reinem
@@ -297,10 +294,10 @@ umbenannt, als ein anderer \fBMS_SYNC\fP zu \fI<mman.h>\fP hinzugefügt
 wurde.
 .LP
 .\" The change is in patch-2.4.0-prerelease.
-Vor Linux 2.4 würde ein Versuch mit \fBEPERM\fP fehlschlagen, ein Set\-User\-ID\-
-oder Set\-Group\-ID\-Programm auf einem Dateisystem auszuführen, das mit
-\fBMS_NOSUID\fP eingehängt ist. Seit Linux 2.4 werden die Bits Set\-User\-ID und
-Set\-User\-Group\-ID in diesem Fall einfach stillschweigend ignoriert.
+Before Linux 2.4 an attempt to execute a set\-user\-ID or set\-group\-ID program
+on a file system mounted with \fBMS_NOSUID\fP would fail with \fBEPERM\fP.  Since
+Linux 2.4 the set\-user\-ID and set\-group\-ID bits are just silently ignored in
+this case.
 .SS "Namensräume pro Prozess"
 Seit Kernel 2.4.19 stellt Linux Einhänge\-Namensräume pro Prozess bereit. Ein
 Einhänge\-Namensraum ist eine Zusammenstellung von eingehängten
@@ -316,16 +313,15 @@ Ein untergeordneter Prozess, der durch \fBfork\fP(2) erzeugt wurde, nutzt den
 Einhänge\-Namensraum seines übergeordneten Prozesses; der Einhänge\-Namensraum
 wird über ein \fBexecve\fP(2) erhalten.
 
-Ein Prozess kann einen privat eingehängten Namensraum erhalten, falls er
-unter Benutzung des Schalters \fBCLONE_NEWNS\fP von \fBclone\fP() erstellt
-wurde. In diesem Fall wird sein neuer Namensraum als eine \fIKopie\fP des
-Namensraums des Prozesses, der \fBclone\fP() aufrief, initialisiert oder er
-ruft \fBunshare\fP(2) mit dem Schalter \fBCLONE_NEWNS\fP auf, was veranlasst, dass
-der Einhänge\-Namensraum des Aufrufenden eine private Kopie des Namensraums
-erhält, der vorher mit anderen Prozessen gemeinsam benutzt wurde, so dass
-zukünftiges Ein\- und Aushängen durch den Aufrufenden für andere Prozesse
-unsichtbar ist (außer Kindprozesse, die der Aufrufende hinterher erzeugt)
-und umgekehrt.
+A process can obtain a private mount namespace if: it was created using the
+\fBclone\fP(2)  \fBCLONE_NEWNS\fP flag, in which case its new namespace is
+initialized to be a \fIcopy\fP of the namespace of the process that called
+\fBclone\fP(2); or it calls \fBunshare\fP(2)  with the \fBCLONE_NEWNS\fP flag, which
+causes the caller's mount namespace to obtain a private copy of the
+namespace that it was previously sharing with other processes, so that
+future mounts and unmounts by the caller are invisible to other processes
+(except child processes that the caller subsequently creates) and vice
+versa.
 
 Die Linux\-spezifische Datei \fI/proc/PID/mounts\fP stellt die Liste der
 Einhängepunkte in dem Einhänge\-Namensraum des Prozesses mit der angegebenen
@@ -333,7 +329,7 @@ ID dar; lesen Sie \fBproc\fP(5), um Einzelheiten zu erfahren.
 .SH "SIEHE AUCH"
 \fBumount\fP(2), \fBpath_resolution\fP(7), \fBmount\fP(8), \fBumount\fP(8)
 .SH KOLOPHON
-Diese Seite ist Teil der Veröffentlichung 3.27 des Projekts
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
 Fehler gemeldet werden können, finden sich unter
 http://www.kernel.org/doc/man\-pages/.
