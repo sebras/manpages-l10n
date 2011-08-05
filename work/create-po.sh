@@ -20,6 +20,7 @@ po4a-gettextize -f man \
  --option groff_code=verbatim \
  --option generated \
  --option untranslated="a.RE,\|" \
+ --option unknown_macros=untranslated \
  -m $1 $translation -p $program.$section.po
 
 # Stop here if po4a fails

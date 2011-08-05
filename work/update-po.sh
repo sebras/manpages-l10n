@@ -36,6 +36,9 @@ sed -i -e "s/CURRENT_DATE/$current_date/" header.po
 
 # Update .po file from master file
 po4a-updatepo -f man --option groff_code=verbatim \
+	--option generated \
+	--option untranslated="a.RE,\|" \
+	--option unknown_macros=untranslated \
 	-m $original -M ISO-8859-1 \
 	--msgmerge-opt "--backup=none --no-location --compendium custom.po --previous" \
 	--po $1.po
