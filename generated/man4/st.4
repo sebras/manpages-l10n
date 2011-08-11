@@ -1,0 +1,763 @@
+.\" Copyright 1995 Robert K. Nichols (Robert.K.Nichols@att.com)
+.\" Copyright 1999-2005 Kai MÃ¤kisara (Kai.Makisara@kolumbus.fi)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ST 4 "4. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+st \- SCSI\-Bandgerät
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/mtio.h>\fP
+.sp
+\fBint ioctl(int \fP\fIfd\fP\fB, int \fP\fIrequest\fP\fB [, (void *)\fP\fIarg3\fP\fB]);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, MTIOCTOP, (struct mtop *)\fP\fImt_cmd\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, MTIOCGET, (struct mtget *)\fP\fImt_status\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, MTIOCPOS, (struct mtpos *)\fP\fImt_pos\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+Der \fBst\fP\-Treiber stellt eine einheitliche Schnittstelle für diverse
+SCSI\-Bandlaufwerke zur Verfügung. Derzeit übernimmt der Treiber die
+Kontrolle über alle erkannten Geräte, auf die nur \fBsequentiell\fP zugegriffen
+werden kann. Der \fBst\fP\-Treiber verwendet die Major\-Gerätenummer 9.
+.PP
+Jedes Gerät verwendet acht Minor\-Gerätenummern. Die untersten fünf Bits in
+den Minor\-Nummern werden nacheinander in der Reihenfolge der Erkennung
+zugeordnet. Im Kernel 2.6 werden die Bits über den acht untersten Bits mit
+den fünf untersten Bits verkettet, um die Nummer des Bands zu bilden. Die
+Minor\-Nummern lassen sich in zwei Gruppen von vier Nummern aufteilen: die
+Minor\-Gerätenummern für automatisches Rückspulen, (\fIn\fP, principal) und die
+Gerätenummern ohne Rücklauf (\fIn\fP + 128, no\-rewind). Mit der
+Principal\-Gerätenummer geöffneten Geräten wird ein \fBREWIND\fP\-Befehl gegeben,
+wenn sie geschlossen werden. Diesen Befehl erhalten mit der
+no\-rewind\-Gerätenummer geöffnete Geräte nicht. (Beachten Sie, dass ein
+Rückspul\-Gerät mit mt nicht positioniert werden kann: das Band wird nach dem
+mt\-Befehl zurückgespult und der nächste Befehl hat als Ausgangspunkt den
+Anfang des Bands.)
+.PP
+Innerhalb jeder Gruppe stehen vier Minor\-Nummern zur Verfügung, um Geräte
+mit unterschiedlichen Eigenschaften zu definieren (Blockgröße, Kompression,
+Dichte usw.). Wenn das System startet, steht nur das erste Gerät zur
+Verfügung. Die anderen drei werden standardmäßig aktiviert, wenn die
+Merkmale definiert sind (siehe unten). (Durch die Änderung von
+Kompilierungs\-Konstanten ist es möglich, die Balance zwischen der maximalen
+Anzahl von Bandlaufwerken und der Anzahl der Minor\-Nummern für jedes
+Laufwerk zu ändern. Die Standard\-Zuweisung ermöglicht die Steuerung von 32
+Bandlaufwerken. Beispielsweise ist es möglich, bis zu 64 Bandlaufwerke mit
+zwei Minor\-Nummern für verschiedene Optionen zu steuern.)
+.PP
+Geräte werden üblicherweise mit
+.in +4n
+.nf
+
+mknod \-m 666 /dev/st0 c 9 0
+mknod \-m 666 /dev/st0l c 9 32
+mknod \-m 666 /dev/st0m c 9 64
+mknod \-m 666 /dev/st0a c 9 96
+mknod \-m 666 /dev/nst0 c 9 128
+mknod \-m 666 /dev/nst0l c 9 160
+mknod \-m 666 /dev/nst0m c 9 192
+mknod \-m 666 /dev/nst0a c 9 224
+.fi
+.in
+.PP
+erstellt. Es gibt kein entsprechendes blockorientiertes Gerät.
+.PP
+Der Treiber benutzt einen internen Puffer, der groß genug sein muss, um
+mindestens einen Band\-Block aufzunehmen. In Kerneln vor 2.1.121 wird der
+Puffer als ein zusammenhängender Block zugewiesen. Dies beschränkt die
+Blockgröße auf den größten zusammenhängenden Speicherblock, den der Kernel
+Allocator vergeben kann. Die Grenze ist derzeit 128 kB für
+32\-Bit\-Architekturen und 256 kB für 64\-Bit\-Architekturen. In neueren Kerneln
+teilt der Treiber den Puffer in mehrere Teile, wenn nötig. Standardmäßig ist
+die maximale Anzahl der Teile 16. Das bedeutet, dass die maximale Blockgröße
+sehr groß ist (2 MB, wenn die Zuteilung von 16 Blöcken von 128 kB gelingt).
+.PP
+Die interne Puffergröße des Treibers wird durch einen Compiler\-Konstante
+bestimmt, die aber mit einer Kernel\-Startoption überschrieben werden
+kann. Darüber hinaus versucht der Treiber, zur Laufzeit im Bedarfsfall einen
+größeren temporären Puffer bereitzustellen. Es ist aber durchaus möglich,
+dass zur Laufzeit die Zuteilung von großen, zusammenhängenden
+Speicherblöcken fehlschlägt. Daher ist es ratsam, sich nicht zu sehr auf
+dynamische Pufferzuweisung mit Kerneln vor 2.1.121 zu verlassen. (Das gilt
+auch für das bedarfsweise Laden des Treibers mit kerneld oder kmod.)
+.PP
+Der Treiber unterstützt nicht speziell bestimmte Marken oder Geräte. Nach
+dem Systemstart werden die Geräte\-Optionen von der Firmware des Laufwerks
+bestimmt. Wenn z. B. die Firmware Blöcke fester Größe wählt, arbeitet das
+Bandlaufwerk im Festblock\-Modus. Die Optionen können mit expliziten Aufrufen
+von \fBioctl\fP(2) geändert werden und leiben in Kraft, wenn das Gerät
+geschlossen und wieder geöffnet wird. Das Einstellen der Optionen betrifft
+Geräte sowohl mit als auch ohne Rückspulfunktion.
+.PP
+Für die verschiedenen Geräte innerhalb der Vierer\-Untergruppen können
+unterschiedliche Optionen angegeben werden. Die Optionen werden wirksam,
+wenn das Gerät geöffnet wird. Zum Beispiel kann der Systemadministrator
+festlegen, dass ein Gerät mit einer bestimmten Blockgröße im Festblock\-Modus
+schreibt und ein anderes Gerät mit variabler Blockgröße betrieben wird (wenn
+das Laufwerk beide Modi unterstützt).
+.PP
+Wenn das Gerät mit \fIBand\-Partionen\fP umgehen kann, wird das vom Treiber
+unterstützt. (Beachten Sie, dass Band\-Partitionen nichts mit
+Festplatten\-Partitionen zu tun haben. Ein partitioniertes Band kann als
+mehrere logische Bänder innerhalb eines Mediums angesehen werden.) Die
+Unterstützung von Partitionen muss mit einem Aufruf von \fBioctl\fP(2)
+aktiviert werden. Der Treiber merkt sich im Fall von Partitionswechseln die
+Positionen auf dem Band. Die Partition für die nachfolgenden Bandoperationen
+wird mit einem Aufruf von \fBioctl\fP(2) ausgewählt. Der Wechsel der Partition
+wird zusammen mit der nächsten Bandoperation ausgeführt, um unnötige
+Bandbewegungen zu vermeiden. Die maximale Anzahl der Partitionen auf einem
+Band wird durch eine Compiler\-Konstante (ursprünglich vier) definiert. Der
+Treiber enthält einen \fBioctl\fP(2), der ein Band mit einer oder zwei
+Partitionen formatieren kann.
+.PP
+Das Gerät \fI/dev/tape\fP wird üblicherweise als harter oder symbolischer Link
+auf das Standard\-Bandgerät des Systems angelegt.
+.PP
+Seit Kernel 2.6.2 exportiert der Treiber im sysfs\-Verzeichnis
+\fI/sys/class/scsi_tape\fP die vorhandenen Geräte und einiger ihrer Parameter.
+.SS Datenübertragung
+Der Treiber unterstützt den Betrieb sowohl im Festblock\-Modus als auch im
+variablen Modus (wenn das Laufwerk dazu imstande ist). Im Festblock\-Modus
+schreibt das Laufwerk Blöcke der angegebenen Größe, wobei die Blockgröße
+nicht abhängig von der Byteanzahl der Schreib\-Systemaufrufe ist. Bei
+variabler Blockgröße wird für jeden Schreibaufruf ein Block geschrieben, die
+Byteanzahl des Aufrufs bestimmt die Größe des entsprechenden Blocks auf dem
+Band. Beachten Sie, dass die Blöcke auf dem Band keine Informationen über
+den Schreibmodus enthalten: Beim Lesen ist das einzig Wichtige, Befehle zu
+verwenden, die Blockgrößen auf dem Band erkennen und danach handeln können.
+.PP
+Bei variabler Blockgröße muss die Anzahl gelesener Bytes nicht exakt zur
+Bandblockgröße passen. Wenn die Byteanzahl größer ist als der nächste Block
+auf dem Band, gibt der Treiber die Daten zurück und die Funktion liefert die
+aktuelle Blockgröße. Wenn der Block größer ist als die angeforderte Anzahl
+von Bytes, werden die angeforderten Bytes zurückgegeben und der Rest des
+Blocks verworfen.
+.PP
+Im Festblock\-Modus kann die Anzahl der zu lesenden Bytes beliebig sein, wenn
+Pufferung aktiviert ist, oder ein Vielfaches der Blockgröße des Bandes, wenn
+Pufferung deaktiviert ist. Kernel vor 2.1.121 ermöglichen Schreibvorgänge
+mit beliebiger Byteanzahl bei aktivierter Pufferung. In allen anderen Fällen
+(Kernel vor 2.1.121 mit deaktivierter Pufferung oder neuere Kernel) muss die
+Anzahl der zu schreibenden Bytes ein Vielfaches der Blockgröße des Bands
+sein.
+.PP
+Mit 2.6\-Kerneln versucht der Treiber direkte Transfers zwischen dem
+Benutzerpuffer und dem Gerät. Wenn das nicht möglich ist, wird der Treiber
+seinen internen Puffer verwenden. Die Gründe dafür, keine direkten Transfers
+zu verwenden, umfassen falsche Ausrichtung des Benutzerpuffers (Vorgabe sind
+512 Byte, aber diese kann durch den HBA\-Treiber geändert werden), eine oder
+mehrere vom SCSI\-Adapter nicht erreichbare Seiten des Benutzerpuffers, etc.
+.PP
+Wenn die letzte Bandoperation vor dem Schließen ein Schreibvorgang war, wird
+automatisch eine Dateimarke geschrieben.
+.PP
+Wenn beim Lesen eine Dateimarke angetroffen wird, geschieht folgendes: Wenn
+noch Daten im Puffer sind, wenn die Dateimarke gefunden wird, werden die
+gepufferten Daten zurückgegeben. Der nächste Leseaufruf gibt Null Byte
+zurück. Der übernächste Leseaufruf gibt Daten aus der nächsten Datei
+zurück. Das Ende der aufgezeichneten Daten wird durch Rückgabe von Null Byte
+für zwei aufeinander folgende Leseaufrufe signalisiert. Ein dritter Aufruf
+gibt einen Fehler zurück.
+.SS "Aufrufe von ioctl(2)"
+Der Treiber unterstützt drei verschiedene \fBioctl\fP(2)\-Aufrufe. Alle vom
+\fBst\fP\-Treiber nicht erkannten Aufrufe werden an den \fBSCSI\fP\-Treiber
+weitergereicht. Die folgenden Definitionen wurden aus
+\fI/usr/include/linux/mtio.h\fP entnommen:
+.SS "MTIOCTOP \(em führt eine Bandoperation aus"
+.PP
+Diese Operation verarbeitet ein Argument vom Typ \fI(struct mtop *)\fP. Nicht
+alle Laufwerke unterstützen jede der möglichen Anweisungen. Der Treiber gibt
+ein \fBEIO\fP zurück, wenn das Laufwerk die Anweisung nicht unterstützt.
+.PP
+.in +4n
+.nf
+/* Struktur für den MTIOCTOP\-Befehl an das Bandlaufwerk */
+struct mtop {
+    short   mt_op;      /* im Folgenden definierte Operationen */
+    int     mt_count;   /* Anzahl der Operationen */
+};
+.fi
+.in
+.PP
+Operationen für den Normalbetrieb von Bandlaufwerken:
+.TP  14
+\fBMTBSF\fP
+um \fBmt_count\fP Dateimarken zurücksetzen
+.TP 
+\fBMTBSFM\fP
+um \fBmt_count\fP Dateimarken zurücksetzen; Medium auf die EOT\-Seite der
+letzten Dateimarke positionieren
+.TP 
+\fBMTBSR\fP
+um \fBmt_count\fP Datensätze (Bandblöcke) zurücksetzen
+.TP 
+\fBMTBSS\fP
+um \fBmt_count\fP »Setmarks« zurücksetzen
+.TP 
+\fBMTCOMPRESSION\fP
+Wenn \fImt_count\fP ungleich Null ist, wird die Kompression der Banddaten durch
+das Laufwerk aktiviert. Ist \fImt_count\fP gleich Null, wird die Kompression
+deaktiviert. Dieser Befehl verwendet die »MODE page 15«, welche von den
+meisten digitalen Magnetbandgeräten (Digital Audio Tape, DAT) unterstützt
+wird.
+.TP 
+\fBMTEOM\fP
+positioniert auf das Ende der aufgezeichneten Daten (um Dateien anzufügen)
+.TP 
+\fBMTERASE\fP
+Das Band wird gelöscht, Mit einem 2.6er Kernel wird »kurz gelöscht« (short
+erase), wenn das Argument gleich Null ist. Dabei wird das Band als leer
+markiert. Anderenfalls wird alles gelöscht (erase all).
+.TP 
+\fBMTFSF\fP
+um \fBmt_count\fP Dateimarken nach vorn positionieren
+.TP 
+\fBMTFSFM\fP
+um \fBmt_count\fP Dateimarken nach vorn positionieren; das Medium auf die
+BOT\-Seite der letzten Dateimarke setzen
+.TP 
+\fBMTFSR\fP
+um \fBmt_count\fP Datensätze (Bandblöcke) nach vorn positionieren
+.TP 
+\fBMTFSS\fP
+um \fBmt_count\fP »Setmarks« nach vorn positionieren
+.TP 
+\fBMTLOAD\fP
+führt den SCSI\-Befehl »load« aus. Für einige HP\-Bandwechsler steht eine
+spezielle Option zur Verfügung. Wenn \fImt_count\fP gleich der Konstante
+\fBMT_ST_HPLOADER_OFFSET\fP plus einer Zahl ist, wird die Zahl an das Laufwerk
+gesendet, um den Bandwechsler zu steuern.
+.TP 
+\fBMTLOCK\fP
+die Tür des Bandlaufwerkes verriegeln
+.TP 
+\fBMTMKPART\fP
+formatiert die Kassette in ein oder zwei Partitionen. Wenn \fImt_count\fP
+ungleich Null ist, gibt es die Größe der ersten Partition an und die zweite
+Partition umfasst den Rest des Bands. Wenn \fImt_count\fP Null ist, wird auf
+dem Band eine Partition angelegt. Dieser Befehl ist nur für Laufwerke
+zulässig, wenn die Unterstützung von Partitionen für das Laufwerk aktiviert
+ist (siehe \fBMT_ST_CAN_PARTITIONS\fP weiter unten).
+.TP 
+\fBMTNOP\fP
+Nichts tun \- Als Seiteneffekt wird der Puffer des Treibers gelehrt. Die
+Option sollte genutzt werden, bevor der Status mit \fBMTIOCGET\fP ausgelesen
+wird.
+.TP 
+\fBMTOFFL\fP
+zurückspulen und Bandlaufwerk vom Netz nehmen
+.TP 
+\fBMTRESET\fP
+Laufwerk zurücksetzen
+.TP 
+\fBMTRETEN\fP
+Band neu spannen
+.TP 
+\fBMTREW\fP
+zurückspulen
+.TP 
+\fBMTSEEK\fP
+sucht nach dem Bandblock mit der Nummer \fImt_count\fP. Diese Anweisung
+erfordert ein SCSI\-2\-Bandlaufwerk, welches den \fBLOCATE\fP\-Befehl unterstützt
+(gerätespezifische Adresse) oder ein tandbergkompatibles SCSI\-1\-Laufwerk
+(Tandberg, Archive, Viper, Wangtek, etc.). Die Blocknummer sollte vorher von
+\fBMTIOCPOS\fP zurückgegeben worden sein, wenn gerätepezifische Adressen
+verwendet werden.
+.TP 
+\fBMTSETBLK\fP
+setzt die Blockgröße des Laufwerks auf den Wert von \fBmt_count\fP. Eine
+Blockgröße von 0 setzt das Laufwerk auf variable Blockgröße.
+.TP 
+\fBMTSETDENSITY\fP
+setzt die Schreibdichte (tape density) auf den Wert in \fBmt_count\fP. Die
+Kodierung der von einem Laufwerk unterstützten Schreibdichte finden Sie in
+der Laufwerksdokumentation.
+.TP 
+\fBMTSETPART\fP
+Die aktive Partition wird auf \fImt_count\fP gesetzt. Die Partitionen werden
+von Null gezählt. Dieser Befehl ist nur für ein Laufwerk zulässig, wenn die
+Partitionsunterstützung für das Laufwerk aktiviert ist (siehe
+\fBMT_ST_CAN_PARTITIONS\fP weiter unten).
+.TP 
+\fBMTUNLOAD\fP
+führt den SCSI\-Befehl unload aus. (Das Band wird nicht ausgeworfen).
+.TP 
+\fBMTUNLOCK\fP
+entriegelt die Tür des Bandlaufwerks
+.TP 
+\fBMTWEOF\fP
+schreibt \fBmt_count\fP Dateimarken
+.TP 
+\fBMTWSM\fP
+schreibt \fBmt_count\fP »Setmarks«
+.PP
+Magnetband\-Operationen für das Setzen von Geräte\-Optionen (für den
+Superuser):
+.TP  8
+\fBMTSETDRVBUFFER\fP
+setzt diverse Geräte\- und Treiberoptionen gemäß den in \fImt_count\fP kodierten
+Bits. Diese umfassen den Puffer\-Modus des Laufwerks, einen Satz von
+booleschen Treiberoptionen, den Schreibschwellwert des Treiberpuffers,
+Vorgabewerte für Blockgröße und Schreibdichte, Zeitschranken (timeouts, nur
+für Kernel 2.1 und später). Eine einzelne Operation kann nur ein Element
+dieser Aufzählung beeinflussen (die booleschen Werte werden dabei als ein
+Wert angesehen).
+.IP
+Ein Wert mit Nullen in den oberen (high\-order) vier Bits wird zum Setzen des
+Puffermodus des Laufwerks verwendet. Die Modi sind:
+.RS 12
+.IP 0 4
+Das Laufwerk gibt erst dann einen \fBGOOD\fP\-Status zurück, wenn die
+Datenblöcke tatsächlich auf das Medium geschrieben wurden.
+.IP 1
+Das Laufwerk darf den Status \fBGOOD\fP für Schreibbefehle melden, sobald alle
+Daten in den internen Laufwerkspuffer übertragen wurden.
+.IP 2
+Das Laufwerk darf den Status \fBGOOD\fP für Schreibbefehle melden, sobald  (a)
+alle Daten in den internen Laufwerkspuffer übertragen wurden und (b) alle in
+dem Laufwerkspuffer (aus verschiedenen Aufrufen) zwischengespeicherten Daten
+erfolgreich auf das Medium geschrieben wurden.
+.RE
+.IP
+Der Schreibschwellwert wird über \fBmt_count\fP gesteuert: \fBmt_count\fP muss in
+den unteren 28 Bit die Konstante \fBMT_ST_WRITE_THRESHOLD\fP bitweise
+ODER\-verknüpft mit einer Blockzahl enthalten. Der Blockzähler zählt 1024
+Byte große Blöcke, nicht die physikalische Blockgröße auf dem Band. Der
+Schwellwert kann die interne Puffergröße des Treibers nicht überschreiten
+(siehe BESCHREIBUNG).
+.IP
+Um die booleschen Optionen zu setzen oder zu löschen, muss der Wert in
+\fImt_count\fP entweder eine der Konstanten \fBMT_ST_BOOLEANS\fP,
+\fBMT_ST_SETBOOLEANS\fP, \fBMT_ST_CLEARBOOLEANS\fP oder \fBMT_ST_DEFBOOLEANS\fP
+bitweise ODER\-verknüpft mit einer beliebigen gewünschten Kombination der
+folgenden Optionen enthalten. Mit \fBMT_ST_BOOLEANS\fP können die Optionen auf
+die Werte in den entsprechenden Bits gesetzt werden. Mit
+\fBMT_ST_SETBOOLEANS\fP können die Optionen gezielt eingestellt und mit
+\fBMT_ST_DEFBOOLEANS\fP gelöscht werden.
+.IP ""
+Die Standardoptionen für ein Bandgerät werden mit \fBMT_ST_DEFBOOLEANS\fP
+gesetzt. Ein nicht aktives Bandgerät (z.B. ein Gerät mit den Minor\-Nummern
+32 oder 160) wird aktiviert, wenn seine Standardoptionen das erste Mal
+definiert werden. Ein aktiviertes Gerät erbt von dem beim Systemstart
+aktivierten Gerät alle nicht explizit gesetzten Optionen.
+.IP ""
+Die booleschen Operationen sind:
+.RS
+.TP 
+\fBMT_ST_BUFFER_WRITES\fP (Vorgabewert: true)
+puffert im Festblock\-Modus alle Schreiboperationen. Hat diese Option den
+Wert false und das Laufwerk verwendet eine feste Blockgröße, müssen alle
+Schreiboperationen mit einem Vielfachen der Blockgröße durchgeführt
+werden. Diese Option muss auf false gesetzt werden, um zuverlässig Archive
+über mehrere Bänder hinweg zu erstellen.
+.TP 
+.TP 
+\fBMT_ST_ASYNC_WRITES\fP (Vorgabewert: true)
+Ist diese Option auf true gesetzt, geben Schreiboperationen umgehend die
+Kontrolle an das aufrufenden Programm zurück, ohne auf den Transfer der
+Daten zum Laufwerk zu warten, wenn die Daten in den Puffer des Treibers
+passen. Der Schreibschwellwert bestimmt den »Füllstand« des Puffers, ab dem
+ein neuer SCSI\-»write«\-Befehl erteilt wird. Alle Fehlermeldungen des
+Laufwerks werden gesammelt und bei der nächsten Laufwerksoperation
+ausgegeben. Diese Option. Eine mügliche Fehlermeldung wird erst nach der
+nüchsten Anweisung zurückgegeben. Diese Option muss auf false gesetzt
+werden, um zuverlässig Archive über mehrere Bänder hinweg zu erstellen.
+.TP 
+\fBMT_ST_READ_AHEAD\fP (Vorgabewert: true)
+Diese Option veranlasst den Treiber, im Festblock\-Modus Daten vorausschauend
+zu lesen (read\-ahead) und die gelesenen Daten zwischenzuspeichern (read
+buffering). Wird diese Option auf false gesetzt und das Laufwerk arbeitet
+mit einer festen Blockgröße, müssen alle Schreiboperationen mit einem
+Vielfachen der Blockgröße durchgeführt werden.
+.TP 
+\fBMT_ST_TWO_FM\fP (Vorgabewert: false)
+Diese Option beeinflusst das Treiberverhalten beim Schließen einer
+Datei. Normalerweise wird eine einzelne Dateimarke geschrieben. Wird diese
+Option auf true gesetzt, schreibt der Treiber zwei Dateimarken und
+positioniert das Band anschließend an den Anfang der zweiten (backspace over
+the second one).
+.IP
+Achtung: Weil QIC\-Bandlaufwerke nicht in der Lage sind, Dateimarken zu
+überschreiben, sollte die Option für diese nicht auf true gesetzt
+werden. Diese Laufwerke erkennen das Ende der geschriebenen Daten nicht an
+zwei aufeinanderfolgenden Dateimarken, sondern an unbeschriebenen
+Bandbereichen. Die Mehrzahl der anderen aktuellen Laufwerke erkennen
+ebenfalls das Ende des Datenbereichs und die Verwendung von zwei Dateimarken
+ist normalerweise nur dann notwendig, wenn Bänder mit anderen Systemen
+ausgetauscht werden.
+.TP 
+\fBMT_ST_DEBUGGING\fP (Vorgabewert: false)
+Diese Option bewirkt, dass der Treiber diverse Debug\-Meldungen ausgibt. (Sie
+wirkt sich nur aus, wenn beim Kompilieren des Treibers \fBDEBUG\fP ungleich
+Null definiert war.)
+.TP 
+\fBMT_ST_FAST_EOM\fP (Vorgabewert: false)
+Diese Option bewirkt, dass die \fBMTEOM\fP\-Anweisung direkt zum Laufwerk
+geschickt wird. Dadurch wird die Operation möglicherweise schneller, der
+Treiber kann aber die aktuelle Dateinummer, die normalerweise von der
+\fBMTIOCGET\fP\-Anfrage zurückgegeben wird, nicht mehr verfolgen. Wenn
+\fBMT_ST_FAST_EOM\fP gleich»false« ist, wird der Treiber eine \fBMTEOM\fP Anfrage
+mit »forward spacing over files« reagieren.
+.TP 
+\fBMT_ST_AUTO_LOCK\fP (Vorgabewert: false)
+Ist diese Option auf true gesetzt, wird das Laufwerk verriegelt, wenn das
+Gerät geöffnet und entsperrt, wenn es geschlossen wird.
+.TP 
+\fBMT_ST_DEF_WRITES\fP (Vorgabewert: false)
+Die Bandoptionen (Blockgröße, Modus, Kompression, etc.) können sich beim
+Wechsel von einem an ein Laufwerk angeschlossenem Gerät zu einem anderen an
+demselben Laufwerk angeschlossenen Gerät ändern. Die Änderung der Optionen
+hängt von der Definition der Geräte ab. Diese Option definiert, wann die
+Änderungen durch den Treiber mittels SCSI\-Befehle durchgeführt werden und
+wann sich auf die Fähigkeiten der Laufwerke zur automatischen Erkennung
+verlassen wird. Wenn diese Option false ist, sendet der Treiber die
+SCSI\-Befehle sofort, wenn das Gerät gewechselt wird. Wenn die Option true
+ist, werden die SCSI\-Befehle nicht gesendet, bis ein Schreiben beantragt
+wird. In diesem Fall darf die Firmware des Laufwerks die Band Struktur beim
+Lesen ermitteln und die SCSI\-Befehle werden nur benutzt, um sicherzustellen,
+dass ein Band nach der richtigen Spezifikation geschrieben wird.
+.TP 
+\fBMT_ST_CAN_BSR\fP (Vorgabewert: false)
+Wenn Read\-Ahead verwendet wird, muss das Band manchmal rückwärts auf die
+richtige Position gesetzt werden, wenn das Gerät geschlossen und dafür der
+SCSI\-Befehl für das Zurücksetzen über Datensätze hinweg verwendet
+wird. Einige ältere Laufwerke können diesen Befehl nicht zuverlässig
+verarbeiten. Mit dieser Option kann der Treiber angewiesen werden, diesen
+Befehl nicht zu verwenden. Das bedeutet also, dass mit Read\-Ahead und
+Festblock\-Modus das Band möglicherweise nicht korrekt in einer Datei
+positioniert werden kann, wenn das Gerät geschlossen wird. Mit Kernel 2.6
+ist die Standardeinstellung true für Laufwerke, die SCSI\-3 unterstützen.
+.TP 
+\fBMT_ST_NO_BLKLIMS\fP (Vorgabewert: false)
+Einige Laufwerke akzeptieren den SCSI\-Befehl \fBREAD BLOCK LIMITS\fP
+nicht. Wenn diese Option verwendet wird, wird der Treiber den Befehl nicht
+verwenden. Der Nachteil ist, dass der Treiber nicht vor dem Senden von
+Befehlen prüfen kann, ob die gewählte Blockgröße für das Laufwerk zulässig
+ist.
+.TP 
+\fBMT_ST_CAN_PARTITIONS\fP (Vorgabewert: false)
+Diese Option aktiviert die Unterstützung für mehrere Partitionen auf einem
+Band. Die Option gilt für alle Geräte mit dem Laufwerk verbundenen Geräte.
+.TP 
+\fBMT_ST_SCSI2LOGICAL\fP (Vorgabewert: false)
+Diese Option weist den Treiber an, die im SCSI\-2\-Standard festgelegten
+logischen Block\-Adressen zu verwenden, wenn die Operationen seek und tell
+durchführt (sowohl mit den Befehlen \fBMTSEEK\fP und \fBMTIOCPOS\fP als auch beim
+Wechsel der Band\-Partition wechselt). Andernfalls werden die
+gerätespezifischen Adressen verwendet. Es wird dringend empfohlen, diese
+Option zu setzen, wenn das Laufwerk die logischen Adressen unterstützt, weil
+sie auch Dateimarken zählen. Es gibt einige Laufwerke die nur die logischen
+Block\-Adressen unterstützen.
+.TP 
+\fBMT_ST_SYSV\fP (Vorgabewert: false)
+Wenn diese Option aktiviert ist, verwenden die Bandgeräte die
+System\-V\-Semantik. Andernfalls wird die BSD\-Semantik verwendet. Der
+wichtigste Unterschied zwischen den Semantiken ist, was passiert, wenn ein
+zum Lesen verwendetes Gerät geschlossen wird: mit der System\-V\-Semantik das
+Band vorwärts über die nächsten Dateimarke positioniert, wenn das nicht
+während der Verwendung des Bandes geschah. Mit der BSD\-Semantik wird das
+Band nicht neu positioniert.
+.TP 
+\fBMT_NO_WAIT\fP (Vorgabewert: false)
+Aktiviert den »sofort«(immediate)\-Modus für einige Befehle
+(z. B. zurückspulen). Es wird also die Ausführung des Befehls nicht
+abgewartet.
+.PP
+Ein Beispiel:
+.in +4n
+.nf
+
+struct mtop mt_cmd;
+mt_cmd.mt_op = MTSETDRVBUFFER;
+mt_cmd.mt_count = MT_ST_BOOLEANS |
+        MT_ST_BUFFER_WRITES | MT_ST_ASYNC_WRITES;
+ioctl(fd, MTIOCTOP, mt_cmd);
+.fi
+.in
+.RE
+.IP ""
+Die Standard\-Blockgröße für ein Gerät kann mit \fBMT_ST_DEF_BLKSIZE\fP und der
+Code für die Standarddichte kann mit \fBMT_ST_DEFDENSITY\fP eingestellt
+werden. Die Werte für die Parameter werden mit dem Operations\-Code
+oder\-verknüpft.
+.IP ""
+Mit den Kerneln 2.1.x und höher können die Timeout\-Werte mit dem Unterbefehl
+\fBMT_ST_SET_TIMEOUT\fP mit den Timeout in Sekunden oder\-verknüpft werden. Die
+großen Timeout\-Werte (für zurückspulen und andere Befehle, die eine lange
+Zeit dauern können) kann mit \fBMT_ST_SET_LONG_TIMEOUT\fP eingestellt
+werden. Die Kernel\-Standardwerte sind sehr groß, um sicherzustellen, dass
+eine erfolgreich ausgeführter Befehl nicht auf einem beliebigen Laufwerk
+gestoppt wird. Aus diesem Grund kann der Treiber selbst als aufgehängt
+erscheinen, wenn er nur auf den Timeout wartet. Diese Befehle können
+verwendet werden, um realistischere Werte für ein bestimmtes Laufwerk zu
+setzen. Die für ein Gerät gesetzten Timeouts gelten für alle an dasselbe
+Laufwerk angeschlossenen Geräte.
+.IP ""
+Seit den Kernel\-Versionen 2.4.19 und 2.5.43 unterstützt der Treiber ein
+Status\-Bit, ob das Laufwerk eine Reinigung anfordert. Die Methode, mit der
+das Laufwerk Reiningungsinformationen zurückgibt, wird mit dem Unterbefehl
+\fBMT_ST_SEL_CLN\fP festgelegt. Ist der Wert gleich Null, ist das
+Reinigungs\-Bit immer Null. Wenn der Wert gleich eins ist, werden die im
+SCSI\-3\-Standard festgelegten TapeAlert\-Daten in der SCSI\-3\-Norm verwendet
+(noch nicht implementiert). Die Werte von 2 bis 17 sind reserviert. Wenn die
+niedrigsten acht Bit >= 18 sind, werden Bits aus de erweiterten
+Status\-Daten verwendet. Die Bits 9\-16 bestimmen eine Maske, mit der die
+betrachteten Bits ausgewählt werden; die Bits 17\-23 geben das Suchmuster
+an. Wenn das Bitmuster Null ist, zeigen ein oder mehrere Bits unter der
+Maske die Reinigungsanfrage an. Wenn das Muster ungleich Null ist, muss das
+Muster dem maskierten Sensor\-Datenbyte entsprechen.
+.SS "\fBMTIOCGET\fP \- Get status"
+.PP
+Dieser Aufruf erfordert ein Argument des Typs \fI(struct mtget *)\fP.
+.PP
+.in +4n
+.nf
+/* Struktur für den \fBMTIOCGET\fP\-Befehl \- »mag tape get status« */
+struct mtget {
+    long    mt_type;
+    long    mt_resid;
+    /* Die folgenden Register sind laufwerksabhängig. */
+    long    mt_dsreg;
+    long    mt_gstat;
+    long    mt_erreg;
+    /* Die folgenden zwei Felder werden nicht immer verwendet. */
+    daddr_t    mt_fileno;
+    daddr_t    mt_blkno;
+};
+.fi
+.in
+.IP \fImt_type\fP 11
+Die Header\-Datei definiert viele Werte für \fImt_type\fP, aber der aktuelle
+Treiber unterstützt nur die generischen Typen \fBMT_ISSCSI1\fP (Generic SCSI\-1
+tape) und \fBMT_ISSCSI2\fP (Generic SCSI\-2 tape).
+.IP \fImt_resid\fP
+enthält die Nummer der aktuellen Band\-Partition.
+.IP \fImt_dsreg\fP
+gibt die aktuellen Laufwerkseinstellungen für die Blockgröße (in den unteren
+24 Bit) und die Schreibdichte (in den oberen 8 Bit) aus. Diese Felder sind
+durch \fBMT_ST\-BLKSIZE_SHIFT\fP, \fBMT_ST_BLKSIZE_MASK\fP, \fBMT_ST_DENSITY_SHIFT\fP
+und \fBMT_ST_DENSITY_MASK\fP definiert.
+.IP \fImt_gstat\fP
+gibt allgemeine (laufwerksunabhängige) Statusinformationen aus. Die Header
+Datei definiert Makros für die Auswertung dieser Status\-Bits:
+.RS
+.HP 4
+\fBGMT_EOF\fP(\fIx\fP): Die Bandposition ist direkt hinter einer Dateimarke (immer
+false nach einer \fBMTSEEK\fP\-Operation).
+.HP
+\fBGMT_BOT\fP(\fIx\fP): Das Band ist auf den Anfang des ersten Datei positioniert
+(immer false nach einer \fBMTSEEK\fP\-Operation).
+.HP
+\fBGMT_EOT\fP(\fIx\fP): Eine Bandoperation hat das physikalische Ende des Bandes
+erreicht (EOT).
+.HP
+\fBGMT_SM\fP(\fIx\fP): Das Band ist aktuell auf ein »setmark« positioniert (immer
+false nach einer \fBMTSEEK\fP\-Operation.
+.HP
+\fBGMT_EOD\fP(\fIx\fP): Das Band ist an das Ende der geschriebenen Daten
+positioniert.
+.HP
+\fBGMT_WR_PROT\fP(\fIx\fP): Das Laufwerk ist schreibgeschützt. Bei manchen
+Laufwerken kann damit auch gemeint sein, dass das Laufwerk kein Schreiben
+auf das aktuelle Medium unterstützt.
+.HP
+\fBGMT_ONLINE\fP(\fIx\fP): Das letzte \fBopen\fP(2) hat festgestellt, dass ein Medium
+eingelegt ist und das Laufwerk betriebsbereit ist.
+.HP
+\fBGMT_D_6250\fP(\fIx\fP), \fBGMT_D_1600\fP(\fIx\fP), \fBGMT_D_800\fP(\fIx\fP): Diese
+\(lqallgemeine\(rq StatusiInformation gibt nur die aktuelle Schreibdichte
+für 9\-Spur\-\(12"\-Laufwerke aus.
+.HP
+\fBGMT_DR_OPEN\fP(\fIx\fP): kein Band eingelegt
+.HP
+\fBGMT_IM_REP_EN\fP(\fIx\fP): Sofortigbericht Modus \- Dieses Bit wird gesetzt,
+wenn nicht garantiert ist, dass die Daten physisch auf das Band geschrieben
+wurden, wenn der Rücksprung aus dem Schreibaufruf erfolgt. Es wird nur auf
+Null gesetzt, wenn der Treiber Daten nicht puffert und das Laufwerk auch
+nicht puffern soll.
+.HP
+\fBGMT_CLN\fP(\fIx\fP): Das Laufwerk hat eine Reinigung angefordert; implementiert
+in Kerneln seit 2.4.19 und 2.5.43.
+.RE
+.IP \fImt_erreg\fP
+Das einzige definierte Feld in \fBmt_erreg\fP ist der » Fehlerzühler« (Es
+werden nur behobene Fehler gezählt)  in den unteren 16 Bits (wie durch
+\fBMT_ST_SOFTERR_SHIFT\fP and \fBMT_ST_SOFTERR_MASK\fP definiert).  Da dieser
+Zähler keinem Standard unterliegt (also von Laufwerk zu Laufwerk
+unterschiedlich sein kann), wird er nicht oft benutzt.
+.IP \fImt_fileno\fP
+Ausgabe der aktuellen Dateinummer (zero\-based). Dieser Wert wird auf \-1
+gesetzt, wenn die Dateinummer nicht bekannt ist (z. B. nach \fBMTBSS\fP oder
+\fBMTSEEK\fP).
+.IP \fImt_blkno\fP
+Ausgabe der Blocknummer innerhalb der aktuellen Datei (zero\-based). Dieser
+Wert wird auf \-1 gesetzt, wenn die Blocknummer nicht bekannt ist (z. B. nach
+\fBMTBSF\fP, \fBMTBSS\fP oder \fBMTSEEK\fP).
+.SS "MTIOCPOS \(em Get tape position"
+.PP
+Dieser Aufruf erfordert ein Argument vom Typ \fI(struct mtpos *)\fP und gibt
+die aktuelle Blocknummer auf dem Band (aus Sicht des Laufwerks) aus. Diese
+ist nicht die gleiche wie \fBmt_blkno\fP, welche dvon \fBMTIOCGET\fP zurückgegeben
+wird. Das Laufwerk muss ein SCSI\-2\-Laufwerk sein und den \fBREAD
+POSITION\fP\-Befehl unterstützen (laufwerksabhängige Adresse) oder ein
+Tandberg\-kompatibles SCSI\-1\-Laufwerk (Tandberg, Archive, Viper, Wangtek,
+usw.).
+.PP
+.in +4n
+.nf
+/* Struktur für den MTIOCPOS\-Befehl »get position« */
+struct mtpos {
+    long mt_blkno;    /* aktuelle Blocknummer */
+};
+.fi
+.in
+.SH RÜCKGABEWERT
+.TP  14
+.TP 
+\fBEACCES\fP
+Es wurde versucht auf ein schreibgeschütztes Medium zu schreiben oder es zu
+löschen. (Dieser Fehler wird nicht während einem \fBopen\fP(2) erkannt.)
+.TP 
+\fBEBUSY\fP
+Das Laufwerk wird schon benutzt oder der Treiber konnte keinen Puffer
+reservieren.
+.TP 
+\fBEFAULT\fP
+Die Befehlsparameter zeigen auf Speicher, der nicht zum aufrufenden Prozess
+gehört.
+.TP 
+\fBEINVAL\fP
+Einem \fBioctl\fP(2)\-Aufruf wurde ein ungültiges Argument übergeben oder die
+angeforderte Blockgröße ist unzulässig.
+.TP 
+\fBEIO\fP
+Die angeforderte Operation konnte nicht abgeschlossen werden.
+.TP 
+\fBENOMEM\fP
+Die Byteanzahl von \fBread\fP(2) ist kleiner als der nächste physische Block
+auf dem Band. (Vor 2.2.18 und 2.4.0\-test6 wurden die zusätzlichen Bytes
+stillschweigend ignoriert.)
+.TP 
+\fBENOSPC\fP
+Eine Schreiboperation konnte nicht beendet werden, da das Ende des Mediums
+(EOT) erreicht wurde.
+.TP 
+\fBENOSYS\fP
+unbekannter \fBioctl\fP(2)\-Aufruf
+.TP 
+\fBENXIO\fP
+Beim Öffnen wurde festgestellt, das das Laufwerk nicht vorhanden ist.
+.TP 
+\fBEOVERFLOW\fP
+Es wurde versucht, einen Block variabler Länge zu lesen oder zu
+schreiben. Der Block ist größer als der interne Puffer des Treibers.
+.TP 
+\fBEROFS\fP
+Es wurde versucht, das schreibgeschützte Laufwerk \fBO_WRONLY\fP oder \fBO_RDWR\fP
+zu öffnen.
+.SH DATEIEN
+.TP  12
+\fI/dev/st*\fP
+SCSI\-Bandlaufwerke, die automatisch zurückspulen
+.TP  12
+\fI/dev/nst*\fP
+.\" .SH AUTHOR
+.\" The driver has been written by Kai M\(:akisara (Kai.Makisara@metla.fi)
+.\" starting from a driver written by Dwayne Forsyth.
+.\" Several other
+.\" people have also contributed to the driver.
+SCSI\-Bandlaufwerke, die nicht zurückspulen
+.SH ANMERKUNGEN
+.IP 1. 4
+Beim Austausch von Daten zwischen Systemen müssen sich beide Systeme auf die
+physische Blockgröße der Bänder einigen. Die Parameter eines Laufwerks nach
+dem Start sind oft nicht diejenigen, die die meisten Betriebssysteme mit
+diesen Geräten verwenden. Die meisten Systeme nutzen die Laufwerke mit
+variabler Blockgröße, wenn das Laufwerk diesen Modus unterstützt. Dies gilt
+für die meisten modernen Laufwerke, einschließlich DAT,
+8mm\-Helical\-Scan\-Laufwerke, DLTs usw. E s kann ratsam sein, diese Laufwerke
+auch unter Linux mit variabler Blockgröße (d. h. beim Systemstart mit
+\fBMTSETBLK\fP oder \fBMTSETDEFBLK\fP diesen Modus festlegen) zu betreiben,
+zumindest für den Austausch von Daten mit einem fremden System. Der Nachteil
+davon ist, dass eine ziemlich große Bandblockgröße verwendet werden muss, um
+akzeptable Übertragungsraten auf dem SCSI\-Bus zu erreichen.
+.IP 2.
+Viele Programme (beispielsweise \fBtar\fP(1)) ermöglichen dem Benutzer, die
+Blockgröße auf der Befehlszeile festzulegen. Beachten Sie, dass das sich nur
+dann auf die physikalischen Blockgröße auswirkt, wenn Blöcke variabler Größe
+verwendet werden.
+.IP 3.
+Um SCSI\-Bandlaufwerke verwenden, müssen der grundlegende SCSI\-Treiber, ein
+SCSI\-Adapter\-Treiber und der SCSI\-Treiber für Bandlaufwerke entweder im
+Kernel konfiguriert sein oder als Module geladen werden. Wenn der
+SCSI\-Laufwerkstreiber nicht vorhanden ist, wird das Laufwerk erkannt, aber
+die in dieser Seite beschriebene Bandunterstützung ist nicht verfügbar.
+.IP 4.
+Der Treiber schreibt Fehlermeldungen in auf die Konsole/in die
+Protokolldatei. Die SENSE\-Codes werden automatisch in Text übersetzt, wenn
+bei der Kernel\-Konfiguration ausführliche SCSI\-Meldungen aktiviert wurden.
+.IP 5.
+.\" .SH COPYRIGHT
+.\" Copyright \(co 1995 Robert K. Nichols.
+.\" .br
+.\" Copyright \(co 1999-2005 Kai M\(:akisara.
+.\" .PP
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\" Additional permissions are contained in the header of the source file.
+Die interne Puffering des Treibers ermöglicht guten Durchsatz im
+Festblock\-Modus auch mit kleinen Bytezahlen für \fBread\fP(2) und
+\fBwrite\fP(2). Bei direkten Transfers ist das nicht möglich ist und kann eine
+Überraschung bei der Umstellung auf den 2.6\-Kernel verursachen. Die Lösung
+ist, die Software anzuweisen, größer Übertragungen verwenden (oft erzählt
+sie größere Blöcke benutzen). Wenn das nicht möglich ist, können direkte
+Transfers deaktiviert werden.
+.SH "SIEHE AUCH"
+\fBmt\fP(1)
+.PP
+Die Datei \fIdrivers/scsi/README.st\fP oder \fIDocumentation/scsi/st.txt\fP
+(Kernel >= 2,6) in den Kernel\-Quellen enthält die aktuellsten
+Informationen über den Treiber und seine Konfigurationsmöglichkeiten.
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+C. Schmidt <c.schmidt@ius.gun.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

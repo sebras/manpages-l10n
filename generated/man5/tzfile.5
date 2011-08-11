@@ -1,0 +1,143 @@
+.\" @(#)tzfile.5	7.11
+.\" This file is in the public domain, so clarified as of
+.\" 1996-06-05 by Arthur David Olson <arthur_david_olson@nih.gov>.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TZFILE 5 "31. August 2010" "" Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+tzfile \- Zeitzonen\-Informationen
+.SH ÜBERSICHT
+\fB#include <tzfile.h>\fP
+.SH BESCHREIBUNG
+Diese Handbuchseite beschreibt die Struktur der Zeitzonen\-Dateien, welche in
+\fI/usr/lib/zoneinfo\fP oder \fI/usr/share/zoneinfo\fP gespeichert sind.
+
+Die Bibliotheksfunktion \fBtzset\fP(3) nutzt
+Zeitzonen\-Informationsdateien. Diese Dateien beginnen mit den magischen
+Zeichen »TZif«, welches sie als Zeitzonen\-Informationsdateien
+identifiziert. Ihnen folgt (Stand 2005) ein Zeichen zur Identifikation des
+Dateiformats (entweder ein ASCII\-NUL (»\e0«) oder eine »2«). Die darauf
+folgenden 15 Byte sind für eine zukünftige Verwendung reserviert. Danach
+folgen sechs 32\-Bit\-Werte des Typs \fIlong\fP. Die Daten werden in einer
+»Standard«\-Byteordnung geschrieben (die höherwertigen Bytes zuerst). Die
+sechs Werte bedeuten:
+.TP 
+\fItzh_ttisgmtcnt\fP
+Anzahl der in der Datei hinterlegten UTC\-/Lokal\-Kennziffern
+.TP 
+\fItzh_ttisstdcnt\fP
+Anzahl der in der Datei gespeicherten Standard\-/Wall\-Kennziffern
+.TP 
+\fItzh_leapcnt\fP
+Anzahl der Schaltsekunden, für die Angaben in der Datei gespeichert sind
+.TP 
+\fItzh_timecnt\fP
+Anzahl der »Übergangszeiten« (transition times), für die Angaben in der
+Datei gespeichert sind
+.TP 
+\fItzh_typecnt\fP
+Anzahl der »lokalen Zeit\-Typen«, für die Informationen in der Datei
+gespeichert sind (darf nicht Null sein)
+.TP 
+\fItzh_charcnt\fP
+Anzahl der Zeichen für in der Datei gespeicherte Zeitzonen\-Abkürzungen
+(timezone abbreviation strings)
+.PP
+Nach diesem Header folgen \fItzh_timecnt\fP 4\-Byte\-Werte vom Typ \fIlong\fP, nach
+steigender Wertigkeit sortiert. Auch sie werden in der Standard\-Byteordnung
+geschrieben. Jeder Wert wird als Zeitpunkt (wie sie von \fBtime\fP(2)
+zurückgegeben wird) verwendet, zu dem sich die Regeln für die Berechnung der
+lokalen Zeit ändern. Darauf folgen \fItzh_timecnt\fP Werte vom Typ \fIunsigned
+char\fP. Jeder dieser Werte besagt, welcher der verschiedenen, in der Datei
+beschriebenen lokalen Zeit\-Typen, mit dem Wechsel der Zeitberechnung mit dem
+gleichen Index verknüpft ist. Die Werte dienen als Indizes für ein Feld von
+\fIttinfo\fP\-Strukturen (mit \fItzh_typecnt\fP Einträgen). Diese Strukturen sind
+wie folgt definiert:
+.in +4n
+.sp
+.nf
+struct ttinfo {
+    long         tt_gmtoff;
+    int          tt_isdst;
+    unsigned int tt_abbrind;
+};
+.in
+.fi
+.sp
+Jede Struktur besteht aus einem 4\-Byte\-Wert für \fItt_gmtoff\fP vom Typ
+\fBlong\fP, geschrieben in einer Standard\-Bytefolge, gefolgt von den
+1\-Byte\-Werten für \fItt_isdst\fP und für \fItt_abbrind\fP. In jeder Struktur legt
+\fItt_gmtoff\fP die Anzahl Sekunden fest, die zu UTC addiert werden,
+\fItt_isdst\fP bestimmt, ob \fItm_isdst\fP von \fBlocaltime\fP(3) gesetzt werden soll
+und \fItt_abbrind\fP entspricht dem Index im Feld der Abkürzungszeichen für
+Zeitzonen, die den \fIttinfo\fP\-Strukturen in der Datei folgen.
+.PP
+Als Nächstes gibt es \fItzh_leapcnt\fP Paare von 4\-Byte\-Werten, geschrieben in
+Standard\-Bytefolge. Der erste Wert jedes Paares bezeichnet den Zeitpunkt
+(Rückgabewert von \fBtime\fP(2)), zu dem die Schaltsekunden auftreten. Der
+zweite bestimmt die \fIgesamte\fP Anzahl der Schaltsekunden, die nach der
+angegebenen Zeit eingelegt werden sollen. Die Wertepaare sind in
+aufsteigender Folge nach der Zeit sortiert.
+.PP
+Nun folgen \fItzh_ttisstdcnt\fP Standard\-/Wall\-Kennziffern, jede wird als
+1\-Byte\-Wert gespeichert. Sie geben an, ob die Übergangszeiten, die den
+lokalen Zeit\-Typen zugeordnet sind, als Standard\-Zeit oder als »wall clock
+time« angegeben wurden. Sie werden verwendet, wenn eine Zonendatei für die
+Verarbeitung POSIX\-artiger Zeitzonen\-Umgebungsvariablen eingesetzt wird.
+.PP
+Schließlich gibt es \fItzh_ttisgmtcnt\fP UTC\-/Lokal\-Kennziffern, jeder als
+1\-Byte\-Wert gespeichert. Sie besagen, ob die den lokalen Zeit\-Typen
+zugeordneten Übergangszeiten als UTC oder als lokale Zeit angegeben
+wurden. Sie werden verwendet, wenn eine Zonendatei für die Verarbeitung
+POSIX\-artiger Zeitzonen\-Umgebungsvariablen eingesetzt wird.
+.PP
+\fIlocaltime\fP(3) verwendet den ersten \fIttinfo\fP\-Eintrag für Standardzeit in
+der Datei (oder einfach den ersten \fIttinfo\-Eintrag\fP, wenn kein
+Standardzeit\-Eintrag existiert), wenn entweder \fItzh_timecnt\fP Null ist oder
+das Zeit\-Argument kleiner ist als der erste in der Datei abgelegte
+Übergangszeitpunkt.
+.SH ANMERKUNGEN
+Diese Handbuchseite beschreibt \fI<tzfile.h>\fP aus dem Glibc\-Quelltext
+(siehe \fItimezone/tzfile.h\fP).
+
+Es scheint, dass timezone \fBtzfile\fP intern verwendet, aber Glibc das nicht
+in der Anwendungsebene verfügbar macht. Das ist sehr wahrscheinlich, weil
+die standardisierten Funktionen sinnvoller, besser portierbar und
+tatsächlich von Glibc dokumentiert sind. Es ist vielleicht nur in Glibc
+enthalten, nur um die nicht von Glibc (sondern einer anderen Organisation)
+gepflegten Zeitzonendaten zu unterstützen.
+.SH "SIEHE AUCH"
+.\" .BR newctime (3)
+\fBtime\fP(3), \fBgettimeofday\fP(3), \fBtzset\fP(3), \fBctime\fP(3)
+.PP
+Für Zeitzonen\-Dateien im Version\-2\-Format folgen dem oben Beschriebenen
+(Vorspann und Daten) ein zweiter Vorspann und Daten in einem ähnlichen
+Format. Der Unterschied besteht darin, dass die Übergangszeiten und
+Schaltsekundenzeiten jeweils mit jeweils acht Byte kodiert werden. Nach dem
+zweiten Header und den Daten folgt eine durch Zeilenumbrüche abgetrennte
+Zeichenkette im Stil von POSIX\-Zeitzonen\-Umgebungsvariablen. Sie ist für die
+Behandlung der Momente nach der letzten in der Datei gespeicherten
+Übergangszeit bestimmt. (Wenn es keinen POSIX\-Darstellung für solche Momente
+gibt, ist die Zeichenkette leer.)
+.SH "SIEHE AUCH"
+\fBctime\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

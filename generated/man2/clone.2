@@ -63,10 +63,11 @@ clone, __clone2 \- erzeugt einen Kindprozess
 \fB          pid_t *\fP\fIctid\fP\fB */ );\fP
 .fi
 .SH BESCHREIBUNG
-\fBclone\fP()  creates a new process, in a manner similar to \fBfork\fP(2).  It is
-actually a library function layered on top of the underlying \fBclone\fP()
-system call, hereinafter referred to as \fBsys_clone\fP.  A description of
-\fBsys_clone\fP is given toward the end of this page.
+\fBclone\fP() erzeugt einen neuen Prozess auf eine ähnliche Art wie \fBfork\fP(2)
+Tatsächlich ist es eine Bibliotheksfunktion, die zuoberst auf dem
+darunterliegenden Systemaufruf \fBclone\fP() aufsetzt, nachfolgend \fBsys_clone\fP
+genannt. Eine Beschreibung von \fBsys_clone\fP findet sich gegen Ende dieser
+Seite.
 
 Im Gegensatz zu \fBfork\fP(2) erlauben diese Aufrufe, dass der Kindprozess
 Teile seines Kontextes mit dem aufrufenden Prozess teilt. Dazu zählen der
@@ -92,14 +93,16 @@ entspricht dem Exit\-Code des Kindprozesses. Der Kindprozess kann auch durch
 den expliziten Aufruf von \fBexit\fP(2) oder durch den Empfang eines fatalen
 Signals beendet werden.
 
-The \fIchild_stack\fP argument specifies the location of the stack used by the
-child process.  Since the child and calling process may share memory, it is
-not possible for the child process to execute in the same stack as the
-calling process.  The calling process must therefore set up memory space for
-the child stack and pass a pointer to this space to \fBclone\fP().  Stacks grow
-downward on all processors that run Linux (except the HP PA processors), so
-\fIchild_stack\fP usually points to the topmost address of the memory space set
-up for the child stack.
+Das Argument \fIkind_stack\fP bestimmt den Ort des Stapelspeichers, der vom
+Kindprozess verwendet wird. Da der aufrufende und der Kindprozess sich
+Speicherbereiche teilen können, kann der Kindprozess nicht auf dem selben
+Stapelspeicher wie der aufrufende Prozess laufen. Der aufrufende Prozess
+muss daher einen Speicherbereich als Stapelspeicher für den Kindprozess
+bereithalten und per \fBclone\fP einen Zeiger darauf an den Kindprozess
+übergeben. Der Stapelspeicher wächst (mit Ausnahme der PA\-Prozessoren von
+HP) auf allen von Linux unterstützten Prozessoren nach unten, so dass
+\fIkind_stack\fP für gewöhnlich auf die oberste Adresse im bereitgehaltenen
+Speicherbereich zeigt.
 
 Das niederwertige Byte von \fIschalter\fP enthält die Nummer des
 \fIBeendigungssignals\fP, das an den Elternprozess gesandt wird, wenn der
@@ -200,8 +203,8 @@ dass der Prozess privilegiert ist ((\fBCAP_SYS_ADMIN\fP). Dieser Schalter kann
 nicht in Verbindung mit \fBCLONE_SYSVSEM\fP angegeben werden.
 .TP 
 \fBCLONE_NEWNET\fP (seit Linux 2.6.24)
-(The implementation of this flag was only completed by about kernel version
-2.6.29.)
+(Die Implementierung dieses Schalters wurde erst mit der Kernel\-Version
+2.6.29 abgeschlossen.)
 
 Wenn \fBCLONE_NEWNET\fP gesetzt ist, dann wird der Prozess einen neuen
 Netzwerk\-Namensraum erstellt. Falls dieser Schalter nicht gesetzt ist, dann
@@ -263,10 +266,10 @@ PID\-Namensraum erstellt. Falls dieser Schalter nicht gesetzt ist (wie mit
 aufrufende Prozess erstellt. Der Schalter ist für die Implementierung von
 Containern gedacht.
 
-A PID namespace provides an isolated environment for PIDs: PIDs in a new
-namespace start at 1, somewhat like a standalone system, and calls to
-\fBfork\fP(2), \fBvfork\fP(2), or \fBclone\fP()  will produce processes with PIDs
-that are unique within the namespace.
+Ein PID\-Namensraum stellt eine isolierte Umgebung für PIDs bereit: PIDs in
+einem neuen Namensraum beginnen bei 1, etwa wie ein alleinstehendes System
+und Aufrufe wie \fBfork\fP(2), \fBvfork\fP(2) oder \fBclone\fP() werden Prozesse mit
+PIDs erstellen, die innerhalb dieses Namensraums eindeutig sind.
 
 Der erste Prozess, der in einem neuen Namensraum erstellt wird, d.h. der
 Prozess, der unter Benutzung des Schalters \fBCLONE_NEWPID\fP erstellt wird hat
@@ -614,20 +617,23 @@ Der Systemaufruf \fB__clone2\fP() arbeitet auf die gleiche Weise wie
 Stapelspeicherbereich des Kindprozesses zeigt und \fIstack_groesse\fP die Größe
 des Stapelspeichers angibt, auf die \fIkind_stack_basis\fP zeigt.
 .SH FEHLER
-Versions of the GNU C library that include the NPTL threading library
-contain a wrapper function for \fBgetpid\fP(2)  that performs caching of PIDs.
-This caching relies on support in the glibc wrapper for \fBclone\fP(), but as
-currently implemented, the cache may not be up to date in some
-circumstances.  In particular, if a signal is delivered to the child
-immediately after the \fBclone\fP()  call, then a call to \fBgetpid\fP(2)  in a
-handler for the signal may return the PID of the calling process ("the
-parent"), if the clone wrapper has not yet had a chance to update the PID
-cache in the child.  (This discussion ignores the case where the child was
-created using \fBCLONE_THREAD\fP, when \fBgetpid\fP(2)  \fIshould\fP return the same
-value in the child and in the process that called \fBclone\fP(), since the
-caller and the child are in the same thread group.  The stale\-cache problem
-also does not occur if the \fIflags\fP argument includes \fBCLONE_VM\fP.)  To get
-the truth, it may be necessary to use code such as the following:
+Versionen der GNU\-C\-Bibiliothek, die die NPTL\-Threading\-Bibliothek
+enthalten, enthalten eine Wrapper\-Funktion für \fBgetpid\fP(2), die die
+Zwischenspeicherung der PIDs verrichtet. Diese Zwischenspeicherung beruht
+auf der Unterstützung für \fBclone\fP() im Glibc\-Wrapper, der Zwischenspeicher
+könnte aber der derzeitigen Implementierung unter Umständen nicht aktuell
+sein. Insbesondere wenn ein Signal sofort nach dem \fBclone\fP()\-Aufruf an den
+Kindprozess gesandt wird, könnte ein Aufruf von \fBgetpid\fP(2) in einem
+Signal\-Handler die PID des aufrufenden Prozesses (des »Elternprozesses«)
+zurückgeben, falls der Clone\-Wrapper noch keine Chance hatte den
+PID\-Zwischenspeicher im Kindprozess zu aktualisieren. (Diese Diskussion
+ignoriert den Fall, dass der Kindprozess mit \fBCLONE_THREAD\fP erstellt wurde,
+in dem \fBgetpid\fP(2) den gleichen Wert im Kindprozess zurückgeben \fIsollte\fP
+und im Prozess, der \fBclone\fP() aufrief, wie sich der Aufrufende und der
+Kindprozess in der gleichen Thread\-Gruppe befinden. Das Problem des nicht
+mehr frischen Zwischenspeichers tritt auch auf, wenn das Argument
+\fIschalter\fP \fBCLONE_VM\fP enthält.) Um die Wahrheit zu erfahren, könnte es
+nötig sein Kode wie den folgenden zu verwenden:
 .nf
 
     #include <syscall.h>
