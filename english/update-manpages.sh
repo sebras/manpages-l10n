@@ -10,9 +10,13 @@ for package in $packages; do
 	if [ -z $latest_deb ]; then
 		echo "Warning: Could not find .deb for package '$package'"
 	else
-		ar x $latest_deb data.tar.gz
+		ar x $latest_deb data.tar.gz data.tar.bz2 2>/dev/null
 		mkdir tmp
-		tar xzf data.tar.gz --directory=tmp/
+		if [ -e "data.tar.gz" ]; then
+			tar xzf data.tar.gz --directory=tmp/
+		else
+			tar xjf data.tar.bz2 --directory=tmp/
+		fi
 		rm -rf $package/man?
 		git rm --quiet -r $package
 		for mandir in tmp/usr/share/man/man?/; do
@@ -47,7 +51,7 @@ for package in $packages; do
 		else
 			rm -f $package/$package.links
 		fi
-		rm -rf tmp/ data.tar.gz tmp.links
+		rm -rf tmp/ data.tar.* tmp.links
 		git add $package
 		changes=`git status | grep "Changes to be committed:"`
 		if [ -n "$changes" ]; then
