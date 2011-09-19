@@ -16,7 +16,6 @@ cat > header.po <<END_OF_HEADER
 # German translation of manpages
 # This file is distributed under the same license as the manpages-de package.
 # Copyright © of this file:
-# MEIN NAME <EMAIL>, JAHR.
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
