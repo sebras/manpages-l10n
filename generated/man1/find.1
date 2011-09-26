@@ -1,0 +1,1586 @@
+.\" -*- nroff -*-
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FIND 1   
+.SH BEZEICHNUNG
+find \- in einer Verzeichnishierarchie nach Dateien suchen
+.SH ÜBERSICHT
+\fBfind\fP [\-H] [\-L] [\-P] [\-D Fehlersuchoptionen] [\-Olevel] [Pfad …] [Ausdruck]
+.SH BESCHREIBUNG
+Diese Handbuchseite beschreibt die GNU Version von \fBfind\fP. GNU\-\fBfind\fP
+durchsucht die Verzeichnisbäume, die seinen Ursprung bei den angegebenen
+Dateinamen haben und wertet dabei den Ausdruck von links nach rechts
+entsprechend der Operatorenrangfolge aus (siehe Abschnitt OPERATOREN) bis
+das Ergebnis ermittelt ist (die linke Seite falsch ist für \fIUND\fP\-Operatoren
+und wahr für \fIODER\fP\-Operatoren). Anschließend fährt \fBfind\fP mit der
+nächsten Datei fort.
+.PP
+Falls Sie \fBfind\fP in einem Umfeld benutzen, in dem Sicherheit wichtig ist
+(zum Beispiel, um Verzeichnisse zu durchsuchen, die für andere Anwender
+schreibbar sind), sollten Sie die das Kapitel »Security Considerations« der
+Findutils\-Dokumentation lesen, die \fBFinding Files\fP heißt und den Findutils
+beigefügt ist. Dieses Dokument enthält außerdem mehr Einzelheiten und
+Erörterungen als diese Handbuchseite, so dass Sie es als eine nützlichere
+Informationsquelle empfinden könnten.
+.SH OPTIONEN
+Die Optionen \fB\-H\fP, \fB\-L\fP und \fB\-P\fP steuern den Umgang mit symbolischen
+Links. Darauf folgende Befehlszeilenparameter werden als zu untersuchende
+Datei\- oder Verzeichnisnamen betrachtet, bis ein Parameter mit einem »\-«
+beginnt oder ein »(« oder »!«, ist. Solche und alle folgenden Parameter
+werden als Ausdruck interpretiert, der beschreibt, wonach gesucht werden
+soll. Wenn kein Pfad angegeben wurde, wird das aktuelle Verzeichnis
+genommen. Wenn kein Ausdruck angegeben ist, wird der Ausdruck \fB\-print\fP
+benutzt (aber Sie sollten vermutlich sowieso in Betracht ziehen, stattdessen
+\fB\-print0\fP zu verwenden).
+.PP
+Dieses Handbuch spricht von »Optionen« innerhalb einer Liste von
+Ausdrücken. Diese Optionen steuern das Verhalten von \fBfind\fP, werden aber
+direkt nach dem letzten Pfadnamen angegeben. Die fünf »echten« Optionen
+\fB\-L\fP, \fB\-P\fP, \fB\-D\fP und \fB\-O\fP müssen wenn dann vor dem ersten Pfadnamen
+erscheinen. Außerdem kann ein doppeltes Minuszeichen \fB\-\-\fP benutzt werden,
+um zu signalisieren, dass die verbleibenden Argumente keine Optionen sind
+(obwohl es im Allgemeinen sicherer ist, wenn Sie dafür sorgen, dass alle
+Startpunkte entweder mit »./« oder »/« beginnen, falls Sie Platzhalter in
+der Liste der Startpunkte verwenden).
+.IP \-P
+keinen symbolischen Links folgen. Dies ist das Standardverhalten. Wenn
+\fBfind\fP eine Datei untersucht oder Informationen über diese ausgibt und die
+Datei ein symbolischer Link ist, dann sollen die Informationen des
+symbolischen Links selbst verwendet werden.
+
+.IP \-L
+symbolischen Links folgen. Wenn \fBfind\fP eine Datei untersucht oder
+Informationen über diese ausgibt, dann sollten die Informationen der Datei
+verwendet werden, auf die der symbolische Link verweist, nicht die des Links
+selbst (es sei denn, der symbolische Link ist kaputt oder \fBfind\fP nicht in
+der Lage, die Datei zu untersuchen, auf die der Link zeigt). Die Verwendung
+dieser Option impliziert die Option \fB\-noleaf\fP. Wenn Sie später die Option
+\fB\-P\fP verwenden, wird \fB\-noleaf\fP immer noch Auswirkungen haben. Wenn \fB\-L\fP
+aktiv ist und \fBfind\fP während seiner Suche einen symbolischen Link zu einem
+Unterverzeichnis vorfindet, wird das Unterverzeichnis durchsucht, auf das
+der symbolische Link zeigt.
+.IP
+Wenn die Option \fB\-L\fP in Kraft ist, wird das Prädikat \fB\-type\fP immer auf den
+Typ der Datei angewandt, auf die ein symbolischer Link zeigt, anstatt auf
+den Link selbst (es sei denn, der symbolische Link ist kaputt). Die
+Verwendung von \fB\-L\fP bewirkt, dass die Prädikate \fB\-lname\fP und \fB\-ilname\fP
+immer falsch zurückliefern.
+
+.IP \-H
+keinen symbolischen Links folgen, es sei denn, die Parameter in der
+Befehlszeile werden ausgewertet. Wenn \fBfind\fP Dateien untersucht oder
+Informationen über diese ausgibt, sollen die verwendeten Informationen vom
+symbolischen Link selbst benutzt werden. Die einzige Ausnahme dieses
+Verhaltens ist, wenn eine in der Befehlszeile angegebene Datei ein
+symbolischer Link ist und dem Link gefolgt werden kann. In dieser Situation
+werden die Informationen der Datei genommen, auf die der symbolische Link
+verweist (das bedeutet, dass dem Link gefolgt wird). Die Informationen über
+den Link selbst dienen als Rückgriff für den Fall, dass die Datei, auf die
+der symbolische Link verweist, nicht untersucht werden kann. Wenn \fB\-H\fP in
+Kraft ist und einer der Pfade, die auf der Befehlszeile angegeben wurden,
+ein symbolischer Link zu einem Verzeichnis ist, werden die Inhalte dieses
+Verzeichnisses untersucht (was natürlich »\-maxdepth 0« verhindern würde).
+.P
+Falls mehr als eine der Optionen \fB\-H\fP, \fB\-L\fP und \fB\-P\fP angegeben ist, setzt
+jedes die anderen außer Kraft; das letzte, das auf der Befehlszeile
+erscheint, gilt. Die Option \fB\-P\fP ist die Voreinstellung. Wenn weder \fB\-H\fP
+noch \fB\-L\fP angegeben wurden, ist es, als wäre dies angegeben worden.
+
+GNU\-\fBfind\fP fragt oft Datei\-Informationen während der Verarbeitung der
+Befehlszeile selbst ab, bevor irgendeine Suche begonnen hat. Diese Optionen
+beeinflussen auch, wie diese Argumente verarbeitet werden. Insbesondere gibt
+es einige Tests, die Dateien auf der Befehlszeile mit einer aktuell
+betrachteten Datei vergleichen. Die Datei, die auf der Befehlszeile
+angegeben wird, wird auf jeden Fall untersucht und einige Ihrer
+Eigenschaften werden gespeichert. Falls die genannte Datei ein symbolischer
+Link ist und die Option \fB\-P\fP in Kraft ist (oder falls weder \fB\-H\fP noch
+\fB\-L\fP angegeben wurden), wird die für den Vergleich benutzte Information aus
+den Eigenschaften des symbolischen Links genommen. Anderenfalls wird sie aus
+den Eigenschaften der Datei genommen, auf die der Link verweist. Falls
+\fBfind\fP dem Link nicht folgen kann (zum Beispiel, weil es nicht über
+ausreichende Rechte verfügt oder der Link auf eine nicht exisitierende Datei
+verweist), werden die Eigenschaften des Links selbst benutzt.
+.P
+Wenn die Optionen \fB\-H\fP oder \fB\-L\fP in Kraft sind, wird jeder symbolische
+Link als Argument von \fB\-newer\fP dereferenziert und der Zeitstempel wird von
+der Datei genommen, auf die der symbolische Link verweist. Die gleichen
+Erwägungen gelten für \fB\-newerXY\fP, \fB\-anewer\fP und \fB\-cnewer\fP.
+
+Die Option \fB\-follow\fP hat ähnliche Auswirkungen wie \fB\-L\fP, obwohl sie an dem
+Punkt in Kraft tritt, an dem sie erscheint (sprich, wenn \fB\-L\fP nicht benutzt
+wird, aber \fB\-follow\fP, werden alle symbolischen Links, die nach \fB\-follow\fP
+auf der Befehlszeile erscheinen, vorher dereferenziert).
+
+.IP "\-D Debug\-Optionen"
+Diagnoseinformationen ausgeben; dies kann hilfreich sein, um Probleme zu
+diagnostizieren, warum \fBfind\fP nicht das tut, was Sie möchten. Die Liste der
+Debug\-Optionen sollte durch Kommas getrennt sein. Kompatibilität der
+Debug\-Optionen ist zwischen den unterschiedlichen Versionen der Findutils
+nicht gewährleistet. Um eine vollständige Liste der gültigen Optionen zu
+erhalten, lesen Sie die Ausgabe von \fBfind \-D\fP \fBhelp\fP. Gültige
+Debug\-Optionen sind unter anderem:
+.RS
+.IP help
+Erklärt die Debugging\-Optionen
+.IP tree
+zeigt den Ausdrucksbaum in seiner originalen und optimierten Form
+.IP stat
+meldet, wenn Dateien mit den Systemaufrufen \fBstat\fP und \fBlstat\fP untersucht
+werden. Das Programm \fBfind\fP versucht, die Anzahl solcher Aufrufe zu
+minimieren.
+.IP opt
+gibt Diagnoseinformationen bezüglich der Optimierung des Ausdrucksbaums aus;
+siehe die Option \-O.
+.IP rates
+gibt eine Zusammenfassung aus, die angibt, wie oft jedes Prädikat
+erfolgreich war oder fehlschlug.
+.RE
+.IP \-Olevel
+aktiviert Abfragenoptimierung. Das Programm \fBfind\fP ordnet Tests neu an, um
+die Ausführung zu beschleunigen, ohne das Gesamtergebnis zu ändern; das
+heißt, Prädikate mit Seiteneffekten werden im Gegensatz zu anderen nicht neu
+angeordnet. Die Optimierungen die auf jeder Optimierungsstufe durchgeführt
+werden, sind wie folgt.
+.RS
+.IP 0
+entspricht der Optimierungsstufe 1
+.IP 1
+Dies ist die Standardoptimierungsstufe und entspricht dem traditionellen
+Verhalten. Ausdrücke werden neu angeordnet, so dass Tests, die nur auf den
+Namen der Dateien basieren (zum Beispiel \fB\-name\fP und \fB\-regex\fP) zuerst
+durchgeführt werden.
+.IP 2
+Irgendwelche \fB\-type\fP\- oder \fB\-xtype\fP\-Tests werden nach allen Tests, die nur
+auf Dateinamen basieren, aber vor Tests, die Informationen aus dem Inode
+benötigen, durchgeführt. Auf vielen modernen Versionen von Unix werden
+Dateitypen durch \fBreaddir()\fP zurückgegeben und daher sind diese Prädikate
+schneller auszuwerten als Prädikate, die zuerst Stat für die Datei ausführen
+müssen.
+.IP 3
+Auf dieser Optimierungsstufe ist der vollständig kostenbasierte Optimierer
+aktiviert. Die Reihenfolge der Tests wird geändert, so dass günstige
+(d.h. schnelle) Tests zuerst und die teureren später durchgeführt werden,
+falls nötig. Innerhalb jeder Kostenebene werden Prädikate früher oder später
+ausgewertet, je nachdem, ob sie wahrscheinlich erfolgreich sein werden oder
+nicht. Für \fB\-o\fP werden Prädikate, die wahrscheinlich erfolgreich sind,
+früher ausgewertet und für \fB\-a\fP werden Prädikate die wahrscheinlich
+fehlschlagen früher ausgewertet.
+.RE
+.IP
+Der kostenbasierte Optimierer hat eine feste Vorstellung davon, wie
+wahrscheinlich ein gegebener Test erfolgreich ist. In einigen Fällen trägt
+die Wahrscheinlichkeit einer bestimmten Eigenheit des Tests Rechnung (zum
+Beispiel wird von \fB\-type f\fP angenommen, dass es eher erfolgreich ist, als
+\fB\-type c\fP). Der kostenbasierte Optimierer wird derzeit untersucht. Falls er
+nicht wirklich die Leistung von \fBfind\fP verbessert, wird er wieder
+entfernt. Im umgekehrten Fall werden Optimierungen, die beweisen, dass sie
+zuverlässig, robust und effektiv sind, im Lauf der Zeit auf niedrigeren
+Optimierungsstufen aktiviert. Das Standardverhalten (d.h. Optimierungsstufe
+1) wird jedoch nicht in der 4.3.x\-Veröffentlichungsserie geändert. Die
+Test\-Suite Findutils führt all die Tests auf \fBfind\fP auf jeder
+Optimierungsstufe aus und stellt sicher, dass das Ergebnis das Gleiche ist.
+.P
+.SH AUSDRÜCKE
+Der Ausdruck besteht aus Optionen (die nur das allgemeine Verhalten der
+Operationen bestimmen, aber nicht die Verarbeitung einer bestimmten Datei
+beeinflussen und immer wahr zurückgeben), Tests (die ein wahr oder falsch
+zurückgeben) und Aktionen (die Seiteneffekte haben und wahr oder falsch
+zurückgeben), jeweils durch Operatoren getrennt. Wenn der Operator
+weggelassen wird, wird \fB\-and\fP angenommen.
+
+Wenn der Ausdruck keine andere Aktion als \fB\-prune\fP enthält, wird für alle
+Dateien, für welche der Ausdruck wahr ergibt, die Aktion \fB\-print\fP
+durchgeführt.
+
+.SS OPTIONEN
+.P
+Alle Optionen geben immer wahr zurück. Mit der Ausnahme von \fB\-daystart\fP,
+\fB\-follow\fP und \fB\-regextype\fP beeinflussen sie alle Tests einschließlich
+derer, die vor der Option angegeben sind. Dies rührt daher, dass die
+Optionen verarbeitet werden, wenn die Befehlszeile ausgewertet wird,
+wohingegen die Tests nichts tun, bis Dateien untersucht werden. Die Optionen
+\fB\-daystart\fP, \fB\-follow\fP und \fB\-regextype\fP unterscheiden sich in dieser
+Hinsicht und beeinflussen nur nur Tests, die später auf der Befehlszeile
+erscheinen. Daher ist es für die Lesbarkeit besser, sie an den Anfang des
+Ausdrucks zu stellen. Eine Warnung wird ausgegeben, wenn Sie das nicht tun.
+
+.IP \-d
+ein Synonym für \-depth, für die Kompatibilität mit FreeBSD, NetBSD, MacOS X
+und OpenBSD.
+
+.IP \-daystart
+misst Zeiten (für \fB\-amin\fP, \fB\-atime\fP, \fB\-cmin\fP, \fB\-ctime\fP, \fB\-mmin\fP und
+\fB\-mtime\fP) vom Beginn des aktuellen Tages anstelle der letzten 24
+Stunden. Diese Option beeinflusst nur die Tests, die weiter hinten in der
+Befehlszeile erscheinen.
+
+.IP \-depth
+bearbeitet den Inhalt jedes Verzeichnisses vor dem Verzeichnis selbst. Die
+Aktion \-delete impliziert ebenfalls \fB\-depth\fP.
+
+.IP \-follow
+missbilligt; verwenden Sie stattdessen die Option \fB\-L\fP; dereferenziert
+symbolische Links; impliziert \fB\-noleaf\fP. Die Option \fB\-follow\fP beeinflusst
+nur jene Tests, die nach ihr auf der Befehlszeile erscheinen. Wenn die
+Option \fB\-H\fP oder \fB\-L\fP nicht angegeben wird, ändert die Position von
+\fB\-follow\fP das Verhalten des Prädikats \fB\-newer\fP. Alle Dateien, die als
+Argumente von \fB\-newer\fP aufgezählt werden, werden dereferenziert, wenn es
+sich bei ihnen um symbolische Links handelt. Das gilt auch für \fB\-anewer\fP
+und \fB\-cnewer\fP. Ähnlich wird das Prädikat \fB\-type\fP immer auf den Typ der
+Datei angewandt, auf den der symbolische Link zeigt und nicht auf den Link
+selbst. Die Verwendung von \fB\-follow\fP hat zur Folge, dass die Prädikate
+\fB\-lname\fP und \fB\-ilname\fP immer falsch zurückliefern.
+
+.IP "\-help, \-\-help"
+gibt eine Zusammenfassung der Verwendung von \fBfind\fP aus und wird beendet
+
+.IP \-ignore_readdir_race
+Normalerweise wird \fBfind\fP eine Fehlermeldung ausgeben, wenn das Ausführen
+von Stat für eine Datei fehlschlägt. Falls Sie diese Option angeben und eine
+Datei in der Zeit zwischen dem Lesen des Namens im Verzeichnis durch \fBfind\fP
+und der Zeit gelöscht wurde, in der Stat für die Datei ausgeführt wird, wird
+keine Fehlermeldung ausgegeben. Dies gilt auch für Dateien und
+Verzeichnisse, deren Namen auf der Befehlszeile angegeben wurden. Diese
+Option tritt dann in Kraft, wenn die Befehlszeile gelesen wird, was
+bedeutet, dass Sie nicht einen Teil des Dateisystem durchsuchen können, bei
+dem diese Option eingeschaltet ist und einen Teil, bei dem diese Option
+ausgeschaltet ist (falls Sie dies tun müssen, werden Sie stattdessen zwei
+\fBfind\fP\-Befehle absetzen müssen, einen mit und einen ohne der Option.
+
+.IP "\-maxdepth \fIEbenen\fP"
+steigt höchstens \fIEbenen\fP (eine nicht negative Ganzzahl) Ebenen im
+Verzeichnisbaum unterhalb der Befehlszeilenargumente hinab.
+\fB\-maxdepth 0\fP
+bedeutet, dass die Tests und Aktionen nur auf die Befehlszeilenargumente
+angewandt werden.
+
+.IP "\-mindepth \fIEbenen\fP"
+keine Tests oder Aktionen auf Ebenen kleiner als \fIEbenen\fP (eine nicht
+negative Ganzzahl) anwenden. \fB\-mindepth 1\fP bedeutet, dass alle Dateien mit
+Ausnahme der Befehlszeilenargumente verarbeitet werden.
+
+.IP \-mount
+keine Verzeichnisse auf anderen Dateisystemen hinabsteigen. Ein alternativer
+Name für \fB\-xdev\fP aus Kompatibilitätsgründen mit anderen Versionen von
+\fBfind\fP.
+
+.IP \-noignore_readdir_race
+den Effekt \fB\-ignore_readdir_race\fP ausschalten
+
+.IP \-noleaf
+nicht optimieren mit der Annahme, dass Verzeichnisse zwei Unterverzeichnisse
+weniger enthalten, als ihre Anzahl harter Links. Diese Option wird benötigt,
+wenn Dateisysteme durchsucht werden, die nicht den Konventionen von
+Unix\-Verzeichnis\-Links folgen, wie CD\-ROM\-, MS\-DOS\-Dateisysteme oder
+AFS\-Datenträgereinhängepunkte. Jedes Verzeichnis auf einem normalen
+Unix\-Dateisystem hat mindestens zwei harte Links: seinen Namen und seinen
+»..«\-Eintrag. Zusätzlich haben seine Unterverzeichnisse (falls vorhanden)
+jeweils einen »..«\-Eintrag, der auf dieses Verzeichnis verweist. Wenn
+\fBfind\fP ein Verzeichnis untersucht, weiß es, nachdem es zwei
+Unterverzeichnissen weniger als der Links\-Anzahl des Verzeichisses begegnet
+ist, dass der Rest der Einträge des Verzeichnisses keine Verzeichnisse sind
+(Blätter im Verzeichnisbaum). Falls nur die Namen der Dateien untersucht
+werden müssen, gibt es keinen Grund Stat für sie auszuführen; dies führt zu
+einer spürbaren Erhöhung der Suchgeschwindigkeit.
+
+.IP "\-regextype \fITyp\fP"
+Ändert die Syntax regulärer Ausdrücke, die von \fB\-regex\fP\- und
+\fB\-iregex\fP\-Tests verstanden werden, die später auf der Befehlszeile
+auftreten. Derzeit implementierte Typen sind »emacs« (das ist die Vorgabe),
+»posix\-awk«, »posix\-basic«, »posix\-egrep« und »posix\-extended«.
+
+.IP "\-version, \-\-version"
+gibt die Versionsnummer von \fBfind\fP aus und wird beendet
+
+.IP "\-warn, \-nowarn"
+schaltet Warnungen ein oder aus. Diese Warnungen betreffen nur die Benutzung
+der Befehlszeile, nicht für irgendwelche Bedingungen, auf die \fBfind\fP beim
+Durchsuchen von Verzeichnissen stoßen könnte. Das Standardverhalten
+entspricht \fB\-warn\fP, falls die Standardeingabe ein Terminal ist und
+andernfalls \fB\-nowarn\fP.
+
+.IP \-xdev
+keine Verzeichnisse auf anderen Dateisystemen hinabsteigen
+
+.SS TESTS
+Einige Tests, zum Beispiel \fB\-newerXY\fP und \fB\-samefile\fP erlauben den
+Vergleich der aktuell untersuchten Datei und irgendwelchen Referenzdateien,
+die auf der Befehlszeile angegeben wurden.Wenn diese Tests benutzt werden,
+wird die Interpretation der Referenzdatei durch die Optionen \fB\-H\fP, \fB\-L\fP,
+\fB\-P\fP und jedem vorhergehenden \fB\-follow\fP festgelegt, die Referenzdatei wird
+nur einmal zu dem Zeitpunkt untersucht, an dem die Befehlszeile ausgewertet
+wird. Falls die Referenzdatei nicht untersucht werden kann (weil zum
+Beispiel der Systemaufruf \fBstat\fP(2) dafür fehlschlägt), wird eine
+Fehlermeldung ausgegeben und \fBfind\fP endet mit einem Status ungleich null.
+.P
+Numerische Argumente können angegeben werden als
+.IP \fI+n\fP
+für größer als \fIn\fP,
+.IP \fI\-n\fP
+für kleiner als \fIn\fP,
+.IP \fIn\fP
+für genau \fIn\fP
+.P
+
+.IP "\-amin \fIn\fP,"
+Auf die Datei wurde zuletzt vor \fIn\fP Minuten zugegriffen.
+
+.IP "\-anewer \fIDatei\fP"
+Auf die Datei ist zugegriffen worden, nachdem \fIDatei\fP das letzten Mal
+verändert wurde. Falls \fIDatei\fP ein symbolischer Link ist und die Optionen
+\fB\-H\fP oder \fB\-L\fP in Kraft sind, wird immer die Zugriffszeit der Datei
+benutzt, auf die er zeigt.
+
+.IP "\-atime \fIn\fP"
+Auf die Datei ist vor \fIn\fP*24 Stunden zugegriffen worden. Wenn Find
+herausfindet, wieviele 24\-Stundenzeiträume es her ist, seit auf die Datei
+zugegriffen wurde, wird jeder Bruchteil ignoriert, so dass \fB\-atime\fP \fB+1\fP
+auf eine Datei passt, auf die zuletzt vor zwei Tagen zugegriffen wurde.
+
+.IP "\-cmin \fIn\fP"
+Der Status der Datei wurde vor \fIn\fP Minuten geändert.
+
+.IP "\-cnewer \fIDatei\fP"
+Der Status der Datei wurde verändert, seit \fIDatei\fP zum letzten Mal geändert
+wurde. Falls \fIDatei\fP ein symbolischer Link ist und die Optionen \fB\-H\fP oder
+\fB\-L\fP in Kraft sind, wird immer die Änderungszeitzeit des Status der Datei
+benutzt, auf den er zeigt.
+
+.IP "\-ctime \fIn\fP"
+Der Dateistatus wurde zuletzt vor \fIn\fP*24 Stunden geändert. Lesen Sie die
+Kommentare zu \fB\-atime\fP, um zu verstehen, wie Rundung die Interpretation der
+Dateistatus\-Änderungszeiten beeinflusst.
+
+.IP \-empty
+Die Datei ist leer und entweder eine reguläre Datei oder ein Verzeichnis.
+
+.IP \-executable
+passt auf ausführbare Dateien und durchsuchbare Verzeichnisse (im Sinn der
+Namensauflösung). Dies berücksichtigt Zugriffssteuerungslisten (Access
+Control Lists) und andere Artefakte von Benutzerrechten, die der Test
+\fB\-perm\fP ignoriert. Dieser Test macht Gebrauch vom Systemaufruf \fBaccess\fP(2)
+und kann daher durch NFS\-Server getäuscht werden, die Abbildung der
+Benutzerkennzahl (oder Root\-Squashing) nutzen, da viele Systeme \fBaccess\fP(2)
+im Kernel des Clients implementieren und daher von den
+Abbildungsinformationen der Benutzerkennzahlen keinen Gebrauch machen
+können, die auf dem Server gehalten werden. Da dieser Test nur auf dem
+Ergebnis des Systemaufrufs  \fBaccess\fP(2) basiert, gibt es keine
+Gewährleistung, dass eine Datei, bei der dieser Test erfolgreich war,
+tatsächlich ausgeführt werden kann.
+
+.IP \-false
+Immer falsch
+
+.IP "\-fstype \fITyp\fP"
+Die Datei liegt auf einem Dateisystem des Typs \fITyp\fP. Die gültigen
+Dateisystemtypen variieren zwischen verschiedenen Versionen von Unix; eine
+unvollständige Liste der Dateisystemtypen, die auf einigen Versionen von
+Unix und anderen akzeptiert werden ist Folgende: ufs, 4.2, 4.3, nfs,tmp,
+mfs, S51K und S52K. Sie können \fB\-printf\fP mit der Option %F benutzen, um die
+Typen Ihrer Dateisysteme zu sehen.
+
+.IP "\-gid \fIn\fP"
+Die numerische Gruppenkennzahl der Datei ist \fIn\fP.
+
+.IP "\-group \fIgname\fP"
+Datei gehört der Gruppe \fIGruppenname\fP (numerische Gruppenkennzahlen
+erlaubt).
+
+.IP "\-ilname \fIMuster\fP"
+wie \fB\-lname\fP, aber der Treffer berücksichtigt keine
+Groß\-/Kleinschreibung. Falls die Option \fB\-follow\fP in Kraft ist, gibt dieser
+Test falsch zurück, außer wenn der symbolische Link kaputt ist.
+
+.IP "\-iname \fIMuster\fP"
+Funktioniert genauso wie \fB\-name\fP ohne jedoch Groß\- und Kleinschreibung zu
+berücksichtigen. Zum Beispiel werden die Muster »fo*« und »F??« beide die
+Dateien »Foo«, »FOO«, »foo«, »fOo« usw. finden. In diesen Mustern können, im
+Gegensatz zur Dateinamensexpansion durch die Shell, auch Dateinamen mit
+einem ».« am Anfang von einem »*« abgedeckt sein. Daher wird \fBfind \-name
+*bar\fP auch Dateien wie ».foo\-bar« finden. Bitte beachten Sie, dass Sie die
+Muster mit Anführungszeichen umschließen, ansonsten werden sämtliche
+Platzhalterzeichen bereits von der Shell expandiert.
+
+.IP "\-inum \fIn\fP"
+Datei hat die Inode\-Nummer \fIn\fP. Es ist normalerweise einfacher, stattdessen
+den Test \fB\-samefile\fP zu benutzen.
+
+.IP "\-ipath \fIMuster\fP"
+verhält sich wie \fB\-iwholename\fP. Diese Option ist missbilligt, benutzen Sie
+sie daher bitte nicht.
+
+.IP "\-iregex \fIMuster\fP"
+wie \fB\-regex\fP, aber der Treffer berücksichtigt keine Groß\-/Kleinschreibung
+
+.IP "\-iwholename \fIMuster\fP"
+wie \fB\-wholename\fP, aber der Treffer berücksichtigt keine
+Groß\-/Kleinschreibung
+
+.IP "\-links \fIn\fP"
+Datei hat \fIn\fP Links.
+
+.IP "\-lname \fIMuster\fP"
+Datei ist ein symbolischer Link, dessen Inhalt zum Shell\-Muster \fIMuster\fP
+passt. Insbesondere behandeln die Metazeichen nicht »/« oder ».«. Falls die
+Optionen \fB\-L\fP oder \fB\-follow\fP in Kraft sind, gibt dieser Test falsch
+zurück, außer wenn der symbolische Link kaputt ist.
+
+.IP "\-mmin \fIn\fP"
+Daten der Datei wurden zuletzt vor \fIn\fP Minuten verändert.
+
+.IP "\-mtime \fIn\fP"
+Daten der Datei wurden zuletzt vor \fIn\fP*24 Stunden verändert.  Lesen Sie die
+Kommentare zu \fB\-atime\fP, um zu verstehen, wie Rundung die Interpretation der
+Dateiänderungszeiten beeinflusst.
+
+.IP "\-name \fIMuster\fP"
+Der Dateiname ohne führende Verzeichnisse (basename) passt zum Shell\-Muster
+\fIMuster\fP. Die Metazeichen (»*«, »?« und »[]«) entsprechen einem ».« am
+Anfang des Basisnamens (dies ist eine Änderung in findutils\-4.2.2; siehe
+Abschnitt STANDARDKONFORMITÄT unten). Um ein Verzeichnis und die Dateien
+darin zu ignorieren, benutzen Sie \fB\-prune\fP; ein Beispiel finden Sie in der
+Beschreibung von \fB\-path\fP. Klammern werden nicht als etwas Besonderes
+erkannt, trotz der Tatsache, dass einige Shells einschließlich der Bash
+Klammern eine besondere Bedeutung innerhalb von Shell\-Mustern beimessen. Der
+Dateinamensabgleich wird unter Benutzung der Bibliotheksfunktion
+\fBfnmatch\fP(3) durchgeführt. Vergessen Sie nicht, das Muster in
+Anführungszeichen zu setzen, um es vor Expandierung durch die Shell zu
+schützen.
+
+.IP "\-newer \fIDatei\fP"
+Datei ist später verändert worden als \fIDatei\fP. Falls \fIDatei\fP ein
+symbolischer Link ist und die Optionen \fB\-H\fP oder \fB\-L\fP in Kraft sind, wird
+immer die Veränderungszeit der Datei benutzt, auf den er verweist.
+
+.IP "\-newerXY \fIBezug\fP"
+Vergleicht den Zeitstempel der aktuellen Datei mit \fIBezug\fP. Das Argument
+\fIBezug\fP ist normalerweise der Name einer Datei (und einer ihrer Zeitstempel
+wird für den Vergleich benutzt), aber es könnte auch eine Zeichenkette sein,
+die eine absolute Zeit beschreibt. \fIX\fP und \fIY\fP sind Platzhalter für andere
+Buchstaben. Diese Buchstaben wählen aus, welche zugehörige Zeit für den
+Vergleich mit \fIBezug\fP benutzt wird.
+.TS
+ll
+ll
+ll
+ll
+llw(2i).
+a	Die Zugriffszeit der Datei \fIBezug\fP
+B	Die Erstellungszeit der Datei \fIBezug\fP
+c	Die Inode\-Statusänderungszeit von \fIBezug\fP
+m	Die Änderungszeit der Datei \fIBezug\fP
+t	\fIBezug\fP wird direkt als eine Zeit interpretiert
+.TE
+
+Einige Kombinationen sind ungültig. So darf \fIX\fP bespielsweise nicht \fIt\fP
+sein. Einige Kombinationen sind nicht auf allen Systemen implementiert. \fIB\fP
+wird beispielsweise nicht von allen Systemen unterstützt. Falls eine
+ungültige oder nicht unterstützte Kombination von \fIXY\fP angegeben wurde,
+kommt es dadurch zu einem schwerwiegenden Fehler. Zeitangaben werden
+diesbezüglich wie das Argument zu der Option \fB\-d\fP von GNU\-\fBdate\fP
+interpretiert. Falls Sie versuchen die Erstellungszeit einer Bezugsdatei zu
+benutzen und die Erstellungszeit nicht bestimmt werden kann, kommt es
+dadurch zu einer Nachricht über einen schwerwiegenden Fehler. Falls Sie
+einen Test angeben, der sich auf die Erstellungszeit der Dateien bezieht,
+die untersucht werden, wird dieser Test für jene Dateien fehlschlagen, deren
+Erstellungszeit nicht bekannt ist.
+
+.IP \-nogroup
+Der numerische Gruppenkennzahl der Datei entspricht keiner Gruppe.
+
+.IP \-nouser
+Die numerische Benutzerkennzahl der Datei gehört zu keinem Benutzer.
+
+.IP "\-path \fIMuster\fP"
+Der Dateiname passt zum Shell\-Muster \fIMuster\fP. Die Metazeichen behandeln
+»/« oder ».« nicht besonders; daher wird zum Beispiel
+.br
+.in +1i
+find . \-path "./sr*sc"
+.br
+.in -1i
+einen Eintrag für ein Verzeichnis mit Namen »./src/misc« ausgeben (falls
+eines exisitert). Benutzen Sie \fB\-prune\fP, um einen ganzen Verzeichnisbaum zu
+ignorieren, anstatt jede Datei im Baum zu überprüfen. Um beispielsweise das
+Verzeichnis »src/emacs« und alle Dateien und Verzeichnisse darin zu
+überspringen und die Namen der anderen gefundenen Dateien auszugeben,
+versuchen Sie Folgendes:
+.br
+.in +1i
+find . \-path ./src/emacs \-prune \-o \-print
+.br
+.in -1i
+Beachten Sie, dass Mustervergleichstests auf den ganzen Dateinamen angewandt
+werden, beginnend von einem der auf der Befehlszeile benannten
+Startpunkte. Es würde nur Sinn ergeben, hier einen absoluten Pfadnamen zu
+benutzen, wenn der maßgebliche Startpunkt auch ein absoluter Pfad wäre. Dies
+bedeutet, dass dieser Befehl niemals auf etwas zutreffen wird:
+.br
+.in +1i
+find bar \-path /foo/bar/myfile \-print
+.br
+.in -1i
+Das Prädikat \fB\-path\fP wird auch auf HP\-UX durch \fBfind\fP unterstützt und wird
+in einer kommenden Version des POSIX\-Standards enthalten sein.
+
+.IP "\-perm \fIModus\fP"
+Die Zugriffsrechte der Datei entsprechen exakt dem \fIModus\fP (oktal oder
+symbolisch). Da exakte Übereinstimmung nötig ist, wenn Sie diese Form für
+symbolische Modi benutzen möchten, müssen Sie möglicherweise eine eher
+komplexe Moduszeichenkette angeben. \fB\-perm g=w\fP wird beispielsweise nur bei
+Dateien zutreffen, die den Modus 0020 haben (also einer, bei dem das
+Schreibrecht der Gruppe das einzige gesetzte Recht ist). Wahrscheinlicher
+ist, dass Sie die Formen »/« oder »\-« benutzen möchten, zum Beispiel \fB\-perm
+\-g=w\fP, was auf jede Datei mit Gruppenschreibrechten passt. Einige
+anschauliche Beispiele finden Sie im Abschnitt \fBBEISPIELE\fP.
+
+.IP "\-perm \-\fIModus\fP"
+Alle Rechte\-Bits \fIModus\fP sind für diese Datei gesetzt. Symbolische Modi
+werden in dieser Form akzeptiert. Dies ist üblicherweise die Art, auf die
+Sie sie benutzen möchten. Sie müssen »u«, »g« oder »o« angeben, falls Sie
+einen symbolischen Modus verwenden. Einige anschauliche Beispiele finden Sie
+im Abschnitt \fBBEISPIELE\fP.
+
+.IP "\-perm /\fIModus\fP"
+Einige der Rechte\-Bits \fIModus\fP sind für diese Datei gesetzt. Symbolische
+Modi werden in dieser Form akzeptiert. Sie müssen »u«, »g« oder »o« angeben,
+falls Sie einen symbolischen Modus verwenden. Einige anschauliche Beispiele
+finden Sie im Abschnitt \fBBEISPIELE\fP. Falls keine Rechte\-Bits in \fIModus\fP
+gesetzt sind, trifft dieser Test auf alle Dateien zu (die Idee, die dahinter
+steckt, ist das durchgängige Verhalten zu \fB\-perm\fP \fB\-000\fP).
+
+.IP "\-perm +\fIModus\fP"
+missbilligt. Dies ist die alte Methode nach Dateien zu suchen, deren
+Rechte\-Bits in \fIModus\fP gesetzt sind. Sie sollten stattdessen \fB\-perm
+\fP\fI/Modus\fP benutzen. Der Versuch, die »+«\-Syntax mit symbolischen Links zu
+verwenden, wird zu überraschenden Ergebnissen führen. »u+x« ist
+beispielsweise ein gültiger symbolischer Modus (entspricht +u,+x, d.h. 0111)
+und wird daher nicht von \fB\-perm +\fP\fIModus\fP ausgewertet, stattdessen aber
+als die genaue Modusangabe \fB\-perm \fP\fIModus\fP. Daher entspricht es Dateien
+mit exakt den Rechten 0111 anstatt den Dateien, deren Ausführungs\-Bit
+gesetzt ist. Falls Sie diesen Paragraph verwirrend finden, stehen Sie damit
+nicht allein da – benutzen Sie nur \fB\-perm /\fP\fIModus\fP. Diese Form des Tests
+\fB\-perm\fP ist missbilligt, da die POSIX\-Spezifikation eine Interpretation des
+führenden »+« als Teil des symbolischen Modus erfordert, wodurch stattdessen
+zur Benutzung von »/« gewechselt wird.
+
+.IP \-readable
+trifft zu auf lesbare Dateien. Dies berücksichtigt Zugriffssteuerungslisten
+(ACLs) und andere Artefakte von Rechten, die der Test \fB\-perm\fP
+ignoriert. Dieser Test macht Gebrauch vom Systemaufruf \fBaccess\fP(2) und kann
+daher durch NFS\-Server getäuscht werden, die Abbildung der Benutzerkennzahl
+(oder Root\-Squashing) nutzen, da viele Systeme \fBaccess\fP(2) im Kernel des
+Clients implementieren und daher von den Abbildungsinformationen der
+Benutzerkennzahlen keinen Gebrauch machen können, die auf dem Server
+gehalten werden.
+
+.IP "\-regex \fIMuster\fP"
+der Dateiname passt zu dem regulären Ausdruck \fIMuster\fP. Dies ist ein
+Treffer auf den gesamten Pfad, keine Suche. Um beispielsweise eine Datei mit
+dem Namen »./fubar3« zu finden, können Sie die regulären Ausdrücke ».*bar.«
+oder ».*b.*3« benutzen, aber nicht »f.*r3«. Die regulären Ausdrücke, die
+\fBfind\fP versteht, sind standardmäßig reguläre Ausdrücke von Emacs, dies kann
+aber mit der Option \fB\-regextype\fP geändert werden.
+
+.IP "\-samefile \fIName\fP"
+Datei bezieht sich auf den gleichen Inode wie \fIName\fP. Wenn \fB\-L\fP in Kraft
+ist, kann dies symbolische Links umfassen.
+
+.IP "\-size \fIn\fP[cwbkMG]"
+Datei belegt \fIn\fP Speichereinheiten. Die folgenden Endungen können benutzt
+werden:
+.RS
+.IP »b«
+für 512\-Byte\-Blöcke (dies ist die Vorgabe, wenn keine Endung benutzt wird)
+.IP »c«
+für Byte
+.IP »w«
+für Wörter aus zwei Byte
+.IP »k«
+für Kilobyte (Einheiten aus 1024 Byte)
+.IP »M«
+für Megabyte (Einheiten aus 1048576 Byte)
+.IP »G«
+für Gigabyte (Einheiten aus 1073741824 Byte)
+.RE
+.IP
+Zur Ermittlung der Größe werden keine indirekten Blöcke gezählt, aber Blöcke
+in Datei mit Löchern (Sparse\-Dateien), die nicht wirklich reserviert
+sind. Vergessen Sie nicht, dass die Formatbezeichner »%k« und »%b« von
+\fB\-printf\fP Dateien mit Löchern unterschiedlich handhaben. Die Endung »b«
+kennzeichnet immer 512\-Byte\-Blöcke und nie 1\-Kilobyte\-Blöcke, was sich vom
+Verhalten von \fB\-ls\fP unterscheidet.
+
+.IP \-true
+immer wahr
+
+.IP "\-type \fIc\fP"
+Datei ist vom Typ \fIc\fP;:
+.RS
+.IP b
+blockorientierte Spezialdatei (gepuffert)
+.IP c
+zeichenorientierte Spezialdatei (nicht gepuffert)
+.IP d
+Verzeichnis
+.IP p
+benannte Pipe (FIFO)
+.IP f
+reguläre Datei
+.IP l
+symbolischer Link; dies ist niemals wahr, falls die Optionen \fB\-L\fP oder
+\fB\-follow\fP in Kraft sind, außer wenn der symbolische Link kaputt ist. Falls
+Sie nach symbolischen Links suchen möchten, während \fB\-L\fP in Kraft ist,
+benutzen Sie \fB\-xtype\fP.
+.IP s
+Socket
+.IP D
+Door (Solaris)
+.RE
+.IP "\-uid \fIn\fP"
+Die numerische Benutzerkennzahl der Datei ist \fIn\fP.
+
+.IP "\-used \fIn\fP"
+Auf die Datei ist \fIn\fP Tage nach ihrer letzten Statusänderung zugegriffen
+worden.
+
+.IP "\-user \fIBenutzername\fP"
+Die Datei gehört dem Anwender \fIBenutzername\fP (numerische Benutzerkennzahl
+erlaubt).
+
+.IP "\-wholename \fIMuster\fP"
+Siehe \-path. Diese Alternative ist nicht so portierbar wie \fB\-path\fP.
+
+.IP \-writable
+passt auf schreibbare Dateien. Die berücksichtigt Zugriffssteuerungslisten
+(ACLs) und andere Artefakte von Rechten, die der Test \fB\-perm\fP
+ignoriert. Dieser Test macht Gebrauch vom Systemaufruf \fBaccess\fP(2) und kann
+daher durch NFS\-Server getäuscht werden, die Abbildung der Benutzerkennzahl
+(oder Root\-Squashing) nutzen, da viele Systeme \fBaccess\fP(2) im Kernel des
+Clients implementieren und daher von den Abbildungsinformationen der
+Benutzerkennzahlen keinen Gebrauch machen können, die auf dem Server
+gehalten werden.
+
+.IP "\-xtype \fIc\fP"
+das Gleiche wie \fB\-type\fP, außer wenn die Datei ein symbolischer Link
+ist. Für symbolische Links gilt: Falls die Optionen \fB\-H\fP oder \fB\-P\fP
+angegeben wurden, ist dies wahr, wenn die Datei ein Link auf eine Datei des
+Typs \fIc\fP ist oder, falls die Option \fB\-L\fP angegeben wurde, wenn \fIc\fP »l«
+ist. Anders ausgedrückt, für symbolische Links prüft \fB\-xtype\fP den Typ der
+Datei, den \fB\-type\fP nicht prüft.
+
+.SS AKTIONEN
+.IP \-delete
+Dateien löschen; wahr, falls erfolgreich entfernt. Falls das Entfernen
+fehlschlägt, wird eine Fehlermeldung ausgegeben. Falls \fB\-delete\fP
+fehlschlägt, wird der Rückgabewert von \fBfind\fP ungleich null sein (wenn es
+letztendlich beendet wird). Das Benutzen von \fB\-delete\fP schaltet automatisch
+die Option \fB\-depth\fP ein.
+
+\fBWarnungen\fP: Vergessen Sie nicht, dass die Find\-Befehlszeile als ein
+Ausdruck ausgewertet wird. Daher wird das Voranstellen von \fB\-delete\fP  dazu
+führen, dass \fBfind\fP versucht alles was Sie unterhalb des Startpunkts
+angegeben haben zu löschen. Wenn Sie eine \fBfind\fP\-Befehlszeile testen, die
+Sie später beabsichtigen mit \fB\-delete\fP zu nutzen, sollten Sie explizit
+\fB\-depth\fP angeben, um spätere Überraschungen zu vermeiden. Da \fB\-delete\fP
+\fB\-depth\fP impliziert, können Sie sinnvollerweise nicht \fB\-prune\fP und
+\fB\-delete\fP zusammen benutzen.
+
+.IP "\-exec \fIBefehl\fP ;"
+führt den \fIBefehl\fP aus; wahr, wenn Status 0 zurückgegeben wird. Alle
+folgenden Argumente von \fBfind\fP werden als Argumente des Befehls betrachtet,
+bis ein Argument gefunden wird, das »;« beinhaltet. Die Zeichenkette »{}«
+wird überall, wo sie in den Argumenten erscheint, durch den aktuell
+verarbeiteten Dateinamen ersetzt, nicht nur in Argumenten, in denen sie
+allein steht, wie in einigen Versionen von \fBfind\fP. Es könnte nötig sein,
+beide Konstruktionen zu maskieren (mit einem »\e«) oder in Anführungszeichen
+zu setzen, um sie vor einer Expansion durch die Shell zu schützen. Im
+Abschnitt \fBBEISPIELE\fP finden Sie Beispiele, wie Sie die Option \fB\-exec\fP
+benutzen. Der angegebene Befehl wird jeweils für jede gefundene Datei
+ausgeführt. Der Befehl wird im Startverzeichnis ausgeführt. Es gibt
+unvermeidliche Sicherheitsprobleme rings um den Gebrauch der Aktion
+\fB\-exec\fP; Sie sollten stattdessen die Option \fB\-execdir\fP verwenden.
+
+.IP "\-exec \fIBefehl\fP {} +"
+Diese Variante der Aktion \fB\-exec\fP führt den angegebenen Befehl für die
+ausgewählten Dateien aus, aber die Befehlszeile wird durch das Anhängen
+jeder ausgewählten Datei an das Ende gebildet; die Gesamtzahl der
+Befehlsaufrufe wird viel geringer sein, als die Anzahl passender
+Dateien. Die Befehlszeile wird auf die gleiche Weise wie bei \fBxargs\fP
+gebildet. Innerhalb des Befehls ist nur eine Instanz von »{}« erlaubt. Der
+Befehl wird im Startverzeichnis ausgeführt.
+
+.IP "\-execdir \fIBefehl\fP ;"
+.IP "\-execdir \fIBefehl\fP {} +"
+wie \fB\-exec\fP, aber der angegebene Befehl wird in dem Unterverzeichnis
+ausgeführt, das die passende Datei enthält, was normalerweise nicht das
+Verzeichnis ist, in dem Sie \fBfind\fP aufgerufen haben. Dies ist eine
+wesentlich sicherere Methode zum Aufruf von Befehlen, da sie Race Conditions
+während der Auflösung von Pfaden zu den passenden Dateien vermeidet. Wie bei
+der Aktion \fB\-exec\fP wird die Form »+« von \fB\-execdir\fP eine Befehlszeile
+bilden, um mehr als eine passende Datei zu verarbeiten, aber jeder
+angegebene Aufruf des \fBBefehl\fPs wird nur Dateien auflisten, die im gleichen
+Unterverzeichnis existieren. Falls Sie diese Option benutzen, müssen Sie
+sicherstellen, dass Ihre Umgebungsvariable \fB$PATH\fP nicht direkt auf ».«
+verweist; andernfalls könnte ein Angreifer Befehle seiner Wahl ausführen,
+indem er eine Datei mit geeignetem Namen in einem Verzeichnis hinterlässt,
+in dem Sie \fB\-execdir\fP ausführen werden. Das Gleiche gilt für die Einträge
+in \fB$PATH\fP, die leer oder keine absoluten Verzeichnisnamen sind.
+
+.IP "\-fls \fIDatei\fP"
+wahr; wie \fB\-ls\fP, schreibt aber wie \fB\-fprint\fP nach \fIDatei\fP. Die
+Ausgabedatei wird immer erstellt, sogar wenn das Prädikat niemals
+passte. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, zu erfahren, wie
+unübliche Dateinamen gehandhabt werden.
+
+.IP "\-fprint \fIDatei\fP"
+wahr; gibt den vollständigen Dateinamen in \fIDatei\fP aus. Falls \fIDatei\fP
+nicht existiert, wird sie erzeugt; andernfalls wird sie gekürzt. Die
+Dateinamen »/dev/stdout« und »/dev/stderr« werden gesondert gehandhabt; sie
+beziehen sich auf die Standardausgabe beziehungsweise die
+Standardfehlerausgabe. Die Ausgabedatei wird immer erstellt, sogar wenn das
+Prädikat niemals passte. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um
+zu erfahren, wie unübliche Dateinamen gehandhabt werden.
+
+.IP "\-fprint0 \fIDatei\fP"
+wahr; wie \fB\-print0\fP, schreibt aber wie \fB\-fprint\fP nach \fIDatei\fP. Die
+Ausgabedatei wird immer erstellt, sogar, wenn das Prädikat niemals
+passte. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um zu erfahren, wie
+unübliche Dateinamen gehandhabt werden.
+
+.IP "\-fprintf \fIDatei\fP \fIFormat\fP"
+wahr; wie \fB\-printf\fP, schreibt aber wie \fB\-fprint\fP nach \fIDatei\fP. Die
+Ausgabedatei wird immer erstellt, sogar, wenn das Prädikat niemals
+passte. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um zu erfahren, wie
+unübliche Dateinamen gehandhabt werden.
+
+.IP \-ls
+wahr; listet aktuelle Datei im Format \fBls \-dils\fP auf der Standardausgabe
+auf. Die Anzahl der Blöcke besteht aus 1K\-Blöcken, außer wenn die
+Umgebungsvariable POSIXLY_CORRECT gesetzt ist, in der Blöcke zu 512 Byte
+benutzt werden. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um zu
+erfahren, wie unübliche Dateinamen gehandhabt werden.
+
+.IP "\-ok \fIBefehl\fP ;"
+wie \fB\-exec\fP, vorher wird der Anwender aber um Bestätigung gebeten. Falls
+der Anwender zustimmt, wird der Befehl ausgeführt. Andernfalls wird nur
+falsch zurückgegeben. Wenn der Befehl ausgeführt wird, ist seine
+Standardeingabe umgeleitet von \fB/dev/null\fP.
+
+.IP
+Die Antwort auf die Abfrage wird mit einem Paar regulärer Ausdrücke
+verglichen, um zu bestimmen, ob es eine positive oder negative Antwort
+ist. Dieser reguläre Ausdruck stammt vom System, falls die Umgebungsvariable
+POSIXLY_CORRECT gesetzt ist, ansonsten von den Nachrichtenübersetzungen von
+\fBfind\fP. Falls das System keine geeignete Definition hat, wird die
+Definition von \fBfind\fP selbst benutzt. Auf jeden Fall wird die
+Interpretation des regulären Ausdrucks von den Umgebungsvariablen »LC_CTYPE«
+(Zeichenklassen) und »LC_COLLATE« (Zeichenbereiche und entsprechende
+Klassen) beeinträchtigt.
+
+
+
+.IP "\-okdir \fIBefehl\fP ;"
+wie \fB\-exec\fP, fragt den Anwender aber zuerst auf die gleiche Art wie für
+\fB\-ok\fP. Falls der Anwender nicht zustimmt, wird nur falsch
+zurückgegeben. Wenn der Befehl ausgeführt wird, ist seine Standardeingabe
+umgeleitet von \fB/dev/null\fP.
+
+.IP \-print
+wahr; gibt den vollständigen Dateinamen gefolgt von einem Zeilenvorschub auf
+der Standardausgabe aus. Falls Sie die Ausgabe von \fBfind\fP in ein anderes
+Programm per Pipe weiterleiten und dort auch nur die geringste Möglichkeit
+besteht, dass die Dateien, die Sie suchen, einen Zeilenvorschub enthalten,
+sollten Sie ernsthaft in Betracht ziehen, statt \fB\-print\fP \fB\-print0\fP zu
+verwenden. Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um zu erfahren,
+wie unübliche Dateinamen gehandhabt werden.
+
+.IP \-print0
+wahr; gibt den vollständigen Dateinamen gefolgt von einem Null\-Zeichen
+(anstelle des Zeilenvorschubs, den \fB\-print\fP benutzt) aus. Dies ermöglicht,
+dass Dateinamen, die Zeilenvorschübe oder andere Typen von Leerräumen
+enthalten, korrekt durch Programme interpretiert werden, die die Ausgabe von
+\fBfind\fP verarbeiten. Diese Option entspricht der Option \fB\-0\fP von \fBxargs\fP.
+
+.IP "\-printf \fIFormat\fP"
+wahr; gibt \fIFormat\fP auf der Standardausgabe aus und interpretiert dabei
+»\e«\- und »%«\-Direktiven. Feldbreiten und Genauigkeiten können wie bei der
+C\-Funktion »printf« angegeben werden. Bitte beachten Sie, dass viele Felder
+mit %s statt mit %d ausgegeben werden. Dies kann bedeuten, dass der Schalter
+nicht wie erwartet funktioniert. Dies bedeutet auch, dass die Option »\-«
+nicht funktioniert (er erzwingt, dass Felder linksbündig ausgerichtet
+werden). Anders als \fB\-print\fP fügt \fB\-printf\fP keinen Zeilenvorschub an das
+Ende der Zeichenkette. Die Direktiven sind:
+.RS
+.IP \ea
+Alarmton
+.IP \eb
+Rückschritt
+.IP \ec
+Ausgabe gemäß dieser Formatbeschreibung sofort stoppen und die Ausgabe
+leeren
+.IP \ef
+Seitenvorschub
+.IP \en
+Zeilenvorschub
+.IP \er
+Wagenrücklauf
+.IP \et
+horizontaler Tabulator
+.IP \ev
+vertikaler Tabulator
+.IP \e0
+ASCII\-Code 0
+.IP \e\e
+der Rückwärtsschrägstrich selbst (»\e«)
+.IP \eNNN
+das Zeichen, dessen ASCII\-Kode NNN ist (oktal)
+.PP
+Ein »\e«\-Zeichen gefolgt von einem anderen Zeichen wird als ein gewöhnliches
+Zeichen betrachtet, daher werden beide ausgegeben.
+.IP %%
+das Prozentzeichen selbst
+.IP %a
+die Zeit des letzten Zugriffs auf die Datei, zurückgegeben im Format der
+C\-Funktion »ctime«
+.IP %A\fIk\fP
+die Zeit des letzten Zugriffs auf die Datei, angegeben durch \fIk\fP. Das ist
+entweder »@« oder eine Direktive für die C\-Funktion »strftime«. Die
+möglichen Werte für \fIk\fP sind nachfolgend aufgeführt; einige davon sind
+möglicherweise aufgrund von Unterschieden zwischen den Systemen nicht auf
+allen Systemen in »strftime« verfügbar.
+.RS
+.IP @
+Sekunden seit dem 1.1.1970, 00:00 Uhr GMT mit Bruchteil
+.PP
+Zeitfelder:
+.IP H
+Stunde (00 bis 23)
+.IP I
+Stunde (01 bis 12)
+.IP k
+Stunde ( 0 bis 23)
+.IP l
+Stunde ( 1 bis 12)
+.IP M
+Minute (00 bis 59)
+.IP p
+PM oder AM der Locale
+.IP r
+Zeit, 12 Stunden (hh:mm:ss: AM/PM)
+.IP S
+Sekunden (00.00 bis 61.00). Es gibt Nachkommastellen.
+.IP T
+Zeit, 24 Stunden (hh:mm:ss)
+.IP +
+Datum und Zeit, getrennt durch »+«, zum Beispiel
+»2004\-04\-28+22:22:05.0«. Dies ist eine GNU\-Erweiterung. Die Zeit wird in der
+aktuellen Zeitzone angegeben (die durch das Setzen der Umgebungsvariable TZ
+beeinflusst sein könnte). Das Sekundenfeld beinhaltet einen Bruchteil.
+.IP X
+Zeitdarstellung der Locale (H:M:S)
+.IP Z
+Zeitzone (z.B. EDT) oder nichts, falls keine Zeitzone bestimmt werden kann
+.PP
+Datumsfelder:
+.IP a
+abgekürzter Wochentag der Locale (So bis Sa)
+.IP A
+voller Wochentag der Locale, variable Länge (Sonntag bis Samstag)
+.IP b
+abgekürzter Monatsname der Locale (Jan bis Dez)
+.IP B
+voller Monatsname der Locale in variabler Länge (Januar bis Dezember)
+.IP c
+Datum und Zeit der Locale (Sa 4. Nov 12:02:33 EST 1989). Das Format
+entspricht dem von \fBctime\fP(3) und wahrt daher die Kompatibilität mit diesem
+Format. Es gibt dort keine Nachkommastellen im Sekundenfeld.
+.IP d
+Tag des Monats (01 bis 31)
+.IP D
+Datum (mm/dd/yy)
+.IP h
+das Gleiche wie b
+.IP j
+Tag des Jahres (001 bis 366)
+.IP m
+Monat (01 bis 12)
+.IP U
+Nummer der Woche im Jahr mit Sonntag als erstem Tag der Woche (00 bis 53)
+.IP w
+Tag der Woche (0 bis 6)
+.IP W
+Nummer der Woche im Jahr mit Montag als erstem Tag der Woche (00 bis 53)
+.IP x
+Datumsdarstellung der Locale (mm/dd/yy)
+.IP y
+die letzten beiden Stellen der Jahreszahl (00 bis 99)
+.IP Y
+Jahr (1970 …)
+.RE
+.IP %b
+der für diese Datei benutzte Plattenplatz in 512\-Byte\-Blöcken. Da
+Plattenplatz als Vielfaches der Blockgröße des Dateisystems reserviert wird,
+ist dieser üblicherweise größer als %s/512, er kann aber auch kleiner sein,
+wenn die Datei eine Datei mit Löchern (Sparse\-Datei) ist.
+.IP %c
+das Datum, an dem zum letzten Mal der Status der Datei geändert wurde, im
+Format der C\-Funktion »ctime«
+.IP %C\fIk\fP
+das Datum, an dem zum letzten Mal der Status der Datei geändert wurde, in
+dem durch \fIk\fP angegebenen Format, was das Gleiche ist, wie für %A
+.IP %d
+die Tiefe der Datei im Verzeichnisbaum; Null bedeutet, dass die Datei ein
+Befehlszeilenargument ist.
+.IP D
+die Gerätenummer des Geräts auf der die Datei existiert (das Feld »st_dev«
+der Stuktur »stat«) als Dezimalzahl
+.IP %f
+der Name der Datei, bei dem die voranstehenden Verzeichnisse entfernt wurden
+(nur das letzte Element)
+.IP %F
+Typ des Dateisystems, auf dem die Datei liegt; dieser Wert kann für \-fstype
+benutzt werden.
+.IP %g
+der Name der Gruppe der Datei oder die numerische Gruppenkennzahl, wenn die
+Gruppe keinen Namen hat
+.IP %G
+die numerische Gruppenkennzahl der Datei
+.IP %h
+voranstehende Verzeichnisse des Dateinamens (alles außer dem letzten
+Element). Falls der Dateiname keine Schrägstriche enthält (da er im
+aktuellen Verzeichnis ist), wird der Bezeichner %h zu ».« expandiert.
+.IP %H
+das Befehlszeilenargument, unter dem die Datei gefunden wurde
+.IP %i
+die Inode\-Nummer der Datei (dezimal)
+.IP %k
+der für diese Datei benutzte Plattenplatz in 1K\-Blöcken. Da Plattenplatz als
+Vielfaches der Blockgröße des Dateisystems reserviert wird, ist dieser
+üblicherweise größer als %s/1024, er kann aber auch kleiner sein, wenn die
+Datei eine Datei mit Löchern (Sparse\-Datei) ist.
+.IP %l
+Ziel des symbolischen Links (leere Zeichenkette, falls die Datei kein
+symbolischer Link ist
+.IP %m
+die Zugriffsrechte\-Bits der Datei (oktal). Diese Option benutzt die
+»traditionellen« Nummern, die die meisten Unix\-Implementierungen benutzen,
+falls aber Ihre Implementierung eine unübliche Sortierung der oktalen
+Zugriffsrechte benutzt, werden Sie einen Unterschied zwischen dem
+tatsächlichen Wert des Datei\-Modus und der Ausgabe von %m
+sehen. Normalerweise möchten Sie eine führende Null vor dieser Zahl
+haben. Um dies zu erreichen sollten Sie die Markierung \fB#\fP benutzen (wie
+beispielsweise in »%#m«).
+.IP M
+die Zugriffsrechte der Datei (in symbolischer Form, wie für \fBls\fP). Diese
+Direktive wird von Findutils seit einschließlich Version 4.2.5 unterstützt.
+.IP %n
+Anzahl harter Links auf die Datei
+.IP %p
+Name der Datei
+.IP %P
+Der Name der Datei mit dem Namen des Befehlszeilenarguments, unter dem sie
+gefunden wurde, wurde entfernt.
+.IP %s
+die Größe der Datei in Byte
+.IP S
+Dichte der Datei. Diese wird berechnet als (BLOCKGRÖßE*st_blocks /
+st_size). Der genaue Wert, den Sie für eine normale Datei einer bestimmten
+Länge erhalten ist vom System abhängig. Normale Dateien mit Löchern
+(Sparse\-Dateien) werden einen Wert kleiner als 1.0 aufweisen und Dateien,
+die indirekte Blöcke verwenden können, einen Wert größer als 1.0 haben. Der
+Wert, der für BLOCKGRÖßE verwandt wird, ist vom System abhängig, beträgt
+aber normalerweise 512 Byte. Falls die Dateigröße null ist, ist der
+ausgegebene Wert undefiniert. Auf Systemen, auf denen die Unterstützung für
+st_blocks fehlt, wird als Dichte einer Datei 1.0. angenommen.
+.IP %t
+Zeit der letzten Änderung der Datei in dem von C\-»ctime« zurückgegebenen
+Format
+.IP %T\fIk\fP
+Zeit der letzten Änderung der Datei in dem durch \fIk\fP angegebenen Format,
+wie bei %A
+.IP %u
+Name des Bemutzers der Datei oder numerische Benutzerkennzahl, falls der
+Benutzer keinen Namen hat.
+.IP %U
+numerische Benutzerkennzahl der Datei.
+.IP %y
+Typ der Datei (wie in \fBls \-l\fP), U=unbekannter Typ (sollte nicht auftreten)
+.IP %Y
+Typ der Datei (wie %y), folgt aber symbolischen Links: L=Schleife, N=nicht
+existent
+.PP
+Ein »%«\-Zeichen gefolgt von einem anderen Zeichen wird verworfen, aber das
+andere Zeichen wird ausgegeben (verlassen Sie sich nicht darauf, da weitere
+Formatzeichen eingeleitet werden könnten). Ein »%« am Ende des
+Formatarguments verursacht unvorhersehbares Verhalten, da es dort kein
+nachfolgendes Zeichen gibt. In einigen Locales könnte es Ihre
+Haustürschlüssel verstecken, während es in anderen Ihre letzte Seite des
+Romans, den Sie lesen, entfernt.
+
+Die Direktiven %m und %d unterstützen die Schalter \fB#\fP , \fB0\fP und \fB+\fP, die
+anderen Direktiven jedoch nicht, selbst wenn Nummern ausgegeben
+werden. Numerische Direktiven, die diese Schalter nicht unterstützen,
+beinhalten \fBG\fP, \fBU\fP, \fBb\fP, \fBD\fP, \fBk\fP und \fBn\fP. Der Formatschalter »\-«
+wird unterstützt und ändert die Ausrichtung eines Feldes von rechtsbündig
+(was vorgegeben ist) auf linksbündig.
+.PP
+Lesen Sie den Abschnitt \fBUNÜBLICHE DATEINAMEN\fP, um zu erfahren, wie
+unübliche Dateinamen gehandhabt werden.
+
+
+.RE
+.IP \-prune
+wahr; falls die Datei ein Verzeichnis ist, nicht darin hinabsteigen. Falls
+\fB\-depth\fP angegeben ist, falsch; kein Effekt. Da \fB\-delete\fP \fB\-depth\fP
+impliziert können Sie sinnvollerweise \fB\-prune\fP and \fB\-delete\fP nicht
+zusammen benutzen.
+
+.IP \-quit
+sofort beenden. Es werden keine laufenden Kindprozesse mehr übrig gelassen,
+aber es werden keine weiteren auf der Befehlzeile angegebenen Pfade mehr
+verarbeitet. Beispielsweise wird \fBfind /tmp/foo /tmp/bar \-print \-quit\fP nur
+\fB/tmp/foo\fP ausgeben. Alle aufzurufenen Befehlszeilen die mit \fB\-execdir …
+{} +\fP gebildet wurden, werden aufgerufen bevor \fBfind\fP beendet wird. Der
+Rückgabewert könnte null oder nicht null sein, je nachdem ob bereits ein
+Fehler aufgetreten ist.
+
+.SS "UNÜBLICHE DATEINAMEN"
+Viele der Aktionen von \fBfind\fP resultieren in der Ausgabe von Daten, die
+unter der Kontrolle anderer Benutzer stehen. Dies umfasst Dateinamen,
+Größen, Änderungszeiten und so weiter. Dateinamen stellen ein potentielles
+Problem dar, da sie jedes Zeichen mit Ausnahme von »\e0« und »/« enthalten
+können. Unübliche Zeichen in Dateinamen können unerwartete und oft
+unerwünschte Dinge mit Ihrem Terminal tun (beispielsweise die Einstellungen
+Ihrer Funktionstasten auf einigen Terminals ändern). Unübliche Zeichen
+werden von verschiedenen Aktionen unterschiedlich gehandhabt, wie im
+Folgenden beschrieben.
+
+.\"
+.IP "\-print0, \-fprint0"
+immer den genauen Dateinamen unverändert ausgeben, sogar wenn die Ausgabe an
+ein Terminal geht.
+
+.IP "\-ls, \-fls"
+Unübliche Zeichen werden maskiert. Leerzeichen, Rückwärtsschrägstrich und
+doppelte Anführungszeichen werden unter Benutzung von Maskierung im C\-Stil
+ausgegeben (zum Beispiel »\ef«, »\e«). Andere unübliche Zeichen werden unter
+Benutzung von einer oktalen Maskierung ausgegeben. Andere druckbare Zeichen
+(für \fB\-ls\fP und \fB\-fls\fP sind das die Zeichen zwischen oktal 041 und 0176)
+werden unverändert ausgegeben.
+
+.IP "\-printf, \-fprintf"
+Falls die Ausgabe nicht an ein Terminal geht, wird sie unverändert
+gedruckt. Andernfalls hängt das Ergebnis davon ab, welche Direktive benutzt
+wird. Die Direktiven %D, %F, %g, %G, %H, %Y und %y expandieren die Werte,
+die nicht unter der Kontrolle des Dateibesitzers stehen und werden daher in
+der vorliegenden Form gedruckt. Die Direktiven %a, %b, %c, %d, %i, %k, %m,
+%M, %n, %s, %t, %u und %U haben Werte, die unter der Kontrolle des
+Dateibesitzers der Datei stehen, die aber nicht benutzt werden können, um
+beliebige Daten an das Terminal zu senden und daher unverändert gedruckt
+werden. Die Direktiven %f, %h, %l, %p und %P werden maskiert. Diese
+Maskierung wird auf die gleiche Art durchgeführt wie für GNU\-\fBls\fP. Dies ist
+nicht der gleiche Maskierungsmechanismus wie der, der für \fB\-ls\fP und \fB\-fls\fP
+benutzt wird. Falls Sie die Wahl haben, welches Format für die Ausgabe
+benutzt werden soll, ist es normalerweise besser »\e0« als Endezeichen statt
+eines Zeilenvorschubs zu verwenden, da Dateinamen Leerzeichen und
+Zeilenvorschübe enthalten können. Die Einstellung der Umgebungsvariablen
+»LC_CTYPE« wird benutzt, um zu bestimmen, welche Zeichen maskiert werden
+müssen.
+
+.IP "\-print, \-fprint"
+Maskierung wird auf die gleiche Weise wie für \fB\-printf\fP und \fB\-fprintf\fP
+gehandhabt. Falls Sie \fBfind\fP in einem Skript benutzen oder in einer
+Situation sind, in der die gefundenen Dateien beliebige Namen haben können,
+sollten Sie in Betracht ziehen \fB\-print0\fP anstelle von \fB\-print\fP benutzen.
+.P
+Die Aktionen \fB\-ok\fP und \fB\-okdir\fP geben den aktuellen Dateinamen unverändert
+aus. Dies könnte sich in einem späteren Release ändern.
+
+.SS OPERATOREN
+.P
+aufgelistet in der Reihenfolge abnehmender Wertigkeit:
+
+.IP "( \fIexpr\fP )"
+Wertigkeit erzwingen. Da Klammern für die Shell etwas spezielles sind,
+werden Sie sie normalerweise maskieren müssen. Viele Beispiele in dieser
+Handbuchseite verwenden zu diesem Zweck; »\e( … \e) anstelle von »( … )«.
+
+.IP "! \fIAusdruck\fP"
+wahr, wenn der \fIAusdruck\fP falsch ist. Es wird normalerweise auch nötig
+sein, dieses Zeichen vor einer Interpretation durch die Shell zu schützen.
+
+.IP "\-not \fIAusdruck\fP"
+das Gleiche wie ! \fIAusdruck\fP, ist aber POSIX\-konform
+
+.IP "\fIAusdruck1 Ausdruck2\fP"
+Zwei Ausdrücke in einer Reihe werden mit enem impliziten »and« verbunden;
+\fIAusdruck2\fP wird nicht ausgewertet, wenn \fIAusdruck1\fP falsch ist.
+
+.IP "\fIAusdruck1\fP \-a \fIAusdruck2\fP"
+entspricht \fIAusdruck1 Ausdruck2\fP
+
+.IP "\fIAusdruck1\fP \-and \fIAusdruck2\fP"
+entspricht \fIAusdruck1 Ausdruck2\fP, ist aber POSIX\-konform
+
+.IP "\fIAusdruck1\fP \-o \fIAusdruck2\fP"
+oder; \fIAusdruck2\fP wird nicht ausgewertet, falls \fIAusdruck1\fP wahr ist
+
+.IP "\fIAusdruck1\fP \-or \fIAusdruck2\fP"
+entspricht \fIAusdruck1\fP \fB\-o\fP \fIAusdruck2\fP, ist aber nicht POSIX\-konform
+
+.IP "\fIAusdruck1\fP, \fIAusdruck2\fP"
+Liste; sowohl \fIAusdruck1\fP als auch \fIAusdruck2\fP werden immer
+ausgewertet. Der Wert von \fIAusdruck1\fP wird verworfen; der Wert der Liste
+ist der Wert von \fIAusdruck2\fP. Der Kommaoperator kann nützlich sein, um nach
+unterschiedlichen Kriterien zu suchen, die Dateisystemhierarchie aber nur
+einmal zu durchlaufen. Die Aktion \fB\-fprintf\fP kann benutzt werden, um die
+verschiedenen gefundenen Elemente in mehreren verschiedenen Ausgabedateien
+aufzulisten.
+
+
+.SH STANDARDKONFORMITÄT
+Für größtmögliche Konformität zum POSIX\-Standard, sollten Sie die
+Umgebungsvariable POSIXLY_CORRECT setzen. Die folgenden Optionen sind im
+POSIX\-Standard (IEEE Std 1003.1, 2003 Edition) spezifiziert:
+
+.IP \fB\-H\fP
+Diese Option wird unterstützt.
+
+.IP \fB\-L\fP
+Diese Option wird unterstützt.
+
+.IP \fB\-name\fP
+Diese Option wird unterstützt, aber die POSIX\-Konformität hängt von der
+POSIX\-Konformität der Bibliotheksfunktion \fBfnmatch\fP(3) des SYstems ab. Ab
+findutils\-4.2.2 werden Shell\-Metazeichen (zum Beispiel »*«, »?« oder »[]«)
+zu einem führenden ».« passen, da dies die IEEE\-PASC\-Interpretation 126
+erfordert. Dies ist eine Änderung gegenüber vorherigen Versionen der
+Findutils.
+
+.IP \fB\-type\fP
+unterstützt. POSIX spezifiziert »b«, »c«, »d«, »l«, »p«, »f« und
+»s«. GNU\-Find unterstützt außerdem »D«, das eine Door repräsentiert, wo
+diese vom Betriebsystem bereitgestellt wird.
+
+.IP \fB\-ok\fP
+unterstützt. Die Interpretation der Antwort entspricht den »ja«\- und
+»nein«\-Mustern, die durch Setzen der Umgebungsvariablen »LC_MESSAGES«
+ausgewählt wurde. Wenn die Umgebungsvariable »POSIXLY_CORRECT« gesetzt ist,
+werden diese Muster als die Systemdefinition einer postiven (ja) oder
+negativen (nein) Anwort betrachtet. Lesen Sie die Dokumentation des Systems
+für \fBnl_langinfo\fP(3), insbesondere YESEXPR und NOEXPR. Wenn
+»POSIXLY_CORRECT« nicht gesetzt ist, werden die Muster von \fBfind\fPs eigenem
+Nachrichtenkatalog genommen.
+
+.IP \fB\-newer\fP
+unterstützt. Falls die angegebene Datei ein symbolischer Link ist, wird er
+immer zurückverfolgt. Dies ist eine Änderung gegenüber dem bisherigen
+Verhalten, das benutzt wurde, um die maßgebliche Zeit vom symbolischen Link
+zu nehmen; siehe den Abschnitt GESCHICHTE unterhalb.
+
+.IP \fB\-perm\fP
+unterstützt. Falls die Umgebungsvariable »POSIXLY_CORRECT« nicht gesetzt
+ist, werden einige Modusargumente (zum Beispiel +a+x), die in POSIX nicht
+gültig sind unterstützt, um abwärtskompatibel zu sein.
+
+.IP "Andere Prädikate"
+Die Prädikate \fB\-atime\fP, \fB\-ctime\fP, \fB\-depth\fP, \fB\-group\fP, \fB\-links\fP,
+\fB\-mtime\fP, \fB\-nogroup\fP, \fB\-nouser\fP, \fB\-print\fP, \fB\-prune\fP, \fB\-size\fP, \fB\-user\fP
+und \fB\-xdev\fP werden alle unterstützt.
+
+.P
+Der POSIX\-Standard spezifiziert Klammern »(«, »)«, Verneinung »!« und die
+Operatoren »and« und »or« (\fB\-a\fP, \fB\-o\fP).
+.P
+Alle anderen Operationen, Prädikate, Ausdrücke und so weiter sind
+Erweiterungen jenseits des POSIX\-Standards. Viele dieser Erweiterungen sind
+jedoch nicht auf GNU\-Find beschränkt.
+.P
+Der POSIX\-Standard erfordert, dass \fBfind\fP Schleifen entdeckt:
+.IP
+Das Hilfswerkzeug \fBfind\fP soll unendliche Schleifen entdecken, also das
+Eintreten in ein bereits vorher besuchtes Verzeichns, das ein Vorgänger der
+zuletzt gefundenen Datei ist. Wenn es eine Endlosschleife entdeckt, soll
+Find eine Diagnosenachricht auf die Standardfehlerausgabe schreiben und
+entweder seine Position in der Hierarchie wiederherstellen oder sich
+beenden.
+.P
+GNU\-\fBfind\fP erfüllt diese Anforderungen. Die Link\-Anzahl von Verzeichnissen,
+die Einträge mit harten Links auf einen Vorgänger enthalten, werden oft
+kleiner sein, als sie andernfalls sein sollten. Dies kann bedeuten, dass
+GNU\-Find manchmal den Besuch eines Unterverzeichnisses wegoptimiert, das
+tatsächlich ein Link zu einem Vorgänger ist. Da \fBfind\fP nicht tatsächlich in
+ein solches Unterverzeichnis eintritt, ist es erlaubt, das Ausgeben einer
+Diagnosenachricht zu verhindern. Dieses Verhalten könnte jedoch ein wenig
+verwirrend sein. Es ist unwahrscheinlich, dass sich tatsächlich jemand auf
+dieses Verhalten verlässt. Falls die Leaf\-Optimierung mit \fB\-noleaf\fP
+ausgeschaltet wurde, wird der Verzeichniseintrag immer untersucht und die
+Diagnosenachricht wird an geeigneter Stelle ausgegeben. Symbolische Links
+können nicht benutzt werden, um Dateisystemzyklen im eigentlichen Sinn zu
+erzeugen, aber falls die Optionen \fB\-L\fP oder \fB\-follow\fP benutzt werden, wird
+eine Diagnosenachricht ausgegeben, wenn \fBfind\fP in symbolischen Links auf
+eine Schleife trifft. Wie bei harten Links, die Schleifen enthalten, wird
+die Leaf\-Optimierung oft bedeuten, dass \fBfind\fP weiß, dass es \fIstat()\fP oder
+\fIchdir()\fP bei einem symbolischen Link nicht aufrufen muss, daher ist diese
+Diagnose häufig nicht nötig.
+.P
+Die Option \fB\-d\fP wird unterstützt, um die Kompatibilität mit verschiedenen
+BSD\-Systemen zu wahren, Sie sollten aber stattdessen die POSIX\-konforme
+Option \fB\-depth\fP benutzen.
+.P
+Die Umgebungsvariable POSIXLY_CORRECT beeinflusst nicht das Verhalten der
+Tests \fB\-regex\fP oder \fB\-iregex\fP, da diese Tests nicht im POSIX\-Standard
+spezifiziert sind.
+.SH UMGEBUNGSVARIABLEN
+
+.IP LANG
+Stellt einen Vorgabewert für die Internationalisierungsvariablen bereit, die
+nicht gesetzt oder null sind.
+
+.IP LC_ALL
+Falls dies auf einen nicht leeren Zeichenkettenwert gesetzt ist,
+überschreibt es die Werte aller anderen Internationalisierungsvariablen.
+
+.IP LC_COLLATE
+Der POSIX\-Standard spezifiziert, dass diese Variable die Mustersuche
+beeinflusst, die bei der Option \fB\-name\fP benutzt wird. GNU\-Find benutzt die
+Bibiliotheksfunktion \fBfnmatch\fP(3) und unterstützt daher »LC_COLLATE« in
+Abhängigkeitt von der Systembibliothek. Diese Variable beeinflusst außerdem
+die Interpretation der Antwort auf \fB\-ok;\fP während die Variable
+»LC_MESSAGES« das Muster auswählt, das tatsächlich benutzt wird, um die
+Antwort auf \fB\-ok;\fP zu interpretieren, wird die Interpretation jeglicher
+Ausdrücke mit Klammern im Muster durch »LC_COLLATE« beeinflusst.
+
+.IP LC_CTYPE
+Diese Variable beeinflusst die Behandlung von Zeichenklassen, die in
+regulären Ausdrücken ebenso wie im Test \fB\-name\fP benutzt wird, falls die
+Bibliotheksfunktion \fBfnmatch\fP(3) des Systems dies unterstützt. Diese
+Variable beeinflusst außerdem die Interpretation jeglicher Zeichenklassen,
+die in regulären Ausdrücken benutzt werden, um die Antwort auf die durch
+\fB\-ok\fP angegebene Abfrage zu interpretieren. Die Umgebungsvariable
+»LC_CTYPE« wird außerdem beeinflussen, welche Zeichen als nicht abdruckbar
+betrachtet werden, wenn Dateinamen ausgegeben werden; siehe den Abschnitt
+UNÜBLICHE DATENAMEN.
+
+.IP LC_MESSAGES
+bestimmt die Locale, die für internationalisierte Nachrichten verwendet
+werden soll. Falls die Umgebungsvariable »POSIXLY_CORRECT« gesetzt ist,
+bestimmt dies außerdem die Interpretation der Antwort auf die, durch die
+Aktion \fB\-ok\fP angegebene Abfrage.
+
+.IP NLSPATH
+bestimmt den Speicherort der Internationalisierungs\-Nachrichtenkataloge.
+
+.IP PATH
+beeinflusst die Verzeichnisse, die durchsucht werden, um die ausführbaren
+Dateien zu finden, die durch \fB\-exec\fP, \fB\-execdir\fP, \fB\-ok\fP und \fB\-okdir\fP
+aufgerufen werden.
+
+.IP POSIXLY_CORRECT
+bestimmt die von \fB\-ls\fP und \fB\-fls\fP benutzte Blockgröße, Falls
+\fBPOSIXLY_CORRECT\fP gesetzt ist, sind Blöcke Einheiten von 512
+Byte. Andernfalls sind es Einheiten von 1024 Byte.
+.IP
+Das Setzen dieser Variable schaltet außerdem standardmäßig Warnmeldungen aus
+(sprich, es implziert \fB\-nowarn\fP), da POSIX erfordert, dass unabhängig von
+der Ausgabe von \fB\-ok\fP, alle Nachrichten auf der Standardfehlerausgabe
+Diagnosen sind und in einem Rückgabewert ungleich null resultieren müssen.
+.IP
+Wenn POSIXLY_CORRECT nicht gesetzt ist, wird \fB\-perm\fP +zzz nur wie \fB\-perm\fP
+/zzz betrachtet, falls +zzz kein gültiger symbolischer Modus ist. Wenn
+POSIXLY_CORRECT gesetzt ist, werden solche Konstruktionen als Fehler
+betrachtet.
+.IP
+Wenn POSIXLY_CORRECT gesetzt ist, hängt die Interpretation der Antwort auf
+die, durch die Aktion \fB\-ok\fP angegebene Abfrage, von den
+Nachrichtenkatalogen des Systems ab, im Gegensatz zur Beachtung der eigenen
+Nachrichtenübersetzungen von \fBfind\fP.
+
+.IP TZ
+beeinflußt die Zeitzone, die für einige zeitbezogene Formatdirektiven von
+\fB\-printf\fP und \fB\-fprintf\fP benutzt wird.
+.SH BEISPIELE
+.nf
+\fBfind /tmp \-name core \-type f \-print | xargs /bin/rm \-f\fP
+
+.fi
+sucht Dateien mit dem Namen \fBcore\fP in oder unterhalb des Verzeichnisses
+\fB/tmp\fP und löscht diese. Beachten Sie, dass dies nicht korrekt
+funktioniert, falls die Dateinamen Zeilenvorschübe, einfache oder doppelte
+Anführungszeichen oder Leerzeichen enthalten.
+.P
+\fBfind /tmp \-name core \-type f \-print0 | xargs \-0 /bin/rm \-f\fP
+
+.fi
+sucht Dateien mit dem Namen \fBcore\fP in oder unterhalb des Verzeichnisses
+\fB/tmp\fP und löscht diese. Verarbeitet Dateinamen auf eine Weise, in der
+Datei\- oder Verzeichnisnamen, die Dateinamen einfache oder doppelte
+Anführungszeichen, Leerzeichen oder Zeilenvorschübe enthalten, korrekt
+gehandhabt werden. Der Test \fB\-name\fP kommt in der Reihenfolge vor dem Test
+\fB\-type\fP, um zu verhindern, dass \fBstat(2)\fP für jede Datei aufgerufen wird.
+
+.P
+.nf
+\fBfind . \-type f \-exec file \(aq{}\(aq \e\;\fP
+
+.fi
+führt »file« für jede Datei in oder unterhalb des aktuellen Verzeichnisses
+aus. Beachten Sie, dass Klammern in einfache Anführungszeichen
+eingeschlossen werden, um sie vor einer Interpretation als
+Shell\-Skript\-Zeichensetzung zu schützen. Der Strichpunkt wird gleichermaßen
+durch die Benutzung des Rückwärtsschrägstrichs geschützt, da einfache
+Anführungszeichen in diesem Fall ebenfalls benutzt werden könnten.
+
+.P
+.nf
+\fBfind / \e\fP
+\fB\e( \-perm \-4000 \-fprintf /root/suid.txt %#m %u %p\en \e) , \e\fP
+\fB\e( \-size +100M \-fprintf /root/big.txt %\-10s %p\en \e)\fP
+
+.fi
+das Dateisystem nur einmal durchlaufen, Setuid\-Dateien und Verzeichnisse in
+\fB/root/suid.txt\fP und große Dateien in \fB/root/big.txt\fP auflisten.
+
+.P
+.nf
+\fBfind $HOME \-mtime 0\fP
+
+.fi
+sucht nach Dateien in Ihrem Home\-Verzeichnis, die in den letzten 24 Stunden
+geändert wurden. Dieser Befehl funktioniert auf diese Art, weil die Zeit,
+seit jede Datei zuletzt verändert wurde, durch 24 Stunden geteilt und der
+Rest verworfen wird. Dies bedeutet, dass eine Datei, um \fB\-mtime\fP \fB0\fP zu
+entsprechen, eine Veränderung in der Vergangenheit haben muss, die weniger
+als 24 Stunden zurückliegt.
+
+.P
+.nf
+\fBfind /sbin /usr/sbin \-executable \e! \-readable \-print\fP
+
+.fi
+sucht Dateien, die ausführbar, aber nicht lesbar sind
+
+.P
+.nf
+\fBfind . \-perm 664\fP
+
+.fi
+sucht nach Dateien, die Lese\- und Schreibrechte für ihren Benutzer und ihre
+Gruppe haben, aber von anderen Benutzern gelesen, aber nicht geschrieben
+werden können. Dateien, die diesem Kriterium entsprechen, aber andere
+Rechte\-Bits gesetzt haben (zum Beispiel, wenn jemand die Datei ausführen
+kann) werden nicht passen.
+
+.P
+.nf
+\fBfind . \-perm \-664\fP
+
+.fi
+sucht nach Dateien, die Lese\- und Schreibrechte für ihren Benutzer und ihre
+Gruppe haben und die von anderen Benutzern gelesen werden können, ohne das
+Vorhandensein irgendwelcher zusätzlicher Rechte\-Bits (zum Beispiel des Bits
+für Ausführbarkeit) zu betrachten. Dies wird beispielsweise auf eine Datei
+mit dem Modus 777 passen.
+
+.P
+.nf
+\fBfind . \-perm /222\fP
+
+.fi
+sucht nach Dateien, die für jedermann schreibbar sind (ihren Besitzer, ihre
+Gruppe oder irgendjemand anderes).
+
+.P
+.nf
+\fBfind . \-perm /220\fP
+\fBfind . \-perm /u+w,g+w\fP
+\fBfind . \-perm /u=w,g=w\fP
+
+.fi
+Diese drei Befehle tun alle dasselbe, aber der Erste benutzt die oktale
+Darstellung des Dateimodus und die beiden anderen benutzen die symbolische
+Form. Diese Befehle suchen alle nach Dateien, die entweder durch ihren
+Besitzer oder ihre Gruppe schreibbar sind. Die Dateien müssen nicht sowohl
+für Besitzer und Gruppe schreibbar sein, um zu passen; eines genügt.
+
+.P
+.nf
+\fBfind . \-perm \-220\fP
+\fBfind . \-perm \-g+w,u+w\fP
+
+.fi
+Beide Befehle tun dasselbe; sie suchen nach Dateien, die sowohl für ihren
+Besitzer als auch für ihre Gruppe schreibbar sind.
+
+.P
+.nf
+\fBfind . \-perm \-444 \-perm /222 ! \-perm /111\fP
+\fBfind . \-perm \-a+r \-perm /a+w ! \-perm /a+x\fP
+
+.fi
+Diese beiden Befehle suchen nach Dateien, die für jedermann lesbar sind
+(\fB\-perm \-444\fP oder \fB\-perm \-a+r\fP), mindestens ein gesetztes Schreib\-Bit
+haben (\fB\-perm /222\fP oder \fB\-perm /a+w\fP), aber für niemanden ausführbar sind
+(\fB! \-perm /111\fP beziehungsweise \fB! \-perm /a+x\fP).
+
+.P
+.nf
+\fBcd /source\-dir\fP
+\fBfind . \-name .snapshot \-prune \-o \e( \e! \-name *~ \-print0 \e)|\fP
+\fBcpio \-pmd0 /dest\-dir\fP
+
+.fi 
+Dieser Befehl kopiert den Inhalt von \fB/source\-dir\fP nach \fB/dest\-dir\fP, lässt
+aber Dateien und Verzeichnisse mit Namen \fB.snapshot\fP aus (und alles, was
+sich darin befindet). Er lässt außerdem alle Dateien und Verzeichnisse aus,
+deren Name auf \fB~\fP endet, nicht jedoch ihren Inhalt. Die Konstruktion
+\fB\-prune \-o \e( ... \-print0 \e)\fP ist ziemlich gebräuchlich. Die Idee besteht
+hier darin, dass der Ausdruck vor \fB\-prune\fP auf die Dinge passt, die gekürzt
+werden. Die Aktion \fB\-prune\fP selbst gibt jedoch wahr zurück, daher stellt
+das folgende \fB\-o\fP sicher, dass die rechte Seite nur für die Verzeichnisse
+ausgewertet wird, die nicht gekürzt wurden (der Inhalt der gekürzten
+Verzeichnisse wird nicht einmal besucht und ist daher irrelevant). Der
+Ausdruck auf der rechten Seite von \fB\-o\fP ist nur der Übersichtlichkeit
+halber in Klammern. Dies hebt hervor, dass die Aktion \fB\-print0\fP nur den
+Platz von Dingen einnimmt, auf die \fB\-prune\fP nicht angewandt wurde. Da die
+Standardbedingung »and« zwischen Tests fester verbindet als \fB\-o\fP, ist dies
+sowieso die Vorgabe, aber die Klammern helfen zu zeigen, was passiert.
+
+.P
+.nf
+\fBfind repo/ \-exec test \-d {}/.svn \-o \-d {}/.git \-o \-d {}/CVS \; \e\fP
+\fB\-print \-prune\fP
+.fi
+
+Beim folgenden gegebenen Verzeichnis mit Projekten und den damit verbundenen
+Versionsverwaltungsverzeichnissen wird eine effiziente Suche nach den
+Wurzeln der Projekte durchgeführt:
+
+.nf
+\fBrepo/project1/CVS\fP
+\fBrepo/gnu/project2/.svn\fP
+\fBrepo/gnu/project3/.svn\fP
+\fBrepo/gnu/project3/src/.svn\fP
+\fBrepo/project4/.git\fP
+
+.fi
+In diesem Beispiel verhindert \fB\-prune\fP unnötiges Absteigen in
+Verzeichnisse, die bereits entdeckt wurden (zum Beispiel wird project3/src
+nicht durchsucht, da es bereits in project3/.svn gefunden wurde), aber es
+stellt sicher, dass Geschwisterverzeichnisse (project2 und project3)
+gefunden werden.
+  
+.SH RÜCKGABEWERT
+.PP
+\fBfind\fP endet mit Status Null, falls alle Dateien erfolgreich verarbeitet
+wurden und größer als Null, falls ein Fehler aufgetreten ist. Dies ist
+absichtlich eine sehr weitgehende Beschreibung, aber falls der Rückgabewert
+ungleich Null ist, sollten Sie sich nicht auf die Richtigkeit des
+Ergebnisses von \fBfind\fP verlassen.
+
+.SH "SIEHE AUCH"
+\fBchmod\fP(1), \fBlocate\fP(1), \fBls\fP(1), \fBupdatedb\fP(1), \fBxargs\fP(1),
+\fBlstat\fP(2), \fBstat\fP(2), \fBctime\fP(3), \fBfnmatch\fP(3), \fBprintf\fP(3),
+\fBlocatedb\fP(5), \fBstrftime\fP(3), \fBregex\fP(7), \fBFinding Files\fP (online in
+Info oder ausgegeben).
+.SH GESCHICHTE
+Ab findutils\-4.2.2 stimmen Shell\-Metazeichen (»*«, »?« oder »[]« zum
+Beispiel), die in Mustern für Dateinamen verwendet werden, mit einem
+führenden ».« überein, da die Interpretation 126 von IEEE POSIX dies
+erfordert.
+.P
+Die Syntax \fB\-perm +MODE\fP wurde in findutils\-4.2.21 zugunsten von \fB\-perm\fP
+\fB/MODUS\fP missbilligt. Ab findutils\-4.3.3 passt \fB\-perm /000\fP nun auf alle
+Dateien statt auf keine.
+.P
+Zeitstempel in Nanosekundenauflösung wurden in findutils\-4.3.3
+implementiert.
+.P
+Ab findutils\-4.3.11 setzt die Aktion \fB\-delete\fP den Rückgabewert von \fBfind\fP
+auf einen Wert ungleich null, wenn sie fehlschlägt. \fBfind\fP wird jedoch
+nicht sofort beendet. Vorher wurde der Rückgabewert von \fBfind\fP nicht durch
+ein Scheitern von \fB\-delete\fP beeinflusst.
+.TS
+l l l .
+Funktion	Hinzugefügt in	Erscheint auch in 
+\-newerXY	4.3.3	BSD
+\-D	4.3.1
+\-O	4.3.1
+\-readable	4.3.0
+\-writable	4.3.0
+\-executable	4.3.0
+\-regextype	4.2.24
+\-exec … +	4.2.12	POSIX
+\-execdir	4.2.12	BSD
+\-okdir	4.2.12
+\-samefile	4.2.11
+\-H	4.2.5	POSIX
+\-L	4.2.5	POSIX
+\-P	4.2.5	BSD
+\-delete	4.2.3	
+\-quit	4.2.3
+\-d	4.2.3	BSD
+\-wholename	4.2.0
+\-iwholename	4.2.0
+\-ignore_readdir_race	4.2.0
+\-fls	4.0
+\-ilname	3.8
+\-iname	3.8
+\-ipath	3.8
+\-iregex	3.8
+.TE
+.SH "KEINE FEHLER"
+.nf
+\fB$ find . \-name *.c \-print\fP
+find: Pfad muss vor dem Ausdruck stehen
+Aufruf: find [\-H] [\-L] [\-P] [\-Olevel] [\-D help|tree|search|stat|rates|opt|exec] [Pfad …] [Ausdruck]
+.fi
+.P
+Dies geschieht, da \fI*.c\fP durch die Shell expandiert wurde, was dazu führt,
+dass \fBfind\fP tatsächlich eine Befehlszeile wie diese bekommt:
+.nf
+
+\fBfind . \-name bigram.c code.c frcode.c locate.c \-print\fP
+
+.fi
+Der Befehl wird sicherlich nicht funktionieren. Statt dies auf diese Weise
+zu tun, sollten Sie die Muster in Anführungszeichen setzen oder den
+Platzhalter maskieren.
+.nf
+\fB$ find . \-name \e*.c \-print\fP
+.fi
+
+.SH FEHLER
+.P
+Es gibt dort Sicherheitslücken, die dem Verhalten anhaften, das der
+POSIX\-Standard für \fBfind\fP spezifiziert und die daher nicht behoben werden
+können. Die Aktion \fB\-exec\fP ist zum Beispiel von Natur aus unsicher und es
+sollte stattdessen \fB\-execdir\fP verwandt werden. Bitte lesen Sie den
+Abschnitt \fBFinding Files\fP, um weitere Informationen zu erhalten.
+.P
+Die Umgebungsvariable \fBLC_COLLATE\fP hat keinen Einfluss auf die Aktion
+\fB\-ok\fP.
+.P
+Der beste Weg, einen Fehler zu melden, ist die Benutzung des Formulars auf
+http://savannah.gnu.org/bugs/?group=findutils. Der Grund dafür liegt darin,
+dass Sie den Prozess, wie das Problem behoben wird, verfolgen können. Andere
+Kommentare über \fBfind\fP(1) und über das Paket Findutils im Allgemeinen
+können an die Mailingliste \fIbug\-findutils\fP gesandt werden. Um diese Liste
+zu abonnieren, senden Sie eine E\-Mail auf Englisch an
+\fIbug\-findutils\-request@gnu.org\fP.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

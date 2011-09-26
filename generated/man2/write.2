@@ -1,0 +1,178 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"                               1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Sat Jul 24 13:35:59 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Nov 28 17:19:01 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sat Jan 13 12:58:08 1996 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified Sun Jul 21 18:59:33 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" 2001-12-13 added remark by Zack Weinberg
+.\" 2007-06-18 mtk:
+.\"    	Added details about seekable files and file offset.
+.\"	Noted that write() may write less than 'count' bytes, and
+.\"	gave some examples of why this might occur.
+.\"	Noted what happens if write() is interrupted by a signal.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WRITE 2 "29. August 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+write \- in einen Dateideskriptor schreiben
+.SH ÜBERSICHT
+\fB#include <unistd.h>\fP
+.sp
+\fBssize_t write(int \fP\fIfd\fP\fB, const void *\fP\fIbuf\fP\fB, size_t \fP\fIcount\fP\fB);\fP
+.SH BESCHREIBUNG
+\fBwrite\fP() versucht \fIcount\fP Byte aus dem Puffer, auf den \fIbuf\fP zeigt, in
+die Datei zu schreiben, auf die der Dateideskriptor \fIfd\fP weist.
+
+Die Anzahl der geschriebenen Bytes kann geringer als \fIcount\fP sein, wenn es
+beispielsweise nicht genügend Platz auf dem zugrunde liegenden physischen
+Medium gibt oder die \fBRLIMIT_FSIZE\fP\-Ressourcenbeschränkung erreicht wird
+(siehe \fBsetrlimit\fP(2)) oder der Aufruf von einem Signal Handler nach
+weniger als \fIcount\fP geschriebenen Bytes unterbrochen wurde. (siehe auch
+\fBpipe\fP(7))
+
+Für eine Datei, auf die \fBlseek\fP(2) angewendet werden kann, ( z. B. eine
+normale Datei) erfolgt das Schreiben am aktuellen Datei\-Offset. Dabei wird
+der Datei\-Offset um die Anzahl der tatsächlich geschriebenen Bytes
+erhöht. Wenn die Datei mit \fBopen\fP(2) und der Option \fBO_APPEND\fP geöffnet
+wurde, wird der Datei\-Offset vor dem ersten Schreiben auf das Dateiende
+gesetzt. Die Einstellung des Datei\-Offsets und die Schreiboperation werden
+als eine unteilbare (atomare) Operation durchgeführt.
+
+POSIX fordert, dass ein nachweisbar nach der Rückkehr von \fBwrite\fP()
+liegendes \fBread\fP(2) die neuen Daten liefern muss. Es sollte jedoch beachtet
+werden, dass nicht alle Dateisysteme zu POSIX konform sind.
+.SH RÜCKGABEWERT
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+
+Wenn \fIcount\fP gleich Null ist und \fIfd\fP auf eine normale Datei verweist,
+kann \fBwrite\fP() einen Fehlerstatus zurückgeben, falls einer der
+nachfolgenden Fehler erkannt wird. Wenn keine Fehler festgestellt werden,
+wird 0 zurückgegeben, ohne dass Nebenwirkungen eintreten. Wenn \fIcount\fP
+gleich Null ist und \fIfd\fP sich nicht auf eine normale Datei bezieht, sind
+die Ergebnisse nicht festgelegt.
+.SH FEHLER
+.TP 
+\fBEAGAIN\fP
+Der Dateideskriptor \fIfd\fP verweist auf eine Datei, die kein Socket und als
+nicht blockierend (\fBO_NONBLOCK\fP) gekennzeichnet ist \- die Schreiboperation
+würde daher blockieren.
+.TP 
+\fBEAGAIN\fP oder \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Der Dateideskriptor \fIfd\fP verweist auf einen Socket und wurde als nicht
+blockierend (\fBO_NONBLOCK\fP) gekennzeichnet \- die Schreiboperation würde
+daher blockieren. POSIX.1\-2001 lässt für diesen Fall beide Fehlerstati zu
+und fordert nicht, dass beide Konstanten den gleichen Wert haben. Eine
+portable Anwendung sollte daher beide Möglichkeiten prüfen.
+.TP 
+\fBEBADF\fP
+\fIfd\fP ist kein gültiger Dateideskriptor oder ist nicht zum Schreiben
+geöffnet.
+.TP 
+\fBEDESTADDRREQ\fP
+\fIfd\fP verweist auf einen Datagram Socket, für den nicht mit \fBconnect\fP(2)
+eine Peer\-Adresse gesetzt wurde.
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP liegt außerhalb Ihres adressierbaren Adressraums.
+.TP 
+\fBEFBIG\fP
+Es wurde versucht, in eine Datei zu schreiben, die die implementations\- oder
+prozessspezifische maximale Dateigröße überschreitet oder der maximal
+zulässige Offset wurde überschritten.
+.TP 
+\fBEINTR\fP
+Der Aufruf wurde durch ein Signal unterbrochen, bevor irgendwelche Daten
+geschrieben wurden (siehe \fBsignal\fP(7)).
+.TP 
+\fBEINVAL\fP
+\fIfd\fP wurde einem nicht beschreibbaren Objekt zugeordnet oder die Datei
+wurde mit dem Schalter \fBO_DIRECT\fP geöffnet und entweder die in \fIbuf\fP
+angegebene Adresse, der in \fIcount\fP angegebene Wert oder der aktuelle
+Datei\-Offset ist nicht geeignet ausgerichtet.
+.TP 
+\fBEIO\fP
+Bei der Bearbeitung des Inodes trat ein system\-/hardwarenaher E/A\-Fehler
+auf.
+.TP 
+\fBENOSPC\fP
+Das Gerät, welches die Datei enthält, hat keinen Platz für die Daten.
+.TP 
+\fBEPIPE\fP
+\fIfd\fP ist mit einer Pipe oder einem Socket verbunden, dessen lesendes Ende
+geschlossen ist. In diesem Fall empfängt der schreibende Prozess auch ein
+\fBSIGPIPE\fP\-Signal. (Somit wird der Rückgabewert von \fBwrite\fP() nur
+sichtbar/wirksam/gesehen, wenn das Programm das Signal abfängt, blockiert
+oder ignoriert.)
+.PP
+Abhängig von dem mit \fIfd\fP verbundenen Objekt können weitere Fehler
+auftreten.
+.SH "KONFORM ZU"
+.\" SVr4 documents additional error
+.\" conditions EDEADLK, ENOLCK, ENOLNK, ENOSR, ENXIO, or ERANGE.
+SVr4, 4.3BSD, POSIX.1\-2001.
+
+Unter SVr4 kann ein Schreiben jederzeit unterbrochen werden und \fBEINTR\fP
+zurückgeben, nicht nur vor dem Schreiben von Daten.
+.SH ANMERKUNGEN
+Eine erfolgreiche Rückkehr aus \fBwrite\fP() garantiert nicht, dass Daten an
+die Festplatte übergeben wurden. In der Tat garantiert es auf einigen
+fehlerhaften Implementierungen nicht einmal, dass der Speicher für die Daten
+erfolgreich reserviert wurde. Der einzig sichere Weg ist der Aufruf von
+\fBfsync\fP(2), nachdem Sie alle Ihre Daten geschrieben haben.
+
+Wenn ein \fBwrite\fP() von einem Signal\-Handler unterbrochen wird, bevor
+irgendwelche Bytes geschrieben wurden, wird der Auruf mit dem Fehler
+\fBEINTR\fP enden. Wird das \fBwrite\fP() unterbrochen, nachdem mindestens ein
+Byte geschrieben wurde, kehrt die Funktion erfolgreich zurück und der
+Rückgabewert ist die Anzahl der geschriebenen Bytes.
+.SH "SIEHE AUCH"
+\fBclose\fP(2), \fBfcntl\fP(2), \fBfsync\fP(2), \fBioctl\fP(2), \fBlseek\fP(2), \fBopen\fP(2),
+\fBpwrite\fP(2), \fBread\fP(2), \fBselect\fP(2), \fBwritev\fP(2), \fBfwrite\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

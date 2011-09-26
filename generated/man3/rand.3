@@ -1,0 +1,188 @@
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-04-28, Lars Wirzenius
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995-05-18, Rik Faith (faith@cs.unc.edu) to add
+.\"          better discussion of problems with rand on other systems.
+.\"          (Thanks to Esa Hyyti{ (ehyytia@snakemail.hut.fi).)
+.\" Modified 1998-04-10, Nicolás Lichtmaier <nick@debian.org>
+.\"          with contribution from Francesco Potorti <F.Potorti@cnuce.cnr.it>
+.\" Modified 2003-11-15, aeb, added rand_r
+.\" 2010-09-13, mtk, added example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RAND 3 "1. Oktober 2010" "" Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+rand, rand_r, srand \- Pseudo\-Zufallszahlengenerator
+.SH ÜBERSICHT
+.nf
+\fB#include <stdlib.h>\fP
+.sp
+\fBint rand(void);\fP
+.sp
+\fBint rand_r(unsigned int *\fP\fIseedp\fP\fB);\fP
+.sp
+\fBvoid srand(unsigned int \fP\fIseed\fP\fB);\fP
+.fi
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+\fBrand_r\fP(): _POSIX_C_SOURCE\ >=\ 1 || _XOPEN_SOURCE || _POSIX_SOURCE
+.SH BESCHREIBUNG
+Die Funktion \fBrand\fP() gibt eine pseudo\-zufällige Ganzzahl im Bereich 0 bis
+\fBRAND_MAX\fP inklusive zurück (d.h. dem mathematischen Bereich [0,\
+\fBRAND_MAX\fP]).
+.PP
+Die Funktion \fBsrand\fP() setzt ihr Argument als Seed (Zufallswert zum
+Erzeugen kryptografischer Schlüssel) für eine neue Reihe von
+pseudo\-zufälligen Ganzzahlen ein, die von \fBrand\fP() zurückgegeben
+werden. Diese Sequenzen sind durch Aufruf von \fBsrand\fP() mit dem selben
+Seed\-Wert wiederholbar.
+.PP
+Wenn kein Seed angegeben wird, wird automatisch 1 als Seed\-Wert für
+\fBrand\fP() genommen.
+.PP
+Die Funktion \fBrand\fP() ist weder ablaufinvariant noch sicher für Threads, da
+sie versteckten Status benutzt, der bei jedem Aufruf geändert wird. Dies ist
+möglicherweise nur der Seed\-Wert, der beim nächsten Aufruf verwendet werden
+soll, oder etwas komplizierteres. Um ein reproduzierbares Verhalten für eine
+Anwendung mit Threads zu erhalten, muss dieser Status explizit gesetzt
+werden; dies kann mit der ablaufinvarianten Funktion \fBrand_r\fP() erledigt
+werden.
+
+Wie \fBrand\fP() gibt \fBrand_r\fP() eine pseudo\-zufällige Ganzzahl im Bereich
+[0,\ \fBRAND_MAX\fP] zurück. Das Argument \fIseedp\fP ist ein Zeiger auf einen
+\fIunsigned int\fP, der benutzt wird, um den Status zwischen Aufrufen zu
+speichern. Falls \fBrand_r\fP() mit dem gleichen Anfangswert für die Ganzzahl
+aufgerufen wird, auf die \fIseedp\fP zeigt, und der Wert zwischen den Aufrufen
+nicht verändert wurde, dann wird das Ergebnis die gleiche pseudo\-zufällige
+Sequenz sein.
+
+Der Wert, auf den das Argument \fIseedp\fP von \fBrand_r\fP() zeigt, stellt nur
+einen kleinen Anteil des Status bereit, daher wird diese Funktion nur ein
+schwacher Pseudo\-Zufallsgenerator sein. Probieren Sie stattdessen
+\fBdrand48_r\fP(3).
+.SH RÜCKGABEWERT
+Die Funktionen \fBrand\fP() und \fBrand_r\fP() geben einen Wert zwischen 0 und
+\fBRAND_MAX\fP (inklusive) zurück. Die Funktion \fBsrand\fP() gibt keinen Wert
+zurück.
+.SH "KONFORM ZU"
+Die Funktionen \fBrand\fP() und \fBsrand\fP() richten sich nach SVr4, 4.3BSD, C89,
+C99 und POSIX.1\-2001. Die Funktion \fBrand_r\fP() richtet sich nach
+POSIX.1\-2001. POSIX.1\-2008 kennzeichnet \fBrand_r\fP() als veraltet.
+.SH ANMERKUNGEN
+Die Versionen von \fBrand\fP() und \fBsrand\fP() in der Linux C\-Bibliothek
+benutzen den selben Zufallszahlengenerator wie \fBrandom\fP(3) und
+\fBsrandom\fP(3), daher sollten niederwertige Bits genauso zufällig wie
+höherwertige Bits sein. Bei älteren Implementierungen von \fBrand\fP() sind
+niederwertige Bits jedoch viel weniger zufällig als höherwertige
+Bits. Benutzen Sie diese Funktion nicht in Anwendungen, die portierbar sein
+sollen, wenn ein hochwertiger Zufall benötigt wird. (Benutzen Sie
+stattdessen \fBrandom\fP(3).)
+.SH BEISPIEL
+POSIX.1\-2001 gibt das folgende Beispiel einer Implementierung von \fBrand\fP()
+und \fBsrand\fP(), das vielleicht nützlich ist, wenn es darum geht, die gleiche
+Abfolge auf zwei unterschiedlichen Rechnern zu erhalten.
+.sp
+.in +4n
+.nf
+static unsigned long next = 1;
+
+/* es wird angenommen, dass RAND_MAX 32767 ist */
+int myrand(void) {
+    next = next * 1103515245 + 12345;
+    return((unsigned)(next/65536) % 32768);
+}
+
+void mysrand(unsigned seed) {
+    next = seed;
+}
+.fi
+.in
+.PP
+Das folgende Programm kann benutzt werden, um eine pseudo\-zufällige Sequenz
+anzuzeigen, die durch \fBrand\fP() erzeugt wird, wenn eine bestimmte Seed
+(Zufallswert zum Erzeugen kryptografischer Schlüssel) vorgegeben wird.
+.in +4n
+.nf
+
+#include <stdlib.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    int j, r, nloops;
+    unsigned int seed;
+
+    if (argc != 3) {
+        fprintf(stderr, "Aufruf: %s <seed> <nloops>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    seed = atoi(argv[1]);
+    nloops = atoi(argv[2]);
+
+    srand(seed);
+    for (j = 0; j < nloops; j++) {
+        r =  rand();
+        printf("%d\en", r);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.fi
+.in
+.SH "SIEHE AUCH"
+\fBdrand48\fP(3), \fBrandom\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.32 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
