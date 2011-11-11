@@ -2,12 +2,12 @@
 
 set -e
 
-# Get all msgids with at least 3 occurences
-msgcat --more-than=2 ../po/man?/*po > min-3-occurences.po
+# Get all msgids with at least 2 occurences
+msgcat --more-than=1 ../po/man?/*po > min-2-occurences.po
 # Remove most comment lines, preserve "#, fuzzy"
-sed -i -e "/^# /d;/^#\. /d" min-3-occurences.po
+sed -i -e "/^# /d;/^#\. /d" min-2-occurences.po
 # Remove first (empty) msgid with all combined headers
-sed -i -e "1,/^$/d" min-3-occurences.po
+sed -i -e "1,/^$/d" min-2-occurences.po
 # Create a temporary header for the above .po file
 cat > tmp.po <<END_OF_HEADER
 msgid ""
@@ -22,7 +22,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 END_OF_HEADER
-cat tmp.po min-3-occurences.po > tmp2.po
+cat tmp.po min-2-occurences.po > tmp2.po
 # In order to remove msgids which are already in the compendium,
 # first create a .po file with all msgids ...
 msgcat --use-first compendium.po tmp2.po > tmp.po
@@ -30,4 +30,4 @@ msgcat --use-first compendium.po tmp2.po > tmp.po
 msgcat --unique compendium.po tmp.po > tmp2.po
 # Remove dates from compendium, as they are translated automatically
 msggrep --msgid -v -E -e "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" tmp2.po > candidates.po
-rm -f tmp.po tmp2.po min-3-occurences.po
+rm -f tmp.po tmp2.po min-2-occurences.po
