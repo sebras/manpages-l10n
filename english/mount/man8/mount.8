@@ -39,7 +39,7 @@
 .\" 010725, Nikita Danilov <NikitaDanilov@Yahoo.COM>: reiserfs options
 .\" 011124, Karl Eichwalder <ke@gnu.franken.de>: tmpfs options
 .\"
-.TH MOUNT 8 "2004-12-16" "Linux 2.6" "Linux Programmer's Manual"
+.TH MOUNT 8 "December 2004" "util-linux" "System Administration"
 .SH NAME
 mount \- mount a filesystem
 .SH SYNOPSIS
@@ -101,6 +101,17 @@ the pathname
 refers to the root of the filesystem on
 .IR device .
 
+If only directory or device is given, for example:
+.RS
+
+.br
+.BI "mount /dir"
+.br
+
+.RE
+then mount looks for a mountpoint and if not found then for a device in the
+/etc/fstab file.
+
 .B The listing and help.
 .RS
 Three forms of invocation do not actually mount anything:
@@ -139,7 +150,7 @@ udev symlinks in the /etc/fstab file. The tags are
 more readable, robust and portable. The
 .BR mount (8)
 command internally uses udev
-symlinks, so use the symlinks in /etc/fstab is not advantage over LABEL=/UUID=.
+symlinks, so use the symlinks in /etc/fstab has no advantage over LABEL=/UUID=.
 For more details see
 .BR libblkid (3).
 
@@ -428,7 +439,7 @@ of that mount such that mounts and umounts within any of the mirrors propagate
 to the other mirror. A slave mount receives propagation from its master, but
 any not vice-versa.  A private mount carries no propagation abilities.  A
 unbindable mount is a private mount which cannot be cloned through a bind
-operation. Detailed semantics is documented in Documentation/sharedsubtree.txt
+operation. Detailed semantics is documented in Documentation/filesystems/sharedsubtree.txt
 file in the kernel source tree.
 
 .RS
@@ -653,7 +664,7 @@ If no
 option is given, or if the
 .B auto
 type is specified, mount will try to guess the desired type.
-Mount uses the blkid or volume_id library for guessing the filesystem
+Mount uses the blkid library for guessing the filesystem
 type; if that does not turn up anything that looks familiar,
 mount will try to read the file
 .IR /etc/filesystems ,
@@ -793,7 +804,7 @@ and
 mount options.
 .TP
 .B noatime
-Do not update inode access times on this filesystem (e.g, for faster
+Do not update inode access times on this filesystem (e.g., for faster
 access on the news spool to speed up news servers).
 .TP
 .B auto
@@ -972,6 +983,12 @@ effect.
 Do not allow set-user-identifier or set-group-identifier bits to take
 effect. (This seems safe, but is in fact rather unsafe if you have
 suidperl(1) installed.)
+.TP
+.B silent
+Turn on the silent flag.
+.TP
+.B loud
+Turn off the silent flag.
 .TP
 .B owner
 Allow an ordinary (i.e., non-root) user to mount the filesystem if he
@@ -1277,9 +1294,6 @@ if it is a directory itself.
 .BR grpquota | noquota | quota | usrquota
 These options are accepted but ignored.
 .TP
-.BR nobh
-Do not attach buffer_heads to file pagecache. (Since 2.5.49.)
-.TP
 .BR nouid32
 Disables 32-bit UIDs and GIDs.  This is for interoperability with older
 kernels which only store and expect 16-bit values.
@@ -1397,16 +1411,14 @@ Enable POSIX Access Control Lists. See the
 manual page.
 
 .SH "Mount options for ext4"
-The ext4 filesystem is an an advanced level of the ext3 filesystem which
+The ext4 filesystem is an advanced level of the ext3 filesystem which
 incorporates scalability and reliability enhancements for supporting large
 filesystem.
 
 The options
 .B journal_dev, noload, data, commit, orlov, oldalloc, [no]user_xattr
 .B [no]acl, bsddf, minixdf, debug, errors, data_err, grpid, bsdgroups, nogrpid
-.B sysvgroups, resgid, resuid, sb, quota, noquota, grpquota, usrquota
-and
-.B [no]bh
+.B sysvgroups, resgid, resuid, sb, quota, noquota, grpquota and usrquota
 are backwardly compatible with ext3 or ext2.
 .TP
 .BR journal_checksum
@@ -1449,7 +1461,7 @@ RAID chunk size in filesystem blocks.
 Deferring block allocation until write-out time.
 .TP
 .BR nodelalloc
-Disable delayed allocation. Blocks are allocation when data is copied from user
+Disable delayed allocation. Blocks are allocated when data is copied from user
 to page cache.
 .TP
 .BI max_batch_time= usec
@@ -1485,7 +1497,7 @@ debugging purposes.  This is normally used while
 remounting a filesystem which is already mounted.
 .TP
 .BR auto_da_alloc | noauto_da_alloc
-Many broken applications don't use fsync() when noauto_da_alloc
+Many broken applications don't use fsync() when
 replacing existing files via patterns such as
 
 fd = open("foo.new")/write(fd,..)/close(fd)/ rename("foo.new", "foo")
@@ -1531,11 +1543,11 @@ Controls whether or not ext4 should use the DIO read locking. If the
 dioread_nolock option is specified ext4 will allocate uninitialized extent
 before buffer write and convert the extent to initialized after IO completes.
 This approach allows ext4 code to avoid using inode mutex, which improves
-scalability on high speed storages. However this does not work with nobh option
-and the mount will fail. Nor does it work with data journaling and
-dioread_nolock option will be ignored with kernel warning. Note that
-dioread_nolock code path is only used for extent-based files.  Because of the
-restrictions this options comprises it is off by default (e.g. dioread_lock).
+scalability on high speed storages. However this does not work with data
+journaling and dioread_nolock option will be ignored with kernel warning.
+Note that dioread_nolock code path is only used for extent-based files.
+Because of the restrictions this options comprises it is off by default
+(e.g. dioread_lock).
 .TP
 .BR i_version
 Enable 64-bit inode version support. This option is off by default.
@@ -2190,7 +2202,6 @@ NUMA capability (perhaps a safe recovery kernel), or with fewer nodes
 online, then it is advisable to omit the mpol option from automatic
 mount options.  It can be added later, when the tmpfs is already mounted
 on MountPoint, by 'mount -o remount,mpol=Policy:NodeList MountPoint'.
-.PE
 
 .SH "Mount options for ubifs"
 UBIFS is a flash file system which works on top of UBI volumes. Note that
@@ -2331,6 +2342,12 @@ Old format of ufs, this is the default, read only.
 .B 44bsd
 For filesystems created by a BSD-like system (NetBSD,FreeBSD,OpenBSD).
 .TP
+.B ufs2
+Used in FreeBSD 5.x supported as read-write.
+.TP
+.B 5xbsd
+Synonym for ufs2.
+.TP
 .B sun
 For filesystems created by SunOS or Solaris on Sparc.
 .TP
@@ -2401,7 +2418,7 @@ before trying
 .TP
 .B utf8
 UTF8 is the filesystem safe 8-bit encoding of Unicode that is used by the
-console. It can be be enabled for the filesystem with this option or disabled
+console. It can be enabled for the filesystem with this option or disabled
 with utf8=0, utf8=no or utf8=false. If `uni_xlate' gets set, UTF8 gets
 disabled.
 .TP
