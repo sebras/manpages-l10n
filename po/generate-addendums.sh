@@ -13,9 +13,13 @@ for translation in `find -name *po | sort`; do
 	number_translators=`echo "$translators" | wc -l`
 	
 	# Output of common header
-	echo "PO4A-HEADER:mode=after;position=^.TH;beginboundary=FakePo4aBoundary" > tmp.add
+	echo "PO4A-HEADER:mode=after;position=^\.(TH|Dt);beginboundary=FakePo4aBoundary" > tmp.add
 	echo >> tmp.add
-	echo ".SH ÜBERSETZUNG" >> tmp.add
+	# Special case for manpages which use mdoc syntax (currently only tar.1)
+	case $translation in
+		*/tar.1.po ) echo ".Sh ÜBERSETZUNG" >> tmp.add ;;
+		* ) echo ".SH ÜBERSETZUNG" >> tmp.add ;;
+	esac
 	echo "Die deutsche Übersetzung dieser Handbuchseite wurde von" >> tmp.add
 	
 	# Apply correct formatting, depending on the number of translators
