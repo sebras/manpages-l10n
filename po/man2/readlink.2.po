@@ -3,17 +3,20 @@
 # Copyright © of this file:
 # Markus Kaufmann <markus.kaufmann@gmx.de>
 # Chris Leick <c.leick@vollbio.de>, 2010.
+# Tobias Quathamer <toddy@debian.org>, 2011.
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
-"POT-Creation-Date: 2011-12-19 21:43+0100\n"
-"PO-Revision-Date: 2010-12-04 16:50+0200\n"
-"Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
+"POT-Creation-Date: 2011-12-21 21:45+0100\n"
+"PO-Revision-Date: 2011-12-21 21:44+0100\n"
+"Last-Translator: Tobias Quathamer <toddy@debian.org>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.2\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. type: TH
 #, no-wrap
@@ -249,6 +252,18 @@ msgid ""
 "buffer size, as this constant is not guaranteed to be defined per POSIX if "
 "the system does not have such limit."
 msgstr ""
+"Wenn Sie einen Puffer mit einer festen Größe verwenden, ist eventuell nicht "
+"genug Platz für die Inhalte des symbolischen Links vorhanden. Die "
+"erforderliche Größe für den Puffer kann aus dem Wert I<stat.st_size> "
+"ermittelt werden, der nach einem Aufruf der Funktion B<lstat>(2) für den "
+"Link zurückgegeben wird. Allerdings sollte die Anzahl der Byte, die von "
+"B<readlink>() geschrieben wurden, überprüft werden. Damit kann "
+"sichergestellt werden, dass die Größe des symbolischen Links zwischen den "
+"Aufrufen nicht zugenommen hat. Die dynamische Allokation des Puffers für "
+"B<readlink>() behebt außerdem ein verbreitetes Portabilitätsproblem, wenn "
+"Sie I<PATH_MAX> für die Puffergröße benutzen. Diese Konstante muss laut "
+"POSIX nicht zwingend definiert sein, wenn das System eine solche "
+"Beschränkung nicht hat."
 
 #. type: SH
 #, no-wrap
@@ -261,13 +276,13 @@ msgid ""
 "dynamically from the information provided by B<lstat>(), making sure there's "
 "no race condition between the calls."
 msgstr ""
+"Das folgende Programm reserviert den von B<readlink>() benötigten Puffer "
+"dynamisch mittels der Information, die von B<lstat>() bereitgestellt wird. "
+"Dabei wird sichergestellt, dass zwischen den Aufrufen keine Race-Condition "
+"entsteht."
 
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "#include E<lt>stdio.hE<gt>\n"
-#| "#include E<lt>stdlib.hE<gt>\n"
-#| "#include E<lt>string.hE<gt>\n"
+#, no-wrap
 msgid ""
 "#include E<lt>sys/types.hE<gt>\n"
 "#include E<lt>sys/stat.hE<gt>\n"
@@ -275,9 +290,11 @@ msgid ""
 "#include E<lt>stdlib.hE<gt>\n"
 "#include E<lt>unistd.hE<gt>\n"
 msgstr ""
+"#include E<lt>sys/types.hE<gt>\n"
+"#include E<lt>sys/stat.hE<gt>\n"
 "#include E<lt>stdio.hE<gt>\n"
 "#include E<lt>stdlib.hE<gt>\n"
-"#include E<lt>string.hE<gt>\n"
+"#include E<lt>unistd.hE<gt>\n"
 
 #. type: Plain text
 #, no-wrap
@@ -289,6 +306,12 @@ msgid ""
 "    char *linkname;\n"
 "    ssize_t r;\n"
 msgstr ""
+"int\n"
+"main(int argc, char *argv[])\n"
+"{\n"
+"    struct stat sb;\n"
+"    char *linkname;\n"
+"    ssize_t r;\n"
 
 #. type: Plain text
 #, no-wrap
@@ -298,6 +321,10 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    if (argc != 2) {\n"
+"        fprintf(stderr, \"Usage: %s E<lt>pathnameE<gt>\\en\", argv[0]);\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
@@ -307,6 +334,10 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    if (lstat(argv[1], &sb) == -1) {\n"
+"        perror(\"lstat\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
@@ -317,11 +348,16 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    linkname = malloc(sb.st_size + 1);\n"
+"    if (linkname == NULL) {\n"
+"        fprintf(stderr, \"insufficient memory\\en\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
 msgid "    r = readlink(argv[1], linkname, sb.st_size + 1);\n"
-msgstr ""
+msgstr "    r = readlink(argv[1], linkname, sb.st_size + 1);\n"
 
 #. type: Plain text
 #, no-wrap
@@ -331,6 +367,10 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    if (r E<lt> 0) {\n"
+"        perror(\"lstat\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
@@ -341,16 +381,21 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    if (r E<gt> sb.st_size) {\n"
+"        fprintf(stderr, \"symlink increased in size \"\n"
+"                        \"between lstat() and readlink()\\en\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
 msgid "    linkname[sb.st_size] = \\(aq\\e0\\(aq;\n"
-msgstr ""
+msgstr "    linkname[sb.st_size] = \\(aq\\e0\\(aq;\n"
 
 #. type: Plain text
 #, no-wrap
 msgid "    printf(\"\\(aq%s\\(aq points to \\(aq%s\\(aq\\en\", argv[1], linkname);\n"
-msgstr ""
+msgstr "    printf(\"\\(aq%s\\(aq points to \\(aq%s\\(aq\\en\", argv[1], linkname);\n"
 
 #. type: Plain text
 #, no-wrap
@@ -367,16 +412,12 @@ msgid "SEE ALSO"
 msgstr "SIEHE AUCH"
 
 #. type: Plain text
-#, fuzzy
-#| msgid ""
-#| "B<lstat>(2), B<readlinkat>(2), B<stat>(2), B<symlink>(2), "
-#| "B<path_resolution>(7), B<symlink>(7)"
 msgid ""
 "B<readlink>(1), B<lstat>(2), B<readlinkat>(2), B<stat>(2), B<symlink>(2), "
 "B<path_resolution>(7), B<symlink>(7)"
 msgstr ""
-"B<lstat>(2), B<readlinkat>(2), B<stat>(2), B<symlink>(2), B<path_resolution>"
-"(7), B<symlink>(7)"
+"B<readlink>(1), B<lstat>(2), B<readlinkat>(2), B<stat>(2), B<symlink>(2), "
+"B<path_resolution>(7), B<symlink>(7)"
 
 #. type: SH
 #, no-wrap
