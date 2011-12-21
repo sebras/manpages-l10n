@@ -1,9 +1,5 @@
-.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
 .\" All rights reserved.
-.\"
-.\" This code is derived from software contributed to Berkeley by
-.\" Chris Torek and the American National Standards Committee X3,
-.\" on Information Processing Systems.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -33,54 +29,72 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\"     @(#)fread.3	6.6 (Berkeley) 6/29/91
+.\"     @(#)getpeername.2	6.5 (Berkeley) 3/10/91
 .\"
-.\" Converted for Linux, Mon Nov 29 15:37:33 1993, faith@cs.unc.edu
-.\" Sun Feb 19 21:26:54 1995 by faith, return values
-.\" Modified Thu Apr 20 20:43:53 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
-.\" Modified Fri May 17 10:21:51 1996 by Martin Schulze <joey@infodrom.north.de>
+.\" Modified Sat Jul 24 16:37:50 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Thu Jul 30 14:37:50 1993 by Martin Schulze <joey@debian.org>
+.\" Modified Sun Mar 28 21:26:46 1999 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 17 Jul 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added 'socket' to NAME, so that "man -k socket" will show this page.
 .\"
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH FREAD 3 "17. Mai 1996" GNU Linux\-Programmierhandbuch
+.TH GETPEERNAME 2 "3. Dezember 2008" Linux Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
-fread, fwrite \- Ein\-/Ausgabe binärer Datenströme
+getpeername \- holt den Namen einer verbundenen Gegenstelle
 .SH ÜBERSICHT
-.nf
-\fB#include <stdio.h>\fP
+\fB#include <sys/socket.h>\fP
 .sp
-\fBsize_t fread(void *\fP\fIzeiger\fP\fB, size_t \fP\fIgroesse\fP\fB,\fP
-\fB             size_t \fP\fInmemb\fP\fB, FILE *\fP\fIdatenstrom\fP\fB);\fP
-.sp
-\fBsize_t fwrite(const void *\fP\fIzeiger\fP\fB, size_t \fP\fIgroesse\fP\fB,\fP
-\fB              size_t \fP\fInmemb\fP\fB, FILE *\fP\fIdatenstrom\fP\fB);\fP
-.fi
+\fBint getpeername(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIaddr\fP\fB, socklen_t
+*\fP\fIaddrlen\fP\fB);\fP
 .SH BESCHREIBUNG
-Die Funktion \fBfread\fP() liest \fInmemb\fP Datenelemente, jeweils \fIgroesse\fP
-Byte lang, vom Datenstrom, auf den \fIdatenstrom\fP zeigt, und speichert sie an
-der Position, die \fIzeiger\fP angibt.
-.PP
-Die Funktion \fBfwrite\fP() schreibt \fInmemb\fP Datenelemente, jeweils \fIgroesse\fP
-Byte lang, in den Datenstrom, auf den \fIdatenstrom\fP zeigt. Diese stammen von
-der Position, die \fIzeiger\fP angibt.
-.PP
-Für nicht sperrende Gegenstücke, siehe \fBunlocked_stdio\fP(3).
+\fBgetpeername\fP() schreibt die Adresse der Gegenstelle, die mit dem Socket
+\fIsockfd\fP verbunden ist, in den Puffer, auf den \fIaddr\fP zeigt. Der Parameter
+\fIaddrlen\fP sollte die Größe des freien Speicherplatzes an der Adresse
+\fIaddr\fP enthalten. Nach dem Aufruf enthält \fIaddrlen\fP die Größe des
+zurückgegebenen Namens (in Byte). Der Name wird abgeschnitten, wenn der zur
+Verfügung gestellte Puffer zu klein ist.
+
+Die zurückgegebene Adresse wird gekürzt, wenn der übergebene Puffer zu klein
+ist vorgesehen. In diesem Fall gibt \fIaddrlen\fP einen Wert zurück, der größer
+als der übergebene Wert ist.
 .SH RÜCKGABEWERT
-\fBfread\fP() und \fBfwrite\fP() geben die Anzahl der erfolgreich geschriebenen
-oder gelesenen Elemente zurück (d.h. nicht die Anzahl der Zeichen). Wenn ein
-Fehler auftritt oder das Dateiende erreicht ist, wird eine kurze
-Elementezahl (oder Null) zurückgegeben.
-.PP
-\fBfread\fP() unterscheidet nicht zwischen Dateiende und Fehler, der Aufrufende
-muss \fBfeof\fP(3) bzw. \fBferror\fP(3) benutzen, um herauszufinden was passiert
-ist.
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEBADF\fP
+Das Argument \fIsockfd\fP ist kein gültiger Descriptor.
+.TP 
+\fBEFAULT\fP
+Das Argument \fIaddr\fP zeigt aus dem vom Prozess adressierbaren Adressraum
+heraus.
+.TP 
+\fBEINVAL\fP
+\fIaddrlen\fP ist ungültig (ist z. B. negativ).
+.TP 
+\fBENOBUFS\fP
+zu wenig verfügbare Ressourcen für die Ausführung dieses Vorgangs
+.TP 
+\fBENOTCONN\fP
+Der Socket ist nicht verbunden.
+.TP 
+\fBENOTSOCK\fP
+Der Parameter \fIsockfd\fP ist eine Datei, kein Socket.
 .SH "KONFORM ZU"
-C89, POSIX.1\-2001.
+SVr4, 4.4BSD (der Funktionsaufruf \fBgetpeername\fP() war erstmals in 4.2BSD zu
+finden), POSIX.1\-2001.
+.SH ANMERKUNGEN
+Der dritte Parameter von \fBgetpeername\fP() ist in Wirklichkeit ein \fIint *\fP
+(und dies ist in 4.x\-BSD und libc4 sowie libc5 so umgesetzt). Einige
+Verwirrungen durch POSIX bewirkten das aktuelle \fIsocklen_t\fP, das ebenfalls
+von Glibc verwendet wird. Siehe auch \fBaccept\fP(2).
 .SH "SIEHE AUCH"
-\fBread\fP(2), \fBwrite\fP(2), \fBfeof\fP(3), \fBferror\fP(3), \fBunlocked_stdio\fP(3)
+\fBaccept\fP(2), \fBbind\fP(2), \fBgetsockname\fP(2), \fBip\fP(7), \fBsocket\fP(7),
+\fBunix\fP(7)
 .SH KOLOPHON
 Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
@@ -89,9 +103,9 @@ http://man7.org/linux/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von
-Martin Schulze <joey@infodrom.org>
+Dennis Stampfer <kontakt@dstampfer.de>
 und
-Chris Leick <c.leick@vollbio.de>
+Tobias Quathamer <toddy@debian.org>
 erstellt.
 
 Diese Übersetzung ist Freie Dokumentation; lesen Sie die

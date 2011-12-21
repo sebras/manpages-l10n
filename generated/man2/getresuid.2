@@ -1,7 +1,7 @@
 .\" Hey Emacs! This file is -*- nroff -*- source.
 .\"
-.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
-.\" Copyright 1997 Andries E. Brouwer (aeb@cwi.nl)
+.\" Copyright (C) 1997 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (c) 2007, Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
 .\" Permission is granted to make and distribute verbatim copies of this
 .\" manual provided the copyright notice and this permission notice are
@@ -23,51 +23,55 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\"
+.\" Modified, 2003-05-26, Michael Kerrisk, <mtk.manpages@gmail.com>
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH VM86 2 "20. Februar 2009" Linux Linux\-Programmierhandbuch
+.TH GETRESUID 2 "22. November 2010" Linux Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
-vm86old, vm86 \- Übergang in den virtuellen 8086\-Modus
+getresuid, getresgid \- ermittelt die reale, effektive und gespeicherte
+Benutzer\- oder Gruppenidentität
 .SH ÜBERSICHT
-\fB#include <sys/vm86.h>\fP
+\fB#define _GNU_SOURCE\fP /* Siehe feature_test_macros(7) */
+.br
+\fB#include <unistd.h>\fP
 .sp
-\fBint vm86old(struct vm86_struct *\fP\fIinfo\fP\fB);\fP
-.sp
-\fBint vm86(unsigned long \fP\fIfn\fP\fB, struct vm86plus_struct *\fP\fIv86\fP\fB);\fP
+\fBint getresuid(uid_t *\fP\fIruid\fP\fB, uid_t *\fP\fIeuid\fP\fB, uid_t *\fP\fIsuid\fP\fB);\fP
+.br
+\fBint getresgid(gid_t *\fP\fIrgid\fP\fB, gid_t *\fP\fIegid\fP\fB, gid_t *\fP\fIsgid\fP\fB);\fP
 .SH BESCHREIBUNG
-Der Systemaufruf \fBvm86\fP() wurde mit Linux 0.97p2 eingeführt.  Unter Linux
-2.1.15 und 2.0.28 wurde er in \fBvm86old\fP() umbenannt und ein neuer \fBvm86\fP()
-eingeführt. Die Definition von \fIstruct vm86_struct\fP wurde in den Versionen
-1.1.8 und 1.1.9 verändert.
-.LP
-Diese Aufrufe veranlassen den Prozess, in den VM86\-Modus (virtual\-8086 in
-der Intel\-Literatur) überzugehen. Sie werden von \fBdosemu\fP verwendet.
-.PP
-Der VM86\-Modus ist eine Emulation des Real\-Modus innerhalb eines
-Protected\-Mode\-Prozesses.
+\fBgetresuid\fP() gibt die reale Benutzer\-ID, die effektive Benutzer\-ID und die
+gespeicherte Benutzer\-ID des aufrufenden Prozesses in den Parametern
+\fIruid\fP, \fIeuid\fP und \fIsuid\fP zurück. \fBgetresgid\fP() liefert die analogen
+Werte für die Gruppen\-ID des Prozesses zurück.
 .SH RÜCKGABEWERT
 Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
 und \fIerrno\fP entsprechend gesetzt.
 .SH FEHLER
 .TP 
 \fBEFAULT\fP
-Dieser Rückgabewert ist i386\-spezifisch und zeigt ein Problem beim
-Datenzugriff auf Anwendungsebene.
-.TP 
-\fBENOSYS\fP
-Dieser Rückgabewert zeigt an, das der Systemaufruf auf der verwendeten
-Architektur nicht implementiert ist.
-.TP 
-\fBEPERM\fP
-Es ist ein gespeicherter Kernel\-Stack vorhanden. (Dies ist ein
-Sicherheitstest des Kernels; der gespeicherte Stack sollte nur im Vm86\-Modus
-selbst vorhanden sein.)
+Einer der Parameter gab eine Adresse an, die außerhalb des Speicherbereichs
+des aufrufenden Programmes liegt.
+.SH VERSIONEN
+Diese Systemaufrufe sind in Linux seit Kernel 2.1.44 enthalten.
+
+Die Prototypen werden von Glibc seit Version 2.3.2 bereitgestellt,
+vorausgesetzt, \fB_GNU_SOURCE\fP ist definiert.
 .SH "KONFORM ZU"
-Dieser Aufruf ist spezifisch für Linux auf 32\-Bit\-Intel\-Prozessoren und
-sollte nicht in Programmen verwendet werden, die portierbar sein sollen.
+Diese Systemaufrufe sind nicht standardisiert. Sie kommen auch in HP\-UX und
+einigen BSDs vor.
+.SH ANMERKUNGEN
+Die ursprünglichen Linux\-Systemaufrufe \fBgetresuid\fP() und \fBgetresgid\fP()
+unterstützten nur 16\-Bit\-Benutzer\- und Gruppen\-IDs. In der Folge wurden
+unter Linux 2.4 \fBgetresuid32\fP() und \fBgetresgid32\fP() hinzugefügt, die
+32\-Bit\-IDs unterstützten. Die Glibc\-Wrapperfunktionen \fBgetresuid\fP() und
+\fBgetresgid\fP() arbeiten transparent mit den Variationen in den verschiedenen
+Kernelversionen.
+.SH "SIEHE AUCH"
+\fBgetuid\fP(2), \fBsetresuid\fP(2), \fBsetreuid\fP(2), \fBsetuid\fP(2),
+\fBcredentials\fP(7)
 .SH KOLOPHON
 Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
@@ -76,9 +80,9 @@ http://man7.org/linux/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von
-Ralf Demmer <rdemmer@rdemmer.de>
+Dennis Stampfer <kontakt@dstampfer.de>
 und
-Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+Tobias Quathamer <toddy@debian.org>
 erstellt.
 
 Diese Übersetzung ist Freie Dokumentation; lesen Sie die
