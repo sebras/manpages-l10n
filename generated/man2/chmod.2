@@ -1,0 +1,212 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-21 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1997-01-12 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>: NFS details
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CHMOD 2 "26. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+chmod, fchmod \- Zugriffsrechte einer Datei ändern
+.SH ÜBERSICHT
+\fB#include <sys/stat.h>\fP
+.sp
+\fBint chmod(const char *\fP\fIpath\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+.br
+\fBint fchmod(int \fP\fIfd\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+.ad l
+.PD 0
+\fBfchmod\fP():
+.RS 4
+_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.br
+|| /* Seit Glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+.PD
+.ad
+.SH BESCHREIBUNG
+Diese Systemaufrufe ändern die Rechte einer Datei. Sie unterscheiden sich
+nur in der Art, wie eine Datei angegeben wird:
+.IP * 2
+\fBchmod\fP() ändert die Berechtigungen einer angegebenen Datei, deren Pfadname
+in \fIpath\fP übergeben ist. Falls sie ein symbolischer Link ist, wird dieser
+dereferenziert.
+.IP *
+\fBfchmod\fP() ändert die Rechte der über den offen Dateideskriptor \fIfd\fP
+angebenen Datei.
+.PP
+Die neuen Dateirechte werden in \fImode\fP, einer Bit\-Maske, die durch
+ODER\-Operationen von null oder mehr der Folgenden erstellt wird, festgelegt:
+.TP  18
+\fBS_ISUID\fP  (04000)
+set\-user\-ID (set process effective user ID on \fBexecve\fP(2))
+.TP 
+\fBS_ISGID\fP  (02000)
+set\-group\-ID (set process effective group ID on \fBexecve\fP(2); mandatory
+locking, as described in \fBfcntl\fP(2); take a new file's group from parent
+directory, as described in \fBchown\fP(2)  and \fBmkdir\fP(2))
+.TP 
+\fBS_ISVTX\fP  (01000)
+sticky bit (restricted deletion flag, as described in \fBunlink\fP(2))
+.TP 
+\fBS_IRUSR\fP  (00400)
+Leserechte für Eigentümer
+.TP 
+\fBS_IWUSR\fP  (00200)
+Schreibrechte für Eigentümer
+.TP 
+\fBS_IXUSR\fP  (00100)
+Ausführ\-/Schreiberechte für Eigentümer (»suchen« trifft für Verzeichnisse zu
+und bedeutet, dass auf Einträge innerhalb des Verzeichnisses zugegriffen
+werden kann)
+.TP 
+\fBS_IRGRP\fP  (00040)
+Leserechte für Gruppe
+.TP 
+\fBS_IWGRP\fP  (00020)
+Schreibrechte für Gruppe
+.TP 
+\fBS_IXGRP\fP  (00010)
+Ausführ\-/Suchrechte für Gruppe
+.TP 
+\fBS_IROTH\fP  (00004)
+Leserechte für andere
+.TP 
+\fBS_IWOTH\fP  (00002)
+Schreibrechte für andere
+.TP 
+\fBS_IXOTH\fP  (00001)
+Ausführ\-/Suchrechte für andere
+.PP
+Die effektive UID des aufrufenden Prozesses muss auf den Eigentümer der
+Datei passen oder der Prozess muss privilegiert sein (Linux: er muss über
+die Capability (Fähigkeit) \fBCAP_FOWNER\fP verfügen).
+
+If the calling process is not privileged (Linux: does not have the
+\fBCAP_FSETID\fP capability), and the group of the file does not match the
+effective group ID of the process or one of its supplementary group IDs, the
+\fBS_ISGID\fP bit will be turned off, but this will not cause an error to be
+returned.
+
+As a security measure, depending on the file system, the set\-user\-ID and
+set\-group\-ID execution bits may be turned off if a file is written.  (On
+Linux this occurs if the writing process does not have the \fBCAP_FSETID\fP
+capability.)  On some file systems, only the superuser can set the sticky
+bit, which may have a special meaning.  For the sticky bit, and for
+set\-user\-ID and set\-group\-ID bits on directories, see \fBstat\fP(2).
+
+On NFS file systems, restricting the permissions will immediately influence
+already open files, because the access control is done on the server, but
+open files are maintained by the client.  Widening the permissions may be
+delayed for other clients if attribute caching is enabled on them.
+.SH RÜCKGABEWERT
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+Abhängig vom Dateisystem können andere Fehler zurückgeliefert werden. Die
+allgemeineren Fehler für \fBchmod\fP() sind im Folgenden aufgeführt:
+.TP 
+\fBEACCES\fP
+Eine Komponente des Pfad\-Präfix darf nicht durchsucht werden. (Siehe auch
+\fBpath_resolution\fP(7).)
+.TP 
+\fBEFAULT\fP
+\fIpath\fP zeigt aus Ihrem adressierbaren Adressraum heraus.
+.TP 
+\fBEIO\fP
+Es ist ein E/A\-Fehler (engl. I/O) aufgetreten.
+.TP 
+\fBELOOP\fP
+Bei der Auflösung von \fIpath\fP wurden zu viele symbolische Verknüpfungen
+gefunden.
+.TP 
+\fBENAMETOOLONG\fP
+\fIpath\fP ist zu lang.
+.TP 
+\fBENOENT\fP
+Die Datei existiert nicht.
+.TP 
+\fBENOMEM\fP
+Zu wenig Kernelspeicher verfügbar.
+.TP 
+\fBENOTDIR\fP
+Eine Komponente des Pfad\-Präfixes ist kein Verzeichnis.
+.TP 
+\fBEPERM\fP
+Die effektive UID passt nicht auf den Eigentümer der Datei und der Prozess
+ist nicht privilegiert (Linux: Er verfügt nicht über die Capability
+\fBCAP_FOWNER\fP).
+.TP 
+\fBEROFS\fP
+Die angegebene Datei befindet sich auf einem nur lesbaren (read\-only)
+Dateisystem.
+.PP
+Die allgemeinen Fehler bei \fBfchmod\fP() sind im Folgenden aufgeführt:
+.TP 
+\fBEBADF\fP
+Der Dateideskriptor \fIfd\fP ist ungültig.
+.TP 
+\fBEIO\fP
+Siehe oben.
+.TP 
+\fBEPERM\fP
+Siehe oben.
+.TP 
+\fBEROFS\fP
+Siehe oben.
+.SH "KONFORM ZU"
+4.4BSD, SVr4, POSIX.1\-2001.
+.SH "SIEHE AUCH"
+\fBchown\fP(2), \fBexecve\fP(2), \fBfchmodat\fP(2), \fBopen\fP(2), \fBstat\fP(2),
+\fBpath_resolution\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Daniel Kobras <kobras@linux.de>
+und
+Helge Kreutzmann <debian@helgefjell.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

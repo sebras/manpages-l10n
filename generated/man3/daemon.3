@@ -1,5 +1,5 @@
-.\" Copyright (c) 1983, 1991 The Regents of the University of California.
-.\" All rights reserved.
+.\" Copyright (c) 1993
+.\"	The Regents of the University of California.  All rights reserved.
 .\"
 .\" Redistribution and use in source and binary forms, with or without
 .\" modification, are permitted provided that the following conditions
@@ -29,73 +29,54 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\"     @(#)getpeername.2	6.5 (Berkeley) 3/10/91
-.\"
-.\" Modified Sat Jul 24 16:37:50 1993 by Rik Faith <faith@cs.unc.edu>
-.\" Modified Thu Jul 30 14:37:50 1993 by Martin Schulze <joey@debian.org>
-.\" Modified Sun Mar 28 21:26:46 1999 by Andries Brouwer <aeb@cwi.nl>
-.\" Modified 17 Jul 2002, Michael Kerrisk <mtk.manpages@gmail.com>
-.\"	Added 'socket' to NAME, so that "man -k socket" will show this page.
-.\"
+.\"	@(#)daemon.3	8.1 (Berkeley) 6/9/93
+.\" Added mentioning of glibc weirdness wrt unistd.h. 5/11/98, Al Viro
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH GETPEERNAME 2 "3. Dezember 2008" Linux Linux\-Programmierhandbuch
+.TH DAEMON 3 "5. Dezember 2009" GNU Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
-getpeername \- holt den Namen einer verbundenen Gegenstelle
+daemon \- im Hintergrund ausführen
 .SH ÜBERSICHT
-\fB#include <sys/socket.h>\fP
+\fB#include <unistd.h>\fP
 .sp
-\fBint getpeername(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIaddr\fP\fB, socklen_t
-*\fP\fIaddrlen\fP\fB);\fP
+\fBint daemon(int \fP\fInochdir\fP\fB, int \fP\fInoclose\fP\fB);\fP
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+\fBdaemon\fP(): _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
 .SH BESCHREIBUNG
-\fBgetpeername\fP() schreibt die Adresse der Gegenstelle, die mit dem Socket
-\fIsockfd\fP verbunden ist, in den Puffer, auf den \fIaddr\fP zeigt. Der Parameter
-\fIaddrlen\fP sollte die Größe des freien Speicherplatzes an der Adresse
-\fIaddr\fP enthalten. Nach dem Aufruf enthält \fIaddrlen\fP die Größe des
-zurückgegebenen Namens (in Byte). Der Name wird abgeschnitten, wenn der zur
-Verfügung gestellte Puffer zu klein ist.
-
-Die zurückgegebene Adresse wird gekürzt, wenn der übergebene Puffer zu klein
-ist vorgesehen. In diesem Fall gibt \fIaddrlen\fP einen Wert zurück, der größer
-als der übergebene Wert ist.
+Die Funktion \fBdaemon\fP()  gibt einem Programm die Möglichkeit, sich selbst
+vom Terminal in den Hintergrund zu setzen und dort weiter als System\-Daemon
+zu laufen.
+.PP
+Wenn \fInochdir\fP gleich Null ist, macht \fBdaemon\fP() das Wurzelverzeichnis
+(»/«, root directory) zum Arbeitsverzeichnis des aufrufenden Prozesses;
+anderenfalls bleibt das Arbeitsverzeichnis unverändert.
+.PP
+Wenn \fInoclose\fP gleich Null ist, leitet \fBdaemon\fP() die Standardausgabe, die
+Standardeingabe und die Fehlerausgabe nach \fI/dev/null\fP um; anderenfalls
+werden keine Änderungen an den Dateideskriptoren vorgenommen.
 .SH RÜCKGABEWERT
-Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
-und \fIerrno\fP entsprechend gesetzt.
-.SH FEHLER
-.TP 
-\fBEBADF\fP
-Das Argument \fIsockfd\fP ist kein gültiger Descriptor.
-.TP 
-\fBEFAULT\fP
-Das Argument \fIaddr\fP zeigt aus dem vom Prozess adressierbaren Adressraum
-heraus.
-.TP 
-\fBEINVAL\fP
-\fIaddrlen\fP ist ungültig (ist z. B. negativ).
-.TP 
-\fBENOBUFS\fP
-Es waren im System zu wenig Ressourcen für die Ausführung dieses Vorgangs
-verfügbar.
-.TP 
-\fBENOTCONN\fP
-Der Socket ist nicht verbunden.
-.TP 
-\fBENOTSOCK\fP
-Der Parameter \fIsockfd\fP ist eine Datei, kein Socket.
+.\" not .IR in order not to underline _
+(Diese Funktion ruft \fBfork\fP(2) auf. Wenn der Aufruf erfolgreich ist, ruft
+der Elternprozess \fB_exit\fP(2) auf, so dass nur der Kindprozess über weitere
+Fehler informiert wird.) Bei Erfolg gibt \fBdaemon\fP() Null zurück. Wenn ein
+Fehler auftritt, gibt \fBdaemon\fP() \-1 zurück und setzt \fIerrno\fP auf einen für
+\fBfork\fP(2) und \fBsetsid\fP(2) beschriebenen Wert.
 .SH "KONFORM ZU"
-SVr4, 4.4BSD (der Funktionsaufruf \fBgetpeername\fP() war erstmals in 4.2BSD zu
-finden), POSIX.1\-2001.
+Nicht in POSIX.1\-2001. Eine ähnliche Funktion kommt in den BSDs vor. Die
+\fBdaemon\fP()\-Funktion erschien erstmals in 4.4BSD.
 .SH ANMERKUNGEN
-Der dritte Parameter von \fBgetpeername\fP() ist in Wirklichkeit ein \fIint *\fP
-(und dies ist in 4.x\-BSD und libc4 sowie libc5 so umgesetzt). Einige
-Verwirrungen durch POSIX bewirkten das aktuelle \fIsocklen_t\fP, das ebenfalls
-von Glibc verwendet wird. Siehe auch \fBaccept\fP(2).
+Die Glibc\-Implementierung kann auch \-1 zurückgeben, wenn \fI/dev/null\fP
+existiert, aber kein zeichenorientiertes Gerät ist und die Haupt\- und
+Nebennummern (major/minor numbers) abweichen.
 .SH "SIEHE AUCH"
-\fBaccept\fP(2), \fBbind\fP(2), \fBgetsockname\fP(2), \fBip\fP(7), \fBsocket\fP(7),
-\fBunix\fP(7)
+\fBfork\fP(2), \fBsetsid\fP(2)
 .SH KOLOPHON
 Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
@@ -106,7 +87,7 @@ http://man7.org/linux/man\-pages/.
 Die deutsche Übersetzung dieser Handbuchseite wurde von
 Dennis Stampfer <kontakt@dstampfer.de>
 und
-Tobias Quathamer <toddy@debian.org>
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
 erstellt.
 
 Diese Übersetzung ist Freie Dokumentation; lesen Sie die
