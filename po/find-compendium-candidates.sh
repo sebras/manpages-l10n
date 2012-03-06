@@ -3,7 +3,7 @@
 set -e
 
 # Get all msgids with at least 2 occurences
-msgcat --more-than=1 ../po/man?/*po > min-2-occurences.po
+msgcat --more-than=1 man?/*po > min-2-occurences.po
 # Remove most comment lines, preserve "#, fuzzy"
 sed -i -e "/^# /d;/^#\. /d" min-2-occurences.po
 # Remove first (empty) msgid with all combined headers

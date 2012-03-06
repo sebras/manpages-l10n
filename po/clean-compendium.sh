@@ -3,7 +3,7 @@
 set -e
 
 # Get all msgids with at most 2 occurences (only in compendium or in one other file)
-msgcat --less-than=3 ../po/man?/*po compendium.po > max-2-occurences.po
+msgcat --less-than=3 man?/*po compendium.po > max-2-occurences.po
 # Remove most comment lines, preserve "#, fuzzy"
 sed -i -e "/^# /d;/^#\. /d" max-2-occurences.po
 # Remove first (empty) msgid with all combined headers
