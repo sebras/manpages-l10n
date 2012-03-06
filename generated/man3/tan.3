@@ -27,26 +27,26 @@
 .\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
 .\"     386BSD man pages
 .\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
-.\" Modified 2004-10-31 by aeb
+.\" Modified 2002-07-27 by Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
 .\"
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH LDEXP 3 "20. September 2010" "" Linux\-Programmierhandbuch
+.TH TAN 3 "11. September 2010" "" Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
-ldexp, ldexpf, ldexpl \- Fließkommazahl mit einer ganzzahligen Zweierpotenz
-multiplizieren
+tan, tanf, tanl \- Tangensfunktion
 .SH ÜBERSICHT
 .nf
 \fB#include <math.h>\fP
 .sp
-\fBdouble ldexp(double \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+\fBdouble tan(double \fP\fIx\fP\fB);\fP
 .br
-\fBfloat ldexpf(float \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+\fBfloat tanf(float \fP\fIx\fP\fB);\fP
 .br
-\fBlong double ldexpl(long double \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+\fBlong double tanl(long double \fP\fIx\fP\fB);\fP
 .fi
 .sp
 Linken Sie mit der Option \fI\-lm\fP.
@@ -56,7 +56,7 @@ Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
 .in
 .sp
 .ad l
-\fBldexpf\fP(), \fBldexpl\fP():
+\fBtanf\fP(), \fBtanl\fP():
 .RS 4
 _BSD_SOURCE || _SVID_SOURCE || _XOPEN_SOURCE\ >=\ 600 || _ISOC99_SOURCE
 || _POSIX_C_SOURCE\ >=\ 200112L;
@@ -65,42 +65,56 @@ oder \fIcc\ \-std=c99\fP
 .RE
 .ad
 .SH BESCHREIBUNG
-Die Funktion \fBldexp\fP() gibt das Ergebnis der Multiplikation einer
-Fließkommazahl \fIx\fP mit 2 hoch \fIexp\fP zurück.
+Die Funktion \fBtan\fP() gibt den Tangens von \fIx\fP zurück, wobei \fIx\fP im
+Radialmaß übergeben wird.
 .SH RÜCKGABEWERT
-Bei Erfolg geben diese Funktionen \fIx * (2^exp)\fP zurück.
-
-Falls \fIexp\fP Null ist, wird \fIx\fP zurückgegeben.
+Bei Erfolg geben diese Funktionen den Tangens von \fIx\fP zurück.
 
 Falls \fIx\fP keine gültige Zahl (»NaN«) ist, wird »NaN« zurückgegeben.
 
-Falls \fIx\fP plus (oder minus) unendlich ist, wird plus (oder minus) unendlich
-zurückgegeben.
+Falls \fIx\fP plus oder minus unendlich ist, tritt ein Wertebereichsfehler auf
+und es wird »NaN« zurückgegeben.
 
-Bei einem Ergebnis\-Unterlauf tritt ein Bereichsfehler auf und es wird Null
-zurückgegeben.
-
-Bei einem Ergebnis\-Überlauf tritt ein Bereichsfehler auf und die Funktionen
-geben \fBHUGE_VAL\fP, \fBHUGE_VALF\fP beziehungsweise \fBHUGE_VALL\fP mit dem
-gleichen Vorzeichen wie \fIx\fP zurück.
+.\" I think overflow can't occur, because the closest floating-point
+.\" representation of pi/2 is still not close enough to pi/2 to
+.\" produce a large enough value to overflow.
+.\" Testing certainly seems to bear this out.  -- mtk, Jul 08
+.\"
+.\" POSIX.1 allows an optional underflow error;
+.\" glibc 2.8 doesn't do this
+.\" POSIX.1 an optional range error for subnormal x;
+.\" glibc 2.8 doesn't do this
+Falls das korrekte Ergebnis überlaufen würde, tritt ein Bereichsfehler auf
+und die Funktionen geben jeweils \fBHUGE_VAL\fP, \fBHUGE_VALF\fP oder \fBHUGE_VALL\fP
+mit dem mathematisch korrekten Vorzeichen zurück.
 .SH FEHLER
 In \fBmath_error\fP(7) erfahren Sie, wie Sie Fehler bei der Ausführung
 mathematischer Funktionen erkennen.
 .PP
 Die folgenden Fehler können auftreten:
 .TP 
-Bereichsfehler, Überlauf
-\fIerrno\fP wird auf \fBERANGE\fP gesetzt. Es wird der Fließkomma\-Ausnahmefehler
-»Überlauf« (\fBFE_OVERFLOW\fP) ausgelöst.
+Wertebereichsfehler: \fIx\fP ist unendlich
+\fIerrno\fP wird auf \fBEDOM\fP gesetzt (siehe aber FEHLER). Es wird der
+Fließkomma\-Ausnahmefehler »ungültige Fließkommazahl« (\fBFE_INVALID\fP)
+ausgelöst.
 .TP 
-Bereichsfehler, Unterlauf
-\fIerrno\fP wird auf \fBERANGE\fP gesetzt. Es wird der Fließkomma\-Ausnahmefehler
-»Unterschreitung« (\fBFE_UNDERFLOW\fP) ausgelöst.
+Bereichsfehler: Ergebnisüberlauf
+.\" Unable to test this case, since the best approximation of
+.\" pi/2 in double precision only yields a tan() value of 1.633e16.
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+Es wird der Fließkomma\-Ausnahmefehler »Überlauf« (\fBFE_OVERFLOW\fP) ausgelöst.
 .SH "KONFORM ZU"
 C99, POSIX.1\-2001. Die Variante, die \fIdouble\fP zurückgibt, ist außerdem
 konform zu SVr4, 4.3BSD, C89.
+.SH FEHLER
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=6782
+Vor Version 2.10 hat die Glibc\-Implementierung \fIerrno\fP nicht auf \fBEDOM\fP
+gesetzt, wenn ein Bereichsfehler auftrat.
 .SH "SIEHE AUCH"
-\fBfrexp\fP(3), \fBmodf\fP(3), \fBscalbln\fP(3)
+\fBacos\fP(3), \fBasin\fP(3), \fBatan\fP(3), \fBatan2\fP(3), \fBcos\fP(3), \fBctan\fP(3),
+\fBsin\fP(3)
 .SH KOLOPHON
 Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
@@ -111,7 +125,7 @@ http://man7.org/linux/man\-pages/.
 Die deutsche Übersetzung dieser Handbuchseite wurde von
 Markus Schmitt <fw@math.uni-sb.de>
 und
-Chris Leick <c.leick@vollbio.de>
+Tobias Quathamer <toddy@debian.org>
 erstellt.
 
 Diese Übersetzung ist Freie Dokumentation; lesen Sie die
