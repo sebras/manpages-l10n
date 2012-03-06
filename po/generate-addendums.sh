@@ -1,4 +1,4 @@
-for translation in `find -name *po | sort`; do
+for translation in `find man?/ -name "*po" | sort`; do
 	# Use the header up until the first msgid
 	# and remove the comment character
 	translators=`sed '/msgid/q;s/^#\s\+//' "$translation" |
