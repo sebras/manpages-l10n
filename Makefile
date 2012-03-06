@@ -15,9 +15,6 @@ install:
 	  test -d $(DESTDIR)/$(MANDIR)/$$i || install -d -m 755 $(DESTDIR)/$(MANDIR)/$$i; \
 	  for m in $$i/*; do \
 	    test -f $(DESTDIR)/$(MANDIR)/$$m || install -m 644 $$m $(DESTDIR)/$(MANDIR)/$$i; \
-			# Add a warning about possibly outdated manpages \
-			perl add-outdated-warning.pl $(DESTDIR)/$(MANDIR)/$$m > manpage.tmp; \
-			mv manpage.tmp $(DESTDIR)/$(MANDIR)/$$m; \
 			# Compress manpages \
 			gzip $(DESTDIR)/$(MANDIR)/$$m; \
 	  done; \
@@ -59,7 +56,7 @@ dist:
 	mkdir manpages-de-$(version)
 	cp -R english/*/*links man?/ generated/ \
 	CHANGES COPYRIGHT GPL-3 Makefile README VERSION \
-	add-outdated-warning.pl create-links.pl remove-links.pl \
+	create-links.pl remove-links.pl \
 	manpages-de-$(version)
 	tar cjf manpages-de-$(version).tar.bz2 manpages-de-$(version)
 	rm -rf manpages-de-$(version)
