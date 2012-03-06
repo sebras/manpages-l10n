@@ -29,13 +29,13 @@ install:
 		gzip $(DESTDIR)/$(MANDIR)/man$$section/$$file; \
 	done
 	# Install links
-	for linkfile in `find -type f -name "*.links"`; do \
+	for linkfile in `find links/ -type f`; do \
 		perl create-links.pl $(DESTDIR)/$(MANDIR) $$linkfile; \
 	done
 
 uninstall:
 	# Remove links
-	for linkfile in `find -type f -name "*.links"`; do \
+	for linkfile in `find links/ -type f`; do \
 		perl remove-links.pl $(DESTDIR)/$(MANDIR) $$linkfile; \
 	done
 	# Remove old manpages
@@ -54,9 +54,13 @@ version=`perl -pe "" VERSION`
 dist:
 	rm -rf manpages-de-$(version)
 	mkdir manpages-de-$(version)
-	cp -R english/*/*links man?/ generated/ \
+	mkdir manpages-de-$(version)/links
+	cp -R man?/ generated/ \
 	CHANGES COPYRIGHT GPL-3 Makefile README VERSION \
 	create-links.pl remove-links.pl \
 	manpages-de-$(version)
+	for linkfile in `find english/ -type f -name "*.links"`; do \
+		cp $$linkfile manpages-de-$(version)/links/`basename $$linkfile .links`; \
+	done
 	tar cjf manpages-de-$(version).tar.bz2 manpages-de-$(version)
 	rm -rf manpages-de-$(version)
