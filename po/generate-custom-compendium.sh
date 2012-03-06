@@ -1,13 +1,26 @@
 #!/bin/sh
 
-original="$1"
-if [ ! -e "$original" ]; then \
-  echo "Die Datei $original wurde nicht gefunden." ; \
-  exit ; \
+# Require two arguments
+if [ ! -f "$1" ]; then
+	echo "The file $1 could not be found."
+	exit 1
+fi
+if [ -z "$2" ]; then
+	echo "Specify the custom compendium filename."
+	exit 1
 fi
 
-program=`basename "$original" | sed -e "s/\.[0-9]$//"`
-section=`basename "$original" | sed -e "s/.\+\.\([0-9]\)$/\1/"`
+# Try to find the original manpage
+manpage=`basename "$1" .po`
+original=`find ../english/ -type f -name "$manpage"`
+if [ -z "$original" ]; then
+	echo "The original manpage for $1 could not be found."
+	exit 1
+fi
+
+name=`basename "$original" | sed -e "s/\.[0-9]//"`
+section=`basename "$original" | sed -e "s/.\+\.//"`
+output=`mktemp`
 
 # Determine if there's a recognizable date in the original file
 perl -ne "if (/^\.TH.*(([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])).*/) {
@@ -30,10 +43,10 @@ perl -ne "if (/^\.TH.*(([1-2][0-9]{3})-([0-1][0-9])-([0-3][0-9])).*/) {
 	print '. ' . \$month[\$3] . ' ' . \$2;
 	print '\"';
 	print \"\\n\";
-}" "$original" > tmp.po
+}" "$original" > "$output"
 
 # Set up strings for coreutils
-cat >> tmp.po <<END_COMPENDIUM
+cat >> "$output" <<END_COMPENDIUM
 
 msgid "UPCASE"
 msgstr "UPCASE"
@@ -64,16 +77,21 @@ msgid "should give you access to the complete manual."
 msgstr "auf das vollständige Handbuch zugreifen."
 END_COMPENDIUM
 # Replace PROGRAM with current program
-upcase=`echo "$program" | tr [:lower:] [:upper:]`
-sed -i -e "s/PROGRAM/$program/g;s/UPCASE/$upcase/g" tmp.po
+upcase=`echo "$name" | tr [:lower:] [:upper:]`
+sed -i -e "s/PROGRAM/$name/g;s/UPCASE/$upcase/g" "$output"
 
-# If the header.po exists, reuse it (useful for generating a template header)
+# If a header has been given on the command line, reuse it.
+# This is useful for generating a template header.
 # Otherwise, extract the existing header
-if [ ! -e header.po ]; then
+if [ ! -f "$3" ]; then
+	header=`mktemp`
 	# Extract header entry for custom compendium (first line until first blank line)
-	sed -n "1,/^$/p" "man$section/$program.$section.po" > header.po
+	sed -n "1,/^$/p" "$1" > "$header"
+else
+	header="$3"
 fi
 # Create a custom compendium with the header from the translation
-msgcat --use-first header.po ../work/compendium.po > tmp-compendium.po
-cat tmp-compendium.po tmp.po > custom.po
-rm tmp-compendium.po header.po tmp.po
+tmpcompendium=`mktemp`
+msgcat --use-first "$header" compendium.po > "$tmpcompendium"
+cat "$tmpcompendium" "$output" > "$2"
+rm -f "$tmpcompendium" "$header" "$output"
