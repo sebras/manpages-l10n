@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 count=0
-for translation in `find -name "*.po" | sort`; do
+for translation in `find man?/ -name "*.po" | sort`; do
 	stats=`msgfmt -cv -o /dev/null $translation 2>&1`
 	fuzzy_or_untranslated=`echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+"`
 	if [ -n "$fuzzy_or_untranslated" ]; then
