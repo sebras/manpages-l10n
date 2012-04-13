@@ -39,6 +39,10 @@ for translation in `find man?/ -name "*po" | sort`; do
 	esac
 	echo "Die deutsche Übersetzung dieser Handbuchseite wurde von" >> tmp.add
 	
+	# Warn if the translators string is empty
+	if [ -z "$translators" ]; then
+		echo "Warning: No translators found for $translation."
+	fi
 	# Apply correct formatting, depending on the number of translators
 	if [ $number_translators -eq 1 ]; then
 		echo "$translators" >> tmp.add
