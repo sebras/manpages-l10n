@@ -37,13 +37,20 @@ name=`basename "$original" | sed -e "s/\.[0-9]//"`
 section=`basename "$original" | sed -e "s/.\+\.//"`
 output=`mktemp`
 
+# Determine if an encoding is specified,
+# otherwise fall back to ISO-8859-1
+coding=`grep "\-\*\- coding:" "$original" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
+if [ -z "$coding" ]; then
+	coding="ISO-8859-1"
+fi
+
 # Create .po file with po4a
 po4a-gettextize -f man \
  --option groff_code=verbatim \
  --option generated \
  --option untranslated="a.RE,\|" \
  --option unknown_macros=untranslated \
- --master "$original" \
+ --master "$original" -M "$coding" \
  --po "$output"
 
 # Stop here if po4a fails
