@@ -28,13 +28,19 @@ for translation in po/man?/*.po; do
 	section=`basename $manpage | sed -e "s/.\+\.//"`;
 	original=`find english/ -type f -name "$manpage"`;
 	addendum=`echo $translation | sed -e "s/\.po$/.add/"`;
+	# Determine if an encoding is specified,
+	# otherwise fall back to ISO-8859-1
+	coding=`grep "\-\*\- coding:" "$original" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
+	if [ -z "$coding" ]; then
+		coding="ISO-8859-1"
+	fi
 	po4a-translate \
 		-f man \
 		--option groff_code=verbatim \
 		--option untranslated="a.RE,\|" \
 		--option generated \
-		-m $original \
-		-M ISO-8859-1 \
+		-m "$original" \
+		-M "$coding" \
 		-p $translation \
 		-a $addendum \
 		-a lizenz.add \

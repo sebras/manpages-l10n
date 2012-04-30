@@ -59,13 +59,20 @@ fi
 custom=`mktemp`
 ./generate-custom-compendium.sh "$1" "$custom" "$header"
 
+# Determine if an encoding is specified,
+# otherwise fall back to ISO-8859-1
+coding=`grep "\-\*\- coding:" "$original" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
+if [ -z "$coding" ]; then
+	coding="ISO-8859-1"
+fi
+
 # Update .po file from master file
 po4a-updatepo -f man \
  --option groff_code=verbatim \
  --option generated \
  --option untranslated="a.RE,\|" \
  --option unknown_macros=untranslated \
- --master "$original" -M ISO-8859-1 \
+ --master "$original" -M "$coding" \
  --msgmerge-opt "--backup=none --no-location --compendium \"$custom\" --previous" \
  --po "$1"
 # Remove obsolete strings
