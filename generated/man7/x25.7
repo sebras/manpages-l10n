@@ -1,0 +1,116 @@
+.\" -*- coding: UTF-8 -*-
+.\" This man page is Copyright (C) 1998 Heiner Eisen.
+.\" Permission is granted to distribute possibly modified copies
+.\" of this page provided the header is included verbatim,
+.\" and in case of nontrivial modification author and date
+.\" of the modification is added to the header.
+.\" $Id: x25.7,v 1.4 1999/05/18 10:35:12 freitag Exp $
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH X25 7 "8. August 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+x25, AF_X25 \- Protokollschnittstelle für ITU\-T X.25 / ISO\-8208
+.SH ÜBERSICHT
+\fB#include <sys/socket.h>\fP
+.br
+\fB#include <linux/x25.h>\fP
+.sp
+\fBx25_socket = socket(AF_X25, SOCK_SEQPACKET, 0);\fP
+.SH BESCHREIBUNG
+X25\-Sockets bieten eine Schnittstelle zur Netzwerkschicht (Packet Layer) des
+X.25\-Protokolls. Dies ermöglicht es Anwendungen, über ein öffentliches
+X.25\-Datennetz zu kommunizieren, wie es von der International
+Telecommunication Union in der Empfehlung X.25 (X.25 DTE\-DCE\-Modus) genormt
+ist. X25\-Sockets können auch für die Kommunikation ohne zwischengeschaltetes
+X.25\-Netz verwendet werden (X.25 DTE\-DTE\-Modus, wie in ISO\-8208
+beschrieben).
+.PP
+Nachrichtengrenzen bleiben erhalten \(em ein \fBread\fP(2) von einem Socket
+wird die gleiche Datenmenge abrufen wie das entsprechende \fBwrite\fP(2) an den
+Socket des Peer\-Rechners. Wenn nötig, erledigt der Kernel die Segmentierung
+und das Zusammensetzen langer Nachrichten mittels des X.25\-M\-Bits. Es gibt
+keine hart codierte Obergrenze für die Größe von Nachrichten. Allerdings
+kann die Rekonstruktion einer langen Nachricht fehlschlagen, wenn ein
+vorübergehender Mangel an System\-Ressourcen oder andere Einschränkungen (wie
+z.B. Begrenzungen für Socket\-Speicher oder Puffer) wirksam werden. In
+solchen Fällen wird die X.25\-Verbindung zurückgesetzt.
+.SS Socket\-Adressen
+Die \fBAF_X25\fP\-Socket\-Adressfamilie nutzt die \fIstruct sockaddr_x25\fP für die
+Darstellung von Netzwerkadressen, wie sie in der ITU\-T\-Empfehlung X.121
+definiert sind.
+.PP
+.in +4n
+.nf
+struct sockaddr_x25 {
+    sa_family_t sx25_family;    /* muss auf AF_X25 gesetzt werden*/
+    x25_address sx25_addr;      /* X.121\-Adresse */
+};
+.fi
+.in
+.PP
+\fIsx25_addr\fP enthält ein Zeichenfeld \fIx25_addr[]\fP, das als nullterminierte
+Zeichenkette zu interpretieren ist. \fIsx25_addr.x25_addr[]\fP besteht aus bis
+zu 15 (ohne die abschließende 0) ASCII\-Zeichen, die die X.121\-Adresse
+bilden. Es sind nur die Dezimalziffern von \(aq0\(aq bis \(aq9\(aq erlaubt.
+.SS Socket\-Optionen
+Die folgenden für X.25 spezifischen Socket\-Optionen können mit
+\fBsetsockopt\fP(2) gesetzt und mit \fBgetsockopt\fP(2) gelesen werden. Das
+Argument \fIlevel\fP muss dafür auf \fBSOL_X25\fP gesetzt werden.
+.TP 
+\fBX25_QBITINCL\fP
+bestimmt, ob das X.25 Q\-bit (Qualified Data Bit) für den Nutzer zugänglich
+ist. Sie erwartet ein Integer\-Argument. Ist das Argument (standardmäßig) auf
+0 gesetzt, wird das Q\-Bit für ausgehende Paket nicht gesetzt; das Q\-Bit
+eingehender Pakete wird ignoriert. Ist der Wert auf 1 gesetzt, wird jeder in
+den Socket geschriebenen oder daraus gelesenen Nachricht ein zusätzliches
+erste Byte vorangestellt. Für aus dem Socket gelesene Daten bedeutet eine 0
+als erstes Byte, dass die Q\-Bits der entsprechenden eingehenden Datenpakete
+nicht gesetzt wurden. Ein erstes Byte mit dem Wert 1 bedeutet, dass das
+Q\-Bit der entsprechenden eingehenden Datenpakete gesetzt wurde. Wenn das
+erste Byte der in den Socket geschriebenen Daten 1 ist, wird das Q\-Bit der
+entsprechenden ausgehenden Datenpakete gesetzt werden. Wenn das erste Byte 0
+ist, wird das Q\-Bit nicht gesetzt.
+.SH VERSIONEN
+Die AF_X25\-Protokollfamilie ist ein neues Merkmal von Linux 2.2.
+.SH FEHLER
+Viele, weil die X.25\-PLP\-Implementierung als \fBCONFIG_EXPERIMENTAL\fP
+gekennzeichnet ist.
+.PP
+Diese Handbuchseite ist nicht vollständig.
+.PP
+Es gibt noch keine spezielle Header\-Datei für Anwendungsprogrammierer; Sie
+müssen die Kernel\-Header\-Datei \fI< linux/x25.h>\fP
+verwenden. \fBCONFIG_EXPERIMENTAL\fP könnte auch bedeuten, dass zukünftige
+Versionen der Schnittstelle nicht binärkompatibel sind.
+.PP
+X.25\-N\-Reset\-Ereignisse werden derzeit noch nicht an den Prozess des
+Anwenders weitergereicht. Somit können im Fall eines Resets (Zurücksetzens)
+Daten verloren gehen, ohne das der Verlust gemeldet wird.
+.SH "SIEHE AUCH"
+\fBsocket\fP(2), \fBsocket\fP(7)
+.PP
+Jonathan Simon Naylor: \(lqThe Re\-Analysis and Re\-Implementation of
+X.25.\(rq Die URL ist
+.RS
+\fIftp://ftp.pspt.fi/pub/ham/linux/ax25/x25doc.tgz\fP
+.RE
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
