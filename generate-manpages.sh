@@ -44,7 +44,19 @@ for translation in po/man?/*.po; do
 		-p $translation \
 		-a $addendum \
 		-a lizenz.add \
-		-l generated/man$section/$manpage;
+		-L UTF-8 \
+		-l "generated/man$section/$manpage";
+	# Check if the generated manpage already includes an encoding
+	coding=`head -n1 "generated/man$section/$manpage" | grep "\-\*\- coding:"`
+	if [ -n "$coding" ]; then
+		# There is an encoding set, remove the first line
+		sed -i -e "1d" "generated/man$section/$manpage"
+	fi
+	# Set an explicit encoding to prevent display errors
+	echo "'\\\" t -*- coding: UTF-8 -*-" > encoding.txt
+	cat encoding.txt "generated/man$section/$manpage" > manpage-with-encoding
+	mv manpage-with-encoding "generated/man$section/$manpage"
 done
 
+rm encoding.txt
 find po/ -name "*add" | xargs rm
