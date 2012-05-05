@@ -54,7 +54,7 @@ for translation in po/man?/*.po; do
 			sed -i -e "1d" "generated/man$section/$manpage"
 		fi
 		# Set an explicit encoding to prevent display errors
-		echo "'\\\" t -*- coding: UTF-8 -*-" > encoding.txt
+		echo "'\\\" -*- coding: UTF-8 -*-" > encoding.txt
 		cat encoding.txt "generated/man$section/$manpage" > manpage-with-encoding
 		mv manpage-with-encoding "generated/man$section/$manpage"
 	fi
