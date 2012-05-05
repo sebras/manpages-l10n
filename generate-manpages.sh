@@ -48,13 +48,13 @@ for translation in po/man?/*.po; do
 		-l "generated/man$section/$manpage";
 	if [ -f "generated/man$section/$manpage" ]; then
 		# Check if the generated manpage already includes an encoding
-		coding=`head -n1 "generated/man$section/$manpage" | grep "\-\*\- coding:"`
+		coding=`head -n1 "generated/man$section/$manpage" | grep "coding:"`
 		if [ -n "$coding" ]; then
 			# There is an encoding set, remove the first line
 			sed -i -e "1d" "generated/man$section/$manpage"
 		fi
 		# Set an explicit encoding to prevent display errors
-		echo "'\\\" -*- coding: UTF-8 -*-" > encoding.txt
+		echo ".\\\" -*- coding: UTF-8 -*-" > encoding.txt
 		cat encoding.txt "generated/man$section/$manpage" > manpage-with-encoding
 		mv manpage-with-encoding "generated/man$section/$manpage"
 	fi
