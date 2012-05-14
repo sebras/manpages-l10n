@@ -1,0 +1,156 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-06-10 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2004-10-10 by Andries Brouwer <aeb@cwi.nl>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UTIME 2 "6. August 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+utime, utimes \- letzte Dateizugriffs\- und \-änderungszeiten ändern
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <utime.h>\fP
+.sp
+\fBint utime(const char *\fP\fIdateiname\fP\fB, const struct utimbuf *\fP\fIzeiten\fP\fB);\fP
+.sp
+\fB#include <sys/time.h>\fP
+.sp
+\fBint utimes(const char *\fP\fIdateiname\fP\fB, const struct timeval \fP\fIzeiten\fP\fB[2]);\fP
+.fi
+.SH BESCHREIBUNG
+Der Systemaufruf \fButime\fP ändert die Zugriffs\- und Änderungszeiten des durch
+\fIdateiname\fP angegebenen Inodes auf die Felder \fIactime\fP beziehungsweise
+\fImodtime\fP von \fIzeiten\fP.
+
+Falls \fIzeiten\fP NULL ist, werden die Zugriffs\- und Änderungszeiten der Datei
+auf die aktuelle Zeit gesetzt.
+
+Das Ändern von Zeitstempeln ist erlaubt, wenn entweder der Prozess
+entsprechende Rechte hat, die effektive Benutzer\-ID der Benutzer\-ID der
+Datei entpricht oder \fIzeiten\fP NULL ist und der Prozess das Schreibrecht für
+die Datei besitzt.
+
+Die Struktur \fIutimbuf\fP hat folgenden Aufbau:
+
+.in +4n
+.nf
+struct utimbuf {
+        time_t actime;  /* Zugriffszeit */
+        time_t modtime; /* Änderungszeit */
+};
+.fi
+.in
+
+Der Systemaufruf \fButime\fP() erlaubt die Angabe von Zeitstempeln mit einer
+Genauigkeit von einer Sekunde.
+
+Der Systemaufruf \fButimes\fP() ist ähnlich, aber das Argument \fIzeiten\fP
+bezieht sich auf ein Feld statt auf eine Struktur. Die Elemente dieses
+Feldes sind \fItimeval\fP\-Strukturen, die eine Genauigkeit von Mikrosekunden
+für die Angabe von Zeitstempeln ermöglichen. Die Struktur \fItimeval\fP hat
+folgenden Aufbau:
+
+.in +4n
+.nf
+struct timeval {
+        long    tv_sec;         /* Sekunden */
+        long    tv_usec;        /* Mikrosekunden */
+};
+.fi
+.in
+.PP
+\fIzeiten\fP[0] gibt die neue Zugriffszeit an und \fIzeiten\fP[1] die neue
+Änderungszeit. Falls \fIzeiten\fP NULL ist, werden wie bei \fButime\fP() die
+Zugriffs\- und Änderungszeiten der Datei auf die aktuelle Zeit gesetzt.
+.SH RÜCKGABEWERT
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEACCES\fP
+In einem oder mehreren Verzeichnissen im Pfad\-Präfix von \fIpfad\fP wurde die
+Erlaubnis zum Suchen verweigert.
+.TP 
+\fBEACCES\fP
+\fIzeiten\fP ist NULL, die effektive Benutzer\-ID des Aufrufenden entspricht
+nicht dem Dateieigentümer, der Aufrufende hat kein Schreibrecht für die
+Datei und der Aufrufende ist nicht privilegiert (Linux: ihm fehlt entweder
+die \fBCAP_DAC_OVERRIDE\fP\- oder die \fBCAP_FOWNER\fP\-Fähigkeit).
+.TP 
+\fBENOENT\fP
+\fIdateiame\fP existiert nicht.
+.TP 
+\fBEPERM\fP
+\fIzeiten\fP ist nicht NULL, die effektive Benutzer\-ID des Aufrufenden
+entspricht nicht dem Dateieigentümer und der Aufrufende ist nicht
+privilegiert (Linux: ihm fehlt die \fBCAP_FOWNER\fP\-Fähigkeit).
+.TP 
+\fBEROFS\fP
+\fIpfad\fP liegt auf einem Dateisystem mit reinem Lesezugriff.
+.SH "KONFORM ZU"
+\fButime\fP(): SVr4, POSIX.1\-2001.  POSIX.1\-2008 kennzeichnet \fButime\fP() als
+veraltet.
+.br
+\fButimes\fP(): 4.3BSD, POSIX.1\-2001.
+.SH ANMERKUNGEN
+Linux erlaubt es nicht, dass Zeitstempel einer unveränderlichen Datei
+geändert werden oder bei einer Datei, an die nur etwas angehängt werden
+darf, die Zeitstempel auf etwas anderes als die aktuelle Zeit geändert
+werden.
+
+In Libc4 und Libc5 ist \fButimes\fP() nur ein Wrapper für \fButime\fP() und
+erlaubt daher keine Auflösung auf Zeiten kleiner einer Sekunde.
+.SH "SIEHE AUCH"
+\fBchattr\fP(1), \fBfutimesat\fP(2), \fBstat\fP(2), \fButimensat\fP(2), \fBfutimens\fP(3),
+\fBfutimes\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

@@ -1,0 +1,144 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"                               1993 Ian Jackson.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\" 
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\" 
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Sat Jul 24 13:00:50 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Sep  8 18:59:01 1996 by aeb following remarks by
+.\"     Arnt Gulbrandsen <agulbra@troll.no>
+.\" Modified Fri Jan 31 23:49:15 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Translated into German by Joern Vehoff (joern@vehoff.net)
+.\" Modified Sun Jan  7 16:44:02 CET 2001 by Martin Schulze <joey@infodrom.north.de>
+.\"
+.TH UNLINK 2 "21. August 1997" "Linux 2.0.30" "Systemaufrufe"
+.SH BEZEICHNUNG
+unlink \- löscht einen Namen und unter Umständen die Datei, auf die dieser verweist
+.PP
+Diese Handbuchseite ist veraltet. Im Zweifelsfall ziehen Sie
+die englischsprachige Handbuchseite zu Rate, indem Sie
+.IP
+man -LC 2 unlink
+.PP
+eingeben.
+.SH ÜBERSICHT
+.B #include <unistd.h>
+.sp
+.BI "int unlink(const char *" Pfadname );
+.SH BESCHREIBUNG
+.B unlink
+löscht einen Namen aus dem Dateisystem.  Wenn dieser Name der letzte
+Verweis auf eine Datei war und kein Prozess die Datei geöffnet hält,
+wird sie gelöscht und der von ihr belegte Speicherplatz wird für die
+weitere Benutzung verfügbar gemacht.
+
+
+Falls dieser Name der letzte Link auf die Datei war und keine Prozesse die Datei
+geöffnet haben, dann ist die Datei gelöscht und der benötigte Speicherplatz
+wieder freigegeben. 
+
+Falls der Name der letzte Link auf die Datei war, aber immer noch Prozesse
+die Datei geöffnet haben, bleibt die Datei bestehen bis die letzte
+Dateikennzahl, die sich auf die Datei bezieht, geschlossen ist. 
+
+Falls der Name auf einen symbolischen Link verwies, so ist dieser Link entfernt. 
+
+Falls der Name auf einen Socket, Fifo oder Gerät verwies, so ist der Name für
+dieses entfernt, aber Prozesse, die dieses Objekt geöffnet haben, können es
+weiterhin benutzen.
+.SH "RÜCKGABEWERT"
+Bei Erfolg wird Null zurückgegeben.  Bei einem Fehler \-1 und
+.I errno
+entsprechend gesetzt.
+.SH FEHLER
+.TP
+.B EACCES
+Schreibzugriff auf das Verzeichnis, das
+.I Pfadname
+enthält, ist für die aktuell gültige uid des Prozesses nicht erlaubt, oder eines der
+Verzeichnisse in
+.I Pfadname
+erlaubt keinen Such\- (Ausführ\-) zugriff.
+.TP
+.BR EPERM " oder " EACCES
+Das Verzeichnis, welches
+.I Pfadname
+enthält, hat das sticky-bit
+.RB (S_ISVTX)
+gesetzt und die aktuell gültige uid des Prozesses ist weder die uid der zu
+löschenden Datei noch die uid des Verzeichnisses, das die Datei enthält
+.TP
+.BR EPERM "(nur Linux)"
+Die Datei
+.I Pfadname
+ist ein Verzeichnis.
+.TP
+.B EFAULT
+.I Pfadname
+liegt außerhalb Ihres erreichbaren Adressraumes.
+.TP
+.B ENAMETOOLONG
+.IR Pfadname " ist zu lang."
+.TP
+.B ENOENT
+Ein Teil aus den Verzeichnissen in
+.I Pfadname
+existiert nicht oder ist ein schlackernder symbolischer Link. 
+.TP
+.B ENOTDIR
+Ein Teil in
+.I Pfadname
+, welcher als Verzeichnis benutzt wird, ist kein Verzeichnis. 
+.TP
+.B EISDIR
+.I Pfadname
+verweist auf ein Verzeichnis. 
+.TP
+.B ENOMEM
+Es ist nicht ausreichend freier Kernel-Speicher verfügbar. 
+.TP
+.B EROFS
+.I Pfadname
+verweist auf ein Verzeichnis eines Nur-Lese-Dateisystems. 
+.TP
+.B ELOOP
+Bei der Übersetzung von
+.I Pfadname
+treten zu viele symbolische Links auf
+.TP
+.B EIO
+Ein E/A Fehler ist aufgetreten. 
+.SH "KONFORM ZU"
+SVr4, SVID, POSIX, X/OPEN, 4.3BSD.  Zusätzliche Fehlerzustände bei SVr4
+Dokumenten EBUSY, EINTR, EMULTIHOP, ETXTBUSY, ENOLINK.
+.SH BUGS
+Unglücke in dem NFS unterliegenden Protokoll kann das unerwartete
+Verschwinden von Dateien, welche noch benötigt werden, verursachen.
+.SH "SIEHE AUCH"
+.BR link (2),
+.BR rename (2),
+.BR open (2),
+.BR rmdir (2),
+.BR mknod (2),
+.BR mkfifo (3),
+.BR remove (3),
+.BR rm (1).

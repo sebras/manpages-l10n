@@ -1,0 +1,668 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1992 Drew Eckhardt <drew@cs.colorado.edu>, March 28, 1992
+.\" and Copyright (c) Michael Kerrisk, 2001, 2002, 2005
+.\" May be distributed under the GNU General Public License.
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 24 Jul 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 21 Aug 1994 by Michael Chastain <mec@shell.portal.com>:
+.\"   New man page (copied from 'fork.2').
+.\" Modified 10 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 25 April 1998 by Xavier Leroy <Xavier.Leroy@inria.fr>
+.\" Modified 26 Jun 2001 by Michael Kerrisk
+.\"     Mostly upgraded to 2.4.x
+.\"     Added prototype for sys_clone() plus description
+.\"	Added CLONE_THREAD with a brief description of thread groups
+.\"	Added CLONE_PARENT and revised entire page remove ambiguity
+.\"		between "calling process" and "parent process"
+.\"	Added CLONE_PTRACE and CLONE_VFORK
+.\"	Added EPERM and EINVAL error codes
+.\"	Renamed "__clone" to "clone" (which is the prototype in <sched.h>)
+.\"	various other minor tidy ups and clarifications.
+.\" Modified 26 Jun 2001 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Updated notes for 2.4.7+ behavior of CLONE_THREAD
+.\" Modified 15 Oct 2002 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added description for CLONE_NEWNS, which was added in 2.4.19
+.\" Slightly rephrased, aeb.
+.\" Modified 1 Feb 2003 - added CLONE_SIGHAND restriction, aeb.
+.\" Modified 1 Jan 2004 - various updates, aeb
+.\" Modified 2004-09-10 - added CLONE_PARENT_SETTID etc. - aeb.
+.\" 2005-04-12, mtk, noted the PID caching behavior of NPTL's getpid()
+.\"	wrapper under BUGS.
+.\" 2005-05-10, mtk, added CLONE_SYSVSEM, CLONE_UNTRACED, CLONE_STOPPED.
+.\" 2005-05-17, mtk, Substantially enhanced discussion of CLONE_THREAD.
+.\" 2008-11-18, mtk, order CLONE_* flags alphabetically
+.\" 2008-11-18, mtk, document CLONE_NEWPID
+.\" 2008-11-19, mtk, document CLONE_NEWUTS
+.\" 2008-11-19, mtk, document CLONE_NEWIPC
+.\" 2008-11-19, Jens Axboe, mtk, document CLONE_IO
+.\"
+.\" FIXME Document CLONE_NEWUSER, which is new in 2.6.23
+.\"       (also supported for unshare()?)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLONE 2 "8. September 2011" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+clone, __clone2 \- erzeugt einen Kindprozess
+.SH ÜBERSICHT
+.nf
+.\" Actually _BSD_SOURCE || _SVID_SOURCE
+.\" See http://sources.redhat.com/bugzilla/show_bug.cgi?id=4749
+\fB#define _GNU_SOURCE\fP             /* Siehe feature_test_macros(7) */
+\fB#include <sched.h>\fP
+
+\fBint clone(int (*\fP\fIfn\fP\fB)(void *), void *\fP\fIkind_stack\fP\fB,\fP
+\fB          int \fP\fIschalter\fP\fB, void *\fP\fIarg\fP\fB, ... \fP
+\fB          /* pid_t *\fP\fIptid\fP\fB, struct user_desc *\fP\fItls\fP\fB,\fP
+\fB          pid_t *\fP\fIctid\fP\fB */ );\fP
+.fi
+.SH BESCHREIBUNG
+\fBclone\fP() erzeugt einen neuen Prozess auf eine ähnliche Art wie \fBfork\fP(2)
+Tatsächlich ist es eine Bibliotheksfunktion, die zuoberst auf dem
+darunterliegenden Systemaufruf \fBclone\fP() aufsetzt, nachfolgend \fBsys_clone\fP
+genannt. Eine Beschreibung von \fBsys_clone\fP findet sich gegen Ende dieser
+Seite.
+
+Im Gegensatz zu \fBfork\fP(2) erlauben diese Aufrufe, dass der Kindprozess
+Teile seines Kontextes mit dem aufrufenden Prozess teilt. Dazu zählen der
+Speicherplatz, die Tabelle der Dateideskriptoren und die Tabelle der
+Signal\-Handler. (Beachten Sie, dass »aufrufender Prozess« auf dieser
+Handbuchseite »Elternprozess« entspricht. Aber lesen Sie im Folgenden die
+Beschreibung von \fBCLONE_PARENT\fP.)
+
+Hauptsächlich wird \fBclone\fP() benutzt, um Threads zu implementieren: mehrere
+Steuer\-Threads in einem Programm, die gleichzeitig in einem gemeinsamen
+Speicherbereich ausgeführt werden.
+
+Wird mit \fBclone\fP() ein Kindprozess erzeugt, führt er das Funktionsprogramm
+\fIfn\fP(\fIarg\fP) aus. (Dies ist ein Unterschied zu \fBfork\fP(2), wo die
+Ausführung im Kindprozess vom Punkt des \fBfork\fP(2)\-Aufrufs fortfährt.) Das
+Argument \fIfn\fP ist ein Zeiger auf eine Funktion, die vom Kindprozess zu
+Beginn seiner Ausführung abgearbeitet wird. \fIarg\fP wird der Funktion \fIfn\fP
+als Argument übergeben.
+
+Kehrt die Funktion \fIfn\fP(\fIarg\fP) zurück, so beendet sich der
+Kindprozess. Der Ganzzahlwert, der von \fIfn\fP zurückgeliefert wird,
+entspricht dem Exit\-Code des Kindprozesses. Der Kindprozess kann auch durch
+den expliziten Aufruf von \fBexit\fP(2) oder durch den Empfang eines fatalen
+Signals beendet werden.
+
+Das Argument \fIkind_stack\fP bestimmt den Ort des Stapelspeichers, der vom
+Kindprozess verwendet wird. Da der aufrufende und der Kindprozess sich
+Speicherbereiche teilen können, kann der Kindprozess nicht auf dem selben
+Stapelspeicher wie der aufrufende Prozess laufen. Der aufrufende Prozess
+muss daher einen Speicherbereich als Stapelspeicher für den Kindprozess
+bereithalten und per \fBclone\fP einen Zeiger darauf an den Kindprozess
+übergeben. Der Stapelspeicher wächst (mit Ausnahme der PA\-Prozessoren von
+HP) auf allen von Linux unterstützten Prozessoren nach unten, so dass
+\fIkind_stack\fP für gewöhnlich auf die oberste Adresse im bereitgehaltenen
+Speicherbereich zeigt.
+
+Das niederwertige Byte von \fIschalter\fP enthält die Nummer des
+\fIBeendigungssignals\fP, das an den Elternprozess gesandt wird, wenn der
+Kindprozess endet. Falls dieses Signal als etwas anderes als \fBSIGCHLD\fP
+angegeben wurde, dann muss der Elternprozess die Optionen \fB__WALL\fP oder
+\fB__WCLONE\fP angeben, wenn er mit \fBwait\fP(2) auf den Kindprozess
+wartet. Falls kein Signal angegeben wurde, wird dem Elternprozess nicht
+signalisiert, wenn der Kindprozess endet.
+
+\fIschalter\fP kann darüber hinaus noch durch bitweises »Oder« mit keiner oder
+mehreren der folgenden Konstanten verknüpft werden. Dadurch wird festgelegt,
+welche Ressourcen sich Eltern\- und Kindprozess teilen:
+.TP 
+\fBCLONE_CHILD_CLEARTID\fP (seit Linux 2.5.49)
+Kind\-Thread\-ID an der Stelle \fIctid\fP im Kindspeicher löschen, wenn das Kind
+existiert und beim Futex (»fast userspace mutual exclusion«/schneller
+gegenseitiger Ausschluss im Userspace) an dieser Adresse aufwachen
+lassen. Die betroffene Adresse könnte durch den Systemaufruf
+\fBset_tid_address\fP(2) geändert werden. Dies wird von Threading\-Bibliotheken
+benutzt.
+.TP 
+\fBCLONE_CHILD_SETTID\fP (seit Linux 2.5.49)
+Speichert die Kind\-Thread\-ID an der Stelle \fIctid\fP im Kindspeicher
+.TP 
+\fBCLONE_FILES\fP
+Ist \fBCLONE_FILES\fP gesetzt, teilen sich der aufrufende und der Kindprozess
+ihre Dateideskriptor\-Tabellen. Jeder Dateideskriptor, der im aufrufenden
+Prozess oder vom Kindprozess erzeugt wird, ist auch im anderen Prozess
+gültig. Ebenso wirkt sich das Schließen eines Dateideskriptors oder das
+Ändern der zugehörigen Schalter (benutzen der \fBF_SETFD\fP\-Operation von
+\fBfcntl\fP(2)) auf den anderen Prozess aus.
+
+Ist \fBCLONE_FILES\fP nicht gesetzt, erbt der Kindprozess zur Ausführungszeit
+von \fBclone\fP() eine Kopie der aktuell geöffneten Dateideskriptoren. (Die
+kopierten Dateideskriptoren im Kindprozess beziehen sich auf die gleichen
+offenen Dateideskriptoren (siehe \fBopen\fP(2)) wie die entsprechenden
+Dateideskriptoren im aufrufenden Prozess.) Anschließende Operationen, die
+Dateideskriptoren öffnen oder schließen bzw. deren Schalter ändern, werden
+entweder vom aufrufenden Prozess oder dem Kindprozess durchgeführt und
+betreffen nicht den jeweils anderen Prozess.
+.TP 
+\fBCLONE_FS\fP
+Ist \fBCLONE_FS\fP gesetzt, teilen sich aufrufender Prozess und Kindprozess
+ihre Informationen über das Dateisystem. Dazu zählen der Ort des
+Wurzelverzeichnisses, das aktuelle Arbeitsverzeichnis und die Maske der
+Dateizugriffsrechte (umask). Jeder Aufruf von \fBchroot\fP(2), \fBchdir\fP(2) oder
+\fBumask\fP(2), entweder durch den aufrufenden Prozess oder den Kindprozess,
+beeinflusst auch den jeweils anderen Prozess.
+
+Ist \fBCLONE_FS\fP nicht gesetzt, arbeitet der Kindprozess von \fBclone\fP() mit
+einer Kopie der Dateisysteminformationen des aufrufenden Prozesses zur Zeit
+des \fBclone\fP()\-Aufrufs. Spätere Aufrufe von \fBchroot\fP(2), \fBchdir\fP(2) und
+\fBumask\fP(2) beeinflussen den anderen Prozess nicht.
+.TP 
+\fBCLONE_IO\fP (seit Linux 2.6.25)
+Ist \fBCLONE_FS\fP gesetzt, teilt sich der neue Prozess einen E/A\-Kontext mit
+dem aufrufenden Prozess. Falls dieser Schalter nicht gesetzt ist (wie bei
+\fBfork\fP(2)), hat der neue Prozess seinen eigenen E/A\-Kontext.
+
+.\" The following based on text from Jens Axboe
+.\" the anticipatory and CFQ scheduler
+.\" with CFQ and AS.
+Der E/A\-Kontext entspricht dem E/A\-Gültigkeitsbereich des
+Platten\-Steuerprogramms, d.h., welches das E/A\-Steuerprogramm zur
+Modellplanung für E/As des Prozesses benutzt. Falls sich Prozesse den
+gleichen E/A\-Kontext teilen, werden sie vom E/A\-Steuerprogramm als ein
+einziger betrachtet. Als Konsequenz daraus müssen sie sich die gleiche
+Plattenzeitzugriffzeit teilen. Einige E/A\-Steuerprogramme ermöglichen zwei
+Prozessen, die einen E/A\-Kontext teilen, ihren Plattenzugriff zu
+verzahnen. Falls mehrere Prozesse E/A im Auftrag des gleichen Prozesses
+durchführen (\fBaio_read\fP(3) zum Beispiel), sollten sie für eine bessere
+E/A\-Leistung \fBCLONE_IO\fP verwenden.
+
+Falls der Kernel nicht mit der Option \fBCONFIG_BLOCK\fP konfiguriert wurde,
+bewirkt dieser Schalter nichts.
+.TP 
+\fBCLONE_NEWIPC\fP (seit Linux 2.6.19)
+Ist \fBCLONE_NEWIPC\fP gesetzt, dann wird der Prozess in einem neuen
+IPC\-Namensraum erstellt. Falls dieser Schalter nicht gesetzt ist, dann wird
+der Prozess (wie bei \fBfork\fP(2)) im gleichen IPC\-Namensraum wie der
+aufrufende Prozess erstellt. Dieser Schalter ist für die Implementierung von
+Containern gedacht.
+
+Ein IPC\-Namensraum besteht aus einer Zusammenstellung von Bezeichnern für
+System\-V\-IPC\-Objekte. (Zur Erstellung dieser Objekte wurden \fBmsgctl\fP(2),
+\fBsemctl\fP(2) und \fBshmctl\fP(2) benutzt). Objekte, die in einem IPC\-Namensraum
+erstellt wurden, sind für alle anderen Prozesse sichtbar, die Mitglieder des
+Namensraums sind. Die Objekte sind jedoch nicht für Prozesse in anderen
+Namensräumen sichtbar.
+
+Wenn ein IPC\-Namensraum zerstört wird, d.h., wenn der letzte Prozess im
+Namensraum beendet wird, werden alle IPC\-Objekte im Namensraum automatisch
+zerstört.
+
+Die Benutzung dieses Schalters benötigt einen Kernel, der mit den Optionen
+\fBCONFIG_SYSVIPC\fP und \fBCONFIG_IPC_NS\fP konfiguriert wurde, und erfordert,
+dass der Prozess privilegiert ist ((\fBCAP_SYS_ADMIN\fP). Dieser Schalter kann
+nicht in Verbindung mit \fBCLONE_SYSVSEM\fP angegeben werden.
+.TP 
+\fBCLONE_NEWNET\fP (seit Linux 2.6.24)
+(Die Implementierung dieses Schalters wurde erst mit der Kernel\-Version
+2.6.29 abgeschlossen.)
+
+Wenn \fBCLONE_NEWNET\fP gesetzt ist, dann wird der Prozess einen neuen
+Netzwerk\-Namensraum erstellt. Falls dieser Schalter nicht gesetzt ist, dann
+wird der Prozess (wie mit \fBfork\fP(2)) im gleichen Netzwerk\-Namensraum wie
+der aufrufende Prozess erstellt. Dieser Schalter ist für die Implementierung
+von Containern gedacht.
+
+Ein Netzwerk\-Namensraum stellt eine isolierte Ansicht des
+Netzwerk\-Stapelspeichers (Netzwerkgeräteschnittstellen, IPv4\- und
+IPv6\-Protokoll\-Stapelspeicher, IP\-Routing\-Tabellen, Firewall\-Regeln, die
+Verzeichnisbäume \fI/proc/net\fP und \fI/sys/class/net\fP, Sockets, etc.)
+bereit. Ein physisches Netzwerkgerät kann in genau einem Netzwerknamensraum
+bestehen. Ein virtuelles Netzwerkgerätepaar (»veth«) stellt eine einer Pipe
+ähnliche Abstraktion bereit, die benutzt werden kann, um Tunnel zwischen
+Netzwerk\-Namensräumen aufzubauen und eine Brücke in ein physisches
+Netzwerkgerät in einem anderen Namensraum zu erstellen.
+
+Wenn ein Netzwerk\-Namensraum freigegeben wird, d.h. wenn der letzte Prozess
+im Namensraum beendet wird, werden seine physischen Netzwerkgeräte zurück in
+den ursprünglichen Namensraum verschoben (nicht zum Elternprozess).
+
+Die Benutzung dieses Schalters benötigt einen Kernel, der mit der Option
+\fBCONFIG_NET_NS\fP konfiguriert wurde, und einen privilegierten Prozess
+(\fBCAP_SYS_ADMIN\fP).
+.TP 
+\fBCLONE_NEWNS\fP (seit Linux 2.4.19)
+Den Kindprozess in einem neu eingehängten Namensraum starten
+
+Jeder Prozess »lebt« in einem Namensraum. Der \fINamensraum\fP eines Prozesses
+besteht aus den Daten (den eingehängten Zusammenstellungen), die die
+Dateihierarchie beschreiben, wie sie von diesem Prozess gesehen wird. Nach
+einem \fBfork\fP(2) oder \fBclone\fP(), bei dem der Schalter \fBCLONE_NEWNS\fP nicht
+gesetzt ist, »lebt« der Kindprozess im gleichen eingehängten Namensraum, wie
+der Elternprozess. Die Systemaufrufe \fBmount\fP(2) und \fBumount\fP(2) ändern den
+eingehängten Namensraum des aufrufenden Prozesses und beeinflussen daher
+alle Prozesse im gleichen Namensraum, jedoch keine Prozesse in einem anderen
+eingehängten Namensraum.
+
+Nach einem \fBclone\fP(), bei dem der Schalter \fBCLONE_NEWNS\fP gesetzt ist, wird
+der geklonte Kindprozess in einem neuen, eingehängten Namensraum gestartet,
+der mit einer Kopie des Namensraums des Elternprozesses initialisiert wurde.
+
+Nur ein privilegierter Prozess (einer der die Fähigkeit \fBCAP_SYS_ADMIN\fP
+hat) kann den Schalter \fBCLONE_NEWNS\fP angeben. Es ist nicht erlaubt sowohl
+\fBCLONE_NEWNS\fP als auch \fBCLONE_FS\fP im gleichen Aufruf von \fBclone\fP()
+anzugeben.
+.TP 
+\fBCLONE_NEWPID\fP (seit Linux 2.6.24)
+.\" This explanation draws a lot of details from
+.\" http://lwn.net/Articles/259217/
+.\" Authors: Pavel Emelyanov <xemul@openvz.org>
+.\" and Kir Kolyshkin <kir@openvz.org>
+.\"
+.\" The primary kernel commit is 30e49c263e36341b60b735cbef5ca37912549264
+.\" Author: Pavel Emelyanov <xemul@openvz.org>
+Wenn \fBCLONE_NEWPID\fP gesetzt ist, dann wird der Prozess in einem neuen
+PID\-Namensraum erstellt. Falls dieser Schalter nicht gesetzt ist (wie mit
+\fBfork\fP(2)), dann wird der Prozess in dem gleichen PID\-Namensraum wie der
+aufrufende Prozess erstellt. Der Schalter ist für die Implementierung von
+Containern gedacht.
+
+Ein PID\-Namensraum stellt eine isolierte Umgebung für PIDs bereit: PIDs in
+einem neuen Namensraum beginnen bei 1, etwa wie ein alleinstehendes System
+und Aufrufe wie \fBfork\fP(2), \fBvfork\fP(2) oder \fBclone\fP() werden Prozesse mit
+PIDs erstellen, die innerhalb dieses Namensraums eindeutig sind.
+
+Der erste Prozess, der in einem neuen Namensraum erstellt wird, d.h. der
+Prozess, der unter Benutzung des Schalters \fBCLONE_NEWPID\fP erstellt wird hat
+die PID 1 und ist der »init«\-Prozess dieses Namensraums. Kindprozesse, die
+innerhalb des Namensraums verwaist sind, werden eher diesem Prozess
+untergeordnet als \fBinit\fP(8). Im Gegensatz zum traditionellen
+\fBinit\fP\-Prozess kann der »init«\-Prozess eines PID\-Namensraums beendet
+werden. Wenn dies geschieht, werden alle Prozesse im Namensraum beendet.
+
+PID\-Namensräume bilden eine Hierarchie. Wenn ein neuer PID\-Namensraum
+erzeugt wird, sind die Prozesse in diesem Namensraum im PID\-Namensraum des
+Prozesses sichtbar, der den Prozess im neuen Namensraum erzeugt hat; ist
+entsprechend der Eltern\-PID\-Namensraum selbst Kind eines anderen
+PID\-Namensraums, dann sind sowohl Kind\- als auch Eltern\-PID\-Namensraum im
+Großeltern\-Namensraum sichtbar. Umgekehrt sehen die Prozesse im
+»Kind«\-PID\-Namensraum nicht die Prozesse im Eltern\-Namensraum. Die Existenz
+einer Namensraum\-Hierarchie bedeutet, dass jeder Prozess nun mehrere PIDs
+haben kann: einen für jeden Namensraum, in dem er sichtbar ist; jede dieser
+PIDs ist innerhalb des dazugehörigen Namensraums eindeutig. (Ein Aufruf von
+\fBgetpid\fP(2) gibt immer die PID für den Namensraum zurück, in der der
+Prozess »lebt«.)
+
+.\" mount -t proc proc /proc
+Nach dem Erstellen eines neuen Namensraums ist es für den Kindprozess
+nützlich, sein Wurzelverzeichnis zu ändern und eine neue Procfs\-Instanz in
+\fI/proc\fP einzuhängen, so dass Werkzeuge wie \fBps\fP(1) korrekt
+arbeiten. (Falls außerdem \fBCLONE_NEWNS\fP zu den Schaltern gehört, dann ist
+es nicht nötig das Wurzelverzeichnis zu ändern: Eine neue Procfs\-Instanz
+kann direkt über \fI/proc\fP eingehängt werden.)
+
+Die Benutzung dieses Schalters benötigt einen Kernel, der mit der Option
+\fBCONFIG_PID_NS\fP konfiguriert wurde und einen privilegierten Prozess
+(\fBCAP_SYS_ADMIN\fP). Dieser Schalter kann nicht zusammen mit \fBCLONE_THREAD\fP
+angegeben werden.
+.TP 
+\fBCLONE_NEWUTS\fP (seit Linux 2.6.19)
+Falls \fBCLONE_NEWUTS\fP gesetzt ist, erzeugt der Prozess einen neuen
+UTS\-Namensraum, dessen Bezeichner durch Duplizieren der Bezeichner aus dem
+UTS\-Namensraum des aufrufenden Prozesses initialisiert werden. Wenn dieser
+Schalter nicht gesetzt ist (wie mit \fBfork\fP(2)), dann wird der Prozess im
+gleichen UTS\-Namensraum wie der aufrufende Prozess erzeugt. Dieser Schalter
+ist für die Implementierung von Containern gedacht.
+
+Ein UTS\-Namensraum ist eine Zusammenstellung von Bezeichnern, die von
+\fBuname\fP(2) zurückgegeben werden; von denen können der Domain\-Name und der
+Rechnername durch \fBsetdomainname\fP(2) beziehungsweise \fBsethostname\fP(2)
+geändert werden. Änderungen, die an Bezeichnern in einem UTS\-Namensraum
+vorgenommen werden, sind für alle anderen Prozesse im gleichen Namensraum
+sichtbar, nicht jedoch für Prozesse in anderen UTS\-Namensräumen.
+
+Die Benutzung dieses Schalters setzt einen Kernel voraus, der mit der Option
+\fBCONFIG_UTS_NS\fP konfiguriert wurde und dass der Prozess privilegiert ist
+(\fBCAP_SYS_ADMIN\fP).
+.TP 
+\fBCLONE_PARENT\fP (seit Linux 2.3.12)
+Falls \fBCLONE_PARENT\fP gesetzt ist, dann wird der Elternprozess des neuen
+Kindprozesses (wie er von \fBgetppid\fP(2) zurückgegeben wird) der gleiche wie
+der aufrufende Prozess sein.
+
+Falls \fBCLONE_PARENT\fP nicht gesetzt ist (wie bei \fBfork\fP(2)), dann ist der
+Elternprozess des Kindprozesses der aufrufende Prozess.
+
+Beachten Sie, dass dem Elternprozess, wie er von \fBgetppid\fP(2) zurückgegeben
+wird, signalisiert wird wenn der Kindprozess endet. Wenn also
+\fBCLONE_PARENT\fP gesetzt ist, wird dem Elternprozess des aufrufenden
+Prozesses anstatt dem aufrufenden Prozess selbst das Signal gesandt.
+.TP 
+\fBCLONE_PARENT_SETTID\fP (seit Linux 2.5.49)
+Kindprozess\-Thread\-ID an Stelle \fIptid\fP im Eltern\- und Kindspeicher
+ablegen. (In Linux 2.5.32\-2.5.48 gab es einen Schalter \fBCLONE_SETTID\fP, der
+das tat.)
+.TP 
+\fBCLONE_PID\fP (veraltet)
+Falls \fBCLONE_PID\fP gesetzt ist, wird der Kindprozess mit der gleichen
+Prozess\-ID wie der aufrufende Prozess erstellt. Dies ist gut, um das System
+zu hacken, aber andererseits zu nicht viel mehr zu gebrauchen. Seit 2.3.21
+konnte dieser Schalter nur durch den Boot\-Prozess angegeben werden (PID
+0). Er verschwand in Linux 2.5.16.
+.TP 
+\fBCLONE_PTRACE\fP
+Falls \fBCLONE_PTRACE\fP angegeben ist und der aufrufende Prozess verfolgt
+wird, dann wird der Kindprozess ebenfalls verfolgt (siehe \fBptrace\fP(2)).
+.TP 
+\fBCLONE_SETTLS\fP (seit Linux 2.5.32)
+Das Argument \fInewtls\fP ist der neue TLS\-Desktiptor (Thread Local
+Storage). (Lesen Sie \fBset_thread_area\fP(2).)
+.TP 
+\fBCLONE_SIGHAND\fP
+Ist \fBCLONE_SIGHAND\fP gesetzt, teilen sich der aufrufende Prozess und der
+Kindprozess die Tabelle der Signal\-Handler. Ruft einer der beiden Prozesse
+\fBsigaction\fP(2) auf, um das Antwortverhalten auf ein Signal zu verändern, so
+betrifft dies auch den anderen Prozess. Jedoch besitzen aufrufender Prozess
+und Kindprozess nach wie vor getrennte Signalmasken und getrennte Listen der
+noch ausstehenden Signale. Einzelne Signale könnten daher durch Aufruf von
+\fBsigprocmask\fP(2) für einen Prozess geblockt oder zugelassen werden ohne den
+anderen Prozess zu beeinflussen.
+
+Ist \fBCLONE_SIGHAND\fP nicht gesetzt, erbt der Kindprozess durch den
+\fBclone\fP\-Aufruf eine Kopie des Signal\-Handlers vom aufrufenden
+Prozess. Spätere Aufrufe von \fBsigaction\fP(2) durch einen der Prozesse hat
+dann keine Auswirkung auf den anderen Prozess.
+
+Seit Linux 2.6.0\-test6 müssen die \fIschalter\fP außerdem \fBCLONE_VM\fP
+enthalten, falls \fBCLONE_SIGHAND\fP angegeben wurde.
+.TP 
+\fBCLONE_STOPPED\fP (seit Linux 2.6.0\-test2)
+Falls \fBCLONE_STOPPED\fP gesetzt ist, ist der Kindprozess anfangs gestoppt
+(als ob ein \fBSIGSTOP\fP\-Signal gesendet worden wäre) und muss durch Senden
+eines \fBSIGCONT\fP\-Signals wieder aufgenommen werden.
+
+.\" glibc 2.8 removed this defn from bits/sched.h
+Dieser Schalter war ab Linux 2.6.25 \fImissbilligt\fP und wurde in Linux 2.6.38
+vollständig \fIentfernt\fP.
+.TP 
+\fBCLONE_SYSVSEM\fP (seit Linux 2.5.10)
+Wenn \fBCLONE_SYSVSEM\fP gesetzt ist, dann teilen sich der Kindprozess und der
+aufrufende Prozess eine einzige Liste von Werten, um System\-V\-Semaphoren
+rückgängig zu machen (siehe \fBsemop\fP(2)). Falls dieser Schalter nicht
+gesetzt ist, besitzt der Kindprozess eine eigene List zum Rückgängig machen,
+die anfangs leer ist.
+.TP 
+\fBCLONE_THREAD\fP (seit Linux 2.4.0\-test8)
+Falls \fBCLONE_THREAD\fP gesetzt ist, wird der Kindprozess in die gleiche
+Thread\-Gruppe wie der aufrufende Prozess platziert. Um den Rest der
+Diskussion von \fBCLONE_THREAD\fP leserlicher zu machen, wird der Begriff
+»Thread« benutzt, um Bezug auf Prozesse innerhalb einer Thread\-Gruppe zu
+nehmen.
+
+Thread\-Gruppen waren ein Leistungsmerkmal, das in Linux 2.4 hinzugefügt
+wurde, um den POSIX\-Thread\-Gedanken von einer Thread\-Zusammenstellung zu
+unterstützen, die sich eine einzelne PID teilt. Intern ist diese gemeinsame
+PID ein sogenannter Thread\-Gruppen\-Bezeichner (TGID) für die
+Thread\-Gruppe. Seit Linux 2.4 geben Aufrufe von \fBgetpid\fP(2) die TGID des
+Aufrufers zurück.
+
+Die Threads innerhalb einer Gruppe können durch ihre (systemweit)
+einheitliche Thread\-ID (TID) unterschieden werden. Die TID eines neuen
+Threads ist als Funktionsergebnis verfügbar, das an den Aufrufenden von
+\fBclone\fP() zurückgegeben wird. Ein Thread kann durch Benutzen von
+\fBgettid\fP(2) seine eigene TID erhalten.
+
+Wenn \fBclone\fP() ohne Angabe von \fBCLONE_THREAD\fP aufgerufen wurde, dann wird
+der resultierende Thread in eine neue Thread\-Gruppe platziert, deren TGID
+der TID des Threads entspricht. Dieser Thread ist der \fIFührer\fP der neuen
+Thread\-Gruppe.
+
+Ein neuer mit \fBCLONE_THREAD\fP erzeugter Thread hat den gleichen
+Elternprozess wie der, der \fBclone\fP() aufruft (d.h. wie \fBCLONE_PARENT\fP), so
+dass Aufrufe von \fBgetppid\fP(2) den gleichen Wert für alle Threads in der
+Thread\-Gruppe zurückliefern. Wenn ein \fBCLONE_THREAD\fP\-Thread endet, wird dem
+Thread, der ihn per \fBclone\fP() erstellt hat, weder ein \fBSIGCHLD\fP\-Signal
+(oder ein anderes Ende\-Signal) gesandt, noch kann der Status eines solchen
+Threads per \fBwait\fP(2) abgefragt werden. (Der Thread wird als \fIlosgelöst\fP
+bezeichnet.)
+
+Nachdem alle Threads in einer Thread\-Gruppe beendet sind, wird dem
+Elternprozess ein \fBSIGCHLD\fP\-Signal (oder ein anderes Ende\-Signal) gesandt.
+
+Falls einige der Threads in einer Thread\-Gruppe ein \fBexecve\fP(2)
+durchführen, dann werden alle Threads außer dem Thread\-Führer beendet und
+das neue Programm wird im Thread\-Gruppenführer ausgeführt.
+
+Falls einer der Threads in einer Thread\-Gruppe per \fBfork\fP(2) einen
+Kindprozess erzeugt, dann kann jeder Thread in der Gruppe \fBwait\fP(2) für
+diesen Kindprozess ausführen.
+
+Seit Linux 2.5.35 müssen die \fIschalter\fP auch \fBCLONE_SIGHAND\fP enthalten,
+wenn \fBCLONE_THREAD\fP angegeben wurde.
+
+Signale können an eine Thread\-Gruppe als Ganzes geschickt werden (d.h. einer
+TGID) unter Benutzung von \fBkill\fP(2) oder an einen bestimmten Thread unter
+Benutzung von \fBtgkill\fP(2).
+
+Signalanordnungen und Aktionen sind prozessweit: Falls ein nicht
+abgefangenes Signal an den Thread geschickt wird, dann wird es alle
+Mitglieder in der Thread\-Gruppe beeinflussen (beenden, stoppen, fortfahren,
+darin ignoriert werden).
+
+Jeder Thread hat seine eigene Signalmaske, wie sie von \fBsigprocmask\fP(2)
+gesetzt wird, Signale können aber entweder für den ganzen Prozess anstehen
+(d.h. an jedes Mitglied der Thread\-Gruppe zu liefern sein), wenn sie mit
+\fBkill\fP(2) gesandt wurden oder für einen einzelnen Thread, wenn sie mit
+\fBtgkill\fP(2) gesandt wurden. Ein Aufruf von \fBsigpending\fP(2) gibt eine
+Signalzusammenstellung zurück, die eine Verbindung ausstehender Signale für
+den ganzen Prozess und der Signale ist, die für den aufrufenden Prozess
+anstehen.
+
+Falls \fBkill\fP(2) benutzt wird, um ein Signal an eine Thread\-Gruppe zu senden
+und die Thread\-Gruppe einen Handler für dieses Signal installiert hat, dann
+dann wird der Handler in exakt einem willkürlich ausgewählten Mitglied der
+Thread\-Gruppe aufrufen, das das Signal nicht blockiert hat. Falls mehrere
+Threads in einer Gruppe darauf warten das gleiche Signal per
+\fBsigwaitinfo\fP(2) zu akzeptieren, wird der Kernel einen dieser Threads
+willkürlich auswählen, um das per \fBkill\fP(2) gesandt Signal zu empfangen.
+.TP 
+\fBCLONE_UNTRACED\fP (seit Linux 2.5.46)
+Falls \fBCLONE_UNTRACED\fP angegeben ist, kann ein verfolgender Prozess kein
+\fBCLONE_PTRACE\fP auf diesem Kindprozess erzwingen.
+.TP 
+\fBCLONE_VFORK\fP
+Falls \fBCLONE_VFORK\fP gesetzt ist, wird die Ausführung des aufrufenden
+Prozesses aufgeschoben bis der Kindprozess seine virtuellen
+Speicherressourcen durch Aufrufen von \fBexecve\fP(2) oder \fB_exit\fP(2) (wie bei
+\fBvfork\fP(2)) freigibt.
+
+Falls \fBCLONE_VFORK\fP nicht gesetzt ist, dann werden sowohl der aufrufende
+Prozess, als auch der Kindprozess nach dem Aufruf planbar und eine Anwendung
+sollte sich nicht darauf verlassen, dass die Ausführung in einer speziellen
+Reihenfolge erfolgt.
+.TP 
+\fBCLONE_VM\fP
+Ist \fBCLONE_VM\fP gesetzt, laufen aufrufender Prozess und Kindprozess im
+selben Speicherbereich. Insbesondere sind Schreibzugriffe des aufrufenden
+Prozesses oder des Kindprozesses in den gemeinsamen Speicher auch vom
+anderen Prozess aus sichtbar. Zudem beeinflusst jede Veränderung der
+Speicher\-Mappings mit \fBmmap\fP(2) oder \fBmunmap\fP(2) durch den Kindprozess
+oder den aufrufenden Prozess auch den jeweils anderen Prozess.
+
+Ist \fBCLONE_VM\fP nicht gesetzt, erhält der Kindprozess eine eigene Kopie des
+Speicherbereichs des aufrufenden Prozesses zur Zeit des
+\fBclone\fP()\-Aufrufs. Führt ein Prozess Schreibzugriffe auf den Speicher oder
+Änderungen am Dateispeicher\-Mapping aus, beeinflussen diese Operationen
+nicht den jeweils anderen, wie bei \fBfork\fP(2).
+.SS sys_clone
+Der \fBsys_clone\fP\-Systemaufruf entspricht eher \fBfork\fP(2), der mit der
+Ausführung des Kindprozesses am Zeitpunkt des Aufrufs fortfährt. Folglich
+benötigt \fBsys_clone\fP nur die Argumente \fIschalter\fP und \fIkind_stack\fP, die
+die gleiche Bedeutung wie für \fBclone\fP() haben. (Beachten Sie, dass die
+Reihenfolge dieser Argumente sich von \fBclone\fP() unterscheidet.)
+
+Ein weiterer Unterschied für \fBsys_clone\fP besteht darin, dass das Argument
+\fIkind_stack\fP Null sein könnte, so dass in diesem Fall
+»copy\-on\-write«\-Semantik sicherstellt, dass der Kindprozess getrennte Kopien
+des Stapelspeichers erhält, wenn beide Prozesse den Stapelspeicher
+verändern. In diesem Fall sollte die Option \fBCLONE_VM\fP nicht angegeben
+werden, damit es korrekt funktioniert.
+
+In Linux 2.4 und früher gab es die Argumente \fIptid\fP, \fItls\fP und \fIctid\fP
+noch nicht.
+.SH RÜCKGABEWERT
+.\" gettid(2) returns current->pid;
+.\" getpid(2) returns current->tgid;
+Bei Erfolg wird im ausgeführten Thread des Aufrufenden die Thread\-ID des
+Kindprozesses zurückgegeben. Im Fehlerfall wird im Kontext des Aufrufenden
+\-1 zurückgegeben, kein Kindprozess erzeugt und \fIerrno\fP entsprechend
+gesetzt.
+.SH FEHLER
+.TP 
+\fBEAGAIN\fP
+Es laufen bereits zu viele Prozesse.
+.TP 
+\fBEINVAL\fP
+\fBCLONE_SIGHAND\fP wurde angegeben, aber nicht \fBCLONE_VM\fP. (Seit Linux
+2.6.0\-test6.)
+.TP 
+\fBEINVAL\fP
+.\" .TP
+.\" .B EINVAL
+.\" Precisely one of
+.\" .B CLONE_DETACHED
+.\" and
+.\" .B CLONE_THREAD
+.\" was specified.
+.\" (Since Linux 2.6.0-test6.)
+\fBCLONE_THREAD\fP wurde angegeben, aber nicht \fBCLONE_SIGHAND\fP. (Seit Linux
+2.5.35.)
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurden sowohl \fBCLONE_FS\fP als auch \fBCLONE_NEWNS\fP angegeben.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurden sowohl \fBCLONE_NEWIPC\fP als auch \fBCLONE_SYSVSEM\fP
+angegeben.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurden sowohl \fBCLONE_NEWPID\fP als auch \fBCLONE_THREAD\fP
+angegeben.
+.TP 
+\fBEINVAL\fP
+Wird von \fBclone\fP() zurückgegeben, wenn ein Wert von Null für \fIkind_stack\fP
+angegeben wurde.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurde \fBCLONE_NEWIPC\fP angegeben, der Kernel wurde jedoch
+nicht mit den Optionen \fBCONFIG_SYSVIPC\fP und \fBCONFIG_IPC_NS\fP konfiguriert.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurde \fBCLONE_NEWNET\fP angegeben, der Kernel wurde jedoch
+nicht mit der Option \fBCONFIG_NET_NS\fP konfiguriert.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurde \fBCLONE_NEWPID\fP angegeben, der Kernel wurde jedoch
+nicht mit der Option \fBCONFIG_PID_NS\fP konfiguriert.
+.TP 
+\fBEINVAL\fP
+In \fIschalter\fP wurde \fBCLONE_NEWUTS\fP angegeben, der Kernel wurde jedoch
+nicht mit der Option \fBCONFIG_UTS\fP konfiguriert.
+.TP 
+\fBENOMEM\fP
+Es kann nicht ausreichend Speicher für eine Aufgabenstruktur des
+Kindprozesses reserviert werden oder um benötigte Teile vom Kontext des
+Aufrufenden zu kopieren.
+.TP 
+\fBEPERM\fP
+\fBCLONE_NEWIPC\fP, \fBCLONE_NEWNET\fP, \fBCLONE_NEWNS\fP, \fBCLONE_NEWPID\fP oder
+\fBCLONE_NEWUTS\fP wurde von einem nicht privilegierten Prozess angegeben
+(Prozess ohne \fBCAP_SYS_ADMIN\fP).
+.TP 
+\fBEPERM\fP
+\fBCLONE_PID\fP wurde von einem anderen Prozess als Prozess 0 angegeben.
+.SH VERSIONEN
+Es gibt in libc5 keinen \fBclone\fP()\-Eintrag. glibc2 stellt \fBclone\fP(), wie in
+dieser Handbuchseite beschrieben, zur Verfügung.
+.SH "KONFORM ZU"
+Die Aufrufe \fBclone\fP() und \fBsys_clone\fP sind Linux\-spezifisch und sollten
+nicht in portablen Programmen benutzt werden.
+.SH ANMERKUNGEN
+In den 2.4.x\-Kerneln gibt \fBCLONE_THREAD\fP generell dem neuen Prozess nicht
+den gleichen Elternprozess, wie dem aufrufenden Prozess. Für die
+Kernel\-Versionen 2.4.7 bis 2.4.18 implizierte der Schalter \fBCLONE_THREAD\fP
+jedoch den Schalter \fBCLONE_PARENT\fP (wie in Kernel 2.6).
+
+Für eine Weile gab es \fBCLONE_DETACHED\fP (eingeführt in 2.5.32):
+Elternprozesse wollen kein Ende\-Signal des Kindprozesses. In 2.6.2
+verschwand die Notwendigkeit, dies zusammen mit \fBCLONE_THREAD\fP zu
+übergeben. Dieser Schalter ist immer noch definiert, hat aber keine
+Auswirkungen.
+
+Auf i386\-Architekturen sollte \fBclone\fP() nicht durch vsyscall aufgerufen
+werden, aber direkt durch \fIint $0x80\fP.
+
+Auf ia64\-Architekturen wird ein anderer Systemaufruf benutzt:
+.nf
+
+\fBint __clone2(int (*\fP\fIfn\fP\fB)(void *), \fP
+\fB             void *\fP\fIkind_stack_basis\fP\fB, size_t \fP\fIstack_groesse\fP\fB,\fP
+\fB             int \fP\fIschalter\fP\fB, void *\fP\fIarg\fP\fB, ... \fP
+\fB          /* pid_t *\fP\fIptid\fP\fB, struct user_desc *\fP\fItls\fP\fB,\fP
+\fB             pid_t *\fP\fIctid\fP\fB */ );\fP
+.fi
+.PP
+Der Systemaufruf \fB__clone2\fP() arbeitet auf die gleiche Weise wie
+\fBclone\fP(), außer dass \fIkind_stack_basis\fP auf die niedrigste Adresse im
+Stapelspeicherbereich des Kindprozesses zeigt und \fIstack_groesse\fP die Größe
+des Stapelspeichers angibt, auf die \fIkind_stack_basis\fP zeigt.
+.SH FEHLER
+Versionen der GNU\-C\-Bibiliothek, die die NPTL\-Threading\-Bibliothek
+enthalten, enthalten eine Wrapper\-Funktion für \fBgetpid\fP(2), die die
+Zwischenspeicherung der PIDs verrichtet. Diese Zwischenspeicherung beruht
+auf der Unterstützung für \fBclone\fP() im Glibc\-Wrapper, der Zwischenspeicher
+könnte aber der derzeitigen Implementierung unter Umständen nicht aktuell
+sein. Insbesondere wenn ein Signal sofort nach dem \fBclone\fP()\-Aufruf an den
+Kindprozess gesandt wird, könnte ein Aufruf von \fBgetpid\fP(2) in einem
+Signal\-Handler die PID des aufrufenden Prozesses (des »Elternprozesses«)
+zurückgeben, falls der Clone\-Wrapper noch keine Chance hatte den
+PID\-Zwischenspeicher im Kindprozess zu aktualisieren. (Diese Diskussion
+ignoriert den Fall, dass der Kindprozess mit \fBCLONE_THREAD\fP erstellt wurde,
+in dem \fBgetpid\fP(2) den gleichen Wert im Kindprozess zurückgeben \fIsollte\fP
+und im Prozess, der \fBclone\fP() aufrief, wie sich der Aufrufende und der
+Kindprozess in der gleichen Thread\-Gruppe befinden. Das Problem des nicht
+mehr frischen Zwischenspeichers tritt auch auf, wenn das Argument
+\fIschalter\fP \fBCLONE_VM\fP enthält.) Um die Wahrheit zu erfahren, könnte es
+nötig sein Kode wie den folgenden zu verwenden:
+.nf
+
+    #include <syscall.h>
+
+    pid_t mypid;
+
+    mypid = syscall(SYS_getpid);
+.fi
+.\" See also the following bug reports
+.\" https://bugzilla.redhat.com/show_bug.cgi?id=417521
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=6910
+.SH "SIEHE AUCH"
+\fBfork\fP(2), \fBfutex\fP(2), \fBgetpid\fP(2), \fBgettid\fP(2), \fBset_thread_area\fP(2),
+\fBset_tid_address\fP(2), \fBtkill\fP(2), \fBunshare\fP(2), \fBwait\fP(2),
+\fBcapabilities\fP(7), \fBpthreads\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Daniel Kobras <kobras@linux.de>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

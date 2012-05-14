@@ -1,0 +1,154 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" Modified 2003-10-25, Walter Harms
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ATEXIT 3 "5. Dezember 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+atexit \- legt eine Funktion fest, die beim normalen Programmende aufgerufen
+wird
+.SH ÜBERSICHT
+.nf
+\fB#include <stdlib.h>\fP
+.sp
+\fBint atexit(void (*\fP\fIfunction\fP\fB)(void));\fP
+.fi
+.SH BESCHREIBUNG
+Die Funktion \fBatexit\fP() legt fest, dass die angegebene Funktion bei
+normalem Programmende aufgerufen wird, also wenn entweder \fBexit\fP(3)
+aufgerufen wird oder das Programm aus seiner \fBmain\fP\-Funktion
+zurückkehrt. Funktionen, die so festgelegt sind, werden in umgekehrter
+Reihenfolge ihrer Registrierung aufgerufen; es werden keine Argumente
+übergeben.
+
+Die gleiche Funktion kann mehrfach registriert werden: sie wird einmal für
+jede Registrierung aufgerufen.
+.LP
+POSIX.1\-2001 verlangt, dass eine Implementierung mindestens \fBATEXIT_MAX\fP
+(32) solcher Funktionen registrieren kann. Die tatsächlich durch eine
+Implementierung unterstützte Grenze können Sie mit \fBsysconf\fP(3) ermitteln.
+.LP
+Wenn mittels \fBfork\fP(2) ein Kind\-Prozess erzeugt wird, erbt er Kopien der
+Registrierungen seiner Eltern. Nach einem erfolgreichen Aufruf einer der
+\fBexec\fP(3)\-Funktionen werden alle Registrierungen entfernt.
+.SH RÜCKGABEWERT
+Die Funktion \fBatexit\fP() gibt bei Erfolg 0 zurück; anderenfalls wird ein von
+Null verschiedener Wert zurückgegeben.
+.SH "KONFORM ZU"
+SVr4, 4.3BSD, C89, C99, POSIX.1\-2001.
+.SH ANMERKUNGEN
+Unter Verwendung von \fBatexit\fP() (und \fBon_exit\fP(3)) registrierte Funktionen
+werden nicht aufgerufen, wenn die Prozesse wegen eines Signals nicht normal
+beendet werden.
+
+Wenn eine der registrierten Funktionen \fB_exit\fP(2) aufruft, dann werden
+jedwede noch verbleibende Funktionen nicht aufgerufen und die anderen von
+\fBexit\fP(3) durchzuführenden Schritte zur Beendigung des Prozesses werden
+nicht durchgeführt.
+
+.\" This can happen on OpenBSD 4.2 for example, and is documented
+.\" as occurring on FreeBSD as well.
+.\" Glibc does "the Right Thing" -- invocation of the remaining
+.\" exit handlers carries on as normal.
+POSIX.1\-2001 legt das Verhalten bei mehrmaligem Aufruf von \fBexit\fP(3)
+(d.h. der Aufruf von \fBexit\fP(3) innerhalb einer mit \fBatexit\fP()
+registrierten Funktion) nicht fest. Auf manchen Systemen (aber nicht Linux)
+kann dies zu einer Endlosschleife führen. Portable Programme sollten
+\fBexit\fP(3) nicht innerhalb einer von \fBatexit\fP() registrierten Funktion
+aufrufen.
+
+Die Funktionen \fBatexit\fP() und \fBon_exit\fP(3) registrieren Funktionen in der
+gleichen Liste. Wird ein Prozess normal beendet werden die registrierten
+Funktionen in der umgekehrten Reihenfolge ihrer Registrierung durch diese
+beiden Funktion aufgerufen (also die zuletzt registrierte Funktion zuerst).
+
+.\" In glibc, things seem to be handled okay
+POSIX.1\-2001 legt das Verhalten nicht fest, wenn eine der mit \fBatexit\fP(3)
+registrierten Funktionen mittels \fBlongjmp\fP(3) beendet wird.
+.SS Linux\-Anmerkungen
+Seit glibc 2.2.3 können \fBatexit\fP() (und \fBon_exit\fP(3)) zur Erzeugung von
+Funktionen  einer Laufzeitbibliothek verwendet werden, die aufgerufen
+werden, wenn die Bibliothek aus dem Speicher entfernt wird.
+.SH BEISPIEL
+.nf
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+void
+bye(void)
+{
+    printf("Das war alles, Leute\en");
+}
+
+int
+main(void)
+{
+    long a;
+    int i;
+
+    a = sysconf(_SC_ATEXIT_MAX);
+    printf("ATEXIT_MAX = %ld\en", a);
+
+    i = atexit(bye);
+    if (i != 0) {
+        fprintf(stderr,
+        "Funktion für Programmschluss kann nicht gesetzt werden\en");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.fi
+.SH "SIEHE AUCH"
+\fB_exit\fP(2), \fBexit\fP(3), \fBon_exit\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

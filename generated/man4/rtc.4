@@ -1,0 +1,269 @@
+.\" -*- coding: UTF-8 -*-
+.\" rtc.4
+.\" Copyright 2002 Urs Thuermann (urs@isnogud.escape.de)
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" $Id: rtc.4,v 1.4 2005/12/05 17:19:49 urs Exp $
+.\"
+.\" 2006-02-08 Various additions by mtk
+.\" 2006-11-26 cleanup, cover the generic rtc framework; David Brownell
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RTC 4 "25. Februar 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+rtc \- Echtzeituhr
+.SH ÜBERSICHT
+#include <linux/rtc.h>
+.sp
+\fBint ioctl(\fP\fIfd\fP\fB, RTC_\fP\fIrequest\fP\fB, \fP\fIparam\fP\fB);\fP
+.SH BESCHREIBUNG
+Dies ist die Schnittstelle zu Treibern für Echtzeit\-Uhren (RTCs).
+
+Die meisten Computer verfügen über eine oder mehrere Hardware\-Uhren, die die
+aktuelle »Wanduhr«\-Zeit erfassen. Diese werden als »Real Time Clocks« (RTC)
+bezeichnet. Eine von ihnen ist in der Regel batteriegepuffert, sodass sie
+die Zeit verfolgt, auch während der Computer ausgeschaltet ist. RTCs stellen
+oft Alarme und andere Interrupts bereit.
+
+In allen i386\-PCs und ACPI\-basierten Systemen ist eine RTC eingebaut, die
+kompatibel zum Chip aus dem Originalen PC/AT ist, dem Motorola
+MC146818. Heutzutage ist solch eine RTC im Allgemeinen in den Chipsatz des
+Mainboards (South Bridge) integriert und nutzt eine austauschbare münzgroße
+Batterie.
+
+Nicht\-PC\-Systeme wie beispielsweise eingebettete Systeme, die um
+»System\-on\-chip«\-Prozessoren aufgebaut sind, nutzen andere
+Implementierungen. Üblicherweise bieten sie nicht die gleiche Funktionalität
+wie die RTC aus einem PC/AT.
+.SS "RTC im Vergleich zur Systemuhr"
+RTCs sollten nicht mit der Systemuhr verwechselt werden. Diese ist eine
+Software\-Uhr, die vom Kernel gepflegt wird. Er verwendet sie für die
+Implementierung von \fBgettimeofday\fP(2) und \fBtime\fP(2) sowie für die
+Zeitstempel von Dateien usw. Die Systemuhr zählt Sekunden und Mikrosekunden
+seit einem Startpunkt, der als die »POSIX Epoch« (1970\-01\-01 00:00:00 +0000
+(UTC)) definiert ist. (Eine verbreitete Umsetzung zählt Timer\-Interrupts,
+einmal pro »Jiffy«, bei einer Frequenz von 100, 250 oder 1000 Hz). Das
+heißt, sie sollte die »Wanduhr«\-Zeit angeben, wie es auch RTCS tun.
+
+Ein wesentlicher Unterschied zwischen einer RTC und der Systemuhr ist, dass
+RTCs auch dann laufen, wenn sich das System in einem Zustand niedrigen
+Energieverbrauchs (einschließlich »ausgeschaltet«) befindet, und die
+Systemuhr das nicht kann. Bis sie initialisiert wird, kann die Systemuhr nur
+die Zeit seit Systemstart berichten ... und nicht seit der POSIX Epoch. Also
+wird beim Booten und nach der Rückkehr aus einem Niedrigenergie\-Zustand des
+Systems die Systemuhr oft über eine RTC auf die aktuelle Wanduhr\-Zeit
+gesetzt werden. Systeme ohne eine RTC müssen die Systemuhr mit einer anderen
+Uhr stellen, vielleicht über das Netzwerk oder durch die manuelle Eingabe
+der Daten.
+.SS RTC\-Funktionen
+RTCs können direkt mit den im Folgenden aufgeführten ioctl\-Aufrufen und
+mittels \fBhwclock\fP(8) gelesen und geschrieben werden.
+
+Neben der Verfolgung von Zeit und Datum können viele RTCs Interrupts
+erzeugen
+.IP * 3
+bei jeder Aktualisierung der Uhr (d.h. einmal pro Sekunde);
+.IP *
+in periodischen Abständen mit einer Frequenz, die ein Mehrfaches einer
+beliebigen Zweierpotenz im Bereich zwischen 2 Hz und 8192 Hz ist;
+.IP *
+bei Erreichen einer vorher festgelegten Alarmzeit.
+.PP
+Jede dieser Interruptquellen kann separat aktiviert oder deaktiviert
+werden. Auf vielen Systemen kann ein solch ein Interrupt als ein Ereignis
+zum »Wecken« aus einem Energiesparzustand wie  Suspend\-to\-RAM (STR, auf
+ACPI\-Systemen S3 genannt), Hibernation (S4 auf ACPI\-Systemen) oder sogar
+»aus« (S5) konfiguriert werden. Auf manchen Systemen kann nicht die
+batteriegepufferte RTC Interrupts auslösen, sondern eine andere.
+
+Das Gerät \fI/dev/rtc\fP (oder \fI/dev/rtc0\fP, \fI/dev/rtc1\fP usw.) kann nur einmal
+(bis es wieder geschlossen wird) und nur für einen Lesezugriff geöffnet
+werden. Beim Aufruf von \fBread\fP(2) und \fBselect\fP(2) wird der aufrufende
+Prozess blockiert, bis er den nächsten Interrupt von dieser RTC empfängt. Im
+Anschluss an den Interrupt kann der Prozess einen »long integer«
+auslesen. Dessen niedrigstwertiges Byte enthält eine Bitmaske, die die Typen
+der aufgetretenen Interrupts codiert, während die verbleibenden 3 Bytes die
+Anzahl von Interrupts seit dem letzten \fBread\fP(2) enthalten.
+.SS ioctl(2)\-Schnittstelle
+Die folgenden \fBioctl\fP(2)\-Anfragen sind für mit RTC\-Geräten verbundene
+Dateideskriptoren definiert:
+.TP 
+\fBRTC_RD_TIME\fP
+gibt die Zeit der RTC in der folgenden Struktur zurück:
+.IP
+.in +4n
+.nf
+struct rtc_time {
+    int tm_sec;
+    int tm_min;
+    int tm_hour;
+    int tm_mday;
+    int tm_mon;
+    int tm_year;
+    int tm_wday;     /* nicht verwendet */
+    int tm_yday;     /* nicht verwendet */
+    int tm_isdst;    /* nicht verwendet */
+};
+.fi
+.in
+.IP
+Die Felder dieser Struktur haben die gleiche Bedeutung und die gleichen
+Wertebereiche wie die in \fBgmtime\fP(3) beschriebene Strukur \fItm\fP. Als
+drittes Argument von \fBioctl\fP(2) sollte ein Zeiger auf diese Strukur
+übergeben werden.
+.TP 
+\fBRTC_SET_TIME\fP
+setzt die Zeit der RTC auf die in der \fIrtc_time\fP\-Struktur festgelegte Zeit,
+auf die das dritte \fBioctl\fP(2)\-Argument zeigt. Zum Setzen der Zeit muss der
+Prozess privilegiert sein (d.h. über die Fähigkeit \fBCAP_SYS_TIME\fP
+verfügen).
+.TP 
+\fBRTC_ALM_READ\fP, \fBRTC_ALM_SET\fP
+liest und setzt die Alarmzeit bei RTCs, die Alarme unterstützen. Der
+Interrupt für den Alarm muss separat mit den Anfragen \fBRTC_AIE_ON\fP und
+\fBRTC_AIE_OFF\fP aktiviert oder deaktiviert werden. Das dritte Argument für
+\fBioctl\fP(2) ist ein Zeiger auf eine \fIrtc_time\fP\-Struktur. Von der Struktur
+werden lediglich die Felder \fItm_sec\fP, \fItm_min\fP und \fItm_hour\fP ausgewertet.
+.TP 
+\fBRTC_IRQP_READ\fP, \fBRTC_IRQP_SET\fP
+liest und setzt die Frequenz periodischer Interrupts bei RTCs, die
+periodische Interrupts unterstützen. Der periodische Interrupt muss separat
+mit den Anfragen \fBRTC_PIE_ON\fP und \fBRTC_PIE_OFF\fP aktiviert oder deaktiviert
+werden. Das dritte Argument von \fBioctl\fP(2)  ist ein \fIunsigned long\ *\fP
+beziehungsweise ein \fIunsigned long\fP. Der Wert ist die Anzahl der Interrupts
+pro Sekunde. Der Satz von zulässigen Frequenzen besteht aus Vielfachen von
+zwei aus dem Bereich von 2 bis 8192.  Nur ein privilegierter Prozess
+(d.h. einer mit der \fBCAP_SYS_RESOURCE\fP\-Fähigkeit) kann Frequenzen über dem
+in \fI/proc/sys/dev/rtc/max\-user\-freq\fP festgelegten Wert festlegen. (Diese
+Datei enthält standardmäßig den Wert 64.)
+.TP 
+\fBRTC_AIE_ON\fP, \fBRTC_AIE_OFF\fP
+aktiviert oder deaktiviert den Alarm\-Interrupt für RTCs, die Alarme
+unterstützen. Das dritte Argument von \fBioctl\fP(2) wird ignoriert.
+.TP 
+\fBRTC_UIE_ON\fP, \fBRTC_UIE_OFF\fP
+aktiviert oder deaktiviert den Interrupt bei jeder Aktualisierung der Uhr
+für RTCs, die diesen »einmal pro Sekunde«\-Interrupt unterstützen. Das dritte
+Argument von \fBioctl\fP(2) wird ignoriert.
+.TP 
+\fBRTC_PIE_ON\fP, \fBRTC_PIE_OFF\fP
+aktiviert oder deaktiviert den periodischen Interrupt für RTCs, die diese
+periodischen Interrupts unterstützen. Das dritte Argument von \fBioctl\fP(2)
+wird ignoriert. Nur ein privilegierter Prozess (d.h. einer mit der
+\fBCAP_SYS_RESOURCE\fP\-Fähigkeit) kann den periodischen Interrupt aktivieren,
+wenn die Frequenz über dem in \fI/proc/sys/dev/rtc/max\-user\-freq\fP
+festgelegten Wert liegt.
+.TP 
+\fBRTC_EPOCH_READ\fP, \fBRTC_EPOCH_SET\fP
+Viele RTCs codieren das Jahr in einem 8\-Bit\-Register, das entweder als
+8\-Bit\-Binärzahl oder als BCD\-Zahl interpretiert wird. In beiden Fällen wird
+die Zahl relativ zum zeitlichen Bezugspunkt (Epoch) der RTC
+interpretiert. Auf den meisten Systemen ist dies das Jahr 1900, aber auf
+Alpha und MIPS könnte es abhängig vom RTC\-Register für das Jahr auch 1952,
+1980 oder 2000 sein. Bei einigen RTCs kann mit diesen Operationen das
+Bezugsjahr gelesen bzw. gesetzt werden. Das dritte Argument von \fBioctl\fP(2)
+ist ein \fIunsigned long\ *\fP oder ein \fIunsigned long\fP und entsprechend ist
+der zurückgegebene (oder zugewiesene Wert) das Bezugsjahr.
+.TP 
+\fBRTC_WKALM_RD\fP, \fBRTC_WKALM_SET\fP
+Einige RTCs unterstützen eine leistungsfähigere Alarm\-Schnittstelle mittels
+dieser »ioctls« zum Schreiben oder Lesen der Alarmzeit der RTC mit dieser
+Struktur:
+.PP
+.RS
+.in +4n
+.nf
+struct rtc_wkalrm {
+    unsigned char enabled;
+    unsigned char pending;
+    struct rtc_time time;
+};
+.fi
+.in
+.RE
+.IP
+Der Schalter \fIenabled\fP wird zur Aktivierung oder Deaktivierung des
+Alarm\-Interrupts oder zur Ermittlung seines aktuellen Status verwendet; wenn
+Sie diese Aufrufe einsetzen, werden \fBRTC_AIE_ON\fP und \fBRTC_AIE_OFF\fP nicht
+beachtet. Der Schalter \fIpending\fP wird von \fBRTC_WKALM_RD\fP verwendet, um
+einen anstehenden Interrupt anzuzeigen. (Er ist also unter Linux meist
+nutzlos \- es sei denn, es wird mit durch EFI\-Firmware verwalteteten RTCs
+kommuniziert.) Das Feld \fItime\fP wird mit \fBRTC_ALM_READ\fP und \fBRTC_ALM_SET\fP
+verwendet, mit dem Unterschied, dass die Felder \fItm_mday\fP, \fItm_mon\fP und
+\fItm_year\fP ebenfalls gültig sind. Ein Zeiger auf diese Struktur sollte als
+drittes Argument an \fBioctl\fP(2) übergeben werden.
+.SH DATEIEN
+\fI/dev/rtc\fP, \fI/dev/rtc0\fP, \fI/dev/rtc1\fP, etc.: (zeichenorientierte)
+RTC\-Gerätedateien.
+
+\fI/proc/driver/rtc\fP: Status der (ersten) RTC
+.SH ANMERKUNGEN
+Wenn die Systemzeit des Kernels mittels \fBadjtimex\fP(2) mit einer externen
+Referenz synchronisiert wird, wird er eine bestimmte RTC periodisch alle 11
+Minuten aktualisieren. Dafür muss der Kernel kurzzeitig periodische
+Interrupts ausschalten. Dadurch könnten Programme beeinträchtigt werden, die
+diese RTC verwenden.
+
+Der Zeitbezugspunkt (Epoch) hat nichts mit der POSIX Epoch zu tun, die
+lediglich für die Systemuhr verwendet wird.
+
+Wenn das Jahr entsprechend der RTC\-Epoch und dem Jahres\-Register kleiner als
+1970 ist, werden 100 Jahre drauf geschlagen, also ein Jahr zwischen 2000 und
+2069 angenommen.
+
+Einige RTCs unterstützen Platzhalterwerte (wildcards) in den Alarm\-Feldern,
+um Szenarien wie regelmäßige Alarme 15 Minuten nach jeder vollen Stunde oder
+am ersten Tag eines jeden Monats zu unterstützen. Die Verwendung ist nicht
+portabel; portabler User\-Space\-Code erwartet lediglich einen einzelnen
+Alarm\-Interrupt und wird den Alarm bei Erhalt entweder deaktivieren oder neu
+initialisieren.
+
+Einige RTCs unterstützen periodische Interrupts mit Zeiten, die ein
+Vielfaches einer Sekunde anstatt Bruchteile einer Sekunde sind; mehrere
+Alarme, programmierbare Ausgangs\-Taktsignale; nichtflüchtigen Speicher und
+weitere Fähigkeiten, die derzeit nicht von dieser API zugänglich gemacht
+werden.
+.SH "SIEHE AUCH"
+\fBdate\fP(1), \fBadjtimex\fP(2), \fBgettimeofday\fP(2), \fBsettimeofday\fP(2),
+\fBstime\fP(2), \fBtime\fP(2), \fBgmtime\fP(3), \fBtime\fP(7), \fBhwclock\fP(8),
+/usr/src/linux/Documentation/rtc.txt
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

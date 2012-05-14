@@ -1,0 +1,141 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Mar 28 00:25:51 1993, David Metcalfe
+.\" Modified Sat Jul 24 18:13:39 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Aug 20 21:47:07 2000, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RANDOM 3 "20. September 2010" GNU Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+random, srandom, initstate, setstate \- Zufallszahlengenerator
+.SH ÜBERSICHT
+.nf
+\fB#include <stdlib.h>\fP
+.sp
+\fBlong int random(void);\fP
+
+\fBvoid srandom(unsigned int \fP\fIseed\fP\fB);\fP
+
+\fBchar *initstate(unsigned int \fP\fIseed\fP\fB, char *\fP\fIstate\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.br
+\fBchar *setstate(char *\fP\fIstate\fP\fB);\fP
+.fi
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+.ad l
+\fBrandom\fP(), \fBsrandom\fP(), \fBinitstate\fP(), \fBsetstate\fP():
+.RS 4
+_SVID_SOURCE || _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.RE
+.ad
+.SH BESCHREIBUNG
+Die Funktion \fBrandom\fP() benutzt einen Zufallsgenerator mit
+nichtlineareradditiver Rückkopplung (Feedback) mit einer vorgegebenen
+Tabellengröße von 31 »long integers«, um aufeinander folgende
+Pseudozufallszahlen im Bereich von 0 bis \fBRAND_MAX\fP zurückzugeben. Die
+Periode dieses Zufallszahlengenerators ist sehr groß, ungefähr \fI16\ *\ ((2^31)\ \-\ 1)\fP.
+.PP
+Die Funktion \fBsrandom\fP() setzt ihr Argument zur Initialisierung (als
+»Saat«) für eine neue Folge von pseudozufälligen Integers, welche von
+\fBrandom\fP() geliefert werden. Diese Folgen sind wiederholbar durch Aufruf
+von \fBsrandom\fP() mit der gleichen Saat. Falls keine Saat angegeben wird,
+wird \fBrandom\fP() automatisch mit dem Wert 1 gestartet.
+.PP
+Die Funktion \fBinitstate\fP() erlaubt es, ein Zustandsfeld \fIstate\fP für den
+Gebrauch durch \fBrandom\fP() zu initialisieren. Die Größe \fIn\fP des
+Zustandsfeldes wird von \fBinitstate\fP() benutzt, um zu entscheiden wie
+differenziert es einen Zufallszahlengenerator benutzen soll \(em je größer
+das Zustandsfeld, desto besser die Zufallszahlen. \fIseed\fP ist der Wert für
+die Initialisierung, welcher den Startpunkt für den Zufallszahlenfolge
+angibt und ermöglicht, am gleichen Punkt erneut zu starten.
+.PP
+Die Funktion \fBsetstate\fP() ändert das Zustandsfeld, welches von der Funktion
+\fBrandom\fP() benutzt wird. Das Zustandsfeld \fIstate\fP wird bis zum nächsten
+Aufruf von \fBinitstate\fP() oder \fBsetstate\fP() zum Erzeugen der Zufallszahlen
+benutzt . \fBstate\fP muss dafür initialisiert worden sein: durch den Aufruf
+von \fBinitstate\fP() oder \fBsetstate\fP().
+.SH RÜCKGABEWERT
+Die Funktion \fBrandom\fP() liefert einen Wert zwischen 0 und \fBRAND_MAX\fP
+zurück. Die Funktion \fBsrandom\fP() liefert keinen Wert zurück. Die Funktionen
+\fBinitstate\fP() liefert einen Zeiger auf das vorherige Zustandsfeld. Die
+Funktion \fBsetstate\fP() liefert einen Zeiger auf das vorherige Zustandsfeld
+oder im Fehlerfall NULL.
+.SH FEHLER
+.TP 
+\fBEINVAL\fP
+Ein Zustandsfeld von weniger als 8 Byte wurde an \fBinitstate\fP() übergeben.
+.SH "KONFORM ZU"
+4.3BSD, POSIX.1\-2001.
+.SH ANMERKUNGEN
+Aktuelle »optimale« Werte für die Größe \fIn\fP des Zustandsfeldes sind 8, 32,
+64, 128 und 256 Byte; andere Werte werden abgerundet auf den nächsten
+bekannten Wert. Verwendung von weniger als 8 Byte verursacht einen Fehler.
+.PP
+Diese Funktion sollte nicht verwendet werden, wenn mehrere Threads
+\fBrandom\fP() nutzen und das Verhalten reproduzierbar sein sollte. Nutzen Sie
+für diesen Anwendungsfall stattdessen \fBrandom_r\fP(3).
+.PP
+Die Erzeugung von Zufallszahlen ist eine schwierige Aufgabe. \fINumerical
+Recipes in C: The Art of Scientific Computing\fP (William H. Press, Brian
+P. Flannery, Saul A. Teukolsky, William T. Vetterling; New York: Cambridge
+University Press, 2007, 3rd ed.) enthält in Kapitel 7 (Random Numbers) eine
+ausgezeichnete Diskussion der Probleme bei der praktischen Erzeugung von
+Zufallszahlen.
+.PP
+Eine eher theoretische Diskussion, die auch viele praktische Probleme
+aufgreift, finden Sie in Kapitel 3 (Random Numbers) in Donald E. Knuths
+\fIThe Art of Computer Programming\fP, Volume 2 (Seminumerical Algorithms), 2nd
+ed.; Reading, Massachusetts: Addison\-Wesley Publishing Company, 1981.
+.SH "SIEHE AUCH"
+\fBdrand48\fP(3), \fBrand\fP(3), \fBrandom_r\fP(3), \fBsrand\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
