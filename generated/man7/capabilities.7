@@ -43,14 +43,13 @@
 .\"     capability, then we must also set the effective flag for all
 .\"     other capabilities where the permitted or inheritable bit is set.
 .\" 2011-09-07, mtk/Serge hallyn: Add CAP_SYSLOG
-.\" FIXME: Linux 3.0 added CAP_WAKE_ALARM
 .\"
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH CAPABILITIES 7 "4. Oktober 2011" Linux Linux\-Programmierhandbuch
+.TH CAPABILITIES 7 "15. April 2012" Linux Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
 capabilities \- Überblick über Linux\-Capabilities
 .SH BESCHREIBUNG
@@ -119,6 +118,8 @@ nicht auf das Dateisystem\- oder eine der ergänzenden GIDs des aufrufenden
 Prozesses passt.
 .TP 
 \fBCAP_IPC_LOCK\fP
+.\" FIXME As at Linux 3.2, there are some strange uses of this capability
+.\" in other places; they probably should be replaced with something else.
 Speicher sperren (\fBmlock\fP(2), \fBmlockall\fP(2), \fBmmap\fP(2), \fBshmctl\fP(2)).
 .TP 
 \fBCAP_IPC_OWNER\fP
@@ -153,9 +154,31 @@ Smack\-LSM
 Spezielle Dateien mittels \fBmknod\fP(2) erstellen.
 .TP 
 \fBCAP_NET_ADMIN\fP
-Verschiedene netzbezogene Operationen ausführen (z.B. privilegierte
-Socket\-Optionen setzen, Multicasting aktivieren,
-Schnittstellenkonfiguration, Routing\-Tabellen verändern)
+Verschiedene Netz\-bezogene Operationen durchführen:
+.PD 0
+.RS
+.IP * 2
+Schnittstellenkonfiguration;
+.IP *
+administration of IP firewall, masquerading, and accounting
+.IP *
+modify routing tables;
+.IP *
+bind to any address for transparent proxying;
+.IP *
+set type\-of\-service (TOS)
+.IP *
+clear driver statistics;
+.IP *
+set promiscuous mode;
+.IP *
+enabling multicasting;
+.IP *
+\fBsetsockopt\fP(2) verwenden, um die folgenden Socket\-Optionen zu setzen:
+\fBSO_DEBUG\fP, \fBSO_MARK\fP, \fBSO_PRIORITY\fP (für eine Priorität außerhalb des
+Bereichs 0 bis 6), \fBSO_RCVBUFFORCE\fP und \fBSO_SNDBUFFORCE\fP.
+.RE
+.PD
 .TP 
 \fBCAP_NET_BIND_SERVICE\fP
 Einen Socket an einen privilegierten Internet\-Domain\-Port binden
@@ -165,8 +188,15 @@ Einen Socket an einen privilegierten Internet\-Domain\-Port binden
 (Unbenutzt) Socket\-Broadcasts durchführen und auf Multicasts warten
 .TP 
 \fBCAP_NET_RAW\fP
+.PD 0
+.RS
+.IP * 2
+RAW\- und PACKET\-Sockets verwenden;
+.IP *
+bind to any address for transparent proxying.
+.RE
+.PD
 .\" Also various IP options and setsockopt(SO_BINDTODEVICE)
-RAW\- und PACKET\-Sockets verwenden
 .TP 
 \fBCAP_SETGID\fP
 beliebige Änderungen an Prozess\-GIDs und der ergänzenden GID\-Liste
@@ -206,6 +236,8 @@ eine Reihe von Systemadministratoroperationen ausführen, darunter:
 privilegierte \fBsyslog\fP(2)\-Operationen ausführen (seit Linux 2.6.37 sollte
 \fBCAP_SYSLOG\fP verwandt werden, um diese Operationen zu erlauben);
 .IP *
+den \fBVM86_REQUEST_IRQ\fP\-Befehl \fBvm86\fP(2) ausführen;
+.IP *
 \fBIPC_SET\fP\- und \fBIPC_RMID\fP\-Operationen auf beliebigen System\-V\-IPC\-Objekten
 ausführen;
 .IP *
@@ -223,13 +255,33 @@ die systemweite Grenze der Anzahl der offenen Dateien
 (\fI/proc/sys/fs/file\-max\fP) in Systemaufrufen, die Dateien öffnen
 (z.B. \fBaccept\fP(2), \fBexecve\fP(2), \fBopen\fP(2), \fBpipe\fP(2)) überschreiben;
 .IP *
-Schalter \fBCLONE_NEWNS\fP mit \fBclone\fP(2) und \fBunshare\fP(2) einsetzen;
+Schalter \fBCLONE_*\fP einsetzen, der neue Namensräume mit \fBclone\fP(2) und
+\fBunshare\fP(2) erstellt;
+.IP *
+\fBperf_event_open\fP(2) aufrufen;
+.IP *
+access privileged \fIperf\fP event information;
 .IP *
 \fBsetns\fP(2) aufrufen;
 .IP *
+\fBfanotify_init\fP(2) aufrufen;
+.IP *
 \fBKEYCTL_CHOWN\fP\- und \fBKEYCTL_SETPERM\fP\-\fBkeyctl\fP(2)\-Operationen ausführen;
 .IP *
-\fBmadvise\fP(2)\-\fBMADV_HWPOISON\fP\-Operationen ausführen
+\fBmadvise\fP(2)\-\fBMADV_HWPOISON\fP\-Operationen ausführen;
+.IP *
+employ the \fBTIOCSTI\fP \fBioctl\fP(2)  to insert characters into the input queue
+of a terminal other than the caller's controlling terminal.
+.IP *
+veralteten Systemaufruf \fBnfsservctl\fP(2); verwenden;
+.IP *
+veralteten Systemaufruf \fBbdflush\fP(2) verwenden;
+.IP *
+verschiedene privilegierte Blockgeräte\-\fBioctl\fP(2)\-Operationen ausführen
+.IP *
+verschiedene privilegierte Dateisystem\-\fBioctl\fP(2)\-Operationen ausführen
+.IP *
+administrative Operationen auf vielen Gerätetreibern ausführen
 .RE
 .PD
 .TP 
@@ -283,7 +335,7 @@ beliebige Prozesse anwenden
 .TP 
 \fBCAP_SYS_RAWIO\fP
 E/A\-Port\-Operationen ausführen (\fBiopl\fP(2) und \fBioperm\fP(2)); auf
-\fI/proc/kcore\fP zugreifen
+\fI/proc/kcore\fP zugreifen; die \fBFIBMAP\fP\-Operation \fBioctl\fP(2) einsetzen
 .TP 
 \fBCAP_SYS_RESOURCE\fP
 .PD 0
@@ -299,12 +351,26 @@ Ressourcenbegrenzungen erhöhen (siehe \fBsetrlimit\fP(2));
 .IP *
 \fBRLIMIT_NPROC\fP\-Ressourcenbegrenzung außer Kraft setzen;
 .IP *
+maximale Anzahl von Konsolen bei der Konsolenzuteilung außer Kraft setzen;
+.IP *
+override maximum number of keymaps;
+.IP *
+mehr als 64 Hz\-Unterbrechungen von der Echtzeituhr erlauben;
+.IP *
 die \fImsg_qbytes\fP\-Begrenzung für eine System\-V\-Nachrichtenwarteschlange über
 die Grenze in \fI/proc/sys/kernel/msgmnb\fP anheben (siehe \fBmsgop\fP(2) und
-\fBmsgctl\fP(2))
+\fBmsgctl\fP(2));
+.IP *
+die \fI/proc/sys/fs/pipe\-size\-max\fP\-Begrenzung beim Setzen der Kapazität einer
+Pipe mittels des \fBF_SETPIPE_SZ\fP\-Befehls \fBfcntl\fP(2) außer Kraft setzen
 .IP *
 \fBF_SETPIPE_SZ\fP verwenden, um die Kapazität einer Pipe über die in
-\fI/proc/sys/fs/pipe\-max\-size\fP angegebene Grenze erhöhen
+\fI/proc/sys/fs/pipe\-max\-size\fP angegebene Grenze erhöhen;
+.IP *
+override \fI/proc/sys/fs/mqueue/queues_max\fP limit when creating POSIX message
+queues (see \fBmq_overview\fP(7));
+.IP *
+\fBprctl\fP(2)\-Operation \fBPR_SET_MM\fP einsetzen.
 .RE
 .PD
 .TP 
@@ -313,12 +379,17 @@ Systemuhr setzen (\fBsettimeofday\fP(2), \fBstime\fP(2), \fBadjtimex\fP(2));
 Echtzeit\- (Hardware\-)Uhr setzen
 .TP 
 \fBCAP_SYS_TTY_CONFIG\fP
-\fBvhangup\fP(2) verwenden
+\fBvhangup\fP(2) einsetzen; verschiedene privilegierte \fBioctl\fP(2)\-Operationen
+auf virtuelle Terminals einsetzen
 .TP 
 \fBCAP_SYSLOG\fP (seit Linux 2.6.37)
-.\"
 Privilegierte \fBsyslog\fP(2)\-Operationen ausführen. Siehe \fBsyslog\fP(2) für
 Informationen, welche Operationen Privilegien benötigen.
+.TP 
+\fBCAP_WAKE_ALARM\fP (seit Linux 3.0)
+.\"
+Trigger something that will wake up the system (set \fBCLOCK_REALTIME_ALARM\fP
+and \fBCLOCK_BOOTTIME_ALARM\fP timers).
 .SS "Frühere und heutige Implementierungen"
 Eine komplette Implementierung von Capabilities verlangt folgendes:
 .IP 1. 3
@@ -698,14 +769,15 @@ anderen im System erstellten Prozessen vererbt wird.
 \fBcapget\fP(2), \fBprctl\fP(2), \fBsetfsuid\fP(2), \fBcap_clear\fP(3),
 \fBcap_copy_ext\fP(3), \fBcap_from_text\fP(3), \fBcap_get_file\fP(3),
 \fBcap_get_proc\fP(3), \fBcap_init\fP(3), \fBcapgetp\fP(3), \fBcapsetp\fP(3),
-\fBcredentials\fP(7), \fBpthreads\fP(7), \fBgetcap\fP(8), \fBsetcap\fP(8)
+\fBlibcap\fP(3), \fBcredentials\fP(7), \fBpthreads\fP(7), \fBgetcap\fP(8), \fBsetcap\fP(8)
 .PP
+Kommentare zum Zweck verschiedener Capabilities in
 \fIinclude/linux/capability.h\fP in den Kernelquellen
 .SH KOLOPHON
-Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Diese Seite ist Teil der Veröffentlichung 3.40 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
 Fehler gemeldet werden können, finden sich unter
-http://man7.org/linux/man\-pages/.
+http://www.kernel.org/doc/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von

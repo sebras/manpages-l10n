@@ -34,13 +34,14 @@
 .\" Modified 18 Apr 2001 by Andi Kleen
 .\"   Fix description to describe what it really does; add a few caveats.
 .\" 2006-04-28, mtk, substantial rewrite of various parts.
+.\" 2012-02-27 Various changes by Christoph Hellwig <hch@lst.de>
 .\"
 .\"*******************************************************************
 .\"
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH FSYNC 2 "7. November 2008" Linux Linux\-Programmierhandbuch
+.TH FSYNC 2 "27. Februar 2012" Linux Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
 fsync, fdatasync \- den gepufferten Dateiinhalt mit einem Datenträger
 synchronisieren
@@ -65,10 +66,13 @@ Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
 \fBfsync\fP() überträgt alle veränderten gepufferten Daten (d.h. geänderte
 Seiten des Pufferzwischenspeichers) von der Datei, auf die der
 Dateideskriptor \fIfd\fP weist, auf die Platte (oder ein anderes dauerhaftes
-Speichermedium) auf dem die Datei liegt. Der Aufruf blockiert bis das Gerät
-meldet, dass die Übertragung vollständig ist. Außerdem werden
-Metadaten\-Informationen übertragen, die mit der Datei verknüpft sind (siehe
-\fBstat\fP(2)).
+Speichermedium), so dass sämtliche Änderungsinformationen sogar nach einem
+Absturz oder Neustart des Systems wieder hergestellt werden können. Dies
+beinhaltet das Schreiben oder Leeren eines Plattenzwischenspeichers, falls
+vorhanden. Der Aufruf blockiert bis das Gerät meldet, dass die Übertragung
+vollständig ist. Außerdem werden Metadaten\-Informationen übertragen, die mit
+der Datei verknüpft sind (siehe \fBstat\fP(2)).
+
 
 Der Aufruf von \fBfsync\fP() garantiert nicht, dass der Verzeichniseintrag der
 Datei die Platte erreicht. Dafür wird auch ein explizites \fBfsync\fP() auf
@@ -93,7 +97,7 @@ zurückgegeben und \fIerrno\fP entsprechend gesetzt.
 .SH FEHLER
 .TP 
 \fBEBADF\fP
-\fIfd\fP ist kein gültiger, zum Schreiben geöffneter Dateideskriptor.
+\fIfd\fP ist kein gültiger offener Dateideskriptor.
 .TP 
 \fBEIO\fP
 Während der Synchronisation ist ein Fehler aufgetreten.
@@ -111,42 +115,24 @@ Auf POSIX\-Systemen, auf denen \fBfdatasync\fP() verfügbar ist, ist
 \fB_POSIX_SYNCHRONIZED_IO\fP in \fI<unistd.h>\fP als ein Wert größer als 0
 definiert. (Siehe auch \fBsysconf\fP(3).)
 .SH ANMERKUNGEN
-Anwendungen, die auf Datenbanken oder Protokolldateien zugreifen, schreiben
-oft ein winziges Datenfragment (z.B. eine Zeile in einer Protokolldatei) und
-rufen dann sofort \fBfsync\fP() auf, um sicherzustellen, dass die geschriebenen
-Daten physisch auf der Festplatte gespeichert werden. Unglücklicherweise
-wird \fBfsync\fP() immer zwei Schreiboperationen anstoßen: eine für die neu
-geschriebenen Daten und eine andere, um die im Inode gespeicherte
-Änderungszeit zu aktualisieren. Falls die Änderungszeit nicht Teil des
-Transaktionskonzeptes ist, kann \fBfdatasync\fP() benutzt werden, um unnötige
-Inode\-Plattenschreiboperationen zu vermeiden.
-
-.\" See
-.\" .BR hdparm (8)
-.\" for how to disable that cache for IDE disks.
-Wenn bei der zugrundeliegenden Festplatte die Zwischenspeicherung beim
-Schreiben eingeschaltet ist, dann kann es sein, dass die Daten bei der
-Rückkehr von \fBfsync\fP()/\fBfdatasync\fP() nicht wirklich im dauerhaften
-Speicher liegen.
-.LP
-Falls ein Ext2\-Dateisystem mit der Option \fIsync\fP eingehängt ist, werden
-außerdem auch Verzeichniseinträge implizit mittels \fBfsync\fP()
-synchronisiert.
-.LP
-Auf Kerneln vor 2.4 kann \fBfsync\fP() bei großen Dateien ineffizient
-sein. Eine Alternative könnte die Benutzung des Schalters \fBO_SYNC\fP für
-\fBopen\fP(2) sein.
+Auf einigen UNIX\-Systemen (aber nicht Linux) muss \fIfd\fP ein \fIschreibbarer\fP
+Dateideskriptor sein.
 
 Bis einschließlich Linux 2.2 entspricht \fBfdatasync\fP() \fBfsync\fP() und
 steigert daher nicht die Leistung.
+
+Die \fBfsync\fP()\-Implementierungen in älteren Kerneln oder weniger benutzten
+Dateisystemen wissen nicht, wie Plattenzwischenspeicher geleert werden. In
+diesen Fällen müssen Plattenzwischenspeicher mittels \fBhdparm\fP(8) oder
+\fBsdparm\fP(8) deaktiviert werden, um sicheres Funktionieren zu garantieren.
 .SH "SIEHE AUCH"
 \fBbdflush\fP(2), \fBopen\fP(2), \fBsync\fP(2), \fBsync_file_range\fP(2), \fBhdparm\fP(8),
 \fBmount\fP(8), \fBsync\fP(8), \fBupdate\fP(8)
 .SH KOLOPHON
-Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Diese Seite ist Teil der Veröffentlichung 3.40 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
 Fehler gemeldet werden können, finden sich unter
-http://man7.org/linux/man\-pages/.
+http://www.kernel.org/doc/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von
