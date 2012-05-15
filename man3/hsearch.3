@@ -1,0 +1,188 @@
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\" Copyright 1993 Ulrich Drepper (drepper@karlsruhe.gmd.de)
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
+.\" USA.
+.\"
+.\" References consulted:
+.\"     SunOS 4.1.1 man pages
+.\" Modified Sat Sep 30 21:52:01 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" Translated into german by Martin Schulze (joey@finlandia.infodrom.north.de)
+.\"
+.TH HSEARCH 3 "1. Januar 1997" "GNU" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+hcreate, hdestroy, hsearch \- hash table management
+.PP
+Diese Handbuchseite ist veraltet. Im Zweifelsfall ziehen Sie
+die englischsprachige Handbuchseite zu Rate, indem Sie
+.IP
+man -LC 3 hsearch
+.PP
+eingeben.
+.SH "ÜBERSICHT"
+.nf
+.B #include <search.h>
+.sp
+.BI "ENTRY *hsearch(ENTRY " item ", ACTION " action ");"
+.sp
+.BI "int     hcreate (unsigned " nel ");"
+.sp
+.BI "void    hdestroy (" void ");"
+.RE
+.fi
+.SH BESCHREIBUNG
+Diese  drei  Funktionen erlauben dem Anwender eine Hashtabelle
+anzulegen, die einen Schlüssel  mit  irgendwelchen  Daten verbindet.
+
+Zuerst muss die Tabelle mit
+.B hcreate()
+erzeugt werden.
+.I nel
+ist die geschätzte Größe der Tabelle.
+.B hcreate()
+kann diesen Wert nach oben korrigieren, um die Performance des
+Algorithmus zu verbessern.  Die GNU-Implementierung von
+.B hsearch()
+wird die Tabelle ebenfalls verlängern, wenn sie fast voll ist.
+.BR malloc (3)
+wird verwendet, um Speicherplatz zu alloziieren.
+
+Die entsprechende Funktion
+.B hdestroy()
+gibt den Speicher wieder frei, der von der Hashtabelle belegt wurde,
+um so Platz für eine neue Tabelle zu schaffen.
+
+.I item
+ist vom Typ
+.BR ENTRY ,
+der in
+.I <search.h> definiert wurde und folgende Elemente enthält:
+.sp
+.nf
+	typedef struct entry 
+	  { 
+	    char *\fIkey\fP;
+	    char *\fIdata\fP; 
+	  } ENTRY;
+.fi
+.sp
+.I key
+zeigt auf eine null-terminierte ASCII-Zeichenkette, die den
+Suchschlüssel repräsentiert.
+.I data
+zeigt auf das Datum, das mit dem Schlüssel verbunden ist.  (Ein Zeiger
+auf einen anderen Typ als char sollte auf einen
+.B char *
+gecastet werden.)
+.B hsearch()
+sucht nach
+.I item
+in der Hashtabelle und gibt bei Erfolg einen Zeiger darauf zurück,
+ansonsten
+.BR NULL .
+.I action
+bestimmt, wie sich
+.B hsearch()
+nach erfolgloser Suche verhält.  Der Wert
+.B ENTER
+bewirkt, dass
+.I item
+in die Tabelle eingefügt wird, während der Wert
+.B FIND
+.B hsearch()
+anweist
+.B NULL
+zurückzugeben.
+.SH "RÜCKGABEWERT"
+.B hcreate()
+gibt
+.B NULL
+zurück, wenn die Hashtabelle nicht erfolgreich angelegt werden konnte.
+
+.B hsearch()
+gibt
+.B NULL
+zurück, wenn
+.I action
+.B ENTER
+ist und nicht ausreichend Speicher zur Verfügung steht, um die
+Hashtabelle zu erweitern, oder wenn
+.I action
+.B FIND
+ist und
+.I item
+nicht in der Tabelle gefunden werden konnte.
+.SH "KONFORM ZU"
+SVID, außer, dass die Tabelle bei SysV nicht wachsen kann.
+.SH FEHLER
+Diese Implementierung kann nur eine Hashtabelle zur gleichen Zeit
+verwalten.  Einzelne Einträge können hinzugefügt, jedoch nicht gelöscht
+werden.
+.SH BEISPIEL
+.PP
+Das folgende Programm fügt 24 Einträge in die Hashtabelle ein und
+zeigt dann einige.
+.nf
+
+    #include <stdio.h>
+    #include <search.h>
+    
+    char *data[]={ "alpha", "bravo", "charley", "delta",
+         "echo", "foxtrot", "golf", "hotel", "india", "juliette",
+         "kilo", "lima", "mike", "november", "oscar", "papa",
+         "quebec", "romeo", "sierra", "tango", "uniform",
+         "victor", "whiskey", "x-ray", "yankee", "zulu" 
+     };
+
+    int main()
+    {
+      ENTRY e, *ep;
+      int i;
+    
+      /* Fang mit einer kleinen Tabelle an und laß sie wachsen */
+      hcreate(3);
+      for (i = 0; i < 24; i++)
+        {
+          e.key = data[i]; 
+          /* Datum ist nur eine Ganzzahl anstelle eines Zeigers auf
+             irgendetwas */
+          e.data = (char *)i;
+          ep = hsearch(e, ENTER);
+          /* Es sollte keine Fehler geben */
+          if(ep == NULL) {fprintf(stderr, "entry failed\\n"); exit(1);}
+        }
+      for (i = 22; i < 26; i++)
+        /* Gib zwei Einträge der Tabelle aus und zeige, dass zwei nicht
+           in der Tabelle enthalten sind */
+        {
+          e.key = data[i];
+          ep = hsearch(e, FIND);
+          printf("%9.9s -> %9.9s:%d\\n", e.key, ep?ep->key:"NULL", 
+                 ep?(int)(ep->data):0);
+        }
+      return 0;
+    }
+
+.fi
+.SH "SIEHE AUCH"
+.BR bsearch (3),
+.BR lsearch (3),
+.BR tsearch (3),
+.BR malloc (3).

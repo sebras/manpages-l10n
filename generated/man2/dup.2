@@ -1,0 +1,158 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\" and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2005, 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified 1993-07-21, Rik Faith <faith@cs.unc.edu>
+.\" Modified 1994-08-21, Michael Chastain <mec@shell.portal.com>:
+.\"   Fixed typoes.
+.\" Modified 1997-01-31, Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2002-09-28, aeb
+.\" 2009-01-12, mtk, reordered text in DESCRIPTION and added some
+.\"     details for dup2().
+.\" 2008-10-09, mtk: add description of dup3()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DUP 2 "10. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+dup, dup2 \- dupliziert einen Datei\-Deskriptor
+.SH ÜBERSICHT
+.nf
+\fB#include <unistd.h>\fP
+.sp
+\fBint dup(int \fP\fIoldfd\fP\fB);\fP
+\fBint dup2(int \fP\fIoldfd\fP\fB, int \fP\fInewfd\fP\fB);\fP
+.sp
+\fB#define _GNU_SOURCE\fP             /* Siehe feature_test_macros(7) */
+\fB#include <unistd.h>\fP
+.sp
+\fBint dup3(int \fP\fIoldfd\fP\fB, int \fP\fInewfd\fP\fB, int \fP\fIschalter\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+Diese Systemaufrufe erstellen eine Kopie des Datei\-Deskriptors \fIoldfd\fP.
+
+\fBdup\fP() benutzt den unbenutzten Deskriptor mit der niedrigsten Nummer für
+den neuen Deskriptor.
+
+\fBdup2\fP() erstellt \fInewfd\fP als Kopie von \fIoldfd\fP, wobei \fInewfd\fP, falls
+notwendig, zuerst geschlossen wird, aber beachten Sie Folgendes:
+.IP * 3
+Falls \fIoldfd\fP kein gültiger Datei\-Deskriptor ist, schlägt der Aufruf fehl
+und \fInewfd\fP wird nicht geschlossen.
+.IP *
+Falls \fIoldfd\fP ein gültiger Datei\-Deskriptor ist und \fInewfd\fP den gleichen
+Wert wie \fIoldfd\fP hat, dann tut \fBdup2\fP() nichts und gibt \fInewfd\fP zurück.
+.PP
+Nach der erfolgreichen Rückkehr von einem dieser Systemaufrufe können die
+alten und neuen Datei\-Deskriptoren synonym benutzt werden. Sie beziehen sich
+auf die gleichen offenen Datei\-Deskriptoren (siehe \fBopen\fP(2)) und teilen
+sich dadurch Dateiversatz (file offset) und Dateistatusschalter. Falls der
+Dateiversatz zum Beispiel durch \fBlseek\fP(2) auf einem der Deskriptoren
+geändert wurde, wird der Versatz auch für den anderen verändert.
+
+Die beiden Deskriptoren teilen sich keine Datei\-Deskriptor\-Schalter (den
+Schalter »close\-on\-exec«). Der Schalter »close\-on\-exec« (\fBFD_CLOEXEC\fP;
+siehe \fBfcntl\fP(2)) für das Duplikat ist aus.
+
+\fBdup3\fP() entspricht \fBdup2\fP(), außer dass:
+.IP * 3
+Der Aufrufende kann erzwingen, dass der Schalter »close\-on\-exec« für den
+neuen Datei\-Deskriptor durch Angabe von \fBO_CLOEXEC\fP in \fIschalter\fP gesetzt
+wird. Lesen Sie die Beschreibung des gleichnamigen Schalters in \fBopen\fP(2),
+um zu erfahren, warum dies nützlich sein könnte.
+.IP *
+.\" FIXME . To confirm with Al Viro that this was intended, and its rationale
+Falls \fIoldfd\fP \fInewfd\fP entspricht, schlägt \fBdup3\fP() mit dem Fehler
+\fBEINVAL\fP fehl.
+.SH RÜCKGABEWERT
+Bei Erfolg geben diese Systemaufrufe den neuen Deskriptor zurück. Im
+Fehlerfall wird \-1 zurückgegeben und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEBADF\fP
+\fIoldfd\fP ist kein offener Datei\-Deskriptor oder \fInewfd\fP ist außerhalb des
+für Datei\-Deskriptoren erlaubten Bereiches.
+.TP 
+\fBEBUSY\fP
+(nur Linux) Dies könnte von \fBdup2\fP() oder \fBdup3\fP() während einer
+Gleichzeitigkeitsbedingung mit \fBopen\fP(2) und \fBdup\fP() zurückgegeben werden.
+.TP 
+\fBEINTR\fP
+Der Aufruf von \fBdup2\fP() oder \fBdup3\fP() wurde von einem Signal unterbrochen;
+lesen Sie \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+.\" FIXME . To confirm with Al Viro that this was intended, and its rationale
+(\fBdup3\fP()) \fIschalter\fP enthält einen ungültigen Wert oder \fIoldfd\fP
+entsprach \fInewfd\fP.
+.TP 
+\fBEMFILE\fP
+Der Prozess hat bereits die maximale Anzahl an offenen Datei\-Deskriptoren
+und versucht einen neuen zu öffnen.
+.SH VERSIONEN
+\fBdup3\fP() wurde in Version 2.6.27 zu Linux hinzugefügt; Glibc\-Unterstützung
+ist seit Version 2.9 verfügbar.
+.SH "KONFORM ZU"
+\fBdup\fP(), \fBdup2\fP(): SVr4, 4.3BSD, POSIX.1\-2001.
+
+.\" SVr4 documents additional
+.\" EINTR and ENOLINK error conditions.  POSIX.1 adds EINTR.
+.\" The EBUSY return is Linux-specific.
+\fBdup3\fP() ist Linux\-spezifisch.
+.SH ANMERKUNGEN
+Der von \fBdup2\fP zurückgegebene Fehler unterscheidet sich von dem, der von
+\fBfcntl(\fP...,\fBF_DUPFD\fP,...\fB)\fP zurückgegeben wird, wenn \fInewfd\fP außerhalb
+des Bereiches ist. Weiterhin gibt \fBdup2\fP auf einigen Systemen \fBEINVAL\fP wie
+\fBF_DUPFD\fP zurück.
+
+Falls \fInewfd\fP geöffnet war, gehen einige Fehler, die zur Zeit des
+\fBclose\fP(2) berichtet worden wären, verloren. Ein vorsichtiger Programmierer
+wird \fBdup2\fP() oder \fBdup3\fP() nicht benutzen ohne zuerst \fInewfd\fP zu
+schließen.
+.SH "SIEHE AUCH"
+\fBclose\fP(2), \fBfcntl\fP(2), \fBopen\fP(2)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Aldo Valente <aldo@dagobar.rhein.de>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

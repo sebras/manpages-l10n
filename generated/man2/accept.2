@@ -1,0 +1,287 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-21 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998-2000 by Andi Kleen to match Linux 2.2 reality
+.\" Modified 2002-04-23 by Roger Luethi <rl@hellgate.ch>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2008-12-04, mtk, Add documentation of accept4()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ACCEPT 2 "10. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+accept – nimmt eine Verbindung auf einem Socket an
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/types.h>\fP          /* Siehe ANMERKUNGEN */
+\fB#include <sys/socket.h>\fP
+
+\fBint accept(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIadresse\fP\fB, socklen_t *\fP\fIadresslaenge\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP             /* Siehe feature_test_macros(7) */
+\fB#include <sys/socket.h>\fP
+
+\fBint accept4(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIadresse\fP\fB,\fP
+\fB            socklen_t *\fP\fIadresslaenge\fP\fB, int \fP\fIschalter\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+Der Systemaufruf \fBaccept\fP() wird mit den verbindungsbasierten Sockettypen
+(\fBSOCK_STREAM\fP und \fBSOCK_SEQPACKET\fP) benutzt. Er extrahiert die erste
+Verbindungsanfrage in der Warteschlange ausstehender Verbindungen für das
+wartende Socket \fIsockfd\fP, erzeugt eine neues verbundenes Socket und gibt
+einen neuen Datei\-Deskriptor zurück, der sich auf dieses Socket bezieht. Das
+neu erstellte Socket ist nicht im Wartezustand. Das Original\-Socket
+\fIsockfd\fP wird von diesem Aufruf nicht beeinflusst.
+.PP
+Das Argument \fIsockfd\fP ist ein Socket, das mit \fBsocket\fP(2) erstellt wurde,
+mit \fBbind\fP(2) an eine lokale Adresse gebunden ist und nach einem
+\fBlisten\fP(2) auf Verbindungen wartet.
+
+Das Argument \fIadresse\fP ist ein Zeiger auf eine \fIsockaddr\fP\-Struktur. Diese
+Struktur enthält die Adresse des Peer\-Sockets, wie sie der
+Kommunikationsschicht bekannt ist. Das exakte Format der zurückgegebenen
+Adresse \fIadresse\fP wird durch die Adressfamilie des Sockets festgelegt
+(siehe \fBsocket\fP(2) und die jeweiligen Protokoll\-Handbuchseiten). Wenn
+\fIadresse\fP NULL ist, wird nichts eingrtragen; in diesem Fall wird
+\fIadresslaenge\fP nicht benutzt und sollte auch NULL sein.
+
+Das Argument \fIadresslaenge\fP ist ein Wert\-Ergebnis\-Argument: Der Aufrufende
+muss es initialisieren, um die Größe (in Byte) der Struktur zu erhalten, auf
+die \fIadresse\fP zeigt; bei der Rückkehr wird es die tatsächliche Größe der
+Peer\-Adresse enthalten.
+
+Die zurückgegebene Adresse wird gekürzt, falls der bereitgestellte Puffer zu
+klein ist; in diesem Fall wird \fIadresslaenge\fP einen größeren Wert
+zurückgeben, als der beim Aufruf übergebene.
+.PP
+Falls keine ausstehenden Verbindungen in der Warteschlange sind und das
+Socket nicht als »nonblocking« gekennzeichnet ist, blockt \fBaccept\fP() den
+Aufrufenden bis eine Verbindung besteht. Wenn das Socket als »nonblocking«
+gekennzeichnet ist und in der Warteschlange keine ausstehenden Verbindungen
+enthält, schlägt \fBaccept\fP() mit dem Fehler \fBEAGAIN\fP oder \fBEWOULDBLOCK\fP
+fehl.
+.PP
+Zur Information über neu auf dem Socket eintreffende Verbindungen, kann
+\fBselect\fP(2) oder \fBpoll\fP(2) benutzt werden. Wenn versucht wird, eine neue
+Verbindung zu erstellen, wird ein lesbares Ereignis geliefert und sie können
+\fBaccept\fP() aufrufen, um ein Socket für diese Verbindung zu
+erhalten. Alternativ können Sie das Socket zum Setzen von \fBSIGIO\fP
+veranlassen, wenn es auf dem Socket zu Aktivität kommt; lesen Sie
+\fBsocket\fP(7), um Einzelheiten zu erhalten.
+.PP
+Bei bestimmten Protokollen, die eine explizite Bestätigung verlangen, wie
+DECNet, kann davon ausgegangen werden, dass \fBaccept\fP() nur die nächste
+Verbindung aus der Warteschlange holt ohne sie automatisch zu
+bestätigen. Die Bestätigung kann ein normaler Lese\- oder Schreibvorgang auf
+dem neuen Deskriptor mit sich bringen, eine Ablehnung kann durch ein
+Schließen des neuen Sockets impliziert werden. Derzeit verfügt nur DECNet
+auf Linux über diese Semantik.
+
+Falls \fIschalter\fP 0 ist, dann entspricht \fBaccept4\fP() \fBaccept\fP(). Die
+folgenden Werte können in \fIschalter\fP bitweise ODER\-verknüpft werden, um ein
+unterschiedliches Verhalten zu bewirken:
+.TP  16
+\fBSOCK_NONBLOCK\fP
+Setzt den Datei\-Statusschalter \fBO_NONBLOCK\fP für den neu geöffneten
+Dateideskriptor. Die Benutzung dieses Schalters speichert zusätzliche
+Aufrufe nach \fBfcntl\fP(2), um das gleiche Ergebnis zu erzielen.
+.TP 
+\fBSOCK_CLOEXEC\fP
+Setzt den Schalter Schließen\-beim\-Ausführen \fBFD_CLOEXEC\fP für den neu
+geöffneten Datei\-Deskriptor. Lesen Sie die Beschreibung des Schalters
+\fBO_CLOEXEC\fP in \fBopen\fP(2), um die Gründe zu beleuchten, warum dies nützlich
+sein könnte.
+.SH RÜCKGABEWERT
+Bei Erfolg geben diese Systemaufrufe eine nicht negative Ganzzahl zurück,
+die kein Deskriptor für das akzeptierte Socket ist. Bei einem Fehler wird \-1
+zurückgegeben und \fIerrno\fP entsprechend gesetzt.
+.SS Fehlerbehandlung
+Die Linux\-Version von \fBaccept\fP() (und \fBaccept4\fP()) reichen alle noch nicht
+behandelten Netzwerkfehler an das neue Socket als einen Fehlerkode von
+\fBaccept\fP() weiter. Dieses Verhalten unterscheidet sich von anderen
+Implementierungen des BSD\-Sockets. Um zuverlässig operieren zu können,
+sollte die Anwendung die für das Protokoll nach \fBaccept\fP() definierten
+Netzwerkfehler aufspüren und sie wie \fBEAGAIN\fP durch erneutes Probieren
+verfolgen. Im Fall von TCP/IP sind dies \fBENETDOWN\fP, \fBEPROTO\fP,
+\fBENOPROTOOPT\fP, \fBEHOSTDOWN\fP, \fBENONET\fP, \fBEHOSTUNREACH\fP, \fBEOPNOTSUPP\fP und
+\fBENETUNREACH\fP.
+.SH FEHLER
+.TP 
+\fBEAGAIN\fP oder \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Das Socket ist als »nonblocking« gekennzeichnet und es sind keine
+Verbindungen vorhanden, die akzeptiert werden müssen. POSIX.1\-2001 erlaubt
+in diesem Fall auch die Rückgabe beider Fehlers und verlangt nicht, dass
+diese Konstanten den gleichen Wert haben. Deshalb sollte eine portable
+Anwendung beide Möglichkeiten prüfen.
+.TP 
+\fBEBADF\fP
+Der Deskriptor ist ungültig.
+.TP 
+\fBECONNABORTED\fP
+Eine Verbindung wurde abgebrochen.
+.TP 
+\fBEFAULT\fP
+Das Argument \fIadresse\fP ist kein beschreibbarer Teil des Adressraums des
+Benutzers.
+.TP 
+\fBEINTR\fP
+Der Systemaufruf wurde vor dem Eintreffen einer gültigen Verbindung durch
+ein Signal unterbrochen; lesen Sie \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Das Socket wartet nicht auf Verbindungen oder \fIadresslaenge\fP ist ungültig
+(z.B. negativ).
+.TP 
+\fBEINVAL\fP
+(\fBaccept4\fP()) ungültiger Wert in \fIschalter\fP
+.TP 
+\fBEMFILE\fP
+Die Beschränkung offener Datei\-Deskriptoren pro Prozess wurde erreicht.
+.TP 
+\fBENFILE\fP
+Die Systembeschränkung für die Summe offener Datei wurde erreicht.
+.TP 
+\fBENOBUFS\fP, \fBENOMEM\fP
+Nicht genug Speicher. Dies bedeutet oft, dass die Speicherreservierung durch
+die Socket\-Pufferbeschränkungen begrenzt ist und nicht durch den
+Systemspeicher.
+.TP 
+\fBENOTSOCK\fP
+Der Deskriptor referenziert eine Datei und kein Socket.
+.TP 
+\fBEOPNOTSUPP\fP
+Das referenzierte Socket ist nicht vom Typ \fBSOCK_STREAM\fP.
+.TP 
+\fBEPROTO\fP
+Protokollfehler
+.PP
+Zusätzlich könnte Linux\-\fBaccept\fP() fehlschlagen, falls:
+.TP 
+\fBEPERM\fP
+Firewallregeln die Verbindung verbieten
+.PP
+Zusätzlich könnten Netzwerkfehler für das neue Socket und wie sie für das
+Protokoll definiert sind, zurückgegeben werden. Verschiedene Linux\-Kernel
+können andere Fehler zurückgeben, wie \fBENOSR\fP, \fBESOCKTNOSUPPORT\fP,
+\fBEPROTONOSUPPORT\fP oder \fBETIMEDOUT\fP. Der Wert \fBERESTARTSYS\fP kann bei einer
+Ablaufverfolgung auftreten.
+.SH VERSIONEN
+Der Systemaufruf \fBaccept4\fP() ist seit Linux 2.6.28 verfügbar; Unterstützung
+in Glibc ist seit Version 2.10 verfügbar.
+.SH "KONFORM ZU"
+.\" The BSD man page documents five possible error returns
+.\" (EBADF, ENOTSOCK, EOPNOTSUPP, EWOULDBLOCK, EFAULT).
+.\" POSIX.1-2001 documents errors
+.\" EAGAIN, EBADF, ECONNABORTED, EINTR, EINVAL, EMFILE,
+.\" ENFILE, ENOBUFS, ENOMEM, ENOTSOCK, EOPNOTSUPP, EPROTO, EWOULDBLOCK.
+.\" In addition, SUSv2 documents EFAULT and ENOSR.
+\fBaccept\fP(): POSIX.1\-2001, SVr4, 4.4BSD, (\fBaccept\fP() erstmalig erschienen
+in 4.2BSD).
+
+\fBaccept4\fP() ist keine Standard\-Linux\-Erweiterung.
+.LP
+.\" Some testing seems to show that Tru64 5.1 and HP-UX 11 also
+.\" do not inherit file status flags -- MTK Jun 05
+Auf Linux erbt das neue, von \fBaccept\fP() zurückgegebene Socket \fInicht\fP die
+Datei\-Statusschalter wie \fBO_NONBLOCK\fP und \fBO_ASYNC\fP vom wartenden
+Socket. Dieses Verhalten unterscheidet sich von der vorschriftsmäßigen
+BSD\-Socket\-Implementierung. Portable Programme sollten sich nicht auf
+Vererbung oder Nicht\-Vererbung der Datei\-Statusschalter verlassen und immer
+explizit alle benötigten Schalter des Sockets setzen, das sie von
+\fBaccept\fP() zurückbekommen.
+.SH ANMERKUNGEN
+POSIX.1\-2001 erfordert nicht, dass \fI<sys/types.h>\fP eingebunden
+wird. Diese Header\-Datei ist in Linux nicht erforderlich. Allerdings
+benötigen einige historische Implementierungen (BSD) diese Header\-Datei. Es
+wird empfohlen, sie für portierbare Anwendungen einzubinden.
+
+Es könnte sein, dass nicht immer eine Verbindung wartet, nachdem ein
+\fBSIGIO\fP zugestellt wurde oder \fBselect\fP(2) oder \fBpoll\fP(2) ein
+Lesbarkeitsereignis zurückgeben, weil die Verbindung von einem asynchronen
+Netwerkfehler oder einem anderen Thread entfernt worden sein könnte bevor
+\fBaccept\fP() aufgerufen wurde. Falls dies geschieht, wird der Aufruf das
+Warten auf die Ankunft der nächsten Verbindung blockieren. Um
+sicherzustellen, dass \fBaccept\fP() niemals blockiert, muss beim
+durchgereichten Socket \fIsockfd\fP der Schalter \fBO_NONBLOCK\fP gesetzt werden
+(siehe \fBsocket\fP(7)).
+.SS "Der Typ socklen_t"
+Das dritte Argument von \fBaccept\fP() wurde ursprünglich als ein \fIint *\fP
+deklariert (und ist dies unter Libc4, Libc5 und vielen anderen Systemen, wie
+4.x BSD, SunOS 4, SGI); ein Entwurf des POSIX.1g\-Standards wollte es in ein
+\fIsize_t *\fP ändern und das ist es in SunOS 5. Neuere POSIX\-Entwürfe benutzen
+\fIsocklen_t *\fP und daher die »Single UNIX Specification« und Glibc2. Zitat
+Linus Thorvalds:
+
+.\" .I fails: only italicizes a single line
+»Bei jeder vernünftigen Bibliothek _muss_ »socklen_t« die gleiche Größe wie
+»int« haben. Alles andere zerstört jedes weitere
+BSD\-Socket\-Ebenen\-Zeug. POSIX \fImachte\fP daraus anfangs ein »size_t« und ich
+(und hoffentlich andere, aber offenbar nicht allzu viele) reklamierten das
+durchaus lautstark. Dies zu einem »size_t« zu machen ist genau deshalb nicht
+in Ordnung, weil »size_t« zum Beispiel sehr selten auf 64\-Bit\-Architekturen
+die gleiche Größe wie »int« hat. Und es \fImuss\fP die gleiche Größe wie »int«
+haben, weil genau das die BSD\-Socket\-Schnittstelle ist. Irgendwie bekamen
+die POSIX\-Leute einen Hinweis und erstellten »socklen_t«. Sie sollten es
+ursprünglich nicht anfassen, aber sobald sie es taten, wollten sie aus einem
+unerfindlichen Grund einen benannten Typ haben (wahrscheinlich wollte jemand
+sein Gesicht wahren wegen der ursprünglichen Dummheit, so dass sie nur
+stillschweigend ihren Fehlgriff umbenannten).«
+.SH BEISPIEL
+Siehe \fBbind\fP(2).
+.SH "SIEHE AUCH"
+\fBbind\fP(2), \fBconnect\fP(2), \fBlisten\fP(2), \fBselect\fP(2), \fBsocket\fP(2),
+\fBsocket\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Hanno Wagner <wagner@bidnix.bid.fh-hannover.de>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

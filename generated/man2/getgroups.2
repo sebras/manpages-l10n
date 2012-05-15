@@ -1,0 +1,152 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Thu Oct 31 12:04:29 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" 2008-05-03, mtk, expanded and rewrote parts of DESCRIPTION and RETURN
+.\"     VALUE, made style of page more consistent with man-pages style.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETGROUPS 2 "22. November 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+getgroups, setgroups \- abfragen/setzen von zusätzlichen Gruppen\-IDs
+.SH ÜBERSICHT
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.sp
+\fBint getgroups(int \fP\fIgroesse\fP\fB, gid_t \fP\fIliste\fP\fB[]);\fP
+.sp
+\fB#include <grp.h>\fP
+.sp
+\fBint setgroups(size_t \fP\fIgroesse\fP\fB, const gid_t *\fP\fIliste\fP\fB);\fP
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+\fBsetgroups\fP(): _BSD_SOURCE
+.SH BESCHREIBUNG
+.PP
+\fBgetgroups\fP() gibt die zusätzlichen Gruppen\-IDs des aufrufenden Prozesses
+in \fIliste\fP zurück. Das Argument \fIgroesse\fP sollte auf die maximale Anzahl
+der Elemente gesetzt werden, die in dem Puffer gespeichert werden können,
+auf den \fIliste\fP zeigt. Falls der aufrufende Prozess Mitglied von mehr als
+\fIgroesse\fP Gruppen ist, dann führt dies zu einem Fehler. Es ist nicht
+beschrieben, ob die effektive Gruppen\-ID des aufrufenden Prozesses in der
+zurückgegebenen Liste enthalten ist. (Daher sollte eine Anwendung auch
+\fBgetegid\fP(2) aufrufen und den resultierenden Wert hinzufügen oder
+entfernen.)
+
+Wenn \fIgroesse\fP Null ist, wird \fIliste\fP nicht verändert, es wird aber die
+Gesamtzahl der zusätzlichen Gruppen\-IDs für den Prozess zurückgegeben. Dies
+erlaubt es dem Aufrufenden, die Größe einer dynamisch reservierten \fIliste\fP
+festzulegen, die in einem weiteren Aufruf von \fBgetgroups\fP() benutzt wird.
+.PP
+\fBsetgroups\fP() setzt die zusätzlichen Gruppen\-IDs für den aufrufenden
+Prozess. Es werden geeignete Privilegien benötigt (Linux; die Fähigkeit
+\fBCAP_SETGID\fP). Das Argument \fIgroesse\fP gibt die Anzahl der zusätzlichen
+Gruppen\-IDs im Puffer an, auf den \fIliste\fP zeigt.
+.SH RÜCKGABEWERT
+Bei Erfolg gibt \fBgetgroups\fP() die Anzahl der zusätzlichen Gruppen\-IDs
+zurück. Bei aufgetretenem Fehler wird \-1 geliefert und \fIerrno\fP wird
+entsprechend gesetzt.
+
+Bei Erfolg gibt \fBsetgroups\fP() 0 zurück. Bei aufgetretenem Fehler wird \-1
+geliefert und \fIerrno\fP wird entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+\fIliste\fP hat eine ungültige Adresse.
+.PP
+\fBgetgroups\fP() kann außerdem mit dem folgenden Fehler fehlschlagen:
+.TP 
+\fBEINVAL\fP
+\fIgroesse\fP ist kleiner als die Anzahl der zusätzlichen Gruppen\-IDs, aber
+nicht Null.
+.PP
+\fBsetgroups\fP() kann überdies mit den folgenden Fehlern fehlschlagen:
+.TP 
+\fBEINVAL\fP
+\fIgroesse\fP ist größer als \fBNGROUPS_MAX\fP (32 vor Linux 2.6.4; 65536 seit
+Linux 2.6.4).
+.TP 
+\fBENOMEM\fP
+Platz im Hauptspeicher reicht nicht aus
+.TP 
+\fBEPERM\fP
+Der aufrufende Prozess hat unzureichende Privilegien.
+.SH "KONFORM ZU"
+SVr4, 4.3BSD. Die Funktion \fBgetgroups\fP() ist in POSIX.1\-2001
+enthalten. Seit \fBsetgroups\fP() Privilegien benötigt, ist es nicht durch
+POSIX.1\-2001 abgedeckt.
+.SH ANMERKUNGEN
+Ein Prozess kann bis zu \fBNGROUPS_MAX\fP zusätzliche Gruppen\-IDs ergänzend zur
+effektiven Gruppen\-ID haben. Die Zusammenstellung zusätzlicher Gruppen\-IDs
+wird vom Elternprozess geerbt und über ein \fBexecve\fP(2) aufbewahrt.
+
+Die maximale Anzahl von zusätzlichen Gruppen\-IDs kann durch Benutzung von
+\fBsysconf\fP(3) bestimmt werden:
+.nf
+
+    long ngroups_max;
+    ngroups_max = sysconf(_SC_NGROUPS_MAX);
+
+.fi
+Der maximale Rückgabewert von \fBgetgroups\fP() kann nicht größer als dieser
+Wert plus eins sein.
+
+Der Original\-Linux\-Systemaufruf \fBgetgroups\fP() unterstützte nur
+16\-Bit\-Gruppen\-IDs. Nachfolgend fügte Linux 2.4 \fBgetgroups32\fP() hinzu, das
+32\-Bit\-IDs unterstützte. Die Glibc\-Wrapper\-Funktion \fBgetgroups\fP() stellt
+die Änderungen transparent über Kernel\-Versionen hinweg bereit.
+.SH "SIEHE AUCH"
+\fBgetgid\fP(2), \fBsetgid\fP(2), \fBgetgrouplist\fP(3), \fBinitgroups\fP(3),
+\fBcapabilities\fP(7), \fBcredentials\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+René Tschirley <gremlin@cs.tu-berlin.de>,
+Martin Schulze <joey@infodrom.org>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

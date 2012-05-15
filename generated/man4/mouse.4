@@ -1,0 +1,166 @@
+.\" -*- coding: UTF-8 -*-
+.\" t
+.\"roff.\" Copyright
+.\" This manpage is Copyright (C) 1996 Michael Haardt.
+.\" Updates Nov 1998, Andries Brouwer
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MOUSE 4 "10. Februar 1996" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+mouse \- Schnittstelle für serielle Mäuse
+.SH KONFIGURATION
+Serielle Mäuse sind mit einer seriellen RS232/V24\-Modemleitung verbunden;
+siehe \fBttyS\fP(4) für eine Beschreibung.
+.SH BESCHREIBUNG
+.SS Einführung
+Die Belegung der üblichen, für serielle Mäuse verwendeten 9\-poligen Stecker
+ist:
+.TS
+center;
+r c l.
+Kontakt	Name	Verwendung
+2	RX	Daten
+3	TX	\-12 V, Imax = 10 mA
+4	DTR	+12 V, Imax = 10 mA
+7	RTS	+12 V, Imax = 10 mA
+5	GND	Signalmasse
+.TE
+
+Das ist die Spezifikation, praktisch reichen bei den meisten Mäusen\ 9\ V.
+.PP
+Der Maus\-Treiber kann die Maus erkennen, indem er RTS auf LOW fallen lässt
+und dann wieder auf HIGH setzt. Ungefähr 14 ms später sendet die Maus 0x4D
+(\(aqM\(aq) auf der Datenleitung. Nach weiteren 63 ms sendet eine Microsoft
+\-kompatible 3\-Tasten\-Maus 0x33 (\(aq3\(aq).
+.PP
+Die relative Mausbewegung wird als \fIdx\fP (positiv bedeutet rechts) und \fIdy\fP
+(positiv bedeutet nach unten) gesendet. Verschiedene Mäuse können mit
+unterschiedlichen Geschwindigkeiten betrieben werden. Um Geschwindigkeiten
+auszuwählen, durchlaufen Sie die Geschwindigkeiten 9600, 4800, 2400 und 1200
+Bit/s, schreiben jeweils die beiden Zeichen aus der nachstehenden Tabelle
+und warten 0,1 Sekunden. Die folgende Tabelle zeigt die verfügbaren
+Geschwindigkeiten und die Zeichen, die sie auswählen:
+.TS
+center;
+l l.
+Bit/s	Zeichen
+9600	*q
+4800	*p
+2400	*o
+1200	*n
+.TE
+
+Das erste Byte eines Datenpakets kann zur Synchronisation verwendet werden.
+.SS Microsoft\-Protokoll
+Das \fBMicrosoft\fP\-Protokoll verwendet 1 Start\-Bit, 7\-Daten\-Bits, kein
+Paritäts\- und ein Stopp\-Bit bei einer Geschwindigkeit von 1200 Bit/s. Daten
+werden in Paketen von 3 Byte nach RxD gesendet. Die \fIdx\fP\- und
+\fIdy\fP\-Bewegungen werden im Zweierkomplement übertragen, \fIlb\fP (\fIrb\fP) werden
+gesetzt, wenn die linke (rechte) Taste betätigt wird:
+.TS
+center;
+r c c c c c c c.
+Byte	d6	d5	d4	d3	d2	d1	d0
+1	1	lb	rb	dy7	dy6	dx7	dx6
+2	0	dx5	dx4	dx3	dx2	dx1	dx0
+2	0	dx5	dx4	dx3	dx2	dx1	dx0
+.TE
+.SS 3\-Tasten\-Microsoft\-Protokoll
+Die originalen Microsoft\-Mäuse haben nur zwei Tasten. Es gibt aber auch
+einige 3\-Tasten\-Mäuse, die ebenfalls das Microsoft\-Protokoll verwenden. Das
+Drücken und Loslassen der mittleren Maustaste wird berichtet, indem ein
+Paket ohne Bewegungsdaten und gedrückte Taste gesendet wird. (Damit wird im
+Gegensatz zu den beiden anderen Tasten der Status der mittleren Taste in
+keinem Paket übertragen.
+.SS Logitech\-Protokoll
+Serielle 3\-Tasten\-Mäuse von Logitech verwenden eine andere Erweiterung des
+Microsoft\-Protokolls: Wenn die mittlere Taste oben ist, wird das eben
+erwähnte 3\-Byte\-Datenpaket gesendet. Wenn die mittlere Taste gedrückt ist,
+wird ein 4\-Byte\-Datenpaket gesendet, in dem das vierte Byte den Wert 0x20
+hat (oder zumindest das Bit 0x20 gesetzt ist). Insbesondere wird das Drücken
+der mittleren Taste als 0,0,0,0x20 gemeldet, wenn keine anderen Tasten
+gedrückt sind.
+.SS Mousesystems\-Protokoll
+Das \fBMousesystems\fP\-Protokoll verwendet 1 Start\-Bit, 8\-Daten\-Bits, kein
+Paritäts\- und zwei Stopp\-Bit bei einer Geschwindigkeit von 1200 Bit/s. Daten
+werden in 5\-Byte\-Paketen zu RxD gesendet. \fIdx\fP wird als die Summe der
+beiden Zweierkomplement\-Werte, \fIdy\fP als negierte Summe der
+Zweierkomplement\-Werte gesendet. \fIlb\fP (\fImb\fP, \fIrb\fP) werden gelöscht, wenn
+die linke (mittlere, rechte) Taste gedrückt wird:
+.TS
+center;
+r c c c c c c c c.
+Byte	d7	d6	d5	d4	d3	d2	d1	d0
+1	1	0	0	0	0	lb	mb	rb
+2	0	dxa6	dxa5	dxa4	dxa3	dxa2	dxa1	dxa0
+3	0	dya6	dya5	dya4	dya3	dya2	dya1	dya0
+4	0	dxb6	dxb5	dxb4	dxb3	dxb2	dxb1	dxb0
+5	0	dyb6	dyb5	dyb4	dyb3	dyb2	dyb1	dyb0
+.TE
+
+Die Bytes 4 und beschreiben die Änderungen seit dem Versand der Bytes 2 und
+3.
+.SS Sun\-Protokoll
+Das \fBSun\fP\-Protokoll ist die 3\-Byte\-Version des obigen 5\-Byte\-Protokolls von
+Mousesystems: die letzten beiden Byte werden nicht gesendet.
+.SS MM\-Protokoll
+Das \fBMM\fP\-Protokoll verwendet 1 Start\-Bit, 8\-Daten\-Bits, ungerade Parität
+und ein Stopp\-Bit bei einer Geschwindigkeit von 1200 Bit/s. Die Daten werden
+in 3\-Byte\-Paketen an RxD gesendet. \fIdx\fP und \fIdy\fP werden als einzelne
+vorzeichenbehaftete Werte gesendet, das Vorzeichenbit kennzeichnet einen
+negativen Wert. \fIlb\fP (\fImb\fP, \fIrb\fP) werden gesetzt, wenn die linke
+(mittlere, rechte) Taste gedrückt wird:
+.TS
+center;
+r c c c c c c c c.
+Byte	d7	d6	d5	d4	d3	d2	d1	d0
+1	1	0	0	dxs	dys	lb	mb	rb
+2	0	dx6	dx5	dx4	dx3	dx2	dx1	dx0
+3	0	dy6	dy5	dy4	dy3	dy2	dy1	dy0
+.TE
+.SH DATEIEN
+.TP 
+\fI/dev/mouse\fP
+Ein häufig verwendeter symbolischer Link zu einem Maus\-Gerät.
+.SH "SIEHE AUCH"
+\fBttyS\fP(4), \fBgpm\fP(8)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

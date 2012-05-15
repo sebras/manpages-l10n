@@ -1,0 +1,146 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified 1995-07-22 by Michael Chastain <mec@duracef.shout.net>:
+.\"   'gethostname' is real system call on Linux/Alpha.
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2000-06-04, 2001-12-15 by aeb
+.\" Modified 2004-06-17 by mtk
+.\" Modified 2008-11-27 by mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETHOSTNAME 2 "26. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+gethostname, sethostname \- bestimmt/setzt den Rechnernamen
+.SH ÜBERSICHT
+\fB#include <unistd.h>\fP
+.sp
+\fBint gethostname(char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.br
+\fBint sethostname(const char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+.ad l
+.PD 0
+\fBgethostname\fP():
+.RS 4
+Seit Glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.br
+|| /* Seit Glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.br
+\fBsethostname\fP():
+.RS 4
+_BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.RE
+.PD
+.ad
+.SH BESCHREIBUNG
+Mit diesen Systemaufrufen erfragen und setzen Sie den Rechnernamen des
+aktuellen Prozessors.
+
+\fBsethostname\fP() setzt den Rechnernamen auf den im Zeichenfeld (character
+array) \fIname\fP übergebenen Wert. Das Argument \fIlen\fP gibt die Anzahl der
+Bytes in \fIname\fP an. (Deshalb erfordert \fIname\fP kein abschließendes
+Null\-Byte.)
+
+\fBgethostname\fP() gibt den (mit einem Null\-Byte abgeschlossenen) Rechnernamen
+der Länge \fIlen\fP Byte im Zeichenfeld \fIname\fP zurück. Ist der Rechnername zu
+groß für \fIname\fP, wird er ohne Fehlermeldung gekürzt (siehe aber die
+ANMERKUNGEN unten). POSIX.1\-2001 legt nicht fest, ob im Fall einer solchen
+Kürzung der zurückgegebene Puffer ein abschließendes Null\-Byte enthält.
+.SH RÜCKGABEWERT
+Bei Erfolg wird Null zurückgegeben. Bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEFAULT\fP
+\fIname\fP ist eine ungültige Adresse.
+.TP 
+\fBEINVAL\fP
+.\" Can't occur for gethostbyname() wrapper, since 'len' has an
+.\" unsigned type; can occur for the underlying system call.
+\fIlen\fP ist negativ oder das Argument \fIlen\fP für \fBsethostname\fP()
+überschreitet die maximal zulässige Größe.
+.TP 
+\fBENAMETOOLONG\fP
+\fBgethostname\fP() der Glibc gibt damit an, das \fIlen\fP kleiner ist als die
+tatsächliche Größe. (Vor Version 2.1 verwendet Glibc in diesem Fall
+\fBEINVAL\fP.)
+.TP 
+\fBEPERM\fP
+Der Aufruf von \fBsethostname\fP() erfolgte ohne die
+\fBCAP_SYS_ADMIN\fP\-Fähigkeit.
+.SH "KONFORM ZU"
+SVr4, 4.4BSD (diese Schnittstellen kamen erstmals in 4.2BSD
+vor). POSIX.1\-2001 spezifiziert \fBgethostname\fP(), aber nicht
+\fBsethostname\fP().
+.SH ANMERKUNGEN
+SUSv2 garantiert, dass »Rechnernamen auf 255 Byte begrenzt
+sind«. POSIX.1\-2001 garantiert, dass »Rechnernamen (ohne das abschließende
+Null\-Byte) auf \fBHOST_NAME_MAX\fP Byte begrenzt sind«. Für Linux ist
+\fBHOST_NAME_MAX\fP seit Version 1.0 auf 64 gesetzt (frühere Kernel setzten
+eine Grenze von 8 Byte).
+.SS "Anmerkungen zur Glibc"
+Die GNU\-C\-Bibliothek implementiert \fBgethostname\fP() nicht als Systemaufruf,
+sondern als Bibliotheksfunktion. Diese Funktion ruft \fBuname\fP(2) auf und
+kopiert bis zu \fIlen\fP Byte aus dem zurückgegebenen Feld \fInodename\fP nach
+\fIname\fP. Nach dem Kopieren prüft die Funktion, ob die Länge von \fInodename\fP
+größer als oder gleich \fIlen\fP ist. In diesem Fall gibt sie \-1 zurück und
+setzt \fIerrno\fP auf \fBENAMETOOLONG\fP; der zurückgegebene \fIname\fP enthält dann
+kein abschließendes Null\-Byte.
+
+.\" At least glibc 2.0 and 2.1, older versions not checked
+Glibc\-Versionen vor 2.2 verhielten sich anders, wenn die Länge von
+\fInodename\fP größer als oder gleich \fIlen\fP war: sie kopierten nichts nach
+\fIname\fP, gaben \-1 zurück und setzten \fIerrno\fP auf \fBENAMETOOLONG\fP.
+.SH "SIEHE AUCH"
+\fBgetdomainname\fP(2), \fBsetdomainname\fP(2), \fBuname\fP(2)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+René Tschirley <gremlin@cs.tu-berlin.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

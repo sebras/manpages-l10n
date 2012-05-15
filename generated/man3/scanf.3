@@ -1,0 +1,491 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" Chris Torek and the American National Standards Committee X3,
+.\" on Information Processing Systems.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)scanf.3	6.14 (Berkeley) 1/8/93
+.\"
+.\" Converted for Linux, Mon Nov 29 15:22:01 1993, faith@cs.unc.edu
+.\" modified to resemble the GNU libio setup used in the Linux libc
+.\" used in versions 4.x (x>4) and 5   Helmut.Geyer@iwr.uni-heidelberg.de
+.\" Modified, aeb, 970121
+.\" 2005-07-14, mtk, added description of %n$ form; various text
+.\"	incorporated from the GNU C library documentation ((C) The
+.\"	Free Software Foundation); other parts substantially rewritten.
+.\"
+.\" 2008-06-23, mtk
+.\"     Add ERRORS section.
+.\"     Document the 'a' and 'm' modifiers for dynamic string allocation.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCANF 3 "28. September 2011" GNU Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+scanf, fscanf, sscanf, vscanf, vsscanf, vfscanf \- Anpassung des
+Eingabeformats
+.SH ÜBERSICHT
+.nf
+\fB#include <stdio.h>\fP
+
+\fBint scanf(const char *\fP\fIformat\fP\fB, ...);\fP
+\fBint fscanf(FILE *\fP\fIdatenstrom\fP\fB, const char *\fP\fIformat\fP\fB, ...);\fP
+\fBint sscanf(const char *\fP\fIzeichenkette\fP\fB,\fP
+\fB           const char *\fP\fIformat\fP\fB, ...);\fP
+.sp
+\fB#include <stdarg.h>\fP
+
+\fBint vscanf(const char *\fP\fIformat\fP\fB, va_list \fP\fIap\fP\fB);\fP
+\fBint vsscanf(const char *\fP\fIzeichenkette\fP\fB,\fP
+\fB            const char *\fP\fIformat\fP\fB, va_list \fP\fIap\fP\fB);\fP
+\fBint vfscanf(FILE *\fP\fIdatenstrom\fP\fB,\fP
+\fB            const char *\fP\fIformat\fP\fB, va_list \fP\fIap\fP\fB);\fP
+.fi
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.sp
+\fBvscanf\fP(), \fBvsscanf\fP(), \fBvfscanf\fP():
+.RS 4
+_XOPEN_SOURCE\ >=\ 600 || _ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L;
+.br
+oder \fIcc \-std=c99\fP
+.ad
+.RE
+.SH BESCHREIBUNG
+Die Funktionenfamilie \fBscanf\fP() prüft Eingaben in Bezug auf ein \fIformat\fP,
+wie es im Folgenden beschrieben wird. Dieses Format darf
+\fIUmwandlungsspezifikationen\fP enthalten; die Ergebnisse solcher
+Umwandlungen, falls vorhanden, werden an den Stellen gespeichert, auf die
+die \fIZeiger\fP\-Argumente verweisen, die sich an das \fIformat\fP halten. Jedes
+\fIZeiger\fP\-Argument muss einen geeigneten Typ für den Rückgabewert durch die
+zugehörige Umwandlungsspezifikation haben.
+
+Falls die Anzahl der Umwandlungsspezifikation in \fIformat\fP die Anzahl der
+\fIZeiger\fP\-Argumente übersteigt, sind die Erbenisse undefiniert. Falls die
+Anzahl der \fIZeiger\fP\-Argumente die Anzahl der Umwandlungsspezifikation
+übersteigt, werden die überzähligen \fIZeiger\fP\-Argumente ausgewertet, aber
+ansonsten ignoriert.
+
+Die Funktion \fBscanf\fP() liest Eingaben von der Standardeingabe \fIstdin\fP,
+\fBfscanf\fP liest Eingaben von dem Datenstrom\-Zeiger \fIdatenstrom\fP und
+\fBsscanf\fP liest ihre Eingaben aus der Zeichenkette, auf den \fIzeichenkette\fP
+zeigt.
+.PP
+Die Funktion \fBvfscanf\fP() verhält sich analog zu \fBvfprintf\fP(3) und liest
+Eingaben von dem Datenstrom\-Zeiger \fIdatenstrom\fP, wobei eine variable
+Argumentliste von Zeigern benutzt wird (siehe \fBstdarg\fP(3)). Die Funktion
+\fBvscanf\fP() liest eine variable Argumentliste von der Standardeingabe und
+die Funktion \fBvsscanf\fP() liest sie aus einer Zeichenkette; diese sind
+analog zu den Funktionen \fBvprintf\fP(3) beziehungsweise \fBvsprintf\fP(3).
+.PP
+Die Zeichenkette \fIformat\fP besteht aus einer Abfolge von \fIRichtlinien\fP, die
+beschreiben, wie die Abfolge der Eingabezeichen verarbeitet wird. Wenn das
+Verarbeiten einer Richtlinie fehlschlägt, werden keine weiteren Eingaben
+gelesen und \fBscanf\fP() kehrt zurück. Ein »Fehlschlagen« kann folgendes sein:
+\fIinput failure\fP bedeutet, dass Eingabezeichen nicht verfügbar
+sind. \fImatching failure\fP heißt, dass die Eingabe ungeeignet war (siehe
+unten).
+
+Eine Richtlinie kann Folgendes sein:
+.TP 
+\(bu
+eine Abfolge von Leerräumen (Leerzeichen, Tabulator, Zeilenvorschub, etc.;
+siehe \fBisspace\fP(3)). Diese Richtlinie passt auf jede Menge von Leerräumen,
+einschließlich keinen in der Eingabe.
+.TP 
+\(bu
+ein normales Zeichen (d.h. ein anderes, als ein Leerraum oder »%«). Dieses
+Zeichen muss exakt mit dem nächsten Zeichen der Eingabe übereinstimmen.
+.TP 
+\(bu
+eine Umwandlungsspezifikation, die mit dem Zeichen »%« (Prozent)
+beginnt. Eine Abfolge von Zeichen wird gemäß dieser Spezifikation
+umgewandelt und das Ergebnis wird in das zugehörige \fIZeiger\fP\-Argument
+platziert. Falls das nächste Element nicht der Umwandlungsspezifikation
+entspricht, schlägt die Umwandlung fehl – dies ist ein \fImatching failure\fP.
+.PP
+Jede \fIUmwandlungsspezifikation\fP in \fIformat\fP fängt entweder mit dem Zeichen
+»%« an oder der Zeichensequenz »\fB%\fP\fIn\fP\fB$\fP« (siehe unten für die
+Unterscheidung) gefolgt von:
+.TP 
+\(bu
+ein optionales »*«\-Zeichen zur Unterdrückung der Zuweisung: \fBscanf\fP() liest
+die Eingabe gemäß der Umwandlungsspezifikation, verwirft aber die
+Eingabe. Es wird kein zugehöriges \fIZeiger\fP\-Argument benötigt und diese
+Spezifikation ist nicht in der Anzahl der erfolgreichen Zuweisungen
+enthalten, die von \fBscanf\fP() zurückgegeben werden.
+.TP 
+\(bu
+ein optionales »a«\-Zeichen. Dies wird mit Zeichenkettenumwandlungen benutzt
+und entlastet den Aufrufenden von der Notwendigkeit einen zugehörigen Puffer
+zu reservieren, der die Eingabe erhält: Stattdessen reserviert \fBscanf\fP()
+einen Puffer von ausreichender Größe und weist die Adresse dieses Puffers
+dem zugehörigen \fIZeiger\fP\-Argument zu, das ein Zeiger auf eine \fIchar
+*\fP\-Variable sein sollte. (Diese Variable muss nicht vor dem Aufruf
+initialisiert werden.) Der Aufrufende sollte diesen Puffer danach mit
+\fBfree\fP(3) freigeben, wenn er nicht länger benötigt wird. Dies ist eine
+GNU\-Erweiterung; C99 verwendet das Zeichen »a« als
+Umwandlungs\-Speifikationssymbol (und es kann auch in der GNU\-Implementierung
+als solches benutzt werden).
+.TP 
+\(bu
+eine optionale dezimale Ganzzahl, die die \fImaximale Feldbreite\fP angibt. Das
+Lesen von Zeichen stoppt entweder wenn dieses Maximum erreicht wurde oder
+wenn ein unpassendes Zeichen gefunden wurde, je nachdem, was eher
+auftrat. Die meisten Umwandlungen verwerfen Leerräume am Anfang (die
+Ausnahmen sind nachfolgend vermerkt). Diese verworfenen Zeichen werden nicht
+bei der Berechnung der maximalen Feldbreite mitgezählt. Eingabeumwandlung
+von Zeichenketten speichert ein terminierendes Null\-Byte (»\e0«), um das
+Ende der Eingabe zu kennzeichnen; die maximale Feldbreite enthält dieses
+Endezeichen nicht.
+.TP 
+\(bu
+ein optionales \fITyp\-Änderungszeichen\fP. Das Typ\-Änderungszeichen \fBl\fP wird
+zum Beispiel bei Ganzzahlumwandlungen, wie \fB%d\fP benutzt, um anzugeben, dass
+sich das zugehörige \fIZeiger\fP\-Argument auf \fIlong int\fP statt auf einen
+Zeiger vom Typ \fIint\fP bezieht.
+.TP 
+\(bu
+eine \fIUmwandlungsspezifikation\fP, die den Typ der durchzuführenden
+Eingabeumwandlung angibt.
+.PP
+Die Umwandlungsspezifikationen in \fIformat\fP haben zwei Formen, entweder mit
+»%« oder mit »\fB%\fP\fIn\fP\fB$\fP« beginnend. Die beiden Formen sollten nicht in
+der gleichen Formatzeichenkette gemischt werden, außer dass eine
+Zeichenkette die »\fB%\fP\fIn\fP\fB$\fP«\-Spezifikationen enthält \fB%%\fP und \fB%*\fP
+umfassen kann. Falls \fIformat\fP »%«\-Spezifikationen enthält, dann
+korrespondieren diese in der Reihenfolge mit nachfolgenden
+\fIZeiger\fP\-Argumenten. In der Form »\fB%\fP\fIn\fP\fB$\fP« (die in POSIX.1\-2001, aber
+nicht in C99 spezifiziert ist), ist \fIn\fP eine dezimale Ganzzahl, die
+anzeigt, dass die umgewandelte Eingabe  an die Stelle platziert werden
+sollte, auf die sich das dem \fIn\fPten \fIZeiger\fP\-Argument folgende \fIformat\fP
+bezieht.
+.SS Umwandlungen
+Die folgenden \fITyp\-Änderungszeichen\fP können in einer
+Umwandlungsspezifikation erscheinen:
+.TP 
+\fBh\fP
+zeigt an, dass die Umwandlung entweder \fBd\fP, \fBi\fP, \fBo\fP, \fBu\fP, \fBx\fP, \fBX\fP
+oder \fBn\fP sein wird und der nächste Zeiger ein Zeiger auf ein \fIshort int\fP
+oder \fIunsigned short int\fP (statt \fIint\fP) sein wird.
+.TP 
+\fBhh\fP
+wie für \fBh\fP, aber der nächste Zeiger ist ein Zeiger auf ein \fIsigned char\fP
+oder ein \fIunsigned char\fP.
+.TP 
+\fBj\fP
+wie für \fBh\fP, aber der nächste Zeiger ist ein Zeiger auf ein \fIintmax_t\fP
+oder ein \fIuintmax_t\fP. Dieses Änderungszeichen wurde in C99 eingeführt.
+.TP 
+\fBl\fP
+.\" This use of l was introduced in Amendment 1 to ISO C90.
+zeigt an, dass die Umwandlung entweder \fBd\fP, \fBi\fP, \fBo\fP, \fBu\fP, \fBx\fP, \fBX\fP
+oder \fBn\fP sein wird und der nächste Zeiger ein Zeiger auf ein \fIlong int\fP
+oder ein \fIunsigned long int\fP (statt \fIint\fP) sein wird oder dass die
+Umwandlung entweder \fBe\fP, \fBf\fP oder \fBg\fP sein wird und der nächste Zeiger
+ein Zeiger auf ein \fIdouble\fP (statt \fIfloat\fP ) sein wird. Die Angabe von
+zwei \fBl\fP\-Zeichen ist äquivalent zu \fBL\fP. Falls sie zusammen mit \fB%c\fP oder
+\fB%s\fP benutzt werden, wird der zugehörige Parameter als ein Zeiger auf ein
+Wide\-Character beziehungsweise eine Wide\-Character\-Zeichenkette betrachtet.
+.TP 
+\fBL\fP
+.\" MTK, Jul 05: The following is no longer true for modern
+.\" ANSI C (i.e., C99):
+.\" (Note that long long is not an
+.\" ANSI C
+.\" type. Any program using this will not be portable to all
+.\" architectures).
+zeigt an, dass die Umwandlung entweder \fBe\fP, \fBf\fP oder \fBg\fP sein wird und
+der nächste Zeiger ein Zeiger auf ein \fIlong double\fP ist oder dass die
+Umwandlung entweder \fBd\fP, \fBi\fP, \fBo\fP, \fBu\fP oder \fBx\fP sein wird und der
+nächste Zeiger ein Zeiger auf ein \fIlong long\fP sein wird.
+.TP 
+\fBq\fP
+ist äquivalent zu \fBL\fP. Dieses Spezifiakationssymbol existiert nicht in
+ANSI\-C.
+.TP 
+\fBt\fP
+wie für \fBh\fP, der nächste Zeiger ist aber ein Zeiger auf ein
+\fIptrdiff_t\fP. Dieses Änderungszeichen wurde in C99 eingeführt.
+.TP 
+\fBz\fP
+wie für \fBh\fP, der nächste Zeiger ist aber ein Zeiger auf ein
+\fIsize_t\fP. Dieses Änderungszeichen wurde in C99 eingeführt.
+.PP
+Die folgenden \fIUmwandlungsspezifikationen\fP sind verfügbar:
+.TP 
+\fB%\fP
+passt zum Buchstabensymbol »%«. Das heißt, \fB%\&%\fP im Formatstring passt zum
+einzelnen Eingabezeichnen »%«. Es findet keine Umwandlung statt (aber
+Leerräume am Anfang werden verworfen) und eine Zuweisung tritt nicht auf.
+.TP 
+\fBd\fP
+passt zu einer optionalen vorzeichenbehafteten dezimalen Ganzzahl; der
+nächste Zeiger muss ein Zeiger auf \fIint\fP sein.
+.TP 
+\fBD\fP
+äquivalent zu \fBld\fP; dies existiert nur aus Gründen der
+Rückwärtskompatibilität. (Beachten Sie, dass dies daher nur in Libc4 der
+Fall ist. In Libc5 und Glibc wird das \fB%D\fP stillschweigend ignoriert, was
+alte Programme zu mysteriösem Fehlschlagen veranlasst.)
+.TP 
+\fBi\fP
+passt zu einer optionalen vorzeichenbehafteten Ganzzahl; der nächste Zeiger
+muss ein Zeiger auf \fIint\fP sein. Die Ganzzahl wird zur Basis 16 gelesen,
+wenn sie mit \fI0x\fP oder \fI0X\fP beginnt, zur Basis 8, wenn sie mit \fI0\fP
+beginnt, anderenfalls zur Basis 10.  Nur Zeichen, die zur Basis passen,
+werden benutzt.
+.TP 
+\fBo\fP
+passt zu einer vorzeichenlosen oktalen Ganzzahl; der nächste Zeiger muss ein
+Zeiger auf ein \fIunsigned int\fP sein.
+.TP 
+\fBu\fP
+passt zu einer vorzeichenlosen dezimalen Ganzzahl; der nächste Zeiger muss
+ein Zeiger auf ein \fIunsigned int\fP sein.
+.TP 
+\fBx\fP
+passt zu einer vorzeichenlosen hexadezimalen Ganzzahl; der nächste Zeiger
+muss ein Zeiger auf ein \fIunsigned int\fP sein.
+.TP 
+\fBX\fP
+äquivalent zu \fBx\fP
+.TP 
+\fBf\fP
+passt zu einer optionalen vorzeichenbehafteten Fließkommazahl; der nächste
+Zeiger muss ein Zeiger auf ein \fIfloat\fP sein.
+.TP 
+\fBe\fP
+äquivalent zu \fBf\fP.
+.TP 
+\fBg\fP
+äquivalent zu \fBf\fP.
+.TP 
+\fBE\fP
+äquivalent zu \fBf\fP.
+.TP 
+\fBa\fP
+(C99) äquivalent zu \fBf\fP.
+.TP 
+\fBs\fP
+passt zu einer Zeichenfolge, die keinen Leerraum darstellt; der nächste
+Zeiger muss Zeiger auf ein Zeichenfeld sein, das groß genug ist, um die
+Eingabesequenz und das abschließende Null\-Byte (»\e0«) aufnehmen zu
+können. Die Eingabezeichenkette stoppt an Leerräumen oder an der maximalen
+Feldgröße, je nachdem, was zuerst auftritt.
+.TP 
+\fBc\fP
+passt zu einer Zeichenfolge, deren Länge durch die \fImaximale Feldgröße\fP
+(Vorgabe 1) angegeben wird; der nächste Zeiger muss ein Zeiger auf ein
+\fIchar\fP sein und es muss genug Platz für alle Zeichen vorhanden sein (es
+wird keine abschließende Null angehängt.) Das übliche Überspringen der
+führenden Leerräume wird unterdrückt. Benutzen Sie ein explizites
+Leerzeichen im Format, um Leerräume zu überspringen .
+.TP 
+\fB\&[\fP
+passt zu einer nicht leeren Abfolge von Zeichen aus der angegebenen
+Zusammenstellung akzeptierter Zeichen; der nächste Zeiger muss ein Zeiger
+auf \fIchar\fP sein und genug Platz für alle Zeichen der Zeichenkette
+einschließlich abschließendem Null\-Byte bieten. Das übliche Überspringen der
+führenden Leerräume wird unterdrückt. Die Zeichenkette soll aus Zeichen in
+einer (oder keiner) besonderen Zusammenstellung bestehen; die
+Zusammenstellung wird durch die Zeichen zwischen der öffnenden \fB[\fP und
+schließenden \fB]\fP Klammer definiert. Die Zusammenstellung \fIschließt\fP jene
+Zeichen \fIaus\fP, wenn das erste Zeichen nach der öffnenden Klammer ein
+Zirkumflex (\fB^\fP) ist. Um der Zusammenstellung eine schließende Klammer
+hinzuzufügen, setzen Sie sie als erstes Zeichen nach der öffnenden Klammer
+oder dem Zirkumflex; jede andere Position würde die Zusammenstellung
+beenden. Um einen Bindestrich einzufügen, setzen Sie ihn als letztes Zeichen
+vor der schließenden Klammer am Ende. \fB[^]0\-9\-]\fP bedeutet zum Beispiel, die
+Zusammenstellung »alles außer schließender Klammer, null bis neun und
+Bindestrich«. Die Zeichenkette endet mit dem Erscheinen eines nicht in der
+Zusammenstellung enthaltenen Zeichens (oder mit einem enthaltenen
+Zirkumflex) oder wenn die Feldgröße erschöpft ist.
+.TP 
+\fBp\fP
+passt zu einem Zeigerwert (wie durch »%p« in \fBprintf\fP(3) ausgegeben); der
+nächste Zeiger muss ein Zeiger auf \fIvoid\fP sein.
+.TP 
+\fBn\fP
+es wird nichts erwartet; stattdessen wird die Anzahl der Zeichen, die bis
+jetzt eingelesen wurden, im nächsten Zeiger gespeichert, welcher ein Zeiger
+auf \fIint\fP sein muss. Dies ist \fIkeine\fP Umwandlung, obwohl sie durch das
+Zeichen zum Unterdrücken von Zuweisungen \fB*\fP unterdrückt werden kann. Der
+C\-Standard sagt: »Die Ausführung einer \fB%n\fP\-Richtlinie erhöht nicht die
+Anzahl der Zuweisungen, die bei Fertigstellung der Ausführung zurückgegeben
+werden«, aber die Berichtigung scheint dem zu widersprechen. Es ist
+wahrscheinlich ratsam, keine Annahmen über die Auswirkungen von
+\fB%n\fP\-Umwandlungen auf den Rückgabewert zu treffen.
+.SH RÜCKGABEWERT
+Diese Funktionen geben die Anzahl der Eingabeelemente zurück, die
+erfolgreich übereinstimmten und zugewiesen wurden. Dies können weniger sein,
+als bereitgestellt wurden oder null, wenn ein früherer Abgleich scheiterte.
+
+Der Wert \fBEOF\fP wird zurückgegeben, wenn das Ende der Eingabe erreicht wird,
+bevor entweder die erste erfolgreiche Umwandlung oder das erste Fehlschlagen
+eines Abgleichs auftrat. \fBEOF\fP wird auch zurückgegeben, wenn ein Lesefehler
+auftritt. In diesem Fall wird die Fehleranzeige für den Datenstrom gesetzt
+(siehe \fBferror\fP(3)) und \fIerrno\fP so gesetzt, dass es den Fehler angibt.
+.SH FEHLER
+.TP 
+\fBEAGAIN\fP
+Der Dateideskriptor, der \fIdatenstrom\fP zugrundeliegt, ist als nicht
+blockierend gekennzeichnet und die Leseoperation würde blocken.
+.TP 
+\fBEBADF\fP
+Der Dateideskriptor, der \fIdatenstrom\fP zugrundeliegt, ist ungültig oder
+nicht zum Lesen geöffnet.
+.TP 
+\fBEILSEQ\fP
+Eingabebyte\-Abfolge bildet kein gültiges Zeichen
+.TP 
+\fBEINTR\fP
+Die Leseoperation wurde durch ein Signal unterbrochen; siehe \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+nicht genug Argumente oder \fIformat\fP ist NULL
+.TP 
+\fBENOMEM\fP
+Platz im Hauptspeicher reicht nicht aus
+.TP 
+\fBERANGE\fP
+Das Ergebnis einer Ganzzahl\-Umwandlung würde die Größe überschreiten, die in
+dem zugehörigen Ganzzahl\-Typ gespeichert werden könnte.
+.SH "KONFORM ZU"
+Die Funktionen \fBfscanf\fP(), \fBscanf\fP() und \fBsscanf\fP() sind konform zu c89,
+C99 und POSIX.1\-2001. Diese Vorgaben spezifizieren nicht den Fehler
+\fBERANGE\fP.
+.PP
+Das Spezifikationssymbol \fBq\fP ist die 4.4BSD\-Schreibweise für \fIlong long\fP,
+während \fBll\fP oder die Benutzung von \fBL\fP in Ganzzahlumwandlungen die
+GNU\-Schreibweise ist.
+.PP
+Die Linuxversion dieser Funktionen basiert auf der \fIGNU\fP\-Bibliothek
+\fIlibio\fP Eine präzisere Beschreibung findet sich in der
+\fIinfo\fP\-Dokumentation von \fIGNU\fP \fIlibc (glibc\-1.08).\fP
+.SH ANMERKUNGEN
+.\" This feature seems to be present at least as far back as glibc 2.0.
+Die GNU\-C\-Bibliothek unterstützt eine nicht standardisierte Erweiterung, die
+die Bibliothek veranlasst dynamisch eine Zeichenkette von ausreichender
+Größe für Eingabezeichenketten und die \fB%s\fP\- und
+\fB%a[\fP\fIBereich\fP\fB]\fP\-Umwandlungsspezifikationen zu reservieren. Um von
+dieser Funktion Gebrauch zu machen, geben Sie als Längenänderungszeichen
+\fBa\fP an (also \fB%as\fP oder \fB%a[\fP\fIrange\fP\fB]\fP). Der Aufrufende muss die
+zurückgegebene Zeichenkette mit \fBfree\fP(3), wie im folgenden Beispiel
+freigeben:
+.in +4n
+.nf
+
+char *p;
+int n;
+
+errno = 0;
+n = scanf("%a[a\-z]", &p);
+if (n == 1) {
+    printf("gelesen: %s\en", p);
+    free(p);
+} else if (errno != 0) {
+    perror("scanf");
+} else {
+    fprintf(stderr, "Keine passenden Zeichen\en"):
+}
+.fi
+.in
+.PP
+Wie im vorstehenden Beispiel gezeigt, ist es nur nötig \fBfree\fP(3)
+aufzurufen, wenn der Aufruf von \fBscanf\fP() eine Zeichenkette erfolgreich
+gelesen hat.
+.PP
+Das Änderungszeichen \fBa\fP ist nicht verfügbar, wenn das Programm mit \fIgcc
+\-std=c99\fP oder \fIgcc \-D_ISOC99_SOURCE\fP kompiliert wurde (außer wenn auch
+\fB_GNU_SOURCE\fP angegeben wurde). In diesem Fall wird \fBa\fP als
+Spezifikationssymbol für Fließkommazahlen interpretiert (siehe oben).
+
+Seit Version 2.7 stellt Glibc außerdem das Änderungszeichen \fBm\fP für den
+gleichen Zweck wie das Änderungszeichen \fBa\fP bereit. Das Änderungszeichen
+\fBm\fP hat die folgenden Vorteile:
+.IP * 2
+Es könnte auch auf \fB%c\fP\-Umwandlungsspezifikationen angewandt werden
+(z.B. \fB%3mc\fP).
+.IP *
+Es vermeidet Mehrdeutigkeit bezüglich der Umwandlungsspezifikation für
+Fließkommazahlen \fB%a\fP (und wird nicht von \fIgcc \-std=c99\fP
+etc. beeinflusst).
+.IP *
+Es ist in der bevorstehenden Überarbeitung des POSIX.1\-Standards
+spezifiziert.
+.SH FEHLER
+Alle Funktionen sind vollkommen konform zu C89, stellen jedoch die
+zusätzlichen Spezifikationssymbole \fBq\fP und \fBa\fP sowie ein zusätzliches
+Verhalten der Spezifikationssymbole \fBL\fP und \fBl\fP zur Verfügung. Letzteres
+kann als Fehler angesehen werden, da es das Verhalten der
+Spezifikationssymbole verändert, die in C89 definiert sind.
+.PP
+Einige Kombinationen von Typänderungssymbolen und
+Umwandlungsspezifikationen, die durch ANSI\-C definiert sind, sind sinnlos
+(z.B. \fB%Ld\fP). Während sie ein wohldefiniertes Verhalten unter Linux haben,
+braucht dies auf anderen Architekturen nicht der Fall zu sein. Daher ist es
+gewöhnlich besser Änderungssymbole zu benutzen, die gar nicht durch ANSI\-C
+definiert sind, also \fBq\fP anstelle von \fBL\fP in Kombination mit der
+Umwandlungen \fBd\fP, \fBi\fP, \fBo\fP, \fBu\fP, \fBx\fP und \fBX\fP oder \fBll\fP.
+.PP
+Die Benutzung von \fBq\fP ist nicht die gleiche wie auf 4.4BSD, da sie in
+Fließkommaumwandlungen äquivalent zu \fBL\fP benutzt werden kann.
+.SH "SIEHE AUCH"
+\fBgetc\fP(3), \fBprintf\fP(3), \fBsetlocale\fP(3), \fBstrtod\fP(3), \fBstrtol\fP(3),
+\fBstrtoul\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

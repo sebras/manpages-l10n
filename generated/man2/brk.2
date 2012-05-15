@@ -1,0 +1,148 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" Copyright (c) 1993 Michael Haardt
+.\" (michael@moria.de),
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" Modified Wed Jul 21 19:52:58 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Aug 21 17:40:38 1994 by Rik Faith <faith@cs.unc.edu>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BRK 2 "20. September 2010" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+brk, sbrk \- Datensegmentgröße ändern
+.SH ÜBERSICHT
+\fB#include <unistd.h>\fP
+.sp
+\fBint brk(void *\fP\fIadresse\fP\fB);\fP
+.sp
+\fBvoid *sbrk(intptr_t \fP\fIerhoehung\fP\fB);\fP
+.sp
+.in -4n
+Mit Glibc erforderliche Makros (siehe \fBfeature_test_macros\fP(7)):
+.in
+.sp
+\fBbrk\fP(), \fBsbrk\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Seit Glibc 2.12:
+.nf
+_BSD_SOURCE || _SVID_SOURCE ||
+    (_XOPEN_SOURCE\ >=\ 500 ||
+        _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED) &&
+    !(_POSIX_C_SOURCE\ >=\ 200112L || _XOPEN_SOURCE\ >=\ 600)
+.TP  4
+.fi
+Bis Glibc 2.12: _BSD_SOURCE || _SVID_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
+_XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+.PD
+.RE
+.ad b
+.SH BESCHREIBUNG
+\fBbrk\fP() und \fBsbrk\fP() ändern den Ort des \fIprogram break\fP, der das Ende des
+Datensegments des Prozesses definiert (d.h. der Program\-Break ist der erste
+Ort nach dem Ende des nicht initialisierten Datensegments). Den
+Program\-Break zu vergrößern hat die Auswirkung, dass für den Prozess
+Speicher reserviert wird; den Break zu verkleinern gibt reservierten
+Speicher frei.
+
+\fBbrk\fP setzt das Ende des Datensegments auf den Wert, der durch \fIadresse\fP
+angegeben ist. Wenn dieser Wert vernünftig ist, hat das System genug
+Speicher und der Prozess überschreitet nicht seine maximale Datengröße
+(siehe \fBsetrlimit\fP(2)).
+
+\fBsbrk\fP vergrößert den Datenbereich des Programms um \fIerhoehung\fP Byte. Der
+Aufruf von \fBsbrk\fP mit einer \fIerhoehung\fP von 0 kann zum Auffinden des
+aktuellen Ortes des Program\-Breaks benutzt werden.
+.SH RÜCKGABEWERT
+Bei Erfolg gibt \fBbrk\fP Null zurück. Im Fehlerfall wird \-1 zurückgegeben und
+\fIerrno\fP auf \fBENOMEM\fP gesetzt. (Lesen sie aber die Linux\-Anmerkungen
+unten.)
+
+Bei Erfolg gibt \fBbrk\fP den vorherigen Program\-Break zurück. (Falls der Break
+erhöht wurde, ist dieser Wert ein Zeiger auf den Anfang des neu reservierten
+Speichers). Im Fehlerfall wird \fI(void\ *)\ \-1\fP zurückgegeben und \fIerrno\fP
+auf \fBENOMEM\fP gesetzt.
+.SH "KONFORM ZU"
+.\"
+.\" .BR brk ()
+.\" and
+.\" .BR sbrk ()
+.\" are not defined in the C Standard and are deliberately excluded from the
+.\" POSIX.1-1990 standard (see paragraphs B.1.1.1.3 and B.8.3.3).
+4.3BSD; SUSv1, in SUSv2 als ALTLAST gekennzeichnet, in POSIX.1\-2001 entfernt
+.SH ANMERKUNGEN
+Vermeiden Sie die Benutzung von \fBbrk\fP() und \fBsbrk\fP(): Das
+Speicherreservierungspaket \fBmalloc\fP(3) ist portabel und stellt eine
+komfortable Möglichkeit der Speicherreservierung bereit.
+
+.\" One sees
+.\" \fIint\fP (e.g., XPGv4, DU 4.0, HP-UX 11, FreeBSD 4.0, OpenBSD 3.2),
+.\" \fIssize_t\fP (OSF1 2.0, Irix 5.3, 6.5),
+.\" \fIptrdiff_t\fP (libc4, libc5, ulibc, glibc 2.0, 2.1),
+.\" \fIintptr_t\fP (e.g., XPGv5, AIX, SunOS 5.8, 5.9, FreeBSD 4.7, NetBSD 1.6,
+.\" Tru64 5.1, glibc2.2).
+Verschiedene Systeme benutzen verschieden Typen für das Argument von
+\fBsbrk\fP(). Üblich sind \fIint\fP, \fIssize_t\fP, \fIptrdiff_t\fP und \fIintptr_t\fP.
+.SS Linux\-Anmerkungen
+Der oben beschriebene Rückgabewert für \fBbrk\fP() stellt das durch die
+Glibc\-Wrapper\-Funktion bereitgestellte Verhalten für den Linux\-Systemaufruf
+\fBbrk\fP() bereit. (In den meisten anderen Implementierungen hat \fBbrk\fP() den
+gleichen Rückgabewert; dieser Rückgabewert wurde auch in SUSv2 angegeben.)
+Der tatsächliche Linux\-Systemaufruf gibt allerdings bei Erfolg den neuen
+Program\-Break zurück. Bei Misserfolg gibt der Systemaufruf den aktuellen
+Break zurück. Die Glibc\-Wrapper\-Funktion tut dasselbe (d.h. sie prüft, ob
+der neue Break kleiner als \fIadresse\fP ist), um die Rückgabewerte 0 und \-1
+wie oben beschrieben zurückzugeben.
+
+Auf Linux ist \fBsbrk\fP() als Bibliotheksfunktion implementiert, die den
+Systemaufruf \fBbrk\fP() benutzt und ein wenig interne Buchführung erledigt, so
+dass sie den alten Break\-Wert zurückgeben kann.
+.SH "SIEHE AUCH"
+\fBexecve\fP(2), \fBgetrlimit\fP(2), \fBend\fP(3), \fBmalloc\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Patrick Rother <krd@gulu.net>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

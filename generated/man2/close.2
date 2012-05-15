@@ -1,0 +1,127 @@
+.\" -*- coding: UTF-8 -*-
+.\" Hey Emacs! This file is -*- nroff -*- source.
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"                               1993 Michael Haardt, Ian Jackson.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Wed Jul 21 22:40:25 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sat Feb 18 15:27:48 1995 by Michael Haardt
+.\" Modified Sun Apr 14 11:40:50 1996 by Andries Brouwer <aeb@cwi.nl>:
+.\"   corrected description of effect on locks (thanks to
+.\"   Tigran Aivazian <tigran@sco.com>).
+.\" Modified Fri Jan 31 16:21:46 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2000-07-22 by Nicolás Lichtmaier <nick@debian.org>
+.\"   added note about close(2) not guaranteeing that data is safe on close.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOSE 2 "28. Dezember 2007" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+close \- Dateideskriptor schließen
+.SH ÜBERSICHT
+.nf
+\fB#include <unistd.h>\fP
+.sp
+\fBint close(int \fP\fIfd\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+\fBclose\fP() schließt einen Dateideskriptor, so dass dieser nicht mehr zu
+einer Datei gehört und wieder verwendet werden kann. Alle zum Prozess
+gehörenden Datensatz\-Sperren (siehe \fBfcntl\fP(2)) der mit dem Deskriptor
+verbundenen Datei werden aufgehoben. Die Aufhebung der Sperren erfolgt
+unabhängig von dem Deskriptor, mit dem die Sperre eingerichtet wurde.
+.PP
+Wenn \fIfd\fP der letzte Deskriptor der zugehörigen offenen Datei ist (siehe
+\fBopen\fP(2)), werden die zugehörigen Ressourcen freigegeben. War der
+Deskriptor der letzte Verweis auf eine Datei, die mittels \fBunlink\fP(2)
+entfernt wurde, wird die Datei gelöscht.
+.SH RÜCKGABEWERT
+Nach erfolgreicher Ausführung gibt \fBclose\fP() 0 zurück. Bei Fehlern wird \-1
+zurückgegeben und \fIerrno\fP entsprechend gesetzt.
+.SH FEHLER
+.TP 
+\fBEBADF\fP
+\fIfd\fP ist kein gültiger Deskriptor für eine geöffnete Datei.
+.TP 
+\fBEINTR\fP
+Der Aufruf von \fBclose\fP() wurde von einem Signal unterbrochen (siehe
+\fBsignal\fP(7)).
+.TP 
+\fBEIO\fP
+Es trat ein I/O\-Fehler auf.
+.SH "KONFORM ZU"
+.\" SVr4 documents an additional ENOLINK error condition.
+SVr4, 4.3BSD, POSIX.1\-2001.
+.SH ANMERKUNGEN
+Es ist ein verbreiteter, ernster Programmierfehler, den Rückgabewert von
+close nicht zu prüfen. Es ist durchaus möglich, dass Fehler bei einer
+früheren \fBwrite\fP(2)\-Operation erst bei dem abschließenden
+\fBclose\fP()\-Zugriff gemeldet werden. Wird der Rückgabewert beim Schließen
+einer Datei nicht geprüft, kann dies zu unbemerktem Datenverlust
+führen. Dies kann vor allem mit NFS und »Disk Quotas« beobachtet werden.
+.PP
+Ein erfolgreiches »close« garantiert nicht, dass die Daten erfolgreich auf
+der Festplatte gespeichert wurden, weil der Kernel verzögert schreibt. Es
+ist bei Dateisystemen nicht üblich, beim Schließen des Streams die Puffer zu
+leeren. Wenn Sie sicher sein müssen, dass die Daten physisch gespeichert
+sind, verwenden Sie \fBfsync\fP(2). (Hierbei kommt es auf die Hardware Ihrer
+Festplatte an.)
+.PP
+.\" Date: Tue, 4 Sep 2007 13:57:35 +0200
+.\" From: Fredrik Noring <noring@nocrew.org>
+.\" One such race involves signals and ERESTARTSYS. If a file descriptor
+.\" in use by a system call is closed and then reused by e.g. an
+.\" independent open() in some unrelated thread, before the original system
+.\" call has restared after ERESTARTSYS, the original system call will
+.\" later restart with the reused file descriptor. This is most likely a
+.\" serious programming error.
+Wahrscheinlich ist es unklug, Dateideskriptoren zu schließen, die
+möglicherweise noch durch Systemaufrufe in anderen Threads desselben
+Prozesses belegt sein können. Da Dateideskriptoren wiederverwendet werden
+können, kann dies zu undurchsichtigen »Race Conditions« mit unbeabsichtigten
+Nebenwirkungen führen.
+.SH "SIEHE AUCH"
+\fBfcntl\fP(2), \fBfsync\fP(2), \fBopen\fP(2), \fBshutdown\fP(2), \fBunlink\fP(2),
+\fBfclose\fP(3)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Ralf Demmer <rdemmer@rdemmer.de>
+und
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

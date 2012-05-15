@@ -1,0 +1,214 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" Modified Sun Nov 28 17:06:19 1993, Rik Faith (faith@cs.unc.edu)
+.\"          with material from Luigi P. Bai (lpb@softint.com)
+.\" Portions Copyright 1993 Luigi P. Bai
+.\" Modified Tue Oct 22 22:04:23 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified, 5 Jan 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified, 19 Sep 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added SHM_REMAP flag description
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Changed wording and placement of sentence regarding attachment
+.\"		of segments marked for destruction
+.\"
+.\" FIXME . Add an example program to this page.
+.\" FIXME Linux 2.6.9 added SHM_EXEC, which should be documented
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHMOP 2 "3. Juni 2008" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+shmat, shmdt \- Operationen mit gemeinsam benutztem Speicher
+.SH ÜBERSICHT
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/shm.h>\fP
+
+\fBvoid *shmat(int \fP\fIshmid\fP\fB, const void *\fP\fIshmaddr\fP\fB, int \fP\fIshmflg\fP\fB);\fP
+
+\fBint shmdt(const void *\fP\fIshmaddr\fP\fB);\fP
+.fi
+.SH BESCHREIBUNG
+\fBshmat\fP() blendet das durch \fIshmid\fP bezeichnete gemeinsame Speichersegment
+in den Adressraum des aufrufenden Prozesses ein. Die Adresse der Enblendung
+wird durch \fIshmaddr\fP nach einem der folgenden Kriterien bestimmt:
+.LP
+Falls \fIshmaddr\fP NULL ist, wählt das System eine geeignete (freie) Adresse,
+an der das Segment eingeblendet wird.
+.LP
+Wenn \fIshmaddr\fP nicht NULL ist und \fBSHM_RND\fP in \fIshmflg\fP angegeben ist,
+wird die Adresse durch Abrundung von \fIshmaddr\fP als Vielfaches von \fBSHMLBA\fP
+bestimmt. Andernfalls muss \fIshmaddr\fP eine an einer Speicherseite
+ausgerichtete Adresse sein, an welcher das Einblenden beginnt.
+.PP
+Ist \fBSHM_RDONLY\fP in \fIshmflg\fP gesetzt, wird das Segment zum Lesen
+eingeblendet und der Prozess muss die Berechtigung für Lesezugriffe auf das
+Segment besitzen. Andernfalls wird das Segment zum Lesen und Schreiben
+eingeblendet und der Prozess muss die Berechtigung für Lese\- und
+Schreibzugriffe auf das Segment besitzen. Ein gemeinsames Speichersegment
+mit reinem Schreibzugriff ist nicht vorgesehen.
+.PP
+Mit dem (Linux\-spezifischen) Schalter \fBSHM_REMAP\fP in \fIshmflag\fP können Sie
+bestimmen, dass das Abbilden des Segments jede vorhandene Abbildung im
+Bereich von \fIshmaddr\fP bis zum Ende des Segments ersetzt. (Falls bereits
+eine Abbildung in diesem Adressbereich existiert, würde dies normalerweise
+zu dem Fehler \fBEINVAL\fP führen.) In diesem Fall darf \fIshmaddr\fP nicht NULL
+sein.
+.PP
+Der \fBbrk\fP(2)\-Wert des aufrufenden Prozesses wird durch das Einblenden nicht
+verändert. Das Segment wird bei Beenden des Prozesses automatisch
+abgetrennt. Das gleiche Segment kann mit Lese\- sowie mit Lese\- und
+Schreibzugriff einmal oder mehrfach an den Adressraum des Prozesses
+eingeblendet werden.
+.PP
+Nach einem erfolgreichen \fBshmat\fP()\-Aufruf aktualisiert das System die
+Bestandteile der dem Speichersegment zugeordneten \fIshmid_ds\fP\-Struktur
+(siehe \fBshmctl\fP(2)) wie folgt:
+.IP
+\fIshm_atime\fP wird auf die aktuelle Zeit gesetzt.
+.IP
+\fIshm_lpid\fP wird auf die Prozess\-ID des aufrufenden Prozesses gesetzt.
+.IP
+\fIshm_nattch\fP wird um eins erhöht.
+.PP
+\fBshmdt\fP() löst das gemeinsame Speichersegment, das an der Adresse
+\fIshmaddr\fP liegt aus dem Adressraum des aufrufenden Prozesses. Das zu
+entfernende gemeinsame Speichersegment muss momentan mit \fIshmaddr\fP
+eingeblendet sein, das dem Rückgabewert des einbendenden \fBshat\fP()\-Aufrufs
+entspricht.
+.PP
+Nach einem erfolgreichen \fBshmdt\fP()\-Aufruf aktualisiert das System die
+Bestandteile der dem Speichersegment zugeordneten Struktur \fBshmid_ds\fP wie
+folgt:
+.IP
+\fIshm_dtime\fP wird auf die aktuelle Zeit gesetzt.
+.IP
+\fIshm_lpid\fP wird auf die Prozess\-ID des aufrufenden Prozesses gesetzt.
+.IP
+\fIshm_nattch\fP wird um eins verringert. Wenn es dabei zu 0 wird und das
+Segment zum Löschen markiert ist, wird es gelöscht.
+.PP
+Nach einem \fBfork\fP(2) erbt der Kindprozess das eingeblendete gemeinsame
+Speichersegment.
+
+Nach einem \fBexec\fP(2) sind alle eingeblendeten gemeinsamen Speichersegmente
+vom Prozess abgelöst.
+
+Bei einem \fBexit\fP(2) sind alle eingeblendeten gemeinsamen Speichersegmente
+vom Prozess abgelöst.
+.SH RÜCKGABEWERT
+Bei Erfolg gibt \fBshmat\fP() die Adresse des eingeblendeten gemeinsamen
+Speichersegments zurück; bei einem Fehler wird \fI(void\ *)\ \-1\fP
+zurückgegeben und \fIerrno\fP so gesetzt, dass es den Grund des Fehlers
+anzeigt.
+
+Bei Erfolg gibt \fBshmdt\fP() 0 zurück; bei einem Fehler wird \-1 zurückgegeben
+und \fIerrno\fP so gesetzt, dass es den Grund des Fehlers anzeigt.
+.SH FEHLER
+Wenn \fBshmat\fP fehlschlägt, wird \fIerrno\fP mit einem der folgenden Werte
+belegt:
+.TP 
+\fBEACCES\fP
+Dem aufrufenden Prozess fehlen die nötigen Zugriffsrechte für den
+angeforderten Einblendetyp und die \fBCAP_IPC_OWNER\fP\-Fähigkeit.
+.TP 
+\fBEINVAL\fP
+ungültiger \fIshmid\fP\-Wert, nicht ausgerichteter (d.h. nicht an die
+Seitengröße angepasst und \fBSHM_RND\fP wurde nicht angegeben) oder ungültiger
+\fIshmaddr\fP\-Wert oder es wurde \fBSHM_REMAP\fP angegeben und \fIshmaddr\fP war
+NULL.
+.TP 
+\fBENOMEM\fP
+Es konnte kein Speicher für den Deskriptor oder die Seitentabellen
+reserviert werden.
+.PP
+Wenn \fBshmat\fP() fehlschlägt, ist \fIerrno\fP mit einem der folgenden Werte
+belegt:
+.TP 
+\fBEINVAL\fP
+.\" The following since 2.6.17-rc1:
+Es ist kein gemeinsames Speichersegment an \fIshmaddr\fP eingeblendet oder
+\fIshmaddr\fP ist nicht an der Seitengrenze ausgerichtet.
+.SH "KONFORM ZU"
+.\" SVr4 documents an additional error condition EMFILE.
+SVr4, POSIX.1\-2001.
+
+In SVID 3 (oder vielleicht früher) wurde der Typ des Arguments \fIshmaddr\fP
+von \fIchar *\fP in \fIconst void *\fP und der von \fBshmat\fP() zurückgegebene Typ
+von \fIchar *\fP in \fIvoid *\fP geändert. (Linux\-Libc4 und \-Libc5 haben die
+\fIchar *\fP\-Prototypen, Glibc2 hat \fIvoid *\fP.)
+.SH ANMERKUNGEN
+Die bevorzugte, portierbare Möglichkeit ein gemeinsames Speichersegment
+einzublenden besteht darin, \fBshmat\fP() mit \fIshmaddr\fP gleich NULL zu
+benutzen. Sie sollten wissen, dass das eingeblendete gemeinsame
+Speichersegment auf diese Art an unterschiedliche Adressen in
+unterschiedlichen Prozessen eingeblendet werden kann. Deshalb müssen alle
+innerhalb des gemeinsamen Speichers verwalteten Zeiger relativ
+(typischerweise zur Startadresse des Segments) statt absolut sein.
+.PP
+Auf Linux ist es möglich, sogar ein gemeinsames Speichersegment
+einzublenden, wenn es bereits zum Löschen markiert ist. POSIX.1\-2001
+spezifiziert dieses Verhalten jedoch nicht und andere Implementierungen
+unterstützen es nicht.
+.LP
+Der folgende Systemparameter beeinflusst \fBshmat\fP():
+.TP 
+.\" FIXME A good explanation of the rationale for the existence
+.\" of SHMLBA would be useful here
+\fBSHMLBA\fP
+.\" FIXME That last sentence isn't true for all Linux
+.\" architectures (i.e., SHMLBA != PAGE_SIZE for some architectures)
+.\" -- MTK, Nov 04
+Adress\-Multiplikator der Segmentuntergrenze. Muss seitenkonform sein. In der
+aktuellen Implemtentierung ist der Wert von \fBSHMBLA\fP gleich \fBPAGE_SIZE\fP.
+.PP
+Die Implemtentierung hat keinen wesentlichen Einschränkungen der maximalen
+Anzahl von gemeinsamen Speichersegmenten pro Prozess (\fBSHMSEG\fP)
+.SH "SIEHE AUCH"
+\fBbrk\fP(2), \fBmmap\fP(2), \fBshmctl\fP(2), \fBshmget\fP(2), \fBcapabilities\fP(7),
+\fBshm_overview\fP(7), \fBsvipc\fP(7)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Ralf Demmer <rdemmer@rdemmer.de>
+und
+Chris Leick <c.leick@vollbio.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.

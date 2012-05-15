@@ -1,0 +1,265 @@
+.\" Copyright (c) 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.\"     @(#)exec.3	6.4 (Berkeley) 4/19/91
+.\"
+.\" Converted for Linux, Mon Nov 29 11:12:48 1993, faith@cs.unc.edu
+.\" Translated into german by Roland Krause <Rokrause@aol.com>
+.\" Fri Jan 12 15:20:05 2001: Modified by Martin Schulze <joey@infodrom.north.de>
+.\"
+.TH EXEC 3 "26. Januar 1997" "BSD MANPAGE" "Bibliotheksfunktionen"
+.SH BEZEICHNUNG
+execl, execlp, execle, execv, execvp \- Datei ausführen
+.PP
+Diese Handbuchseite ist veraltet. Im Zweifelsfall ziehen Sie
+die englischsprachige Handbuchseite zu Rate, indem Sie
+.IP
+man -LC 3 exec
+.PP
+eingeben.
+.SH "ÜBERSICHT"
+.B #include <unistd.h>
+.sp
+.B extern char **environ;
+.sp
+.BI "int execl( const char *" path ", const char *" arg ", ...);
+.br
+.BI "int execlp( const char *" file ", const char *" arg ", ...);
+.br
+.BI "int execle( const char *" path ", const char *" arg,
+.br
+.BI "            ..., NULL, char * const " envp "[]);"
+.br
+.BI "int execv( const char *" path ", char *const " argv "[]);"
+.br
+.BI "int execvp( const char *" file ", char *const " argv "[]);"
+.br
+.SH BESCHREIBUNG
+Die
+.BR exec \-Bibliotheksfunktionen
+ersetzen den aktuellen Programmcode im Speicher mit neuem Programmcode.
+Dieser Programmcode wird aus einer Datei geladen.  Die
+hier beschriebenen Bibliotheksfunktionen stellen eine Schnittstelle zu
+der Systemfunktion
+.BR execve (2)
+dar.
+.PP
+Das erste Argument dieser Funktionen ist immer der Pfadname der Datei,
+die ausgeführt werden soll.
+
+Der Ausdruck
+.I "const char *arg"
+und die nachfolgenden Ellipsen ('...' wird auch Ellipse genannt) der Funktionen
+.BR execl ,
+.BR execlp ,
+und
+.B execle
+ist als eine Liste mit einer unbestimmten Anzahl von Parametern
+.IR arg0 ,
+.IR arg1 ,
+\&...,
+.IR argn
+zu verstehen.
+Zusammen stellen sie eine Liste mit einem oder mehreren nullterminierten
+(mit '\\0' abgeschlossenen) Zeichenketten dar, die der Funktion
+.I main
+des aufgerufenen Programms in
+.I argv[]
+übergeben wird.  Der erste Eintrag
+.I arg0
+sollte ein Zeiger auf den Dateinamen des aufgerufenen Programms sein.
+Dieser Dateiname wird normalerweise von jedem Programm in
+.I argv[0]
+erwartet.  Die Parameterliste der
+.BR execl \-Funktionen 
+.I muss
+mit einem
+.BR NULL \-Zeiger
+abgeschlossen werden.
+.PP
+Die Funktionen
+.B execv
+und
+.B execvp
+übergeben die Aufrufparameter an das Folgeprogramm in einem Vektor von
+Zeigern auf nullterminierte Zeichenketten.  Die Struktur dieses Vektors
+entspricht exakt dem Aufbau von
+.I argv[]
+der Funktion
+.I main
+eines Programms.  Daher sollte der erste Eintrag in diesem Vektor einen
+Zeiger auf den Dateinamen des aufgerufenen Programms enthalten.  Der
+Zeigervektor
+.I muss
+mit einen NULL-Zeiger als letzten Eintrag abgeschlossen werden.
+.PP
+Die Funktion
+.B execle
+übergibt zusätzlich die Umgebungsvariablen (siehe
+.BR env (1))
+in einem Zeigervektor an das Folgeprogramm.  Dieser Vektor muss ebenfalls
+mit einem NULL-Zeiger als letzten Eintrag abgeschlossen werden.  Alle
+Zeichenketten müssen nullterminiert sein.  Die Parameterliste
+.I arg0
+bis
+.I argn
+wird zunächst mit einem NULL - Zeiger abgeschlossen.  Hinter dem
+NULL-Zeiger wird dann der Zeigervektor
+.I envp[]
+wie oben beschrieben angegeben.  Die übrigen Funktionen übernehmen die
+Umgebungsvariablen für den neuen Prozess von der externen Variablen
+.IR environ .
+
+Ein Teil der Funktionen hat eine spezielle Semantik.
+
+Die Funktionen
+.B execlp
+und
+.B execvp
+verwenden den Suchpfad für ausführbare Dateien vom Elternprozess, wenn
+der angegebene Programmname nicht in Form eines relativen oder absoluten
+Pfadnamens angegeben wird.  Der Suchpfad wird durch die Umgebungsvariable
+.B PATH
+definiert.  Ist
+.B PATH
+nicht definiert, wird der Standardpfad ``/bin:/usr/bin:.'' verwendet.
+.PP
+Wenn die Ausführung einer gefundenen Datei nicht möglich war (der
+.BR execve \-Aufruf
+lieferte
+.B EACCES
+in
+.IR errno ),
+wird die Suche mit den verbliebenen Pfadangaben des Suchpfades fortgesetzt.
+Wenn keine andere Datei gefunden wird, kehren diese Funktionen mit dem
+Rückgabewert \-1 in das aufrufende Programm zurück.  Die globale Fehlervariable
+.I errno
+ist in diesem Fall auf
+.B EACCES
+gesetzt.
+.PP
+Wenn der Dateiheader einer gefundenen Datei nicht das korrekte
+Format hat (der
+.BR execve \-Aufruf
+lieferte
+.B ENOEXEC
+in
+.IR errno ),
+starten diese Funktionen eine Shell mit dem Pfadnamen dieser Datei als
+erstes Argument.  Wenn dieser Versuch fehlschlägt, wird die Suche abgebrochen.
+.PP
+Wenn der Zugriff auf die gefundene Datei gerade nicht möglich ist (der
+.BR execve \-Aufruf
+lieferte
+.B ETXTBUSY
+in
+.IR errno ),
+warten diese Funktionen mehrere Sekunden und versuchen periodisch die
+gefundene Datei auszuführen.  Dieses Problem kann beim Dateizugriff
+über ein Netzwerk wie z.B. mit NFS auftreten.
+.SH "RÜCKGABEWERT"
+Wenn eine der
+.BR exec \-Funktionen
+in das aufrufende Programm zurückkehrt, ist ein Fehler
+aufgetreten.  Das Funktionsergebnis ist \-1 und die globale Variable
+.I errno
+wird auf die entsprechende Fehlerkennung gesetzt.
+.SH DATEIEN
+.I /bin/sh
+.SH FEHLER
+Der Aufruf der Funktionen
+.BR execl ,
+.BR execle ,
+.B execlp
+und
+.B execvp
+kann fehlschlagen.  In diesem Fall wird
+.I errno
+auf einen der möglichen Fehler der Funktionen
+.BR execve (2)
+oder
+.BR malloc (3)
+gesetzt.
+.PP
+.B Execv
+setzt in diesem Fall
+.I errno
+auf einen der möglichen Fehler der Funktion
+.BR execve (2).
+.SH KOMPATIBILITÄT
+In früheren Versionen von
+.B execlp
+und
+.B execvp
+wurde ``.:/bin:/usr/bin'' als Standard-Suchpfad verwendet.  Um die Systemsicherheit
+zu erhöhen, wurde das aktuelle Verzeichnis ``.'' zum Ende des Suchpfads
+verlegt.  Linux verwendet hier den traditionellen "lokaler Pfad zuerst"-Pfad.
+.PP
+Das Fehlerverhalten von
+.B execlp
+und
+.B execvp
+beim Versuch Programme zu starten ist historische Praxis und traditionell
+undokumentiert.  Daher ist dieses Verhalten auch nicht durch den POSIX Standard
+spezifiziert.  Generell sollte der Wert von
+.I errno
+nach einem Fehler einer
+.BR exec \-Funktion
+nur für die Ausgabe von Fehlermeldungen genutzt und keinesfalls
+der Programmfluss von diesem Wert abhängig gemacht werden.  Es ist auf jedem
+UNIX-Derivat mit unterschiedlichen Ergebnissen zu rechnen.
+
+Traditionell ignorieren die Funktionen
+.B execlp
+und
+.B execvp
+alle Fehler bis auf die oben beschriebenen sowie
+.B ENOMEM
+und
+.BR E2BIG ,
+in welchen Fällen sie ins Hauptprogramm zurückkehren.  Sie kehren
+jetzt ins Hauptprogramm bei jedem Fehler anders als den oben
+beschriebenen zurück.
+
+.SH "KONFORM ZU"
+.BR Execl ,
+.BR execv ,
+.BR execle ,
+.B execlp
+and
+.B execvp
+sind konform zu
+IEEE Std1003.1-88 (POSIX).
+.SH "SIEHE AUCH"
+.BR sh (1),
+.BR execve (2),
+.BR fork (2),
+.BR environ (7).

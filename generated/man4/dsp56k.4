@@ -1,0 +1,120 @@
+.\" -*- coding: UTF-8 -*-
+.\" t
+.\" Copyright (c) 2000 lars brinkhoff <lars@nocrew.org>
+.\"
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\"
+.\" Modified, Thu Jan 27 19:16:19 CET 2000, lars@nocrew.org
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DSP56K 4 "1. März 2000" Linux Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+dsp56k \- DSP56001\-Schnittstelle
+.SH ÜBERSICHT
+.nf
+#include <asm/dsp56k.h>
+.sp
+\fBssize_t read(int \fP\fIfd\fP\fB, void *\fP\fIdata\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+\fBssize_t write(int \fP\fIfd\fP\fB, void *\fP\fIdata\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_UPLOAD, struct dsp56k_upload *\fP\fIprogram\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_SET_TX_WSIZE, int \fP\fIwsize\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_SET_RX_WSIZE, int \fP\fIwsize\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_HOST_FLAGS, struct dsp56k_host_flags *\fP\fIflags\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_HOST_CMD, int \fP\fIcmd\fP\fB);\fP
+.fi
+.SH KONFIGURATION
+Die »dsp56k«\-Schnittstelle ist ein zeichenorientiertes Gerät mit der
+Major\-Nummer 55 und der Minor\-Nummer 0.
+.SH BESCHREIBUNG
+Der Motorola DSP56001 ist ein voll programmierbarer digitaler
+Signalprozessoer mit einer Wortbreite von 24\-Bit, der in mit dem Atari
+Falcon030 kompatiblen Computern eingebaut ist. Die Gerätedatei \fIdsp56k\fP
+wird verwendet, um den DSP56001 zu steuern und über den bidirektionalen
+Handshake\-Port Daten zu senden und zu empfangen.
+.PP
+Um einen Datenstrom an den Signalprozessor zu senden, rufen Sie \fBwrite\fP(2)
+für das Gerät auf; mit \fBread\fP(2) rufen Sie verarbeitete Daten ab. Die Daten
+können vom Wirtsrechner (Host) als Vielfache von 8, 16, 24, oder 32 Bit
+gesendet oder empfangen werden, der DSP56001 sieht aber immer Vielfache von
+24 Bit.
+.PP
+Das \fIdsp56\fP\-Gerät wird mit den folgenden \fBioctl\fP(2)\-Aufrufen gesteuert:
+.IP \fBDSP56K_UPLOAD\fP
+setzt den DSP56001 zurück und lädt ein Programm. Das dritte Argument von
+\fBioctl\fP(2) muss ein Zeiger auf eine \fIstruct dsp56k_binary\fP mit den
+Komponenten \fIbin\fP und \fIlen\fP sein. Erstere weist auf ein
+DSP56001\-Binärprogramm; letztere gibt die Programmlänge in in 24\-Bit\-Wörtern
+an.
+.IP \fBDSP56K_SET_TX_WSIZE\fP
+setzt die Wortgröße der an den DSP56001 zu übertragenden Daten in
+Bytes. Zulässige Werte liegen im Bereich von 1 bis 4. Diese Datenmengen
+werden entweder mit Null\-Bytes aufgefüllt oder auf das native
+24\-Bit\-Datenformat des DSP56001 gekürzt.
+.IP \fBDSP56K_SET_RX_WSIZE\fP
+setzt die Wortgröße der vom DSP56001 zu empfangenden Daten in
+Bytes. Zulässige Werte liegen im Bereich von 1 bis 4. Diese Datenmengen
+werden entweder gekürzt oder mit Null\-Bytes (\(aq\e0\(aq) aufgefüllt, um sie
+an das native 24\-Bit\-Datenformat des DSP56001 anzupassen.
+.IP \fBDSP56K_HOST_FLAGS\fP
+liest und schreibt die Host\-Schalter (Flags). Das sind vier Allzweck\-Bits,
+die sowohl vom Host als auch dem DSP56001 gelesen werden können. Die Bits 0
+und 1 können vom Host geschrieben werden; die Bits 2 und 3 vom DSP56001.
+
+Für den Zugriff auf die Host\-Schalter muss das dritte Argument von
+\fBioctl\fP(2) ein Zeiger auf eine \fIstruct dsp56k_host_flags\fP sein. Ist Bit 0
+oder 1 in der \fIdir\fP\-Komponente gesetzt, wird das entsprechende Bit in
+\fIout\fP in die Host\-Schalter geschrieben. Der Zustand aller Host\-Schalter
+wird in den unteren vier Bits der \fIstatus\fP\-Komponente zurückgegeben.
+.IP \fBDSP56K_HOST_CMD\fP
+sendet einen Host\-Befehl. Die zulässigen Werte liegen im Bereich von 0 bis
+31. Sie werden vom auf dem DSP56001 laufenden Programm als
+benutzerdefinierter Befehl behandelt.
+.SH DATEIEN
+.\" .SH AUTHORS
+.\" Fredrik Noring <noring@nocrew.org>, lars brinkhoff <lars@nocrew.org>,
+.\" Tomas Berndtsson <tomas@nocrew.org>.
+/dev/dsp56k
+.SH "SIEHE AUCH"
+\fIlinux/include/asm\-m68k/dsp56k.h\fP, \fIlinux/drivers/char/dsp56k.c\fP,
+\fIhttp://dsp56k.nocrew.org/\fP, DSP56000/DSP56001 Digital Signal Processor
+User's Manual
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://man7.org/linux/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
