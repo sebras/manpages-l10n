@@ -18,9 +18,7 @@
 # Usage: Put the latest .deb files of the packages into their
 # corresponding directory and run this script.
 
-packages=`find -maxdepth 1 -type d | grep -v "^\.$" | cut -d/ -f2 | sort`
-
-for package in $packages; do
+while read package; do
 	echo "Updating package $package"
 	latest_deb=`ls $package/$package*.deb 2>/dev/null | tail -n1`
 	if [ -z $latest_deb ]; then
@@ -75,4 +73,4 @@ for package in $packages; do
 			git commit -m "Update $package $version manpages"
 		fi
 	fi
-done
+done < packages.list
