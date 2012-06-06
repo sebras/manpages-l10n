@@ -1,0 +1,222 @@
+.\" -*- coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-25 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2004-10-31 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RESOLVER 3 "23. April 2012" GNU Linux\-Programmierhandbuch
+.SH BEZEICHNUNG
+res_init, res_query, res_search, res_querydomain, res_mkquery, res_send,
+dn_comp, dn_expand \- Resolver\-Routinen
+.SH ÜBERSICHT
+.nf
+\fB#include <netinet/in.h>\fP
+\fB#include <arpa/nameser.h>\fP
+\fB#include <resolv.h>\fP
+\fBextern struct state _res;\fP
+.sp
+\fBint res_init(void);\fP
+.sp
+\fBint res_query(const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+.RS
+\fBunsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.RE
+.sp
+\fBint res_search(const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+.RS
+\fBunsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.RE
+.sp
+\fBint res_querydomain(const char *\fP\fIname\fP\fB, const char *\fP\fIdomain\fP\fB,\fP
+.RS
+\fBint \fP\fIclass\fP\fB, int \fP\fItype\fP\fB, unsigned char *\fP\fIanswer\fP\fB,\fP
+\fBint \fP\fIanslen\fP\fB);\fP
+.RE
+.sp
+\fBint res_mkquery(int \fP\fIop\fP\fB, const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB,\fP
+.RS
+\fBint \fP\fItype\fP\fB, char *\fP\fIdata\fP\fB, int \fP\fIdatalen\fP\fB, struct rrec *\fP\fInewrr\fP\fB,\fP
+\fBchar *\fP\fIbuf\fP\fB, int \fP\fIbuflen\fP\fB);\fP
+.RE
+.sp
+\fBint res_send(const char *\fP\fImsg\fP\fB, int \fP\fImsglen\fP\fB, char *\fP\fIanswer\fP\fB,\fP
+.RS
+\fBint \fP\fIanslen\fP\fB);\fP
+.RE
+.sp
+\fBint dn_comp(unsigned char *\fP\fIexp_dn\fP\fB, unsigned char *\fP\fIcomp_dn\fP\fB,\fP
+.RS
+\fBint \fP\fIlength\fP\fB, unsigned char **\fP\fIdnptrs\fP\fB, unsigned char **\fP\fIlastdnptr\fP\fB);\fP
+.RE
+.sp
+\fBint dn_expand(unsigned char *\fP\fImsg\fP\fB, unsigned char *\fP\fIeomorig\fP\fB,\fP
+.RS
+\fBunsigned char *\fP\fIcomp_dn\fP\fB, char *\fP\fIexp_dn\fP\fB,\fP
+\fBint \fP\fIlength\fP\fB);\fP
+.RE
+.fi
+.sp
+Linken Sie mit der Option \fI\-lresolv\fP.
+.SH BESCHREIBUNG
+Diese Funktionen machen Anfragen an Internet Domain Nameserver und
+interpretieren die Rückmeldungen.
+.PP
+The \fBres_init\fP()  function reads the configuration files (see
+resolv.conf(5)) to get the default domain name, search order and name server
+address(es).  If no server is given, the local host is tried.  If no domain
+is given, that associated with the local host is used.  It can be overridden
+with the environment variable \fBLOCALDOMAIN\fP.  \fBres_init\fP()  is normally
+executed by the first call to one of the other functions.
+.PP
+The \fBres_query\fP()  function queries the name server for the fully qualified
+domain name \fIname\fP of specified \fItype\fP and \fIclass\fP.  The reply is left in
+the buffer \fIanswer\fP of length \fIanslen\fP supplied by the caller.
+.PP
+Die Funktion \fBres_search\fP() stellt eine Anfrage und wartet auf die Antwort
+wie \fBres_query\fP(), implementiert jedoch zusätzlich die Vorgabe\- und
+Such\-Regeln, die durch \fBRES_DEFNAMES\fP und \fBRES_DNSRCH\fP gesteuert werden
+(siehe Beschreibung von \fI_res\fP\-Optionen unten).
+.PP
+Die Funktion \fBres_querydomain\fP() macht eine Anfrage über \fBres_query\fP() auf
+die Verkettung von \fIname\fP und \fIdomain\fP.
+.PP
+Die folgenden Funktionen sind Routinen tieferer Ebene, die von
+\fBres_query\fP() benutzt werden.
+.PP
+Die Funktion \fBres_mkquery\fP() konstruiert eine Anfragenachricht für den
+Domainnamen \fIdname\fP in \fIbuf\fP der Länge \fIbuflen\fP. Der Anfragetyp \fIop\fP ist
+gewöhnlich \fBQUERY\fP, kann aber jeder der in \fI<arpa/nameser.h>\fP
+definierten Typen sein. \fInewrr\fP ist momentan unbenutzt.
+.PP
+Die Funktion \fBres_send\fP() sendet eine vorformatierte Anfrage, die in \fImsg\fP
+gegeben ist und die Länge \fImsglen\fP hat und gibt die Antwort in \fIanswer\fP
+zurück, die die Länge \fIanslen\fP hat. Sie ruft \fBres_init\fP() auf, falls sie
+noch nicht aufgerufen wurde.
+.PP
+The \fBdn_comp\fP()  function compresses the domain name \fIexp_dn\fP and stores
+it in the buffer \fIcomp_dn\fP of length \fIlength\fP.  The compression uses an
+array of pointers \fIdnptrs\fP to previously compressed names in the current
+message.  The first pointer points to the beginning of the message and the
+list ends with NULL.  The limit of the array is specified by \fIlastdnptr\fP.
+If \fIdnptr\fP is NULL, domain names are not compressed.  If \fIlastdnptr\fP is
+NULL, the list of labels is not updated.
+.PP
+Die Funktion \fBdn_expand\fP() expandiert den komprimierten Domainnamen
+\fIcomp_dn\fP zu einem vollen Domainnamen, welcher in dem Puffer \fIexp_dn\fP der
+Größe \fIlength\fP platziert ist. Der komprimierte Name ist in einer Anfrage\-
+oder Antwortnachricht enthalten und \fImsg\fP zeigt auf den Anfang der
+Nachricht.
+.PP
+The resolver routines use global configuration and state information
+contained in the structure \fI_res\fP, which is defined in
+\fI<resolv.h>\fP.  The only field that is normally manipulated by the
+user is \fI_res.options\fP.  This field can contain the bitwise "OR" of the
+following options:
+.TP 
+\fBRES_INIT\fP
+Wahr, falls \fBres_init\fP() aufgerufen wurde.
+.TP 
+\fBRES_DEBUG\fP
+Drucke Debug\-Nachrichten.
+.TP 
+\fBRES_AAONLY\fP
+Akzeptiere nur autoritative Antworten. \fBres_send\fP() fährt fort, bis es eine
+autoritative Antwort findet oder gibt einen Fehler zurück. [Noch nicht
+implementiert.]
+.TP 
+\fBRES_USEVC\fP
+TCP\-Verbindungen statt UDP\-Datagramme für Anfragen benutzen.
+.TP 
+\fBRES_PRIMARY\fP
+Nur primäre Domainnameserver abfragen.
+.TP 
+\fBRES_IGNTC\fP
+Ignore truncation errors.  Don't retry with TCP.  [Not currently
+implemented].
+.TP 
+\fBRES_RECURSE\fP
+Setze das Rekursionswunsch\-Bit in Anfragen. Rekursion wird von dem
+Domainnameserver ausgeführt, nicht von \fBres_send\fP(). [Standardmäßig
+eingeschaltet]
+.TP 
+\fBRES_DEFNAMES\fP
+Falls gesetzt fügt \fBres_search\fP() den Vorgabedomainnamen an
+Einzelkomponentennamen an, d.h. an solchen, die keinen Punkt
+enthalten. [Standardmäßig eingeschaltet]
+.TP 
+\fBRES_STAYOPEN\fP
+Used with \fBRES_USEVC\fP to keep the TCP connection open between queries.
+.TP 
+\fBRES_DNSRCH\fP
+If set, \fBres_search\fP()  will search for hostnames in the current domain and
+in parent domains.  This option is used by \fBgethostbyname\fP(3).  [Enabled by
+default].
+.PP
+This list is not complete. You can find some other flags described in
+\fBresolv.conf\fP(5).
+.SH RÜCKGABEWERT
+Die Funktion \fBres_init\fP() gibt 0 bei Erfolg zurück oder \-1, falls ein
+Fehler auftritt.
+.PP
+Die Funktionen \fBres_query\fP(), \fBres_search\fP(), \fBres_querydomain\fP(),
+\fBres_mkquery\fP() und \fBres_send\fP() geben die Länge der Antwort zurück oder
+\-1, falls ein Fehler auftritt.
+.PP
+Die Funktionen \fBdn_comp\fP() und \fBdn_expand\fP() geben die Länge des
+komprimierten Namens zurück oder \-1, falls ein Fehler auftritt.
+.SH DATEIEN
+.nf
+/etc/resolv.conf          Resolver\-Konfigurationsdatei
+/etc/host.conf            Resolver\-Konfigurationsdatei
+.fi
+.SH "KONFORM ZU"
+4.3BSD.
+.SH "SIEHE AUCH"
+\fBgethostbyname\fP(3), \fBresolv.conf\fP(5), \fBresolver\fP(5), \fBhostname\fP(7),
+\fBnamed\fP(8)
+.SH KOLOPHON
+Diese Seite ist Teil der Veröffentlichung 3.40 des Projekts
+Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
+Fehler gemeldet werden können, finden sich unter
+http://www.kernel.org/doc/man\-pages/.
+
+.SH ÜBERSETZUNG
+Die deutsche Übersetzung dieser Handbuchseite wurde von
+
+erstellt.
+
+Diese Übersetzung ist Freie Dokumentation; lesen Sie die
+GNU General Public License Version 3 oder neuer bezüglich der
+Copyright-Bedingungen. Es wird KEINE HAFTUNG übernommen.
+
+Wenn Sie Fehler in der Übersetzung dieser Handbuchseite finden,
+schicken Sie bitte eine E-Mail an <debian-l10n-german@lists.debian.org>.
