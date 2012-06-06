@@ -31,7 +31,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MALLOC 3 "8. September 2011" GNU Linux\-Programmierhandbuch
+.TH MALLOC 3 "18. April 2012" GNU Linux\-Programmierhandbuch
 .SH BEZEICHNUNG
 malloc, free, calloc, realloc \- dynamischen Speicher belegen und freigeben
 .SH ÜBERSICHT
@@ -103,7 +103,6 @@ beendet. Für weitere Informationen siehe die Beschreibung von
 \fI/proc/sys/vm/overcommit_memory\fP und \fI/proc/sys/vm/oom_adj\fP in \fBproc\fP(5)
 sowie die Kernel\-Quelldatei \fIDocumentation/vm/overcommit\-accounting\fP.
 
-.\" FIXME . there is no mallopt(3) man page yet.
 Normalerweise stellt \fBmalloc\fP() Speicher auf dem Heap bereit und passt die
 je nach Bedarf die Größe des Heaps nach Bedarf mittels \fBsbrk\fP(2) an. Bei
 der Zuweisung von Speicherblöcken größer als \fBMMAP_THRESHOLD\fP Bytes,
@@ -112,6 +111,16 @@ private anonyme Zuordnung mithilfe von \fBmmap\fP(2). \fBMMAP_THRESHOLD\fP ist
 standardmäßig 128 kB, kann aber mittels \fBmallopt\fP(3). Reservierungen unter
 Verwendung von \fBmmap\fP(2) sind von der Ressourcenbeschränkung \fBRLIMIT_DATA\fP
 (siehe \fBgetrlimit\fP(2)) nicht betroffen.
+
+To avoid corruption in multithreaded applications, mutexes are used
+internally to protect the memory\-management data structures employed by
+these functions.  In a multithreaded application in which threads
+simultaneously allocate and free memory, there could be contention for these
+mutexes.  To scalably handle memory allocation in multithreaded
+applications, glibc creates additional \fImemory allocation arenas\fP if mutex
+contention is detected.  Each arena is a large region of memory that is
+internally allocated by the system (using \fBbrk\fP(2)  or \fBmmap\fP(2)), and
+managed with its own mutexes.
 
 Der UNIX\-98\-Standard fordert von \fBmalloc\fP(), \fBcalloc\fP() und \fBrealloc\fP()
 im Fehlerfall \fIerrno\fP auf \fBENOMEM\fP zu setzen. Glibc geht davon aus, dass
@@ -125,28 +134,28 @@ nahezu immer einen Bezug zu einem beschädigten Heap, wie z.B. eine Nutzung
 von mehr als dem zugeordneten Bereich (overflowing) oder die zweimalige
 Freigabe eines Zeigers.
 .PP
-Neuere Versionen von Linux libc (nach 5.4.23) und Glibc (2.x) enthalten eine
-Implementierung von \fBmalloc\fP(), die über Umgebungsvariablen abstimmbar
-ist. Wenn \fBMALLOC_CHECK_\fP gesetzt ist, wird eine spezielle (weniger
-effiziente) Implementierung verwendet. Diese ist als tolerant gegen einfache
-Fehler wie beispielsweise doppelte Anrufe von \fBfree\fP() mit dem gleichen
-Argument oder Überläufe eines einzelnen Bytes (off\-by\-one\-Fehler)
-konzipiert. Es ist jedoch kein Schutz gegen alle solche Fehler möglich und
-daher können Speicherlecks auftreten. Wenn \fBMALLOC_CHECK_\fP auf 0 gesetzt
-ist, wird jede erkannte Schädigung des Heaps stillschweigend ignoriert; für
-den Wert 1 wird ein diagnostische Meldung wird auf \fIstderr\fP gedruckt; 2
-bewirkt den sofortigen Aufruf von \fBabort\fP(3); 3 vereint 1 und 2: Meldung
-auf \fIstderr\fP und Programmabbruch. Ein von 0 verschiedener Wert für
-\fBMALLOC_CHECK_\fP kann nützlich sein, da sonst ein Absturz viel später
-geschehen kann und die wahre Ursache für das Problem dann sehr schwer
-aufzuspüren ist.
+Recent versions of Linux libc (later than 5.4.23) and glibc (2.x)  include a
+\fBmalloc\fP()  implementation which is tunable via environment variables.  For
+details, see \fBmallopt\fP(3).
 .SH "SIEHE AUCH"
-\fBbrk\fP(2), \fBmallopt\fP(3), \fBmmap\fP(2), \fBalloca\fP(3), \fBposix_memalign\fP(3)
+.\" http://g.oswego.edu/dl/html/malloc.html
+.\" A Memory Allocator - by Doug Lea
+.\"
+.\" http://www.bozemanpass.com/info/linux/malloc/Linux_Heap_Contention.html
+.\" Linux Heap, Contention in free() - David Boreham
+.\"
+.\" http://www.citi.umich.edu/projects/linux-scalability/reports/malloc.html
+.\" malloc() Performance in a Multithreaded Linux Environment -
+.\"     Check Lever, David Boreham
+.\"
+\fBbrk\fP(2), \fBmmap\fP(2), \fBalloca\fP(3), \fBmalloc_get_state\fP(3),
+\fBmalloc_trim\fP(3), \fBmalloc_usable_size\fP(3), \fBmallopt\fP(3), \fBmcheck\fP(3),
+\fBmtrace\fP(3), \fBposix_memalign\fP(3)
 .SH KOLOPHON
-Diese Seite ist Teil der Veröffentlichung 3.35 des Projekts
+Diese Seite ist Teil der Veröffentlichung 3.40 des Projekts
 Linux\-\fIman\-pages\fP. Eine Beschreibung des Projekts und Informationen, wie
 Fehler gemeldet werden können, finden sich unter
-http://man7.org/linux/man\-pages/.
+http://www.kernel.org/doc/man\-pages/.
 
 .SH ÜBERSETZUNG
 Die deutsche Übersetzung dieser Handbuchseite wurde von
