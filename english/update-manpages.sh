@@ -14,31 +14,26 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Usage: Put the latest .deb files of the packages into their
-# corresponding directory and run this script.
+
+rm -rf man1 man2 man3 man4 man5 man6 man7 man8 links
+mkdir man1 man2 man3 man4 man5 man6 man7 man8 links
 
 while read package; do
-	echo "Updating package $package"
-	latest_deb=`ls $package/$package*.deb 2>/dev/null | tail -n1`
+	echo "Updating package '$package'"
+	latest_deb=`ls downloads/$package\_*.deb 2>/dev/null | tail -n1`
 	if [ -z $latest_deb ]; then
 		echo "Warning: Could not find .deb for package '$package'"
 	else
-		ar x $latest_deb data.tar.gz data.tar.bz2 2>/dev/null
-		mkdir tmp
-		if [ -e "data.tar.gz" ]; then
-			tar xzf data.tar.gz --directory=tmp/
-		else
-			tar xjf data.tar.bz2 --directory=tmp/
-		fi
-		rm -rf $package/man?
-		git rm --quiet -r $package
-		for mandir in tmp/usr/share/man/man?/; do
-			section=`echo $mandir | cut -d/ -f5`
+		data_tar=`ar t $latest_deb | grep data.tar`
+		ar x $latest_deb $data_tar
+		mkdir -p tmp/$package
+		tar xaf $data_tar --directory=tmp/$package
+		for mandir in tmp/$package/usr/share/man/man?/; do
+			section=`echo $mandir | cut -d/ -f6`
 			# Only copy directories with files
 			files=`ls $mandir`
 			if [ -n "$files" ]; then
-				mkdir $package/$section
+				mkdir -p tmp/$package/$section
 				# Remove manpages which are links
 				for manpage in $mandir/*; do
 					existing=`readlink $manpage`
@@ -48,29 +43,25 @@ while read package; do
 						rm $manpage
 					fi
 				done
-				cp $mandir/* $package/$section
-				gzip -d $package/$section/*
+				cp $mandir/* tmp/$package/$section
+				gzip -d tmp/$package/$section/*
 				# Remove manpages which contain only .so links
-				for manpage in $package/$section/*; do
+				for manpage in tmp/$package/$section/*; do
 					existing=`grep "^\.so" $manpage | sed -e "s/^\.so //"`
 					if [ -n "$existing" ]; then
 						echo $existing.gz $section/`basename $manpage`.gz >> tmp.links
 						rm $manpage
 					fi
 				done
+				# Copy remaining manpages
+				cp tmp/$package/$section/* $section
 			fi
 		done
 		if [ -e tmp.links ]; then
-			LC_ALL=C sort tmp.links > $package/$package.links
-		else
-			rm -f $package/$package.links
+			LC_ALL=C sort tmp.links > links/$package
 		fi
-		rm -rf tmp/ data.tar.* tmp.links
-		git add $package
-		changes=`git status | grep "Changes to be committed:"`
-		if [ -n "$changes" ]; then
-			version=`basename "$latest_deb" | cut -d_ -f2`
-			git commit -m "Update $package $version manpages"
-		fi
+		rm -rf $data_tar tmp.links
 	fi
 done < packages.list
+
+rm -rf tmp

@@ -1,3 +1,3 @@
-SUBDIRS = po
+SUBDIRS = english po
 
-EXTRA_DIST = create-links.pl remove-links.pl
+EXTRA_DIST = COPYRIGHT lizenz.add create-links.pl remove-links.pl
