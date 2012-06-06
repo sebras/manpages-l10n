@@ -14,3 +14,18 @@ MOSTLYCLEANFILES = $(addendums) $(manpages)
 	$(top_srcdir)/po/generate-manpage.sh $(top_srcdir) $@
 
 all: $(manpages)
+
+install-data-hook: $(manpages)
+	$(mkinstalldirs) $(DESTDIR)$(mandir)/de/man$(MANPAGE_SECTION)
+	for manpage in `ls *.$(MANPAGE_SECTION)`; do \
+		$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/man$(MANPAGE_SECTION) ;\
+		gzip --best $(DESTDIR)$(mandir)/de/man$(MANPAGE_SECTION)/$$manpage ;\
+	done
+
+uninstall-hook: $(manpages)
+	for linkfile in `ls $(top_srcdir)/english/links/*`; do \
+		perl $(top_srcdir)/remove-links.pl $(DESTDIR)$(mandir)/de $$linkfile; \
+	done
+	for manpage in `ls *.$(MANPAGE_SECTION)`; do \
+		rm -f $(DESTDIR)$(mandir)/de/man$(MANPAGE_SECTION)/$$manpage.gz ;\
+	done
