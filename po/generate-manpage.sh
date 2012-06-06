@@ -18,32 +18,18 @@
 top_srcdir="$1"
 manpage="$2"
 
-# Try to locate original manpage
-if [ -d "$top_srcdir/english/" ]; then
-	original=`find "$top_srcdir/english/" -type f -name "$manpage"`
-fi
-if [ ! -f "$original" ]; then
-	original_gz=`find /usr/share/man/man? -type f -name "$manpage.gz"`
-	if [ ! -f "$original_gz" ]; then
-		original_gz=`find /usr/local/share/man/man? -type f -name "$manpage.gz"`
-	fi
-fi
-# Uncompress manpage
-if [ -f "$original_gz" ]; then
-	original=`mktemp`
-	gzip --stdout -d "$original_gz" > "$original"
-	remove_original="yes"
-fi
-
-# Cannot generate manpage if the original could not be found
-if [ ! -f "$original" ]; then
-	echo "The original manpage for $manpage could not be found." >&2
-	exit
-fi
-
 translation="$manpage".po
 addendum="$manpage".add
 section=`basename "$manpage" | sed -e "s/.\+\.//"`
+
+# Try to locate original manpage
+original=$top_srcdir/english/man$section/$manpage
+# Cannot generate manpage if the original could not be found
+if [ ! -f "$original" ]; then
+	echo "The original manpage for $manpage could not be found." >&2
+	echo "Expected at: $original" >&2
+	exit
+fi
 
 # Determine if an encoding is specified,
 # otherwise fall back to ISO-8859-1
@@ -79,9 +65,4 @@ if [ -f "$manpage" ]; then
 	cat "$tmp_encoding" "$manpage" > "$tmp_manpage"
 	mv "$tmp_manpage" "$manpage"
 	rm "$tmp_encoding"
-fi
-
-# Clean up if the original manpage has been uncompressed
-if [ "X$remove_original" = "Xyes" ]; then
-	rm "$original"
 fi

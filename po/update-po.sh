@@ -23,14 +23,14 @@ fi
 
 # Try to find the original manpage
 manpage=`basename "$1" .po`
-original=`find ../english/ -type f -name "$manpage"`
+name=`basename "$manpage" | sed -e "s/\.[0-9]//"`
+section=`basename "$manpage" | sed -e "s/.\+\.//"`
+
+original="../english/man$section/$manpage"
 if [ -z "$original" ]; then
-	echo "The original manpage for $1 could not be found."
+	echo "The original manpage for $1 could not be found." >&2
 	exit 1
 fi
-
-name=`basename "$original" | sed -e "s/\.[0-9]//"`
-section=`basename "$original" | sed -e "s/.\+\.//"`
 
 # If the .po file has just been created, we need to
 # insert a better header than the default from po4a.
