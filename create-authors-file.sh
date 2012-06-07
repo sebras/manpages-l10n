@@ -15,25 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Generate COPYRIGHT file
-cat > COPYRIGHT <<END_OF_COPYRIGHT
-Copyright information:
-
-    Please note that these man pages are distributed under a variety of
-    copyright licenses.  Although these licenses permit free distribution
-    of the nroff sources contained in this package, commercial distribution
-    may impose other requirements (e.g., acknowledgement of copyright or
-    inclusion of the raw nroff sources with the commercial distribution).
-    If you distribute these man pages commercially, it is your
-    responsibility to figure out your obligations.  (For many man pages,
-    these obligations require you to distribute nroff sources with any
-    pre-formatted man pages that you provide.)  Each file that contains
-    nroff source for a man page also contains the author(s) name, email
-    address, and copyright notice.
-
-
-Translators:
-END_OF_COPYRIGHT
+# Generate AUTHORS file
+echo "The following people have contributed to the german translation" > AUTHORS
+echo "of Linux manpages. The list is sorted alphabetically." >> AUTHORS
+echo >> AUTHORS
 
 # Extract all translators from the copyright headers
 for translation in `find po/man? -name "*po" | sort`; do
@@ -52,5 +37,5 @@ for translation in `find po/man? -name "*po" | sort`; do
 done
 # Sort, unique and remove blank lines from file
 sort translators.list | uniq | sed -e "/^$/d" > tmp.list
-perl -ne 'print "\t"; print;' tmp.list >> COPYRIGHT
+cat tmp.list >> AUTHORS
 rm tmp.list translators.list
