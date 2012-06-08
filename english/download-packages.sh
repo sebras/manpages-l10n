@@ -29,5 +29,7 @@ while read package; do
 	else
 		echo "downloading"
 		wget --quiet --directory-prefix=downloads "$url"
+		# Remove older Debian packages
+		ls downloads/$package\_* | head --lines=-1 | xargs rm
 	fi
 done < packages.list
