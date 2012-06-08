@@ -30,6 +30,6 @@ while read package; do
 		echo "downloading"
 		wget --quiet --directory-prefix=downloads "$url"
 		# Remove older Debian packages
-		ls downloads/$package\_* | head --lines=-1 | xargs rm
+		ls downloads/$package\_* | head --lines=-1 | xargs --no-run-if-empty rm
 	fi
 done < packages.list
