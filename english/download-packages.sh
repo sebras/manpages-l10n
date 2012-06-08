@@ -15,20 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+mkdir -p downloads
+
 while read package; do
-	if [ ! -d "$package" ]; then
-		mkdir "$package"
-	fi
 	echo -n "Checking package $package ... "
 	# Download HTML page and discover the correct link
 	url=`wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,"`
 	deb_version=`basename $url`
-	if [ -f "$package/$deb_version" ]; then
+	if [ -f "downloads/$deb_version" ]; then
 		echo "current"
 	else
 		echo "downloading"
-		wget --quiet --directory-prefix="$package" "$url"
+		wget --quiet --directory-prefix=downloads "$url"
+		# Remove older Debian packages
+		ls downloads/$package\_* | head --lines=-1 | xargs --no-run-if-empty rm
 	fi
 done < packages.list
