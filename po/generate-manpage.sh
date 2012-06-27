@@ -24,10 +24,23 @@ section=`basename "$manpage" | sed -e "s/.\+\.//"`
 
 # Try to locate original manpage
 original=$top_srcdir/english/man$section/$manpage
+# If the original is not there, try using the system wide installation
+if [ ! -f "$original" ]; then
+	original=/usr/share/man/man$section/$manpage
+fi
+# Try a gzip'ed version
+if [ ! -f "$original" ]; then
+	original=/usr/share/man/man$section/$manpage.gz
+	if [ -f "$original" ]; then
+		# The manpage exists, but needs to be decompressed
+		uncompressed_manpage=`mktemp`
+		gzip -d -c "$original" > "$uncompressed_manpage"
+		original="$uncompressed_manpage"
+	fi
+fi
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$original" ]; then
 	echo "The original manpage for $manpage could not be found." >&2
-	echo "Expected at: $original" >&2
 	exit
 fi
 
@@ -65,4 +78,9 @@ if [ -f "$manpage" ]; then
 	cat "$tmp_encoding" "$manpage" > "$tmp_manpage"
 	mv "$tmp_manpage" "$manpage"
 	rm "$tmp_encoding"
+fi
+
+# Clean up temporary file, if necessary
+if [ -f "$uncompressed_manpage" ]; then
+	rm -f "$uncompressed_manpage"
 fi
