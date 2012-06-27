@@ -18,5 +18,7 @@
 EXTRA_DIST = packages.list download-packages.sh update-manpages.sh
 
 all:
-	./download-packages.sh
-	./update-manpages.sh
+	if [ "x$(ac_enable_download)" = "xyes" ]; then \
+		./download-packages.sh ; \
+		./update-manpages.sh ; \
+	fi

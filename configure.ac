@@ -19,6 +19,16 @@ AC_INIT(manpages-de, [1.0])
 
 AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
 
+# Support the downloading of manpages from Debian
+AC_ARG_ENABLE(
+    [download],
+    [AS_HELP_STRING([--enable-download],
+        [download manpages from Debian instead of using manpages installed on the system (default is no)])],
+    [ac_enable_download=yes],
+    [ac_enable_download=no]
+)
+AC_SUBST([ac_enable_download])
+
 AC_CONFIG_FILES([
     Makefile
     english/Makefile
