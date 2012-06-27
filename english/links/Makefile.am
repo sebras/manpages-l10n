@@ -15,12 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = links
-
-EXTRA_DIST = packages.list download-packages.sh update-manpages.sh
-
-all:
-	if [ "x$(ac_enable_download)" = "xyes" ]; then \
-		./download-packages.sh ; \
-		./update-manpages.sh ; \
-	fi
+EXTRA_DIST = \
+	coreutils \
+	fdutils \
+	findutils \
+	grep \
+	groff-base \
+	gzip \
+	hostname \
+	less \
+	manpages \
+	manpages-dev \
+	mount \
+	nfs-common \
+	procps \
+	sysvinit \
+	util-linux \
+	wodim

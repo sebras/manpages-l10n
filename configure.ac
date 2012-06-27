@@ -32,6 +32,7 @@ AC_SUBST([ac_enable_download])
 AC_CONFIG_FILES([
     Makefile
     english/Makefile
+    english/links/Makefile
     po/Makefile
     po/man1/Makefile
     po/man2/Makefile
