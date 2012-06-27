@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-rm -rf man1 man2 man3 man4 man5 man6 man7 man8 links
-mkdir man1 man2 man3 man4 man5 man6 man7 man8 links
+rm -rf man1 man2 man3 man4 man5 man6 man7 man8 links/*links
+mkdir man1 man2 man3 man4 man5 man6 man7 man8
 
 while read package; do
 	echo "Updating package '$package'"
@@ -58,7 +58,7 @@ while read package; do
 			fi
 		done
 		if [ -e tmp.links ]; then
-			LC_ALL=C sort tmp.links > links/$package
+			LC_ALL=C sort tmp.links > links/$package.links
 		fi
 		rm -rf $data_tar tmp.links
 	fi

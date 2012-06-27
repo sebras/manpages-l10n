@@ -16,19 +16,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 EXTRA_DIST = \
-	coreutils \
-	fdutils \
-	findutils \
-	grep \
-	groff-base \
-	gzip \
-	hostname \
-	less \
-	manpages \
-	manpages-dev \
-	mount \
-	nfs-common \
-	procps \
-	sysvinit \
-	util-linux \
-	wodim
+	coreutils.links \
+	fdutils.links \
+	findutils.links \
+	grep.links \
+	groff-base.links \
+	gzip.links \
+	hostname.links \
+	less.links \
+	manpages.links \
+	manpages-dev.links \
+	mount.links \
+	nfs-common.links \
+	procps.links \
+	sysvinit.links \
+	util-linux.links \
+	wodim.links
