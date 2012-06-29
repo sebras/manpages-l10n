@@ -15,5 +15,8 @@ for i in `find man? -name "*.po" | sort`; do
 	cat tmp-result.po tmp-header.po tmp-tail.po > "$i"
 	# Now remove location information, which is not needed in our case
 	sed -i -e "/^#: /d" "$i"
+	# Reformat manpage to wrap lines
+	msgcat "$i" > tmp-result.po
+	mv tmp-result.po "$i"
 done
-rm tmp-result.po tmp-header.po tmp-tail.po
+rm -f tmp-result.po tmp-header.po tmp-tail.po
