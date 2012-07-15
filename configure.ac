@@ -19,6 +19,12 @@ AC_INIT(manpages-de, [1.1])
 
 AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
 
+# Check that po4a is available on the system
+AC_PATH_PROG([po4a], [po4a], [no])
+if test "x$po4a" = "xno"; then
+    AC_MSG_ERROR([You need to install po4a])
+fi
+
 # Support the downloading of manpages from Debian
 AC_ARG_ENABLE(
     [download],
