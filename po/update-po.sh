@@ -81,6 +81,11 @@ result=`mktemp`
 msgattrib --no-obsolete "$1" > "$tmppo"
 # Prefer the translations from the compendium
 msgmerge --compendium "$custom" --no-fuzzy-matching /dev/null "$tmppo" > "$result"
+if [ $? -ne 0 ]; then
+	echo "Fehler bei der Ausführung von msgmerge."
+	rm -f "$header" "$tmppo" "$custom"
+	exit 1
+fi
 mv "$result" "$1"
 
 # Cleanup
