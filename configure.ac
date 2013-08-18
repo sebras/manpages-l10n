@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(manpages-de, [1.2])
+AC_INIT(manpages-de, [1.3])
 
 AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
 
