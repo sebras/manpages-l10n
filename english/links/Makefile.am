@@ -31,4 +31,5 @@ EXTRA_DIST = \
 	procps.links \
 	sysvinit.links \
 	util-linux.links \
+	vorbis-tools.links \
 	wodim.links
