@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 EXTRA_DIST = \
+	bsdmainutils.links \
 	coreutils.links \
 	fdutils.links \
 	findutils.links \
