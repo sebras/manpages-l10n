@@ -30,6 +30,6 @@ EXTRA_DIST = \
 	mount.links \
 	nfs-common.links \
 	procps.links \
-	sysvinit.links \
+	sysvinit-core.links \
 	util-linux.links \
 	wodim.links
