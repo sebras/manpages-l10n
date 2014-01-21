@@ -27,7 +27,7 @@ name=`basename "$manpage" | sed -e "s/\.[0-9]//"`
 section=`basename "$manpage" | sed -e "s/.\+\.//"`
 
 original="../english/man$section/$manpage"
-if [ -z "$original" ]; then
+if [ ! -f "$original" ]; then
 	echo "The original manpage for $1 could not be found." >&2
 	exit 1
 fi
