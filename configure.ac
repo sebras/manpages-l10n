@@ -17,7 +17,7 @@
 
 AC_INIT(manpages-de, [1.4])
 
-AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([foreign dist-xz no-dist-gzip])
 
 # Check that po4a is available on the system
 AC_PATH_PROG([po4a], [po4a], [no])
