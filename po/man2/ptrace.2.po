@@ -4,6 +4,7 @@
 # Patrick Rother <krd@gulu.net>
 # Chris Leick <c.leick@vollbio.de>, 2010-2014.
 # Helge Kreutzmann <debian@helgefjell.de>, 2012.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de 3.51\n"
@@ -144,10 +145,10 @@ msgid ""
 "causes the tracee to continue, optionally ignoring the delivered signal (or "
 "even delivering a different signal instead)."
 msgstr ""
-"Während der verfolgte Prozess verfolgt wird, wird er jedesmal stoppen, wenn "
-"ein Signal gesandt wird, sogar wenn das Signal ignoriert wird. (Eine "
-"Ausnahme ist B<SIGKILL>, das seine normale Wirkung erzielt.) Der Verfolger "
-"wird bei seinem nächsten Aufruf von B<waitpid>(2) (oder den zugehörigen "
+"Während der Prozess verfolgt wird, wird er jedesmal stoppen, wenn ein Signal "
+"gesandt wird, sogar wenn das Signal ignoriert wird. (Eine Ausnahme ist "
+"B<SIGKILL>, das seine normale Wirkung erzielt.) Der Verfolger wird bei seinem "
+"nächsten Aufruf von B<waitpid>(2) (oder den zugehörigen "
 "»wait«-Systemaufrufen) benachrichtigt; dies wird einen I<Status>wert "
 "zurückgeben, der Informationen enthält, die den Grund angeben, weshalb der "
 "verfolgte Prozess stoppte. Während der verfolgte Prozess angehalten ist, "
@@ -267,7 +268,7 @@ msgid ""
 msgstr ""
 "kopiert das »word« I<Daten> an die Stelle I<Adresse> im Speicher des "
 "verfolgenden Prozesses. Wie bei B<PTRACE_PEEKTEXT> und B<PTRACE_PEEKDATA> "
-"sind die beiden Abfragen derzeit gleichwertig."
+"sind die beiden Anfragen derzeit gleichwertig."
 
 #. type: TP
 #, no-wrap
@@ -431,6 +432,16 @@ msgid ""
 "I<si_code> field includes information (B<__SI_CHLD>, B<__SI_FAULT>, etc.) "
 "that are not otherwise exposed to user space."
 msgstr ""
+"fragt I<siginfo_t>-Strukturen ab, ohne Signale aus einer Warteschlange zu "
+"entfernen. I<Adresse> zeigt auf eine I<ptrace_peeksiginfo_args>-Struktur, die "
+"die Ordnungsposition angibt, von der das Kopieren der Signale starten soll "
+"sowie die Anzahl zu kopierender Signale. I<siginfo_t>-Strukturen werden in "
+"den Puffer kopiert, auf den I<Daten> verweist. Der Rückgabewert enthält die "
+"Anzahl der kopierten Signale (null zeigt an, dass es an der angegebenen "
+"Ordnungsposition kein entsprechendes Signal gibt). Innerhalb der "
+"zurückgegebenen I<siginfo>-Strukturen enthält das Feld I<si_code> "
+"Informationen (B<__SI_CHLD>, B<__SI_FAULT>, etc.), die ansonsten nicht an "
+"den Userspace offengelegt werden."
 
 #. type: Plain text
 #, no-wrap
@@ -442,6 +453,12 @@ msgid ""
 "    s32 nr;     /* Number of signals to copy */\n"
 "};\n"
 msgstr ""
+"struct ptrace_peeksiginfo_args {\n"
+"    u64 off;    /* Ordnungsposition in der Warteschlange, an der\n"
+"                   mit dem Kopieren der Signale begonnen wird */\n"
+"    u32 flags;  /* PTRACE_PEEKSIGINFO_SHARED oder 0 */\n"
+"    s32 nr;     /* Anzahl zu kopierender Signale */\n"
+"};\n"
 
 #. type: Plain text
 msgid ""
@@ -449,6 +466,10 @@ msgid ""
 "signals from the process-wide signal queue.  If this flag is not set, "
 "signals are read from the per-thread queue of the specified thread."
 msgstr ""
+"Derzeit gibt es nur einen Schalter, B<PTRACE_PEEKSIGINFO_SHARED>, um Signale "
+"aus der prozessweiten Signalwarteschlange auszugeben. Falls dieser Schalter "
+"nicht gesetzt ist, werden Signale von der Tread-eigenen Warteschlange des "
+"angegebenen Threads gelesen."
 
 #. type: TP
 #, no-wrap
@@ -463,6 +484,11 @@ msgid ""
 "I<sigset_t>.  The I<addr> argument contains the size of the buffer pointed "
 "to by I<data> (i.e., I<sizeof(sigset_t)>)."
 msgstr ""
+"Platzieren Sie eine Kopie der Maske blockierter Signale (siehe "
+"B<sigprocmask>(2)) in den Puffer, auf den I<Daten> zeigt. Dies sollte ein "
+"Zeiger auf einen Puffer des Typs I<sigset_t> sein. Das Argument I<Adresse> "
+"enthält die Größe des Puffers, auf den I<Daten> zeigt (d.h. "
+"I<sizeof(sigset_t)>)."
 
 #. type: TP
 #, no-wrap
@@ -476,6 +502,11 @@ msgid ""
 "a buffer of type I<sigset_t>.  The I<addr> argument contains the size of the "
 "buffer pointed to by I<data> (i.e., I<sizeof(sigset_t)>)."
 msgstr ""
+"ändert die Maske blockierter Signale (siehe B<sigprocmask>(2)) auf den Wert, "
+"der im Puffer angegeben wird, auf den I<Daten> zeigt. Dies sollte ein Zeiger "
+"auf einen Puffer des Typs I<sigset_t> sein. Das Argument I<Adresse> "
+"enthält die Größe des Puffers, auf den I<Daten> zeigt (d.h. "
+"I<sizeof(sigset_t)>)."
 
 #. type: TP
 #, no-wrap
@@ -2449,11 +2480,11 @@ msgid ""
 "receiving several kinds of B<waitpid>(2)  notifications when the child "
 "process is traced by some other process."
 msgstr ""
-"Die Ptrace-API (miss)braucht die Standard-UNIX-Eltern-/Kindprozess-"
-"Signalgebung über B<waitpid>(2). Diese wird benutzt, um den echten "
-"Elternprozess zum Stopp des Empfangs mehrerer Arten von B<waitpid>(2)-"
-"Benachrichtigungen zu veranlassen, wenn der Kindprozess durch einen anderen "
-"Prozess verfolgt wird."
+"Die Ptrace-Programmierschnittstelle (miss)braucht die "
+"Standard-UNIX-Eltern-/Kindprozess-Signalgebung über B<waitpid>(2). Diese wird "
+"benutzt, um den echten Elternprozess zum Stopp des Empfangs mehrerer Arten "
+"von B<waitpid>(2)-Benachrichtigungen zu veranlassen, wenn der Kindprozess "
+"durch einen anderen Prozess verfolgt wird."
 
 #. type: Plain text
 msgid ""
@@ -2492,6 +2523,8 @@ msgid ""
 "On success, the B<PTRACE_PEEK*> requests return the requested data (but see "
 "NOTES), while other requests return zero."
 msgstr ""
+"Bei Erfolg geben die B<PTRACE_PEEK*>-Anfragen die angeforderten Daten zurück "
+"(aber siehe die ANMERKUNGEN), während andere Anfragen null zurückgeben."
 
 #. type: Plain text
 msgid ""
@@ -2562,7 +2595,7 @@ msgid ""
 "alignment violation, or an invalid signal was specified during a restart "
 "request."
 msgstr ""
-"I<Abfrage> ist ungültig, es wurde versucht, in einem ungültigen Bereich im "
+"I<Anfrage> ist ungültig, es wurde versucht, in einem ungültigen Bereich im "
 "Speicher des Verfolgers oder des verfolgten Prozesses zu lesen oder zu "
 "schreiben, es gab eine Verletzung der Ausrichtung an der »word«-Größe oder "
 "es wurde während des Neustarts der Abfrage ein ungültiges Signal angegeben."
@@ -2641,6 +2674,13 @@ msgid ""
 "DESCRIPTION above, with the result being returned via the function return "
 "value."
 msgstr ""
+"Auf der Systemaufrufebene haben die Anfragen B<PTRACE_PEEKTEXT>, "
+"B<PTRACE_PEEKDATA> und B<PTRACE_PEEKUSER> eine unterschiedliche "
+"Programmierschnittstelle: Sie speichern das Ergebnis an der durch den "
+"Parameter I<Daten> angegebenen Adresse und der Rückgabewert ist ein "
+"Fehlercode. Die Glibc-Wrapper-Funktion stellt die oben in BESCHREIBUNG "
+"angegebene Programmierschnittstelle bereit. Ihr Ergebnis wird über den "
+"Rückgabewert der Funktion zurückgegeben."
 
 #.  See commit 00cd5c37afd5f431ac186dd131705048c0a11fdb
 #. type: Plain text
