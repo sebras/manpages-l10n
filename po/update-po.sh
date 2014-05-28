@@ -73,7 +73,7 @@ po4a-updatepo -f man \
  --option untranslated="a.RE,\|" \
  --option unknown_macros=untranslated \
  --master "$original" -M "$coding" \
- --msgmerge-opt "--backup=none --no-location --compendium \"$custom\" --previous" \
+ --msgmerge-opt "--backup=none --no-location --compendium $custom --previous" \
  --po "$1"
 # Remove obsolete strings
 tmppo=`mktemp`
