@@ -66,13 +66,11 @@ cat >> "$output" <<END_COMPENDIUM
 msgid "UPCASE"
 msgstr "UPCASE"
 
-msgid "Report PROGRAM bugs to bug-coreutils@gnu.org"
-msgstr ""
-"Berichten Sie Fehler in PROGRAM (auf Englisch) an bug-coreutils@gnu.org"
-
 msgid ""
+"GNU coreutils online help: E<lt>http://www.gnu.org/software/coreutils/E<gt> "
 "Report PROGRAM translation bugs to E<lt>http://translationproject.org/team/E<gt>"
 msgstr ""
+"Onlinehilfe für GNU coreutils: E<lt>http://www.gnu.org/software/coreutils/E<gt> "
 "Berichten Sie Fehler in der Übersetzung von PROGRAM an "
 "E<lt>http://translationproject.org/team/de.htmlE<gt>"
 
