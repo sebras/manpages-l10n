@@ -28,13 +28,23 @@ original=$top_srcdir/english/man$section/$manpage
 if [ ! -f "$original" ]; then
 	original=/usr/share/man/man$section/$manpage
 fi
-# Try a gzip'ed version
+# Try a gzip compressed version
 if [ ! -f "$original" ]; then
 	original=/usr/share/man/man$section/$manpage.gz
 	if [ -f "$original" ]; then
 		# The manpage exists, but needs to be decompressed
 		uncompressed_manpage=`mktemp`
 		gzip -d -c "$original" > "$uncompressed_manpage"
+		original="$uncompressed_manpage"
+	fi
+fi
+# Try a xz compressed version
+if [ ! -f "$original" ]; then
+	original=/usr/share/man/man$section/$manpage.xz
+	if [ -f "$original" ]; then
+		# The manpage exists, but needs to be decompressed
+		uncompressed_manpage=`mktemp`
+		xz -d -c "$original" > "$uncompressed_manpage"
 		original="$uncompressed_manpage"
 	fi
 fi
