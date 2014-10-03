@@ -2,12 +2,12 @@
 # This file is distributed under the same license as the manpages-de package.
 # Copyright © of this file:
 # Aldo Valente <aldo@dagobar.rhein.de>
-# Chris Leick <c.leick@vollbio.de>, 2010, 2012.
+# Chris Leick <c.leick@vollbio.de>, 2010-2014.
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
 "POT-Creation-Date: 2014-08-22 17:06+0200\n"
-"PO-Revision-Date: 2014-09-30 10:19+0200\n"
+"PO-Revision-Date: 2014-10-02 18:09+0200\n"
 "Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -85,16 +85,12 @@ msgid "DESCRIPTION"
 msgstr "BESCHREIBUNG"
 
 #. type: Plain text
-#, fuzzy
-#| msgid ""
-#| "B<dup>()  uses the lowest-numbered unused descriptor for the new "
-#| "descriptor."
 msgid ""
 "The B<dup>()  system call creates a copy of the file descriptor I<oldfd>, "
 "using the lowest-numbered unused descriptor for the new descriptor."
 msgstr ""
-"B<dup>() benutzt den unbenutzten Deskriptor mit der niedrigsten Nummer für "
-"den neuen Deskriptor."
+"Der Systemaufruf B<dup>() erzeugt eine Kopie des Dateideskriptors I<oldfd> "
+"mit der niedrigsten unbenutzten Nummer für den neuen Deskriptor."
 
 #. type: Plain text
 msgid ""
@@ -133,6 +129,11 @@ msgid ""
 "number specified in I<newfd>.  If the descriptor I<newfd> was previously "
 "open, it is silently closed before being reused."
 msgstr ""
+"Der Systemaufruf B<dup2>() führt dieselben Aufgaben wie B<dup>() durch, "
+"verwendet jedoch statt des kleinsten nicht benutzten Dateideskriptors die in "
+"I<newfd> angegebene Zahl. Falls der Deskriptor I<newfd> vorher bereits "
+"geöffnet wurde, wird er stillschweigend geschlossen, bevor er erneut benutzt "
+"wird."
 
 #. type: Plain text
 msgid ""
@@ -144,6 +145,14 @@ msgid ""
 "handler that allocates a file descriptor, or because a parallel thread "
 "allocates a file descriptor."
 msgstr ""
+"Die Schritte zum Schließen und erneuten Verwenden des Dateideskriptors "
+"I<newfd> werden I<automatisch> durchgeführt. Dies ist wichtig, da der Versuch "
+"gleichwertige Funktionalität mittels B<close>(2) und B<dup>()zu "
+"implementieren, Gegenstand von Race Conditions sein könnte, bei denen "
+"I<newfd> zwischen zwei Schritten erneut benutzt wird. Ein derartiges erneutes "
+"Verwenden kann vorkommen, da das Hauptprogramm durch ein "
+"Signalverarbeitungsprogramm unterbrochen wird, der einen Dateideskriptor "
+"reserviert oder weil ein paralleler Thread einen Dateideskriptor reserviert."
 
 #. type: Plain text
 msgid "Note the following points:"
@@ -336,6 +345,13 @@ msgid ""
 "B<dup2>(), because of the race condition described above.  Instead, code "
 "something like the following could be used:"
 msgstr ""
+"Falls I<newfd> geöffnet war, sind alle Fehler verlorengegangen, die in dieser "
+"Zeit an B<close>(2) gemeldet worden wären. Falls dies von Bedeutung ist, ist "
+"die korrekte Herangehensweise, \\(emsofern das Programm nicht in einem "
+"einzigen Thread läuft und keine Dateideskriptoren in "
+"Signalverarbeitungsprogrammen reserviert\\(em, I<newfd>  vor dem Aufruf von "
+"B<dup2>() wegen der oben beschriebenen Race Conditions I<nicht> zu schließen. "
+"Stattdessen kann Code wie der folgende verwendet werden:"
 
 #. type: Plain text
 #, no-wrap
@@ -344,6 +360,9 @@ msgid ""
 "       be used to check for close() errors; an EBADF error\n"
 "       means that 'newfd' was not open. */\n"
 msgstr ""
+"    /* Erhält ein Duplikat von »newfd«, das nachfolgend benutzt\n"
+"       werden kann, um auf Fehler von close() zu prüfen. Ein\n"
+"       EBADF-Fehler bedeutet, dass »newfd« nicht geöffnet war. */\n"
 
 #. type: Plain text
 #, no-wrap
@@ -353,11 +372,15 @@ msgid ""
 "        /* Handle unexpected dup() error */\n"
 "    }\n"
 msgstr ""
+"    tmpfd = dup(newfd);\n"
+"    if (tmpfd == -1 && errno != EBADF) {\n"
+"        /* behandelt unerwartete dup()-Fehler */\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
 msgid "    /* Atomically duplicate 'oldfd' on 'newfd' */\n"
-msgstr ""
+msgstr "    /* »oldfd« atomar auf »newfd« duplizieren */\n"
 
 #. type: Plain text
 #, no-wrap
@@ -366,6 +389,9 @@ msgid ""
 "        /* Handle dup2() error */\n"
 "    }\n"
 msgstr ""
+"    if (dup2(oldfd, newfd) == -1) {\n"
+"        /* dup2()-Fehler behandeln */\n"
+"    }\n"
 
 #. type: Plain text
 #, no-wrap
@@ -373,6 +399,8 @@ msgid ""
 "    /* Now check for close() errors on the file originally\n"
 "       referred to by 'newfd' */\n"
 msgstr ""
+"    /* Nun wird auf close()-Fehler für die Datei, auf die sich\n"
+"       »newfd« ursprünglich bezog, geprüft */\n"
 
 #. type: Plain text
 #, no-wrap
@@ -383,6 +411,11 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    if (tmpfd != -1) {\n"
+"        if (close(tmpfd) == -1) {\n"
+"            /* close-Fehler behandeln */\n"
+"        }\n"
+"    }\n"
 
 #. type: SH
 #, no-wrap
