@@ -64,8 +64,9 @@ fi
 po4a-translate \
 	-f man \
 	--option groff_code=verbatim \
-	--option untranslated="a.RE,\|" \
 	--option generated \
+	--option untranslated="a.RE,\|" \
+	--option unknown_macros=untranslated \
 	-m "$original" \
 	-M "$coding" \
 	-p "$translation" \
