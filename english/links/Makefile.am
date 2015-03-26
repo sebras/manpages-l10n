@@ -17,6 +17,7 @@
 
 EXTRA_DIST = \
 	bsdmainutils.links \
+	bzip2.links \
 	coreutils.links \
 	fdutils.links \
 	findutils.links \
@@ -32,4 +33,5 @@ EXTRA_DIST = \
 	procps.links \
 	sysvinit-core.links \
 	util-linux.links \
-	wodim.links
+	wodim.links \
+	xz-utils.links
