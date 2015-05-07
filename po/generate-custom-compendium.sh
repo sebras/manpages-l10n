@@ -67,27 +67,18 @@ msgid "UPCASE"
 msgstr "UPCASE"
 
 msgid ""
-"GNU coreutils online help: E<lt>http://www.gnu.org/software/coreutils/E<gt> "
 "Report PROGRAM translation bugs to E<lt>http://translationproject.org/team/E<gt>"
 msgstr ""
-"Onlinehilfe für GNU coreutils: E<lt>http://www.gnu.org/software/coreutils/E<gt> "
 "Berichten Sie Fehler in der Übersetzung von PROGRAM an "
 "E<lt>http://translationproject.org/team/de.htmlE<gt>"
 
 msgid ""
-"The full documentation for B<PROGRAM> is maintained as a Texinfo "
-"manual.  If the B<info> and B<PROGRAM> programs are properly installed "
-"at your site, the command"
+"Full documentation at: E<lt>http://www.gnu.org/software/coreutils/PROGRAME<gt>"
 msgstr ""
-"Die vollständige Dokumentation für B<PROGRAM> wird als Texinfo-Handbuch "
-"gepflegt. Wenn die Programme B<info> und B<PROGRAM> auf Ihrem Rechner "
-"ordnungsgemäß installiert sind, können Sie mit dem Befehl"
+"Vollständige Dokumentation unter: E<lt>http://www.gnu.org/software/coreutils/PROGRAME<gt>"
 
-msgid "B<info coreutils \\\\(aqPROGRAM invocation\\\\(aq>"
-msgstr "B<info coreutils \\\\(aqPROGRAM invocation\\\\(aq>"
-
-msgid "should give you access to the complete manual."
-msgstr "auf das vollständige Handbuch zugreifen."
+msgid "or available locally via: info \\\\(aq(coreutils) PROGRAM invocation\\\\(aq"
+msgstr "oder lokal verfügbar mit: info \\\\(aq(coreutils) PROGRAM invocation\\\\(aq"
 END_COMPENDIUM
 # Replace PROGRAM with current program
 upcase=`echo "$name" | tr [:lower:] [:upper:]`
