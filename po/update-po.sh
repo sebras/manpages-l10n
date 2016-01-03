@@ -26,6 +26,9 @@ manpage=`basename "$1" .po`
 name=`basename "$manpage" | sed -e "s/\.[0-9]//"`
 section=`basename "$manpage" | sed -e "s/.\+\.//"`
 
+backup=`mktemp`
+cp "$1" "$backup"
+
 original="../english/man$section/$manpage"
 if [ ! -f "$original" ]; then
 	echo "The original manpage for $1 could not be found." >&2
@@ -86,7 +89,14 @@ if [ $? -ne 0 ]; then
 	rm -f "$header" "$tmppo" "$custom"
 	exit 1
 fi
-mv "$result" "$1"
+
+# Determine if the only change is the "POT-Creation-Date:" header
+# If so, copy back the backup to revert that change
+sed -f remove-potcdate.sed < "$backup" > "$tmppo"
+sed -f remove-potcdate.sed < "$1" > "$custom"
+if cmp "$tmppo" "$custom" >/dev/null 2>&1; then \
+	mv "$backup" "$1"; \
+fi
 
 # Cleanup
-rm -f "$header" "$tmppo" "$custom"
+rm -f "$header" "$tmppo" "$custom" "$backup"
