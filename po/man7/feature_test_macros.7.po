@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
-"POT-Creation-Date: 2015-06-26 16:51+0200\n"
+"POT-Creation-Date: 2016-01-06 18:47+0100\n"
 "PO-Revision-Date: 2014-08-31 08:26+0200\n"
 "Last-Translator: Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
@@ -23,8 +23,8 @@ msgstr "FEATURE_TEST_MACROS"
 
 #. type: TH
 #, no-wrap
-msgid "2014-03-20"
-msgstr "20. März 2014"
+msgid "2015-03-29"
+msgstr "29. März 2015"
 
 #. type: TH
 #, no-wrap
@@ -379,9 +379,15 @@ msgstr ""
 "für SUSv4 (d.h. die POSIX.1-2001 Base Specification und die XSI-Erweiterung)."
 
 #. type: Plain text
+#, fuzzy
+#| msgid ""
+#| "If B<__STRICT_ANSI__> is not defined, or B<_XOPEN_SOURCE> is defined with "
+#| "a value greater than or equal to 500 I<and> neither B<_POSIX_SOURCE> not "
+#| "B<_POSIX_C_SOURCE> is explicitly defined, then the following macros are "
+#| "implicitly defined:"
 msgid ""
 "If B<__STRICT_ANSI__> is not defined, or B<_XOPEN_SOURCE> is defined with a "
-"value greater than or equal to 500 I<and> neither B<_POSIX_SOURCE> not "
+"value greater than or equal to 500 I<and> neither B<_POSIX_SOURCE> nor "
 "B<_POSIX_C_SOURCE> is explicitly defined, then the following macros are "
 "implicitly defined:"
 msgstr ""
@@ -530,10 +536,20 @@ msgid "B<_LARGEFILE_SOURCE>"
 msgstr "B<_LARGEFILE_SOURCE>"
 
 #. type: Plain text
+#, fuzzy
+#| msgid ""
+#| "This macro was historically used to expose certain functions "
+#| "(specifically B<fseeko>(3)  and B<ftello>(3))  that address limitations "
+#| "of earlier APIs (B<feek>(3)  and B<ftell>(3))  that use I<long int> for "
+#| "file offsets.  This macro is implicitly defined if B<_XOPEN_SOURCE> is "
+#| "defined with a value greater than or equal to 500.  New programs should "
+#| "not employ this macro; defining B<_XOPEN_SOURCE> as just described or "
+#| "defining B<_FILE_OFFSET_BITS> with the value 64 is the preferred "
+#| "mechanism to achieve the same result."
 msgid ""
 "This macro was historically used to expose certain functions (specifically "
 "B<fseeko>(3)  and B<ftello>(3))  that address limitations of earlier APIs "
-"(B<feek>(3)  and B<ftell>(3))  that use I<long int> for file offsets.  This "
+"(B<fseek>(3)  and B<ftell>(3))  that use I<long int> for file offsets.  This "
 "macro is implicitly defined if B<_XOPEN_SOURCE> is defined with a value "
 "greater than or equal to 500.  New programs should not employ this macro; "
 "defining B<_XOPEN_SOURCE> as just described or defining B<_FILE_OFFSET_BITS> "
@@ -786,41 +802,48 @@ msgstr "B<_FORTIFY_SOURCE> (seit Glibc 2.3.4)"
 #.  * From: Jakub Jelinek <jakub at redhat dot com>
 #.  * To: gcc-patches at gcc dot gnu dot org
 #.  * Date: Tue, 21 Sep 2004 04:16:40 -0400
+#.  Look for __USE_FORTIFY_LEVEL in the header files
 #. type: Plain text
 msgid ""
 "Defining this macro causes some lightweight checks to be performed to detect "
 "some buffer overflow errors when employing various string and memory "
-"manipulation functions.  Not all buffer overflows are detected, just some "
-"common cases."
+"manipulation functions (for example, B<memcpy>(3), B<memset>(3), "
+"B<stpcpy>(3), B<strcpy>(3), B<strncpy>(3), B<strcat>(3), B<strncat>(3), "
+"B<sprintf>(3), B<snprintf>(3), B<vsprintf>(3), B<vsnprintf>(3), B<gets>(3), "
+"and wide character variants thereof).  For some functions, argument "
+"consistency is checked; for example, a check is made that B<open>(2)  has "
+"been supplied with a I<mode> argument when the specified flags include "
+"B<O_CREAT>.  Not all problems are detected, just some common cases."
 msgstr ""
-"Durch die Definition dieses Makros werden einige leichtgewichtige Prüfungen "
-"durchgeführt, um einige Pufferüberlauffehler beim Einsatz verschiedener "
-"Zeichenketten- und Speicherbearbeitungsfunktionen zu erkennen. Es werden "
-"nicht alle Pufferüberläufe erkannt, lediglich einige häufige Fälle."
-
-#. type: Plain text
-msgid ""
-"In the current implementation, checks are added for calls to B<memcpy>(3), "
-"B<mempcpy>(3), B<memmove>(3), B<memset>(3), B<stpcpy>(3), B<strcpy>(3), "
-"B<strncpy>(3), B<strcat>(3), B<strncat>(3), B<sprintf>(3), B<snprintf>(3), "
-"B<vsprintf>(3), B<vsnprintf>(3), and B<gets>(3)."
-msgstr ""
-"In der aktuellen Implementierung werden Prüfungen für Aufrufe von "
-"B<memcpy>(3), B<mempcpy>(3), B<memmove>(3), B<memset>(3), B<stpcpy>(3), "
-"B<strcpy>(3), B<strncpy>(3), B<strcat>(3), B<strncat>(3), B<sprintf>(3), "
-"B<snprintf>(3), B<vsprintf>(3), B<vsnprintf>(3) und B<gets>(3) hinzugefügt."
 
 # (mes) Conforming programs ?? Habe ich hier mal mit standardkonformen
 # Programmen übersetzt.
 # FIXME: Consider using »übersetzen« instead of »kompilieren«
+#.  For example, given the following code
+#.         int d;
+#.         char buf[1000], buf[1000];
+#.         strcpy(fmt, "Hello world
+#. %n");
+#.         snprintf(buf, sizeof(buf), fmt, &d);
+#.  Compiling with "gcc -D_FORTIFY_SOURCE=2 -O1" and then running will
+#.  cause the following diagnostic at runtime at the snprintf() call
+#.         *** %n in writable segment detected ***
+#.         Aborted (core dumped)
 #. type: Plain text
+#, fuzzy
+#| msgid ""
+#| "If B<_FORTIFY_SOURCE> is set to 1, with compiler optimization level 1 "
+#| "(I<gcc\\ -O1>)  and above, checks that shouldn't change the behavior of "
+#| "conforming programs are performed.  With B<_FORTIFY_SOURCE> set to 2 some "
+#| "more checking is added, but some conforming programs might fail.  Some of "
+#| "the checks can be performed at compile time, and result in compiler "
+#| "warnings; other checks take place at run time, and result in a run-time "
+#| "error if the check fails."
 msgid ""
 "If B<_FORTIFY_SOURCE> is set to 1, with compiler optimization level 1 (I<gcc"
 "\\ -O1>)  and above, checks that shouldn't change the behavior of conforming "
-"programs are performed.  With B<_FORTIFY_SOURCE> set to 2 some more checking "
-"is added, but some conforming programs might fail.  Some of the checks can "
-"be performed at compile time, and result in compiler warnings; other checks "
-"take place at run time, and result in a run-time error if the check fails."
+"programs are performed.  With B<_FORTIFY_SOURCE> set to 2, some more "
+"checking is added, but some conforming programs might fail."
 msgstr ""
 "Ist der Wert von B<_FORTIFY_SOURCE> gleich 1 und die Compiler-"
 "Optimierungsstufe 1 (I<gcc\\ -O1>) oder höher, erfolgt eine Beschränkung auf "
@@ -831,6 +854,13 @@ msgstr ""
 "ausgeführt werden und führen zu Compiler-Warnungen, andere Kontrollen finden "
 "zur Laufzeit statt und führen zu einem Laufzeitfehler, wenn die Überprüfung "
 "fehlschlägt."
+
+#. type: Plain text
+msgid ""
+"Some of the checks can be performed at compile time (via macros logic "
+"implemented in header files), and result in compiler warnings; other checks "
+"take place at run time, and result in a run-time error if the check fails."
+msgstr ""
 
 #. type: Plain text
 msgid ""
@@ -1327,12 +1357,12 @@ msgstr "KOLOPHON"
 
 #. type: Plain text
 msgid ""
-"This page is part of release 3.74 of the Linux I<man-pages> project.  A "
+"This page is part of release 4.04 of the Linux I<man-pages> project.  A "
 "description of the project, information about reporting bugs, and the latest "
 "version of this page, can be found at \\%http://www.kernel.org/doc/man-"
 "pages/."
 msgstr ""
-"Diese Seite ist Teil der Veröffentlichung 3.74 des Projekts Linux-I<man-"
+"Diese Seite ist Teil der Veröffentlichung 4.04 des Projekts Linux-I<man-"
 "pages>. Eine Beschreibung des Projekts, Informationen, wie Fehler gemeldet "
 "werden können sowie die aktuelle Version dieser Seite finden sich unter \\"
 "%http://www.kernel.org/doc/man-pages/."
