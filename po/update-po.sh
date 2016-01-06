@@ -83,10 +83,10 @@ tmppo=`mktemp`
 result=`mktemp`
 msgattrib --no-obsolete "$1" > "$tmppo"
 # Prefer the translations from the compendium
-msgmerge --compendium "$custom" --no-fuzzy-matching /dev/null "$tmppo" > "$result"
+msgmerge --compendium "$custom" --no-fuzzy-matching /dev/null "$tmppo" > "$1"
 if [ $? -ne 0 ]; then
 	echo "Fehler bei der Ausführung von msgmerge."
-	rm -f "$header" "$tmppo" "$custom"
+	rm -f "$header" "$tmppo" "$custom" "$backup" "$result"
 	exit 1
 fi
 
@@ -99,4 +99,4 @@ if cmp "$tmppo" "$custom" >/dev/null 2>&1; then \
 fi
 
 # Cleanup
-rm -f "$header" "$tmppo" "$custom" "$backup"
+rm -f "$header" "$tmppo" "$custom" "$backup" "$result"
