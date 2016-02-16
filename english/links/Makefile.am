@@ -20,7 +20,6 @@ EXTRA_DIST = \
 	bzip2.links \
 	coreutils.links \
 	fdutils.links \
-	findutils.links \
 	grep.links \
 	groff-base.links \
 	gzip.links \
