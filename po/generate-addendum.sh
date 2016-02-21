@@ -22,10 +22,10 @@ tmpfile=`mktemp`
 # and remove the comment character
 translators=`sed '/msgid/q;s/^#\s\+//' "$pofile" |
 # Throw away the common (non translator) lines
-grep -v "German translation of manpages" |
-grep -v "This file is distributed under the same license as the manpages-de package." |
-grep -v "Copyright © of this file:" |
-grep -v "msgid" |
+grep -a -v "German translation of manpages" |
+grep -a -v "This file is distributed under the same license as the manpages-de package." |
+grep -a -v "Copyright © of this file:" |
+grep -a -v "msgid" |
 # Split lines to extract the name (and e-mail address)
 cut -f1 -d","`
 # Determine number of translators
