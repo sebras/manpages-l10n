@@ -20,7 +20,17 @@ for translation in `find man?/ -name "*.po" | sort`; do
 	stats=`msgfmt -cv -o /dev/null $translation 2>&1`
 	fuzzy_or_untranslated=`echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+"`
 	if [ -n "$fuzzy_or_untranslated" ]; then
-		echo `basename $translation`:
+		# Remove the last text part
+		all=`echo $stats | sed -e "s/[^0-9]\+$//"`
+		# Replace all remaining text parts with the plus sign
+		all=`echo $all | sed -e "s/[^0-9]\+/+/g"`
+		# Calculate the sum
+		all=`echo $all | bc`
+		# Get the translated messages
+		translated=`echo $stats | sed -e "s/\([0-9]\+\).*/\1/"`
+		# Calculate the percentage
+		percentage=`echo "100 * $translated / $all" | bc`
+		echo `basename $translation`: $percentage%
 		echo $stats
 		echo
 		count=$(($count+1))
