@@ -30,7 +30,13 @@ for translation in `find man?/ -name "*.po" | sort`; do
 		translated=`echo $stats | sed -e "s/\([0-9]\+\).*/\1/"`
 		# Calculate the percentage
 		percentage=`echo "100 * $translated / $all" | bc`
-		echo `basename $translation`: $percentage%
+		# Calculate needed translations for 80%
+		hint=""
+		if [ $percentage -lt 80 ]; then
+			number=`echo "(800 * $all / 100 + 9) / 10 - $translated" | bc`
+			hint=", es fehlen $number Übersetzungen bis 80%"
+		fi
+		echo `basename $translation`: $percentage%$hint
 		echo $stats
 		echo
 		count=$(($count+1))
