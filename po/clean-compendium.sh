@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2012 Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2012 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ msgstr ""
 "Project-Id-Version: manpages-de\n"
 "POT-Creation-Date: 2010-10-18 14:52+0200\n"
 "PO-Revision-Date: 2010-10-18 14:52+0200\n"
-"Last-Translator: Tobias Quathamer <toddy@debian.org>\n"
+"Last-Translator: Dr. Tobias Quathamer <toddy@debian.org>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"

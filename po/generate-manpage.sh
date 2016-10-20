@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2012 Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2012 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
