@@ -5,12 +5,12 @@
 # Chris Leick <c.leick@vollbio.de>, 2010.
 # Dr. Tobias Quathamer <toddy@debian.org>, 2011.
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2013, 2014.
-# Helge Kreutzmann <debian@helgefjell.de>, 2014.
+# Helge Kreutzmann <debian@helgefjell.de>, 2014, 2016.
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
 "POT-Creation-Date: 2016-10-30 06:30+0100\n"
-"PO-Revision-Date: 2016-04-06 21:52+0200\n"
+"PO-Revision-Date: 2016-10-30 19:20+0100\n"
 "Last-Translator: Mario Blättermann <mario.blaettermann@gmail.com>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -129,13 +129,6 @@ msgid "DESCRIPTION"
 msgstr "BESCHREIBUNG"
 
 #. type: Plain text
-#, fuzzy
-#| msgid ""
-#| "B<readlink>()  places the contents of the symbolic link I<pathname> in "
-#| "the buffer I<buf>, which has size I<bufsiz>.  B<readlink>()  does not "
-#| "append a null byte to I<buf>.  It will truncate the contents (to a length "
-#| "of I<bufsiz> characters), in case the buffer is too small to hold all of "
-#| "the contents."
 msgid ""
 "B<readlink>()  places the contents of the symbolic link I<pathname> in the "
 "buffer I<buf>, which has size I<bufsiz>.  B<readlink>()  does not append a "
@@ -146,7 +139,7 @@ msgstr ""
 "B<readlink>() platziert den Inhalt des symbolischen Links I<Pfadname> in den "
 "I<Puffer>, der die Größe I<Puffergröße> hat. B<readlink>() hängt kein Null-"
 "Byte an I<Puffer>. Ist der Puffer zu klein, um den ganzen Inhalt "
-"aufzunehmen, verkürzt es den Inhalt (auf die Länge von I<Puffergröße> "
+"aufzunehmen, verkürzt es (stillschweigend) den Inhalt (auf die Länge von I<Puffergröße> "
 "Zeichen)."
 
 #. type: SS
@@ -213,17 +206,15 @@ msgid "RETURN VALUE"
 msgstr "RÜCKGABEWERT"
 
 #. type: Plain text
-#, fuzzy
-#| msgid ""
-#| "On success, these calls return the number of bytes placed in I<buf>.  On "
-#| "error, -1 is returned and I<errno> is set to indicate the error."
 msgid ""
 "On success, these calls return the number of bytes placed in I<buf>.  (If "
 "the returned value equals I<busiz>, then truncation may have occurred.)  On "
 "error, -1 is returned and I<errno> is set to indicate the error."
 msgstr ""
 "Bei Erfolg geben diese Aufrufe die Anzahl der Byte zurück, die in I<Puffer> "
-"platziert wurden. Bei einem Fehler wird -1 zurückgegeben und I<errno> so "
+"platziert wurden. (Falls der zurückgelieferte Wert identisch mit I<busiz> "
+"ist, kann ein Abschneiden erfolgt sein.) Bei einem Fehler wird -1 "
+"zurückgegeben und I<errno> so "
 "gesetzt, dass es den Fehler angibt."
 
 #. type: SH
@@ -449,11 +440,6 @@ msgid "EXAMPLE"
 msgstr "BEISPIEL"
 
 #. type: Plain text
-#, fuzzy
-#| msgid ""
-#| "The following program allocates the buffer needed by B<readlink>()  "
-#| "dynamically from the information provided by B<lstat>(), making sure "
-#| "there's no race condition between the calls."
 msgid ""
 "The following program allocates the buffer needed by B<readlink>()  "
 "dynamically from the information provided by B<lstat>(2), falling back to a "
@@ -461,18 +447,12 @@ msgid ""
 "zero."
 msgstr ""
 "Das folgende Programm reserviert den von B<readlink>() benötigten Puffer "
-"dynamisch mittels der Information, die von B<lstat>() bereitgestellt wird. "
-"Dabei wird sichergestellt, dass zwischen den Aufrufen keine Race-Condition "
-"entsteht."
+"dynamisch mittels der Information, die von B<lstat>(2) bereitgestellt wird. "
+"In den Fällen, in denen B<lstat>(2) eine Größe von Null meldet, fällt es auf "
+"eine Puffergröße B<PATH_MAX> zurück."
 
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "#include E<lt>sys/types.hE<gt>\n"
-#| "#include E<lt>sys/stat.hE<gt>\n"
-#| "#include E<lt>stdio.hE<gt>\n"
-#| "#include E<lt>stdlib.hE<gt>\n"
-#| "#include E<lt>unistd.hE<gt>\n"
+#, no-wrap
 msgid ""
 "#include E<lt>sys/types.hE<gt>\n"
 "#include E<lt>sys/stat.hE<gt>\n"
@@ -483,19 +463,13 @@ msgid ""
 msgstr ""
 "#include E<lt>sys/types.hE<gt>\n"
 "#include E<lt>sys/stat.hE<gt>\n"
+"#include E<lt>limits.hE<gt>\n"
 "#include E<lt>stdio.hE<gt>\n"
 "#include E<lt>stdlib.hE<gt>\n"
 "#include E<lt>unistd.hE<gt>\n"
 
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "int\n"
-#| "main(int argc, char *argv[])\n"
-#| "{\n"
-#| "    struct stat sb;\n"
-#| "    char *linkname;\n"
-#| "    ssize_t r;\n"
+#, no-wrap
 msgid ""
 "int\n"
 "main(int argc, char *argv[])\n"
@@ -509,7 +483,7 @@ msgstr ""
 "{\n"
 "    struct stat sb;\n"
 "    char *linkname;\n"
-"    ssize_t r;\n"
+"    ssize_t r, bufsiz;\n"
 
 #. type: Plain text
 #, no-wrap
@@ -540,7 +514,7 @@ msgstr ""
 #. type: Plain text
 #, no-wrap
 msgid "    bufsiz = sb.st_size + 1;\n"
-msgstr ""
+msgstr "    bufsiz = sb.st_size + 1;\n"
 
 #. type: Plain text
 #, no-wrap
@@ -549,6 +523,9 @@ msgid ""
 "       report \\(aqst_size\\(aq as zero. In that case, take PATH_MAX as\n"
 "       a \"good enough\" estimate */\n"
 msgstr ""
+"    /* Einige magische Symlinks unter (zum Beispiel) /proc und /sys\n"
+"       melden \\(aqst_size\\(aq als Null. In diesem Fall, nimm PATH_MAX als\n"
+"       eine »gut genuge« Schätzung */\n"
 
 #. type: Plain text
 #, no-wrap
@@ -556,21 +533,16 @@ msgid ""
 "    if (sb.st_size == 0)\n"
 "        bufsiz = PATH_MAX;\n"
 msgstr ""
+"    if (sb.st_size == 0)\n"
+"        bufsiz = PATH_MAX;\n"
 
 #. type: Plain text
 #, no-wrap
 msgid "    printf(\"%zd\\en\", bufsiz);\n"
-msgstr ""
+msgstr "    printf(\"%zd\\en\", bufsiz);\n"
 
-# fuzzy, no-wrap
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "    linkname = malloc(sb.st_size + 1);\n"
-#| "    if (linkname == NULL) {\n"
-#| "        fprintf(stderr, \"insufficient memory\\en\");\n"
-#| "        exit(EXIT_FAILURE);\n"
-#| "    }\n"
+#, no-wrap
 msgid ""
 "    linkname = malloc(bufsiz);\n"
 "    if (linkname == NULL) {\n"
@@ -578,19 +550,14 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
-"    linkname = malloc(sb.st_size + 1);\n"
+"    linkname = malloc(bufsiz);\n"
 "    if (linkname == NULL) {\n"
-"        fprintf(stderr, \"insufficient memory\\en\");\n"
+"        perror(\"malloc\");\n"
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "    if (r == -1) {\n"
-#| "        perror(\"readlink\");\n"
-#| "        exit(EXIT_FAILURE);\n"
-#| "    }\n"
+#, no-wrap
 msgid ""
 "    r = readlink(argv[1], linkname, bufsiz);\n"
 "    if (r == -1) {\n"
@@ -598,6 +565,7 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    r = readlink(argv[1], linkname, bufsiz);\n"
 "    if (r == -1) {\n"
 "        perror(\"readlink\");\n"
 "        exit(EXIT_FAILURE);\n"
@@ -619,17 +587,17 @@ msgid ""
 "    if (r == bufsiz)\n"
 "        printf(\"(Returned buffer may have been truncated)\\en\");\n"
 msgstr ""
+"    if (r == bufsiz)\n"
+"        printf(\"(Zurückgelieferter Puffer könnte abgeschnitten sein)\\en\");\n"
 
 #. type: Plain text
-#, fuzzy, no-wrap
-#| msgid ""
-#| "    exit(EXIT_SUCCESS);\n"
-#| "}\n"
+#, no-wrap
 msgid ""
 "    free(linkname);\n"
 "    exit(EXIT_SUCCESS);\n"
 "}\n"
 msgstr ""
+"    free(linkname);\n"
 "    exit(EXIT_SUCCESS);\n"
 "}\n"
 
