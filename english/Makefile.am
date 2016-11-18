@@ -20,7 +20,10 @@ SUBDIRS = links
 EXTRA_DIST = packages.list download-packages.sh update-manpages.sh
 
 all:
-	if [ "x$(ac_enable_download)" = "xyes" ]; then \
+	if [ "x$(ac_enable_deprecated_download)" = "xyes" ]; then \
+		echo -e "\033[31;1m" ; \
+		echo "Warning: The option --enable-download is deprecated and will be removed in the future." ; \
+		echo -e "\033[0m" ; \
 		./download-packages.sh ; \
 		./update-manpages.sh ; \
 	fi

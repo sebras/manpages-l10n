@@ -26,14 +26,18 @@ if test "x$po4a" = "xno"; then
 fi
 
 # Support the downloading of manpages from Debian
+# Warning: Since version 1.17, this option is deprecated.
 AC_ARG_ENABLE(
-    [download],
-    [AS_HELP_STRING([--enable-download],
-        [download manpages from Debian instead of using manpages installed on the system (default is no)])],
-    [ac_enable_download=yes],
-    [ac_enable_download=no]
+    [deprecated-download],
+    [AS_HELP_STRING([--enable-deprecated-download],
+        [download manpages from Debian instead of using manpages
+         installed on the system.
+         Warning: This option is deprecated and will be removed.
+         (default is no)])],
+    [ac_enable_deprecated_download=yes],
+    [ac_enable_deprecated_download=no]
 )
-AC_SUBST([ac_enable_download])
+AC_SUBST([ac_enable_deprecated_download])
 
 AC_CONFIG_FILES([
     Makefile
