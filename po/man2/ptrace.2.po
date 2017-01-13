@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de 4.09\n"
 "POT-Creation-Date: 2016-12-12 22:33+0100\n"
-"PO-Revision-Date: 2017-01-04 10:48+0100\n"
+"PO-Revision-Date: 2017-01-13 21:33+0100\n"
 "Last-Translator: Mario Blättermann <mario.blaettermann@gmail.com>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -965,7 +965,7 @@ msgid ""
 msgstr ""
 "stoppt einen verfolgten Prozess. Falls der verfolgte Prozess im Kernel-Space "
 "läuft oder schläft und B<PTRACE_SYSCALL> in Kraft ist, wird der Systemaufruf "
-"unterbrochen und »syscall-exit-stop« gemeldet. (Der unterbrochene "
+"unterbrochen und Systemaufrufbeendigungsstopp gemeldet. (Der unterbrochene "
 "Systemaufruf wird beim Neustart des verfolgten Prozesses ebenfalls neu "
 "gestartet.) Falls der verfolgte Prozess bereits durch ein Signal gestoppt "
 "und B<PTRACE_LISTEN> an ihn gesendet wurde, stoppt der verfolgte Prozess mit "
@@ -1967,6 +1967,12 @@ msgid ""
 "rule) can be retrieved with B<PTRACE_GETEVENTMSG>.  The semantics of this "
 "stop are described in detail in a separate section below."
 msgstr ""
+"Stopp, der durch eine B<seccomp>(2)-Regel durch den Eintritt des verfolgten "
+"Prozesses in einen Systemaufruf ausgelöst wird, wenn "
+"B<PTRACE_O_TRACESECCOMP> vom Verfolger gesetzt wird. Die Seccomp-"
+"Ereignisdaten (von dem Anteil B<SECCOMP_RET_DATA> der Filterregel) können "
+"durch B<PTRACE_GETEVENTMSG> ermittelt werden. Die Semantik dieses Stopps "
+"werden in einem separaten Abschnitt weiter unten beschrieben."
 
 #. type: Plain text
 msgid ""
@@ -2225,6 +2231,17 @@ msgid ""
 "the next observed stop will be a syscall-exit-stop, rather than the syscall-"
 "entry-stop that might have been expected."
 msgstr ""
+"Neustarts aus diesem Stopp verhalten sich so, als ob der Stopp direkt vor "
+"dem in Frage stehenden Systemaufruf stattgefunden hätte. Insbesondere werden "
+"sowohl B<PTRACE_SYSCALL> als auch B<PTRACE_SYSEMU> normalerweise einen "
+"folgenden Systemaufrufeintrittsstopp auslösen. Falls allerdings nach dem "
+"B<PTRACE_EVENT_SECCOMP> die Systemaufrufnummer negativ ist, werden sowohl "
+"der Systemaufrufeintrittsstopp als auch der Systemaufruf selbst "
+"übersprungen. Das bedeutet, dass falls die Systemaufrufnummer nach dem "
+"B<PTRACE_EVENT_SECCOMP> negativ ist und der verfolgte Prozess mittels "
+"B<PTRACE_SYSCALL> neu gestartet wird der nächste beobachtete Stopp ein "
+"Systemaufrufbeendigungsstopp statt des vielleicht erwarteten "
+"Systemaufrufeintrittsstopps sein wird."
 
 #. type: SS
 #, no-wrap
@@ -2239,6 +2256,11 @@ msgid ""
 "no longer runs (and no B<PTRACE_EVENT_SECCOMP> will be reported) if the "
 "system call is skipped due to B<PTRACE_SYSEMU>."
 msgstr ""
+"Beginnend mit Linux 4.8 wurde der Stopp B<PTRACE_EVENT_SECCOMP> neu "
+"geordnet, so dass er zwischen Systemaufrufeintrittsstopp und "
+"Systemaufrufbeendigungsstopp auftritt. Beachten Sie, dass Seccomp nicht "
+"länger ausgeführt wird (und kein B<PTRACE_EVENT_SECCOMP> berichtet wird) "
+"falls der Systemaufruf aufgrund B<PTRACE_SYSEMU> übersprungen wird."
 
 #. type: Plain text
 msgid ""
@@ -2249,6 +2271,13 @@ msgid ""
 "Note that there may be, but need not have been a preceding syscall-entry-"
 "stop."
 msgstr ""
+"Funktional arbeitet B<PTRACE_EVENT_SECCOMP>-Stopp vergleichbar mit einem "
+"Systemaufrufeintrittsstopp (d.h. Fortsetzungen mittels B<PTRACE_SYSCALL> "
+"werden einen Systemaufrufbeendigungsstopp auslösen, die Systemaufrufnummer "
+"könnte sich ändern und alle anderen veränderten Register sind im gleich "
+"auszuführenden Systemaufruf ebenfalls sichtbar). Beachten Sie, dass es einen "
+"vorhergehenden Systemaufrufeintrittsstopp gegeben haben kann, aber nicht "
+"muss."
 
 #. type: Plain text
 msgid ""
@@ -2258,6 +2287,11 @@ msgid ""
 "modified during the B<PTRACE_EVENT_SECCOMP> stop, the system call will then "
 "be allowed."
 msgstr ""
+"Nach einem Stopp B<PTRACE_EVENT_SECCOMP> wird Seccomp mit einer Regel "
+"B<SECCOMP_RET_TRACE>, die identissch zu einer B<SECCOMP_RET_ALLOW> "
+"funktioniert, erneut ausgeführt. Insbesondere bedeutet dies, dass falls "
+"Register nicht während des Stopps B<PTRACE_EVENT_SECCOMP> verändert wurden, "
+"der Systemaufruf dann erlaubt wird."
 
 #. type: SS
 #, no-wrap
@@ -3004,6 +3038,8 @@ msgid ""
 "A tracees parent continues to be the tracer even if that tracer calls "
 "B<execve>(2)."
 msgstr ""
+"Die Eltern des verfolgten Prozesses werden weiterhin der Vorfolger sein, "
+"selbst wenn der Verfolger B<execve>(2) aufruft."
 
 #.  See http://lkml.org/lkml/2008/5/8/375
 #. type: Plain text
@@ -3041,8 +3077,9 @@ msgstr ""
 #. type: SS
 #, no-wrap
 msgid "Ptrace access mode checking"
-msgstr ""
+msgstr "Ptrace-Zugriffsmodusüberprüfung"
 
+#, fuzzy
 #. type: Plain text
 msgid ""
 "Various parts of the kernel-user-space API (not just B<ptrace>()  "
@@ -3056,6 +3093,18 @@ msgid ""
 "by any enabled Linux Security Module (LSM)\\(emfor example, SELinux, Yama, "
 "or Smack\\(emand by the commoncap LSM (which is always invoked)."
 msgstr ""
+"Verschiedene Teile des Kernel-Benutzerraum-APIs (nicht nur B<ptrace>()-"
+"Aktionen) benötigen sogenannte »Ptrace-Zugriffsmodusüberprüfungen«, deren "
+"Ergebnis bestimmt, ob eine Aktion erlaubt (oder, in wenigen Fällen, einer "
+"»Lese«-Aktion bereinigte Daten zurückliefern) wird. Diese Überprüfungen "
+"werden in Fällen durchgeführt, in denen ein Prozess vertrauliche "
+"Informationen über einen anderen Prozess einsehen könnte oder in einigen "
+"Fällen den Zustand eines anderen Prozesse verändern könnte. Diese "
+"Überprüfungen basieren auf Faktoren wie den Zugangsdaten und den "
+"Capabilities der zwei Prozesse, ob der »Ziel«-Prozess FIXME ist und dem "
+"Ergebnis der Überprüfungen, die durch jedes aktivierte Linux-"
+"Sicherheitsmodul (LSM) – zum Beispiel SELinux, Yama oder Smack – und den "
+"FIXME LSM (die immer ausgeführt wird), ausgeführt wird."
 
 #.  commit 006ebb40d3d65338bd74abb03b945f8d60e362bd
 #. type: Plain text
@@ -3063,6 +3112,8 @@ msgid ""
 "Prior to Linux 2.6.27, all access checks were of a single type.  Since Linux "
 "2.6.27, two access mode levels are distinguished:"
 msgstr ""
+"Vor Linux 2.6.27 waren alle Zugriffsprüfungen von einem einzigen Typ. Seit "
+"Linux 2.6.27 werden zwei Zugriffsmodi unterschieden:"
 
 #. type: TP
 #, no-wrap
@@ -3076,6 +3127,10 @@ msgid ""
 "[pid]/environ>, or I</proc/[pid]/stat>; or B<readlink>(2)  of a I</proc/"
 "[pid]/ns/*> file."
 msgstr ""
+"Für »Lese«-Aktionen oder andere Aktionen, die weniger gefährlich sind, wie "
+"B<get_robust_list>(2); B<kcmp>(2); Lesen aus I</proc/[PID]/auxv>, I</proc/"
+"[PID]/environ> oder I</proc/[PID]/stat>; oder B<readlink>(2) einer I</proc/"
+"[PID]/ns/*>-Datei."
 
 #. type: TP
 #, no-wrap
@@ -3101,6 +3156,10 @@ msgid ""
 "B<process_vm_writev>(2).  (B<PTRACE_MODE_ATTACH> was effectively the default "
 "before Linux 2.6.27.)"
 msgstr ""
+"Für »Schreibe«-Aktionen oder andere Aktionen, die gefährlicher sind, wie "
+"Ptrace-Anhängungen (B<PTRACE_ATTACH>) an einen anderen Prozess oder Aufrufe "
+"von B<process_vm_writev>(2). (B<PTRACE_MODE_ATTACH> war tatsächlich die "
+"Vorgabe vor Linux 2.6.27.)"
 
 #.  commit caaee6234d05a58c5b4d05e7bf766131b810a657
 #. type: Plain text
