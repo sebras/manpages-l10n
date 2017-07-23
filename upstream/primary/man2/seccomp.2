@@ -24,7 +24,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SECCOMP 2 2016-10-08 "Linux" "Linux Programmer's Manual"
+.TH SECCOMP 2 2017-07-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 seccomp \- operate on Secure Computing state of the process
 .SH SYNOPSIS
@@ -378,6 +378,24 @@ The process terminates as though killed by a
 signal
 .RI ( not
 .BR SIGKILL ).
+Even if a signal handler has been registered and otherwise catches
+.BR SIGSYS ,
+the handler will be ignored in this case and the process always terminates.
+
+.\" See these commits:
+.\" seccomp: dump core when using SECCOMP_RET_KILL (b25e67161c295c98acda92123b2dd1e7d8642901)
+.\" seccomp: Only dump core when single-threaded (d7276e321ff8a53106a59c85ca46d03e34288893)
+Before Linux 4.11,
+any process terminated this way would not trigger a coredump
+(even though
+.B SIGSYS
+is documented in
+.BR signal (7)
+as having a default action of termination with a core dump).
+Since Linux 4.11,
+single threaded processes follow standard core dump behavior,
+but multithreaded processes still do not.
+There is no workaround currently for multithreaded processes.
 .TP
 .BR SECCOMP_RET_TRAP
 This value results in the kernel sending a
@@ -843,7 +861,7 @@ Proceedings of the USENIX Winter 1993 Conference
 .UR http://www.tcpdump.org/papers/bpf\-usenix93.pdf
 .UE
 .SH COLOPHON
-This page is part of release 4.11 of the Linux
+This page is part of release 4.12 of the Linux
 .I man-pages
 project.
 A description of the project,

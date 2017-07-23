@@ -24,19 +24,19 @@
 .\" %%%LICENSE_END
 .\"
 .\" aeb, various minor fixes
-.TH SIGALTSTACK 2 2016-03-15 "Linux" "Linux Programmer's Manual"
+.TH SIGALTSTACK 2 2017-07-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sigaltstack \- set and/or get signal stack context
 .SH SYNOPSIS
 .B #include <signal.h>
 .sp
-.BI "int sigaltstack(const stack_t *" ss ", stack_t *" oss );
-.sp
+.BI "int sigaltstack(const stack_t *" ss ", stack_t *" old_ss );
+.PP
 .in -4n
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .in
-.sp
+.PP
 .BR sigaltstack ():
 .ad l
 .RS 4
@@ -57,7 +57,7 @@ An alternate signal stack is used during the
 execution of a signal handler if the establishment of that handler (see
 .BR sigaction (2))
 requested it.
-
+.PP
 The normal sequence of events for using an alternate signal stack
 is the following:
 .TP 3
@@ -79,13 +79,16 @@ on the alternate signal stack by
 specifying the \fBSA_ONSTACK\fP flag.
 .P
 The \fIss\fP argument is used to specify a new
-alternate signal stack, while the \fIoss\fP argument
+alternate signal stack, while the \fIold_ss\fP argument
 is used to retrieve information about the currently
 established signal stack.
 If we are interested in performing just one
 of these tasks, then the other argument can be specified as NULL.
-Each of these arguments is a structure of the following type:
-.sp
+.PP
+The
+.I stack_t
+type used to type the arguments of this function is defined as follows:
+
 .in +4n
 .nf
 typedef struct {
@@ -97,30 +100,36 @@ typedef struct {
 .in
 
 To establish a new alternate signal stack,
-\fIss.ss_flags\fP is set to zero, and \fIss.ss_sp\fP and
-\fIss.ss_size\fP specify the starting address and size of
-the stack.
+the fields of this structure are set as follows:
+.TP
+.I ss.ss_flags
+This field is set to zero.
+.TP
+.I ss.ss_sp
+This field specifies the starting address of the stack.
+When a signal handler is invoked on the alternate stack,
+the kernel automatically aligns the address given in \fIss.ss_sp\fP
+to a suitable address boundary for the underlying hardware architecture.
+.TP
+.I ss.ss_size
+This field specifies the size of the stack.
 The constant \fBSIGSTKSZ\fP is defined to be large enough
 to cover the usual size requirements for an alternate signal stack,
 and the constant \fBMINSIGSTKSZ\fP defines the minimum
 size required to execute a signal handler.
-
-When a signal handler is invoked on the alternate stack,
-the kernel automatically aligns the address given in \fIss.ss_sp\fP
-to a suitable address boundary for the underlying hardware architecture.
-
+.PP
 To disable an existing stack, specify \fIss.ss_flags\fP
 as \fBSS_DISABLE\fP.
 In this case, the remaining fields
 in \fIss\fP are ignored.
-
-If \fIoss\fP is not NULL, then it is used to return information about
+.PP
+If \fIold_ss\fP is not NULL, then it is used to return information about
 the alternate signal stack which was in effect prior to the
 call to
 .BR sigaltstack ().
-The \fIoss.ss_sp\fP and \fIoss.ss_size\fP fields return the starting
+The \fIold_ss.ss_sp\fP and \fIold_ss.ss_size\fP fields return the starting
 address and size of that stack.
-The \fIoss.ss_flags\fP may return either of the following values:
+The \fIold_ss.ss_flags\fP may return either of the following values:
 .TP
 .B SS_ONSTACK
 The process is currently executing on the alternate signal stack.
@@ -130,6 +139,13 @@ currently executing on it.)
 .TP
 .B SS_DISABLE
 The alternate signal stack is currently disabled.
+.PP
+By specifying
+.I ss
+as NULL, and
+.I old_ss
+as a non-NULL value, one can obtain the current settings for
+the alternate signal stack without changing them.
 .SH RETURN VALUE
 .BR sigaltstack ()
 returns 0 on success, or \-1 on failure with
@@ -137,13 +153,12 @@ returns 0 on success, or \-1 on failure with
 .SH ERRORS
 .TP
 .B EFAULT
-Either \fIss\fP or \fIoss\fP is not NULL and points to an area
+Either \fIss\fP or \fIold_ss\fP is not NULL and points to an area
 outside of the process's address space.
 .TP
 .B EINVAL
 \fIss\fP is not NULL and the \fIss_flags\fP field contains
-a nonzero value other than
-.BR SS_DISABLE .
+an invalid flag.
 .TP
 .B ENOMEM
 The specified size of the new alternate signal stack
@@ -167,7 +182,6 @@ T{
 .BR sigaltstack ()
 T}	Thread safety	MT-Safe
 .TE
-
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2009, SUSv2, SVr4.
 .SH NOTES
@@ -244,6 +258,29 @@ if (sigaltstack(&ss, NULL) == \-1)
     /* Handle error */;
 .fi
 .in
+.SH BUGS
+In the lead up to the development of the Linux 2.4 kernel,
+.\" Linux 2.3.40
+someone got confused and allowed the kernel to accept
+.B SS_ONSTACK
+in
+.IR ss.ss_flags ,
+which results in behavior that is the same as when
+.I ss_flags
+is 0.
+On other implementations, and according to POSIX.1,
+.B SS_ONSTACK
+appears only as a reported flag in
+.IR old_ss.ss_flags .
+There is no need ever to specify this flag in
+.IR ss.ss_flags
+(and indeed, doing so decreases portability,
+since some implementations
+.\" See the source code of Illumos and FreeBSD, for example.
+give an error if
+.B SS_ONSTACK
+is specified in
+.IR ss.ss_flags ).
 .SH SEE ALSO
 .BR execve (2),
 .BR setrlimit (2),
@@ -252,7 +289,7 @@ if (sigaltstack(&ss, NULL) == \-1)
 .BR sigsetjmp (3),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 4.11 of the Linux
+This page is part of release 4.12 of the Linux
 .I man-pages
 project.
 A description of the project,

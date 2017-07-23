@@ -24,7 +24,7 @@
 .\"
 .\" Modified Sat Jul 24 17:51:42 1993 by Rik Faith (faith@cs.unc.edu)
 .\" Modified Tue Aug 17 11:42:20 1999 by Ariel Scolnicov (ariels@compugen.co.il)
-.TH SYSCONF 3  2015-08-08 "GNU" "Linux Programmer's Manual"
+.TH SYSCONF 3  2017-07-13 "GNU" "Linux Programmer's Manual"
 .SH NAME
 sysconf \- get configuration information at run time
 .SH SYNOPSIS
@@ -47,7 +47,7 @@ and testing the value of certain macros.
 At run time, one can ask for numerical values using the present function
 .BR sysconf ().
 One can ask for numerical values that may depend
-on the filesystem a file is in using the calls
+on the filesystem in which a file resides using
 .BR fpathconf (3)
 and
 .BR pathconf (3).
@@ -312,18 +312,50 @@ The number of processors configured.
 .BR "" " - " _SC_NPROCESSORS_ONLN
 The number of processors currently online (available).
 .SH RETURN VALUE
+The return value of
+.BR sysconf ()
+is one of the following:
+.IP * 3
+On error, \-1 is returned and
+.I errno
+is set to indicate the cause of the error
+(for example,
+.BR EINVAL ,
+indicating that
+.I name
+is invalid).
+.IP *
 If
 .I name
-is invalid, \-1 is returned, and
-.I errno
-is set to
-.BR EINVAL .
-Otherwise, the value returned is the value of the system resource and
+corresponds to a maximum or minimum limit, and that limit is indeterminate,
+\-1 is returned and
 .I errno
 is not changed.
-In the case of options, a positive value is returned if a queried option
-is available, and \-1 if it is not.
-In the case of limits, \-1 means that there is no definite limit.
+(To distinguish an indeterminate limit from an error, set
+.I errno
+to zero before the call, and then check whether
+.I errno
+is nonzero when \-1 is returned.)
+.IP *
+If
+.I name
+corresponds to an option,
+a positive value is returned if the option is supported,
+and \-1 is returned if the option is not supported.
+.IP *
+Otherwise,
+the current value of the option or limit is returned.
+This value will not be more restrictive than
+the corresponding value that was described to the application in
+.I <unistd.h>
+or
+.I <limits.h>
+when the application was compiled.
+.SH ERRORS
+.TP
+.B EINVAL
+.I name
+is invalid.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
@@ -357,7 +389,7 @@ memory.
 .BR pathconf (3),
 .BR posixoptions (7)
 .SH COLOPHON
-This page is part of release 4.11 of the Linux
+This page is part of release 4.12 of the Linux
 .I man-pages
 project.
 A description of the project,

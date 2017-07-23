@@ -45,7 +45,7 @@
 .\"     other capabilities where the permitted or inheritable bit is set.
 .\" 2011-09-07, mtk/Serge hallyn: Add CAP_SYSLOG
 .\"
-.TH CAPABILITIES 7 2016-12-12 "Linux" "Linux Programmer's Manual"
+.TH CAPABILITIES 7 2017-07-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 capabilities \- overview of Linux capabilities
 .SH DESCRIPTION
@@ -195,11 +195,11 @@ inode flags (see
 .BR ioctl_iflags (2)).
 .TP
 .BR CAP_MAC_ADMIN " (since Linux 2.6.25)"
-Override Mandatory Access Control (MAC).
+Allow MAC configuration or state changes.
 Implemented for the Smack Linux Security Module (LSM).
 .TP
 .BR CAP_MAC_OVERRIDE " (since Linux 2.6.25)"
-Allow MAC configuration or state changes.
+Override Mandatory Access Control (MAC).
 Implemented for the Smack LSM.
 .TP
 .BR CAP_MKNOD " (since Linux 2.4)"
@@ -973,9 +973,21 @@ has the set-user-ID or set-group-ID bit set.
 .IR Note :
 the capability transitions described above may
 .I not
-performed (i.e., file capabilities may be ignored) for the same reasons
+be performed (i.e., file capabilities may be ignored) for the same reasons
 that the set-user-ID and set-group-ID bits are ignored; see
 .BR execve (2).
+
+.IR Note :
+according to the rules above,
+if a process with nonzero user IDs performs an
+.BR execve (2)
+then any capabilities that are present in
+its permitted and effective sets will be cleared.
+For the treatment of capabilities when a process with a
+user ID of zero performs an
+.BR execve (2),
+see below under
+.IR "Capabilities and execution of programs by root" .
 .\"
 .SS Safety checking for capability-dumb binaries
 A capability-dumb binary is an application that has been
@@ -1020,26 +1032,34 @@ using capability sets, during an
 .BR execve (2):
 .IP 1. 3
 If a set-user-ID-root program is being executed,
-or the real user ID of the process is 0 (root)
+or the real or effective user ID of the process is 0 (root)
 then the file inheritable and permitted sets are defined to be all ones
 (i.e., all capabilities enabled).
 .IP 2.
 If a set-user-ID-root program is being executed,
+or the effective user ID of the process is 0 (root)
 then the file effective bit is defined to be one (enabled).
 .PP
 The upshot of the above rules,
 combined with the capabilities transformations described above,
-is that when a process
+is as follows:
+.IP * 3
+When a process
 .BR execve (2)s
 a set-user-ID-root program, or when a process with an effective UID of 0
 .BR execve (2)s
 a program,
 it gains all capabilities in its permitted and effective capability sets,
 except those masked out by the capability bounding set.
-.\" If a process with real UID 0, and nonzero effective UID does an
-.\" exec(), then it gets all capabilities in its
-.\" permitted set, and no effective capabilities
-This provides semantics that are the same as those provided by
+.IP *
+When a process with a real UID of 0
+.BR execve (2)s
+a program,
+it gains all capabilities in its permitted capability set,
+.\" but no effective capabilities
+except those masked out by the capability bounding set.
+.PP
+The above steps yield semantics that are the same as those provided by
 traditional UNIX systems.
 .SS Capability bounding set
 The capability bounding set is a security mechanism that can be used
@@ -1420,13 +1440,16 @@ created on the system.
 .BR credentials (7),
 .BR pthreads (7),
 .BR user_namespaces (7),
+.BR filecap (8), \" from libcap-ng
 .BR getcap (8),
+.BR netcap (8), \" from libcap-ng
+.BR pscap (8), \" from libcap-ng
 .BR setcap (8)
 .PP
 .I include/linux/capability.h
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 4.11 of the Linux
+This page is part of release 4.12 of the Linux
 .I man-pages
 project.
 A description of the project,
