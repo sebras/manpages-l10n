@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2012 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,88 +15,49 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Require one argument
+# Require one argument (the .po file of the manpage)
 if [ ! -f "$1" ]; then
-	echo "The file $1 could not be found."
+	echo "The file '$1' could not be found."
 	exit 1
 fi
 
-# Try to find the original manpage
-manpage=`basename "$1" .po`
-name=`basename "$manpage" | sed -e "s/\.[0-9]//"`
-section=`basename "$manpage" | sed -e "s/.\+\.//"`
+# path to the templates
+# @FIXME: for now, the upstream is 'primary', remove it when ready.
+templatedir="../templates/primary"
 
+# Find the pot file by adding the letter 't'
+potfile="$templatedir/$1""t"
+if [ ! -f "$potfile" ]; then
+	echo "The potfile '$potfile' could not be found." >&2
+	exit 1
+fi
+
+# Create backup, to be able later to run diff on the files.
 backup=`mktemp`
 cp "$1" "$backup"
 
-original="../english/man$section/$manpage"
-if [ ! -f "$original" ]; then
-	echo "The original manpage for $1 could not be found." >&2
-	exit 1
-fi
+# Generate compendium
+compendium=`mktemp`
+./generate-compendium.sh "$compendium"
 
-# If the .po file has just been created, we need to
-# insert a better header than the default from po4a.
-if [ "x$2" = "xCREATE_HEADER" ]; then
-	header=`mktemp`
-	cat > "$header" <<END_OF_HEADER
-# German translation of manpages
-# This file is distributed under the same license as the manpages-de package.
-# Copyright © of this file:
-msgid ""
-msgstr ""
-"Project-Id-Version: manpages-de\n"
-"POT-Creation-Date: CURRENT_DATE\n"
-"PO-Revision-Date: CURRENT_DATE\n"
-"Last-Translator: MEIN NAME <EMAIL>\n"
-"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-END_OF_HEADER
-	current_date=`date +"%Y-%m-%d %H:%M%z"`
-	sed -i -e "s/CURRENT_DATE/$current_date/" "$header"
-fi
-
-# Generate custom compendium
-custom=`mktemp`
-./generate-custom-compendium.sh "$1" "$custom" "$header"
-
-# Determine if an encoding is specified,
-# otherwise fall back to ISO-8859-1
-coding=`grep "\-\*\- coding:" "$original" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
-if [ -z "$coding" ]; then
-	coding="ISO-8859-1"
-fi
-
-# Update .po file from master file
-po4a-updatepo -f man \
- --option groff_code=verbatim \
- --option generated \
- --option untranslated="a.RE,\|" \
- --option unknown_macros=untranslated \
- --master "$original" -M "$coding" \
- --msgmerge-opt "--backup=none --no-location --compendium $custom --previous" \
- --po "$1"
-# Remove obsolete strings
+# Update .po file from .pot file
 tmppo=`mktemp`
-result=`mktemp`
-msgattrib --no-obsolete "$1" > "$tmppo"
+msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
+
+# Remove obsolete strings
+msgattrib --no-obsolete "$tmppo" > "$1"
+
 # Prefer the translations from the compendium
-msgmerge --compendium "$custom" --no-fuzzy-matching /dev/null "$tmppo" > "$1"
-if [ $? -ne 0 ]; then
-	echo "Fehler bei der Ausführung von msgmerge."
-	rm -f "$header" "$tmppo" "$custom" "$backup" "$result"
-	exit 1
-fi
+msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
+mv "$tmppo" "$1"
 
 # Determine if the only change is the "POT-Creation-Date:" header
 # If so, copy back the backup to revert that change
 sed -f remove-potcdate.sed < "$backup" > "$tmppo"
-sed -f remove-potcdate.sed < "$1" > "$custom"
-if cmp "$tmppo" "$custom" >/dev/null 2>&1; then \
+sed -f remove-potcdate.sed < "$1" > "$compendium"
+if cmp "$tmppo" "$compendium" >/dev/null 2>&1; then \
 	mv "$backup" "$1"; \
 fi
 
 # Cleanup
-rm -f "$header" "$tmppo" "$custom" "$backup" "$result"
+rm -f "$tmppo" "$compendium" "$backup"
