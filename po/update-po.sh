@@ -38,7 +38,7 @@ cp "$1" "$backup"
 
 # Generate compendium
 compendium=`mktemp`
-./generate-compendium.sh "$compendium"
+./generate-compendium.sh "$1" "$compendium"
 
 # Update .po file from .pot file
 tmppo=`mktemp`
