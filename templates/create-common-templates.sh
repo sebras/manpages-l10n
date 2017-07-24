@@ -35,7 +35,7 @@ for step in $steps; do
   # Remove first (empty) msgid with all combined headers
   sed -i -e "1,/^$/d" step.pot
   # Create a temporary header for the pot file
-  header=`mktemp`
+  header=$(mktemp)
 	cat > "$header" <<END_OF_HEADER
 # Common msgids
 msgid ""
@@ -51,12 +51,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 END_OF_HEADER
-	current_date=`date +"%Y-%m-%d %H:%M%z"`
+	current_date=$(date +"%Y-%m-%d %H:%M%z")
 	sed -i -e "s/CURRENT_DATE/$current_date/" "$header"
   cat "$header" step.pot > tmp2.pot
 
   # Create a filename with leading zeros
-  min_step_file=`printf "min-%03d-occurences.pot" $step`
+  min_step_file=$(printf "min-%03d-occurences.pot" $step)
 
   # Remove dates, as they are translated automatically
   msggrep --msgid -v -E -e "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" tmp2.pot > $min_step_file

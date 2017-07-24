@@ -18,7 +18,7 @@
 # Determine directory names.
 # The path "../upstream" points here. This way, it's possible
 # to filter out the current directory named ".".
-directories=`find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort`
+directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
 
 for directory in $directories; do
 	echo "Processing directory '$directory'"

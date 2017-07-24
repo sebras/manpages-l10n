@@ -33,15 +33,15 @@ if [ ! -f "$potfile" ]; then
 fi
 
 # Create backup, to be able later to run diff on the files.
-backup=`mktemp`
+backup=$(mktemp)
 cp "$1" "$backup"
 
 # Generate compendium
-compendium=`mktemp`
+compendium=$(mktemp)
 ./generate-compendium.sh "$1" "$compendium"
 
 # Update .po file from .pot file
-tmppo=`mktemp`
+tmppo=$(mktemp)
 msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
 
 # Remove obsolete strings

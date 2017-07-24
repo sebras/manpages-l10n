@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Find all upstreams
-upstreams=`find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort`
+upstreams=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
 
 # Create pot files for all upstreams
 for upstream in $upstreams; do
@@ -26,17 +26,17 @@ for upstream in $upstreams; do
   rm -rf $upstream
 
   # Find all manpage sections
-  mandirs=`find "../upstream/$upstream" -maxdepth 1 -type d | cut -d/ -f4- | LC_ALL=C sort`
+  mandirs=$(find "../upstream/$upstream" -maxdepth 1 -type d | cut -d/ -f4- | LC_ALL=C sort)
   for mandir in $mandirs; do
     echo Section $mandir
 
     mkdir -p "$upstream/$mandir"
 
     # Find all manpages of the upstream
-    manpage_paths=`find "../upstream/$upstream/$mandir" -type f | LC_ALL=C sort`
+    manpage_paths=$(find "../upstream/$upstream/$mandir" -type f | LC_ALL=C sort)
     for manpage_path in $manpage_paths; do
       # Determine manpage name
-      manpage_name=`basename "$manpage_path"`
+      manpage_name=$(basename "$manpage_path")
 
       # Check if there is a translation
       # FIXME: add $upstream to path
@@ -47,7 +47,7 @@ for upstream in $upstreams; do
 
       # Determine if an encoding is specified,
       # otherwise fall back to ISO-8859-1
-      coding=`grep "\-\*\- coding:" "$manpage_path" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
+      coding=$(grep "\-\*\- coding:" "$manpage_path" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
       if [ -z "$coding" ]; then
         coding="ISO-8859-1"
       fi

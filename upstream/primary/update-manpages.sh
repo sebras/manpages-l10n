@@ -22,35 +22,35 @@ mkdir man1 man2 man3 man4 man5 man6 man7 man8
 while read package; do
 	echo "Downloading package '$package'"
 	# Download HTML page and discover the correct link
-	url=`wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
+	url=$(wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
-	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,"`
+	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
 	wget --quiet --directory-prefix=downloads "$url"
 done < packages.txt
 
 # Extract manpages
 while read package; do
 	echo "Updating package '$package'"
-	latest_deb=`ls downloads/$package\_*.deb 2>/dev/null | tail -n1`
+	latest_deb=$(ls downloads/$package\_*.deb 2>/dev/null | tail -n1)
 	if [ -z $latest_deb ]; then
 		echo "Warning: Could not find .deb for package '$package'"
 	else
-		data_tar=`ar t $latest_deb | grep data.tar`
+		data_tar=$(ar t $latest_deb | grep data.tar)
 		ar x $latest_deb $data_tar
 		mkdir -p tmp/$package
 		tar xaf $data_tar --directory=tmp/$package
 		for mandir in tmp/$package/usr/share/man/man*/; do
-			section=`echo $mandir | cut -d/ -f6`
+			section=$(echo $mandir | cut -d/ -f6)
 			# Only copy directories with files
-			files=`ls $mandir`
+			files=$(ls $mandir)
 			if [ -n "$files" ]; then
 				mkdir -p tmp/$package/$section
 				# Remove manpages which are links
 				for manpage in $mandir/*; do
-					existing=`readlink $manpage`
+					existing=$(readlink $manpage)
 					if [ -n "$existing" ]; then
-						linked_section=`basename $existing .gz | sed -e "s/.\+\.//"`
-						echo man$linked_section/`basename $existing` $section/`basename $manpage` >> tmp.links
+						linked_section=$(basename $existing .gz | sed -e "s/.\+\.//")
+						echo man$linked_section/$(basename $existing) $section/$(basename $manpage) >> tmp.links
 						rm $manpage
 					fi
 				done
@@ -58,9 +58,9 @@ while read package; do
 				gzip -d tmp/$package/$section/*
 				# Remove manpages which contain only .so links
 				for manpage in tmp/$package/$section/*; do
-					existing=`grep "^\.so" $manpage | sed -e "s/^\.so //"`
+					existing=$(grep "^\.so" $manpage | sed -e "s/^\.so //")
 					if [ -n "$existing" ]; then
-						echo $existing.gz $section/`basename $manpage`.gz >> tmp.links
+						echo $existing.gz $section/$(basename $manpage).gz >> tmp.links
 						rm $manpage
 					fi
 				done

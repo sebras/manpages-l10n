@@ -26,15 +26,15 @@ if [ -z "$2" ]; then
 fi
 
 # Extract header entry for compendium (first line until first blank line)
-header=`mktemp`
+header=$(mktemp)
 sed -n "1,/^$/p" "$1" > "$header"
 
 # Join all files into one compendium
-giant=`mktemp`
+giant=$(mktemp)
 msgcat common-primary/*po > "$giant"
 
 # Remove untranslated and fuzzy entries
-tmpcompendium=`mktemp`
+tmpcompendium=$(mktemp)
 msgattrib --translated --no-fuzzy "$giant" > "$tmpcompendium"
 
 # Create a custom compendium with the header from the translation

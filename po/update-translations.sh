@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-translations=`find man? -name "*.po" | sort`
+translations=$(find man* -name "*.po" | sort)
 for translation in $translations; do
 	echo "$translation"
 	./update-po.sh "$translation"
