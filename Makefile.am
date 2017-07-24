@@ -15,6 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Reformat all .po files and commit changes
+reformat:
+	cd po && \
+	./format-po.sh && \
+	git commit -m "Reformat .po files, no content changes" . || true
+
 # Export the current git tree into the tarball directory
 dist-hook:
 	git archive --format=tar manpages-de-$(VERSION) | (cd $(distdir) && tar xf -)
