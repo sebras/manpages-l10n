@@ -25,20 +25,6 @@ if test "x$po4a" = "xno"; then
     AC_MSG_ERROR([You need to install po4a])
 fi
 
-# Support the downloading of manpages from Debian
-# Warning: Since version 1.17, this option is deprecated.
-AC_ARG_ENABLE(
-    [deprecated-download],
-    [AS_HELP_STRING([--enable-deprecated-download],
-        [download manpages from Debian instead of using manpages
-         installed on the system.
-         Warning: This option is deprecated and will be removed.
-         (default is no)])],
-    [ac_enable_deprecated_download=yes],
-    [ac_enable_deprecated_download=no]
-)
-AC_SUBST([ac_enable_deprecated_download])
-
 AC_CONFIG_FILES([
     Makefile
     po/Makefile
