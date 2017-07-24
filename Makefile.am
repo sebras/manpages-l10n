@@ -15,11 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-EXTRA_DIST = \
-	AUTHORS \
-	CHANGES \
-	LICENSE \
-	COPYRIGHT \
-	lizenz.add \
-	create-links.pl \
-	remove-links.pl
+# Export the current git tree into the tarball directory
+dist-hook:
+	git archive --format=tar manpages-de-$(VERSION) | (cd $(distdir) && tar xf -)
