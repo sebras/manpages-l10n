@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2012 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,96 +15,65 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-top_srcdir="$1"
-manpage="$2"
+translation="$1"
 
-translation="$manpage".po
-addendum="$manpage".add
-section=`basename "$manpage" | sed -e "s/.\+\.//"`
-
-# Try to locate original manpage in the english directory.
-original=$top_srcdir/english/man$section/$manpage
-
-# Try to locate original manpage from system-wide installation
-# The order to try is gzip, bzip2, xz, uncompressed
-if [ ! -f "$original" ]; then
-	original=/usr/share/man/man$section/$manpage.gz
-	if [ -f "$original" ]; then
-		# The manpage exists, but needs to be decompressed
-		uncompressed_manpage=`mktemp`
-		gzip -d -c "$original" > "$uncompressed_manpage"
-		original="$uncompressed_manpage"
-	fi
-fi
-# Try a bzip2 compressed version
-if [ ! -f "$original" ]; then
-	original=/usr/share/man/man$section/$manpage.bz2
-	if [ -f "$original" ]; then
-		# The manpage exists, but needs to be decompressed
-		uncompressed_manpage=`mktemp`
-		bzip2 -d -c "$original" > "$uncompressed_manpage"
-		original="$uncompressed_manpage"
-	fi
-fi
-# Try a xz compressed version
-if [ ! -f "$original" ]; then
-	original=/usr/share/man/man$section/$manpage.xz
-	if [ -f "$original" ]; then
-		# The manpage exists, but needs to be decompressed
-		uncompressed_manpage=`mktemp`
-		xz -d -c "$original" > "$uncompressed_manpage"
-		original="$uncompressed_manpage"
-	fi
-fi
-# Try an uncompressed version
-if [ ! -f "$original" ]; then
-	original=/usr/share/man/man$section/$manpage
-fi
+# Set up the path to the original manpage
+master="../upstream/$translation"
+master=${master%.po}
 
 # Cannot generate manpage if the original could not be found
-if [ ! -f "$original" ]; then
-	echo "The original manpage for $manpage could not be found." >&2
+if [ ! -f "$master" ]; then
+	echo "The original manpage for '$translation' could not be found." >&2
 	exit
 fi
 
 # Determine if an encoding is specified,
 # otherwise fall back to ISO-8859-1
-coding=`grep "\-\*\- coding:" "$original" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/"`
+coding=$(grep "\-\*\- coding:" "$master" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
 if [ -z "$coding" ]; then
 	coding="ISO-8859-1"
 fi
 
+# Set up the filename of the localized manpage
+localized="localized/$translation"
+localized=${localized%.po}
+
+# Remove possible stale copy
+mkdir -p localized
+rm -f "$localized"
+
+# Create the addendum for this manpage
+addendum=$(mktemp)
+./generate-addendum.sh "$translation" "$addendum"
+
+# Actual translation
 po4a-translate \
 	-f man \
 	--option groff_code=verbatim \
 	--option generated \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
-	-m "$original" \
+	-m "$master" \
 	-M "$coding" \
 	-p "$translation" \
 	-a "$addendum" \
-	-a "$top_srcdir/lizenz.add" \
+	-a "../lizenz.add" \
 	-L UTF-8 \
-	-l "$manpage";
+	-l "$localized";
 
-if [ -f "$manpage" ]; then
-	tmp_encoding=`mktemp`
-	tmp_manpage=`mktemp`
+# Ensure a proper encoding if the generation has been successful
+if [ -f "$localized" ]; then
+	encoding=$(mktemp)
+	manpage=$(mktemp)
 	# Check if the generated manpage already includes an encoding
-	coding=`head -n1 "$manpage" | grep "coding:"`
+	coding=$(head -n1 "$localized" | grep "coding:")
 	if [ -n "$coding" ]; then
 		# There is an encoding set, remove the first line
-		sed -i -e "1d" "$manpage"
+		sed -i -e "1d" "$localized"
 	fi
 	# Set an explicit encoding to prevent display errors
-	echo ".\\\" -*- coding: UTF-8 -*-" > "$tmp_encoding"
-	cat "$tmp_encoding" "$manpage" > "$tmp_manpage"
-	mv "$tmp_manpage" "$manpage"
-	rm "$tmp_encoding"
-fi
-
-# Clean up temporary file, if necessary
-if [ -f "$uncompressed_manpage" ]; then
-	rm -f "$uncompressed_manpage"
+	echo ".\\\" -*- coding: UTF-8 -*-" > "$encoding"
+	cat "$encoding" "$localized" > "$manpage"
+	mv "$manpage" "$localized"
+	rm "$encoding"
 fi
