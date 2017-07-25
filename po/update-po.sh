@@ -22,8 +22,7 @@ if [ ! -f "$1" ]; then
 fi
 
 # path to the templates
-# @FIXME: for now, the upstream is 'primary', remove it when ready.
-templatedir="../templates/primary"
+templatedir="../templates"
 
 # Find the pot file by adding the letter 't'
 potfile="$templatedir/$1""t"
