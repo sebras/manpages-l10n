@@ -20,7 +20,7 @@ directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sor
 
 for directory in $directories; do
 	echo "Processing directory '$directory'"
-	translations=$(find "$directory"/man* -name "*.po" | sort)
+	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
 	for translation in $translations; do
 		echo $(basename "$translation")
 		./update-po.sh "$translation"
