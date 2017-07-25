@@ -21,16 +21,18 @@
 # Determine directory names from upstream directory.
 directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
 
-# path to the templates
-templatedir="../templates"
+# path to the upstream manpages
+upstreamdir="../upstream"
 
 for directory in $directories; do
 	echo "Processing directory '$directory'"
 	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
 	for translation in $translations; do
-		# Find the pot file by adding the letter 't'
-		potfile="$templatedir/$translation""t"
-		if [ ! -f "$potfile" ]; then
+		# Find the manpage by removing the .po extension
+		manpage=$(basename $translation .po)
+		mandir=$(dirname $translation)
+		manpage="$upstreamdir/$mandir/$manpage"
+		if [ ! -f "$manpage" ]; then
 			echo "No upstream found for '$translation'"
 		fi
 	done
