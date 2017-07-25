@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2012 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-translations=$(find man* -name "*.po" | sort)
-for translation in $translations; do
-	echo "$translation"
-	./update-po.sh "$translation"
+# Determine directory names from upstream directory.
+directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+
+for directory in $directories; do
+	echo "Processing directory '$directory'"
+	translations=$(find "$directory"/man* -name "*.po" | sort)
+	for translation in $translations; do
+		echo $(basename "$translation")
+		./update-po.sh "$translation"
+	done
 done
