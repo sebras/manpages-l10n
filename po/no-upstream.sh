@@ -15,16 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-set -e
-
 # Check if there is a .po file without the corresponding
 # upstream manpage, e.g. when a package has been removed.
 
-translations=`find man? -name "*.po" | sort`
-for translation in $translations; do
-	manpage=`basename "$translation" .po`
-	original=`find ../english/ -name "$manpage"`
-	if [ -z "$original" ]; then
-		echo "No upstream found for" $translation
-	fi
+# Determine directory names from upstream directory.
+directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+
+# path to the templates
+templatedir="../templates"
+
+for directory in $directories; do
+	echo "Processing directory '$directory'"
+	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
+	for translation in $translations; do
+		# Find the pot file by adding the letter 't'
+		potfile="$templatedir/$translation""t"
+		if [ ! -f "$potfile" ]; then
+			echo "No upstream found for '$translation'"
+		fi
+	done
 done
