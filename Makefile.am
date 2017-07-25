@@ -1,6 +1,6 @@
 # Makefile for manpages-de
 #
-# Copyright © 2012 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2012-2017 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Generate all localized manpages
+all-local:
+	cd po && \
+	./generate-all-manpages.sh
+
 # Reformat all .po files and commit changes
+.PHONY: reformat
 reformat:
 	cd po && \
 	./format-po.sh && \
