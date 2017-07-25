@@ -15,33 +15,41 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Determine directory names from upstream directory.
+directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+
 count=0
-for translation in `find man?/ -name "*.po" | sort`; do
-	stats=`msgfmt -cv -o /dev/null $translation 2>&1`
-	fuzzy_or_untranslated=`echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+"`
-	if [ -n "$fuzzy_or_untranslated" ]; then
-		# Remove the last text part
-		all=`echo $stats | sed -e "s/[^0-9]\+$//"`
-		# Replace all remaining text parts with the plus sign
-		all=`echo $all | sed -e "s/[^0-9]\+/+/g"`
-		# Calculate the sum
-		all=`echo $all | bc`
-		# Get the translated messages
-		translated=`echo $stats | sed -e "s/\([0-9]\+\).*/\1/"`
-		# Calculate the percentage
-		percentage=`echo "100 * $translated / $all" | bc`
-		# Calculate needed translations for 80%
-		hint=""
-		if [ $percentage -lt 80 ]; then
-			number=`echo "(800 * $all / 100 + 9) / 10 - $translated" | bc`
-			hint=", es fehlen $number Übersetzungen bis 80%"
+for directory in $directories; do
+	echo "Processing directory '$directory'"
+	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
+	for translation in $translations; do
+		stats=$(msgfmt -cv -o /dev/null $translation 2>&1)
+		fuzzy_or_untranslated=$(echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+")
+		if [ -n "$fuzzy_or_untranslated" ]; then
+			# Remove the last text part
+			all=$(echo $stats | sed -e "s/[^0-9]\+$//")
+			# Replace all remaining text parts with the plus sign
+			all=$(echo $all | sed -e "s/[^0-9]\+/+/g")
+			# Calculate the sum
+			all=$(echo $all | bc)
+			# Get the translated messages
+			translated=$(echo $stats | sed -e "s/\([0-9]\+\).*/\1/")
+			# Calculate the percentage
+			percentage=$(echo "100 * $translated / $all" | bc)
+			# Calculate needed translations for 80%
+			hint=""
+			if [ $percentage -lt 80 ]; then
+				number=$(echo "(800 * $all / 100 + 9) / 10 - $translated" | bc)
+				hint=", es fehlen $number Übersetzungen bis 80%"
+			fi
+			echo $translation: $percentage%$hint
+			echo $stats
+			echo
+			count=$(($count+1))
 		fi
-		echo `basename $translation`: $percentage%$hint
-		echo $stats
-		echo
-		count=$(($count+1))
-	fi
+	done
 done
+
 if [ $count -eq 0 ]; then
 	echo "Alle Dateien sind vollständig übersetzt."
 else
