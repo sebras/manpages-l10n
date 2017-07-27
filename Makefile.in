@@ -471,7 +471,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic mostlyclean-am
+clean-am: clean-generic clean-local mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -491,7 +491,8 @@ info: info-am
 info-am:
 
 install-data-am:
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
 
 install-dvi-am:
@@ -537,22 +538,23 @@ ps: ps-am
 ps-am:
 
 uninstall-am:
-
-.MAKE: install-am install-strip
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
+.MAKE: install-am install-data-am install-strip uninstall-am
 
 .PHONY: all all-am all-local am--refresh check check-am clean \
-	clean-generic cscopelist-am ctags-am dist dist-all dist-bzip2 \
-	dist-gzip dist-hook dist-lzip dist-shar dist-tarZ dist-xz \
-	dist-zip distcheck distclean distclean-generic distcleancheck \
-	distdir distuninstallcheck dvi dvi-am html html-am info \
-	info-am install install-am install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags-am \
-	uninstall uninstall-am
+	clean-generic clean-local cscopelist-am ctags-am dist dist-all \
+	dist-bzip2 dist-gzip dist-hook dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-generic \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-data-hook install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags-am uninstall uninstall-am uninstall-hook
 
 .PRECIOUS: Makefile
 
@@ -561,6 +563,36 @@ uninstall-am:
 all-local:
 	cd po && \
 	./generate-all-manpages.sh
+
+# Remove generated manpages
+clean-local:
+	rm -rf po/localized
+
+# Install localized manpages
+install-data-hook:
+	for directory in $(top_srcdir)/po/localized/primary/man*; do \
+		mansection=$$(basename $$directory) ; \
+		$(mkinstalldirs) $(DESTDIR)$(mandir)/de/$$mansection ; \
+		for manpage in $$directory/*; do \
+			filename=$$(basename $$manpage) ; \
+			$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
+			gzip --best $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		done \
+	done
+	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
+		$(top_srcdir)/upstream/primary/links.txt
+
+# Uninstall localized manpages
+uninstall-hook:
+	perl $(top_srcdir)/remove-links.pl $(DESTDIR)$(mandir)/de \
+		$(top_srcdir)/upstream/primary/links.txt
+	for directory in $(top_srcdir)/po/localized/primary/man*; do \
+		mansection=$$(basename $$directory) ; \
+		for manpage in $$directory/*; do \
+			filename=$$(basename $$manpage) ; \
+			rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
+		done \
+	done
 
 # Reformat all .po files and commit changes
 .PHONY: reformat

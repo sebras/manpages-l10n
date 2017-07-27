@@ -20,6 +20,36 @@ all-local:
 	cd po && \
 	./generate-all-manpages.sh
 
+# Remove generated manpages
+clean-local:
+	rm -rf po/localized
+
+# Install localized manpages
+install-data-hook:
+	for directory in $(top_srcdir)/po/localized/primary/man*; do \
+		mansection=$$(basename $$directory) ; \
+		$(mkinstalldirs) $(DESTDIR)$(mandir)/de/$$mansection ; \
+		for manpage in $$directory/*; do \
+			filename=$$(basename $$manpage) ; \
+			$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
+			gzip --best $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		done \
+	done
+	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
+		$(top_srcdir)/upstream/primary/links.txt
+
+# Uninstall localized manpages
+uninstall-hook:
+	perl $(top_srcdir)/remove-links.pl $(DESTDIR)$(mandir)/de \
+		$(top_srcdir)/upstream/primary/links.txt
+	for directory in $(top_srcdir)/po/localized/primary/man*; do \
+		mansection=$$(basename $$directory) ; \
+		for manpage in $$directory/*; do \
+			filename=$$(basename $$manpage) ; \
+			rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
+		done \
+	done
+
 # Reformat all .po files and commit changes
 .PHONY: reformat
 reformat:
