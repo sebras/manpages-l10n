@@ -17,12 +17,12 @@
 
 # Generate all localized manpages
 all-local:
-	cd po && \
+	cd $(top_srcdir)/po ; \
 	./generate-all-manpages.sh
 
 # Remove generated manpages
 clean-local:
-	rm -rf po/localized
+	rm -rf $(top_srcdir)/po/localized
 
 # Install localized manpages
 install-data-hook:
@@ -54,8 +54,8 @@ uninstall-hook:
 # Reformat all .po files and commit changes
 .PHONY: reformat
 reformat:
-	cd po && \
-	./format-po.sh && \
+	cd $(top_srcdir)/po ; \
+	./format-po.sh ; \
 	git commit -m "Reformat .po files, no content changes" . || true
 
 # Export the current git tree into the tarball directory
