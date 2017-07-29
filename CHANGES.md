@@ -54,9 +54,9 @@
 
 *Mon Nov 21 13:07:25 CET 2016*
 
-* Deprecate configure option --enable-download.
+* Deprecate configure option *--enable-download*.
   This option will be removed in the future. If this option is really
-  needed for now, the new option --enable-deprecated-download will
+  needed for now, the new option *--enable-deprecated-download* will
   behave just the same but serves as a reminder to change the
   build process.
 * Include bzip2 compressed manpages in the search for the original.
@@ -98,7 +98,7 @@
 
 * Make build reproducible by telling grep that all files
   are text, not binary. Thanks to Reiner Herrmann for the
-  bug report and patch. Closes: #815192
+  bug report and patch. Closes: [#815192](https://bugs.debian.org/815192)
 * Updated many translations
 
 ## Version 1.11
@@ -153,18 +153,16 @@
   chcpu.8, fsck.cramfs.8, lslocks.8, mkfs.cramfs.8, readprofile.8,
   wdctl.8
 * Updated many translations
-* Removed translations:
-  chkdupexe.1, ddate.1, readprofile.1, cytune.8, getty.8
+* Removed translations: chkdupexe.1, ddate.1, readprofile.1, cytune.8,
+  getty.8
 
 ## Version 1.7
 
 *Mon Jul 14 12:28:03 CEST 2014*
 
-* New translations:
-  pivot_root.2
+* New translation: pivot_root.2
 * Updated many translations
-* Removed translations:
-  clock.8
+* Removed translation: clock.8
 
 ## Version 1.6
 
@@ -195,17 +193,15 @@
 
 *Sun Dec 15 19:16:36 CET 2013*
 
-* New translations:
-  ogg123.1, oggdec.1, oggenc.1, ogginfo.1, vcut.1, vorbiscomment.1,
-  vorbistagedit.1
+* New translations: ogg123.1, oggdec.1, oggenc.1, ogginfo.1,
+  vcut.1, vorbiscomment.1, vorbistagedit.1
 * Updated many translations
 
 ## Version 1.3
 
 *Sun Aug 18 15:09:58 CEST 2013*
 
-* Renamed translations:
-  getdtablesize.2 -> getdtablesize.3
+* Renamed translation: getdtablesize.2 -> getdtablesize.3
 * Updated many translations
 
 ## Version 1.2
@@ -213,8 +209,7 @@
 *Sun Oct 28 12:50:50 CET 2012*
 
 * During ./configure, check that po4a is available on the system.
-* New translations:
-  charmap.5, hosts.equiv.5, networks.5
+* New translations: charmap.5, hosts.equiv.5, networks.5
 * Updated many translations
 
 ## Version 1.1
@@ -224,9 +219,10 @@
 * Instead of downloading the original manpages during building
   of the package, the software now uses the locally installed
   manpages on the system. To enable the previous behaviour,
-  there is now an option "--enable-download" for the configure
+  there is now an option *--enable-download* for the configure
   script. Thanks to Jeremy Bicha <jbicha@ubuntu.com> for the
-  bug report. This closes Debian bug #679122.
+  bug report. This closes Debian bug
+  [#679122](https://bugs.debian.org/679122).
 * Updated many translations
 
 ## Version 1.0
@@ -239,8 +235,7 @@
   installation
 * Because of the above, the package now needs wget and po4a
   during installation
-* New translations:
-  iso_8859-8.7
+* New translation: iso_8859-8.7
 * Updated many translations
 * Removed translations which are severely out of date:
   groff.1, less.1, access.2, capget.2, connect.2, execve.2, fcntl.2,
@@ -285,16 +280,14 @@
 
 *Thu Jan  5 22:34:51 CET 2012*
 
-* New manpages:
-  tar.1, getpeername.2, getresuid.2, bstring.3, fstab.5
+* New manpages: tar.1, getpeername.2, getresuid.2, bstring.3, fstab.5
 * Updated many translations
 
 ## Version 0.10
 
 *Fri Dec 16 22:44:36 CET 2011*
 
-* New manpages:
-  grep.1, acosh.3, fgetpwent.3, strdup.3
+* New manpages: grep.1, acosh.3, fgetpwent.3, strdup.3
 * Updated many translations
 
 ## Version 0.9
@@ -308,9 +301,9 @@
   binkdlogstat.8, ttyS.4, cpuid.4, dsp56k.4, mouse.4, msr.4, random.4,
   wavelan.4, man-pages.7, operator.7, initrd.4, group.5, resolv.conf.5
 * Removed manpages:
-  resolver.5 (linked from resolv.conf.5)
-  write.1, ttys.4, rdev.8 (removed upstream)
-  ar.1, ps.1, kill.1, more.1 (too outdated translation)
+  resolver.5 (linked from resolv.conf.5),
+  write.1, ttys.4, rdev.8 (removed upstream),
+  ar.1, ps.1, kill.1, more.1 (too outdated translation),
   fdformat.1, mcopy.1, mdel.1, mdir.1, mformat.1, mmd.1, mrd.1, mread.1,
   mtools.1, pon.1, tkinfo.1, exports.5, lilo.conf.5, lilo.8 (obsolete)
 
@@ -325,8 +318,8 @@
   sdiff.1
 * Updated many translations
 * Removed manpages:
-  doshell.1 (upstream does no longer exist)
-  g77.1 (upstream does no longer exist)
+  doshell.1 (upstream does no longer exist),
+  g77.1 (upstream does no longer exist),
   ginstall.1 (upstream does no longer exist)
 
 ## Version 0.7
@@ -334,8 +327,9 @@
 *Thu Nov 11 17:04:01 CET 2010*
 
 * Updated and reviewed numerous manpages
-* Fix typo in cut.1. Closes: #602816
-* Changed cdrecord.1 to wodim.1. Closes: LP#321674
+* Fix typo in cut.1. Closes: [#602816](https://bugs.debian.org/602816).
+* Changed cdrecord.1 to wodim.1. Closes:
+  [LP#321674](https://launchpad.net/bugs/602816)
 
 ## Version 0.6
 
@@ -472,18 +466,18 @@
 * Added fgetc(3)
 * Added newline for getsid(2) and strcpy(3)
 * New snapshot, includes
-  . Corrections made by Johnny Tevessen <j.tevessen@line.org>
-  . New unicode.7 from Johnny Tevessen <j.tevessen@line.org>
-  . localeconf.5 updated by Jochen Hein
-  . Fixed spelling errors in ls.1, nohup.1, mmap.1, msync.2,
+  * Corrections made by Johnny Tevessen <j.tevessen@line.org>
+  * New unicode.7 from Johnny Tevessen <j.tevessen@line.org>
+  * localeconf.5 updated by Jochen Hein
+  * Fixed spelling errors in ls.1, nohup.1, mmap.1, msync.2,
     localeconf.3, puts.3, fstab.5, issue.5, man.config.5, securetty.6,
     intro.6, man.7
-  . un-undocumented in section 2: msync, readv, writev, getsid, _sysctl
+  * un-undocumented in section 2: msync, readv, writev, getsid, _sysctl
 * New upstream pages included
 * Merged README and readme
-* Removed manpages for man,apropos,whatis} (fixes: Bug#5335)
-* Corrected man(7) (fixes: Bug#10327)
-* Corrected nohup(1) (fixes: Bug#10873)
+* Removed manpages for man,apropos,whatis} (fixes: [Bug#5335](https://bugs.debian.org/5335))
+* Corrected man(7) (fixes: [Bug#10327](https://bugs.debian.org/10327))
+* Corrected nohup(1) (fixes: [Bug#10873](https://bugs.debian.org/10873))
 
 ## Version 0.1
 
