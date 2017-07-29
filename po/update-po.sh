@@ -28,6 +28,10 @@ templatedir="../templates"
 potfile="$templatedir/$1""t"
 if [ ! -f "$potfile" ]; then
 	echo "The potfile '$potfile' could not be found." >&2
+	echo >&2
+	echo "Please go to the templates directory and run './update-templates.sh'." >&2
+	echo "$ cd ../templates" >&2
+	echo "$ ./update-templates.sh" >&2
 	exit 1
 fi
 
