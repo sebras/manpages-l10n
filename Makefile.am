@@ -66,6 +66,18 @@ update-upstream:
 	git add . ; \
 	git commit -m "Update upstream manpages" || true
 
+# Update all template files from upstream manpages
+.PHONY: update-templates
+update-templates:
+	cd $(top_srcdir)/templates ; \
+	./update-templates.sh ; \
+	git add . ; \
+	git commit -m "Update templates from original manpages" || true
+	cd $(top_srcdir)/templates ; \
+	./create-common-templates.sh ; \
+	git add . ; \
+	git commit -m "Update common templates" || true
+
 # Export the current git tree into the tarball directory
 dist-hook:
 	git archive --format=tar manpages-de-$(VERSION) | (cd $(distdir) && tar xf -)
