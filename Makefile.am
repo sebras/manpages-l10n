@@ -58,6 +58,14 @@ reformat:
 	./format-po.sh ; \
 	git commit -m "Reformat .po files, no content changes" . || true
 
+# Download and update all upstream manpages
+.PHONY: update-upstream
+update-upstream:
+	cd $(top_srcdir)/upstream ; \
+	./update-distribution-manpages.sh ; \
+	git add . ; \
+	git commit -m "Update upstream manpages" || true
+
 # Export the current git tree into the tarball directory
 dist-hook:
 	git archive --format=tar manpages-de-$(VERSION) | (cd $(distdir) && tar xf -)
