@@ -39,8 +39,7 @@ for upstream in $upstreams; do
       manpage_name=$(basename "$manpage_path")
 
       # Check if there is a translation
-      # FIXME: add $upstream to path
-      translation="../po/$mandir/$manpage_name.po"
+      translation="../po/$upstream/$mandir/$manpage_name.po"
       if [ ! -f "$translation" ]; then
         continue
       fi
