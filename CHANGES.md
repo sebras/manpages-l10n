@@ -25,1824 +25,1824 @@
 
 *Mon Mar 13 16:55:49 CET 2017*
 
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
-    df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
-    expr.1, factor.1, false.1, find.1, fmt.1, fold.1, free.1, groups.1,
-    head.1, hostid.1, id.1, install.1, join.1, link.1, ln.1, logname.1,
-    ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1,
-    nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
-    printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
-    runcon.1, sed.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1,
-    sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
-    split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
-    tar.1, tee.1, test.1, timeout.1, touch.1, tr.1, true.1, truncate.1,
-    tsort.1, tty.1, uname.1, unexpand.1, uniq.1, unlink.1, users.1,
-    vdir.1, wc.1, who.1, whoami.1, wodim.1, yes.1, fcntl.2, flock.2,
-    mlock.2, ptrace.2, rename.2, shmget.2, stat.2, swapon.2, sysinfo.2,
-    times.2, resolver.3, fstab.5, nfs.5, proc.5, agetty.8, blkid.8,
-    chroot.8, fdisk.8, lslocks.8, mkswap.8, sfdisk.8, swaplabel.8,
-    systemd-halt.service.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
+  df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
+  expr.1, factor.1, false.1, find.1, fmt.1, fold.1, free.1, groups.1,
+  head.1, hostid.1, id.1, install.1, join.1, link.1, ln.1, logname.1,
+  ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1,
+  nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
+  printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
+  runcon.1, sed.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1,
+  sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
+  split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
+  tar.1, tee.1, test.1, timeout.1, touch.1, tr.1, true.1, truncate.1,
+  tsort.1, tty.1, uname.1, unexpand.1, uniq.1, unlink.1, users.1,
+  vdir.1, wc.1, who.1, whoami.1, wodim.1, yes.1, fcntl.2, flock.2,
+  mlock.2, ptrace.2, rename.2, shmget.2, stat.2, swapon.2, sysinfo.2,
+  times.2, resolver.3, fstab.5, nfs.5, proc.5, agetty.8, blkid.8,
+  chroot.8, fdisk.8, lslocks.8, mkswap.8, sfdisk.8, swaplabel.8,
+  systemd-halt.service.8
 
 
 ## Version 1.21
 
 *Sun Jan 22 22:16:24 CET 2017*
 
-  * Updated translations:
-    tar.1, resolver.3
+* Updated translations:
+  tar.1, resolver.3
 
 
 ## Version 1.20
 
 *Sun Jan 22 21:57:18 CET 2017*
 
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, chrt.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1,
-    dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1, du.1, echo.1,
-    env.1, expand.1, expr.1, factor.1, fallocate.1, false.1, fmt.1,
-    fold.1, getopt.1, groups.1, head.1, hostid.1, id.1, install.1,
-    ionice.1, ipcrm.1, ipcs.1, join.1, link.1, ln.1, logname.1, ls.1,
-    mcookie.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, more.1,
-    mv.1, namei.1, nice.1, nl.1, nohup.1, nproc.1, nsenter.1, od.1,
-    paste.1, pathchk.1, pg.1, pinky.1, pr.1, printenv.1, printf.1,
-    prlimit.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1, runcon.1,
-    runuser.1, seq.1, setterm.1, sha1sum.1, sha224sum.1, sha256sum.1,
-    sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
-    split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
-    tailf.1, taskset.1, tee.1, test.1, timeout.1, touch.1, tr.1,
-    true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1, uniq.1,
-    unlink.1, unshare.1, users.1, vdir.1, wc.1, whereis.1, who.1,
-    whoami.1, yes.1, terminal-colors.d.5, agetty.8, blkdiscard.8,
-    blkid.8, cfdisk.8, chroot.8, fdformat.8, fdisk.8, fsck.8,
-    fsck.minix.8, fstrim.8, lsblk.8, lslocks.8, mkfs.cramfs.8,
-    mkfs.minix.8, pivot_root.8, readprofile.8, swaplabel.8,
-    switch_root.8, tunelp.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, chrt.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1,
+  dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1, du.1, echo.1,
+  env.1, expand.1, expr.1, factor.1, fallocate.1, false.1, fmt.1,
+  fold.1, getopt.1, groups.1, head.1, hostid.1, id.1, install.1,
+  ionice.1, ipcrm.1, ipcs.1, join.1, link.1, ln.1, logname.1, ls.1,
+  mcookie.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, more.1,
+  mv.1, namei.1, nice.1, nl.1, nohup.1, nproc.1, nsenter.1, od.1,
+  paste.1, pathchk.1, pg.1, pinky.1, pr.1, printenv.1, printf.1,
+  prlimit.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1, runcon.1,
+  runuser.1, seq.1, setterm.1, sha1sum.1, sha224sum.1, sha256sum.1,
+  sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
+  split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
+  tailf.1, taskset.1, tee.1, test.1, timeout.1, touch.1, tr.1,
+  true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1, uniq.1,
+  unlink.1, unshare.1, users.1, vdir.1, wc.1, whereis.1, who.1,
+  whoami.1, yes.1, terminal-colors.d.5, agetty.8, blkdiscard.8,
+  blkid.8, cfdisk.8, chroot.8, fdformat.8, fdisk.8, fsck.8,
+  fsck.minix.8, fstrim.8, lsblk.8, lslocks.8, mkfs.cramfs.8,
+  mkfs.minix.8, pivot_root.8, readprofile.8, swaplabel.8,
+  switch_root.8, tunelp.8
 
 
 ## Version 1.19
 
 *Sat Jan 21 12:15:48 CET 2017*
 
-  * Updated translations:
-    find.1, grep.1, groff.1, lzmainfo.1, mkdir.1, rmdir.1, runcon.1,
-    sed.1, setterm.1, tar.1, unshare.1, adjtimex.2, capget.2, chmod.2,
-    chown.2, clone.2, fcntl.2, fork.2, mkdir.2, mknod.2, mlock.2,
-    mount.2, mremap.2, nice.2, open.2, pipe.2, pivot_root.2, ptrace.2,
-    reboot.2, select.2, setpgid.2, setsid.2, signal.2, sigreturn.2,
-    stat.2, symlink.2, umask.2, write.2, atexit.3, errno.3, fseek.3,
-    getmntent.3, glob.3, hsearch.3, isalpha.3, on_exit.3, printf.3,
-    puts.3, resolver.3, toupper.3, console_codes.4, console_ioctl.4,
-    random.4, st.4, tty_ioctl.4, wavelan.4, acct.5, nfs.5, proc.5,
-    termcap.5, capabilities.7, environ.7, feature_test_macros.7,
-    libc.7, signal.7, fdisk.8, hwclock.8, init.8, lsblk.8, sfdisk.8,
-    systemd-activate.8, systemd-networkd-wait-online.service.8, tunelp.8
+* Updated translations:
+  find.1, grep.1, groff.1, lzmainfo.1, mkdir.1, rmdir.1, runcon.1,
+  sed.1, setterm.1, tar.1, unshare.1, adjtimex.2, capget.2, chmod.2,
+  chown.2, clone.2, fcntl.2, fork.2, mkdir.2, mknod.2, mlock.2,
+  mount.2, mremap.2, nice.2, open.2, pipe.2, pivot_root.2, ptrace.2,
+  reboot.2, select.2, setpgid.2, setsid.2, signal.2, sigreturn.2,
+  stat.2, symlink.2, umask.2, write.2, atexit.3, errno.3, fseek.3,
+  getmntent.3, glob.3, hsearch.3, isalpha.3, on_exit.3, printf.3,
+  puts.3, resolver.3, toupper.3, console_codes.4, console_ioctl.4,
+  random.4, st.4, tty_ioctl.4, wavelan.4, acct.5, nfs.5, proc.5,
+  termcap.5, capabilities.7, environ.7, feature_test_macros.7,
+  libc.7, signal.7, fdisk.8, hwclock.8, init.8, lsblk.8, sfdisk.8,
+  systemd-activate.8, systemd-networkd-wait-online.service.8, tunelp.8
 
 
 ## Version 1.18
 
 *Sun Dec 18 13:11:21 CET 2016*
 
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
-    df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
-    expr.1, factor.1, false.1, fmt.1, fold.1, grep.1, groups.1, head.1,
-    hostid.1, id.1, install.1, intro.1, join.1, link.1, ln.1,
-    logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1,
-    mt-gnu.1, mv.1, ncal.1, nice.1, nl.1, nohup.1, nproc.1, od.1,
-    oggenc.1, paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1,
-    ptx.1, pwd.1, readlink.1, rm.1, rmdir.1, runcon.1, seq.1,
-    sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1,
-    shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1,
-    stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, test.1, timeout.1,
-    touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1, uname.1,
-    unexpand.1, uniq.1, unlink.1, unshare.1, users.1, vdir.1, wc.1,
-    who.1, whoami.1, yes.1, accept.2, access.2, acct.2, adjtimex.2,
-    alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
-    chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
-    execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
-    getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
-    getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
-    getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
-    ioperm.2, iopl.2, ipc.2, link.2, listen.2, lseek.2, mkdir.2,
-    mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2,
-    msync.2, nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
-    pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
-    wavelan.4, acct.5, charmap.5, filesystems.5, group.5, host.conf.5,
-    hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5, networks.5,
-    nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
-    securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
-    intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-10.7,
-    iso_8859-11.7, iso_8859-13.7, iso_8859-14.7, iso_8859-15.7,
-    iso_8859-16.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, iso_8859-9.7, libc.7, locale.7, mailaddr.7, man.7,
-    man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
-    suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
-    agetty.8, blockdev.8, chroot.8, fdisk.8, fsck.8, fsck.minix.8,
-    hwclock.8, intro.8, mkfs.minix.8, systemd-halt.service.8, tzselect.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
+  df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
+  expr.1, factor.1, false.1, fmt.1, fold.1, grep.1, groups.1, head.1,
+  hostid.1, id.1, install.1, intro.1, join.1, link.1, ln.1,
+  logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1,
+  mt-gnu.1, mv.1, ncal.1, nice.1, nl.1, nohup.1, nproc.1, od.1,
+  oggenc.1, paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1,
+  ptx.1, pwd.1, readlink.1, rm.1, rmdir.1, runcon.1, seq.1,
+  sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1,
+  shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1,
+  stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, test.1, timeout.1,
+  touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1, uname.1,
+  unexpand.1, uniq.1, unlink.1, unshare.1, users.1, vdir.1, wc.1,
+  who.1, whoami.1, yes.1, accept.2, access.2, acct.2, adjtimex.2,
+  alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
+  chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
+  execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
+  getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
+  getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
+  getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
+  ioperm.2, iopl.2, ipc.2, link.2, listen.2, lseek.2, mkdir.2,
+  mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2,
+  msync.2, nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
+  pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
+  wavelan.4, acct.5, charmap.5, filesystems.5, group.5, host.conf.5,
+  hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5, networks.5,
+  nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
+  securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
+  intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-10.7,
+  iso_8859-11.7, iso_8859-13.7, iso_8859-14.7, iso_8859-15.7,
+  iso_8859-16.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, iso_8859-9.7, libc.7, locale.7, mailaddr.7, man.7,
+  man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
+  suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
+  agetty.8, blockdev.8, chroot.8, fdisk.8, fsck.8, fsck.minix.8,
+  hwclock.8, intro.8, mkfs.minix.8, systemd-halt.service.8, tzselect.8
 
 
 ## Version 1.17
 
 *Mon Nov 21 13:07:25 CET 2016*
 
-  * Deprecate configure option --enable-download.
-    This option will be removed in the future. If this option is really
-    needed for now, the new option --enable-deprecated-download will
-    behave just the same but serves as a reminder to change the
-    build process.
-  * Include bzip2 compressed manpages in the search for the original.
-    Also reorder the compression methods to search for. The order
-    is now gzip, bzip2, xz, uncompressed.
-  * Updated translations:
-    arch.1, cksum.1, ddate.1, dircolors.1, dmesg.1, factor.1, false.1,
-    find.1, flock.1, grep.1, hostid.1, intro.1, ionice.1, ipcrm.1,
-    link.1, ln.1, logname.1, lscpu.1, lzmainfo.1, ncal.1, nice.1,
-    nproc.1, pg.1, runuser.1, sleep.1, stdbuf.1, sum.1, timeout.1,
-    true.1, unshare.1, uptime.1, utmpdump.1, xzmore.1, yes.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
-    nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
-    pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
-    wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5, group.5,
-    host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
-    networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
-    rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
-    utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-10.7,
-    iso_8859-11.7, iso_8859-13.7, iso_8859-14.7, iso_8859-15.7,
-    iso_8859-16.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, iso_8859-9.7, libc.7, locale.7, mailaddr.7, man.7,
-    man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
-    suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
-    agetty.8, blkid.8, blockdev.8, cfdisk.8, chroot.8, fdisk.8, fsck.8,
-    halt.8, hwclock.8, init.8, intro.8, lsblk.8, lslocks.8, rtcwake.8,
-    sfdisk.8, systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-modules-load.service.8, systemd-networkd.service.8,
-    systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    tzselect.8
+* Deprecate configure option --enable-download.
+  This option will be removed in the future. If this option is really
+  needed for now, the new option --enable-deprecated-download will
+  behave just the same but serves as a reminder to change the
+  build process.
+* Include bzip2 compressed manpages in the search for the original.
+  Also reorder the compression methods to search for. The order
+  is now gzip, bzip2, xz, uncompressed.
+* Updated translations:
+  arch.1, cksum.1, ddate.1, dircolors.1, dmesg.1, factor.1, false.1,
+  find.1, flock.1, grep.1, hostid.1, intro.1, ionice.1, ipcrm.1,
+  link.1, ln.1, logname.1, lscpu.1, lzmainfo.1, ncal.1, nice.1,
+  nproc.1, pg.1, runuser.1, sleep.1, stdbuf.1, sum.1, timeout.1,
+  true.1, unshare.1, uptime.1, utmpdump.1, xzmore.1, yes.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
+  nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
+  pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
+  wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5, group.5,
+  host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
+  networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
+  rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
+  utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-10.7,
+  iso_8859-11.7, iso_8859-13.7, iso_8859-14.7, iso_8859-15.7,
+  iso_8859-16.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, iso_8859-9.7, libc.7, locale.7, mailaddr.7, man.7,
+  man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
+  suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
+  agetty.8, blkid.8, blockdev.8, cfdisk.8, chroot.8, fdisk.8, fsck.8,
+  halt.8, hwclock.8, init.8, intro.8, lsblk.8, lslocks.8, rtcwake.8,
+  sfdisk.8, systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-modules-load.service.8, systemd-networkd.service.8,
+  systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  tzselect.8
 
 
 ## Version 1.16
 
 *Tue Sep 27 18:06:30 CEST 2016*
 
-  * Updated translations:
-    cmp.1, diff.1, diff3.1, info.1, ncal.1, sdiff.1, adjtimex.2,
-    mmap.2, mount.2, open.2, personality.2, sigreturn.2, sync.2,
-    assert.3, readdir.3, setjmp.3, console_ioctl.4, hosts.equiv.5,
-    nfs.5, proc.5, agetty.8, blkid.8, hwclock.8, raw.8, rtcwake.8
+* Updated translations:
+  cmp.1, diff.1, diff3.1, info.1, ncal.1, sdiff.1, adjtimex.2,
+  mmap.2, mount.2, open.2, personality.2, sigreturn.2, sync.2,
+  assert.3, readdir.3, setjmp.3, console_ioctl.4, hosts.equiv.5,
+  nfs.5, proc.5, agetty.8, blkid.8, hwclock.8, raw.8, rtcwake.8
 
 
 ## Version 1.15
 
 *Sat Aug 27 08:13:17 CEST 2016*
 
-  * Updated translations:
-    fallocate.1, find.1, getopt.1, tar.1, taskset.1, unshare.1,
-    access.2, cacheflush.2, execve.2, fcntl.2, fork.2, mmap.2, mount.2,
-    open.2, sigaction.2, socketcall.2, stat.2, statfs.2, sync.2,
-    umask.2, clearenv.3, getdate.3, gethostbyname.3, memcpy.3,
-    strcasecmp.3, tzset.3, console_ioctl.4, nfs.5, proc.5, ascii.7,
-    locale.7, blkdiscard.8, blkid.8, cfdisk.8, hwclock.8, lilo.8,
-    raw.8, sfdisk.8, systemd-journald.service.8,
-    systemd-sysctl.service.8
+* Updated translations:
+  fallocate.1, find.1, getopt.1, tar.1, taskset.1, unshare.1,
+  access.2, cacheflush.2, execve.2, fcntl.2, fork.2, mmap.2, mount.2,
+  open.2, sigaction.2, socketcall.2, stat.2, statfs.2, sync.2,
+  umask.2, clearenv.3, getdate.3, gethostbyname.3, memcpy.3,
+  strcasecmp.3, tzset.3, console_ioctl.4, nfs.5, proc.5, ascii.7,
+  locale.7, blkdiscard.8, blkid.8, cfdisk.8, hwclock.8, lilo.8,
+  raw.8, sfdisk.8, systemd-journald.service.8,
+  systemd-sysctl.service.8
 
 
 ## Version 1.14
 
 *Fri Aug 5 22:21:51 CEST 2016*
 
-  * New translations:
-    iso_8859-10.7, iso_8859-11.7, iso_8859-13.7, iso_8859-14.7,
-    iso_8859-16.7, iso_8859-9.7
-  * Updated translations:
-    find.1, free.1, getopt.1, groff.1, intro.1, ipcs.1, sed.1,
-    unshare.1, wodim.1, accept.2, access.2, acct.2, adjtimex.2,
-    alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
-    chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
-    execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
-    getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
-    getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
-    getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
-    ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
-    mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2,
-    mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
-    pipe.2, pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2,
-    reboot.2, rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2,
-    setgid.2, setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2,
-    setup.2, shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2,
-    sigreturn.2, socket.2, socketcall.2, socketpair.2, stat.2,
-    statfs.2, stime.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
-    sysinfo.2, time.2, times.2, truncate.2, umask.2, uname.2,
-    unimplemented.2, unlink.2, uselib.2, ustat.2, utime.2, vhangup.2,
-    vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3, acosh.3,
-    addseverity.3, alloca.3, asin.3, asinh.3, asprintf.3, assert.3,
-    atan2.3, atan.3, atanh.3, atexit.3, atof.3, atoi.3, bsearch.3,
-    bstring.3, byteorder.3, cabs.3, cacos.3, cacosh.3, carg.3, cbrt.3,
-    ceil.3, cimag.3, clearenv.3, clock.3, closedir.3, copysign.3,
-    cos.3, cosh.3, creal.3, crypt.3, csin.3, csinh.3, ctan.3, ctanh.3,
-    ctermid.3, ctime.3, daemon.3, difftime.3, div.3, dysize.3, erf.3,
-    errno.3, exec.3, exit.3, exp.3, expm1.3, fabs.3, fclose.3,
-    fcloseall.3, ferror.3, fflush.3, ffs.3, fgetpwent.3, floor.3,
-    fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3, gcvt.3,
-    getcwd.3, getdate.3, getdirentries.3, getdtablesize.3, getenv.3,
-    getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
-    getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
-    getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
-    hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
-    isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
-    memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
-    memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
-    opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
-    putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
-    readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
-    scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
-    sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
-    stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
-    strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
-    strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
-    system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
-    toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
-    console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
-    initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
-    ram.4, random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
-    group.5, host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5,
-    motd.5, networks.5, nfs.5, nologin.5, proc.5, protocols.5,
-    resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
-    environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
-    iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
-    math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
-    svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, agetty.8,
-    blkid.8, intro.8, mkrescue.8, rtcwake.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-modules-load.service.8, systemd-networkd.service.8,
-    systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    tzselect.8
+* New translations:
+  iso_8859-10.7, iso_8859-11.7, iso_8859-13.7, iso_8859-14.7,
+  iso_8859-16.7, iso_8859-9.7
+* Updated translations:
+  find.1, free.1, getopt.1, groff.1, intro.1, ipcs.1, sed.1,
+  unshare.1, wodim.1, accept.2, access.2, acct.2, adjtimex.2,
+  alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
+  chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
+  execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
+  getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
+  getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
+  getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
+  ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
+  mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2,
+  mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
+  pipe.2, pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2,
+  reboot.2, rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2,
+  setgid.2, setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2,
+  setup.2, shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2,
+  sigreturn.2, socket.2, socketcall.2, socketpair.2, stat.2,
+  statfs.2, stime.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
+  sysinfo.2, time.2, times.2, truncate.2, umask.2, uname.2,
+  unimplemented.2, unlink.2, uselib.2, ustat.2, utime.2, vhangup.2,
+  vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3, acosh.3,
+  addseverity.3, alloca.3, asin.3, asinh.3, asprintf.3, assert.3,
+  atan2.3, atan.3, atanh.3, atexit.3, atof.3, atoi.3, bsearch.3,
+  bstring.3, byteorder.3, cabs.3, cacos.3, cacosh.3, carg.3, cbrt.3,
+  ceil.3, cimag.3, clearenv.3, clock.3, closedir.3, copysign.3,
+  cos.3, cosh.3, creal.3, crypt.3, csin.3, csinh.3, ctan.3, ctanh.3,
+  ctermid.3, ctime.3, daemon.3, difftime.3, div.3, dysize.3, erf.3,
+  errno.3, exec.3, exit.3, exp.3, expm1.3, fabs.3, fclose.3,
+  fcloseall.3, ferror.3, fflush.3, ffs.3, fgetpwent.3, floor.3,
+  fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3, gcvt.3,
+  getcwd.3, getdate.3, getdirentries.3, getdtablesize.3, getenv.3,
+  getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
+  getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
+  getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
+  hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
+  isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
+  memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
+  memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
+  opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
+  putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
+  readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
+  scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
+  sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
+  stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
+  strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
+  strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
+  system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
+  toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
+  console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
+  initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
+  ram.4, random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
+  group.5, host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5,
+  motd.5, networks.5, nfs.5, nologin.5, proc.5, protocols.5,
+  resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
+  environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
+  iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
+  math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
+  svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, agetty.8,
+  blkid.8, intro.8, mkrescue.8, rtcwake.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-modules-load.service.8, systemd-networkd.service.8,
+  systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  tzselect.8
 
 
 ## Version 1.13
 
 *Thu Jun 9 14:40:27 CEST 2016*
 
-  * Updated translations:
-    chrt.1, dmesg.1, fallocate.1, getopt.1, grep.1, info.1, intro.1,
-    lscpu.1, ncal.1, nsenter.1, rename.ul.1, repoclosure.1, repodiff.1,
-    repo-graph.1, repomanage.1, repoquery.1, repo-rss.1, reposync.1,
-    repotrack.1, runuser.1, tailf.1, tar.1, taskset.1, unshare.1,
-    yum-builddep.1, yum-config-manager.1, yumdownloader.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
-    nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
-    pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
-    wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5, group.5,
-    host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
-    networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
-    rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    terminal-colors.d.5, tzfile.5, utmp.5, intro.6, ascii.7,
-    capabilities.7, complex.7, environ.7, feature_test_macros.7,
-    fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
-    iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
-    iso_8859-7.7, iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7,
-    man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
-    suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
-    agetty.8, blkdiscard.8, blkid.8, combinedeltarpm.8, ctrlaltdel.8,
-    fdisk.8, fsck.8, fstrim.8, hwclock.8, init.8, intro.8, lsblk.8,
-    makedeltarpm.8, partx.8, raw.8, sfdisk.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-modules-load.service.8, systemd-networkd.service.8,
-    systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    tzselect.8, yum-complete-transaction.8
-  * Removed translations:
-    sk98lin.4
+* Updated translations:
+  chrt.1, dmesg.1, fallocate.1, getopt.1, grep.1, info.1, intro.1,
+  lscpu.1, ncal.1, nsenter.1, rename.ul.1, repoclosure.1, repodiff.1,
+  repo-graph.1, repomanage.1, repoquery.1, repo-rss.1, reposync.1,
+  repotrack.1, runuser.1, tailf.1, tar.1, taskset.1, unshare.1,
+  yum-builddep.1, yum-config-manager.1, yumdownloader.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
+  nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
+  pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
+  wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5, group.5,
+  host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
+  networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
+  rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  terminal-colors.d.5, tzfile.5, utmp.5, intro.6, ascii.7,
+  capabilities.7, complex.7, environ.7, feature_test_macros.7,
+  fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
+  iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
+  iso_8859-7.7, iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7,
+  man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
+  suffixes.7, svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7,
+  agetty.8, blkdiscard.8, blkid.8, combinedeltarpm.8, ctrlaltdel.8,
+  fdisk.8, fsck.8, fstrim.8, hwclock.8, init.8, intro.8, lsblk.8,
+  makedeltarpm.8, partx.8, raw.8, sfdisk.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-modules-load.service.8, systemd-networkd.service.8,
+  systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  tzselect.8, yum-complete-transaction.8
+* Removed translations:
+  sk98lin.4
 
 
 ## Version 1.12
 
 *Mon Apr 11 15:51:21 CEST 2016*
 
-  * Make build reproducible by telling grep that all files
-    are text, not binary. Thanks to Reiner Herrmann for the
-    bug report and patch. Closes: #815192
-  * Updated translations:
-    arch.1, base64.1, cat.1, chcon.1, chgrp.1, chmod.1, chown.1,
-    chrt.1, cksum.1, cmp.1, comm.1, cp.1, csplit.1, csv2rec.1, cut.1,
-    date.1, dd.1, df.1, diff.1, diff3.1, dir.1, dircolors.1, du.1,
-    echo.1, env.1, expand.1, factor.1, find.1, fmt.1, fold.1, getopt.1,
-    grep.1, groff.1, groups.1, head.1, hostname.1, info.1, install.1,
-    intro.1, ionice.1, join.1, less.1, ln.1, ls.1, md5sum.1, mdb2rec.1,
-    mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, ncal.1, nice.1, nl.1,
-    nohup.1, nproc.1, od.1, ogg123.1, oggdec.1, oggenc.1, ogginfo.1,
-    paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1, ptx.1,
-    pwd.1, rec2csv.1, recdel.1, recinf.1, rename.ul.1, repoquery.1,
-    rm.1, rmdir.1, sdiff.1, sed.1, seq.1, sha1sum.1, sha224sum.1,
-    sha256sum.1, sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1,
-    sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1,
-    tail.1, tar.1, tee.1, timeout.1, touch.1, tr.1, truncate.1, tty.1,
-    uname.1, unexpand.1, uniq.1, users.1, vdir.1, vorbistagedit.1,
-    wc.1, whereis.1, who.1, whoami.1, wodim.1, yes.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
-    nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
-    pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
-    wavelan.4, acct.5, charmap.5, filesystems.5, group.5, host.conf.5,
-    hosts.5, hosts.equiv.5, inittab.5, intro.5, issue.5, motd.5,
-    networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
-    rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
-    utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
-    iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
-    shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
-    units.7, utf-8.7, x25.7, blockdev.8, fdisk.8, intro.8, lilo.8,
-    partprobe.8, systemd-activate.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-modules-load.service.8, systemd-networkd.service.8,
-    systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    tzselect.8, zramctl.8
+* Make build reproducible by telling grep that all files
+  are text, not binary. Thanks to Reiner Herrmann for the
+  bug report and patch. Closes: #815192
+* Updated translations:
+  arch.1, base64.1, cat.1, chcon.1, chgrp.1, chmod.1, chown.1,
+  chrt.1, cksum.1, cmp.1, comm.1, cp.1, csplit.1, csv2rec.1, cut.1,
+  date.1, dd.1, df.1, diff.1, diff3.1, dir.1, dircolors.1, du.1,
+  echo.1, env.1, expand.1, factor.1, find.1, fmt.1, fold.1, getopt.1,
+  grep.1, groff.1, groups.1, head.1, hostname.1, info.1, install.1,
+  intro.1, ionice.1, join.1, less.1, ln.1, ls.1, md5sum.1, mdb2rec.1,
+  mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, ncal.1, nice.1, nl.1,
+  nohup.1, nproc.1, od.1, ogg123.1, oggdec.1, oggenc.1, ogginfo.1,
+  paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1, ptx.1,
+  pwd.1, rec2csv.1, recdel.1, recinf.1, rename.ul.1, repoquery.1,
+  rm.1, rmdir.1, sdiff.1, sed.1, seq.1, sha1sum.1, sha224sum.1,
+  sha256sum.1, sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1,
+  sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1,
+  tail.1, tar.1, tee.1, timeout.1, touch.1, tr.1, truncate.1, tty.1,
+  uname.1, unexpand.1, uniq.1, users.1, vdir.1, vorbistagedit.1,
+  wc.1, whereis.1, who.1, whoami.1, wodim.1, yes.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
+  nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
+  pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, st.4, tty.4, tty_ioctl.4, ttyS.4, vcs.4,
+  wavelan.4, acct.5, charmap.5, filesystems.5, group.5, host.conf.5,
+  hosts.5, hosts.equiv.5, inittab.5, intro.5, issue.5, motd.5,
+  networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
+  rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
+  utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
+  iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
+  shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
+  units.7, utf-8.7, x25.7, blockdev.8, fdisk.8, intro.8, lilo.8,
+  partprobe.8, systemd-activate.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-modules-load.service.8, systemd-networkd.service.8,
+  systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  tzselect.8, zramctl.8
 
 
 ## Version 1.11
 
 *Tue Feb 16 20:12:05 CET 2016*
 
-  * New translations:
-    zramctl.8
-  * Updated translations:
-    arch.1, base64.1, basename.1, cal.ul.1, cat.1, chcon.1, chgrp.1,
-    chmod.1, chown.1, cksum.1, comm.1, cp.1, csplit.1, csv2rec.1,
-    cut.1, date.1, dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1,
-    du.1, echo.1, env.1, exif.1, expand.1, expr.1, factor.1,
-    fallocate.1, false.1, find.1, flock.1, fmt.1, fold.1, free.1,
-    getopt.1, grep.1, groff.1, groups.1, head.1, hostid.1, id.1,
-    info.1, install.1, intro.1, ionice.1, ipcmk.1, join.1, less.1,
-    link.1, ln.1, logname.1, ls.1, lscpu.1, md5sum.1, mdb2rec.1,
-    mkdir.1, mkfifo.1, mknod.1, mktemp.1, more.1, mv.1, ncal.1, nice.1,
-    nl.1, nohup.1, nproc.1, nsenter.1, od.1, ogg123.1, oggenc.1,
-    paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1, ptx.1,
-    pwd.1, readlink.1, rec2csv.1, recdel.1, recfix.1, recfmt.1,
-    recinf.1, recins.1, recsel.1, recset.1, repoquery.1, rm.1, rmdir.1,
-    runcon.1, sed.1, seq.1, setterm.1, sha1sum.1, sha224sum.1,
-    sha256sum.1, sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1,
-    sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1,
-    tail.1, tailf.1, tar.1, tee.1, test.1, timeout.1, touch.1, tr.1,
-    true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1, uniq.1,
-    unlink.1, unshare.1, uptime.1, users.1, vdir.1, wc.1, who.1,
-    whoami.1, xzless.1, yes.1, accept.2, access.2, acct.2, adjtimex.2,
-    alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
-    chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
-    execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
-    getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
-    getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
-    getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
-    ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
-    mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2,
-    mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
-    pipe.2, pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2,
-    reboot.2, rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2,
-    setgid.2, setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2,
-    setup.2, shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2,
-    sigreturn.2, socket.2, socketcall.2, socketpair.2, stat.2,
-    statfs.2, stime.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
-    sysinfo.2, time.2, times.2, truncate.2, umask.2, uname.2,
-    unimplemented.2, unlink.2, uselib.2, ustat.2, utime.2, vhangup.2,
-    vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3, acosh.3,
-    addseverity.3, alloca.3, asin.3, asinh.3, asprintf.3, assert.3,
-    atan2.3, atan.3, atanh.3, atexit.3, atof.3, atoi.3, bsearch.3,
-    bstring.3, byteorder.3, cabs.3, cacos.3, cacosh.3, carg.3, cbrt.3,
-    ceil.3, cimag.3, clearenv.3, clock.3, closedir.3, copysign.3,
-    cos.3, cosh.3, creal.3, crypt.3, csin.3, csinh.3, ctan.3, ctanh.3,
-    ctermid.3, ctime.3, daemon.3, difftime.3, div.3, dysize.3, erf.3,
-    errno.3, exec.3, exit.3, exp.3, expm1.3, fabs.3, fclose.3,
-    fcloseall.3, ferror.3, fflush.3, ffs.3, fgetpwent.3, floor.3,
-    fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3, gcvt.3,
-    getcwd.3, getdate.3, getdirentries.3, getdtablesize.3, getenv.3,
-    getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
-    getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
-    getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
-    hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
-    isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
-    memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
-    memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
-    opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
-    putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
-    readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
-    scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
-    sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
-    stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
-    strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
-    strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
-    system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
-    toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
-    console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4,
-    hd.4, initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4,
-    pts.4, ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4,
-    tty_ioctl.4, ttyS.4, vcs.4, wavelan.4, acct.5, charmap.5,
-    filesystems.5, fstab.5, group.5, host.conf.5, hosts.5,
-    hosts.equiv.5, inittab.5, intro.5, issue.5, motd.5, networks.5,
-    nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
-    securetty.5, services.5, shells.5, termcap.5, terminal-colors.d.5,
-    tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
-    environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
-    iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
-    math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
-    svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, cfdisk.8,
-    chroot.8, fdisk.8, fsck.8, fsck.minix.8, hwclock.8, intro.8,
-    isosize.8, ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8,
-    mkfs.minix.8, mkswap.8, rtcwake.8, sfdisk.8, systemd-activate.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-modules-load.service.8, systemd-networkd.service.8,
-    systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    tzselect.8, wipefs.8
-  * Removed translations:
-    LDP.7, undocumented.7
+* New translations:
+  zramctl.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cal.ul.1, cat.1, chcon.1, chgrp.1,
+  chmod.1, chown.1, cksum.1, comm.1, cp.1, csplit.1, csv2rec.1,
+  cut.1, date.1, dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1,
+  du.1, echo.1, env.1, exif.1, expand.1, expr.1, factor.1,
+  fallocate.1, false.1, find.1, flock.1, fmt.1, fold.1, free.1,
+  getopt.1, grep.1, groff.1, groups.1, head.1, hostid.1, id.1,
+  info.1, install.1, intro.1, ionice.1, ipcmk.1, join.1, less.1,
+  link.1, ln.1, logname.1, ls.1, lscpu.1, md5sum.1, mdb2rec.1,
+  mkdir.1, mkfifo.1, mknod.1, mktemp.1, more.1, mv.1, ncal.1, nice.1,
+  nl.1, nohup.1, nproc.1, nsenter.1, od.1, ogg123.1, oggenc.1,
+  paste.1, pathchk.1, pinky.1, pr.1, printenv.1, printf.1, ptx.1,
+  pwd.1, readlink.1, rec2csv.1, recdel.1, recfix.1, recfmt.1,
+  recinf.1, recins.1, recsel.1, recset.1, repoquery.1, rm.1, rmdir.1,
+  runcon.1, sed.1, seq.1, setterm.1, sha1sum.1, sha224sum.1,
+  sha256sum.1, sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1,
+  sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1,
+  tail.1, tailf.1, tar.1, tee.1, test.1, timeout.1, touch.1, tr.1,
+  true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1, uniq.1,
+  unlink.1, unshare.1, uptime.1, users.1, vdir.1, wc.1, who.1,
+  whoami.1, xzless.1, yes.1, accept.2, access.2, acct.2, adjtimex.2,
+  alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2,
+  chmod.2, chown.2, chroot.2, clone.2, close.2, connect.2, dup.2,
+  execve.2, _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
+  getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
+  getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
+  getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
+  ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
+  mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mq_getsetattr.2,
+  mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
+  pipe.2, pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2,
+  reboot.2, rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2,
+  setgid.2, setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2,
+  setup.2, shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2,
+  sigreturn.2, socket.2, socketcall.2, socketpair.2, stat.2,
+  statfs.2, stime.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
+  sysinfo.2, time.2, times.2, truncate.2, umask.2, uname.2,
+  unimplemented.2, unlink.2, uselib.2, ustat.2, utime.2, vhangup.2,
+  vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3, acosh.3,
+  addseverity.3, alloca.3, asin.3, asinh.3, asprintf.3, assert.3,
+  atan2.3, atan.3, atanh.3, atexit.3, atof.3, atoi.3, bsearch.3,
+  bstring.3, byteorder.3, cabs.3, cacos.3, cacosh.3, carg.3, cbrt.3,
+  ceil.3, cimag.3, clearenv.3, clock.3, closedir.3, copysign.3,
+  cos.3, cosh.3, creal.3, crypt.3, csin.3, csinh.3, ctan.3, ctanh.3,
+  ctermid.3, ctime.3, daemon.3, difftime.3, div.3, dysize.3, erf.3,
+  errno.3, exec.3, exit.3, exp.3, expm1.3, fabs.3, fclose.3,
+  fcloseall.3, ferror.3, fflush.3, ffs.3, fgetpwent.3, floor.3,
+  fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3, gcvt.3,
+  getcwd.3, getdate.3, getdirentries.3, getdtablesize.3, getenv.3,
+  getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
+  getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
+  getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
+  hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
+  isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
+  memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
+  memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
+  opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
+  putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
+  readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
+  scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
+  sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
+  stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
+  strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
+  strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
+  system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
+  toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
+  console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4,
+  hd.4, initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4,
+  pts.4, ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4,
+  tty_ioctl.4, ttyS.4, vcs.4, wavelan.4, acct.5, charmap.5,
+  filesystems.5, fstab.5, group.5, host.conf.5, hosts.5,
+  hosts.equiv.5, inittab.5, intro.5, issue.5, motd.5, networks.5,
+  nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
+  securetty.5, services.5, shells.5, termcap.5, terminal-colors.d.5,
+  tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
+  environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
+  iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
+  math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
+  svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, cfdisk.8,
+  chroot.8, fdisk.8, fsck.8, fsck.minix.8, hwclock.8, intro.8,
+  isosize.8, ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8,
+  mkfs.minix.8, mkswap.8, rtcwake.8, sfdisk.8, systemd-activate.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-modules-load.service.8, systemd-networkd.service.8,
+  systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  tzselect.8, wipefs.8
+* Removed translations:
+  LDP.7, undocumented.7
 
 
 ## Version 1.10
 
 *Sun Jan 3 17:08:16 CET 2016*
 
-  * Updated translations:
-    dmesg.1, find.1, flock.1, free.1, grep.1, groff.1, info.1, ipcmk.1,
-    ncal.1, nsenter.1, runuser.1, tailf.1, tar.1, unshare.1,
-    ioctl_list.2, lseek.2, mmap.2, sigaction.2, socket.2, stat.2,
-    crypt.3, printf.3, stdio.3, console_codes.4, console_ioctl.4, fd.4,
-    lp.4, mouse.4, sk98lin.4, proc.5, terminal-colors.d.5, ascii.7,
-    iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, man-pages.7, signal.7, suffixes.7, units.7, agetty.8,
-    blkid.8, cfdisk.8, fdisk.8, fsck.8, fsck.minix.8, hwclock.8,
-    ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8, mkfs.minix.8,
-    mkswap.8, rtcwake.8, sfdisk.8, systemd-activate.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-machined.service.8, systemd-modules-load.service.8,
-    systemd-networkd.service.8, systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    yum-complete-transaction.8, yumdb.8
+* Updated translations:
+  dmesg.1, find.1, flock.1, free.1, grep.1, groff.1, info.1, ipcmk.1,
+  ncal.1, nsenter.1, runuser.1, tailf.1, tar.1, unshare.1,
+  ioctl_list.2, lseek.2, mmap.2, sigaction.2, socket.2, stat.2,
+  crypt.3, printf.3, stdio.3, console_codes.4, console_ioctl.4, fd.4,
+  lp.4, mouse.4, sk98lin.4, proc.5, terminal-colors.d.5, ascii.7,
+  iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, man-pages.7, signal.7, suffixes.7, units.7, agetty.8,
+  blkid.8, cfdisk.8, fdisk.8, fsck.8, fsck.minix.8, hwclock.8,
+  ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8, mkfs.minix.8,
+  mkswap.8, rtcwake.8, sfdisk.8, systemd-activate.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-machined.service.8, systemd-modules-load.service.8,
+  systemd-networkd.service.8, systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  yum-complete-transaction.8, yumdb.8
 
 
 ## Version 1.9
 
 *Sun Jun 28 15:16:29 CEST 2015*
 
-  * New translations:
-    bzdiff.1, bzgrep.1, bzip2.1, bzmore.1, cal.ul.1, ddate.1, exif.1,
-    gzexe.1, lzmainfo.1, repoclosure.1, repodiff.1, repo-graph.1,
-    repomanage.1, repoquery.1, repo-rss.1, reposync.1, repotrack.1,
-    xzdiff.1, xzgrep.1, xzless.1, xzmore.1, yum-builddep.1,
-    yum-config-manager.1, yumdownloader.1, zdiff.1, zforce.1, zless.1,
-    zmore.1, znew.1, applydeltarpm.8, combinedeltarpm.8,
-    makedeltarpm.8, resizepart.8, rpm2cpio.8, systemd-activate.8,
-    systemd-ask-password-console.service.8,
-    systemd-backlight@.service.8, systemd-binfmt.service.8,
-    systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
-    systemd-halt.service.8, systemd-hostnamed.service.8,
-    systemd-initctl.service.8, systemd-journald.service.8,
-    systemd-machined.service.8, systemd-modules-load.service.8,
-    systemd-networkd.service.8, systemd-networkd-wait-online.service.8,
-    systemd-quotacheck.service.8, systemd-remount-fs.service.8,
-    systemd-resolved.8, systemd-shutdownd.service.8,
-    systemd-sysctl.service.8, systemd-system-update-generator.8,
-    systemd-sysusers.8, systemd-timedated.service.8,
-    systemd-timesyncd.service.8, systemd-tmpfiles.8,
-    systemd-update-utmp.service.8, systemd-user-sessions.service.8,
-    yum-complete-transaction.8, yumdb.8
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, chrt.1, cksum.1, cmp.1, comm.1, cp.1, cpio.1, csplit.1,
-    csv2rec.1, cut.1, date.1, dd.1, df.1, diff.1, diff3.1, dir.1,
-    dircolors.1, dirname.1, dmesg.1, du.1, echo.1, env.1, expand.1,
-    expr.1, factor.1, fallocate.1, false.1, find.1, flock.1, fmt.1,
-    fold.1, free.1, getopt.1, grep.1, groff.1, groups.1, gzip.1,
-    head.1, hostid.1, hostname.1, id.1, info.1, install.1, intro.1,
-    ionice.1, ipcmk.1, ipcrm.1, ipcs.1, join.1, line.1, link.1, ln.1,
-    logname.1, ls.1, lscpu.1, mcookie.1, md5sum.1, mdb2rec.1, mkdir.1,
-    mkfifo.1, mknod.1, mktemp.1, more.1, mt-gnu.1, mv.1, namei.1,
-    ncal.1, nice.1, nl.1, nohup.1, nproc.1, nsenter.1, od.1, ogg123.1,
-    oggdec.1, oggenc.1, ogginfo.1, paste.1, pathchk.1, pg.1, pinky.1,
-    pr.1, printenv.1, printf.1, prlimit.1, ptx.1, pwd.1, readlink.1,
-    rec2csv.1, recdel.1, recfix.1, recfmt.1, recinf.1, recins.1,
-    recsel.1, recset.1, rename.ul.1, rev.1, rm.1, rmdir.1, runcon.1,
-    runuser.1, sdiff.1, sed.1, seq.1, setsid.1, setterm.1, sha1sum.1,
-    sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1, shred.1,
-    shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1,
-    sync.1, tac.1, tail.1, tailf.1, tar.1, taskset.1, tee.1, test.1,
-    timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1,
-    uname.1, unexpand.1, uniq.1, unlink.1, unshare.1, uptime.1,
-    users.1, utmpdump.1, vcut.1, vdir.1, vorbiscomment.1,
-    vorbistagedit.1, wc.1, whereis.1, who.1, whoami.1, wodim.1, yes.1,
-    accept.2, access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2,
-    brk.2, cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
-    nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
-    pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
-    group.5, host.conf.5, hosts.5, hosts.equiv.5, hwclock.5,
-    initscript.5, inittab.5, intro.5, isdnlog.5, issue.5, motd.5,
-    networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
-    rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    terminal-colors.d.5, tzfile.5, utmp.5, intro.6, ascii.7,
-    capabilities.7, complex.7, environ.7, feature_test_macros.7,
-    fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
-    iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
-    iso_8859-7.7, iso_8859-8.7, LDP.7, libc.7, locale.7, mailaddr.7,
-    man.7, man-pages.7, math_error.7, operator.7, shm_overview.7,
-    signal.7, suffixes.7, svipc.7, termio.7, undocumented.7, unicode.7,
-    units.7, utf-8.7, x25.7, addpart.8, agetty.8, binkd.8,
-    binkdlogstat.8, blkdiscard.8, blkid.8, blockdev.8, cfdisk.8,
-    chcpu.8, chroot.8, ctrlaltdel.8, delpart.8, fdformat.8, fdisk.8,
-    findfs.8, fsck.8, fsck.cramfs.8, fsck.minix.8, fsfreeze.8,
-    fstrim.8, halt.8, hwclock.8, init.8, intro.8, isosize.8,
-    ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8, mkfs.bfs.8,
-    mkfs.cramfs.8, mkfs.minix.8, mkrescue.8, mkswap.8, parted.8,
-    partprobe.8, partx.8, pivot_root.8, raw.8, readprofile.8,
-    rtcwake.8, runlevel.8, setarch.8, sfdisk.8, shutdown.8,
-    swaplabel.8, switch_root.8, tunelp.8, tzselect.8, wdctl.8, wipefs.8
+* New translations:
+  bzdiff.1, bzgrep.1, bzip2.1, bzmore.1, cal.ul.1, ddate.1, exif.1,
+  gzexe.1, lzmainfo.1, repoclosure.1, repodiff.1, repo-graph.1,
+  repomanage.1, repoquery.1, repo-rss.1, reposync.1, repotrack.1,
+  xzdiff.1, xzgrep.1, xzless.1, xzmore.1, yum-builddep.1,
+  yum-config-manager.1, yumdownloader.1, zdiff.1, zforce.1, zless.1,
+  zmore.1, znew.1, applydeltarpm.8, combinedeltarpm.8,
+  makedeltarpm.8, resizepart.8, rpm2cpio.8, systemd-activate.8,
+  systemd-ask-password-console.service.8,
+  systemd-backlight@.service.8, systemd-binfmt.service.8,
+  systemd-cryptsetup@.service.8, systemd-fstab-generator.8,
+  systemd-halt.service.8, systemd-hostnamed.service.8,
+  systemd-initctl.service.8, systemd-journald.service.8,
+  systemd-machined.service.8, systemd-modules-load.service.8,
+  systemd-networkd.service.8, systemd-networkd-wait-online.service.8,
+  systemd-quotacheck.service.8, systemd-remount-fs.service.8,
+  systemd-resolved.8, systemd-shutdownd.service.8,
+  systemd-sysctl.service.8, systemd-system-update-generator.8,
+  systemd-sysusers.8, systemd-timedated.service.8,
+  systemd-timesyncd.service.8, systemd-tmpfiles.8,
+  systemd-update-utmp.service.8, systemd-user-sessions.service.8,
+  yum-complete-transaction.8, yumdb.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, chrt.1, cksum.1, cmp.1, comm.1, cp.1, cpio.1, csplit.1,
+  csv2rec.1, cut.1, date.1, dd.1, df.1, diff.1, diff3.1, dir.1,
+  dircolors.1, dirname.1, dmesg.1, du.1, echo.1, env.1, expand.1,
+  expr.1, factor.1, fallocate.1, false.1, find.1, flock.1, fmt.1,
+  fold.1, free.1, getopt.1, grep.1, groff.1, groups.1, gzip.1,
+  head.1, hostid.1, hostname.1, id.1, info.1, install.1, intro.1,
+  ionice.1, ipcmk.1, ipcrm.1, ipcs.1, join.1, line.1, link.1, ln.1,
+  logname.1, ls.1, lscpu.1, mcookie.1, md5sum.1, mdb2rec.1, mkdir.1,
+  mkfifo.1, mknod.1, mktemp.1, more.1, mt-gnu.1, mv.1, namei.1,
+  ncal.1, nice.1, nl.1, nohup.1, nproc.1, nsenter.1, od.1, ogg123.1,
+  oggdec.1, oggenc.1, ogginfo.1, paste.1, pathchk.1, pg.1, pinky.1,
+  pr.1, printenv.1, printf.1, prlimit.1, ptx.1, pwd.1, readlink.1,
+  rec2csv.1, recdel.1, recfix.1, recfmt.1, recinf.1, recins.1,
+  recsel.1, recset.1, rename.ul.1, rev.1, rm.1, rmdir.1, runcon.1,
+  runuser.1, sdiff.1, sed.1, seq.1, setsid.1, setterm.1, sha1sum.1,
+  sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1, shred.1,
+  shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1,
+  sync.1, tac.1, tail.1, tailf.1, tar.1, taskset.1, tee.1, test.1,
+  timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1,
+  uname.1, unexpand.1, uniq.1, unlink.1, unshare.1, uptime.1,
+  users.1, utmpdump.1, vcut.1, vdir.1, vorbiscomment.1,
+  vorbistagedit.1, wc.1, whereis.1, who.1, whoami.1, wodim.1, yes.1,
+  accept.2, access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2,
+  brk.2, cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mq_getsetattr.2, mremap.2, msync.2,
+  nice.2, open.2, outb.2, pause.2, personality.2, pipe.2,
+  pivot_root.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
+  group.5, host.conf.5, hosts.5, hosts.equiv.5, hwclock.5,
+  initscript.5, inittab.5, intro.5, isdnlog.5, issue.5, motd.5,
+  networks.5, nfs.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
+  rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  terminal-colors.d.5, tzfile.5, utmp.5, intro.6, ascii.7,
+  capabilities.7, complex.7, environ.7, feature_test_macros.7,
+  fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
+  iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
+  iso_8859-7.7, iso_8859-8.7, LDP.7, libc.7, locale.7, mailaddr.7,
+  man.7, man-pages.7, math_error.7, operator.7, shm_overview.7,
+  signal.7, suffixes.7, svipc.7, termio.7, undocumented.7, unicode.7,
+  units.7, utf-8.7, x25.7, addpart.8, agetty.8, binkd.8,
+  binkdlogstat.8, blkdiscard.8, blkid.8, blockdev.8, cfdisk.8,
+  chcpu.8, chroot.8, ctrlaltdel.8, delpart.8, fdformat.8, fdisk.8,
+  findfs.8, fsck.8, fsck.cramfs.8, fsck.minix.8, fsfreeze.8,
+  fstrim.8, halt.8, hwclock.8, init.8, intro.8, isosize.8,
+  ldattach.8, lilo.8, lsblk.8, lslocks.8, mkfs.8, mkfs.bfs.8,
+  mkfs.cramfs.8, mkfs.minix.8, mkrescue.8, mkswap.8, parted.8,
+  partprobe.8, partx.8, pivot_root.8, raw.8, readprofile.8,
+  rtcwake.8, runlevel.8, setarch.8, sfdisk.8, shutdown.8,
+  swaplabel.8, switch_root.8, tunelp.8, tzselect.8, wdctl.8, wipefs.8
 
 
 ## Version 1.8
 
 *Fri Oct 24 21:59:18 CEST 2014*
 
-  * New translations:
-    cpio.1, flock.1, mt-gnu.1, nsenter.1, prlimit.1, runuser.1,
-    utmpdump.1, mq_getsetattr.2, terminal-colors.d.5, blkdiscard.8,
-    chcpu.8, fsck.cramfs.8, lslocks.8, mkfs.cramfs.8, readprofile.8,
-    wdctl.8
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, chrt.1, cksum.1, comm.1, cp.1, csplit.1, csv2rec.1, cut.1,
-    date.1, dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1, du.1,
-    echo.1, env.1, expand.1, expr.1, factor.1, fallocate.1, false.1,
-    fmt.1, fold.1, free.1, getopt.1, grep.1, groff.1, groups.1, gzip.1,
-    head.1, hostid.1, id.1, install.1, intro.1, ionice.1, ipcmk.1,
-    ipcrm.1, ipcs.1, join.1, link.1, ln.1, logname.1, ls.1, lscpu.1,
-    mcookie.1, md5sum.1, mdb2rec.1, mkdir.1, mkfifo.1, mknod.1,
-    mktemp.1, more.1, mv.1, namei.1, ncal.1, nice.1, nl.1, nohup.1,
-    nproc.1, od.1, paste.1, pathchk.1, pg.1, pinky.1, pr.1, printenv.1,
-    printf.1, ptx.1, pwd.1, readlink.1, rec2csv.1, recdel.1, recfix.1,
-    recfmt.1, recinf.1, recins.1, recsel.1, recset.1, rename.ul.1,
-    rev.1, rm.1, rmdir.1, runcon.1, seq.1, setsid.1, setterm.1,
-    sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1,
-    shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1,
-    stty.1, sum.1, sync.1, tac.1, tail.1, tailf.1, taskset.1, tee.1,
-    test.1, timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1,
-    tty.1, uname.1, unexpand.1, uniq.1, unlink.1, unshare.1, uptime.1,
-    users.1, vdir.1, wc.1, whereis.1, who.1, whoami.1, yes.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
-    outb.2, pause.2, personality.2, pipe.2, pivot_root.2, ptrace.2,
-    read.2, readdir.2, readlink.2, reboot.2, rename.2, rmdir.2,
-    select.2, setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
-    setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
-    shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
-    socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
-    truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
-    ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
-    abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
-    atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
-    group.5, host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5,
-    motd.5, networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
-    rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
-    utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
-    iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
-    shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
-    units.7, utf-8.7, x25.7, addpart.8, agetty.8, binkd.8, blkid.8,
-    blockdev.8, cfdisk.8, chroot.8, ctrlaltdel.8, delpart.8,
-    fdformat.8, fdisk.8, findfs.8, fsck.8, fsck.minix.8, fsfreeze.8,
-    fstrim.8, hwclock.8, intro.8, isosize.8, ldattach.8, lilo.8,
-    lsblk.8, mkfs.8, mkfs.bfs.8, mkfs.minix.8, mkswap.8, parted.8,
-    partprobe.8, partx.8, pivot_root.8, raw.8, rtcwake.8, setarch.8,
-    sfdisk.8, shutdown.8, swaplabel.8, switch_root.8, tunelp.8,
-    tzselect.8, wipefs.8
-  * Removed translations:
-    chkdupexe.1, ddate.1, readprofile.1, cytune.8, getty.8
+* New translations:
+  cpio.1, flock.1, mt-gnu.1, nsenter.1, prlimit.1, runuser.1,
+  utmpdump.1, mq_getsetattr.2, terminal-colors.d.5, blkdiscard.8,
+  chcpu.8, fsck.cramfs.8, lslocks.8, mkfs.cramfs.8, readprofile.8,
+  wdctl.8
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, chrt.1, cksum.1, comm.1, cp.1, csplit.1, csv2rec.1, cut.1,
+  date.1, dd.1, df.1, dir.1, dircolors.1, dirname.1, dmesg.1, du.1,
+  echo.1, env.1, expand.1, expr.1, factor.1, fallocate.1, false.1,
+  fmt.1, fold.1, free.1, getopt.1, grep.1, groff.1, groups.1, gzip.1,
+  head.1, hostid.1, id.1, install.1, intro.1, ionice.1, ipcmk.1,
+  ipcrm.1, ipcs.1, join.1, link.1, ln.1, logname.1, ls.1, lscpu.1,
+  mcookie.1, md5sum.1, mdb2rec.1, mkdir.1, mkfifo.1, mknod.1,
+  mktemp.1, more.1, mv.1, namei.1, ncal.1, nice.1, nl.1, nohup.1,
+  nproc.1, od.1, paste.1, pathchk.1, pg.1, pinky.1, pr.1, printenv.1,
+  printf.1, ptx.1, pwd.1, readlink.1, rec2csv.1, recdel.1, recfix.1,
+  recfmt.1, recinf.1, recins.1, recsel.1, recset.1, rename.ul.1,
+  rev.1, rm.1, rmdir.1, runcon.1, seq.1, setsid.1, setterm.1,
+  sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1,
+  shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1,
+  stty.1, sum.1, sync.1, tac.1, tail.1, tailf.1, taskset.1, tee.1,
+  test.1, timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1,
+  tty.1, uname.1, unexpand.1, uniq.1, unlink.1, unshare.1, uptime.1,
+  users.1, vdir.1, wc.1, whereis.1, who.1, whoami.1, yes.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
+  outb.2, pause.2, personality.2, pipe.2, pivot_root.2, ptrace.2,
+  read.2, readdir.2, readlink.2, reboot.2, rename.2, rmdir.2,
+  select.2, setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
+  setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
+  shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
+  socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
+  truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
+  ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
+  abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
+  atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
+  group.5, host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5,
+  motd.5, networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5,
+  rpc.5, securetty.5, services.5, shells.5, termcap.5, tzfile.5,
+  utmp.5, intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
+  iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
+  shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
+  units.7, utf-8.7, x25.7, addpart.8, agetty.8, binkd.8, blkid.8,
+  blockdev.8, cfdisk.8, chroot.8, ctrlaltdel.8, delpart.8,
+  fdformat.8, fdisk.8, findfs.8, fsck.8, fsck.minix.8, fsfreeze.8,
+  fstrim.8, hwclock.8, intro.8, isosize.8, ldattach.8, lilo.8,
+  lsblk.8, mkfs.8, mkfs.bfs.8, mkfs.minix.8, mkswap.8, parted.8,
+  partprobe.8, partx.8, pivot_root.8, raw.8, rtcwake.8, setarch.8,
+  sfdisk.8, shutdown.8, swaplabel.8, switch_root.8, tunelp.8,
+  tzselect.8, wipefs.8
+* Removed translations:
+  chkdupexe.1, ddate.1, readprofile.1, cytune.8, getty.8
 
 
 ## Version 1.7
 
 *Mon Jul 14 12:28:03 CEST 2014*
 
-  * New translations:
-    pivot_root.2
-  * Updated translations:
-    diff.1, echo.1, find.1, free.1, getopt.1, grep.1, groff.1, gzip.1,
-    hostname.1, intro.1, ionice.1, ipcrm.1, ipcs.1, less.1, md5sum.1,
-    od.1, pr.1, sed.1, tar.1, uptime.1, vorbistagedit.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
-    outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
-    readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
-    setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
-    setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
-    shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
-    socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
-    truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
-    ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
-    abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
-    atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
-    group.5, host.conf.5, hosts.5, hosts.equiv.5, hwclock.5, inittab.5,
-    intro.5, issue.5, motd.5, networks.5, nfs.5, nologin.5, proc.5,
-    protocols.5, resolv.conf.5, rpc.5, securetty.5, services.5,
-    shells.5, termcap.5, tzfile.5, utmp.5, intro.6, ascii.7,
-    capabilities.7, complex.7, environ.7, feature_test_macros.7,
-    fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
-    iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
-    iso_8859-7.7, iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7,
-    man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
-    suffixes.7, svipc.7, termio.7, undocumented.7, unicode.7, units.7,
-    utf-8.7, x25.7, agetty.8, fdformat.8, fsck.8, fsck.minix.8,
-    fsfreeze.8, getty.8, hwclock.8, init.8, intro.8, lilo.8, lsblk.8,
-    mkfs.8, mkrescue.8, mkswap.8, parted.8, partx.8, setarch.8,
-    shutdown.8, tzselect.8, wipefs.8
-  * Removed translations:
-    clock.8
+* New translations:
+  pivot_root.2
+* Updated translations:
+  diff.1, echo.1, find.1, free.1, getopt.1, grep.1, groff.1, gzip.1,
+  hostname.1, intro.1, ionice.1, ipcrm.1, ipcs.1, less.1, md5sum.1,
+  od.1, pr.1, sed.1, tar.1, uptime.1, vorbistagedit.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
+  outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
+  readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
+  setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
+  setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
+  shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
+  socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
+  truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
+  ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
+  abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
+  atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, fd.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, fstab.5,
+  group.5, host.conf.5, hosts.5, hosts.equiv.5, hwclock.5, inittab.5,
+  intro.5, issue.5, motd.5, networks.5, nfs.5, nologin.5, proc.5,
+  protocols.5, resolv.conf.5, rpc.5, securetty.5, services.5,
+  shells.5, termcap.5, tzfile.5, utmp.5, intro.6, ascii.7,
+  capabilities.7, complex.7, environ.7, feature_test_macros.7,
+  fifo.7, hier.7, intro.7, iso_8859-15.7, iso_8859-1.7, iso_8859-2.7,
+  iso_8859-3.7, iso_8859-4.7, iso_8859-5.7, iso_8859-6.7,
+  iso_8859-7.7, iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7,
+  man-pages.7, math_error.7, operator.7, shm_overview.7, signal.7,
+  suffixes.7, svipc.7, termio.7, undocumented.7, unicode.7, units.7,
+  utf-8.7, x25.7, agetty.8, fdformat.8, fsck.8, fsck.minix.8,
+  fsfreeze.8, getty.8, hwclock.8, init.8, intro.8, lilo.8, lsblk.8,
+  mkfs.8, mkrescue.8, mkswap.8, parted.8, partx.8, setarch.8,
+  shutdown.8, tzselect.8, wipefs.8
+* Removed translations:
+  clock.8
 
 
 ## Version 1.6
 
 *Tue Mar  4 14:55:29 CET 2014*
 
-  * Updated translations:
-    chrt.1, intro.1, ionice.1, ipcs.1, rev.1, tar.1, accept.2,
-    access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
-    outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
-    readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
-    setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
-    setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
-    shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
-    socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
-    truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
-    ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
-    abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
-    atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
-    host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
-    networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
-    securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
-    intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
-    iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
-    shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
-    units.7, utf-8.7, x25.7, intro.8, tzselect.8
+* Updated translations:
+  chrt.1, intro.1, ionice.1, ipcs.1, rev.1, tar.1, accept.2,
+  access.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
+  outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
+  readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
+  setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
+  setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
+  shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
+  socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
+  truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
+  ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
+  abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
+  atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
+  host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
+  networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
+  securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
+  intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
+  iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
+  shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
+  units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
 ## Version 1.5
 
 *Tue Feb 25 13:47:09 CET 2014*
 
-  * New translations:
-    chkdupexe.1, chrt.1, csv2rec.1, ddate.1, dmesg.1, fallocate.1,
-    getopt.1, ionice.1, ipcmk.1, ipcrm.1, ipcs.1, line.1, lscpu.1,
-    mcookie.1, mdb2rec.1, more.1, namei.1, ncal.1, pg.1, readprofile.1,
-    rec2csv.1, recdel.1, recfix.1, recfmt.1, recinf.1, recins.1,
-    recsel.1, recset.1, rename.ul.1, rev.1, setsid.1, setterm.1,
-    tailf.1, taskset.1, unshare.1, whereis.1, hwclock.5, addpart.8,
-    agetty.8, blkid.8, blockdev.8, cfdisk.8, clock.8, ctrlaltdel.8,
-    cytune.8, delpart.8, fdformat.8, findfs.8, fsck.8, fsck.minix.8,
-    fsfreeze.8, fstrim.8, getty.8, hwclock.8, isosize.8, ldattach.8,
-    lsblk.8, mkfs.8, mkfs.bfs.8, mkfs.minix.8, mkswap.8, parted.8,
-    partprobe.8, partx.8, pivot_root.8, raw.8, rtcwake.8, setarch.8,
-    sfdisk.8, swaplabel.8, switch_root.8, tunelp.8, wipefs.8
-  * Updated translations:
-    free.1, grep.1, groff.1, hostname.1, intro.1, od.1, ogg123.1,
-    oggdec.1, oggenc.1, ogginfo.1, tar.1, uptime.1, vorbiscomment.1,
-    vorbistagedit.1, accept.2, access.2, acct.2, adjtimex.2, alarm.2,
-    bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2, chmod.2,
-    chown.2, chroot.2, clone.2, close.2, connect.2, dup.2, execve.2,
-    _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
-    getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
-    getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
-    getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
-    ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
-    mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mremap.2, msync.2,
-    nice.2, open.2, outb.2, pause.2, personality.2, pipe.2, ptrace.2,
-    read.2, readdir.2, readlink.2, reboot.2, rename.2, rmdir.2,
-    select.2, setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
-    setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
-    shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
-    socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
-    truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
-    ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
-    abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
-    atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
-    host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
-    networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
-    securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
-    intro.6, ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
-    iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
-    shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
-    units.7, utf-8.7, x25.7, intro.8, tzselect.8
+* New translations:
+  chkdupexe.1, chrt.1, csv2rec.1, ddate.1, dmesg.1, fallocate.1,
+  getopt.1, ionice.1, ipcmk.1, ipcrm.1, ipcs.1, line.1, lscpu.1,
+  mcookie.1, mdb2rec.1, more.1, namei.1, ncal.1, pg.1, readprofile.1,
+  rec2csv.1, recdel.1, recfix.1, recfmt.1, recinf.1, recins.1,
+  recsel.1, recset.1, rename.ul.1, rev.1, setsid.1, setterm.1,
+  tailf.1, taskset.1, unshare.1, whereis.1, hwclock.5, addpart.8,
+  agetty.8, blkid.8, blockdev.8, cfdisk.8, clock.8, ctrlaltdel.8,
+  cytune.8, delpart.8, fdformat.8, findfs.8, fsck.8, fsck.minix.8,
+  fsfreeze.8, fstrim.8, getty.8, hwclock.8, isosize.8, ldattach.8,
+  lsblk.8, mkfs.8, mkfs.bfs.8, mkfs.minix.8, mkswap.8, parted.8,
+  partprobe.8, partx.8, pivot_root.8, raw.8, rtcwake.8, setarch.8,
+  sfdisk.8, swaplabel.8, switch_root.8, tunelp.8, wipefs.8
+* Updated translations:
+  free.1, grep.1, groff.1, hostname.1, intro.1, od.1, ogg123.1,
+  oggdec.1, oggenc.1, ogginfo.1, tar.1, uptime.1, vorbiscomment.1,
+  vorbistagedit.1, accept.2, access.2, acct.2, adjtimex.2, alarm.2,
+  bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2, chmod.2,
+  chown.2, chroot.2, clone.2, close.2, connect.2, dup.2, execve.2,
+  _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
+  getdomainname.2, getgid.2, getgroups.2, gethostname.2, getitimer.2,
+  getpagesize.2, getpeername.2, getpid.2, getresuid.2, getsid.2,
+  getsockname.2, getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2,
+  ioperm.2, iopl.2, ipc.2, killpg.2, link.2, listen.2, lseek.2,
+  mkdir.2, mknod.2, mlock.2, mmap.2, mount.2, mremap.2, msync.2,
+  nice.2, open.2, outb.2, pause.2, personality.2, pipe.2, ptrace.2,
+  read.2, readdir.2, readlink.2, reboot.2, rename.2, rmdir.2,
+  select.2, setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
+  setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
+  shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
+  socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
+  truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
+  ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
+  abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
+  atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
+  host.conf.5, hosts.5, hosts.equiv.5, intro.5, issue.5, motd.5,
+  networks.5, nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5,
+  securetty.5, services.5, shells.5, termcap.5, tzfile.5, utmp.5,
+  intro.6, ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
+  iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
+  shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
+  units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
 ## Version 1.4
 
 *Sun Dec 15 19:16:36 CET 2013*
 
-  * New translations:
-    ogg123.1, oggdec.1, oggenc.1, ogginfo.1, vcut.1, vorbiscomment.1,
-    vorbistagedit.1
-  * Updated translations:
-    cmp.1, cp.1, dd.1, df.1, diff.1, diff3.1, du.1, grep.1, gzip.1,
-    hostname.1, info.1, intro.1, nice.1, od.1, readlink.1, sdiff.1,
-    stty.1, tar.1, timeout.1, uptime.1, accept.2, access.2, acct.2,
-    adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2,
-    capget.2, chdir.2, chmod.2, chown.2, chroot.2, clone.2, close.2,
-    connect.2, dup.2, execve.2, _exit.2, fcntl.2, flock.2, fork.2,
-    fsync.2, getdents.2, getdomainname.2, getgid.2, getgroups.2,
-    gethostname.2, getitimer.2, getpagesize.2, getpeername.2, getpid.2,
-    getresuid.2, getsid.2, getsockname.2, getuid.2, idle.2, intro.2,
-    ioctl.2, ioctl_list.2, ioperm.2, iopl.2, ipc.2, killpg.2, link.2,
-    listen.2, lseek.2, mkdir.2, mknod.2, mlock.2, mmap.2, mount.2,
-    mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
-    pipe.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
-    getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
-    getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
-    getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
-    getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
-    isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
-    malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
-    memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
-    on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
-    psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
-    random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
-    rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
-    setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
-    strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
-    swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
-    undocumented.3, usleep.3, wprintf.3, console_codes.4,
-    console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
-    intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
-    random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
-    vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
-    host.conf.5, hosts.5, hosts.equiv.5, inittab.5, intro.5, isdnlog.5,
-    issue.5, motd.5, networks.5, nologin.5, proc.5, protocols.5,
-    resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
-    environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
-    iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
-    math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
-    svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, intro.8,
-    lilo.8, shutdown.8, tzselect.8
+* New translations:
+  ogg123.1, oggdec.1, oggenc.1, ogginfo.1, vcut.1, vorbiscomment.1,
+  vorbistagedit.1
+* Updated translations:
+  cmp.1, cp.1, dd.1, df.1, diff.1, diff3.1, du.1, grep.1, gzip.1,
+  hostname.1, info.1, intro.1, nice.1, od.1, readlink.1, sdiff.1,
+  stty.1, tar.1, timeout.1, uptime.1, accept.2, access.2, acct.2,
+  adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2, cacheflush.2,
+  capget.2, chdir.2, chmod.2, chown.2, chroot.2, clone.2, close.2,
+  connect.2, dup.2, execve.2, _exit.2, fcntl.2, flock.2, fork.2,
+  fsync.2, getdents.2, getdomainname.2, getgid.2, getgroups.2,
+  gethostname.2, getitimer.2, getpagesize.2, getpeername.2, getpid.2,
+  getresuid.2, getsid.2, getsockname.2, getuid.2, idle.2, intro.2,
+  ioctl.2, ioctl_list.2, ioperm.2, iopl.2, ipc.2, killpg.2, link.2,
+  listen.2, lseek.2, mkdir.2, mknod.2, mlock.2, mmap.2, mount.2,
+  mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
+  pipe.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3,
+  getdtablesize.3, getenv.3, getgrent.3, getgrnam.3, gethostbyname.3,
+  getmntent.3, getnetent.3, getopt.3, getpass.3, getpw.3, getpwent.3,
+  getpwnam.3, gets.3, getservent.3, getusershell.3, getutent.3,
+  getw.3, glob.3, hsearch.3, hypot.3, index.3, initgroups.3, intro.3,
+  isalpha.3, isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3,
+  malloc.3, memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3,
+  memmem.3, memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3,
+  on_exit.3, opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3,
+  psignal.3, putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3,
+  random.3, readdir.3, realpath.3, re_comp.3, resolver.3,
+  rewinddir.3, rint.3, scandir.3, scanf.3, seekdir.3, setbuf.3,
+  setenv.3, setjmp.3, sigpause.3, sigsetops.3, sin.3, sinh.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strerror.3, strfry.3,
+  strftime.3, string.3, strlen.3, strpbrk.3, strstr.3, strtod.3,
+  swab.3, sysconf.3, syslog.3, system.3, tan.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3, tzset.3,
+  undocumented.3, usleep.3, wprintf.3, console_codes.4,
+  console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4,
+  intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4, ram.4,
+  random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4, ttyS.4,
+  vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5, group.5,
+  host.conf.5, hosts.5, hosts.equiv.5, inittab.5, intro.5, isdnlog.5,
+  issue.5, motd.5, networks.5, nologin.5, proc.5, protocols.5,
+  resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
+  environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
+  iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
+  math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
+  svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, intro.8,
+  lilo.8, shutdown.8, tzselect.8
 
 
 ## Version 1.3
 
 *Sun Aug 18 15:09:58 CEST 2013*
 
-  * Renamed translations:
-    getdtablesize.2 -> getdtablesize.3
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
-    df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
-    expr.1, factor.1, false.1, fmt.1, fold.1, grep.1, groff.1,
-    groups.1, gzip.1, head.1, hostid.1, hostname.1, id.1, info.1,
-    install.1, intro.1, join.1, less.1, link.1, ln.1, logname.1, ls.1,
-    md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1, nl.1,
-    nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
-    printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
-    runcon.1, sed.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1,
-    sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
-    split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
-    tee.1, test.1, timeout.1, touch.1, tr.1, true.1, truncate.1,
-    tsort.1, tty.1, uname.1, unexpand.1, uniq.1, unlink.1, uptime.1,
-    users.1, vdir.1, wc.1, who.1, whoami.1, yes.1, accept.2, access.2,
-    acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
-    clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
-    flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
-    ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
-    mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
-    outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
-    readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
-    setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
-    setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
-    shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
-    socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
-    truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
-    ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
-    abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
-    atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3, getenv.3,
-    getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
-    getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
-    getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
-    hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
-    isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
-    memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
-    memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
-    opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
-    putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
-    readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
-    scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
-    sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
-    stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
-    strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
-    strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
-    system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
-    toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
-    console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
-    initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
-    ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4,
-    ttyS.4, vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5,
-    group.5, host.conf.5, hosts.5, hosts.equiv.5, inittab.5, intro.5,
-    issue.5, motd.5, networks.5, nfs.5, nologin.5, proc.5, protocols.5,
-    resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
-    environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
-    iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
-    iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
-    iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
-    math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
-    svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, binkd.8,
-    chroot.8, intro.8, lilo.8, shutdown.8, tzselect.8
+* Renamed translations:
+  getdtablesize.2 -> getdtablesize.3
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
+  df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
+  expr.1, factor.1, false.1, fmt.1, fold.1, grep.1, groff.1,
+  groups.1, gzip.1, head.1, hostid.1, hostname.1, id.1, info.1,
+  install.1, intro.1, join.1, less.1, link.1, ln.1, logname.1, ls.1,
+  md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1, nl.1,
+  nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
+  printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
+  runcon.1, sed.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1,
+  sha384sum.1, sha512sum.1, shred.1, shuf.1, sleep.1, sort.1,
+  split.1, stat.1, stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1,
+  tee.1, test.1, timeout.1, touch.1, tr.1, true.1, truncate.1,
+  tsort.1, tty.1, uname.1, unexpand.1, uniq.1, unlink.1, uptime.1,
+  users.1, vdir.1, wc.1, who.1, whoami.1, yes.1, accept.2, access.2,
+  acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, capget.2, chdir.2, chmod.2, chown.2, chroot.2,
+  clone.2, close.2, connect.2, dup.2, execve.2, _exit.2, fcntl.2,
+  flock.2, fork.2, fsync.2, getdents.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioctl_list.2, ioperm.2, iopl.2,
+  ipc.2, killpg.2, link.2, listen.2, lseek.2, mkdir.2, mknod.2,
+  mlock.2, mmap.2, mount.2, mremap.2, msync.2, nice.2, open.2,
+  outb.2, pause.2, personality.2, pipe.2, ptrace.2, read.2,
+  readdir.2, readlink.2, reboot.2, rename.2, rmdir.2, select.2,
+  setfsgid.2, setfsuid.2, setgid.2, setpgid.2, setresuid.2,
+  setreuid.2, setsid.2, setuid.2, setup.2, shmget.2, shmop.2,
+  shutdown.2, sigaction.2, signal.2, sigreturn.2, socket.2,
+  socketcall.2, socketpair.2, stat.2, statfs.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, times.2,
+  truncate.2, umask.2, uname.2, unimplemented.2, unlink.2, uselib.2,
+  ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2, a64l.3,
+  abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3, atof.3,
+  atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3, getenv.3,
+  getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
+  getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
+  getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
+  hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
+  isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
+  memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
+  memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
+  opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
+  putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
+  readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
+  scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
+  sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
+  stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
+  strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
+  strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
+  system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
+  toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
+  console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
+  initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
+  ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4,
+  ttyS.4, vcs.4, wavelan.4, acct.5, charmap.5, filesystems.5,
+  group.5, host.conf.5, hosts.5, hosts.equiv.5, inittab.5, intro.5,
+  issue.5, motd.5, networks.5, nfs.5, nologin.5, proc.5, protocols.5,
+  resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  tzfile.5, utmp.5, intro.6, ascii.7, capabilities.7, complex.7,
+  environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
+  iso_8859-15.7, iso_8859-1.7, iso_8859-2.7, iso_8859-3.7,
+  iso_8859-4.7, iso_8859-5.7, iso_8859-6.7, iso_8859-7.7,
+  iso_8859-8.7, libc.7, locale.7, mailaddr.7, man.7, man-pages.7,
+  math_error.7, operator.7, shm_overview.7, signal.7, suffixes.7,
+  svipc.7, termio.7, unicode.7, units.7, utf-8.7, x25.7, binkd.8,
+  chroot.8, intro.8, lilo.8, shutdown.8, tzselect.8
 
 
 ## Version 1.2
 
 *Sun Oct 28 12:50:50 CET 2012*
 
-  * During ./configure, check that po4a is available on the system.
-  * New translations:
-    charmap.5, hosts.equiv.5, networks.5
-  * Updated translations:
-    intro.1, less.1, accept.2, access.2, acct.2, adjtimex.2, alarm.2,
-    bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2, chmod.2,
-    chown.2, chroot.2, clone.2, close.2, connect.2, dup.2, execve.2,
-    _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
-    getdomainname.2, getdtablesize.2, getgid.2, getgroups.2,
-    gethostname.2, getitimer.2, getpagesize.2, getpeername.2, getpid.2,
-    getresuid.2, getsid.2, getsockname.2, getuid.2, idle.2, intro.2,
-    ioctl.2, ioctl_list.2, ioperm.2, iopl.2, ipc.2, killpg.2, link.2,
-    listen.2, lseek.2, mkdir.2, mknod.2, mlock.2, mmap.2, mount.2,
-    mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
-    pipe.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
-    rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
-    setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
-    shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
-    socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
-    swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
-    times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
-    uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
-    a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
-    asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
-    atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
-    cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
-    closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
-    csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
-    div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
-    fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
-    ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3, getenv.3,
-    getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
-    getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
-    getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
-    hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
-    isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
-    memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
-    memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
-    opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
-    putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
-    readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
-    scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
-    sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
-    stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
-    strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
-    strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
-    system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
-    toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
-    console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
-    initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
-    ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4,
-    ttyS.4, vcs.4, wavelan.4, acct.5, filesystems.5, group.5,
-    host.conf.5, hosts.5, intro.5, isdnlog.5, issue.5, motd.5,
-    nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5, securetty.5,
-    services.5, shells.5, termcap.5, tzfile.5, utmp.5, intro.6,
-    ascii.7, capabilities.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
-    iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
-    shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
-    units.7, utf-8.7, x25.7, intro.8, tzselect.8
+* During ./configure, check that po4a is available on the system.
+* New translations:
+  charmap.5, hosts.equiv.5, networks.5
+* Updated translations:
+  intro.1, less.1, accept.2, access.2, acct.2, adjtimex.2, alarm.2,
+  bdflush.2, bind.2, brk.2, cacheflush.2, capget.2, chdir.2, chmod.2,
+  chown.2, chroot.2, clone.2, close.2, connect.2, dup.2, execve.2,
+  _exit.2, fcntl.2, flock.2, fork.2, fsync.2, getdents.2,
+  getdomainname.2, getdtablesize.2, getgid.2, getgroups.2,
+  gethostname.2, getitimer.2, getpagesize.2, getpeername.2, getpid.2,
+  getresuid.2, getsid.2, getsockname.2, getuid.2, idle.2, intro.2,
+  ioctl.2, ioctl_list.2, ioperm.2, iopl.2, ipc.2, killpg.2, link.2,
+  listen.2, lseek.2, mkdir.2, mknod.2, mlock.2, mmap.2, mount.2,
+  mremap.2, msync.2, nice.2, open.2, outb.2, pause.2, personality.2,
+  pipe.2, ptrace.2, read.2, readdir.2, readlink.2, reboot.2,
+  rename.2, rmdir.2, select.2, setfsgid.2, setfsuid.2, setgid.2,
+  setpgid.2, setresuid.2, setreuid.2, setsid.2, setuid.2, setup.2,
+  shmget.2, shmop.2, shutdown.2, sigaction.2, signal.2, sigreturn.2,
+  socket.2, socketcall.2, socketpair.2, stat.2, statfs.2, stime.2,
+  swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2,
+  times.2, truncate.2, umask.2, uname.2, unimplemented.2, unlink.2,
+  uselib.2, ustat.2, utime.2, vhangup.2, vm86.2, wait4.2, write.2,
+  a64l.3, abs.3, acos.3, acosh.3, addseverity.3, alloca.3, asin.3,
+  asinh.3, asprintf.3, assert.3, atan2.3, atan.3, atanh.3, atexit.3,
+  atof.3, atoi.3, bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3,
+  cacosh.3, carg.3, cbrt.3, ceil.3, cimag.3, clearenv.3, clock.3,
+  closedir.3, copysign.3, cos.3, cosh.3, creal.3, crypt.3, csin.3,
+  csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3, daemon.3, difftime.3,
+  div.3, dysize.3, erf.3, errno.3, exec.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, ferror.3, fflush.3, ffs.3,
+  fgetpwent.3, floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3,
+  ftok.3, gcvt.3, getcwd.3, getdate.3, getdirentries.3, getenv.3,
+  getgrent.3, getgrnam.3, gethostbyname.3, getmntent.3, getnetent.3,
+  getopt.3, getpass.3, getpw.3, getpwent.3, getpwnam.3, gets.3,
+  getservent.3, getusershell.3, getutent.3, getw.3, glob.3,
+  hsearch.3, hypot.3, index.3, initgroups.3, intro.3, isalpha.3,
+  isatty.3, j0.3, ldexp.3, lgamma.3, localeconv.3, malloc.3,
+  memccpy.3, memchr.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
+  memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
+  opendir.3, perror.3, popen.3, pow10.3, pow.3, printf.3, psignal.3,
+  putenv.3, putpwent.3, puts.3, qsort.3, raise.3, rand.3, random.3,
+  readdir.3, realpath.3, re_comp.3, resolver.3, rewinddir.3, rint.3,
+  scandir.3, scanf.3, seekdir.3, setbuf.3, setenv.3, setjmp.3,
+  sigpause.3, sigsetops.3, sin.3, sinh.3, sleep.3, sqrt.3, stdarg.3,
+  stdio.3, strcasecmp.3, strcat.3, strchr.3, strcmp.3, strcpy.3,
+  strdup.3, strerror.3, strfry.3, strftime.3, string.3, strlen.3,
+  strpbrk.3, strstr.3, strtod.3, swab.3, sysconf.3, syslog.3,
+  system.3, tan.3, tanh.3, telldir.3, tmpfile.3, tmpnam.3, toascii.3,
+  toupper.3, ttyname.3, tzset.3, undocumented.3, usleep.3, wprintf.3,
+  console_codes.4, console_ioctl.4, cpuid.4, dsp56k.4, full.4, hd.4,
+  initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4, null.4, pts.4,
+  ram.4, random.4, rtc.4, sd.4, sk98lin.4, st.4, tty.4, tty_ioctl.4,
+  ttyS.4, vcs.4, wavelan.4, acct.5, filesystems.5, group.5,
+  host.conf.5, hosts.5, intro.5, isdnlog.5, issue.5, motd.5,
+  nologin.5, proc.5, protocols.5, resolv.conf.5, rpc.5, securetty.5,
+  services.5, shells.5, termcap.5, tzfile.5, utmp.5, intro.6,
+  ascii.7, capabilities.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-2.7, iso_8859-3.7, iso_8859-4.7,
+  iso_8859-5.7, iso_8859-6.7, iso_8859-7.7, iso_8859-8.7, libc.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, math_error.7, operator.7,
+  shm_overview.7, signal.7, suffixes.7, svipc.7, termio.7, unicode.7,
+  units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
 ## Version 1.1
 
 *Fri Jun 29 14:11:32 CEST 2012*
 
-  * Instead of downloading the original manpages during building
-    of the package, the software now uses the locally installed
-    manpages on the system. To enable the previous behaviour,
-    there is now an option "--enable-download" for the configure
-    script. Thanks to Jeremy Bicha <jbicha@ubuntu.com> for the
-    bug report. This closes Debian bug #679122.
-  * Updated translations:
-    groff.1, gzip.1, capget.2, connect.2, ptrace.2, read.2, readdir.2,
-    rename.2, setpgid.2, setreuid.2, setuid.2, statfs.2, truncate.2,
-    fopen.3, fread.3, getgrnam.3, getpwnam.3, isalpha.3, malloc.3,
-    memchr.3, mkstemp.3, perror.3, qsort.3, scandir.3, scanf.3,
-    strerror.3, sysconf.3, isdnlog.5, proc.5, iso_8859-8.7
+* Instead of downloading the original manpages during building
+  of the package, the software now uses the locally installed
+  manpages on the system. To enable the previous behaviour,
+  there is now an option "--enable-download" for the configure
+  script. Thanks to Jeremy Bicha <jbicha@ubuntu.com> for the
+  bug report. This closes Debian bug #679122.
+* Updated translations:
+  groff.1, gzip.1, capget.2, connect.2, ptrace.2, read.2, readdir.2,
+  rename.2, setpgid.2, setreuid.2, setuid.2, statfs.2, truncate.2,
+  fopen.3, fread.3, getgrnam.3, getpwnam.3, isalpha.3, malloc.3,
+  memchr.3, mkstemp.3, perror.3, qsort.3, scandir.3, scanf.3,
+  strerror.3, sysconf.3, isdnlog.5, proc.5, iso_8859-8.7
 
 
 ## Version 1.0
 
 *Fri Jun  8 11:58:02 CEST 2012*
 
-  * Converted package to use autotools for setup and installation
-  * Removed generated translations from tarball, instead download
-    the original manpages and generate the translations before
-    installation
-  * Because of the above, the package now needs wget and po4a
-    during installation
-  * New translations:
-    iso_8859-8.7
-  * Updated translations:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
-    df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
-    expr.1, factor.1, false.1, fmt.1, fold.1, free.1, grep.1, groups.1,
-    head.1, hostid.1, id.1, install.1, join.1, link.1, ln.1, logname.1,
-    ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1,
-    nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
-    printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
-    runcon.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1,
-    sha512sum.1, shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1,
-    stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, test.1,
-    timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1,
-    uname.1, unexpand.1, uniq.1, unlink.1, uptime.1, users.1, vdir.1,
-    wc.1, who.1, whoami.1, yes.1, access.2, bdflush.2, bind.2, chown.2,
-    connect.2, execve.2, fcntl.2, flock.2, getdents.2, intro.2,
-    ioctl_list.2, iopl.2, lseek.2, mlock.2, mmap.2, mremap.2, open.2,
-    pipe.2, readdir.2, rename.2, setpgid.2, setreuid.2, setuid.2,
-    sigaction.2, signal.2, socket.2, stat.2, statfs.2, sync.2, times.2,
-    truncate.2, umask.2, ustat.2, copysign.3, div.3, errno.3, exec.3,
-    fopen.3, fread.3, getdate.3, getgrent.3, gethostbyname.3, getopt.3,
-    getpwnam.3, getutent.3, glob.3, hsearch.3, intro.3, mkstemp.3,
-    perror.3, printf.3, qsort.3, raise.3, readdir.3, resolver.3,
-    scanf.3, strchr.3, sysconf.3, tzset.3, wprintf.3, console_codes.4,
-    console_ioctl.4, sk98lin.4, tty_ioctl.4, isdnlog.5, nfs.5,
-    nologin.5, capabilities.7, feature_test_macros.7, iso_8859-15.7,
-    iso_8859-1.7, iso_8859-3.7, iso_8859-7.7, shm_overview.7, x25.7,
-    chroot.8, fdisk.8, halt.8, mkrescue.8
-  * Removed translations which are severely out of date:
-    groff.1, less.1, access.2, capget.2, connect.2, execve.2, fcntl.2,
-    flock.2, fork.2, lseek.2, mknod.2, mlock.2, mmap.2, mremap.2,
-    open.2, pipe.2, ptrace.2, read.2, readdir.2, rename.2, select.2,
-    setpgid.2, setreuid.2, setuid.2, sigaction.2, signal.2, stat.2,
-    statfs.2, times.2, truncate.2, unlink.2, exec.3, getdate.3,
-    gethostbyname.3, getmntent.3, getopt.3, glob.3, hsearch.3,
-    printf.3, readdir.3, strftime.3, syslog.3, tzset.3, wprintf.3,
-    console.4, nfs.5
+* Converted package to use autotools for setup and installation
+* Removed generated translations from tarball, instead download
+  the original manpages and generate the translations before
+  installation
+* Because of the above, the package now needs wget and po4a
+  during installation
+* New translations:
+  iso_8859-8.7
+* Updated translations:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
+  df.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1, expand.1,
+  expr.1, factor.1, false.1, fmt.1, fold.1, free.1, grep.1, groups.1,
+  head.1, hostid.1, id.1, install.1, join.1, link.1, ln.1, logname.1,
+  ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1, mv.1, nice.1,
+  nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1, pr.1,
+  printenv.1, printf.1, ptx.1, pwd.1, readlink.1, rm.1, rmdir.1,
+  runcon.1, seq.1, sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1,
+  sha512sum.1, shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1,
+  stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, test.1,
+  timeout.1, touch.1, tr.1, true.1, truncate.1, tsort.1, tty.1,
+  uname.1, unexpand.1, uniq.1, unlink.1, uptime.1, users.1, vdir.1,
+  wc.1, who.1, whoami.1, yes.1, access.2, bdflush.2, bind.2, chown.2,
+  connect.2, execve.2, fcntl.2, flock.2, getdents.2, intro.2,
+  ioctl_list.2, iopl.2, lseek.2, mlock.2, mmap.2, mremap.2, open.2,
+  pipe.2, readdir.2, rename.2, setpgid.2, setreuid.2, setuid.2,
+  sigaction.2, signal.2, socket.2, stat.2, statfs.2, sync.2, times.2,
+  truncate.2, umask.2, ustat.2, copysign.3, div.3, errno.3, exec.3,
+  fopen.3, fread.3, getdate.3, getgrent.3, gethostbyname.3, getopt.3,
+  getpwnam.3, getutent.3, glob.3, hsearch.3, intro.3, mkstemp.3,
+  perror.3, printf.3, qsort.3, raise.3, readdir.3, resolver.3,
+  scanf.3, strchr.3, sysconf.3, tzset.3, wprintf.3, console_codes.4,
+  console_ioctl.4, sk98lin.4, tty_ioctl.4, isdnlog.5, nfs.5,
+  nologin.5, capabilities.7, feature_test_macros.7, iso_8859-15.7,
+  iso_8859-1.7, iso_8859-3.7, iso_8859-7.7, shm_overview.7, x25.7,
+  chroot.8, fdisk.8, halt.8, mkrescue.8
+* Removed translations which are severely out of date:
+  groff.1, less.1, access.2, capget.2, connect.2, execve.2, fcntl.2,
+  flock.2, fork.2, lseek.2, mknod.2, mlock.2, mmap.2, mremap.2,
+  open.2, pipe.2, ptrace.2, read.2, readdir.2, rename.2, select.2,
+  setpgid.2, setreuid.2, setuid.2, sigaction.2, signal.2, stat.2,
+  statfs.2, times.2, truncate.2, unlink.2, exec.3, getdate.3,
+  gethostbyname.3, getmntent.3, getopt.3, glob.3, hsearch.3,
+  printf.3, readdir.3, strftime.3, syslog.3, tzset.3, wprintf.3,
+  console.4, nfs.5
 
 
 ## Version 0.13
 
 *Tue May 15 14:26:17 CEST 2012*
 
-  * New manpages:
-    chown.2, getdtablesize.2, mkdir.2, setgid.2, shutdown.2,
-    addseverity.3, atan.3, cacosh.3, carg.3, ceil.3, clearenv.3, erf.3,
-    errno.3, ferror.3, getgrent.3, getgrnam.3, getnetent.3, getpass.3,
-    gets.3, getw.3, hypot.3, isalpha.3, j0.3, malloc.3, memchr.3,
-    psignal.3, random.3, scandir.3, setbuf.3, sinh.3, strerror.3,
-    strtod.3, tan.3, rtc.4, proc.5, capabilities.7, iso_8859-15.7,
-    iso_8859-2.7, iso_8859-3.7, iso_8859-4.7, iso_8859-5.7,
-    iso_8859-6.7, iso_8859-7.7, libc.7, math_error.7, shm_overview.7,
-    termio.7, undocumented.7, units.7, x25.7, fdisk.8, lilo.8,
-    mkrescue.8
-  * Updated manpages:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, cmp.1, comm.1, cp.1, csplit.1, cut.1, date.1,
-    dd.1, df.1, diff.1, diff3.1, dir.1, dircolors.1, dirname.1, du.1,
-    echo.1, env.1, expand.1, expr.1, factor.1, false.1, find.1, fmt.1,
-    fold.1, free.1, grep.1, groups.1, gzip.1, head.1, hostid.1,
-    hostname.1, id.1, info.1, install.1, intro.1, join.1, link.1, ln.1,
-    logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1,
-    mv.1, nice.1, nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1,
-    pinky.1, pr.1, printenv.1, printf.1, ptx.1, pwd.1, readlink.1,
-    rm.1, rmdir.1, runcon.1, sdiff.1, sed.1, seq.1, sha1sum.1,
-    sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1, shred.1,
-    shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1,
-    sync.1, tac.1, tail.1, tar.1, tee.1, test.1, timeout.1, touch.1,
-    tr.1, true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1,
-    uniq.1, unlink.1, uptime.1, users.1, vdir.1, wc.1, who.1, whoami.1,
-    wodim.1, yes.1, accept.2, acct.2, adjtimex.2, alarm.2, bdflush.2,
-    bind.2, brk.2, cacheflush.2, chdir.2, chmod.2, chroot.2, clone.2,
-    close.2, dup.2, _exit.2, fsync.2, getdomainname.2, getgid.2,
-    getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
-    getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
-    getuid.2, idle.2, intro.2, ioctl.2, ioperm.2, ipc.2, killpg.2,
-    link.2, listen.2, mount.2, msync.2, nice.2, outb.2, pause.2,
-    personality.2, ptrace.2, readlink.2, reboot.2, rmdir.2, setfsgid.2,
-    setfsuid.2, setresuid.2, setsid.2, setup.2, shmget.2, shmop.2,
-    sigreturn.2, socketcall.2, socketpair.2, stime.2, swapon.2,
-    symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, uname.2,
-    unimplemented.2, uselib.2, utime.2, vhangup.2, vm86.2, wait4.2,
-    write.2, a64l.3, abs.3, acos.3, acosh.3, alloca.3, asin.3, asinh.3,
-    asprintf.3, assert.3, atan2.3, atanh.3, atexit.3, atof.3, atoi.3,
-    bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3, cbrt.3,
-    cimag.3, clock.3, closedir.3, copysign.3, cos.3, cosh.3, creal.3,
-    crypt.3, csin.3, csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3,
-    daemon.3, difftime.3, div.3, dysize.3, exit.3, exp.3, expm1.3,
-    fabs.3, fclose.3, fcloseall.3, fflush.3, ffs.3, fgetpwent.3,
-    floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3,
-    gcvt.3, getcwd.3, getdirentries.3, getenv.3, getpw.3, getpwent.3,
-    getpwnam.3, getservent.3, getusershell.3, index.3, initgroups.3,
-    intro.3, isatty.3, ldexp.3, lgamma.3, localeconv.3, memccpy.3,
-    memcmp.3, memcpy.3, memfrob.3, memmem.3, memmove.3, memset.3,
-    mkstemp.3, mktemp.3, modf.3, on_exit.3, opendir.3, perror.3,
-    popen.3, pow10.3, pow.3, putenv.3, putpwent.3, puts.3, qsort.3,
-    raise.3, rand.3, realpath.3, re_comp.3, rewinddir.3, rint.3,
-    scanf.3, seekdir.3, setenv.3, setjmp.3, sigpause.3, sigsetops.3,
-    sin.3, sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
-    strchr.3, strcmp.3, strcpy.3, strdup.3, strfry.3, string.3,
-    strlen.3, strpbrk.3, strstr.3, swab.3, sysconf.3, system.3, tanh.3,
-    telldir.3, tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3,
-    undocumented.3, usleep.3, console.4, cpuid.4, dsp56k.4, fd.4,
-    full.4, hd.4, initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4,
-    null.4, pts.4, ram.4, random.4, sd.4, st.4, tty.4, ttyS.4, vcs.4,
-    wavelan.4, acct.5, filesystems.5, fstab.5, group.5, host.conf.5,
-    hosts.5, intro.5, isdnlog.5, issue.5, motd.5, nologin.5,
-    protocols.5, resolv.conf.5, rpc.5, securetty.5, services.5,
-    shells.5, termcap.5, tzfile.5, utmp.5, intro.6, ascii.7, complex.7,
-    environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
-    iso_8859-1.7, LDP.7, locale.7, mailaddr.7, man.7, man-pages.7,
-    operator.7, signal.7, suffixes.7, svipc.7, unicode.7, utf-8.7,
-    binkd.8, binkdlogstat.8, chroot.8, intro.8, tzselect.8
+* New manpages:
+  chown.2, getdtablesize.2, mkdir.2, setgid.2, shutdown.2,
+  addseverity.3, atan.3, cacosh.3, carg.3, ceil.3, clearenv.3, erf.3,
+  errno.3, ferror.3, getgrent.3, getgrnam.3, getnetent.3, getpass.3,
+  gets.3, getw.3, hypot.3, isalpha.3, j0.3, malloc.3, memchr.3,
+  psignal.3, random.3, scandir.3, setbuf.3, sinh.3, strerror.3,
+  strtod.3, tan.3, rtc.4, proc.5, capabilities.7, iso_8859-15.7,
+  iso_8859-2.7, iso_8859-3.7, iso_8859-4.7, iso_8859-5.7,
+  iso_8859-6.7, iso_8859-7.7, libc.7, math_error.7, shm_overview.7,
+  termio.7, undocumented.7, units.7, x25.7, fdisk.8, lilo.8,
+  mkrescue.8
+* Updated manpages:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, cmp.1, comm.1, cp.1, csplit.1, cut.1, date.1,
+  dd.1, df.1, diff.1, diff3.1, dir.1, dircolors.1, dirname.1, du.1,
+  echo.1, env.1, expand.1, expr.1, factor.1, false.1, find.1, fmt.1,
+  fold.1, free.1, grep.1, groups.1, gzip.1, head.1, hostid.1,
+  hostname.1, id.1, info.1, install.1, intro.1, join.1, link.1, ln.1,
+  logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mktemp.1,
+  mv.1, nice.1, nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1,
+  pinky.1, pr.1, printenv.1, printf.1, ptx.1, pwd.1, readlink.1,
+  rm.1, rmdir.1, runcon.1, sdiff.1, sed.1, seq.1, sha1sum.1,
+  sha224sum.1, sha256sum.1, sha384sum.1, sha512sum.1, shred.1,
+  shuf.1, sleep.1, sort.1, split.1, stat.1, stdbuf.1, stty.1, sum.1,
+  sync.1, tac.1, tail.1, tar.1, tee.1, test.1, timeout.1, touch.1,
+  tr.1, true.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1,
+  uniq.1, unlink.1, uptime.1, users.1, vdir.1, wc.1, who.1, whoami.1,
+  wodim.1, yes.1, accept.2, acct.2, adjtimex.2, alarm.2, bdflush.2,
+  bind.2, brk.2, cacheflush.2, chdir.2, chmod.2, chroot.2, clone.2,
+  close.2, dup.2, _exit.2, fsync.2, getdomainname.2, getgid.2,
+  getgroups.2, gethostname.2, getitimer.2, getpagesize.2,
+  getpeername.2, getpid.2, getresuid.2, getsid.2, getsockname.2,
+  getuid.2, idle.2, intro.2, ioctl.2, ioperm.2, ipc.2, killpg.2,
+  link.2, listen.2, mount.2, msync.2, nice.2, outb.2, pause.2,
+  personality.2, ptrace.2, readlink.2, reboot.2, rmdir.2, setfsgid.2,
+  setfsuid.2, setresuid.2, setsid.2, setup.2, shmget.2, shmop.2,
+  sigreturn.2, socketcall.2, socketpair.2, stime.2, swapon.2,
+  symlink.2, sync.2, sysctl.2, sysfs.2, sysinfo.2, time.2, uname.2,
+  unimplemented.2, uselib.2, utime.2, vhangup.2, vm86.2, wait4.2,
+  write.2, a64l.3, abs.3, acos.3, acosh.3, alloca.3, asin.3, asinh.3,
+  asprintf.3, assert.3, atan2.3, atanh.3, atexit.3, atof.3, atoi.3,
+  bsearch.3, bstring.3, byteorder.3, cabs.3, cacos.3, cbrt.3,
+  cimag.3, clock.3, closedir.3, copysign.3, cos.3, cosh.3, creal.3,
+  crypt.3, csin.3, csinh.3, ctan.3, ctanh.3, ctermid.3, ctime.3,
+  daemon.3, difftime.3, div.3, dysize.3, exit.3, exp.3, expm1.3,
+  fabs.3, fclose.3, fcloseall.3, fflush.3, ffs.3, fgetpwent.3,
+  floor.3, fmod.3, fopen.3, fread.3, fseek.3, ftime.3, ftok.3,
+  gcvt.3, getcwd.3, getdirentries.3, getenv.3, getpw.3, getpwent.3,
+  getpwnam.3, getservent.3, getusershell.3, index.3, initgroups.3,
+  intro.3, isatty.3, ldexp.3, lgamma.3, localeconv.3, memccpy.3,
+  memcmp.3, memcpy.3, memfrob.3, memmem.3, memmove.3, memset.3,
+  mkstemp.3, mktemp.3, modf.3, on_exit.3, opendir.3, perror.3,
+  popen.3, pow10.3, pow.3, putenv.3, putpwent.3, puts.3, qsort.3,
+  raise.3, rand.3, realpath.3, re_comp.3, rewinddir.3, rint.3,
+  scanf.3, seekdir.3, setenv.3, setjmp.3, sigpause.3, sigsetops.3,
+  sin.3, sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strcat.3,
+  strchr.3, strcmp.3, strcpy.3, strdup.3, strfry.3, string.3,
+  strlen.3, strpbrk.3, strstr.3, swab.3, sysconf.3, system.3, tanh.3,
+  telldir.3, tmpfile.3, tmpnam.3, toascii.3, toupper.3, ttyname.3,
+  undocumented.3, usleep.3, console.4, cpuid.4, dsp56k.4, fd.4,
+  full.4, hd.4, initrd.4, intro.4, lp.4, mem.4, mouse.4, msr.4,
+  null.4, pts.4, ram.4, random.4, sd.4, st.4, tty.4, ttyS.4, vcs.4,
+  wavelan.4, acct.5, filesystems.5, fstab.5, group.5, host.conf.5,
+  hosts.5, intro.5, isdnlog.5, issue.5, motd.5, nologin.5,
+  protocols.5, resolv.conf.5, rpc.5, securetty.5, services.5,
+  shells.5, termcap.5, tzfile.5, utmp.5, intro.6, ascii.7, complex.7,
+  environ.7, feature_test_macros.7, fifo.7, hier.7, intro.7,
+  iso_8859-1.7, LDP.7, locale.7, mailaddr.7, man.7, man-pages.7,
+  operator.7, signal.7, suffixes.7, svipc.7, unicode.7, utf-8.7,
+  binkd.8, binkdlogstat.8, chroot.8, intro.8, tzselect.8
 
 ## Version 0.12
 
 *Mon Feb 27 22:52:19 CET 2012*
 
-  * New manpages:
-    chmod.2, getsockname.2, idle.2, nice.2, stime.2, asin.3, asinh.3,
-    cbrt.3, copysign.3, cos.3, cosh.3, daemon.3, div.3, fcloseall.3,
-    ffs.3, floor.3, gcvt.3, getusershell.3, initgroups.3, puts.3,
-    raise.3, sigpause.3, strcat.3, strfry.3, toupper.3, pts.4, acct.5,
-    utmp.5
-  * Updated manpages:
-    free.1, hostname.1, uptime.1, gethostname.2, getpeername.2,
-    localeconv.3, st.4, unicode.7, init.8
+* New manpages:
+  chmod.2, getsockname.2, idle.2, nice.2, stime.2, asin.3, asinh.3,
+  cbrt.3, copysign.3, cos.3, cosh.3, daemon.3, div.3, fcloseall.3,
+  ffs.3, floor.3, gcvt.3, getusershell.3, initgroups.3, puts.3,
+  raise.3, sigpause.3, strcat.3, strfry.3, toupper.3, pts.4, acct.5,
+  utmp.5
+* Updated manpages:
+  free.1, hostname.1, uptime.1, gethostname.2, getpeername.2,
+  localeconv.3, st.4, unicode.7, init.8
 
 ## Version 0.11
 
 *Thu Jan  5 22:34:51 CET 2012*
 
-  * New manpages:
-    tar.1, getpeername.2, getresuid.2, bstring.3, fstab.5
-  * Updated manpages:
-    arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
-    chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
-    df.1, diff.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1,
-    expand.1, expr.1, factor.1, fmt.1, fold.1, groups.1, head.1,
-    hostid.1, hostname.1, id.1, install.1, intro.1, join.1, link.1,
-    ln.1, logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mv.1,
-    nice.1, nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1,
-    pr.1, printenv.1, ptx.1, readlink.1, rm.1, rmdir.1, runcon.1,
-    seq.1, sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1,
-    sha512sum.1, shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1,
-    stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, timeout.1,
-    touch.1, tr.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1,
-    uniq.1, unlink.1, users.1, vdir.1, wc.1, who.1, whoami.1, yes.1,
-    accept.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
-    cacheflush.2, chdir.2, chroot.2, clone.2, close.2, dup.2, _exit.2,
-    fsync.2, getdomainname.2, getgid.2, getgroups.2, gethostname.2,
-    getitimer.2, getpagesize.2, getpid.2, getsid.2, getuid.2, intro.2,
-    ioctl.2, ioperm.2, ipc.2, killpg.2, link.2, listen.2, mount.2,
-    msync.2, outb.2, pause.2, personality.2, ptrace.2, readlink.2,
-    reboot.2, rmdir.2, setfsgid.2, setfsuid.2, setresuid.2, setsid.2,
-    setup.2, shmget.2, shmop.2, sigreturn.2, socketcall.2,
-    socketpair.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
-    sysinfo.2, time.2, uname.2, unimplemented.2, uselib.2, utime.2,
-    vhangup.2, vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3,
-    acosh.3, alloca.3, asprintf.3, assert.3, atan2.3, atanh.3,
-    atexit.3, atof.3, atoi.3, bsearch.3, byteorder.3, cabs.3, cacos.3,
-    cimag.3, clock.3, closedir.3, creal.3, crypt.3, csin.3, csinh.3,
-    ctan.3, ctanh.3, ctermid.3, ctime.3, difftime.3, dysize.3, exit.3,
-    exp.3, expm1.3, fabs.3, fclose.3, fflush.3, fgetpwent.3, fmod.3,
-    fopen.3, fread.3, fseek.3, ftime.3, ftok.3, getcwd.3,
-    getdirentries.3, getenv.3, getpw.3, getpwent.3, getpwnam.3,
-    getservent.3, index.3, intro.3, isatty.3, ldexp.3, lgamma.3,
-    localeconv.3, memccpy.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
-    memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
-    opendir.3, perror.3, popen.3, pow10.3, pow.3, putenv.3, putpwent.3,
-    qsort.3, rand.3, realpath.3, re_comp.3, rewinddir.3, rint.3,
-    scanf.3, seekdir.3, setenv.3, setjmp.3, sigsetops.3, sin.3,
-    sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strchr.3,
-    strcmp.3, strcpy.3, strdup.3, string.3, strlen.3, strpbrk.3,
-    strstr.3, swab.3, sysconf.3, system.3, tanh.3, telldir.3,
-    tmpfile.3, tmpnam.3, toascii.3, ttyname.3, undocumented.3,
-    usleep.3, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4, intro.4, lp.4,
-    mem.4, mouse.4, msr.4, null.4, ram.4, random.4, sd.4, st.4, tty.4,
-    ttyS.4, vcs.4, wavelan.4, filesystems.5, group.5, host.conf.5,
-    hosts.5, intro.5, issue.5, motd.5, nologin.5, protocols.5,
-    resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
-    tzfile.5, intro.6, ascii.7, complex.7, environ.7,
-    feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-1.7,
-    locale.7, mailaddr.7, man.7, man-pages.7, operator.7, signal.7,
-    suffixes.7, svipc.7, unicode.7, utf-8.7, chroot.8, intro.8,
-    tzselect.8
+* New manpages:
+  tar.1, getpeername.2, getresuid.2, bstring.3, fstab.5
+* Updated manpages:
+  arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
+  chown.1, cksum.1, comm.1, cp.1, csplit.1, cut.1, date.1, dd.1,
+  df.1, diff.1, dir.1, dircolors.1, dirname.1, du.1, echo.1, env.1,
+  expand.1, expr.1, factor.1, fmt.1, fold.1, groups.1, head.1,
+  hostid.1, hostname.1, id.1, install.1, intro.1, join.1, link.1,
+  ln.1, logname.1, ls.1, md5sum.1, mkdir.1, mkfifo.1, mknod.1, mv.1,
+  nice.1, nl.1, nohup.1, nproc.1, od.1, paste.1, pathchk.1, pinky.1,
+  pr.1, printenv.1, ptx.1, readlink.1, rm.1, rmdir.1, runcon.1,
+  seq.1, sha1sum.1, sha224sum.1, sha256sum.1, sha384sum.1,
+  sha512sum.1, shred.1, shuf.1, sleep.1, sort.1, split.1, stat.1,
+  stdbuf.1, stty.1, sum.1, sync.1, tac.1, tail.1, tee.1, timeout.1,
+  touch.1, tr.1, truncate.1, tsort.1, tty.1, uname.1, unexpand.1,
+  uniq.1, unlink.1, users.1, vdir.1, wc.1, who.1, whoami.1, yes.1,
+  accept.2, acct.2, adjtimex.2, alarm.2, bdflush.2, bind.2, brk.2,
+  cacheflush.2, chdir.2, chroot.2, clone.2, close.2, dup.2, _exit.2,
+  fsync.2, getdomainname.2, getgid.2, getgroups.2, gethostname.2,
+  getitimer.2, getpagesize.2, getpid.2, getsid.2, getuid.2, intro.2,
+  ioctl.2, ioperm.2, ipc.2, killpg.2, link.2, listen.2, mount.2,
+  msync.2, outb.2, pause.2, personality.2, ptrace.2, readlink.2,
+  reboot.2, rmdir.2, setfsgid.2, setfsuid.2, setresuid.2, setsid.2,
+  setup.2, shmget.2, shmop.2, sigreturn.2, socketcall.2,
+  socketpair.2, swapon.2, symlink.2, sync.2, sysctl.2, sysfs.2,
+  sysinfo.2, time.2, uname.2, unimplemented.2, uselib.2, utime.2,
+  vhangup.2, vm86.2, wait4.2, write.2, a64l.3, abs.3, acos.3,
+  acosh.3, alloca.3, asprintf.3, assert.3, atan2.3, atanh.3,
+  atexit.3, atof.3, atoi.3, bsearch.3, byteorder.3, cabs.3, cacos.3,
+  cimag.3, clock.3, closedir.3, creal.3, crypt.3, csin.3, csinh.3,
+  ctan.3, ctanh.3, ctermid.3, ctime.3, difftime.3, dysize.3, exit.3,
+  exp.3, expm1.3, fabs.3, fclose.3, fflush.3, fgetpwent.3, fmod.3,
+  fopen.3, fread.3, fseek.3, ftime.3, ftok.3, getcwd.3,
+  getdirentries.3, getenv.3, getpw.3, getpwent.3, getpwnam.3,
+  getservent.3, index.3, intro.3, isatty.3, ldexp.3, lgamma.3,
+  localeconv.3, memccpy.3, memcmp.3, memcpy.3, memfrob.3, memmem.3,
+  memmove.3, memset.3, mkstemp.3, mktemp.3, modf.3, on_exit.3,
+  opendir.3, perror.3, popen.3, pow10.3, pow.3, putenv.3, putpwent.3,
+  qsort.3, rand.3, realpath.3, re_comp.3, rewinddir.3, rint.3,
+  scanf.3, seekdir.3, setenv.3, setjmp.3, sigsetops.3, sin.3,
+  sleep.3, sqrt.3, stdarg.3, stdio.3, strcasecmp.3, strchr.3,
+  strcmp.3, strcpy.3, strdup.3, string.3, strlen.3, strpbrk.3,
+  strstr.3, swab.3, sysconf.3, system.3, tanh.3, telldir.3,
+  tmpfile.3, tmpnam.3, toascii.3, ttyname.3, undocumented.3,
+  usleep.3, cpuid.4, dsp56k.4, full.4, hd.4, initrd.4, intro.4, lp.4,
+  mem.4, mouse.4, msr.4, null.4, ram.4, random.4, sd.4, st.4, tty.4,
+  ttyS.4, vcs.4, wavelan.4, filesystems.5, group.5, host.conf.5,
+  hosts.5, intro.5, issue.5, motd.5, nologin.5, protocols.5,
+  resolv.conf.5, rpc.5, securetty.5, services.5, shells.5, termcap.5,
+  tzfile.5, intro.6, ascii.7, complex.7, environ.7,
+  feature_test_macros.7, fifo.7, hier.7, intro.7, iso_8859-1.7,
+  locale.7, mailaddr.7, man.7, man-pages.7, operator.7, signal.7,
+  suffixes.7, svipc.7, unicode.7, utf-8.7, chroot.8, intro.8,
+  tzselect.8
 
 ## Version 0.10
 
 *Fri Dec 16 22:44:36 CET 2011*
 
-  * New manpages:
-    grep.1, acosh.3, fgetpwent.3, strdup.3
-  * Updated manpages:
-    cat.1, chcon.1, chgrp.1, chmod.1, chown.1, cmp.1, comm.1, cp.1,
-    date.1, dd.1, df.1, diff.1, diff3.1, dir.1, du.1, echo.1, find.1,
-    free.1, hostname.1, install.1, join.1, ln.1, ls.1, mv.1,
-    readlink.1, sdiff.1, split.1, truncate.1, uptime.1, vdir.1,
-    wodim.1, accept.2, bind.2, chdir.2, _exit.2, fsync.2,
-    getpagesize.2, getuid.2, killpg.2, listen.2, msync.2, ptrace.2,
-    readlink.2, setfsuid.2, socketpair.2, symlink.2, sync.2, wait4.2,
-    a64l.3, abs.3, acos.3, atanh.3, atexit.3, atof.3, exp.3, expm1.3,
-    fmod.3, fopen.3, getcwd.3, getpwent.3, getpwnam.3, ldexp.3,
-    lgamma.3, mkstemp.3, mktemp.3, opendir.3, pow.3, rand.3,
-    realpath.3, rint.3, scanf.3, setenv.3, sigsetops.3, sin.3, sqrt.3,
-    string.3, sysconf.3, tanh.3, usleep.3, lp.4, host.conf.5,
-    resolv.conf.5, feature_test_macros.7, intro.7, man-pages.7, init.8,
-    tzselect.8
+* New manpages:
+  grep.1, acosh.3, fgetpwent.3, strdup.3
+* Updated manpages:
+  cat.1, chcon.1, chgrp.1, chmod.1, chown.1, cmp.1, comm.1, cp.1,
+  date.1, dd.1, df.1, diff.1, diff3.1, dir.1, du.1, echo.1, find.1,
+  free.1, hostname.1, install.1, join.1, ln.1, ls.1, mv.1,
+  readlink.1, sdiff.1, split.1, truncate.1, uptime.1, vdir.1,
+  wodim.1, accept.2, bind.2, chdir.2, _exit.2, fsync.2,
+  getpagesize.2, getuid.2, killpg.2, listen.2, msync.2, ptrace.2,
+  readlink.2, setfsuid.2, socketpair.2, symlink.2, sync.2, wait4.2,
+  a64l.3, abs.3, acos.3, atanh.3, atexit.3, atof.3, exp.3, expm1.3,
+  fmod.3, fopen.3, getcwd.3, getpwent.3, getpwnam.3, ldexp.3,
+  lgamma.3, mkstemp.3, mktemp.3, opendir.3, pow.3, rand.3,
+  realpath.3, rint.3, scanf.3, setenv.3, sigsetops.3, sin.3, sqrt.3,
+  string.3, sysconf.3, tanh.3, usleep.3, lp.4, host.conf.5,
+  resolv.conf.5, feature_test_macros.7, intro.7, man-pages.7, init.8,
+  tzselect.8
 
 ## Version 0.9
 
 *Wed Oct 12 21:43:26 CEST 2011*
 
-  * Updated upstream manpages:
-    manpages 3.32-0.1, manpages-dev 3.32-0.1, util-linux 2.19.1-5
-  * Updated manpages:
-    fifo.7, LDP.7, mailaddr.7, utf-8.7, binkd.8, hier.7, unicode.7, clone.2,
-    iso_8859-1.7, tty.4, vcs.4, pause.2, hd.4, st.4, hosts.5, isdnlog.5,
-    termcap.5, tzfile.5, ascii.7, signal.7, find.1, info.1, gzip.1, intro.1,
-    bind.2, write.2, crypt.3, getgroups.2, getuid.2, reboot.2, setfsgid.2,
-    setfsuid.2, setresuid.2, swapon.2, rand.3, acos.3, localeconv.3
-  * New manpages:
-    binkdlogstat.8, ttyS.4, cpuid.4, dsp56k.4, mouse.4, msr.4, random.4,
-    wavelan.4, man-pages.7, operator.7, initrd.4, group.5, resolv.conf.5
-  * Removed manpages:
-    resolver.5 (linked from resolv.conf.5)
-    write.1, ttys.4, rdev.8 (removed upstream)
-    ar.1, ps.1, kill.1, more.1 (too outdated translation)
-    fdformat.1, mcopy.1, mdel.1, mdir.1, mformat.1, mmd.1, mrd.1, mread.1,
-    mtools.1, pon.1, tkinfo.1, exports.5, lilo.conf.5, lilo.8 (obsolete)
+* Updated upstream manpages:
+  manpages 3.32-0.1, manpages-dev 3.32-0.1, util-linux 2.19.1-5
+* Updated manpages:
+  fifo.7, LDP.7, mailaddr.7, utf-8.7, binkd.8, hier.7, unicode.7, clone.2,
+  iso_8859-1.7, tty.4, vcs.4, pause.2, hd.4, st.4, hosts.5, isdnlog.5,
+  termcap.5, tzfile.5, ascii.7, signal.7, find.1, info.1, gzip.1, intro.1,
+  bind.2, write.2, crypt.3, getgroups.2, getuid.2, reboot.2, setfsgid.2,
+  setfsuid.2, setresuid.2, swapon.2, rand.3, acos.3, localeconv.3
+* New manpages:
+  binkdlogstat.8, ttyS.4, cpuid.4, dsp56k.4, mouse.4, msr.4, random.4,
+  wavelan.4, man-pages.7, operator.7, initrd.4, group.5, resolv.conf.5
+* Removed manpages:
+  resolver.5 (linked from resolv.conf.5)
+  write.1, ttys.4, rdev.8 (removed upstream)
+  ar.1, ps.1, kill.1, more.1 (too outdated translation)
+  fdformat.1, mcopy.1, mdel.1, mdir.1, mformat.1, mmd.1, mrd.1, mread.1,
+  mtools.1, pon.1, tkinfo.1, exports.5, lilo.conf.5, lilo.8 (obsolete)
 
 ## Version 0.8
 
 *Sun Feb 27 11:15:54 CET 2011*
 
-  * Updated upstream manpages:
-    manpages 3.27-1, manpages-dev 3.27-1
-  * New manpages:
-    setresuid.2, socketpair.2, environ.7, halt.8, shutdown.8, runlevel.8,
-    sdiff.1
-  * Updated manpages:
-    cmp.1, diff.1, diff3.1, hostname.1, _exit.2, accept.2, bdflush.2, brk.2,
-    chroot.2, dup.2, getdomainname.2, getgroups.2, gethostname.2, getpid.2,
-    getsid.2, getuid.2, ioclt.2, killpg.2, link.2, listen.2, mount.2, msync.2,
-    readlink.2, shmget.2, shmop.2, sysfs.2, sysinfo.2, swapon.2, uname.2,
-    wait4.2, exit.3, initscript.5, inittab.5, locale.7, uptime.1, alloca.3,
-    ptrace.2, setfsgid.2, setfsuid.2, uselib.2, utime.2, fsync.2, getitimer.2,
-    reboot.2, sysctl.2, ctime.3, expm1.3, stdarg.3, stdio.3, string.3,
-    adjtimex.2, filesystems.5, getpagesize.2, group.5, ioperm.2, atanh.3,
-    chdir.2, ipc.2, socketcall.2, exp.3, fabs.3, fclose.3, fflush.3, fmod.3,
-    sysconf.3, setsid.2, svipc.7, vhangup.2, getservent.3, man.7, lp.4,
-    alarm.2, pow.3, fopen.3, fread.3, getcwd.3, getpw.3, getpwent.3,
-    getpwnam.3, ldexp.3, perror.3, popen.3, putenv.3, qsort.3, rand.3,
-    re_comp.3, realpath.3, rint.3, scanf.3, setenv.3, setjmp.3, sqrt.3,
-    system.3, tanh.3, tmpfile.3, tmpnam.3, ttyname.3, host.conf.5
-  * Removed manpages:
-    doshell.1 (upstream does no longer exist)
-    g77.1 (upstream does no longer exist)
-    ginstall.1 (upstream does no longer exist)
+* Updated upstream manpages:
+  manpages 3.27-1, manpages-dev 3.27-1
+* New manpages:
+  setresuid.2, socketpair.2, environ.7, halt.8, shutdown.8, runlevel.8,
+  sdiff.1
+* Updated manpages:
+  cmp.1, diff.1, diff3.1, hostname.1, _exit.2, accept.2, bdflush.2, brk.2,
+  chroot.2, dup.2, getdomainname.2, getgroups.2, gethostname.2, getpid.2,
+  getsid.2, getuid.2, ioclt.2, killpg.2, link.2, listen.2, mount.2, msync.2,
+  readlink.2, shmget.2, shmop.2, sysfs.2, sysinfo.2, swapon.2, uname.2,
+  wait4.2, exit.3, initscript.5, inittab.5, locale.7, uptime.1, alloca.3,
+  ptrace.2, setfsgid.2, setfsuid.2, uselib.2, utime.2, fsync.2, getitimer.2,
+  reboot.2, sysctl.2, ctime.3, expm1.3, stdarg.3, stdio.3, string.3,
+  adjtimex.2, filesystems.5, getpagesize.2, group.5, ioperm.2, atanh.3,
+  chdir.2, ipc.2, socketcall.2, exp.3, fabs.3, fclose.3, fflush.3, fmod.3,
+  sysconf.3, setsid.2, svipc.7, vhangup.2, getservent.3, man.7, lp.4,
+  alarm.2, pow.3, fopen.3, fread.3, getcwd.3, getpw.3, getpwent.3,
+  getpwnam.3, ldexp.3, perror.3, popen.3, putenv.3, qsort.3, rand.3,
+  re_comp.3, realpath.3, rint.3, scanf.3, setenv.3, setjmp.3, sqrt.3,
+  system.3, tanh.3, tmpfile.3, tmpnam.3, ttyname.3, host.conf.5
+* Removed manpages:
+  doshell.1 (upstream does no longer exist)
+  g77.1 (upstream does no longer exist)
+  ginstall.1 (upstream does no longer exist)
 
 ## Version 0.7
 
 *Thu Nov 11 17:04:01 CET 2010*
 
-  * Updated and reviewed numerous manpages
-  * Fix typo in cut.1. Closes: #602816
-  * Changed cdrecord.1 to wodim.1. Closes: LP#321674
+* Updated and reviewed numerous manpages
+* Fix typo in cut.1. Closes: #602816
+* Changed cdrecord.1 to wodim.1. Closes: LP#321674
 
 ## Version 0.6
 
 *Sat Sep 25 10:11:45 CEST 2010*
 
-  * Add a warning to outdated manpages
-  * Install compressed manpages by default
-  * Support $(DESTDIR) for installation
-  * Rename target "remove" to "uninstall"
-  * Include automatically generated manpages from GNU coreutils
-  * Remove manpages which contain only links
-  * Convert from ISO-8859-1 to UTF-8
-  * Remove egrep.1, will be linked to grep.1
-  * Rename fs.5 to filesystems.5
-  * Move complex.5 to complex.7 and ipc.5 to svipc.7
-  * Import many spelling fixes from Debian
-  * Add GPL-3 because of coreutils manpages
-  * Remove apropos.1, man.1, manpath.1, whatis.1, zsoelim.1, manpath.5,
-    catman.8, and mandb.8. Those are included in the package man-db.
-  * Remove chsh.1, login.1, newgrp.1, passwd.1, su.1, passwd.5. Those are
-    included in the packages login and passwd.
-  * Rename iso_8859_1.7 to iso_8859-1.7
-  * Remove obsolete manpages: compress.1, lunetIX.1, modules.2, obsolete.2,
-    profil.2, setregid.2, sigblock.2, sigvec.2, undocumented.2, drem.3,
-    infnan.3, isinf.3, killpg.3, labs.3, ldiv.3, readv.3, hisax.7
-  * Move sigpause.2 to sigpause.3
-  * Move fifo.4 to fifo.7
+* Add a warning to outdated manpages
+* Install compressed manpages by default
+* Support $(DESTDIR) for installation
+* Rename target "remove" to "uninstall"
+* Include automatically generated manpages from GNU coreutils
+* Remove manpages which contain only links
+* Convert from ISO-8859-1 to UTF-8
+* Remove egrep.1, will be linked to grep.1
+* Rename fs.5 to filesystems.5
+* Move complex.5 to complex.7 and ipc.5 to svipc.7
+* Import many spelling fixes from Debian
+* Add GPL-3 because of coreutils manpages
+* Remove apropos.1, man.1, manpath.1, whatis.1, zsoelim.1, manpath.5,
+  catman.8, and mandb.8. Those are included in the package man-db.
+* Remove chsh.1, login.1, newgrp.1, passwd.1, su.1, passwd.5. Those are
+  included in the packages login and passwd.
+* Rename iso_8859_1.7 to iso_8859-1.7
+* Remove obsolete manpages: compress.1, lunetIX.1, modules.2, obsolete.2,
+  profil.2, setregid.2, sigblock.2, sigvec.2, undocumented.2, drem.3,
+  infnan.3, isinf.3, killpg.3, labs.3, ldiv.3, readv.3, hisax.7
+* Move sigpause.2 to sigpause.3
+* Move fifo.4 to fifo.7
 
 ## Version 0.5
 
 *Mon Nov 27 15:02:04 CET 2006*
 
-  * New wprintf(3) by Walter Harms
-  * New bstring(3) by Walter Harms
-  * New tzselect(8) by Peter Littmann
-  * New clearenv(3) by Daniel Kobras
-  * Updates to environ(7), getenv(3), putenv(3) and setenv(3) by Daniel Kobras
-  * Updates to atexit(3) by Erik Meusel
-  * New getresuid(2) and setresuid(2) by Dennis Stampfer
-  * Updates to cdrecord(1) by Jens Seidel
-  * Updates to fstab(5) by Jens Seidel
-  * New asprintf(3) by David Thamm
-  * Many corrections by Jens Seidel
-  * Updates to tzset(3) by Joey Schulze
-  * More corrections by Jens Seidel
-  * Updates to find(1) by Peter Niederlag and Joey Schulze
-  * Updates to LDP(7) by Joey Schulze
-  * Correction to usleep(2) by Erik Thiele
-  * New bsearch(3) and complex(5) by Jens Rohler
-  * New cimag(3) and creal(3) by Maik Messerschmidt
-  * New cabs(3) by Jens Rohler
+* New wprintf(3) by Walter Harms
+* New bstring(3) by Walter Harms
+* New tzselect(8) by Peter Littmann
+* New clearenv(3) by Daniel Kobras
+* Updates to environ(7), getenv(3), putenv(3) and setenv(3) by Daniel Kobras
+* Updates to atexit(3) by Erik Meusel
+* New getresuid(2) and setresuid(2) by Dennis Stampfer
+* Updates to cdrecord(1) by Jens Seidel
+* Updates to fstab(5) by Jens Seidel
+* New asprintf(3) by David Thamm
+* Many corrections by Jens Seidel
+* Updates to tzset(3) by Joey Schulze
+* More corrections by Jens Seidel
+* Updates to find(1) by Peter Niederlag and Joey Schulze
+* Updates to LDP(7) by Joey Schulze
+* Correction to usleep(2) by Erik Thiele
+* New bsearch(3) and complex(5) by Jens Rohler
+* New cimag(3) and creal(3) by Maik Messerschmidt
+* New cabs(3) by Jens Rohler
 
 ## Version 0.4
 
 *Tue Jan  1 20:27:33 CET 2002*
 
-  * Added fileutils manpages, converted by Michael Piefel
-  * Added updated tar(1) by Michael Piefel
-  * Updated printf(3), ioctl(2), ioctl_list(2) and stat(2) by Michael Piefel
-  * Added resolver(5) and full(4) by Martin Schmitt
-  * Added diff(1) and tar(1) by Michael Piefel
-  * Added utf-8(7) and socket(2) by Sebastian Rittau
-  * Added shellutils manpages, converted by Michael Piefel
-  * Added info(1), converted by Michael Piefel
-  * Added tkinfo(1) by Michael Piefel
-  * Updates to atoi(3) by Michael Piefel
-  * Added capget(2), chdir(2), chmod(2) and clone(2) by Daniel Kobras
-  * Updates to write(1) by Daniel Kobras
-  * Updates to mkdir(2) by Daniel Kobras
-  * Added host.conf(5) by Martin Schmitt
-  * Updates to select(2) by Daniel Kobras
-  * Updates to comm(1) by Daniel Kobras
-  * New passwd(1) by Michael Piefel
-  * Updates to clock(3) by Michael Piefel
-  * Updates to strftime(3) by Michael Piefel
-  * New dysize(3) and getdate(3) by Walter Harms
-  * Updates to comm(1) and install(1) by Michael Piefel (help2man)
-  * New rpc(5) by Martin Schulze
-  * Updates to read(2) by Peter Gerbrandt
-  * New lseek(2) by Peter Gerbrandt
-  * Mostly new getdate(3) by Martin Schulze
-  * New undocumented(3) by Michael Arndt
-  * New rmdir(2) by Michael Arndt
-  * New LDP(7) by Walter Holzer
-  * New tzset(3) by Walter Harms
-  * New isdnlog(5) by Holger Jannsen and me
+* Added fileutils manpages, converted by Michael Piefel
+* Added updated tar(1) by Michael Piefel
+* Updated printf(3), ioctl(2), ioctl_list(2) and stat(2) by Michael Piefel
+* Added resolver(5) and full(4) by Martin Schmitt
+* Added diff(1) and tar(1) by Michael Piefel
+* Added utf-8(7) and socket(2) by Sebastian Rittau
+* Added shellutils manpages, converted by Michael Piefel
+* Added info(1), converted by Michael Piefel
+* Added tkinfo(1) by Michael Piefel
+* Updates to atoi(3) by Michael Piefel
+* Added capget(2), chdir(2), chmod(2) and clone(2) by Daniel Kobras
+* Updates to write(1) by Daniel Kobras
+* Updates to mkdir(2) by Daniel Kobras
+* Added host.conf(5) by Martin Schmitt
+* Updates to select(2) by Daniel Kobras
+* Updates to comm(1) by Daniel Kobras
+* New passwd(1) by Michael Piefel
+* Updates to clock(3) by Michael Piefel
+* Updates to strftime(3) by Michael Piefel
+* New dysize(3) and getdate(3) by Walter Harms
+* Updates to comm(1) and install(1) by Michael Piefel (help2man)
+* New rpc(5) by Martin Schulze
+* Updates to read(2) by Peter Gerbrandt
+* New lseek(2) by Peter Gerbrandt
+* Mostly new getdate(3) by Martin Schulze
+* New undocumented(3) by Michael Arndt
+* New rmdir(2) by Michael Arndt
+* New LDP(7) by Walter Holzer
+* New tzset(3) by Walter Harms
+* New isdnlog(5) by Holger Jannsen and me
 
 ## Version 0.3
 
 *Sun Jan 21 21:29:46 CET 2001*
 
-  * Added assert.3, translated by Toni Volkmer
-  * Added cdrecord.1 translated by Eduard Bloch
-  * Added hypot.3 translated by Regine Bast
-  * Added alloca.3,chroot.2,j0.3,re_comp.3,shmop.2,time.2,vm86.2,
-    assert.3,close.2,mem.4,outb.2,shmget.2,swapon.2,times.2 by
-    Ralf Demmer.
-  * Added getpapersize.2,erf.3,ffs.3 translated by Regine Bast
-  * Added chown.2 translated by Florian Jenn
-  * Added unlink.2 translated by Joern Verhoff
-  * Added difftime.3 translated by Jens Pueschel
-  * Moved environ.5 to environ.7
-  * Added new translation to ps(1) by Martin Schulze
-  * Updated cdrecord.1
-  * Added errno(3) by Christoph Seibert
-  * Added init(8) and rdev(8) by Martin Okrslar
-  * Added exec(3), ferror(3), memchr(3), setbuf(3) by Roland Krause
-  * Added getpass(3) and initgroups(3) by Andreas D. Preissig
-  * Added atexit(3), byteorder(3), ctermid(3), ctime(3), fseek(3), getopt(3),
-    sigsetops(3) and string(3) by Patrick Rother
-  * Added crypt(3) by Martin Schulze
-  * Updated suffixes(7) by Michael Piefel
-  * Added fifo(4) by Martin Schmitt
-  * Added hosts(5) by Florian Jenn
+* Added assert.3, translated by Toni Volkmer
+* Added cdrecord.1 translated by Eduard Bloch
+* Added hypot.3 translated by Regine Bast
+* Added alloca.3,chroot.2,j0.3,re_comp.3,shmop.2,time.2,vm86.2,
+  assert.3,close.2,mem.4,outb.2,shmget.2,swapon.2,times.2 by
+  Ralf Demmer.
+* Added getpapersize.2,erf.3,ffs.3 translated by Regine Bast
+* Added chown.2 translated by Florian Jenn
+* Added unlink.2 translated by Joern Verhoff
+* Added difftime.3 translated by Jens Pueschel
+* Moved environ.5 to environ.7
+* Added new translation to ps(1) by Martin Schulze
+* Updated cdrecord.1
+* Added errno(3) by Christoph Seibert
+* Added init(8) and rdev(8) by Martin Okrslar
+* Added exec(3), ferror(3), memchr(3), setbuf(3) by Roland Krause
+* Added getpass(3) and initgroups(3) by Andreas D. Preissig
+* Added atexit(3), byteorder(3), ctermid(3), ctime(3), fseek(3), getopt(3),
+  sigsetops(3) and string(3) by Patrick Rother
+* Added crypt(3) by Martin Schulze
+* Updated suffixes(7) by Michael Piefel
+* Added fifo(4) by Martin Schmitt
+* Added hosts(5) by Florian Jenn
 
 ## Version 0.2
 
 *Tue Mar 16 09:42:55 CET 1999*
 
-  * Added scanf.3, translated by Patrick Rother
-  * Added floor.3, translated by Martin Schulze
-  * Changed syntax of some manpages, Andreas Braukmann
-  * New group.5 motd.5 proc.5 shells.5 ttytype.5 pages from Mike Fengler
-  * New hisax.7 page from Soeren Todt
-  * Updated email address from Markus Kaufmann
-  * New environ.5 fs.5 ipc.5 services.5 termcap.5  from Mike Fengler
-  * Added manpath.1 zsoelim.1 manpath.5 catman.8 mandb.8 by Anke Steuernagel
-    and Nils Magnus
-  * New apropos.1 man.1 whatis.1 by Anke Steuernagel and Nils Magnus
-  * Added more names to COPYRIGHTs file
-  * Added pon/poff/plog.1 from Othmar Pasteka
-  * Added locale.7 translated by Joey
-  * Added binkd.8 translated by Andreas Braukmann
-  * Added fgetc(3)
-  * Added newline for getsid(2) and strcpy(3)
-  * New snapshot, includes
-    . Corrections made by Johnny Tevessen <j.tevessen@line.org>
-    . New unicode.7 from Johnny Tevessen <j.tevessen@line.org>
-    . localeconf.5 updated by Jochen Hein
-    . Fixed spelling errors in ls.1, nohup.1, mmap.1, msync.2,
-      localeconf.3, puts.3, fstab.5, issue.5, man.config.5, securetty.6,
-      intro.6, man.7
-    . un-undocumented in section 2: msync, readv, writev, getsid, _sysctl
-  * New upstream pages included
-  * Merged README and readme
-  * Removed manpages for man,apropos,whatis} (fixes: Bug#5335)
-  * Corrected man(7) (fixes: Bug#10327)
-  * Corrected nohup(1) (fixes: Bug#10873)
+* Added scanf.3, translated by Patrick Rother
+* Added floor.3, translated by Martin Schulze
+* Changed syntax of some manpages, Andreas Braukmann
+* New group.5 motd.5 proc.5 shells.5 ttytype.5 pages from Mike Fengler
+* New hisax.7 page from Soeren Todt
+* Updated email address from Markus Kaufmann
+* New environ.5 fs.5 ipc.5 services.5 termcap.5  from Mike Fengler
+* Added manpath.1 zsoelim.1 manpath.5 catman.8 mandb.8 by Anke Steuernagel
+  and Nils Magnus
+* New apropos.1 man.1 whatis.1 by Anke Steuernagel and Nils Magnus
+* Added more names to COPYRIGHTs file
+* Added pon/poff/plog.1 from Othmar Pasteka
+* Added locale.7 translated by Joey
+* Added binkd.8 translated by Andreas Braukmann
+* Added fgetc(3)
+* Added newline for getsid(2) and strcpy(3)
+* New snapshot, includes
+  . Corrections made by Johnny Tevessen <j.tevessen@line.org>
+  . New unicode.7 from Johnny Tevessen <j.tevessen@line.org>
+  . localeconf.5 updated by Jochen Hein
+  . Fixed spelling errors in ls.1, nohup.1, mmap.1, msync.2,
+    localeconf.3, puts.3, fstab.5, issue.5, man.config.5, securetty.6,
+    intro.6, man.7
+  . un-undocumented in section 2: msync, readv, writev, getsid, _sysctl
+* New upstream pages included
+* Merged README and readme
+* Removed manpages for man,apropos,whatis} (fixes: Bug#5335)
+* Corrected man(7) (fixes: Bug#10327)
+* Corrected nohup(1) (fixes: Bug#10873)
 
 ## Version 0.1
 
-  First collection, made by Andries Brouwer
+First collection, made by Andries Brouwer
