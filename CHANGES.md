@@ -21,9 +21,9 @@
 * The documentation has been mostly converted to markdown.
 
 
-Version 1.22
+## Version 1.22
 
-  Mon Mar 13 16:55:49 CET 2017
+*Mon Mar 13 16:55:49 CET 2017*
 
   * Updated translations:
     arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
@@ -46,17 +46,17 @@ Version 1.22
     systemd-halt.service.8
 
 
-Version 1.21
+## Version 1.21
 
-  Sun Jan 22 22:16:24 CET 2017
+*Sun Jan 22 22:16:24 CET 2017*
 
   * Updated translations:
     tar.1, resolver.3
 
 
-Version 1.20
+## Version 1.20
 
-  Sun Jan 22 21:57:18 CET 2017
+*Sun Jan 22 21:57:18 CET 2017*
 
   * Updated translations:
     arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
@@ -82,9 +82,9 @@ Version 1.20
     switch_root.8, tunelp.8
 
 
-Version 1.19
+## Version 1.19
 
-  Sat Jan 21 12:15:48 CET 2017
+*Sat Jan 21 12:15:48 CET 2017*
 
   * Updated translations:
     find.1, grep.1, groff.1, lzmainfo.1, mkdir.1, rmdir.1, runcon.1,
@@ -101,9 +101,9 @@ Version 1.19
     systemd-activate.8, systemd-networkd-wait-online.service.8, tunelp.8
 
 
-Version 1.18
+## Version 1.18
 
-  Sun Dec 18 13:11:21 CET 2016
+*Sun Dec 18 13:11:21 CET 2016*
 
   * Updated translations:
     arch.1, base64.1, basename.1, cat.1, chcon.1, chgrp.1, chmod.1,
@@ -185,9 +185,9 @@ Version 1.18
     hwclock.8, intro.8, mkfs.minix.8, systemd-halt.service.8, tzselect.8
 
 
-Version 1.17
+## Version 1.17
 
-  Mon Nov 21 13:07:25 CET 2016
+*Mon Nov 21 13:07:25 CET 2016*
 
   * Deprecate configure option --enable-download.
     This option will be removed in the future. If this option is really
@@ -281,9 +281,9 @@ Version 1.17
     tzselect.8
 
 
-Version 1.16
+## Version 1.16
 
-  Tue Sep 27 18:06:30 CEST 2016
+*Tue Sep 27 18:06:30 CEST 2016*
 
   * Updated translations:
     cmp.1, diff.1, diff3.1, info.1, ncal.1, sdiff.1, adjtimex.2,
@@ -292,9 +292,9 @@ Version 1.16
     nfs.5, proc.5, agetty.8, blkid.8, hwclock.8, raw.8, rtcwake.8
 
 
-Version 1.15
+## Version 1.15
 
-  Sat Aug 27 08:13:17 CEST 2016
+*Sat Aug 27 08:13:17 CEST 2016*
 
   * Updated translations:
     fallocate.1, find.1, getopt.1, tar.1, taskset.1, unshare.1,
@@ -307,9 +307,9 @@ Version 1.15
     systemd-sysctl.service.8
 
 
-Version 1.14
+## Version 1.14
 
-  Fri Aug 5 22:21:51 CEST 2016
+*Fri Aug 5 22:21:51 CEST 2016*
 
   * New translations:
     iso_8859-10.7, iso_8859-11.7, iso_8859-13.7, iso_8859-14.7,
@@ -392,9 +392,9 @@ Version 1.14
     tzselect.8
 
 
-Version 1.13
+## Version 1.13
 
-  Thu Jun 9 14:40:27 CEST 2016
+*Thu Jun 9 14:40:27 CEST 2016*
 
   * Updated translations:
     chrt.1, dmesg.1, fallocate.1, getopt.1, grep.1, info.1, intro.1,
@@ -482,9 +482,9 @@ Version 1.13
     sk98lin.4
 
 
-Version 1.12
+## Version 1.12
 
-  Mon Apr 11 15:51:21 CEST 2016
+*Mon Apr 11 15:51:21 CEST 2016*
 
   * Make build reproducible by telling grep that all files
     are text, not binary. Thanks to Reiner Herrmann for the
@@ -582,9 +582,9 @@ Version 1.12
     tzselect.8, zramctl.8
 
 
-Version 1.11
+## Version 1.11
 
-  Tue Feb 16 20:12:05 CET 2016
+*Tue Feb 16 20:12:05 CET 2016*
 
   * New translations:
     zramctl.8
@@ -689,9 +689,9 @@ Version 1.11
     LDP.7, undocumented.7
 
 
-Version 1.10
+## Version 1.10
 
-  Sun Jan 3 17:08:16 CET 2016
+*Sun Jan 3 17:08:16 CET 2016*
 
   * Updated translations:
     dmesg.1, find.1, flock.1, free.1, grep.1, groff.1, info.1, ipcmk.1,
@@ -720,9 +720,9 @@ Version 1.10
     yum-complete-transaction.8, yumdb.8
 
 
-Version 1.9
+## Version 1.9
 
-  Sun Jun 28 15:16:29 CEST 2015
+*Sun Jun 28 15:16:29 CEST 2015*
 
   * New translations:
     bzdiff.1, bzgrep.1, bzip2.1, bzmore.1, cal.ul.1, ddate.1, exif.1,
@@ -843,9 +843,9 @@ Version 1.9
     swaplabel.8, switch_root.8, tunelp.8, tzselect.8, wdctl.8, wipefs.8
 
 
-Version 1.8
+## Version 1.8
 
-  Fri Oct 24 21:59:18 CEST 2014
+*Fri Oct 24 21:59:18 CEST 2014*
 
   * New translations:
     cpio.1, flock.1, mt-gnu.1, nsenter.1, prlimit.1, runuser.1,
@@ -943,9 +943,9 @@ Version 1.8
     chkdupexe.1, ddate.1, readprofile.1, cytune.8, getty.8
 
 
-Version 1.7
+## Version 1.7
 
-  Mon Jul 14 12:28:03 CEST 2014
+*Mon Jul 14 12:28:03 CEST 2014*
 
   * New translations:
     pivot_root.2
@@ -1021,9 +1021,9 @@ Version 1.7
     clock.8
 
 
-Version 1.6
+## Version 1.6
 
-  Tue Mar  4 14:55:29 CET 2014
+*Tue Mar  4 14:55:29 CET 2014*
 
   * Updated translations:
     chrt.1, intro.1, ionice.1, ipcs.1, rev.1, tar.1, accept.2,
@@ -1089,9 +1089,9 @@ Version 1.6
     units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
-Version 1.5
+## Version 1.5
 
-  Tue Feb 25 13:47:09 CET 2014
+*Tue Feb 25 13:47:09 CET 2014*
 
   * New translations:
     chkdupexe.1, chrt.1, csv2rec.1, ddate.1, dmesg.1, fallocate.1,
@@ -1171,9 +1171,9 @@ Version 1.5
     units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
-Version 1.4
+## Version 1.4
 
-  Sun Dec 15 19:16:36 CET 2013
+*Sun Dec 15 19:16:36 CET 2013*
 
   * New translations:
     ogg123.1, oggdec.1, oggenc.1, ogginfo.1, vcut.1, vorbiscomment.1,
@@ -1244,9 +1244,9 @@ Version 1.4
     lilo.8, shutdown.8, tzselect.8
 
 
-Version 1.3
+## Version 1.3
 
-  Sun Aug 18 15:09:58 CEST 2013
+*Sun Aug 18 15:09:58 CEST 2013*
 
   * Renamed translations:
     getdtablesize.2 -> getdtablesize.3
@@ -1328,9 +1328,9 @@ Version 1.3
     chroot.8, intro.8, lilo.8, shutdown.8, tzselect.8
 
 
-Version 1.2
+## Version 1.2
 
-  Sun Oct 28 12:50:50 CET 2012
+*Sun Oct 28 12:50:50 CET 2012*
 
   * During ./configure, check that po4a is available on the system.
   * New translations:
@@ -1397,9 +1397,9 @@ Version 1.2
     units.7, utf-8.7, x25.7, intro.8, tzselect.8
 
 
-Version 1.1
+## Version 1.1
 
-  Fri Jun 29 14:11:32 CEST 2012
+*Fri Jun 29 14:11:32 CEST 2012*
 
   * Instead of downloading the original manpages during building
     of the package, the software now uses the locally installed
@@ -1415,9 +1415,9 @@ Version 1.1
     strerror.3, sysconf.3, isdnlog.5, proc.5, iso_8859-8.7
 
 
-Version 1.0
+## Version 1.0
 
-  Fri Jun  8 11:58:02 CEST 2012
+*Fri Jun  8 11:58:02 CEST 2012*
 
   * Converted package to use autotools for setup and installation
   * Removed generated translations from tarball, instead download
@@ -1466,9 +1466,9 @@ Version 1.0
     console.4, nfs.5
 
 
-Version 0.13
+## Version 0.13
 
-  Tue May 15 14:26:17 CEST 2012
+*Tue May 15 14:26:17 CEST 2012*
 
   * New manpages:
     chown.2, getdtablesize.2, mkdir.2, setgid.2, shutdown.2,
@@ -1541,9 +1541,9 @@ Version 0.13
     operator.7, signal.7, suffixes.7, svipc.7, unicode.7, utf-8.7,
     binkd.8, binkdlogstat.8, chroot.8, intro.8, tzselect.8
 
-Version 0.12
+## Version 0.12
 
-  Mon Feb 27 22:52:19 CET 2012
+*Mon Feb 27 22:52:19 CET 2012*
 
   * New manpages:
     chmod.2, getsockname.2, idle.2, nice.2, stime.2, asin.3, asinh.3,
@@ -1555,9 +1555,9 @@ Version 0.12
     free.1, hostname.1, uptime.1, gethostname.2, getpeername.2,
     localeconv.3, st.4, unicode.7, init.8
 
-Version 0.11
+## Version 0.11
 
-  Thu Jan  5 22:34:51 CET 2012
+*Thu Jan  5 22:34:51 CET 2012*
 
   * New manpages:
     tar.1, getpeername.2, getresuid.2, bstring.3, fstab.5
@@ -1614,9 +1614,9 @@ Version 0.11
     suffixes.7, svipc.7, unicode.7, utf-8.7, chroot.8, intro.8,
     tzselect.8
 
-Version 0.10
+## Version 0.10
 
-  Fri Dec 16 22:44:36 CET 2011
+*Fri Dec 16 22:44:36 CET 2011*
 
   * New manpages:
     grep.1, acosh.3, fgetpwent.3, strdup.3
@@ -1636,9 +1636,9 @@ Version 0.10
     resolv.conf.5, feature_test_macros.7, intro.7, man-pages.7, init.8,
     tzselect.8
 
-Version 0.9
+## Version 0.9
 
-  Wed Oct 12 21:43:26 CEST 2011
+*Wed Oct 12 21:43:26 CEST 2011*
 
   * Updated upstream manpages:
     manpages 3.32-0.1, manpages-dev 3.32-0.1, util-linux 2.19.1-5
@@ -1658,9 +1658,9 @@ Version 0.9
     fdformat.1, mcopy.1, mdel.1, mdir.1, mformat.1, mmd.1, mrd.1, mread.1,
     mtools.1, pon.1, tkinfo.1, exports.5, lilo.conf.5, lilo.8 (obsolete)
 
-Version 0.8
+## Version 0.8
 
-  Sun Feb 27 11:15:54 CET 2011
+*Sun Feb 27 11:15:54 CET 2011*
 
   * Updated upstream manpages:
     manpages 3.27-1, manpages-dev 3.27-1
@@ -1687,17 +1687,17 @@ Version 0.8
     g77.1 (upstream does no longer exist)
     ginstall.1 (upstream does no longer exist)
 
-Version 0.7
+## Version 0.7
 
-  Thu Nov 11 17:04:01 CET 2010
+*Thu Nov 11 17:04:01 CET 2010*
 
   * Updated and reviewed numerous manpages
   * Fix typo in cut.1. Closes: #602816
   * Changed cdrecord.1 to wodim.1. Closes: LP#321674
 
-Version 0.6
+## Version 0.6
 
-  Sat Sep 25 10:11:45 CEST 2010
+*Sat Sep 25 10:11:45 CEST 2010*
 
   * Add a warning to outdated manpages
   * Install compressed manpages by default
@@ -1722,9 +1722,9 @@ Version 0.6
   * Move sigpause.2 to sigpause.3
   * Move fifo.4 to fifo.7
 
-Version 0.5
+## Version 0.5
 
-  Mon Nov 27 15:02:04 CET 2006
+*Mon Nov 27 15:02:04 CET 2006*
 
   * New wprintf(3) by Walter Harms
   * New bstring(3) by Walter Harms
@@ -1746,9 +1746,9 @@ Version 0.5
   * New cimag(3) and creal(3) by Maik Messerschmidt
   * New cabs(3) by Jens Rohler
 
-Version 0.4
+## Version 0.4
 
-  Tue Jan  1 20:27:33 CET 2002
+*Tue Jan  1 20:27:33 CET 2002*
 
   * Added fileutils manpages, converted by Michael Piefel
   * Added updated tar(1) by Michael Piefel
@@ -1781,9 +1781,9 @@ Version 0.4
   * New tzset(3) by Walter Harms
   * New isdnlog(5) by Holger Jannsen and me
 
-Version 0.3
+## Version 0.3
 
-  Sun Jan 21 21:29:46 CET 2001
+*Sun Jan 21 21:29:46 CET 2001*
 
   * Added assert.3, translated by Toni Volkmer
   * Added cdrecord.1 translated by Eduard Bloch
@@ -1809,9 +1809,9 @@ Version 0.3
   * Added fifo(4) by Martin Schmitt
   * Added hosts(5) by Florian Jenn
 
-Version 0.2
+## Version 0.2
 
-  Tue Mar 16 09:42:55 CET 1999
+*Tue Mar 16 09:42:55 CET 1999*
 
   * Added scanf.3, translated by Patrick Rother
   * Added floor.3, translated by Martin Schulze
@@ -1843,6 +1843,6 @@ Version 0.2
   * Corrected man(7) (fixes: Bug#10327)
   * Corrected nohup(1) (fixes: Bug#10873)
 
-Version 0.1
+## Version 0.1
 
   First collection, made by Andries Brouwer
