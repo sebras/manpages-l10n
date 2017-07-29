@@ -35,6 +35,9 @@ fi
 backup=$(mktemp)
 cp "$1" "$backup"
 
+# Translate dates, if possible
+./translate-dates.sh "$1"
+
 # Generate compendium
 compendium=$(mktemp)
 ./generate-compendium.sh "$1" "$compendium"
