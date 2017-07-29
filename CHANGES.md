@@ -1,3 +1,26 @@
+# Changelog for manpages-de
+
+## Version 2.X
+
+* This version changes the versioning scheme, because a pure semantic
+  version is not sensible for this package. The major version has been
+  incremented to reflect this change. The minor version is now
+  the date of the release, in the form YYYYMMDD.
+* The package has been restructured to include the original manpages.
+  During the build of the package, external manpages are no longer
+  needed.
+* As a result of this change, the already deprecated configure
+  option *--enable-deprecated-download* has now been removed
+  completely.
+* There is now a framework in place, which should allow to support
+  translations for different distributions. Some manpages differ
+  between distributions, the package can now cope with that and
+  still provide complete translations. This enables custom
+  packages for e.g. Debian stable, Ubuntu, Gentoo, openSUSE etc.
+  Currently, only Debian unstable is supported.
+* The documentation has been mostly converted to markdown.
+
+
 Version 1.22
 
   Mon Mar 13 16:55:49 CET 2017
