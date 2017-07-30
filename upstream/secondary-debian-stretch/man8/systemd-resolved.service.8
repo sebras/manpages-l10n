@@ -1,0 +1,307 @@
+'\" t
+.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 232" "systemd-resolved.service"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+systemd-resolved.service, systemd-resolved \- Network Name Resolution manager
+.SH "SYNOPSIS"
+.PP
+systemd\-resolved\&.service
+.PP
+/lib/systemd/systemd\-resolved
+.SH "DESCRIPTION"
+.PP
+\fBsystemd\-resolved\fR
+is a system service that provides network name resolution to local applications\&. It implements a caching and validating DNS/DNSSEC stub resolver, as well as an LLMNR resolver and responder\&. Local applications may submit network name resolution requests via three interfaces:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The native, fully\-featured API
+\fBsystemd\-resolved\fR
+exposes on the bus\&. See the
+\m[blue]\fBAPI Documentation\fR\m[]\&\s-2\u[1]\d\s+2
+for details\&. Usage of this API is generally recommended to clients as it is asynchronous and fully featured (for example, properly returns DNSSEC validation status and interface scope for addresses as necessary for supporting link\-local networking)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The glibc
+\fBgetaddrinfo\fR(3)
+API as defined by
+\m[blue]\fBRFC3493\fR\m[]\&\s-2\u[2]\d\s+2
+and its related resolver functions, including
+\fBgethostbyname\fR(3)\&. This API is widely supported, including beyond the Linux platform\&. In its current form it does not expose DNSSEC validation status information however, and is synchronous only\&. This API is backed by the glibc Name Service Switch (\fBnss\fR(5))\&. Usage of the glibc NSS module
+\fBnss-resolve\fR(8)
+is required in order to allow glibc\*(Aqs NSS resolver functions to resolve host names via
+\fBsystemd\-resolved\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Additionally,
+\fBsystemd\-resolved\fR
+provides a local DNS stub listener on IP address 127\&.0\&.0\&.53 on the local loopback interface\&. Programs issuing DNS requests directly, bypassing any local API may be directed to this stub, in order to connect them to
+\fBsystemd\-resolved\fR\&. Note however that it is strongly recommended that local programs use the glibc NSS or bus APIs instead (as described above), as various network resolution concepts (such as link\-local addressing, or LLMNR Unicode domains) cannot be mapped to the unicast DNS protocol\&.
+.RE
+.PP
+The DNS servers contacted are determined from the global settings in
+/etc/systemd/resolved\&.conf, the per\-link static settings in
+/etc/systemd/network/*\&.network
+files, the per\-link dynamic settings received over DHCP and any DNS server information made available by other system services\&. See
+\fBresolved.conf\fR(5)
+and
+\fBsystemd.network\fR(5)
+for details about systemd\*(Aqs own configuration files for DNS servers\&. To improve compatibility,
+/etc/resolv\&.conf
+is read in order to discover configured system DNS servers, but only if it is not a symlink to
+/run/systemd/resolve/resolv\&.conf
+(see below)\&.
+.PP
+\fBsystemd\-resolved\fR
+synthesizes DNS resource records (RRs) for the following cases:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The local, configured hostname is resolved to all locally configured IP addresses ordered by their scope, or \(em if none are configured \(em the IPv4 address 127\&.0\&.0\&.2 (which is on the local loopback) and the IPv6 address ::1 (which is the local host)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The hostnames
+"localhost"
+and
+"localhost\&.localdomain"
+(as well as any hostname ending in
+"\&.localhost"
+or
+"\&.localhost\&.localdomain") are resolved to the IP addresses 127\&.0\&.0\&.1 and ::1\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The hostname
+"gateway"
+is resolved to all current default routing gateway addresses, ordered by their metric\&. This assigns a stable hostname to the current gateway, useful for referencing it independently of the current network configuration state\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The mappings defined in
+/etc/hosts
+are resolved to their configured addresses and back\&.
+.RE
+.PP
+Lookup requests are routed to the available DNS servers and LLMNR interfaces according to the following rules:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Lookups for the special hostname
+"localhost"
+are never routed to the network\&. (A few other, special domains are handled the same way\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Single\-label names are routed to all local interfaces capable of IP multicasting, using the LLMNR protocol\&. Lookups for IPv4 addresses are only sent via LLMNR on IPv4, and lookups for IPv6 addresses are only sent via LLMNR on IPv6\&. Lookups for the locally configured host name and the
+"gateway"
+host name are never routed to LLMNR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Multi\-label names are routed to all local interfaces that have a DNS sever configured, plus the globally configured DNS server if there is one\&. Address lookups from the link\-local address range are never routed to DNS\&.
+.RE
+.PP
+If lookups are routed to multiple interfaces, the first successful response is returned (thus effectively merging the lookup zones on all matching interfaces)\&. If the lookup failed on all interfaces, the last failing response is returned\&.
+.PP
+Routing of lookups may be influenced by configuring per\-interface domain names\&. See
+\fBsystemd.network\fR(5)
+for details\&. Lookups for a hostname ending in one of the per\-interface domains are exclusively routed to the matching interfaces\&.
+.PP
+See the
+\m[blue]\fBresolved D\-Bus API Documentation\fR\m[]\&\s-2\u[1]\d\s+2
+for information about the APIs
+systemd\-resolved
+provides\&.
+.SH "/ETC/RESOLV\&.CONF"
+.PP
+Three modes of handling
+/etc/resolv\&.conf
+(see
+\fBresolv.conf\fR(5)) are supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+A static file
+/usr/lib/systemd/resolv\&.conf
+is provided that lists the 127\&.0\&.0\&.53 DNS stub (see above) as only DNS server\&. This file may be symlinked from
+/etc/resolv\&.conf
+in order to connect all local clients that bypass local DNS APIs to
+\fBsystemd\-resolved\fR\&. This mode of operation is recommended\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBsystemd\-resolved\fR
+maintains the
+/run/systemd/resolve/resolv\&.conf
+file for compatibility with traditional Linux programs\&. This file may be symlinked from
+/etc/resolv\&.conf
+and is always kept up\-to\-date, containing information about all known DNS servers\&. Note the file format\*(Aqs limitations: it does not know a concept of per\-interface DNS servers and hence only contains system\-wide DNS server definitions\&. Note that
+/run/systemd/resolve/resolv\&.conf
+should not be used directly by applications, but only through a symlink from
+/etc/resolv\&.conf\&. If this mode of operation is used local clients that bypass any local DNS API will also bypass
+\fBsystemd\-resolved\fR
+and will talk directly to the known DNS servers\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Alternatively,
+/etc/resolv\&.conf
+may be managed by other packages, in which case
+\fBsystemd\-resolved\fR
+will read it for DNS configuration data\&. In this mode of operation
+\fBsystemd\-resolved\fR
+is consumer rather than provider of this configuration file\&.
+.RE
+.PP
+Note that the selected mode of operation for this file is detected fully automatically, depending on whether
+/etc/resolv\&.conf
+is a symlink to
+/run/systemd/resolve/resolv\&.conf
+or lists 127\&.0\&.0\&.53 as DNS server\&.
+.SH "SIGNALS"
+.PP
+\fBSIGUSR1\fR
+.RS 4
+Upon reception of the SIGUSR1 process signal
+\fBsystemd\-resolved\fR
+will dump the contents of all DNS resource record caches it maintains into the system logs\&.
+.RE
+.PP
+\fBSIGUSR2\fR
+.RS 4
+Upon reception of the SIGUSR2 process signal
+\fBsystemd\-resolved\fR
+will flush all caches it maintains\&. Note that it should normally not be necessary to request this explicitly \(en except for debugging purposes \(en as
+\fBsystemd\-resolved\fR
+flushes the caches automatically anyway any time the host\*(Aqs network configuration changes\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBsystemd\fR(1),
+\fBresolved.conf\fR(5),
+\fBdnssec-trust-anchors.d\fR(5),
+\fBnss-resolve\fR(8),
+\fBsystemd-resolve\fR(1),
+\fBresolv.conf\fR(5),
+\fBhosts\fR(5),
+\fBsystemd.network\fR(5),
+\fBsystemd-networkd.service\fR(8)
+.SH "NOTES"
+.IP " 1." 4
+API Documentation
+.RS 4
+\%http://www.freedesktop.org/wiki/Software/systemd/resolved
+.RE
+.IP " 2." 4
+RFC3493
+.RS 4
+\%https://tools.ietf.org/html/rfc3493
+.RE
