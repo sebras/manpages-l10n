@@ -7,30 +7,56 @@ created ad libitum.
 
 ## How to create a new secondary directory
 
-Every directory name needs to start with "*secondary-*".
-It might make sense to use the distribution's name
+### Part 1
+
+The scripts *create-new-distribution-1.sh* and
+*create-new-distribution-2.sh* in the toplevel directory help you
+a bit with this task.
+
+You can execute the first script like this:
+
+```
+$ ./create-new-distribution-1.sh debian-stretch
+```
+
+It makes sense to use the distribution's name
 and (if applicable) codename for the given release.
 
 Examples:
 
-* *secondary-debian-stretch*
-* *secondary-ubuntu-artful*
-* *secondary-netbsd-7.1*
-* *secondary-opensuse-leap-42.2*
-* *secondary-gentoo*
-* *secondary-fedora-26*
+* *debian-stretch*
+* *ubuntu-artful*
+* *netbsd-7.1*
+* *opensuse-leap-42.2*
+* *gentoo*
+* *fedora-26*
 
-There is only one mandatory script in each secondary directory,
-which must be called "*update-manpages.sh*".
+After the script has been executed, a new directory has been
+created with two empty files in it, called "*update-manpages.sh*"
+and "*links.txt*". Both are mandatory in each secondary
+directory.
 
-This script is responsible for creating all "man" directories
-needed for the distribution's manpages as well as a file called
-"*links.txt*". In that file, every manpage which is a link to
-another manpage is listed on a single line in the format:
+The script is responsible for creating all "man" directories
+needed for the distribution's manpages. In the "man" directories,
+every translatable manpage must be available in an uncompressed
+format. For some hints what this script needs to do, take a
+look at the script "*primary/update-manpages.sh*".
+
+The script must also create the file called "*links.txt*".
+In that file, every manpage which is a link to another manpage
+is listed on a single line in the format:
 
 ```
 destination link_name
 ```
 
-In the "man" directories, every translatable manpage must
-be available in an uncompressed format.
+### Part 2
+
+After the script "*update-manpages.sh*" does what it needs to do,
+the remaing part is trivial. Just execute the second script:
+
+```
+$ ./create-new-distribution-2.sh debian-stretch
+```
+
+You should be done now.
