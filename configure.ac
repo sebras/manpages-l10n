@@ -54,9 +54,9 @@ AS_IF([test -d "upstream/$upstream"],
 
 # Check that po4a is available on the system
 AC_PATH_PROG([po4a], [po4a], [no])
-if test "x$po4a" = "xno"; then
-    AC_MSG_ERROR([You need to install po4a])
-fi
+AS_IF([test "x$po4a" = "xno"],
+  [AC_MSG_ERROR([You need to install po4a])]
+)
 
 AC_CONFIG_FILES([
     Makefile
