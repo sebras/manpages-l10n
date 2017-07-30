@@ -15,28 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Create pot files for common msgids
-echo Generating pot files for common msgids ...
+# Find all upstreams
+upstreams=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
 
-previous_step=""
-steps="100 50 40 30 20 18 16 14 12 10 9 8 7 6 5 4 3 2"
-
-for step in $steps; do
-  if [ "X$previous_step" = "X" ] ; then
-    echo Generating $step - ...
+# Create pot files for all common msgids in upstreams
+for upstream in $upstreams; do
+  if [ "x$upstream" = "xprimary" ]; then
+    level="primary"
   else
-    echo Generating $step - $(($previous_step - 1))
+    level="secondary"
   fi
-  # Get all msgids with at least $step and at most $previous_step occurences
-  LC_ALL=C msgcat --less-than=$previous_step --more-than=$(($step - 1)) \
-    --sort-output primary/man*/*pot > step.pot
-  # Remove most comment lines, preserve "#, no-wrap" etc.
-  sed -i -e "/^# /d;/^#$/d;/^#\. /d" step.pot
-  # Remove first (empty) msgid with all combined headers
-  sed -i -e "1,/^$/d" step.pot
-  # Create a temporary header for the pot file
-  header=$(mktemp)
-	cat > "$header" <<END_OF_HEADER
+  # Create pot files for common msgids
+  echo "Generating pot files for common-$level ..."
+
+  previous_step=""
+  steps="100 50 40 30 20 18 16 14 12 10 9 8 7 6 5 4 3 2"
+
+  for step in $steps; do
+    if [ "X$previous_step" = "X" ] ; then
+      echo Generating $step - ...
+    else
+      echo Generating $step - $(($previous_step - 1))
+    fi
+    # Get all msgids with at least $step and at most $previous_step occurences
+    LC_ALL=C msgcat --less-than=$previous_step --more-than=$(($step - 1)) \
+      --sort-output $level*/man*/*pot > step.pot
+    # Remove most comment lines, preserve "#, no-wrap" etc.
+    sed -i -e "/^# /d;/^#$/d;/^#\. /d" step.pot
+    # Remove first (empty) msgid with all combined headers
+    sed -i -e "1,/^$/d" step.pot
+    # Create a temporary header for the pot file
+    header=$(mktemp)
+    cat > "$header" <<END_OF_HEADER
 # Common msgids
 msgid ""
 msgstr ""
@@ -51,37 +61,53 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 END_OF_HEADER
-	current_date=$(date +"%Y-%m-%d %H:%M%z")
-	sed -i -e "s/CURRENT_DATE/$current_date/" "$header"
-  cat "$header" step.pot > tmp2.pot
+    current_date=$(date +"%Y-%m-%d %H:%M%z")
+    sed -i -e "s/CURRENT_DATE/$current_date/" "$header"
+    cat "$header" step.pot > tmp2.pot
 
-  # Create a filename with leading zeros
-  min_step_file=$(printf "min-%03d-occurences.pot" $step)
+    # Create a filename with leading zeros
+    min_step_file=$(printf "min-%03d-occurences.pot" $step)
 
-  # Remove dates, as they are translated automatically
-  msggrep --msgid -v -E -e "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" tmp2.pot > $min_step_file
+    # Remove dates, as they are translated automatically
+    msggrep --msgid -v -E -e "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" tmp2.pot > $min_step_file
 
-  # Remove msgids which are listed in the exclude file.
-  # Ensure that excluded msgids are not unique by creating
-  # a temporary copy of that file.
-  cp exclude.pot tmp.pot
-  msgcat --unique tmp.pot exclude.pot $min_step_file > tmp2.pot
+    # Remove msgids which are listed in the exclude file.
+    # Ensure that excluded msgids are not unique by creating
+    # a temporary copy of that file.
+    cp exclude.pot tmp.pot
+    msgcat --unique tmp.pot exclude.pot $min_step_file > tmp2.pot
 
-  # Remove first (empty) msgid with all combined headers
-  sed -i -e "1,/^$/d" tmp2.pot
-  cat "$header" tmp2.pot > $min_step_file
+    # Remove msgids from common-primary, if this is already
+    # a secondary common msgid collection.
+    if [ "x$level" = "xsecondary" ]; then
+      primary_msgids=$(mktemp)
+      msgcat common-primary/*pot > "$primary_msgids"
+      # Ensure that primary msgids are not unique by creating
+      # a temporary copy of that file.
+      tmpcopy=$(mktemp)
+      cp "$primary_msgids" "$tmpcopy"
+      msgcat --unique tmp2.pot "$primary_msgids" "$tmpcopy" > tmp.pot
+      # The move is necessary for the following instructions.
+      mv tmp.pot tmp2.pot
+      rm -f "$primary_msgids" "$tmpcopy"
+    fi
 
-  # Determine if the only change is the "POT-Creation-Date:" header
-  # If so, do not copy to the common directory
-  sed -f remove-potcdate.sed < common-primary/$min_step_file > old.pot
-  sed -f remove-potcdate.sed < $min_step_file > new.pot
-  if cmp old.pot new.pot >/dev/null 2>&1; then
-    rm $min_step_file
-  else
-    mv $min_step_file common-primary/
-  fi
+    # Remove first (empty) msgid with all combined headers
+    sed -i -e "1,/^$/d" tmp2.pot
+    cat "$header" tmp2.pot > $min_step_file
 
-  # Clean up
-  previous_step=$step
-  rm -rf tmp.pot tmp2.pot step.pot new.pot old.pot "$header"
+    # Determine if the only change is the "POT-Creation-Date:" header
+    # If so, do not copy to the common directory
+    sed -f remove-potcdate.sed < common-$level/$min_step_file > old.pot
+    sed -f remove-potcdate.sed < $min_step_file > new.pot
+    if cmp old.pot new.pot >/dev/null 2>&1; then
+      rm $min_step_file
+    else
+      mv $min_step_file common-$level/
+    fi
+
+    # Clean up
+    previous_step=$step
+    rm -rf tmp.pot tmp2.pot step.pot new.pot old.pot "$header"
+  done
 done
