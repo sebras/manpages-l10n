@@ -29,7 +29,7 @@ needed for the distribution's manpages as well as a file called
 another manpage is listed on a single line in the format:
 
 ```
-destination source
+destination link_name
 ```
 
 In the "man" directories, every translatable manpage must
