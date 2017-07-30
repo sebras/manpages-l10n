@@ -22,9 +22,15 @@ mkdir man1 man2 man3 man4 man5 man6 man7 man8
 while read package; do
 	echo "Downloading package '$package'"
 	# Download HTML page and discover the correct link
-	url=$(wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
+	# Prefer manpages from stretch-backports, then try stretch
+	url=$(wget --quiet -O - "http://packages.debian.org/stretch-backports/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	if [ -z "$url" ]; then
+		url=$(wget --quiet -O - "http://packages.debian.org/stretch/amd64/$package/download" |
+		grep "http://ftp.de.debian.org/debian/pool/" |
+		sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	fi
 	wget --quiet --directory-prefix=downloads "$url"
 done < packages.txt
 
