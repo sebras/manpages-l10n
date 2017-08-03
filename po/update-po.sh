@@ -42,9 +42,12 @@ cp "$1" "$backup"
 # Translate dates, if possible
 ./translate-dates.sh "$1"
 
+# Determine the translation level, primary or secondary
+level=$(echo "$1" | cut -d/ -f1 | cut -d- -f1)
+
 # Generate compendium
 compendium=$(mktemp)
-./generate-compendium.sh "$1" "$compendium"
+./generate-compendium.sh "$1" "$compendium" "$level"
 
 # Update .po file from .pot file
 tmppo=$(mktemp)
@@ -52,6 +55,19 @@ msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
 
 # Remove obsolete strings
 msgattrib --no-obsolete "$tmppo" > "$1"
+
+# If this is a secondary translation, use the primary .po
+# file as a reference, too. This way, typo fixes and better
+# wordings in the primary translation will automatically
+# migrate to all secondary translations.
+if [ "x$level" = "xsecondary" ]; then
+	# Construct the path by removing the first directory
+	primary=$(echo "$1" | cut -d/ -f2-)
+	primary="primary/$primary"
+	# Prefer the translations from the primary .po file
+	msgmerge --previous --compendium "$primary" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
+	mv "$tmppo" "$1"
+fi
 
 # Prefer the translations from the compendium
 msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$1" > "$tmppo"

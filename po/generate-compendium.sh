@@ -24,6 +24,10 @@ if [ -z "$2" ]; then
 	echo "Specify the compendium filename."
 	exit 1
 fi
+if [ -z "$3" ]; then
+	echo "Specify the level."
+	exit 1
+fi
 
 # Extract header entry for compendium (first line until first blank line)
 header=$(mktemp)
@@ -31,7 +35,11 @@ sed -n "1,/^$/p" "$1" > "$header"
 
 # Join all files into one compendium
 giant=$(mktemp)
-msgcat common-primary/*po > "$giant"
+if [ "$3" = "secondary" ]; then
+	msgcat common-primary/*po common-secondary/*po > "$giant"
+else
+	msgcat common-primary/*po > "$giant"
+fi
 
 # Remove untranslated and fuzzy entries
 tmpcompendium=$(mktemp)
