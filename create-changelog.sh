@@ -1,9 +1,12 @@
 #!/bin/sh
 set -e
 
-git checkout CHANGES
-./collect-changes.sh > tmp-changes
-sed -i -e "s/ $//" tmp-changes
-cat tmp-changes CHANGES > new-changes
-mv new-changes CHANGES
-rm tmp-changes
+tmp=$(mktemp)
+merged=$(mktemp)
+
+git checkout CHANGES.md
+./collect-changes.sh > "$tmp"
+sed -i -e "s/ *$//" "$tmp"
+cat "$tmp" CHANGES.md > "$merged"
+mv "$merged" CHANGES.md
+rm "$tmp"
