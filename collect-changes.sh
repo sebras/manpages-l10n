@@ -9,7 +9,7 @@ echo "* New translations:"
 git diff --name-status $last_release po/*/man*/ |
 grep "^A" |
 cut -f2 |
-sort |
+LC_ALL=C sort |
 cut -d"/" -f4 |
 sed -e "s/\.po$//" |
 perl -e "my @a; while (<>) { chomp; push(@a, \$_); } print join(', ', @a); print \"\\n\";" |
@@ -20,7 +20,7 @@ echo "* Removed translations:"
 git diff --name-status $last_release po/man?/ |
 grep "^D" |
 cut -f2 |
-sort |
+LC_ALL=C sort |
 cut -d"/" -f4 |
 sed -e "s/\.po$//" |
 perl -e "my @a; while (<>) { chomp; push(@a, \$_); } print join(', ', @a); print \"\\n\";" |
