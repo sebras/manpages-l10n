@@ -78,4 +78,4 @@ update-templates:
 
 # Export the current git tree into the tarball directory
 dist-hook:
-	git archive --format=tar manpages-de-$(VERSION) | (cd $(distdir) && tar xf -)
+	git archive --format=tar v$(VERSION) | (cd $(distdir) && tar xf -)
