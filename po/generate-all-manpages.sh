@@ -15,8 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Determine directory names from upstream directory.
-directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+# If there's a commandline argument, it's the upstream directory.
+if [ "$1" ]; then
+	directories="$1"
+else
+	# Determine directory names from upstream directory.
+	directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+fi
 
 for directory in $directories; do
 	echo "Processing directory '$directory'"

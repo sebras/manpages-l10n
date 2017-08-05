@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Generate all localized manpages
+# Generate all localized manpages for given distribution
 all-local:
 	cd $(top_srcdir)/po ; \
-	./generate-all-manpages.sh
+	./generate-all-manpages.sh $(upstream)
 
 # Remove generated manpages
 clean-local:
