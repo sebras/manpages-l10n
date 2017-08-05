@@ -17,7 +17,9 @@
   between distributions, the package can now cope with that and
   still provide complete translations. This enables custom
   packages for e.g. Debian stable, Ubuntu, Gentoo, openSUSE etc.
-  Currently, only Debian unstable is supported.
+  Currently, only Debian unstable and Debian stretch are supported.
+  In order to build translations for Debian stretch, use the
+  new configure option *--enable-distribution=debian-stretch*.
 * The documentation has been mostly converted to markdown.
 
 ## Version 1.22
