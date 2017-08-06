@@ -15,15 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-translation="$1"
+# This is the filename of the localized manpage
+localized="$1"
 
 # Set up the path to the original manpage
-master="../upstream/$translation"
-master=${master%.po}
+master="../upstream/$localized"
 
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
-	echo "The original manpage for '$translation' could not be found." >&2
+	echo "The original manpage for '$localized' could not be found." >&2
 	exit
 fi
 
@@ -34,13 +34,8 @@ if [ -z "$coding" ]; then
 	coding="ISO-8859-1"
 fi
 
-# Set up the filename of the localized manpage
-localized="localized/$translation"
-localized=${localized%.po}
-
-# Remove possible stale copy
-mkdir -p localized
-rm -f "$localized"
+# Set up the filename of the translation
+translation="$localized.po"
 
 # Create the addendum for this manpage
 addendum=$(mktemp)

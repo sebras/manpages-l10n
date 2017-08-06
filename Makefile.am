@@ -15,41 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Generate all localized manpages for given distribution
-all-local:
-	cd $(top_srcdir)/po ; \
-	./generate-all-manpages.sh $(upstream)
-
-# Remove generated manpages
-clean-local:
-	rm -rf $(top_srcdir)/po/localized
-
-# Install localized manpages for given distribution
-install-data-hook:
-	for directory in $(top_srcdir)/po/localized/$(upstream)/man*; do \
-		mansection=$$(basename $$directory) ; \
-		$(mkinstalldirs) $(DESTDIR)$(mandir)/de/$$mansection ; \
-		for manpage in $$directory/*; do \
-			filename=$$(basename $$manpage) ; \
-			$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
-			gzip --best $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
-		done \
-	done
-	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
-		$(top_srcdir)/upstream/$(upstream)/links.txt
-
-# Uninstall localized manpages for given distribution
-uninstall-hook:
-	for link in $$(cut -d" " -f2 $(top_srcdir)/upstream/$(upstream)/links.txt); do \
-		rm -f $(DESTDIR)$(mandir)/de/$$link ; \
-	done
-	for directory in $(top_srcdir)/po/localized/$(upstream)/man*; do \
-		mansection=$$(basename $$directory) ; \
-		for manpage in $$directory/*; do \
-			filename=$$(basename $$manpage) ; \
-			rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
-		done \
-	done
+SUBDIRS = po
 
 # Reformat all .po files and commit changes
 .PHONY: reformat
