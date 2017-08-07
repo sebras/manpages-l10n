@@ -60,3 +60,9 @@ uninstall-hook:
 		mansection=$$(basename $$(dirname $$manpage)) ; \
 		rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
 	done
+
+# Reformat all .po files and commit changes
+.PHONY: reformat
+reformat:
+	$(srcdir)/format-po.sh ; \
+	git commit -m "Reformat .po files, no content changes" . || true

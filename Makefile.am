@@ -17,13 +17,6 @@
 
 SUBDIRS = po
 
-# Reformat all .po files and commit changes
-.PHONY: reformat
-reformat:
-	cd $(top_srcdir)/po ; \
-	./format-po.sh ; \
-	git commit -m "Reformat .po files, no content changes" . || true
-
 # Download and update all upstream manpages
 .PHONY: update-upstream
 update-upstream:
