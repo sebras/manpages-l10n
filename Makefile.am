@@ -35,6 +35,7 @@ update-templates:
 	git commit -m "Update common templates" || true ; \
 	cd .. ; \
 	cd $(top_srcdir)/po ; \
+	$(MAKE) reformat ; \
 	./update-common.sh ; \
 	git add . ; \
 	git commit -m "Update common messages from templates" || true
