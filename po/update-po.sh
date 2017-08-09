@@ -64,9 +64,14 @@ if [ "x$level" = "xsecondary" ]; then
 	# Construct the path by removing the first directory
 	primary=$(echo "$1" | cut -d/ -f2-)
 	primary="primary/$primary"
-	# Prefer the translations from the primary .po file
-	msgmerge --previous --compendium "$primary" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
-	mv "$tmppo" "$1"
+	# Make sure the corresponding file in primary exists,
+	# otherwise msgmerge will fail and then remove the
+	# .po file which should be updated.
+	if [ -f "$primary" ]; then
+		# Prefer the translations from the primary .po file
+		msgmerge --previous --compendium "$primary" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
+		mv "$tmppo" "$1"
+	fi
 fi
 
 # Prefer the translations from the compendium
