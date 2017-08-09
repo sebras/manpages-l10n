@@ -45,4 +45,12 @@ for directory in $directories; do
 		mv "$result" "$translation"
 	done
 done
+
+# Reformat all common messages
+echo "Processing common messages"
+for translation in common-*/*po; do
+	msgcat --force-po "$translation" > "$result"
+	mv "$result" "$translation"
+done
+
 rm -f "$header" "$tail" "$result"

@@ -30,10 +30,15 @@ update-upstream:
 update-templates:
 	cd $(top_srcdir)/templates ; \
 	./update-templates.sh ; \
-	cd $(top_srcdir)/templates ; \
 	./create-common-templates.sh ; \
 	git add . ; \
-	git commit -m "Update common templates" || true
+	git commit -m "Update common templates" || true ; \
+	cd .. ; \
+	cd $(top_srcdir)/po ; \
+	$(MAKE) reformat ; \
+	./update-common.sh ; \
+	git add . ; \
+	git commit -m "Update common messages from templates" || true
 
 # Export the current git tree into the tarball directory
 dist-hook:

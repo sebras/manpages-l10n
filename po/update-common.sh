@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Handle primary messages
 compendium=$(mktemp)
 msgcat --use-first common-primary/*po > "$compendium"
 rm -f common-primary/*po
@@ -23,7 +24,22 @@ for potfile in ../templates/common-primary/*pot; do
 	pofile=$(basename "$potfile")
 	# Remove the letter "t" at the end
 	pofile=${pofile%t}
-	msgmerge --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
+	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
 	mv "$tmppo" "common-primary/$pofile"
 done
+
+# Handle secondary messages, using also the compendium
+# from primary, because some strings may have shifted
+# between levels.
+msgcat --use-first common-secondary/*po "$compendium" > "$tmppo"
+mv "$tmppo" "$compendium"
+rm -f common-secondary/*po
+for potfile in ../templates/common-secondary/*pot; do
+	pofile=$(basename "$potfile")
+	# Remove the letter "t" at the end
+	pofile=${pofile%t}
+	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
+	mv "$tmppo" "common-secondary/$pofile"
+done
+
 rm -f "$compendium" "$tmppo"
