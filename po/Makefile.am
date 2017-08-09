@@ -66,3 +66,9 @@ uninstall-hook:
 reformat:
 	$(srcdir)/format-po.sh ; \
 	git commit -m "Reformat .po files, no content changes" . || true
+
+# Reformat all .po files and commit changes
+.PHONY: update-po
+update-po: reformat
+	$(srcdir)/update-translations.sh ; \
+	git commit -m "Update .po files from templates and common messages" . || true
