@@ -25,9 +25,18 @@ update-upstream:
 	git add . ; \
 	git commit -m "Update upstream manpages" || true
 
-# Update all template files from upstream manpages
-.PHONY: update-templates
-update-templates:
+# Update all template files from upstream manpages.
+# In order to re-use translations from 'primary' for
+# the secondary translations before they get overwritten
+# by changes to the primary templates, it's needed to
+# update all translations (with 'make update-po') first,
+# and afterwards update the templates, the common
+# templates, and then the translations again.
+.PHONY: update-translations
+update-translations:
+	cd $(top_srcdir)/po ; \
+	$(MAKE) update-po ; \
+	cd .. ; \
 	cd $(top_srcdir)/templates ; \
 	./update-templates.sh ; \
 	./create-common-templates.sh ; \
@@ -35,10 +44,10 @@ update-templates:
 	git commit -m "Update common templates" || true ; \
 	cd .. ; \
 	cd $(top_srcdir)/po ; \
-	$(MAKE) reformat ; \
 	./update-common.sh ; \
 	git add . ; \
-	git commit -m "Update common messages from templates" || true
+	git commit -m "Update common messages from templates" || true ; \
+	$(MAKE) update-po
 
 # Export the current git tree into the tarball directory
 dist-hook:
