@@ -1,11 +1,7 @@
 # Changelog for manpages-de
 
-## Version 2.X
+## Version 2.0
 
-* This version changes the versioning scheme, because a pure semantic
-  version is not sensible for this package. The major version has been
-  incremented to reflect this change. The minor version is now
-  the date of the release, in the form YYYYMMDD.
 * The package has been restructured to include the original manpages.
   During the build of the package, external manpages are no longer
   needed.
@@ -21,6 +17,7 @@
   In order to build translations for Debian stretch, use the
   new configure option *--enable-distribution=debian-stretch*.
 * The documentation has been mostly converted to markdown.
+* Updated many translations
 
 ## Version 1.22
 
