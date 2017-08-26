@@ -2,6 +2,8 @@
 
 ## Version 2.0
 
+*Sat Aug 26 14:32:40 CEST 2017*
+
 * The package has been restructured to include the original manpages.
   During the build of the package, external manpages are no longer
   needed.
