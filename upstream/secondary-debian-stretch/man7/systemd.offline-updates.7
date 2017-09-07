@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.OFFLINE\-UPDATES" "7" "" "systemd 232" "systemd.offline-updates"
+.TH "SYSTEMD\&.OFFLINE\-UPDATES" "7" "" "systemd 234" "systemd.offline-updates"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -87,7 +87,9 @@ sysinit\&.target, so that all file systems are mounted but little else) and the 
 .\}
 The system now continues to boot into
 default\&.target, and thus into
-system\-update\&.target\&. This target pulls in the system update unit, which starts the system update script after all file systems have been mounted\&.
+system\-update\&.target\&. This target pulls in all system update units\&. Only one service should perform an update (see the next point), and all the other ones should exit cleanly with a "success" return code and without doing anything\&. Update services should be ordered after
+sysinit\&.target
+so that the update starts after all file systems have been mounted\&.
 .RE
 .sp
 .RS 4
@@ -98,9 +100,9 @@ system\-update\&.target\&. This target pulls in the system update unit, which st
 .sp -1
 .IP "  5." 4.2
 .\}
-As the first step, the update script should check if the
+As the first step, an update service should check if the
 /system\-update
-symlink points to the location used by that update script\&. In case it does not exists or points to a different location, the script must exit without error\&. It is possible for multiple update services to be installed, and for multiple update scripts to be launched in parallel, and only the one that corresponds to the tool that
+symlink points to the location used by that update service\&. In case it does not exist or points to a different location, the service must exit without error\&. It is possible for multiple update services to be installed, and for multiple update services to be launched in parallel, and only the one that corresponds to the tool that
 \fIcreated\fR
 the symlink before reboot should perform any actions\&. It is unsafe to run multiple updates in parallel\&.
 .RE
@@ -113,7 +115,7 @@ the symlink before reboot should perform any actions\&. It is unsafe to run mult
 .sp -1
 .IP "  6." 4.2
 .\}
-The update script should now do its job\&. If applicable and possible, it should create a file system snapshot, then install all packages\&. After completion (regardless whether the update succeeded or failed) the machine must be rebooted, for example by calling
+The update service should now do its job\&. If applicable and possible, it should create a file system snapshot, then install all packages\&. After completion (regardless whether the update succeeded or failed) the machine must be rebooted, for example by calling
 \fBsystemctl reboot\fR\&. In addition, on failure the script should revert to the old file system snapshot (without the symlink)\&.
 .RE
 .sp
@@ -125,11 +127,26 @@ The update script should now do its job\&. If applicable and possible, it should
 .sp -1
 .IP "  7." 4.2
 .\}
-The system is rebooted\&. Since the
+The upgrade scripts should exit only after the update is finished\&. It is expected that the service which performs the upgrade will cause the machine to reboot after it is done\&. If the
+system\-update\&.target
+is successfully reached, i\&.e\&. all update services have run, and the
+/system\-update
+symlink still exists, it will be removed and the machine rebooted as a safety measure\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 8.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  8." 4.2
+.\}
+After a reboot, now that the
 /system\-update
 symlink is gone, the generator won\*(Aqt redirect
 default\&.target
-after reboot and the system now boots into the default target again\&.
+anymore and the system now boots into the default target again\&.
 .RE
 .SH "RECOMMENDATIONS"
 .sp
@@ -196,7 +213,9 @@ for details\&.
 .IP "  4." 4.2
 .\}
 The update service should declare
-\fIDefaultDependencies=false\fR, and pull in any services it requires explicitly\&.
+\fIDefaultDependencies=false\fR,
+\fIRequires=sysinit\&.target\fR,
+\fIAfter=sysinit\&.target\fR, and explicitly pull in any other services it requires\&.
 .RE
 .SH "SEE ALSO"
 .PP
@@ -214,10 +233,10 @@ GNOME design whiteboard
 .IP " 2." 4
 logind dbus API
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/logind
+\%https://www.freedesktop.org/wiki/Software/systemd/logind
 .RE
 .IP " 3." 4
 Implementing Offline System Updates
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/SystemUpdates/
+\%https://www.freedesktop.org/wiki/Software/systemd/SystemUpdates/
 .RE

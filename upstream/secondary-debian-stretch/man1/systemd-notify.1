@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NOTIFY" "1" "" "systemd 232" "systemd-notify"
+.TH "SYSTEMD\-NOTIFY" "1" "" "systemd 234" "systemd-notify"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,8 +37,28 @@ and makes this functionality available to shell scripts\&. For details see
 The command line may carry a list of environment variables to send as part of the status update\&.
 .PP
 Note that systemd will refuse reception of status updates from this command unless
-\fINotifyAccess=all\fR
+\fINotifyAccess=\fR
 is set for the service unit this command is called from\&.
+.PP
+Note that
+\fBsd_notify()\fR
+notifications may be attributed to units correctly only if either the sending process is still around at the time PID 1 processes the message, or if the sending process is explicitly runtime\-tracked by the service manager\&. The latter is the case if the service manager originally forked off the process, i\&.e\&. on all processes that match
+\fINotifyAccess=\fR\fBmain\fR
+or
+\fINotifyAccess=\fR\fBexec\fR\&. Conversely, if an auxiliary process of the unit sends an
+\fBsd_notify()\fR
+message and immediately exits, the service manager might not be able to properly attribute the message to the unit, and thus will ignore it, even if
+\fINotifyAccess=\fR\fBall\fR
+is set for it\&.
+.PP
+\fBsystemd\-notify\fR
+will first attempt to invoke
+\fBsd_notify()\fR
+pretending to have the PID of the invoking process\&. This will only succeed when invoked with sufficient privileges\&. On failure, it will then fall back to invoking it under its own PID\&. This behaviour is useful in order that when the tool is invoked from a shell script the shell process \(em and not the
+\fBsystemd\-notify\fR
+process \(em appears as sender of the message, which in turn is helpful if the shell process is the main process of a service, due to the limitations of
+\fINotifyAccess=\fR\fBall\fR
+described above\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -62,7 +82,7 @@ is used\&. This is equivalent to
 \fB\-\-status=\fR
 .RS 4
 Send a free\-form status string for the daemon to the init systemd\&. This option takes the status string as argument\&. This is equivalent to
-\fBsystemd\-notify STATUS=\&.\&.\&.\fR\&. For details about the semantics of this option see
+\fBsystemd\-notify STATUS=\&...\fR\&. For details about the semantics of this option see
 \fBsd_notify\fR(3)\&.
 .RE
 .PP
@@ -103,15 +123,15 @@ A simple shell daemon that sends start\-up notifications after having set up its
 #!/bin/bash
 
 mkfifo /tmp/waldo
-systemd\-notify \-\-ready \-\-status="Waiting for data\&.\&.\&."
+systemd\-notify \-\-ready \-\-status="Waiting for data\&..."
 
 while : ; do
         read a < /tmp/waldo
         systemd\-notify \-\-status="Processing $a"
 
-        # Do something with $a \&.\&.\&.
+        # Do something with $a \&...
 
-        systemd\-notify \-\-status="Waiting for data\&.\&.\&."
+        systemd\-notify \-\-status="Waiting for data\&..."
 done
 .fi
 .if n \{\

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 232" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 234" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -192,7 +192,7 @@ directories\&. Drop\-in files in
 take precedence over those in
 /run
 which in turn take precedence over those in
-/lib\&. Drop\-in files under any of these directories take precedence over unit files wherever located\&.
+/lib\&. Drop\-in files under any of these directories take precedence over unit files wherever located\&. Multiple drop\-in files with different names are applied in lexicographic order, regardless of which of the directories they reside in\&.
 .PP
 Some unit names reflect paths existing in the file system namespace\&. Example: a device unit
 dev\-sda\&.device
@@ -409,6 +409,18 @@ instead of
 \fIRequires=\fR
 in order to achieve a system that is more robust when dealing with failing services\&.
 .sp
+Note that this dependency type does not imply that the other unit always has to be in active state when this unit is running\&. Specifically: failing condition checks (such as
+\fIConditionPathExists=\fR,
+\fIConditionPathExists=\fR, \&... \(em see below) do not cause the start job of a unit with a
+\fIRequires=\fR
+dependency on it to fail\&. Also, some unit types may deactivate on their own (for example, a service process may decide to exit cleanly, or a device may be unplugged by the user), which is not propagated to units having a
+\fIRequires=\fR
+dependency\&. Use the
+\fIBindsTo=\fR
+dependency type together with
+\fIAfter=\fR
+to ensure that a unit may never be in active state without a specific other unit also in active state (see below)\&.
+.sp
 Note that dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
 \&.requires/
 directory accompanying the unit file\&. For details, see above\&.
@@ -433,7 +445,20 @@ directory accompanying the unit file\&. For details, see above\&.
 \fIBindsTo=\fR
 .RS 4
 Configures requirement dependencies, very similar in style to
-\fIRequires=\fR, however in addition to this behavior, it also declares that this unit is stopped when any of the units listed suddenly disappears\&. Units can suddenly, unexpectedly disappear if a service terminates on its own choice, a device is unplugged or a mount point unmounted without involvement of systemd\&.
+\fIRequires=\fR\&. However, this dependency type is stronger: in addition to the effect of
+\fIRequires=\fR
+it declares that if the unit bound to is stopped, this unit will be stopped too\&. This means a unit bound to another unit that suddenly enters inactive state will be stopped too\&. Units can suddenly, unexpectedly enter inactive state for different reasons: the main process of a service unit might terminate on its own choice, the backing device of a device unit might be unplugged or the mount point of a mount unit might be unmounted without involvement of the system and service manager\&.
+.sp
+When used in conjunction with
+\fIAfter=\fR
+on the same unit the behaviour of
+\fIBindsTo=\fR
+is even stronger\&. In this case, the unit bound to strictly has to be in active state for this unit to also be in active state\&. This not only means a unit bound to another unit that suddenly enters inactive state, but also one that is bound to another unit that gets skipped due to a failed condition check (such as
+\fIConditionPathExists=\fR,
+\fIConditionPathIsSymbolicLink=\fR, \&... \(em see below) will be stopped, should it be running\&. Hence, in many cases it is best to combine
+\fIBindsTo=\fR
+with
+\fIAfter=\fR\&.
 .RE
 .PP
 \fIPartOf=\fR
@@ -457,31 +482,36 @@ If a unit A that conflicts with a unit B is scheduled to be started at the same 
 .PP
 \fIBefore=\fR, \fIAfter=\fR
 .RS 4
-A space\-separated list of unit names\&. Configures ordering dependencies between units\&. If a unit
+These two settings expect a space\-separated list of unit names\&. They configure ordering dependencies between units\&. If a unit
 foo\&.service
 contains a setting
 \fBBefore=bar\&.service\fR
 and both units are being started,
 bar\&.service\*(Aqs start\-up is delayed until
 foo\&.service
-is started up\&. Note that this setting is independent of and orthogonal to the requirement dependencies as configured by
-\fIRequires=\fR\&. It is a common pattern to include a unit name in both the
+has finished starting up\&. Note that this setting is independent of and orthogonal to the requirement dependencies as configured by
+\fIRequires=\fR,
+\fIWants=\fR
+or
+\fIBindsTo=\fR\&. It is a common pattern to include a unit name in both the
 \fIAfter=\fR
 and
 \fIRequires=\fR
-option, in which case the unit listed will be started before the unit that is configured with these options\&. This option may be specified more than once, in which case ordering dependencies for all listed names are created\&.
+options, in which case the unit listed will be started before the unit that is configured with these options\&. This option may be specified more than once, in which case ordering dependencies for all listed names are created\&.
 \fIAfter=\fR
 is the inverse of
 \fIBefore=\fR, i\&.e\&. while
 \fIAfter=\fR
 ensures that the configured unit is started after the listed unit finished starting up,
 \fIBefore=\fR
-ensures the opposite, i\&.e\&. that the configured unit is fully started up before the listed unit is started\&. Note that when two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. i\&.e\&. if a unit is configured with
+ensures the opposite, that the configured unit is fully started up before the listed unit is started\&. Note that when two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. i\&.e\&. if a unit is configured with
 \fIAfter=\fR
 on another unit, the former is stopped before the latter if both are shut down\&. Given two units with any ordering dependency between them, if one unit is shut down and the other is started up, the shutdown is ordered before the start\-up\&. It doesn\*(Aqt matter if the ordering dependency is
 \fIAfter=\fR
 or
-\fIBefore=\fR\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up\&. The shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&.
+\fIBefore=\fR, in this case\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up\&. The shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&. It depends on the unit type when precisely a unit has finished starting up\&. Most importantly, for service units start\-up is considered completed for the purpose of
+\fIBefore=\fR/\fIAfter=\fR
+when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&.
 .RE
 .PP
 \fIOnFailure=\fR
@@ -524,10 +554,8 @@ for all mount units required to access the specified path\&.
 .sp
 Mount points marked with
 \fBnoauto\fR
-are not mounted automatically and will be ignored for the purposes of this option\&. If such a mount should be a requirement for this unit, direct dependencies on the mount units may be added (\fIRequires=\fR
-and
-\fIAfter=\fR
-or some other combination)\&.
+are not mounted automatically through
+local\-fs\&.target, but are still honored for the purposes of this option, i\&.e\&. they will be pulled in by this unit\&.
 .RE
 .PP
 \fIOnFailureJobMode=\fR
@@ -589,13 +617,19 @@ Takes a boolean argument\&. If
 \fBfalse\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
 .RE
 .PP
-\fIJobTimeoutSec=\fR, \fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
+\fIJobTimeoutSec=\fR, \fIJobRunningTimeoutSec=\fR, \fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
 .RS 4
-When a job for this unit is queued, a time\-out may be configured\&. If this time limit is reached, the job will be cancelled, the unit however will not change state or even enter the
+When a job for this unit is queued, a time\-out
+\fIJobTimeoutSec=\fR
+may be configured\&. Similarly,
+\fIJobRunningTimeoutSec=\fR
+starts counting when the queued job is actually started\&. If either time limit is reached, the job will be cancelled, the unit however will not change state or even enter the
 "failed"
 mode\&. This value defaults to
 "infinity"
-(job timeouts disabled), except for device units\&. NB: this timeout is independent from any unit\-specific timeout (for example, the timeout set with
+(job timeouts disabled), except for device units (\fIJobRunningTimeoutSec=\fR
+defaults to
+\fIDefaultTimeoutStartSec=\fR)\&. NB: this timeout is independent from any unit\-specific timeout (for example, the timeout set with
 \fITimeoutStartSec=\fR
 in service units) as the job timeout has no effect on the unit itself, only on the job that might be pending for it\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
 .sp
@@ -681,7 +715,7 @@ is a reboot action\&. This works just like the optional argument to
 command\&.
 .RE
 .PP
-\fIConditionArchitecture=\fR, \fIConditionVirtualization=\fR, \fIConditionHost=\fR, \fIConditionKernelCommandLine=\fR, \fIConditionSecurity=\fR, \fIConditionCapability=\fR, \fIConditionACPower=\fR, \fIConditionNeedsUpdate=\fR, \fIConditionFirstBoot=\fR, \fIConditionPathExists=\fR, \fIConditionPathExistsGlob=\fR, \fIConditionPathIsDirectory=\fR, \fIConditionPathIsSymbolicLink=\fR, \fIConditionPathIsMountPoint=\fR, \fIConditionPathIsReadWrite=\fR, \fIConditionDirectoryNotEmpty=\fR, \fIConditionFileNotEmpty=\fR, \fIConditionFileIsExecutable=\fR
+\fIConditionArchitecture=\fR, \fIConditionVirtualization=\fR, \fIConditionHost=\fR, \fIConditionKernelCommandLine=\fR, \fIConditionSecurity=\fR, \fIConditionCapability=\fR, \fIConditionACPower=\fR, \fIConditionNeedsUpdate=\fR, \fIConditionFirstBoot=\fR, \fIConditionPathExists=\fR, \fIConditionPathExistsGlob=\fR, \fIConditionPathIsDirectory=\fR, \fIConditionPathIsSymbolicLink=\fR, \fIConditionPathIsMountPoint=\fR, \fIConditionPathIsReadWrite=\fR, \fIConditionDirectoryNotEmpty=\fR, \fIConditionFileNotEmpty=\fR, \fIConditionFileIsExecutable=\fR, \fIConditionUser=\fR, \fIConditionGroup=\fR
 .RS 4
 Before starting a unit, verify that the specified condition is true\&. If it is not true, the starting of the unit will be (mostly silently) skipped, however all ordering dependencies of it are still respected\&. A failing condition will not result in the unit being moved into a failure state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require its functionality\&. Use the various
 \fIAssertArchitecture=\fR,
@@ -713,9 +747,11 @@ may be used to check whether the system is running on a specific architecture\&.
 \fIarm64\-be\fR,
 \fIsh\fR,
 \fIsh64\fR,
-\fIm86k\fR,
+\fIm68k\fR,
 \fItilegx\fR,
-\fIcris\fR
+\fIcris\fR,
+\fIarc\fR,
+\fIarc\-be\fR
 to test against a specific architecture\&. The architecture is determined from the information returned by
 \fBuname\fR(2)
 and is thus subject to
@@ -803,9 +839,12 @@ on the next following boot\&. Units making use of this condition should order th
 \fIConditionFirstBoot=\fR
 takes a boolean argument\&. This condition may be used to conditionalize units on whether the system is booting up with an unpopulated
 /etc
-directory\&. This may be used to populate
+directory (specifically: an
 /etc
-on the first boot after factory reset, or when a new system instances boots up for the first time\&.
+with no
+/etc/machine\-id)\&. This may be used to populate
+/etc
+on the first boot after factory reset, or when a new system instance boots up for the first time\&.
 .sp
 With
 \fIConditionPathExists=\fR
@@ -852,11 +891,24 @@ is similar to
 \fIConditionPathExists=\fR
 but verifies whether a certain path exists, is a regular file and marked executable\&.
 .sp
+\fIConditionUser=\fR
+takes a numeric
+"UID", a UNIX user name, or the special value
+"@system"\&. This condition may be used to check whether the service manager is running as the given user\&. The special value
+"@system"
+can be used to check if the user id is within the system user range\&. This option is not useful for system services, as the system manager exclusively runs as the root user, and thus the test result is constant\&.
+.sp
+\fIConditionGroup=\fR
+is similar to
+\fIConditionUser=\fR
+but verifies that the service manager\*(Aqs real or effective group, or any of its auxiliary groups match the specified group or GID\&. This setting does not have a special value
+"@system"\&.
+.sp
 If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol (|) in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
 \fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
@@ -1152,7 +1204,7 @@ within
 /etc/systemd/system
 and place a drop\-in file
 \fIname\fR\&.conf
-there that only changes the specific settings one is interested in\&. Note that multiple such drop\-in files are read if present\&.
+there that only changes the specific settings one is interested in\&. Note that multiple such drop\-in files are read if present, processed in lexicographic order of their filename\&.
 .PP
 The advantage of the first method is that one easily overrides the complete unit, the vendor unit is not parsed at all anymore\&. It has the disadvantage that improvements to the unit file by the vendor are not automatically incorporated on updates\&.
 .PP
@@ -1200,7 +1252,7 @@ instead\&. Secondly, the local configuration makes the HTTP server also depend o
 memcached\&.service, that should be pulled in (\fIRequires=\fR) and also be ordered appropriately (\fIAfter=\fR)\&. Thirdly, in order to harden the service a bit more, the administrator would like to set the
 \fIPrivateTmp=\fR
 setting (see
-\fBsystemd.service\fR(5)
+\fBsystemd.exec\fR(5)
 for details)\&. And lastly, the administrator would like to reset the niceness of the service to its default value of 0\&.
 .PP
 The first possibility is to copy the unit file to
@@ -1284,5 +1336,5 @@ XDG Desktop Entry Specification
 .IP " 2." 4
 Interface Stability Promise
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/InterfaceStabilityPromise
+\%https://www.freedesktop.org/wiki/Software/systemd/InterfaceStabilityPromise
 .RE

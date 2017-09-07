@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 232" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 234" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -94,7 +94,9 @@ The hardware address of the interface (use full colon\-delimited hexadecimal, e\
 \fIPath=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the persistent path, as exposed by the udev property
-"ID_PATH"\&.
+"ID_PATH"\&. If the list is prefixed with a "!", the test is inverted; i\&.e\&. it is true when
+"ID_PATH"
+does not match any item in the list\&.
 .RE
 .PP
 \fIDriver=\fR
@@ -103,19 +105,19 @@ A whitespace\-separated list of shell\-style globs matching the driver currently
 "DRIVER"
 of its parent device, or if that is not set the driver as exposed by
 "ethtool \-i"
-of the device itself\&.
+of the device itself\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIType=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the device type, as exposed by the udev property
-"DEVTYPE"\&.
+"DEVTYPE"\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIName=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the device name, as exposed by the udev property
-"INTERFACE"\&.
+"INTERFACE"\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIHost=\fR
@@ -176,6 +178,15 @@ Note that if IPv6 is enabled on the interface, and the MTU is chosen below 1280 
 A boolean\&. Enables or disables the ARP (low\-level Address Resolution Protocol) for this interface\&. Defaults to unset, which means that the kernel default will be used\&.
 .sp
 For example, disabling ARP is useful when creating multiple MACVLAN or VLAN virtual interfaces atop a single lower\-level physical interface, which will then only serve as a link/"bridge" device aggregating traffic to the same physical link and not participate in the network otherwise\&.
+.RE
+.PP
+\fIUnmanaged=\fR
+.RS 4
+A boolean\&. When
+"yes", no attempts are made to bring up or configure matching links, equivalent to when there are no matching network files\&. Defaults to
+"no"\&.
+.sp
+This is useful for preventing later matching network files from interfering with certain interfaces that are fully controlled by other applications\&.
 .RE
 .SH "[NETWORK] SECTION OPTIONS"
 .PP
@@ -427,45 +438,69 @@ Configures the amount of IPv6 Duplicate Address Detection (DAD) probes to send\&
 Configures IPv6 Hop Limit\&. For each router that forwards the packet, the hop limit is decremented by 1\&. When the hop limit field reaches zero, the packet is discarded\&. Defaults to unset\&.
 .RE
 .PP
-\fIProxyARP=\fR
+\fIIPv4ProxyARP=\fR
 .RS 4
-A boolean\&. Configures proxy ARP\&. Proxy ARP is the technique in which one host, usually a router, answers ARP requests intended for another machine\&. By "faking" its identity, the router accepts responsibility for routing packets to the "real" destination\&. (see
+A boolean\&. Configures proxy ARP for IPv4\&. Proxy ARP is the technique in which one host, usually a router, answers ARP requests intended for another machine\&. By "faking" its identity, the router accepts responsibility for routing packets to the "real" destination\&. (see
 \m[blue]\fBRFC 1027\fR\m[]\&\s-2\u[7]\d\s+2\&. Defaults to unset\&.
+.RE
+.PP
+\fIIPv6ProxyNDP=\fR
+.RS 4
+A boolean\&. Configures proxy NDP for IPv6\&. Proxy NDP (Neighbor Discovery Protocol) is a technique for IPv6 to allow routing of addresses to a different destination when peers expect them to be present on a certain physical link\&. In this case a router answers Neighbour Advertisement messages intended for another machine by offering its own MAC address as destination\&. Unlike proxy ARP for IPv4, it is not enabled globally, but will only send Neighbour Advertisement messages for addresses in the IPv6 neighbor proxy table, which can also be shown by
+\fBip \-6 neighbour show proxy\fR\&. systemd\-networkd will control the per\-interface `proxy_ndp` switch for each configured interface depending on this option\&. Defautls to unset\&.
+.RE
+.PP
+\fIIPv6ProxyNDPAddress=\fR
+.RS 4
+An IPv6 address, for which Neighbour Advertisement messages will be proxied\&. This option may be specified more than once\&. systemd\-networkd will add the
+\fBIPv6ProxyNDPAddress=\fR
+entries to the kernel\*(Aqs IPv6 neighbor proxy table\&. This option implies
+\fBIPv6ProxyNDP=true\fR
+but has no effect if
+\fBIPv6ProxyNDP\fR
+has been set to false\&. Defaults to unset\&.
 .RE
 .PP
 \fIBridge=\fR
 .RS 4
-The name of the bridge to add the link to\&.
+The name of the bridge to add the link to\&. See
+\fBsystemd.netdev\fR(5)\&.
 .RE
 .PP
 \fIBond=\fR
 .RS 4
-The name of the bond to add the link to\&.
+The name of the bond to add the link to\&. See
+\fBsystemd.netdev\fR(5)\&.
 .RE
 .PP
 \fIVRF=\fR
 .RS 4
-The name of the VRF to add the link to\&.
+The name of the VRF to add the link to\&. See
+\fBsystemd.netdev\fR(5)\&.
 .RE
 .PP
 \fIVLAN=\fR
 .RS 4
-The name of a VLAN to create on the link\&. This option may be specified more than once\&.
+The name of a VLAN to create on the link\&. See
+\fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .PP
 \fIMACVLAN=\fR
 .RS 4
-The name of a MACVLAN to create on the link\&. This option may be specified more than once\&.
+The name of a MACVLAN to create on the link\&. See
+\fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .PP
 \fIVXLAN=\fR
 .RS 4
-The name of a VXLAN to create on the link\&. This option may be specified more than once\&.
+The name of a VXLAN to create on the link\&. See
+\fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .PP
 \fITunnel=\fR
 .RS 4
-The name of a Tunnel to create on the link\&. This option may be specified more than once\&.
+The name of a Tunnel to create on the link\&. See
+\fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .SH "[ADDRESS] SECTION OPTIONS"
 .PP
@@ -548,6 +583,26 @@ or networkd\*(Aqs netdev kind vxlan have the group option that enables then to d
 we can get similar functionality for openvswitch (OVS) vxlan interfaces as well as other tunneling mechanisms that need to receive multicast traffic\&. Defaults to
 "no"\&.
 .RE
+.SH "[IPV6ADDRESSLABEL] SECTION OPTIONS"
+.PP
+An
+"[IPv6AddressLabel]"
+section accepts the following keys\&. Specify several
+"[IPv6AddressLabel]"
+sections to configure several addresse labels\&. IPv6 address labels are used for address selection\&. See
+\m[blue]\fBRFC 3484\fR\m[]\&\s-2\u[11]\d\s+2\&. Precedence is managed by userspace, and only the label itself is stored in the kernel
+.PP
+\fILabel=\fR
+.RS 4
+The label for the prefix (an unsigned integer) ranges 0 to 4294967294\&. 0xffffffff is reserved\&. This key is mandatory\&.
+.RE
+.PP
+\fIPrefix=\fR
+.RS 4
+IPv6 prefix is an address with a prefix length, separated by a slash
+"/"
+character\&. This key is mandatory\&.
+.RE
 .SH "[ROUTE] SECTION OPTIONS"
 .PP
 The
@@ -563,6 +618,14 @@ As in the
 section\&.
 .RE
 .PP
+\fIGatewayOnlink=\fR
+.RS 4
+The
+"GatewayOnlink"
+option tells the kernel that it does not have to check if the gateway is reachable directly by the current machine (i\&.e\&., the kernel does not need to check if the gateway is attached to the local network), so that we can insert the route in the kernel table without it being complained about\&. A boolean, defaults to
+"no"\&.
+.RE
+.PP
 \fIDestination=\fR
 .RS 4
 The destination prefix of the route\&. Possibly followed by a slash and the prefix length\&. If omitted, a full\-length host route is assumed\&.
@@ -576,6 +639,19 @@ The source prefix of the route\&. Possibly followed by a slash and the prefix le
 \fIMetric=\fR
 .RS 4
 The metric of the route (an unsigned integer)\&.
+.RE
+.PP
+\fIIPv6Preference=\fR
+.RS 4
+Specifies the route preference as defined in
+\m[blue]\fBRFC4191\fR\m[]\&\s-2\u[12]\d\s+2
+for Router Discovery messages\&. Which can be one of
+"low"
+the route has a lowest priority,
+"medium"
+the route has a default priority or
+"high"
+the route has a highest priority\&.
 .RE
 .PP
 \fIScope=\fR
@@ -598,6 +674,16 @@ The preferred source address of the route\&. The address must be in the format d
 .RS 4
 The table identifier for the route (a number between 1 and 4294967295, or 0 to unset)\&. The table can be retrieved using
 \fBip route show table \fR\fB\fInum\fR\fR\&.
+.RE
+.PP
+\fIProtocol=\fR
+.RS 4
+The Protocol identifier for the route\&. Takes a number between 0 and 255 or the special values
+"kernel",
+"boot"
+and
+"static"\&. Defaults to
+"static"\&.
 .RE
 .SH "[DHCP] SECTION OPTIONS"
 .PP
@@ -663,7 +749,7 @@ option in
 .PP
 \fIUseRoutes=\fR
 .RS 4
-When true (the default), the static routes will be requested from the DHCP server and added to the routing table with a metric of 1024\&.
+When true (the default), the static routes will be requested from the DHCP server and added to the routing table with a metric of 1024, and a scope of "global", "link" or "host", depending on the route\*(Aqs destination and gateway\&. If the destination is on the local host, e\&.g\&., 127\&.x\&.x\&.x, or the same as the link\*(Aqs own address, the scope will be set to "host"\&. Otherwise if the gateway is null (a direct route), a "link" scope will be used\&. For anything else, scope defaults to "global"\&.
 .RE
 .PP
 \fIUseTimezone=\fR
@@ -728,6 +814,11 @@ Set the routing metric for routes specified by the DHCP server\&.
 .RS 4
 The table identifier for DHCP routes (a number between 1 and 4294967295, or 0 to unset)\&. The table can be retrieved using
 \fBip route show table \fR\fB\fInum\fR\fR\&.
+.RE
+.PP
+\fIListenPort=\fR
+.RS 4
+Allow setting custom port for the DHCP client to listen on\&.
 .RE
 .SH "[IPV6ACCEPTRA] SECTION OPTIONS"
 .PP
@@ -876,7 +967,12 @@ A boolean\&. Configures whether a given port is allowed to become a root port\&.
 .PP
 \fICost=\fR
 .RS 4
-Sets the "cost" of sending packets of this interface\&. Each port in a bridge may have a different speed and the cost is used to decide which link to use\&. Faster interfaces should have lower costs\&.
+Sets the "cost" of sending packets of this interface\&. Each port in a bridge may have a different speed and the cost is used to decide which link to use\&. Faster interfaces should have lower costs\&. It is an interger value between 1 and 65535\&.
+.RE
+.PP
+\fIPriority=\fR
+.RS 4
+Sets the "priority" of sending packets on this interface\&. Each port in a bridge may have a different priority which is used to decide which link to use\&. Lower value means higher priority\&. It is an interger value between 0 to 63\&. Networkd does not set any default, meaning the kernel default value of 32 is used\&.
 .RE
 .SH "[BRIDGEFDB] SECTION OPTIONS"
 .PP
@@ -934,14 +1030,15 @@ implicates the use of
 \fIVLAN=\fR
 above and will enable the VLAN ID for ingress as well\&.
 .RE
-.SH "EXAMPLE"
+.SH "EXAMPLES"
 .PP
-\fBExample\ \&1.\ \&/etc/systemd/network/50\-static\&.network\fR
+\fBExample\ \&1.\ \&Static network configuration\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+# /etc/systemd/network/50\-static\&.network
 [Match]
 Name=enp2s0
 
@@ -953,12 +1050,17 @@ Gateway=192\&.168\&.0\&.1
 .RE
 .\}
 .PP
-\fBExample\ \&2.\ \&/etc/systemd/network/80\-dhcp\&.network\fR
+This brings interface
+"enp2s0"
+up with a static address\&. The specified gateway will be used for a default route\&.
+.PP
+\fBExample\ \&2.\ \&DHCP on ethernet links\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+# /etc/systemd/network/80\-dhcp\&.network
 [Match]
 Name=en*
 
@@ -969,12 +1071,17 @@ DHCP=yes
 .RE
 .\}
 .PP
-\fBExample\ \&3.\ \&/etc/systemd/network/25\-bridge\-static\&.network\fR
+This will enable DHCPv4 and DHCPv6 on all interfaces with names starting with
+"en"
+(i\&.e\&. ethernet interfaces)\&.
+.PP
+\fBExample\ \&3.\ \&A bridge with two enslaved links\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+# /etc/systemd/network/25\-bridge\-static\&.network
 [Match]
 Name=bridge0
 
@@ -986,13 +1093,12 @@ DNS=192\&.168\&.0\&.1
 .if n \{\
 .RE
 .\}
-.PP
-\fBExample\ \&4.\ \&/etc/systemd/network/25\-bridge\-slave\-interface\&.network\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+# /etc/systemd/network/25\-bridge\-slave\-interface\-1\&.network
 [Match]
 Name=enp2s0
 
@@ -1002,13 +1108,35 @@ Bridge=bridge0
 .if n \{\
 .RE
 .\}
-.PP
-\fBExample\ \&5.\ \&/etc/systemd/network/25\-bridge\-slave\-interface\-vlan\&.network\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+# /etc/systemd/network/25\-bridge\-slave\-interface\-2\&.network
+[Match]
+Name=wlp3s0
+
+[Network]
+Bridge=bridge0
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This creates a bridge and attaches devices
+"enp2s0"
+and
+"wlp3s0"
+to it\&. The bridge will have the specified static address and network assigned, and a default route via the specified gateway will be added\&. The specified DNS server will be added to the global list of DNS resolvers\&.
+.PP
+\fBExample\ \&4.\ \&\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/20\-bridge\-slave\-interface\-vlan\&.network
 [Match]
 Name=enp2s0
 
@@ -1030,99 +1158,193 @@ EgressUntagged=300\-400
 .RE
 .\}
 .PP
-\fBExample\ \&6.\ \&/etc/systemd/network/25\-ipip\&.network\fR
+This overrides the configuration specified in the previous example for the interface
+"enp2s0", and enables VLAN on that bridge port\&. VLAN IDs 1\-32, 42, 100\-400 will be allowed\&. Packets tagged with VLAN IDs 42, 300\-400 will be untagged when they leave on this interface\&. Untagged packets which arrive on this interface will be assigned VLAN ID 42\&.
+.PP
+\fBExample\ \&5.\ \&Various tunnels\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+/etc/systemd/network/25\-tunnels\&.network
 [Match]
-Name=em1
+Name=ens1
 
 [Network]
 Tunnel=ipip\-tun
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBExample\ \&7.\ \&/etc/systemd/network/25\-sit\&.network\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-[Match]
-Name=em1
-
-[Network]
 Tunnel=sit\-tun
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBExample\ \&8.\ \&/etc/systemd/network/25\-gre\&.network\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-[Match]
-Name=em1
-
-[Network]
 Tunnel=gre\-tun
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBExample\ \&9.\ \&/etc/systemd/network/25\-vti\&.network\fR
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-[Match]
-Name=em1
-
-[Network]
 Tunnel=vti\-tun
+      
 .fi
 .if n \{\
 .RE
 .\}
-.PP
-\fBExample\ \&10.\ \&/etc/systemd/network/25\-bond\&.network\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-[Match]
-Name=bond1
-
-[Network]
-DHCP=yes
+/etc/systemd/network/25\-tunnel\-ipip\&.netdev
+[NetDev]
+Name=ipip\-tun
+Kind=ipip
+      
 .fi
 .if n \{\
 .RE
 .\}
-.PP
-\fBExample\ \&11.\ \&/etc/systemd/network/25\-vrf\&.network\fR
-.PP
-Add the bond1 interface to the VRF master interface vrf\-test\&. This will redirect routes generated on this interface to be within the routing table defined during VRF creation\&. Traffic won\*(Aqt be redirected towards the VRFs routing table unless specific ip\-rules are added\&.
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
+/etc/systemd/network/25\-tunnel\-sit\&.netdev
+[NetDev]
+Name=sit\-tun
+Kind=sit
+      
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/etc/systemd/network/25\-tunnel\-gre\&.netdev
+[NetDev]
+Name=gre\-tun
+Kind=gre
+      
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/etc/systemd/network/25\-tunnel\-vti\&.netdev
+[NetDev]
+Name=vti\-tun
+Kind=vti
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This will bring interface
+"ens1"
+up and create an IPIP tunnel, a SIT tunnel, a GRE tunnel, and a VTI tunnel using it\&.
+.PP
+\fBExample\ \&6.\ \&A bond device\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/30\-bond1\&.network
 [Match]
 Name=bond1
 
 [Network]
-VRF=vrf\-test
+DHCP=ipv6
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/30\-bond1\&.netdev
+[NetDev]
+Name=bond1
+Kind=bond
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/30\-bond1\-dev1\&.network
+[Match]
+MACAddress=52:54:00:e9:64:41
+
+[Network]
+Bond=bond1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/30\-bond1\-dev2\&.network
+[Match]
+MACAddress=52:54:00:e9:64:42
+
+[Network]
+Bond=bond1
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This will create a bond device
+"bond1"
+and enslave the two devices with MAC addresses 52:54:00:e9:64:41 and 52:54:00:e9:64:42 to it\&. IPv6 DHCP will be used to acquire an address\&.
+.PP
+\fBExample\ \&7.\ \&Virtual Routing and Forwarding (VRF)\fR
+.PP
+Add the
+"bond1"
+interface to the VRF master interface
+"vrf1"\&. This will redirect routes generated on this interface to be within the routing table defined during VRF creation\&. Traffic won\*(Aqt be redirected towards the VRFs routing table unless specific ip\-rules are added\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/25\-vrf\&.network
+[Match]
+Name=bond1
+
+[Network]
+VRF=vrf1
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&8.\ \&MacVTap\fR
+.PP
+This brings up a network interface
+"macvtap\-test"
+and attaches it to
+"enp0s25"\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /lib/systemd/network/25\-macvtap\&.network
+[Match]
+Name=enp0s25
+
+[Network]
+MACVTAP=macvtap\-test
 .fi
 .if n \{\
 .RE
@@ -1184,4 +1406,14 @@ RFC 4862
 RFC 3041
 .RS 4
 \%https://tools.ietf.org/html/rfc3041
+.RE
+.IP "11." 4
+RFC 3484
+.RS 4
+\%https://tools.ietf.org/html/rfc3484
+.RE
+.IP "12." 4
+RFC4191
+.RS 4
+\%https://tools.ietf.org/html/rfc4191
 .RE

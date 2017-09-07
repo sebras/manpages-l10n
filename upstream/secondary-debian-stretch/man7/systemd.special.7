@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 232" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 234" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,15 +23,13 @@
 systemd.special \- Special systemd units
 .SH "SYNOPSIS"
 .PP
+
 basic\&.target,
 bluetooth\&.target,
-ctrl\-alt\-del\&.target,
-cryptsetup\&.target,
 cryptsetup\-pre\&.target,
-dbus\&.service,
-dbus\&.socket,
+cryptsetup\&.target,
+ctrl\-alt\-del\&.target,
 default\&.target,
-display\-manager\&.service,
 emergency\&.target,
 exit\&.target,
 final\&.target,
@@ -41,25 +39,26 @@ halt\&.target,
 hibernate\&.target,
 hybrid\-sleep\&.target,
 initrd\-fs\&.target,
+initrd\-root\-device\&.target,
+initrd\-root\-fs\&.target,
 kbrequest\&.target,
 kexec\&.target,
-local\-fs\&.target,
 local\-fs\-pre\&.target,
+local\-fs\&.target,
+machines\&.target
 multi\-user\&.target,
-network\&.target,
 network\-online\&.target,
 network\-pre\&.target,
+network\&.target,
 nss\-lookup\&.target,
 nss\-user\-lookup\&.target,
 paths\&.target,
 poweroff\&.target,
 printer\&.target,
 reboot\&.target,
-remote\-fs\&.target,
 remote\-fs\-pre\&.target,
+remote\-fs\&.target,
 rescue\&.target,
-initrd\-root\-device\&.target,
-initrd\-root\-fs\&.target,
 rpcbind\&.target,
 runlevel2\&.target,
 runlevel3\&.target,
@@ -80,13 +79,19 @@ system\-update\&.target,
 time\-sync\&.target,
 timers\&.target,
 umount\&.target,
+
 \-\&.slice,
 system\&.slice,
 user\&.slice,
-machine\&.slice
+machine\&.slice,
+
+dbus\&.service,
+dbus\&.socket,
+display\-manager\&.service,
+system\-update\-cleanup\&.service
 .SH "DESCRIPTION"
 .PP
-A few units are treated specially by systemd\&. They have special internal semantics and cannot be renamed\&.
+A few units are treated specially by systemd\&. Many of them have special internal semantics and cannot be renamed, while others simply have a standard meaning and should be present on all systems\&.
 .SH "SPECIAL SYSTEM UNITS"
 .PP
 basic\&.target
@@ -274,6 +279,13 @@ to this target unit for those mounts listed in
 that have the
 \fBauto\fR
 mount option set\&.
+.RE
+.PP
+machines\&.target
+.RS 4
+A standard target unit for starting all the containers and other virtual machines\&. See
+systemd\-nspawn@\&.service
+for an example\&.
 .RE
 .PP
 multi\-user\&.target
@@ -497,14 +509,24 @@ The socket unit syslog implementations should listen on\&. All userspace log mes
 document\&.
 .RE
 .PP
-system\-update\&.target
+system\-update\&.target, system\-update\-cleanup\&.service
 .RS 4
-A special target unit that is used for off\-line system updates\&.
+A special target unit that is used for offline system updates\&.
 \fBsystemd-system-update-generator\fR(8)
 will redirect the boot process to this target if
 /system\-update
-exists\&. For more information see the
-\m[blue]\fBSystem Updates Specification\fR\m[]\&\s-2\u[3]\d\s+2\&.
+exists\&. For more information see
+\fBsystemd.offline-updates\fR(7)\&.
+.sp
+Updates should happen before the
+system\-update\&.target
+is reached, and the services which implement them should cause the machine to reboot\&. As a safety measure, if this does not happen, and
+/system\-update
+still exists after
+system\-update\&.target
+is reached,
+system\-update\-cleanup\&.service
+will remove this symlink and reboot the machine\&.
 .RE
 .PP
 timers\&.target
@@ -665,8 +687,9 @@ printer\&.target,
 smartcard\&.target,
 sound\&.target\&.
 .SH "SPECIAL PASSIVE USER UNITS"
-.SS "graphical\-session\&.target"
 .PP
+graphical\-session\&.target
+.RS 4
 This target is active whenever any graphical session is running\&. It is used to stop user services which only apply to a graphical (X, Wayland, etc\&.) session when the session is terminated\&. Such services should have
 "PartOf=graphical\-session\&.target"
 in their
@@ -676,7 +699,7 @@ gnome\-session\&.target) starts and stops
 "graphical\-session\&.target"
 with
 "BindsTo=graphical\-session\&.target"\&.
-.PP
+.sp
 Which services are started by a session target is determined by the
 "Wants="
 and
@@ -691,7 +714,6 @@ should be used, see
 \fBsystemctl\fR(1)\&.
 .PP
 \fBExample\ \&1.\ \&Nautilus as part of a GNOME session\fR
-.PP
 "gnome\-session\&.target"
 pulls in Nautilus as top\-level service:
 .sp
@@ -703,12 +725,11 @@ pulls in Nautilus as top\-level service:
 Description=User systemd services for GNOME graphical session
 Wants=nautilus\&.service
 BindsTo=graphical\-session\&.target
-        
 .fi
 .if n \{\
 .RE
 .\}
-.PP
+.sp
 "nautilus\&.service"
 gets stopped when the session stops:
 .sp
@@ -721,16 +742,18 @@ Description=Render the desktop icons with Nautilus
 PartOf=graphical\-session\&.target
 
 [Service]
-\&.\&.\&.
-        
+\&...
 .fi
 .if n \{\
 .RE
 .\}
-.SS "graphical\-session\-pre\&.target"
+.RE
 .PP
+graphical\-session\-pre\&.target
+.RS 4
 This target contains services which set up the environment or global configuration of a graphical session, such as SSH/GPG agents (which need to export an environment variable into all desktop processes) or migration of obsolete d\-conf keys after an OS upgrade (which needs to happen before starting any process that might use them)\&. This target must be started before starting a graphical session like
 gnome\-session\&.target\&.
+.RE
 .SH "SPECIAL SLICE UNITS"
 .PP
 There are four
@@ -774,15 +797,10 @@ are found in this slice\&.
 .IP " 1." 4
 Running Services After the Network is up
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/NetworkTarget
+\%https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget
 .RE
 .IP " 2." 4
 Syslog Interface
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/syslog
-.RE
-.IP " 3." 4
-System Updates Specification
-.RS 4
-\%http://freedesktop.org/wiki/Software/systemd/SystemUpdates
+\%https://www.freedesktop.org/wiki/Software/systemd/syslog
 .RE

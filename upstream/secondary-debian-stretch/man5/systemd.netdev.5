@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 232" "systemd.network"
+.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 234" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,6 +91,7 @@ T}:T{
 Description
 T}
 .T&
+l l
 l l
 l l
 l l
@@ -212,6 +213,11 @@ T{
 \fIvxlan\fR
 T}:T{
 A virtual extensible LAN (vxlan), for connecting Cloud computing deployments\&.
+T}
+T{
+\fIgeneve\fR
+T}:T{
+A GEneric NEtwork Virtualization Encapsulation (GENEVE) netdev driver\&.
 T}
 T{
 \fIvrf\fR
@@ -341,7 +347,9 @@ The priority of the bridge\&. An integer between 0 and 65535\&. A lower value me
 .PP
 \fIDefaultPVID=\fR
 .RS 4
-This specifies the default port VLAN ID of a newly attached bridge port\&.
+This specifies the default port VLAN ID of a newly attached bridge port\&. Set this to an integer in the range 1\(en4094 or
+"none"
+to disable the PVID\&.
 .RE
 .PP
 \fIMulticastQuerier=\fR
@@ -373,6 +381,26 @@ section only applies for netdevs of kind
 \fIId=\fR
 .RS 4
 The VLAN ID to use\&. An integer in the range 0\(en4094\&. This option is compulsory\&.
+.RE
+.PP
+\fIGVRP=\fR
+.RS 4
+The Generic VLAN Registration Protocol (GVRP) is a protocol that allows automatic learning of VLANs on a network\&. A boolean\&. When unset, the kernel\*(Aqs default setting applies\&.
+.RE
+.PP
+\fIMVRP=\fR
+.RS 4
+Multiple VLAN Registration Protocol (MVRP) formerly known as GARP VLAN Registration Protocol (GVRP) is a standards\-based Layer 2 network protocol, for automatic configuration of VLAN information on switches\&. It was defined in the 802\&.1ak amendment to 802\&.1Q\-2005\&. A boolean\&. When unset, the kernel\*(Aqs default setting applies\&.
+.RE
+.PP
+\fILooseBinding=\fR
+.RS 4
+The VLAN loose binding mode, in which only the operational state is passed from the parent to the associated VLANs, but the VLAN device state is not changed\&. A boolean\&. When unset, the kernel\*(Aqs default setting applies\&.
+.RE
+.PP
+\fIReorderHeader=\fR
+.RS 4
+The VLAN reorder header is set VLAN interfaces behave like physical interfaces\&. A boolean\&. When unset, the kernel\*(Aqs default setting applies\&.
 .RE
 .SH "[MACVLAN] SECTION OPTIONS"
 .PP
@@ -423,9 +451,14 @@ section only applies for netdevs of kind
 The VXLAN ID to use\&.
 .RE
 .PP
-\fIGroup=\fR
+\fIRemote=\fR
 .RS 4
-An assigned multicast group IP address\&.
+Configures destination multicast group IP address\&.
+.RE
+.PP
+\fILocal=\fR
+.RS 4
+Configures local IP address\&.
 .RE
 .PP
 \fITOS=\fR
@@ -453,9 +486,11 @@ The lifetime of Forwarding Database entry learnt by the kernel, in seconds\&.
 Configures maximum number of FDB entries\&.
 .RE
 .PP
-\fIARPProxy=\fR
+\fIReduceARPProxy=\fR
 .RS 4
-A boolean\&. When true, enables ARP proxying\&.
+A boolean\&. When true, bridge\-connected VXLAN tunnel endpoint answers ARP requests from the local bridge on behalf of remote Distributed Overlay Virtual Ethernet
+\m[blue]\fB(DVOE)\fR\m[]\&\s-2\u[5]\d\s+2
+clients\&. Defaults to false\&.
 .RE
 .PP
 \fIL2MissNotification=\fR
@@ -501,18 +536,74 @@ A boolean\&. When true, remote receive checksum offload in VXLAN is turned on\&.
 \fIGroupPolicyExtension=\fR
 .RS 4
 A boolean\&. When true, it enables Group Policy VXLAN extension security label mechanism across network peers based on VXLAN\&. For details about the Group Policy VXLAN, see the
-\m[blue]\fBVXLAN Group Policy\fR\m[]\&\s-2\u[5]\d\s+2
+\m[blue]\fBVXLAN Group Policy\fR\m[]\&\s-2\u[6]\d\s+2
 document\&. Defaults to false\&.
 .RE
 .PP
 \fIDestinationPort=\fR
 .RS 4
-Configures the default destination UDP port on a per\-device basis\&. If destination port is not specified then Linux kernel default will be used\&. Set destination port 4789 to get the IANA assigned value, and destination port 0 to get default values\&.
+Configures the default destination UDP port on a per\-device basis\&. If destination port is not specified then Linux kernel default will be used\&. Set destination port 4789 to get the IANA assigned value\&. If not set or if the destination port is assigned the empty string the default port of 4789 is used\&.
 .RE
 .PP
 \fIPortRange=\fR
 .RS 4
 Configures VXLAN port range\&. VXLAN bases source UDP port based on flow to help the receiver to be able to load balance based on outer header flow\&. It restricts the port range to the normal UDP local ports, and allows overriding via configuration\&.
+.RE
+.PP
+\fIFlowLabel=\fR
+.RS 4
+Specifies the flow label to use in outgoing packets\&. The valid range is 0\-1048575\&.
+.RE
+.SH "[GENEVE] SECTION OPTIONS"
+.PP
+The
+"[GENEVE]"
+section only applies for netdevs of kind
+"geneve", and accepts the following keys:
+.PP
+\fIId=\fR
+.RS 4
+Specifies the Virtual Network Identifer (VNI) to use\&. Ranges [0\-16777215]\&.
+.RE
+.PP
+\fIRemote=\fR
+.RS 4
+Specifies the unicast destination IP address to use in outgoing packets\&.
+.RE
+.PP
+\fITOS=\fR
+.RS 4
+Specifies the TOS value to use in outgoing packets\&. Ranges [1\-255]\&.
+.RE
+.PP
+\fITTL=\fR
+.RS 4
+Specifies the TTL value to use in outgoing packets\&. Ranges [1\-255]\&.
+.RE
+.PP
+\fIUDPChecksum=\fR
+.RS 4
+A boolean\&. When true, specifies if UDP checksum is calculated for transmitted packets over IPv4\&.
+.RE
+.PP
+\fIUDP6ZeroChecksumTx=\fR
+.RS 4
+A boolean\&. When true, skip UDP checksum calculation for transmitted packets over IPv6\&.
+.RE
+.PP
+\fIUDP6ZeroChecksumRx=\fR
+.RS 4
+A boolean\&. When true, allows incoming UDP packets over IPv6 with zero checksum field\&.
+.RE
+.PP
+\fIDestinationPort=\fR
+.RS 4
+Specifies destination port\&. Defaults to 6081\&. If not set or assigned the empty string, the default port of 6081 is used\&.
+.RE
+.PP
+\fIFlowLabel=\fR
+.RS 4
+Specifies the flow label to use in outgoing packets\&.
 .RE
 .SH "[TUNNEL] SECTION OPTIONS"
 .PP
@@ -543,7 +634,7 @@ The remote endpoint of the tunnel\&.
 \fITOS=\fR
 .RS 4
 The Type Of Service byte value for a tunnel interface\&. For details about the TOS, see the
-\m[blue]\fBType of Service in the Internet Protocol Suite\fR\m[]\&\s-2\u[6]\d\s+2
+\m[blue]\fBType of Service in the Internet Protocol Suite\fR\m[]\&\s-2\u[7]\d\s+2
 document\&.
 .RE
 .PP
@@ -560,8 +651,8 @@ A boolean\&. When true, enables Path MTU Discovery on the tunnel\&.
 \fIIPv6FlowLabel=\fR
 .RS 4
 Configures the 20\-bit flow label (see
-\m[blue]\fBRFC 6437\fR\m[]\&\s-2\u[7]\d\s+2) field in the IPv6 header (see
-\m[blue]\fBRFC 2460\fR\m[]\&\s-2\u[8]\d\s+2), which is used by a node to label packets of a flow\&. It is only used for IPv6 tunnels\&. A flow label of zero is used to indicate packets that have not been labeled\&. It can be configured to a value in the range 0\(en0xFFFFF, or be set to
+\m[blue]\fBRFC 6437\fR\m[]\&\s-2\u[8]\d\s+2) field in the IPv6 header (see
+\m[blue]\fBRFC 2460\fR\m[]\&\s-2\u[9]\d\s+2), which is used by a node to label packets of a flow\&. It is only used for IPv6 tunnels\&. A flow label of zero is used to indicate packets that have not been labeled\&. It can be configured to a value in the range 0\(en0xFFFFF, or be set to
 "inherit", in which case the original flowlabel is used\&.
 .RE
 .PP
@@ -574,7 +665,7 @@ A boolean\&. When true, the Differentiated Service Code Point (DSCP) field will 
 \fIEncapsulationLimit=\fR
 .RS 4
 The Tunnel Encapsulation Limit option specifies how many additional levels of encapsulation are permitted to be prepended to the packet\&. For example, a Tunnel Encapsulation Limit option containing a limit value of zero means that a packet carrying that option may not enter another tunnel before exiting the current tunnel\&. (see
-\m[blue]\fBRFC 2473\fR\m[]\&\s-2\u[9]\d\s+2)\&. The valid range is 0\(en255 and
+\m[blue]\fBRFC 2473\fR\m[]\&\s-2\u[10]\d\s+2)\&. The valid range is 0\(en255 and
 "none"\&. Defaults to 4\&.
 .RE
 .PP
@@ -587,7 +678,7 @@ and
 \fIOutputKey=\fR)\&. The
 \fIKey=\fR
 is either a number or an IPv4 address\-like dotted quad\&. It is used as mark\-configured SAD/SPD entry as part of the lookup key (both in data and control path) in ip xfrm (framework used to implement IPsec protocol)\&. See
-\m[blue]\fBip\-xfrm \(em transform configuration\fR\m[]\&\s-2\u[10]\d\s+2
+\m[blue]\fBip\-xfrm \(em transform configuration\fR\m[]\&\s-2\u[11]\d\s+2
 for details\&. It is only used for VTI/VTI6 tunnels\&.
 .RE
 .PP
@@ -827,6 +918,28 @@ A boolean\&. Specifies that duplicate frames (received on inactive ports) should
 Specifies the minimum number of links that must be active before asserting carrier\&. The default value is 0\&.
 .RE
 .PP
+\fIActiveSlave=\fR
+.RS 4
+A boolean\&. Specifies the new active slave\&. The
+"ActiveSlave="
+option is only valid for following modes:
+"active\-backup",
+"balance\-alb"
+and
+"balance\-tlb"\&. Defaults to false\&.
+.RE
+.PP
+\fIPrimarySlave=\fR
+.RS 4
+A boolean\&. Specifies which slave is the primary device\&. The specified device will always be the active slave while it is available\&. Only when the primary is off\-line will alternate devices be used\&. This is useful when one slave is preferred over another, e\&.g\&. when one slave has higher throughput than another\&. The
+"PrimarySlave="
+option is only valid for following modes:
+"active\-backup",
+"balance\-alb"
+and
+"balance\-tlb"\&. Defaults to false\&.
+.RE
+.PP
 For more detail information see
 \m[blue]\fBLinux Ethernet Bonding Driver HOWTO\fR\m[]\&\s-2\u[1]\d\s+2
 .SH "EXAMPLE"
@@ -1030,6 +1143,23 @@ TableId=42
 .if n \{\
 .RE
 .\}
+.PP
+\fBExample\ \&12.\ \&/etc/systemd/network/25\-macvtap\&.netdev\fR
+.PP
+Create a MacVTap device\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[NetDev]
+Name=macvtap\-test
+Kind=macvtap
+      
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
@@ -1058,31 +1188,36 @@ VRF
 \%https://www.kernel.org/doc/Documentation/networking/vrf.txt
 .RE
 .IP " 5." 4
+(DVOE)
+.RS 4
+\%https://en.wikipedia.org/wiki/Distributed_Overlay_Virtual_Ethernet
+.RE
+.IP " 6." 4
 VXLAN Group Policy
 .RS 4
 \%https://tools.ietf.org/html/draft-smith-vxlan-group-policy
 .RE
-.IP " 6." 4
+.IP " 7." 4
 Type of Service in the Internet Protocol Suite
 .RS 4
 \%http://tools.ietf.org/html/rfc1349
 .RE
-.IP " 7." 4
+.IP " 8." 4
 RFC 6437
 .RS 4
 \%https://tools.ietf.org/html/rfc6437
 .RE
-.IP " 8." 4
+.IP " 9." 4
 RFC 2460
 .RS 4
 \%https://tools.ietf.org/html/rfc2460
 .RE
-.IP " 9." 4
+.IP "10." 4
 RFC 2473
 .RS 4
 \%https://tools.ietf.org/html/rfc2473#section-4.1.1
 .RE
-.IP "10." 4
+.IP "11." 4
 ip-xfrm \(em transform configuration
 .RS 4
 \%http://man7.org/linux/man-pages/man8/ip-xfrm.8.html

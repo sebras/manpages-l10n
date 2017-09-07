@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 232" "systemd.mount"
+.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 234" "systemd.mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -132,11 +132,18 @@ The NFS mount option
 \fBbg\fR
 for NFS background mounts as documented in
 \fBnfs\fR(5)
-is not supported in
-/etc/fstab
-entries\&. The systemd mount option
-\fBnofail\fR
-provides similar functionality and should be used instead\&.
+is detected by
+\fBsystemd\-fstab\-generator\fR
+and the options are transformed so that systemd fulfills the job\-control implications of that option\&. Specifically
+\fBsystemd\-fstab\-generator\fR
+acts as though
+"x\-systemd\&.mount\-timout=infinity,retry=10000"
+was prepended to the option list, and
+"fg,nofail"
+was appended\&. Depending on specific requirements, it may be appropriate to provide some of these options explicitly, or to make use of the
+"x\-systemd\&.automount"
+option described below instead of using
+"bg"\&.
 .PP
 When reading
 /etc/fstab
@@ -166,6 +173,25 @@ in
 for details\&.
 .RE
 .PP
+\fBx\-systemd\&.before=\fR, \fBx\-systemd\&.after=\fR
+.RS 4
+Configures a
+\fIBefore=\fR
+dependency or
+\fIAfter=\fR
+between the created mount unit and another systemd unit, such as a mount unit\&. The argument should be a unit name or an absolute path to a mount point\&. This option may be specified more than once\&. This option is particularly useful for mount point declarations with
+\fBnofail\fR
+option that are mounted asynchronously but need to be mounted before or after some unit start, for example, before
+local\-fs\&.target
+unit\&. See
+\fIBefore=\fR
+and
+\fIAfter=\fR
+in
+\fBsystemd.unit\fR(5)
+for details\&.
+.RE
+.PP
 \fBx\-systemd\&.requires\-mounts\-for=\fR
 .RS 4
 Configures a
@@ -175,6 +201,18 @@ dependency between the created mount unit and other mount units\&. The argument 
 in
 \fBsystemd.unit\fR(5)
 for details\&.
+.RE
+.PP
+\fBx\-systemd\&.device\-bound\fR
+.RS 4
+The block device backed file system will be upgraded to
+\fIBindsTo=\fR
+dependency\&. This option is only useful when mounting file systems manually with
+\fBmount\fR(8)
+as the default dependency in this case is
+\fIRequires=\fR\&. This option is already implied by entries in
+/etc/fstab
+or by mount units\&.
 .RE
 .PP
 \fBx\-systemd\&.automount\fR
@@ -276,12 +314,13 @@ Takes an absolute path of a device node, file or other resource to mount\&. See
 \fBmount\fR(8)
 for details\&. If this refers to a device node, a dependency on the respective device unit is automatically created\&. (See
 \fBsystemd.device\fR(5)
-for more information\&.) This option is mandatory\&.
+for more information\&.) This option is mandatory\&. Note that the usual specifier expansion is applied to this setting, literal percent characters should hence be written as
+"%%"\&.
 .RE
 .PP
 \fIWhere=\fR
 .RS 4
-Takes an absolute path of a directory of the mount point\&. If the mount point does not exist at the time of mounting, it is created\&. This string must be reflected in the unit filename\&. (See above\&.) This option is mandatory\&.
+Takes an absolute path of a directory for the mount point; in particular, the destination cannot be a symbolic link\&. If the mount point does not exist at the time of mounting, it is created\&. This string must be reflected in the unit filename\&. (See above\&.) This option is mandatory\&.
 .RE
 .PP
 \fIType=\fR
@@ -293,7 +332,8 @@ for details\&. This setting is optional\&.
 .PP
 \fIOptions=\fR
 .RS 4
-Mount options to use when mounting\&. This takes a comma\-separated list of options\&. This setting is optional\&.
+Mount options to use when mounting\&. This takes a comma\-separated list of options\&. This setting is optional\&. Note that the usual specifier expansion is applied to this setting, literal percent characters should hence be written as
+"%%"\&.
 .RE
 .PP
 \fISloppyOptions=\fR
@@ -362,5 +402,5 @@ for more settings\&.
 .IP " 1." 4
 API File Systems
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/APIFileSystems
+\%https://www.freedesktop.org/wiki/Software/systemd/APIFileSystems
 .RE

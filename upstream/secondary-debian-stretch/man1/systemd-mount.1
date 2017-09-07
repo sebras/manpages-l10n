@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-MOUNT" "1" "" "systemd 232" "systemd-mount"
+.TH "SYSTEMD\-MOUNT" "1" "" "systemd 234" "systemd-mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,12 +20,14 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-systemd-mount \- Establish a mount or auto\-mount point transiently
+systemd-mount, systemd-umount \- Establish and destroy transient mount or auto\-mount points
 .SH "SYNOPSIS"
 .HP \w'\fBsystemd\-mount\fR\ 'u
 \fBsystemd\-mount\fR [\fIOPTIONS\fR...] \fIWHAT\fR [\fIWHERE\fR]
 .HP \w'\fBsystemd\-mount\fR\ 'u
 \fBsystemd\-mount\fR [\fIOPTIONS\fR...] \fB\-\-list\fR
+.HP \w'\fBsystemd\-mount\fR\ 'u
+\fBsystemd\-mount\fR [\fIOPTIONS\fR...] \fB\-\-umount\fR \fIWHAT|WHERE\fR...
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-mount\fR
@@ -46,8 +48,10 @@ command, however instead of executing the mount operation directly and immediate
 \fBsystemd\-mount\fR
 schedules it through the service manager job queue, so that it may pull in further dependencies (such as parent mounts, or a file system checker to execute a priori), and may make use of the auto\-mounting logic\&.
 .PP
-The command takes either one or two arguments\&. If only one argument is specified it should refer to a block device containing a file system (e\&.g\&.
-"/dev/sdb1"), which is then probed for a label and other metadata, and is mounted to a directory whose name is generated from the label\&. In this mode the block device must exist at the time of invocation of the command, so that it may be probed\&. If the device is found to be a removable block device (e\&.g\&. a USB stick) an automount point instead of a regular mount point is created (i\&.e\&. the
+The command takes either one or two arguments\&. If only one argument is specified it should refer to a block device or regular file containing a file system (e\&.g\&.
+"/dev/sdb1"
+or
+"/path/to/disk\&.img")\&. If it is a block device, which is then probed for a label and other metadata, and is mounted to a directory whose name is generated from the label\&. In this mode the block device must exist at the time of invocation of the command, so that it may be probed\&. If the device is found to be a removable block device (e\&.g\&. a USB stick) an automount point instead of a regular mount point is created (i\&.e\&. the
 \fB\-\-automount=\fR
 option is implied, see below)\&.
 .PP
@@ -59,6 +63,11 @@ If two arguments are specified the first indicates the mount source (the
 Use the
 \fB\-\-list\fR
 command to show a terse table of all local, known block devices with file systems that may be mounted with this command\&.
+.PP
+\fBsystemd\-umount\fR
+can be used to unmount a mount or automount point\&. It is the same as
+\fBsystemd\-mount\fR
+\fB\-\-unmount\fR\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -180,6 +189,25 @@ is used (or only a single argument passed, which implies
 .RS 4
 Instead of establishing a mount or automount point, print a terse list of block devices containing file systems that may be mounted with
 "systemd\-mount", along with useful metadata such as labels, etc\&.
+.RE
+.PP
+\fB\-u\fR, \fB\-\-umount\fR
+.RS 4
+Stop the mount and automount units corresponding to the specified mount points
+\fIWHERE\fR
+or the devices
+\fIWHAT\fR\&.
+\fBsystemd\-mount\fR
+with this option or
+\fBsystemd\-umount\fR
+can take multiple arguments which can be mount points, devices,
+/etc/fstab
+style node names, or backing files corresponding to loop devices, like
+\fBsystemd\-mount \-\-umount /path/to/umount /dev/sda1 UUID=xxxxxx\-xxxx LABEL=xxxxx /path/to/disk\&.img\fR\&. Note that when
+\fB\-H\fR
+or
+\fB\-M\fR
+is specified, only absolute paths to mount points are supported\&.
 .RE
 .PP
 \fB\-\-user\fR

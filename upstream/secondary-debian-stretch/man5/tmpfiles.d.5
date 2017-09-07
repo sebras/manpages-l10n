@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 232" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 234" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -87,8 +87,8 @@ The configuration format is one line per path containing type, path, mode, owner
 .\}
 .nf
 #Type Path        Mode UID  GID  Age Argument
-    d    /run/user   0755 root root 10d \-
-    L    /tmp/foobar \-    \-    \-    \-   /dev/null
+d     /run/user   0755 root root 10d \-
+L     /tmp/foobar \-    \-    \-    \-   /dev/null
 .fi
 .if n \{\
 .RE
@@ -118,7 +118,7 @@ Write the argument parameter to a file, if the file exists\&. Lines of this type
 .PP
 \fId\fR
 .RS 4
-Create a directory\&. The mode and ownership will be adjusted if specified and the directory already exists\&. Contents of this directory are subject to time based cleanup if the time argument is specified\&.
+Create a directory\&. The mode and ownership will be adjusted if specified and the directory already exists\&. Contents of this directory are subject to time based cleanup if the age argument is specified\&.
 .RE
 .PP
 \fID\fR
@@ -132,7 +132,11 @@ is used\&.
 \fIe\fR
 .RS 4
 Similar to
-\fId\fR, but the directory will not be created if it does not exist\&. Lines of this type accept shell\-style globs in place of normal path names\&.
+\fId\fR, but the directory will not be created if it does not exist\&. Lines of this type accept shell\-style globs in place of normal path names\&. For this entry to be useful, at least one of the mode, uid, gid, or age arguments must be specified, since otherwise this entry has no effect\&. If the age argument is
+"0", contents of the directory will be unconditionally deleted every time
+\fBsystemd\-tmpfiles \-\-clean\fR
+is run\&. This can be useful when combined with
+\fI!\fR, see the examples\&.
 .RE
 .PP
 \fIv\fR
@@ -589,6 +593,23 @@ e  /var/chache/dnf/ \- \- \- 30d
 The lock files will be removed during boot\&. Any files and directories in
 /var/chache/dnf/
 will be removed after they have not been accessed in 30 days\&.
+.PP
+\fBExample\ \&5.\ \&Empty the contents of a cache directory on boot\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /usr/lib/tmpfiles\&.d/krb5rcache\&.conf
+e! /var/cache/krb5rcache \- \- \- 0
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Any files and subdirectories in
+/var/cache/krb5rcache/
+will be removed on boot\&. The directory will not be created\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

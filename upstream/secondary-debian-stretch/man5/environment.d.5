@@ -1,5 +1,5 @@
 '\" t
-.TH "BINFMT\&.D" "5" "" "systemd 234" "binfmt.d"
+.TH "ENVIRONMENT\&.D" "5" "" "systemd 234" "environment.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,26 +20,31 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-binfmt.d \- Configure additional binary formats for executables at boot
+environment.d \- Definition of user session environment
 .SH "SYNOPSIS"
 .PP
-/etc/binfmt\&.d/*\&.conf
+~/\&.config/environment\&.d/*\&.conf
 .PP
-/run/binfmt\&.d/*\&.conf
+/etc/environment\&.d/*\&.conf
 .PP
-/usr/lib/binfmt\&.d/*\&.conf
+/run/environment\&.d/*\&.conf
+.PP
+/usr/lib/environment\&.d/*\&.conf
+.PP
+/etc/environment
 .SH "DESCRIPTION"
 .PP
-At boot,
-\fBsystemd-binfmt.service\fR(8)
-reads configuration files from the above directories to register in the kernel additional binary formats for executables\&.
-.SH "CONFIGURATION FORMAT"
+The
+environment\&.d
+directories contain a list of "global" environment variable assignments for the user environment\&.
+\fBsystemd-environment-d-generator\fR(8)
+parses them and updates the environment exported by the systemd user instance to the services it starts\&.
 .PP
-Each file contains a list of binfmt_misc kernel binary format rules\&. Consult
-\m[blue]\fBbinfmt_misc\&.txt\fR\m[]\&\s-2\u[1]\d\s+2
-for more information on registration of additional binary formats and how to write rules\&.
+It is recommended to use numerical prefixes for file names to simplify ordering\&.
 .PP
-Empty lines and lines beginning with ; and # are ignored\&. Note that this means you may not use ; and # as delimiter in binary format rules\&.
+For backwards compatibility, a symlink to
+/etc/environment
+is installed, so this file is also parsed\&.
 .SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 Configuration files are read from directories in
@@ -65,16 +70,46 @@ If the administrator wants to disable a configuration file supplied by the vendo
 /dev/null
 in the configuration directory in
 /etc/, with the same filename as the vendor configuration file\&. If the vendor configuration file is included in the initrd image, the image has to be regenerated\&.
-.SH "EXAMPLE"
+.SH "CONFIGURATION FORMAT"
 .PP
-\fBExample\ \&1.\ \&/etc/binfmt\&.d/wine\&.conf example:\fR
+The configuration files contain a list of
+"\fIKEY\fR=\fIVALUE\fR"
+environment variable assignments, separated by newlines\&. The right hand side of these assignments may reference previously defined environment variables, using the
+"${OTHER_KEY}"
+and
+"$OTHER_KEY"
+format\&. It is also possible to use
+"${\fIFOO\fR:\-\fIDEFAULT_VALUE\fR}"
+to expand in the same way as
+"${\fIFOO\fR}"
+unless the expansion would be empty, in which case it expands to
+\fIDEFAULT_VALUE\fR, and use
+"${\fIFOO\fR:+\fIALTERNATE_VALUE\fR}"
+to expand to
+\fIALTERNATE_VALUE\fR
+as long as
+"${\fIFOO\fR}"
+would have expanded to a non\-empty value\&. No other elements of shell syntax are supported\&.
+.PP
+Each\fIKEY\fR
+must be a valid variable name\&. Empty lines and lines beginning with the comment character
+"#"
+are ignored\&.
+.SS "Example"
+.PP
+\fBExample\ \&1.\ \&Setup environment to allow access to a program installed in /opt/foo\fR
+.PP
+/etc/environment\&.d/60\-foo\&.conf:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# Start WINE on Windows executables
-:DOSWin:M::MZ::/usr/bin/wine:
+        FOO_DEBUG=force\-software\-gl,log\-verbose
+        PATH=/opt/foo/bin:$PATH
+        LD_LIBRARY_PATH=/opt/foo/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+        XDG_DATA_DIRS=/opt/foo/share:${XDG_DATA_DIRS:\-/usr/local/share/:/usr/share/}
+        
 .fi
 .if n \{\
 .RE
@@ -82,12 +117,5 @@ in the configuration directory in
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
-\fBsystemd-binfmt.service\fR(8),
-\fBsystemd-delta\fR(1),
-\fBwine\fR(8)
-.SH "NOTES"
-.IP " 1." 4
-binfmt_misc.txt
-.RS 4
-\%https://www.kernel.org/doc/Documentation/binfmt_misc.txt
-.RE
+\fBsystemd-environment-d-generator\fR(8),
+\fBsystemd.environment-generator\fR(7)

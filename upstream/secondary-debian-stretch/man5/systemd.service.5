@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 232" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 234" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -116,9 +116,10 @@ and
 Service files must include a
 "[Service]"
 section, which carries information about the service and the process it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
-\fBsystemd.exec\fR(5)
+\fBsystemd.exec\fR(5),
+\fBsystemd.kill\fR(5)
 and
-\fBsystemd.kill\fR(5)\&. The options specific to the
+\fBsystemd.resource-control\fR(5)\&. The options specific to the
 "[Service]"
 section of service units are the following:
 .PP
@@ -160,7 +161,7 @@ is similar to
 \fIRemainAfterExit=\fR
 is particularly useful for this type of service\&. This is the implied default if neither
 \fIType=\fR
-or
+nor
 \fIExecStart=\fR
 are specified\&.
 .sp
@@ -241,7 +242,13 @@ is used, zero or more commands may be specified\&. Commands may be specified by 
 \fIExecStart=\fR
 is specified, then the service must have
 \fIRemainAfterExit=yes\fR
-set\&.
+and at least one
+\fIExecStop=\fR
+line set\&. (Services lacking both
+\fIExecStart=\fR
+and
+\fIExecStop=\fR
+are not valid\&.)
 .sp
 For each of the specified commands, the first argument must be an absolute path to an executable\&. Optionally, if this file name is prefixed with
 "@", the second token will be passed as
@@ -280,13 +287,17 @@ commands that were not prefixed with a
 exit successfully\&.
 .sp
 \fIExecStartPost=\fR
-commands are only run after the service has started successfully, as determined by
+commands are only run after the commands specified in
+\fIExecStart=\fR
+have been invoked successfully, as determined by
 \fIType=\fR
 (i\&.e\&. the process has been started for
 \fIType=simple\fR
 or
-\fIType=idle\fR, the process exits successfully for
-\fIType=oneshot\fR, the initial process exits successfully for
+\fIType=idle\fR, the last
+\fIExecStart=\fR
+process exited successfully for
+\fIType=oneshot\fR, the initial process exited successfully for
 \fIType=forking\fR,
 "READY=1"
 is sent for
@@ -343,7 +354,7 @@ to a command that not only triggers a configuration reload of the daemon, but al
 Commands to execute to stop the service started via
 \fIExecStart=\fR\&. This argument takes multiple command lines, following the same scheme as described for
 \fIExecStart=\fR
-above\&. Use of this setting is optional\&. After the commands configured in this option are run, all processes remaining for a service are terminated according to the
+above\&. Use of this setting is optional\&. After the commands configured in this option are run, it is implied that the service is stopped, and any processes remaining for it are terminated according to the
 \fIKillMode=\fR
 setting (see
 \fBsystemd.kill\fR(5))\&. If this option is not specified, the process is terminated by sending the signal specified in
@@ -351,9 +362,11 @@ setting (see
 when service stop is requested\&. Specifier and environment variable substitution is supported (including
 \fI$MAINPID\fR, see above)\&.
 .sp
-Note that it is usually not sufficient to specify a command for this setting that only asks the service to terminate (for example, by queuing some form of termination signal for it), but does not wait for it to do so\&. Since the remaining processes of the services are killed using
-\fBSIGKILL\fR
-immediately after the command exited, this would not result in a clean stop\&. The specified command should hence be a synchronous operation, not an asynchronous one\&.
+Note that it is usually not sufficient to specify a command for this setting that only asks the service to terminate (for example, by queuing some form of termination signal for it), but does not wait for it to do so\&. Since the remaining processes of the services are killed according to
+\fIKillMode=\fR
+and
+\fIKillSignal=\fR
+as described above immediately after the command exited, this may not result in a clean stop\&. The specified command should hence be a synchronous operation, not an asynchronous one\&.
 .sp
 Note that the commands specified in
 \fIExecStop=\fR
@@ -627,9 +640,18 @@ T}
 .sp 1
 As exceptions to the setting above, the service will not be restarted if the exit code or signal is specified in
 \fIRestartPreventExitStatus=\fR
-(see below)\&. Also, the services will always be restarted if the exit code or signal is specified in
+(see below) or the service is stopped with
+\fBsystemctl stop\fR
+or an equivalent operation\&. Also, the services will always be restarted if the exit code or signal is specified in
 \fIRestartForceExitStatus=\fR
 (see below)\&.
+.sp
+Note that service restart is subject to unit start rate limiting configured with
+\fIStartLimitIntervalSec=\fR
+and
+\fIStartLimitBurst=\fR, see
+\fBsystemd.unit\fR(5)
+for details\&.
 .sp
 Setting this to
 \fBon\-failure\fR
@@ -731,10 +753,13 @@ commands\&. If false, the setting is applied to all configured commands the same
 .RS 4
 Set the
 \fBO_NONBLOCK\fR
-flag for all file descriptors passed via socket\-based activation\&. If true, all file descriptors >= 3 (i\&.e\&. all except stdin, stdout, and stderr) will have the
+flag for all file descriptors passed via socket\-based activation\&. If true, all file descriptors >= 3 (i\&.e\&. all except stdin, stdout, stderr), excluding those passed in via the file descriptor storage logic (see
+\fIFileDescriptorStoreMax=\fR
+for details), will have the
 \fBO_NONBLOCK\fR
 flag set and hence are in non\-blocking mode\&. This option is only useful in conjunction with a socket unit, as described in
-\fBsystemd.socket\fR(5)\&. Defaults to false\&.
+\fBsystemd.socket\fR(5)
+and has no effect on file descriptors which were previously saved in the file\-descriptor store for example\&. Defaults to false\&.
 .RE
 .PP
 \fINotifyAccess=\fR
@@ -744,11 +769,15 @@ Controls access to the service status notification socket, as accessible via the
 call\&. Takes one of
 \fBnone\fR
 (the default),
-\fBmain\fR
+\fBmain\fR,
+\fBexec\fR
 or
 \fBall\fR\&. If
 \fBnone\fR, no daemon status updates are accepted from the service processes, all status update messages are ignored\&. If
 \fBmain\fR, only service updates sent from the main process of the service are accepted\&. If
+\fBexec\fR, only service updates sent from any of the main or control processes originating from one of the
+\fIExec*=\fR
+commands are accepted\&. If
 \fBall\fR, all services updates from all members of the service\*(Aqs control group are accepted\&. This option should be set to open access to the notification socket when using
 \fIType=notify\fR
 or
@@ -757,6 +786,17 @@ or
 \fINotifyAccess=\fR
 is not configured, it will be implicitly set to
 \fBmain\fR\&.
+.sp
+Note that
+\fBsd_notify()\fR
+notifications may be attributed to units correctly only if either the sending process is still around at the time PID 1 processes the message, or if the sending process is explicitly runtime\-tracked by the service manager\&. The latter is the case if the service manager originally forked off the process, i\&.e\&. on all processes that match
+\fBmain\fR
+or
+\fBexec\fR\&. Conversely, if an auxiliary process of the unit sends an
+\fBsd_notify()\fR
+message and immediately exits, the service manager might not be able to properly attribute the message to the unit, and thus will ignore it, even if
+\fINotifyAccess=\fR\fBall\fR
+is set for it\&.
 .RE
 .PP
 \fISockets=\fR
@@ -790,9 +830,14 @@ and executes the same actions (see
 Configure how many file descriptors may be stored in the service manager for the service using
 \fBsd_pid_notify_with_fds\fR(3)\*(Aqs
 "FDSTORE=1"
-messages\&. This is useful for implementing service restart schemes where the state is serialized to
-/run
-and the file descriptors passed to the service manager, to allow restarts without losing state\&. Defaults to 0, i\&.e\&. no file descriptors may be stored in the service manager\&. All file descriptors passed to the service manager from a specific service are passed back to the service\*(Aqs main process on the next service restart\&. Any file descriptors passed to the service manager are automatically closed when POLLHUP or POLLERR is seen on them, or when the service is fully stopped and no job is queued or being executed for it\&.
+messages\&. This is useful for implementing services that can restart after an explicit request or a crash without losing state\&. Any open sockets and other file descriptors which should not be closed during the restart may be stored this way\&. Application state can either be serialized to a file in
+/run, or better, stored in a
+\fBmemfd_create\fR(2)
+memory file descriptor\&. Defaults to 0, i\&.e\&. no file descriptors may be stored in the service manager\&. All file descriptors passed to the service manager from a specific service are passed back to the service\*(Aqs main process on the next service restart\&. Any file descriptors passed to the service manager are automatically closed when
+\fBPOLLHUP\fR
+or
+\fBPOLLERR\fR
+is seen on them, or when the service is fully stopped and no job is queued or being executed for it\&.
 .RE
 .PP
 \fIUSBFunctionDescriptors=\fR
@@ -832,9 +877,9 @@ options\&.
 Multiple command lines may be concatenated in a single directive by separating them with semicolons (these semicolons must be passed as separate words)\&. Lone semicolons may be escaped as
 "\e;"\&.
 .PP
-Each command line is split on whitespace, with the first item being the command to execute, and the subsequent items being the arguments\&. Double quotes ("\&.\&.\&.") and single quotes (\*(Aq\&.\&.\&.\*(Aq) may be used, in which case everything until the next matching quote becomes part of the same argument\&. C\-style escapes are also supported\&. The table below contains the list of allowed escape patterns\&. Only patterns which match the syntax in the table are allowed; others will result in an error, and must be escaped by doubling the backslash\&. Quotes themselves are removed after parsing and escape sequences substituted\&. In addition, a trailing backslash ("\e") may be used to merge lines\&.
+Each command line is split on whitespace, with the first item being the command to execute, and the subsequent items being the arguments\&. Double quotes ("\&...") and single quotes (\*(Aq\&...\*(Aq) may be used to wrap a whole item (the opening quote may appear only at the beginning or after whitespace that is not quoted, and the closing quote must be followed by whitespace or the end of line), in which case everything until the next matching quote becomes part of the same argument\&. Quotes themselves are removed\&. C\-style escapes are also supported\&. The table below contains the list of known escape patterns\&. Only escape patterns which match the syntax in the table are allowed; other patterns may be added in the future and unknown patterns will result in a warning\&. In particular, any backslashes should be doubled\&. Finally, a trailing backslash ("\e") may be used to merge lines\&.
 .PP
-This syntax is intended to be very similar to shell syntax, but only the meta\-characters and expansions described in the following paragraphs are understood\&. Specifically, redirection using
+This syntax is inspired by shell syntax, but only the meta\-characters and expansions described in the following paragraphs are understood, and the expansion of variables is different\&. Specifically, redirection using
 "<",
 "<<",
 ">", and
@@ -1314,7 +1359,7 @@ for details on how you can influence the way systemd terminates the service\&.
 .IP " 1." 4
 Incompatibilities with SysV
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/Incompatibilities
+\%https://www.freedesktop.org/wiki/Software/systemd/Incompatibilities
 .RE
 .IP " 2." 4
 Proper handling of SIGINT/SIGQUIT \(em How to be a proper program
