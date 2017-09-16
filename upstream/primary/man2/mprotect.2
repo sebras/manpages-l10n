@@ -30,13 +30,13 @@
 .\" 2007-06-02, mtk: Fairly substantial rewrites and additions, and
 .\" a much improved example program.
 .\"
-.TH MPROTECT 2 2016-12-12 "Linux" "Linux Programmer's Manual"
+.TH MPROTECT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mprotect, pkey_mprotect \- set protection on a region of memory
 .SH SYNOPSIS
 .nf
 .B #include <sys/mman.h>
-.sp
+.PP
 .BI "int mprotect(void *" addr ", size_t " len ", int " prot );
 .BI "int pkey_mprotect(void *" addr ", size_t " len ", int " prot ", int " pkey ");
 .fi
@@ -47,7 +47,7 @@ containing any part of the address range in the
 interval [\fIaddr\fP,\ \fIaddr\fP+\fIlen\fP\-1].
 .I addr
 must be aligned to a page boundary.
-
+.PP
 If the calling process tries to access memory in a manner
 that violates the protections, then the kernel generates a
 .B SIGSEGV
@@ -197,7 +197,7 @@ was incorrectly produced for these cases.)
 Changing the protection of a memory region would result in the total number of
 mappings with distinct attributes (e.g., read versus read/write protection)
 exceeding the allowed maximum.
-.\" I.e., the number of VMAs would exceed the 64kB maximum
+.\" I.e., the number of VMAs would exceed the 64 kB maximum
 (For example, making the protection of a range
 .BR PROT_READ
 in the middle of a region currently protected as
@@ -218,7 +218,7 @@ POSIX says that the behavior of
 is unspecified if it is applied to a region of memory that
 was not obtained via
 .BR mmap (2).
-
+.PP
 .BR pkey_mprotect ()
 is a nonportable Linux extension.
 .SH NOTES
@@ -228,7 +228,7 @@ on any address in a process's address space (except for the
 kernel vsyscall area).
 In particular, it can be used
 to change existing code mappings to be writable.
-
+.PP
 Whether
 .B PROT_EXEC
 has any effect different from
@@ -242,12 +242,12 @@ specifying
 .B PROT_READ
 will implicitly add
 .BR PROT_EXEC.
-
+.PP
 On some hardware architectures (e.g., i386),
 .B PROT_WRITE
 implies
 .BR PROT_READ .
-
+.PP
 POSIX.1 says that an implementation may permit access
 other than that specified in
 .IR prot ,
@@ -256,7 +256,7 @@ but at a minimum can allow write access only if
 has been set, and must not allow any access if
 .B PROT_NONE
 has been set.
-
+.PP
 Applications should be careful when mixing use of
 .BR mprotect ()
 and
@@ -269,7 +269,7 @@ set to
 .B PROT_EXEC
 a pkey is may be allocated and set on the memory implicitly
 by the kernel, but only when the pkey was 0 previously.
-
+.PP
 On systems that do not support protection keys in hardware,
 .BR pkey_mprotect ()
 may still be used, but
@@ -287,20 +287,20 @@ The program below demonstrates the use of
 The program allocates four pages of memory, makes the third
 of these pages read-only, and then executes a loop that walks upward
 through the allocated region modifying bytes.
-
+.PP
 An example of what we might see when running the program is the
 following:
-
+.PP
 .in +4n
-.nf
+.EX
 .RB "$" " ./a.out"
 Start of region:        0x804c000
 Got SIGSEGV at address: 0x804e000
-.fi
+.EE
 .in
 .SS Program source
 \&
-.nf
+.EX
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -317,6 +317,12 @@ static char *buffer;
 static void
 handler(int sig, siginfo_t *si, void *unused)
 {
+    /* Note: calling printf() from a signal handler is not safe
+       (and should not be done in production programs), since
+       printf() is not async\-signal\-safe; see signal-safety(7).
+       Nevertheless, we use printf() here as a simple way of
+       showing that the handler was called. */
+
     printf("Got SIGSEGV at address: 0x%lx\\n",
             (long) si\->si_addr);
     exit(EXIT_FAILURE);
@@ -358,13 +364,13 @@ main(int argc, char *argv[])
     printf("Loop completed\\n");     /* Should never happen */
     exit(EXIT_SUCCESS);
 }
-.fi
+.EE
 .SH SEE ALSO
 .BR mmap (2),
 .BR sysconf (3),
 .BR pkeys (7)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

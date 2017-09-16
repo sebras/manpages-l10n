@@ -35,47 +35,40 @@
 .\" 2005-03-11, mtk, modified pselect() text (it is now a system
 .\"     call in 2.6.16.
 .\"
-.TH SELECT 2 2017-05-03 "Linux" "Linux Programmer's Manual"
+.TH SELECT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
 synchronous I/O multiplexing
 .SH SYNOPSIS
 .nf
 /* According to POSIX.1-2001, POSIX.1-2008 */
-.br
 .B #include <sys/select.h>
-.sp
+.PP
 /* According to earlier standards */
-.br
 .B #include <sys/time.h>
-.br
 .B #include <sys/types.h>
-.br
 .B #include <unistd.h>
-.sp
+.PP
 .BI "int select(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
 .BI "           fd_set *" exceptfds ", struct timeval *" timeout );
-.sp
+.PP
 .BI "void FD_CLR(int " fd ", fd_set *" set );
-.br
 .BI "int  FD_ISSET(int " fd ", fd_set *" set );
-.br
 .BI "void FD_SET(int " fd ", fd_set *" set );
-.br
 .BI "void FD_ZERO(fd_set *" set );
-.sp
+
 .B #include <sys/select.h>
-.sp
+.PP
 .BI "int pselect(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
 .BI "            fd_set *" exceptfds ", const struct timespec *" timeout ,
 .BI "            const sigset_t *" sigmask );
 .fi
-.sp
+.PP
 .in -4n
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .in
-.sp
+.PP
 .BR pselect ():
 _POSIX_C_SOURCE\ >=\ 200112L
 .SH DESCRIPTION
@@ -148,13 +141,13 @@ will be watched for exceptional conditions.
 .B POLLPRI
 in
 .BR poll (2).)
-
+.PP
 On exit, each of the file descriptor sets is modified in place
 to indicate which file descriptors actually changed status.
 (Thus, if using
 .BR select ()
 within a loop, the sets must be reinitialized before each call.)
-
+.PP
 Each of the three file descriptor sets may be specified as NULL
 if no file descriptors are to be watched for the corresponding class
 of events.
@@ -223,23 +216,28 @@ Other than the difference in the precision of the
 argument, the following
 .BR pselect ()
 call:
-.nf
-
-    ready = pselect(nfds, &readfds, &writefds, &exceptfds,
-                    timeout, &sigmask);
-
-.fi
+.PP
+.in +4n
+.EX
+ready = pselect(nfds, &readfds, &writefds, &exceptfds,
+                timeout, &sigmask);
+.EE
+.in
+.PP
 is equivalent to
 .I atomically
 executing the following calls:
-.nf
+.PP
+.in +4n
+.EX
+sigset_t origmask;
 
-    sigset_t origmask;
-
-    pthread_sigmask(SIG_SETMASK, &sigmask, &origmask);
-    ready = select(nfds, &readfds, &writefds, &exceptfds, timeout);
-    pthread_sigmask(SIG_SETMASK, &origmask, NULL);
-.fi
+pthread_sigmask(SIG_SETMASK, &sigmask, &origmask);
+ready = select(nfds, &readfds, &writefds, &exceptfds, timeout);
+pthread_sigmask(SIG_SETMASK, &origmask, NULL);
+.EE
+.in
+.PP
 .PP
 The reason that
 .BR pselect ()
@@ -264,27 +262,27 @@ avoiding the race.)
 The time structures involved are defined in
 .I <sys/time.h>
 and look like
-
+.PP
 .in +4n
-.nf
+.EX
 struct timeval {
     long    tv_sec;         /* seconds */
     long    tv_usec;        /* microseconds */
 };
-.fi
+.EE
 .in
-
+.PP
 and
-
+.PP
 .in +4n
-.nf
+.EX
 struct timespec {
     long    tv_sec;         /* seconds */
     long    tv_nsec;        /* nanoseconds */
 };
-.fi
+.EE
 .in
-
+.PP
 (However, see below on the POSIX.1 versions.)
 .PP
 Some code calls
@@ -399,7 +397,7 @@ in undefined behavior.
 Moreover, POSIX requires
 .I fd
 to be a valid file descriptor.
-
+.PP
 On some other UNIX systems,
 .\" Darwin, according to a report by Jeremy Sequoia, relayed by Josh Triplett
 .BR select ()
@@ -416,7 +414,7 @@ Portable programs may wish to check for
 .B EAGAIN
 and loop, just as with
 .BR EINTR .
-
+.PP
 On systems that lack
 .BR pselect (),
 reliable (and more portable) signal trapping can be achieved
@@ -429,7 +427,7 @@ in the main program.
 (To avoid possibly blocking when writing to a pipe that may be full
 or reading from a pipe that may be empty,
 nonblocking I/O is used when reading from and writing to the pipe.)
-
+.PP
 Concerning the types involved, the classical situation is that
 the two fields of a
 .I timeval
@@ -438,16 +436,16 @@ structure are typed as
 (as shown above), and the structure is defined in
 .IR <sys/time.h> .
 The POSIX.1 situation is
-
+.PP
 .in +4n
-.nf
+.EX
 struct timeval {
     time_t         tv_sec;     /* seconds */
     suseconds_t    tv_usec;    /* microseconds */
 };
-.fi
+.EE
 .in
-
+.PP
 where the structure is defined in
 .I <sys/select.h>
 and the data types
@@ -456,7 +454,7 @@ and
 .I suseconds_t
 are defined in
 .IR <sys/types.h> .
-.LP
+.PP
 Concerning prototypes, the classical situation is that one should
 include
 .I <time.h>
@@ -468,7 +466,7 @@ for
 .BR select ()
 and
 .BR pselect ().
-
+.PP
 Under glibc 2.0,
 .I <sys/select.h>
 gives the wrong prototype for
@@ -490,9 +488,9 @@ and the event notifications provided by
 .BR poll (2)
 (and
 .BR epoll (7)):
-
-.nf
+.PP
 .in +4n
+.EX
 #define POLLIN_SET (POLLRDNORM | POLLRDBAND | POLLIN | POLLHUP |
                     POLLERR)
                    /* Ready for reading */
@@ -500,8 +498,8 @@ and the event notifications provided by
                    /* Ready for writing */
 #define POLLEX_SET (POLLPRI)
                    /* Exceptional condition */
+.EE
 .in
-.fi
 .\"
 .SS Multithreaded applications
 If a file descriptor being monitored by
@@ -528,7 +526,7 @@ However, in the glibc implementation, the
 .IR fd_set
 type is fixed in size.
 See also BUGS.
-
+.PP
 The
 .BR pselect ()
 interface described in this page is implemented by glibc.
@@ -536,7 +534,7 @@ The underlying Linux system call is named
 .BR pselect6 ().
 This system call has somewhat different behavior from the glibc
 wrapper function.
-
+.PP
 The Linux
 .BR pselect6 ()
 system call modifies its
@@ -551,23 +549,23 @@ function does not modify its
 .I timeout
 argument;
 this is the behavior required by POSIX.1-2001.
-
+.PP
 The final argument of the
 .BR pselect6 ()
 system call is not a
 .I "sigset_t\ *"
 pointer, but is instead a structure of the form:
+.PP
 .in +4
-.nf
-
+.EX
 struct {
     const kernel_sigset_t *ss;   /* Pointer to signal set */
     size_t ss_len;               /* Size (in bytes) of object
                                     pointed to by 'ss' */
 };
-
-.fi
+.EE
 .in
+.PP
 This allows the system call to obtain both
 a pointer to the signal set and its size,
 while allowing for the fact that most architectures
@@ -592,7 +590,7 @@ macros operating according to that limit.
 To monitor file descriptors greater than 1023, use
 .BR poll (2)
 instead.
-
+.PP
 According to POSIX,
 .BR select ()
 should check all specified file descriptors in the three file descriptor sets,
@@ -604,13 +602,13 @@ that the process currently has open.
 According to POSIX, any such file descriptor that is specified in one
 of the sets should result in the error
 .BR EBADF .
-
+.PP
 Glibc 2.0 provided a version of
 .BR pselect ()
 that did not take a
 .I sigmask
 argument.
-
+.PP
 Starting with version 2.1, glibc provided an emulation of
 .BR pselect ()
 that was implemented using
@@ -623,7 +621,7 @@ was designed to prevent.
 Modern versions of glibc use the (race-free)
 .BR pselect ()
 system call on kernels where it is provided.
-
+.PP
 Under Linux,
 .BR select ()
 may report a socket file descriptor as "ready for reading", while
@@ -639,7 +637,7 @@ Thus it may be safer to use
 .B O_NONBLOCK
 on sockets that should not block.
 .\" Maybe the kernel should have returned EIO in such a situation?
-
+.PP
 On Linux,
 .BR select ()
 also modifies
@@ -655,7 +653,7 @@ but the glibc wrapper hides this behavior by internally copying the
 .I timeout
 to a local variable and passing that variable to the system call.
 .SH EXAMPLE
-.nf
+.EX
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -692,7 +690,7 @@ main(void)
 
     exit(EXIT_SUCCESS);
 }
-.fi
+.EE
 .SH SEE ALSO
 .BR accept (2),
 .BR connect (2),
@@ -705,11 +703,11 @@ main(void)
 .BR write (2),
 .BR epoll (7),
 .BR time (7)
-
+.PP
 For a tutorial with discussion and examples, see
 .BR select_tut (2).
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

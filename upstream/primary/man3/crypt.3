@@ -33,25 +33,23 @@
 .\" added _XOPEN_SOURCE, aeb, 970705
 .\" added GNU MD5 stuff, aeb, 011223
 .\"
-.TH CRYPT 3 2015-08-08 "" "Linux Programmer's Manual"
+.TH CRYPT 3 2017-09-15 "" "Linux Programmer's Manual"
 .SH NAME
 crypt, crypt_r \- password and data encryption
 .SH SYNOPSIS
 .nf
 .BR "#define _XOPEN_SOURCE" "       /* See feature_test_macros(7) */"
-.br
 .B #include <unistd.h>
-.sp
+.PP
 .BI "char *crypt(const char *" key ", const char *" salt );
-.sp
+
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
-.br
 .B #include <crypt.h>
-.sp
+.PP
 .BI "char *crypt_r(const char *" key ", const char *" salt ,
 .BI "              struct crypt_data *" data );
 .fi
-.sp
+.PP
 Link with \fI\-lcrypt\fP.
 .SH DESCRIPTION
 .BR crypt ()
@@ -105,7 +103,7 @@ If you are planning on using the
 .BR crypt ()
 interface for a cryptography project, don't do it: get a good book on
 encryption and one of the widely available DES libraries.
-
+.PP
 .BR crypt_r ()
 is a reentrant version of
 .BR crypt ().
@@ -193,19 +191,19 @@ is a GNU extension.
 .SS Glibc notes
 The glibc2 version of this function supports additional
 encryption algorithms.
-
+.PP
 If
 .I salt
 is a character string starting with the characters "$\fIid\fP$"
-followed by a string terminated by "$":
+followed by a string optionally terminated by "$",
+then the result has the form:
 .RS
-
+.PP
 $\fIid\fP$\fIsalt\fP$\fIencrypted\fP
-
+.PP
 .RE
-then instead of using the DES machine,
 .I id
-identifies the encryption method used and this then determines how the rest
+identifies the encryption method used instead of DES and this then determines how the rest
 of the password string is interpreted.
 The following values of
 .I id
@@ -228,14 +226,15 @@ _
 6   | SHA-512 (since glibc 2.7)
 .TE
 .RE
-
-So $5$\fIsalt\fP$\fIencrypted\fP is an SHA-256 encoded
-password and $6$\fIsalt\fP$\fIencrypted\fP is an
-SHA-512 encoded one.
-
+.PP
+Thus, $5$\fIsalt\fP$\fIencrypted\fP and $6$\fIsalt\fP$\fIencrypted\fP
+contain the password encrypted with, respectively, functions
+based on SHA-256 and SHA-512.
+.PP
 "\fIsalt\fP" stands for the up to 16 characters
 following "$\fIid\fP$" in the salt.
-The encrypted part of the password string is the actual computed password.
+The "\fIencrypted\fP"
+part of the password string is the actual computed password.
 The size of this string is fixed:
 .TS
 l l.
@@ -243,13 +242,36 @@ MD5     | 22 characters
 SHA-256 | 43 characters
 SHA-512 | 86 characters
 .TE
-
+.sp 1
 The characters in "\fIsalt\fP" and "\fIencrypted\fP" are drawn from the set
 [\fBa\-zA\-Z0\-9./\fP].
 In the MD5 and SHA implementations the entire
 .I key
 is significant (instead of only the first
 8 bytes in DES).
+.PP
+Since glibc 2.7,
+.\" glibc commit 9425cb9eea6a62fc21d99aafe8a60f752b934b05
+the SHA-256 and SHA-512 implementations support a user-supplied number of
+hashing rounds, defaulting to 5000.
+If the "$\fIid\fP$" characters in the salt are
+followed by "rounds=\fIxxx\fP$", where \fIxxx\fP is an integer, then the
+result has the form
+.RS
+.PP
+$\fIid\fP$\fIrounds=yyy\fP$\fIsalt\fP$\fIencrypted\fP
+.PP
+.RE
+where \fIyyy\fP is the number of hashing rounds actually used.
+The number of rounds actually used is 1000 if
+.I xxx
+is less than
+1000, 999999999 if
+.I xxx
+is greater than 999999999, and
+is equal to
+.I xxx
+otherwise.
 .SH SEE ALSO
 .BR login (1),
 .BR passwd (1),
@@ -257,7 +279,7 @@ is significant (instead of only the first
 .BR getpass (3),
 .BR passwd (5)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,
