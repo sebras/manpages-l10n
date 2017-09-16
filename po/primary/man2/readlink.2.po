@@ -9,7 +9,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
-"POT-Creation-Date: 2017-07-23 16:01+0200\n"
+"POT-Creation-Date: 2017-09-16 17:17+0200\n"
 "PO-Revision-Date: 2016-12-15 21:28+0100\n"
 "Last-Translator: Dr. Tobias Quathamer <toddy@debian.org>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
@@ -27,8 +27,8 @@ msgstr "READLINK"
 
 #. type: TH
 #, no-wrap
-msgid "2016-10-08"
-msgstr "8. Oktober 2016"
+msgid "2017-09-15"
+msgstr ""
 
 #. type: TH
 #, no-wrap
@@ -468,14 +468,21 @@ msgstr ""
 "#include E<lt>unistd.hE<gt>\n"
 
 #. type: Plain text
-#, no-wrap
+#, fuzzy, no-wrap
+#| msgid ""
+#| "int\n"
+#| "main(int argc, char *argv[])\n"
+#| "{\n"
+#| "    struct stat sb;\n"
+#| "    char *linkname;\n"
+#| "    ssize_t r, bufsiz;\n"
 msgid ""
 "int\n"
 "main(int argc, char *argv[])\n"
 "{\n"
 "    struct stat sb;\n"
-"    char *linkname;\n"
-"    ssize_t r, bufsiz;\n"
+"    char *buf;\n"
+"    ssize_t nbytes, bufsiz;\n"
 msgstr ""
 "int\n"
 "main(int argc, char *argv[])\n"
@@ -512,15 +519,26 @@ msgstr ""
 
 #. type: Plain text
 #, no-wrap
+msgid ""
+"    /* Add one to the link size, so that we can determine whether\n"
+"       the buffer returned by readlink() was truncated. */\n"
+msgstr ""
+
+#. type: Plain text
+#, no-wrap
 msgid "    bufsiz = sb.st_size + 1;\n"
 msgstr "    bufsiz = sb.st_size + 1;\n"
 
 #. type: Plain text
-#, no-wrap
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    /* Some magic symlinks under (for example) /proc and /sys\n"
+#| "       report \\(aqst_size\\(aq as zero. In that case, take PATH_MAX as\n"
+#| "       a \"good enough\" estimate */\n"
 msgid ""
 "    /* Some magic symlinks under (for example) /proc and /sys\n"
 "       report \\(aqst_size\\(aq as zero. In that case, take PATH_MAX as\n"
-"       a \"good enough\" estimate */\n"
+"       a \"good enough\" estimate. */\n"
 msgstr ""
 "    /* Einige magische Symlinks unter (beispielsweise) /proc und /sys\n"
 "       geben \\(aqst_size\\(aq als Null zurück. In diesem Fall wird PATH_MAX als\n"
@@ -536,15 +554,16 @@ msgstr ""
 "        bufsiz = PATH_MAX;\n"
 
 #. type: Plain text
-#, no-wrap
-msgid "    printf(\"%zd\\en\", bufsiz);\n"
-msgstr "    printf(\"%zd\\en\", bufsiz);\n"
-
-#. type: Plain text
-#, no-wrap
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    linkname = malloc(bufsiz);\n"
+#| "    if (linkname == NULL) {\n"
+#| "        perror(\"malloc\");\n"
+#| "        exit(EXIT_FAILURE);\n"
+#| "    }\n"
 msgid ""
-"    linkname = malloc(bufsiz);\n"
-"    if (linkname == NULL) {\n"
+"    buf = malloc(bufsiz);\n"
+"    if (buf == NULL) {\n"
 "        perror(\"malloc\");\n"
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
@@ -556,10 +575,16 @@ msgstr ""
 "    }\n"
 
 #. type: Plain text
-#, no-wrap
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    r = readlink(argv[1], linkname, bufsiz);\n"
+#| "    if (r == -1) {\n"
+#| "        perror(\"readlink\");\n"
+#| "        exit(EXIT_FAILURE);\n"
+#| "    }\n"
 msgid ""
-"    r = readlink(argv[1], linkname, bufsiz);\n"
-"    if (r == -1) {\n"
+"    nbytes = readlink(argv[1], buf, bufsiz);\n"
+"    if (nbytes == -1) {\n"
 "        perror(\"readlink\");\n"
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
@@ -571,28 +596,41 @@ msgstr ""
 "    }\n"
 
 #. type: Plain text
-#, no-wrap
-msgid "    linkname[r] = \\(aq\\e0\\(aq;\n"
-msgstr "    linkname[r] = \\(aq\\e0\\(aq;\n"
-
-#. type: Plain text
-#, no-wrap
-msgid "    printf(\"\\(aq%s\\(aq points to \\(aq%s\\(aq\\en\", argv[1], linkname);\n"
+#, fuzzy, no-wrap
+#| msgid "    printf(\"\\(aq%s\\(aq points to \\(aq%s\\(aq\\en\", argv[1], linkname);\n"
+msgid "    printf(\"\\(aq%s\\(aq points to \\(aq%.*s\\(aq\\en\", argv[1], (int) nbytes, buf);\n"
 msgstr "    printf(\"\\(aq%s\\(aq zeigt auf \\(aq%s\\(aq\\en\", argv[1], linkname);\n"
 
 #. type: Plain text
 #, no-wrap
 msgid ""
-"    if (r == bufsiz)\n"
+"    /* If the return value was equal to the buffer size, then the\n"
+"       the link target was larger than expected (perhaps because the\n"
+"       target was changed between the call to lstat() and the call to\n"
+"       readlink()). Warn the user that the returned target may have\n"
+"       been truncated. */\n"
+msgstr ""
+
+#. type: Plain text
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    if (r == bufsiz)\n"
+#| "        printf(\"(Returned buffer may have been truncated)\\en\");\n"
+msgid ""
+"    if (nbytes == bufsiz)\n"
 "        printf(\"(Returned buffer may have been truncated)\\en\");\n"
 msgstr ""
 "    if (r == bufsiz)\n"
 "        printf(\"(Der zurückgegebene Puffer könnte verkürzt worden sein)\\en\");\n"
 
 #. type: Plain text
-#, no-wrap
+#, fuzzy, no-wrap
+#| msgid ""
+#| "    free(linkname);\n"
+#| "    exit(EXIT_SUCCESS);\n"
+#| "}\n"
 msgid ""
-"    free(linkname);\n"
+"    free(buf);\n"
 "    exit(EXIT_SUCCESS);\n"
 "}\n"
 msgstr ""
@@ -620,12 +658,12 @@ msgstr "KOLOPHON"
 
 #. type: Plain text
 msgid ""
-"This page is part of release 4.12 of the Linux I<man-pages> project.  A "
+"This page is part of release 4.13 of the Linux I<man-pages> project.  A "
 "description of the project, information about reporting bugs, and the latest "
 "version of this page, can be found at \\%https://www.kernel.org/doc/man-"
 "pages/."
 msgstr ""
-"Diese Seite ist Teil der Veröffentlichung 4.12 des Projekts Linux-I<man-"
+"Diese Seite ist Teil der Veröffentlichung 4.13 des Projekts Linux-I<man-"
 "pages>. Eine Beschreibung des Projekts, Informationen, wie Fehler gemeldet "
 "werden können sowie die aktuelle Version dieser Seite finden sich unter \\"
 "%https://www.kernel.org/doc/man-pages/."
