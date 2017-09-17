@@ -39,9 +39,6 @@ fi
 backup=$(mktemp)
 cp "$1" "$backup"
 
-# Translate dates, if possible
-./translate-dates.sh "$1"
-
 # Determine the translation level, primary or secondary
 level=$(echo "$1" | cut -d/ -f1 | cut -d- -f1)
 
@@ -55,6 +52,9 @@ msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
 
 # Remove obsolete strings
 msgattrib --no-obsolete "$tmppo" > "$1"
+
+# Translate dates, if possible
+./translate-dates.sh "$1" "$potfile"
 
 # If this is a secondary translation, use the primary .po
 # file as a reference, too. This way, typo fixes and better

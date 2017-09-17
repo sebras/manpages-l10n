@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Require one argument (the .po file of the manpage)
+# Require two arguments (the .po file of the manpage and the .pot file)
 if [ ! -f "$1" ]; then
-	echo "The file '$1' could not be found."
+	echo "The po file '$1' could not be found."
+	exit 1
+fi
+if [ ! -f "$2" ]; then
+	echo "The pot file '$2' could not be found."
 	exit 1
 fi
 
@@ -65,4 +69,4 @@ echo $translatable_date >> "$newfile"
 echo "msgstr \"$date_day. $month $date_year\"" >> "$newfile"
 
 # Move translation back to original filename
-mv "$newfile" "$1"
+msgmerge "$newfile" "$2" > "$1"
