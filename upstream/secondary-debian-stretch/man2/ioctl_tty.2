@@ -5,12 +5,12 @@
 .\" Distributed under GPL
 .\" %%%LICENSE_END
 .\"
-.TH IOCTL_TTY 2 2017-05-03 "Linux" "Linux Programmer's Manual"
+.TH IOCTL_TTY 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 ioctl_tty \- ioctls for terminals and serial lines
 .SH SYNOPSIS
 .B "#include <termios.h>"
-.sp
+.PP
 .BI "int ioctl(int " fd ", int " cmd ", ...);"
 .SH DESCRIPTION
 The
@@ -20,7 +20,7 @@ Most require a third argument, of varying type, here called
 .I argp
 or
 .IR arg .
-.LP
+.PP
 Use of
 .I ioctl
 makes for nonportable programs.
@@ -54,7 +54,7 @@ Equivalent to
 .br
 Allow the output buffer to drain, discard pending input, and
 set the current serial port settings.
-.LP
+.PP
 The following four ioctls are just like
 .BR TCGETS ,
 .BR TCSETS ,
@@ -98,7 +98,7 @@ Window sizes are kept in the kernel, but not used by the kernel
 (except in the case of virtual consoles, where the kernel will
 update the window size when the size of the virtual console changes,
 for example, by loading a new font).
-
+.PP
 The following constants and structure are defined in
 .IR <sys/ioctl.h> .
 .TP
@@ -107,20 +107,20 @@ Get window size.
 .TP
 .BI "TIOCSWINSZ	const struct winsize *" argp
 Set window size.
-.LP
+.PP
 The struct used by these ioctls is defined as
-
+.PP
 .in +4n
-.nf
+.EX
 struct winsize {
     unsigned short ws_row;
     unsigned short ws_col;
     unsigned short ws_xpixel;   /* unused */
     unsigned short ws_ypixel;   /* unused */
 };
-.fi
+.EE
 .in
-
+.PP
 When the window size changes, a
 .B SIGWINCH
 signal is sent to the
@@ -141,7 +141,7 @@ returns without doing anything.
 When
 .I arg
 is nonzero, nobody knows what will happen.
-
+.IP
 (SVr4, UnixWare, Solaris, Linux treat
 .I "tcsendbreak(fd,arg)"
 with nonzero
@@ -244,7 +244,7 @@ controlling terminal already.
 For this case,
 .I arg
 should be specified as zero.
-
+.IP
 If this terminal is already the controlling terminal
 of a different session group, then the ioctl fails with
 .BR EPERM ,
@@ -300,12 +300,12 @@ except for a process with the
 capability.)
 .TP
 .BI "TIOCGEXCL	int *" argp
+(since Linux 3.8)
 If the terminal is currently in exclusive mode,
 place a nonzero value in the location pointed to by
 .IR argp ;
 otherwise, place zero in
-.IR *argp
-(since Linux 3.8).
+.IR *argp .
 .TP
 .B "TIOCNXCL	void"
 Disable exclusive mode.
@@ -334,7 +334,7 @@ If the first byte is not
 .B TIOCPKT_DATA
 (0), it is an OR of one
 or more of the following bits:
-
+.IP
 .nf
 TIOCPKT_FLUSHREAD   The read queue for the terminal is flushed.
 TIOCPKT_FLUSHWRITE  The write queue for the terminal is flushed.
@@ -343,7 +343,7 @@ TIOCPKT_START       Output to the terminal is restarted.
 TIOCPKT_DOSTOP      The start and stop characters are \fB^S\fP/\fB^Q\fP.
 TIOCPKT_NOSTOP      The start and stop characters are not \fB^S\fP/\fB^Q\fP.
 .fi
-
+.IP
 While this mode is in use, the presence
 of control status information to be read
 from the master side may be detected by a
@@ -353,7 +353,7 @@ for exceptional conditions or a
 for the
 .I POLLPRI
 event.
-
+.IP
 This mode is used by
 .BR rlogin (1)
 and
@@ -362,9 +362,9 @@ to implement a remote-echoed,
 locally \fB^S\fP/\fB^Q\fP flow-controlled remote login.
 .TP
 .BI "TIOCGPKT	const int *" argp
+(since Linux 3.8)
 Return the current packet mode setting in the integer pointed to by
-.IR argp
-(since Linux 3.8).
+.IR argp .
 .TP
 .BI "TIOCSPTLCK	int *" argp
 Set (if
@@ -376,10 +376,36 @@ is zero) the pseudoterminal slave device.
 .BR unlockpt (3).)
 .TP
 .BI "TIOCGPTLCK	int *" argp
+(since Linux 3.8)
 Place the current lock state of the pseudoterminal slave device
 in the location pointed to by
-.IR argp
-(since Linux 3.8).
+.IR argp .
+.TP
+.BI "TIOCGPTPEER	int " flags
+.\" commit 54ebbfb1603415d9953c150535850d30609ef077
+(since Linux 4.13)
+Given a file descriptor in
+.I fd
+that refers to a pseudoterminal master,
+open (with the given
+.BR open (2)-style
+.IR flags )
+and return a new file descriptor that refers to the peer
+pseudoterminal slave device.
+This operation can be performed
+regardless of whether the pathname of the slave device
+is accessible through the calling process's mount namespaces.
+.IP
+Security-conscious programs interacting with namespaces may wish to use this
+operation rather than
+.BR open (2)
+with the pathname returned by
+.BR ptsname (3),
+and similar library functions that have insecure APIs.
+(For example, confusion can occur in some cases using
+.BR ptsname (3)
+with a pathname where a devpts filesystem
+has been mounted in a different mount namespace.)
 .PP
 The BSD ioctls
 .BR TIOCSTOP ,
@@ -400,9 +426,9 @@ Clear the indicated modem bits.
 .TP
 .BI "TIOCMBIS	const int *" argp
 Set the indicated modem bits.
-.LP
+.PP
 The following bits are used by the above ioctls:
-
+.PP
 .nf
 TIOCM_LE        DSR (data set ready/line enable)
 TIOCM_DTR       DTR (data terminal ready)
@@ -437,7 +463,7 @@ The counts are written to the
 .I serial_icounter_struct
 structure pointed to by
 .IR argp .
-
+.IP
 Note: both 1->0 and 0->1 transitions are counted, except for
 RI, where only 0->1 transitions are counted.
 .SS Marking a line as local
@@ -455,7 +481,7 @@ Set the CLOCAL flag in the
 structure when
 .RI * argp
 is nonzero, and clear it otherwise.
-.LP
+.PP
 If the
 .B CLOCAL
 flag for a line is off, the hardware carrier detect (DCD)
@@ -495,7 +521,7 @@ This command was removed in Linux 2.5.67.
 .\"
 .\" .SS Serial info
 .\" .BR "#include <linux/serial.h>"
-.\" .sp
+.\" .PP
 .\" .TP
 .\" .BI "TIOCGSERIAL	struct serial_struct *" argp
 .\" Get serial info.
@@ -525,8 +551,8 @@ Inappropriate
 Insufficient permission.
 .SH EXAMPLE
 Check the condition of DTR on the serial port.
-
-.nf
+.PP
+.EX
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -544,7 +570,7 @@ main(void)
         puts("TIOCM_DTR is not set");
     close(fd);
 }
-.fi
+.EE
 .SH SEE ALSO
 .BR ldattach (1),
 .BR ioctl (2),
@@ -566,7 +592,7 @@ main(void)
 .\" TIOCSERSETMULTI		const struct serial_multiport_struct *
 .\" TIOCGSERIAL, TIOCSSERIAL (see above)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

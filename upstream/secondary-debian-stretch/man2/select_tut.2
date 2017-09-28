@@ -29,47 +29,40 @@
 .\"             various other changes
 .\" 2008-01-26, mtk, substantial changes and rewrites
 .\"
-.TH SELECT_TUT 2 2017-05-03 "Linux" "Linux Programmer's Manual"
+.TH SELECT_TUT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
 synchronous I/O multiplexing
 .SH SYNOPSIS
 .nf
 /* According to POSIX.1-2001, POSIX.1-2008 */
-.br
 .B #include <sys/select.h>
-.sp
+.PP
 /* According to earlier standards */
-.br
 .B #include <sys/time.h>
-.br
 .B #include <sys/types.h>
-.br
 .B #include <unistd.h>
-.sp
+.PP
 .BI "int select(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
 .BI "           fd_set *" exceptfds ", struct timeval *" utimeout );
-.sp
+.PP
 .BI "void FD_CLR(int " fd ", fd_set *" set );
-.br
 .BI "int  FD_ISSET(int " fd ", fd_set *" set );
-.br
 .BI "void FD_SET(int " fd ", fd_set *" set );
-.br
 .BI "void FD_ZERO(fd_set *" set );
-.sp
+
 .B #include <sys/select.h>
-.sp
+.PP
 .BI "int pselect(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
 .BI "            fd_set *" exceptfds ", const struct timespec *" ntimeout ,
 .BI "            const sigset_t *" sigmask );
 .fi
-.sp
+.PP
 .in -4n
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .in
-.sp
+.PP
 .BR pselect ():
 _POSIX_C_SOURCE\ >=\ 200112L
 .SH DESCRIPTION
@@ -80,7 +73,7 @@ is used to efficiently monitor multiple file descriptors,
 to see if any of them is, or becomes, "ready";
 that is, to see whether I/O becomes possible,
 or an "exceptional condition" has occurred on any of the file descriptors.
-
+.PP
 Its principal arguments are three "sets" of file descriptors:
 \fIreadfds\fP, \fIwritefds\fP, and \fIexceptfds\fP.
 Each set is declared as type
@@ -168,12 +161,12 @@ of file descriptors at the time of the call.
 The structure \fIstruct timeval\fP is defined as:
 .IP
 .in +4n
-.nf
+.EX
 struct timeval {
     time_t tv_sec;    /* seconds */
     long tv_usec;     /* microseconds */
 };
-.fi
+.EE
 .in
 .TP
 \fIntimeout\fP
@@ -186,12 +179,12 @@ but
 has nanosecond precision as follows:
 .IP
 .in +4n
-.nf
+.EX
 struct timespec {
     long tv_sec;    /* seconds */
     long tv_nsec;   /* nanoseconds */
 };
-.fi
+.EE
 .in
 .TP
 \fIsigmask\fP
@@ -255,7 +248,7 @@ call would enable
 by using an empty signal mask.
 Our program would look like:
 .PP
-.nf
+.EX
 static volatile sig_atomic_t got_SIGCHLD = 0;
 
 static void
@@ -309,7 +302,7 @@ main(int argc, char *argv[])
         /* main body of program */
     }
 }
-.fi
+.EE
 .SS Practical
 So what is the point of
 .BR select ()?
@@ -395,18 +388,22 @@ The buffers in the example below are 1024 bytes although they could
 easily be made larger.
 .TP
 7.
-The functions
+Calls to
 .BR read (2),
 .BR recv (2),
 .BR write (2),
+.BR send (2),
+and
+.BR select ()
+can fail with the error
+\fBEINTR\fP,
+and calls to
+.BR read (2),
+.BR recv (2)
+.BR write (2),
 and
 .BR send (2)
-as well as the
-.BR select ()
-call can return \-1 with
-.I errno
-set to \fBEINTR\fP,
-or with
+can fail with
 .I errno
 set to \fBEAGAIN\fP (\fBEWOULDBLOCK\fP).
 These results must be properly managed (not done properly above).
@@ -474,12 +471,14 @@ function, you can call
 with a finite timeout and no file descriptors as
 follows:
 .PP
-.nf
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 200000;  /* 0.2 seconds */
-    select(0, NULL, NULL, NULL, &tv);
-.fi
+.in +4n
+.EX
+struct timeval tv;
+tv.tv_sec = 0;
+tv.tv_usec = 200000;  /* 0.2 seconds */
+select(0, NULL, NULL, NULL, &tv);
+.EE
+.in
 .PP
 This is guaranteed to work only on UNIX systems, however.
 .SH RETURN VALUE
@@ -487,13 +486,13 @@ On success,
 .BR select ()
 returns the total number of file descriptors
 still present in the file descriptor sets.
-
+.PP
 If
 .BR select ()
 timed out, then the return value will be zero.
 The file descriptors set should be all
 empty (but may not be on some systems).
-
+.PP
 A return value of \-1 indicates an error, with \fIerrno\fP being
 set appropriately.
 In the case of an error, the contents of the returned sets and
@@ -532,7 +531,7 @@ Here is an example that better demonstrates the true utility of
 The listing below is a TCP forwarding program that forwards
 from one TCP port to another.
 .PP
-.nf
+.EX
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -797,7 +796,7 @@ main(int argc, char *argv[])
     }
     exit(EXIT_SUCCESS);
 }
-.fi
+.EE
 .PP
 The above program properly forwards most kinds of TCP connections
 including OOB signal data transmitted by \fBtelnet\fP servers.
@@ -811,7 +810,7 @@ Another idea is to set nonblocking I/O using
 .BR fcntl (2).
 This also has its problems because you end up using
 inefficient timeouts.
-
+.PP
 The program does not handle more than one simultaneous connection at a
 time, although it could easily be extended to do this with a linked list
 of buffers\(emone for each connection.
@@ -837,7 +836,7 @@ connections cause the current connection to be dropped.
 .\" .SH AUTHORS
 .\" This man page was written by Paul Sheer.
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

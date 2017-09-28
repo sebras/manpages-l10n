@@ -17,17 +17,17 @@
 .\" (e.g., compare with recommendation in mbind(2)).
 .\" Does this page need to give advice on this topic?
 .\"
-.TH MOVE_PAGES 2 2010-06-11 "Linux" "Linux Programmer's Manual"
+.TH MOVE_PAGES 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 move_pages \- move individual pages of a process to another node
 .SH SYNOPSIS
 .nf
 .B #include <numaif.h>
-.sp
+.PP
 .BI "long move_pages(int " pid ", unsigned long count, void **" pages ,
 .BI "                const int *" nodes ", int *" status ", int " flags );
 .fi
-.sp
+.PP
 Link with \fI\-lnuma\fP.
 .SH DESCRIPTION
 .BR move_pages ()
@@ -42,20 +42,35 @@ The result of the move is reflected in
 The
 .I flags
 indicate constraints on the pages to be moved.
-
+.PP
 .I pid
 is the ID of the process in which pages are to be moved.
-To move pages in another process,
-the caller must be privileged
-.RB ( CAP_SYS_NICE )
-or the real or effective user ID of the calling process must match the
-real or saved-set user ID of the target process.
 If
 .I pid
 is 0, then
 .BR move_pages ()
 moves pages of the calling process.
-
+.PP
+To move pages in another process requires the following privileges:
+.IP * 3
+In kernels up to and including Linux 4.12:
+the caller must be privileged
+.RB ( CAP_SYS_NICE )
+or the real or effective user ID of the calling process must match the
+real or saved-set user ID of the target process.
+.IP *
+The older rules allowed the caller to discover various
+virtual address choices made by the kernel that could lead
+to the defeat of address-space-layout randomization
+for a process owned by the same UID as the caller,
+the rules were changed starting with Linux 4.13.
+Since Linux 4.13,
+.\" commit 197e7e521384a23b9e585178f3f11c9fa08274b9
+permission is governed by a ptrace access mode
+.B PTRACE_MODE_READ_REALCREDS
+check with respect to the target process; see
+.BR ptrace (2).
+.PP
 .I count
 is the number of pages to move.
 It defines the size of the three arrays
@@ -63,7 +78,7 @@ It defines the size of the three arrays
 .IR nodes ,
 and
 .IR status .
-
+.PP
 .I pages
 is an array of pointers to the pages that should be moved.
 These are pointers that should be aligned to page boundaries.
@@ -71,7 +86,7 @@ These are pointers that should be aligned to page boundaries.
 .\" not aligned to page boundaries
 Addresses are specified as seen by the process specified by
 .IR pid .
-
+.PP
 .I nodes
 is an array of integers that specify the desired location for each page.
 Each element in the array is a node number.
@@ -84,13 +99,13 @@ where each page currently resides, in the
 array.
 Obtaining the status of each page may be necessary to determine
 pages that need to be moved.
-
+.PP
 .I status
 is an array of integers that return the status of each page.
 The array contains valid values only if
 .BR move_pages ()
 did not return an error.
-
+.PP
 .I flags
 specify what types of pages to move.
 .B MPOL_MF_MOVE
@@ -198,7 +213,7 @@ This system call is Linux-specific.
 .SH NOTES
 For information on library support, see
 .BR numa (7).
-
+.PP
 Use
 .BR get_mempolicy (2)
 with the
@@ -209,7 +224,7 @@ flag to obtain the set of nodes that are allowed by
 the current cpuset.
 Note that this information is subject to change at any
 time by manual or automatic reconfiguration of the cpuset.
-
+.PP
 Use of this function may result in pages whose location
 (node) violates the memory policy established for the
 specified addresses (See
@@ -219,7 +234,7 @@ and/or the specified process (See
 That is, memory policy does not constrain the destination
 nodes used by
 .BR move_pages ().
-
+.PP
 The
 .I <numaif.h>
 header is not included with glibc, but requires installing
@@ -236,7 +251,7 @@ or a similar package.
 .BR migratepages (8),
 .BR numastat (8)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

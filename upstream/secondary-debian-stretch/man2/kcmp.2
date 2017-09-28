@@ -25,17 +25,17 @@
 .\"
 .\" Kernel commit d97b46a64674a267bc41c9e16132ee2a98c3347d
 .\"
-.TH KCMP 2 2017-03-13 "Linux" "Linux Programmer's Manual"
+.TH KCMP 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 kcmp \- compare two processes to determine if they share a kernel resource
 .SH SYNOPSIS
 .nf
 .B #include <linux/kcmp.h>
-
+.PP
 .BI "int kcmp(pid_t " pid1 ", pid_t " pid2 ", int " type ,
 .BI "         unsigned long " idx1 ", unsigned long "  idx2 );
 .fi
-
+.PP
 .IR Note :
 There is no glibc wrapper for this system call; see NOTES.
 .SH DESCRIPTION
@@ -47,7 +47,7 @@ and
 .I pid2
 share a kernel resource such as virtual memory, file descriptors,
 and so on.
-
+.PP
 Permission to employ
 .BR kcmp ()
 is governed by ptrace access mode
@@ -58,7 +58,7 @@ and
 .IR pid2 ;
 see
 .BR ptrace (2).
-
+.PP
 The
 .I type
 argument specifies which resource is to be compared in the two processes.
@@ -156,6 +156,45 @@ See the discussion of the
 .BR CLONE_VM
 flag in
 .BR clone (2).
+.TP
+.BR KCMP_EPOLL_TFD " (since Linux 4.13)"
+.\" commit 0791e3644e5ef21646fe565b9061788d05ec71d4
+Check whether the file descriptor
+.I idx1
+of the process
+.I pid1
+is present in the
+.BR epoll (7)
+instance described by
+.I idx2
+of the process
+.IR pid2 .
+The argument
+.I idx2
+is a pointer to a structure where the target file is described.
+This structure has the form:
+.PP
+.in +4n
+.EX
+struct kcmp_epoll_slot {
+    __u32 efd;
+    __u32 tfd;
+    __u64 toff;
+};
+.EE
+.in
+.PP
+Within this structure,
+.I efd
+is an epoll file descriptor returned from
+.BR epoll_create (2),
+.I tfd
+is a target file descriptor number, and
+.I toff
+is a target file offset counted from zero.
+Several different targets may be registered with
+the same file descriptor number and setting a specific
+offset helps to investigate each of them.
 .PP
 Note the
 .BR kcmp ()
@@ -172,7 +211,7 @@ The return value of a successful call to
 is simply the result of arithmetic comparison
 of kernel pointers (when the kernel compares resources, it uses their
 memory addresses).
-
+.PP
 The easiest way to explain is to consider an example.
 Suppose that
 .I v1
@@ -204,7 +243,7 @@ but ordering information is unavailable.
 On error, \-1 is returned, and
 .I errno
 is set appropriately.
-
+.PP
 .BR kcmp ()
 was designed to return values suitable for sorting.
 This is particularly handy if one needs to compare
@@ -246,6 +285,16 @@ Process
 or
 .I pid2
 does not exist.
+.TP
+.B EFAULT
+The epoll slot addressed by
+.I idx2
+is outside of the user's address space.
+.TP
+.B ENOENT
+The target file is not present in
+.BR epoll (7)
+instance.
 .SH VERSIONS
 The
 .BR kcmp ()
@@ -256,7 +305,7 @@ is Linux-specific and should not be used in programs intended to be portable.
 .SH NOTES
 Glibc does not provide a wrapper for this system call; call it using
 .BR syscall (2).
-
+.PP
 This system call is available only if the kernel was configured with
 .BR CONFIG_CHECKPOINT_RESTORE .
 The main use of the system call is for the
@@ -265,7 +314,7 @@ The alternative to this system call would have been to expose suitable
 process information via the
 .BR proc (5)
 filesystem; this was deemed to be unsuitable for security reasons.
-
+.PP
 See
 .BR clone (2)
 for some background information on the shared resources
@@ -278,9 +327,9 @@ the same open file description.
 The program tests different cases for the file descriptor pairs,
 as described in the program output.
 An example run of the program is as follows:
-
-.nf
+.PP
 .in +4n
+.EX
 $ \fB./a.out\fP
 Parent PID is 1144
 Parent opened file on FD 3
@@ -294,11 +343,11 @@ Child opened file on FD 4
 Child duplicated FD 3 to create FD 5
 	Compare duplicated FDs in same process:
 		kcmp(1145, 1145, KCMP_FILE, 3, 5) ==> same
+.EE
 .in
-.fi
 .SS Program source
 \&
-.nf
+.EX
 #define _GNU_SOURCE
 #include <sys/syscall.h>
 #include <sys/wait.h>
@@ -375,12 +424,12 @@ main(int argc, char *argv[])
 
     exit(EXIT_SUCCESS);
 }
-.fi
+.EE
 .SH SEE ALSO
 .BR clone (2),
 .BR unshare (2)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,

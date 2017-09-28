@@ -28,19 +28,19 @@
 .\" 2006-07-01, mtk, Added POLLRDHUP + various other wording and
 .\"	formatting changes.
 .\"
-.TH POLL 2 2017-05-03 "Linux" "Linux Programmer's Manual"
+.TH POLL 2 2017-09-15 "Linux" "Linux Programmer's Manual"
 .SH NAME
 poll, ppoll \- wait for some event on a file descriptor
 .SH SYNOPSIS
 .nf
 .B #include <poll.h>
-.sp
+.PP
 .BI "int poll(struct pollfd *" fds ", nfds_t " nfds ", int " timeout );
-.sp
+
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
 .B #include <signal.h>
 .B #include <poll.h>
-.sp
+.PP
 .BI "int ppoll(struct pollfd *" fds ", nfds_t " nfds ", "
 .BI "        const struct timespec *" tmo_p ", const sigset_t *" sigmask );
 .fi
@@ -50,26 +50,26 @@ performs a similar task to
 .BR select (2):
 it waits for one of a set of file descriptors to become ready
 to perform I/O.
-
+.PP
 The set of file descriptors to be monitored is specified in the
 .I fds
 argument, which is an array of structures of the following form:
+.PP
 .in +4n
-.nf
-
+.EX
 struct pollfd {
     int   fd;         /* file descriptor */
     short events;     /* requested events */
     short revents;    /* returned events */
 };
+.EE
 .in
-.fi
 .PP
 The caller should specify the number of items in the
 .I fds
 array in
 .IR nfds .
-
+.PP
 The field
 .I fd
 contains a file descriptor for an open file.
@@ -85,7 +85,7 @@ call: simply negate the
 .I fd
 field.
 Note, however, that this technique can't be used to ignore file descriptor 0.)
-
+.PP
 The field
 .I events
 is an input parameter, a bit mask specifying the events the application
@@ -100,7 +100,7 @@ are
 and
 .B POLLNVAL
 (see below).
-
+.PP
 The field
 .I revents
 is an output parameter, filled by the kernel with the events that
@@ -119,12 +119,12 @@ or
 field, and will be set in the
 .I revents
 field whenever the corresponding condition is true.)
-
+.PP
 If none of the events requested (and no error) has occurred for any
 of the file descriptors, then
 .BR poll ()
 blocks until one of the events occurs.
-
+.PP
 The
 .I timeout
 argument specifies the number of milliseconds that
@@ -151,7 +151,7 @@ Specifying a
 of zero causes
 .BR poll ()
 to return immediately, even if no file descriptors are ready.
-
+.PP
 The bits that may be set/returned in
 .I events
 and
@@ -264,32 +264,36 @@ Other than the difference in the precision of the
 argument, the following
 .BR ppoll ()
 call:
-.nf
-
-    ready = ppoll(&fds, nfds, tmo_p, &sigmask);
-
-.fi
+.PP
+.in +4n
+.EX
+ready = ppoll(&fds, nfds, tmo_p, &sigmask);
+.EE
+.in
+.PP
 is equivalent to
 .I atomically
 executing the following calls:
-.nf
+.PP
+.in +4n
+.EX
+sigset_t origmask;
+int timeout;
 
-    sigset_t origmask;
-    int timeout;
-
-    timeout = (tmo_p == NULL) ? \-1 :
-              (tmo_p\->tv_sec * 1000 + tmo_p\->tv_nsec / 1000000);
-    pthread_sigmask(SIG_SETMASK, &sigmask, &origmask);
-    ready = poll(&fds, nfds, timeout);
-    pthread_sigmask(SIG_SETMASK, &origmask, NULL);
-.fi
+timeout = (tmo_p == NULL) ? \-1 :
+          (tmo_p\->tv_sec * 1000 + tmo_p\->tv_nsec / 1000000);
+pthread_sigmask(SIG_SETMASK, &sigmask, &origmask);
+ready = poll(&fds, nfds, timeout);
+pthread_sigmask(SIG_SETMASK, &origmask, NULL);
+.EE
+.in
 .PP
 See the description of
 .BR pselect (2)
 for an explanation of why
 .BR ppoll ()
 is necessary.
-
+.PP
 If the
 .I sigmask
 argument is specified as NULL, then
@@ -301,23 +305,23 @@ differs from
 only in the precision of the
 .I timeout
 argument).
-
+.PP
 The
 .I tmo_p
 argument specifies an upper limit on the amount of time that
 .BR ppoll ()
 will block.
 This argument is a pointer to a structure of the following form:
+.PP
 .in +4n
-.nf
-
+.EX
 struct timespec {
     long    tv_sec;         /* seconds */
     long    tv_nsec;        /* nanoseconds */
 };
-.fi
+.EE
 .in
-
+.PP
 If
 .I tmo_p
 is specified as NULL, then
@@ -362,7 +366,7 @@ the glibc (and the old Linux libc)
 .BR poll ()
 wrapper function provides emulation using
 .BR select (2).
-
+.PP
 The
 .BR ppoll ()
 system call was added to Linux in kernel 2.6.16.
@@ -389,7 +393,7 @@ Portable programs may wish to check for
 .B EAGAIN
 and loop, just as with
 .BR EINTR .
-
+.PP
 Some implementations define the nonstandard constant
 .B INFTIM
 with the value \-1 for use as a
@@ -397,7 +401,7 @@ with the value \-1 for use as a
 for
 .BR poll ().
 This constant is not provided in glibc.
-
+.PP
 For a discussion of what may happen if a file descriptor being monitored by
 .BR poll ()
 is closed in another thread, see
@@ -416,7 +420,7 @@ Thus, the glibc
 function does not modify its
 .I tmo_p
 argument.
-
+.PP
 The raw
 .BR ppoll ()
 system call has a fifth argument,
@@ -444,7 +448,7 @@ BUGS section of
 .BR epoll (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 4.12 of the Linux
+This page is part of release 4.13 of the Linux
 .I man-pages
 project.
 A description of the project,
