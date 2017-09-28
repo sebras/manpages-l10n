@@ -69,4 +69,4 @@ echo $translatable_date >> "$newfile"
 echo "msgstr \"$date_day. $month $date_year\"" >> "$newfile"
 
 # Move translation back to original filename
-msgmerge "$newfile" "$2" > "$1"
+msgmerge --previous "$newfile" "$2" > "$1"
