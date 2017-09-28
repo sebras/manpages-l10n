@@ -1,5 +1,13 @@
 # Changelog for manpages-de
 
+## Version 2.1
+
+*Thu Sep 28 15:44:19 CEST 2017*
+
+* Fix typo in find.1, spotted by Sven Bartscher <kritzefitz@debian.org>.
+  Thanks! Closes: [#877060](https://bugs.debian.org/877060)
+* Updated many translations
+
 ## Version 2.0
 
 *Sat Aug 26 14:32:40 CEST 2017*
