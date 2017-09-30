@@ -7,6 +7,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Alexander Bachmer <alex.bachmer@t-online.de>
 * Andreas Braukmann <andy@abra.de>
 * Andreas D. Preissig <andreas@sanix.ruhr.de>
+* Bernhard R. Link <brlink@debian.org>
 * Chris Leick <c.leick@vollbio.de>
 * Christian Schmidt <c.schmidt@ius.gun.de>
 * Daniel Kobras <kobras@linux.de>
@@ -43,6 +44,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Martin Okrslar <okrslar@informatik.uni-muenchen.de>
 * Martin Schmitt <martin@schmitt.li>
 * Martin Schulze <joey@infodrom.org>
+* Matthias Intemann <ma.in@arcor.de>
 * Michaela Hohenner <mhohenne@techfak.uni-bielefeld.de>
 * Michael Arndt <michael@scriptkiller.de>
 * Michael Haardt <michael@moria.de>
