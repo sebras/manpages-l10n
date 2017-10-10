@@ -356,7 +356,7 @@ For example:
 
 .RS
 .br
-.B mount \-\-bind,ro foo foo
+.B mount -o bind,ro foo foo
 .RE
 
 This feature is not supported by the Linux kernel; it is implemented in userspace
@@ -807,8 +807,12 @@ Mount the partition that has the specified
 Verbose mode.
 .TP
 .BR \-w , " \-\-rw" , " \-\-read\-write"
-Mount the filesystem read/write.  This is the default.  A synonym is
+Mount the filesystem read/write. The read-write is kernel default.  A synonym is
 .BR "\-o rw" .
+
+Note that specify \fB\-w\fR on command line forces \fBmount\fR command
+to never try read-only mount on write-protected devices. The default is
+try read-only if the previous mount syscall with read-write flags failed.
 .TP
 .BR \-V , " \-\-version"
 Display version information and exit.
@@ -1142,21 +1146,34 @@ This option implies the options
 (unless overridden by subsequent options, as in the option line
 .BR users,exec,dev,suid ).
 .TP
-.B x-*
-All options prefixed with "x-" are interpreted as comments or as userspace
-application-specific options.  These options are not stored in the mtab file,
+.B X-*
+All options prefixed with "X-" are interpreted as comments or as userspace
+application-specific options.  These options are not stored in the user space (e.g. mtab file),
 nor sent to the mount.\fItype\fR helpers nor to the
 .BR mount (2)
-system call.  The suggested format is \fBx-\fIappname\fR.\fIoption\fR
-(e.g.\& \fBx-systemd.automount\fR).
+system call.  The suggested format is \fBX-\fIappname\fR.\fIoption\fR.
 .TP
-.BR x-mount.mkdir [ = \fImode\fR ]
+.B x-*
+The same as \fBX-*\fR options, but stored permanently in the user space. It
+means the options are also available for umount or another operations.  Note
+that maintain mount options in user space is tricky, because it's necessary use
+libmount based tools and there is no guarantee that the options will be always
+available (for example after a move mount operation or in unshared namespace).
+
+Note that before util-linux v2.30 the x-* options have not been maintained by
+libmount and stored in user space (functionality was the same as have X-* now),
+but due to growing number of use-cases (in initrd, systemd etc.) the
+functionality have been extended to keep existing fstab configurations usable
+without a change.
+.TP
+.BR X-mount.mkdir [ = \fImode\fR ]
 Allow to make a target directory (mountpoint).  The optional argument
 .I mode
 specifies the filesystem access mode used for
 .BR mkdir (2)
 in octal notation.  The default mode is 0755.  This functionality is supported
-only for root users.
+only for root users.  The option is also supported as x-mount.mkdir, this notation
+is deprecated for mount.mkdir since v2.30.
 
 .SH "FILESYSTEM-SPECIFIC MOUNT OPTIONS"
 The following options apply only to certain filesystems.
@@ -3131,4 +3148,4 @@ Karel Zak <kzak@redhat.com>
 .fi
 .SH AVAILABILITY
 The mount command is part of the util-linux package and is available from
-ftp://ftp.kernel.org/pub/linux/utils/util-linux/.
+https://www.kernel.org/pub/linux/utils/util-linux/.
