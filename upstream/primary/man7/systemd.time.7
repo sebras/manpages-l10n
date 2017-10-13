@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.TIME" "7" "" "systemd 234" "systemd.time"
+.TH "SYSTEMD\&.TIME" "7" "" "systemd 235" "systemd.time"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -188,7 +188,10 @@ In some cases timestamps are shown with microsecond granularity\&. In this case 
 .PP
 When parsing, systemd will accept a similar syntax, but expects no timezone specification, unless it is given as the literal string
 "UTC"
-(for the UTC timezone) or is specified to be the locally configured timezone\&. Other timezones than the local and UTC are not supported\&. The weekday specification is optional, but when the weekday is specified, it must either be in the abbreviated ("Wed") or non\-abbreviated ("Wednesday") English language form (case does not matter), and is not subject to the locale choice of the user\&. Either the date, or the time part may be omitted, in which case the current date or 00:00:00, respectively, is assumed\&. The seconds component of the time may also be omitted, in which case ":00" is assumed\&. Year numbers may be specified in full or may be abbreviated (omitting the century)\&.
+(for the UTC timezone), or is specified to be the locally configured timezone, or the timezone name in the IANA timezone database format\&. The complete list of timezones supported on your system can be obtained using the
+"timedatectl list\-timezones"
+(see
+\fBtimedatectl\fR(1))\&. Using IANA format is recommended over local timezone names, as less prone to errors (eg: with local timezone it\*(Aqs possible to specify daylight saving time in winter, while it\*(Aqs incorrect)\&. The weekday specification is optional, but when the weekday is specified, it must either be in the abbreviated ("Wed") or non\-abbreviated ("Wednesday") English language form (case does not matter), and is not subject to the locale choice of the user\&. Either the date, or the time part may be omitted, in which case the current date or 00:00:00, respectively, is assumed\&. The seconds component of the time may also be omitted, in which case ":00" is assumed\&. Year numbers may be specified in full or may be abbreviated (omitting the century)\&.
 .PP
 A timestamp is considered invalid if a weekday is specified and the date does not match the specified day of the week\&.
 .PP
@@ -222,22 +225,23 @@ Examples for valid timestamps and their normalized form (assuming the current ti
 .RS 4
 .\}
 .nf
-Fri 2012\-11\-23 11:12:13 → Fri 2012\-11\-23 11:12:13
-    2012\-11\-23 11:12:13 → Fri 2012\-11\-23 11:12:13
-2012\-11\-23 11:12:13 UTC → Fri 2012\-11\-23 19:12:13
-             2012\-11\-23 → Fri 2012\-11\-23 00:00:00
-               12\-11\-23 → Fri 2012\-11\-23 00:00:00
-               11:12:13 → Fri 2012\-11\-23 11:12:13
-                  11:12 → Fri 2012\-11\-23 11:12:00
-                    now → Fri 2012\-11\-23 18:15:22
-                  today → Fri 2012\-11\-23 00:00:00
-              today UTC → Fri 2012\-11\-23 16:00:00
-              yesterday → Fri 2012\-11\-22 00:00:00
-               tomorrow → Fri 2012\-11\-24 00:00:00
-               +3h30min → Fri 2012\-11\-23 21:45:22
-                    \-5s → Fri 2012\-11\-23 18:15:17
-              11min ago → Fri 2012\-11\-23 18:04:22
-            @1395716396 → Tue 2014\-03\-25 03:59:56
+  Fri 2012\-11\-23 11:12:13 → Fri 2012\-11\-23 11:12:13
+      2012\-11\-23 11:12:13 → Fri 2012\-11\-23 11:12:13
+  2012\-11\-23 11:12:13 UTC → Fri 2012\-11\-23 19:12:13
+               2012\-11\-23 → Fri 2012\-11\-23 00:00:00
+                 12\-11\-23 → Fri 2012\-11\-23 00:00:00
+                 11:12:13 → Fri 2012\-11\-23 11:12:13
+                    11:12 → Fri 2012\-11\-23 11:12:00
+                      now → Fri 2012\-11\-23 18:15:22
+                    today → Fri 2012\-11\-23 00:00:00
+                today UTC → Fri 2012\-11\-23 16:00:00
+                yesterday → Fri 2012\-11\-22 00:00:00
+                 tomorrow → Fri 2012\-11\-24 00:00:00
+tomorrow Pacific/Auckland → Thu 2012\-11\-23 19:00:00
+                 +3h30min → Fri 2012\-11\-23 21:45:22
+                      \-5s → Fri 2012\-11\-23 18:15:17
+                11min ago → Fri 2012\-11\-23 18:04:22
+              @1395716396 → Tue 2014\-03\-25 03:59:56
 .fi
 .if n \{\
 .RE
@@ -319,8 +323,8 @@ Either time or date specification may be omitted, in which case the current day 
 ":00"
 is assumed\&.
 .PP
-A timezone specification is not expected, unless it is given as the literal string
-"UTC", or the local timezone, similar to the supported syntax of timestamps (see above)\&. Non\-local timezones except for UTC are not supported\&.
+Timezone can be specified as the literal string
+"UTC", or the local timezone, similar to the supported syntax of timestamps (see above), or the timezone in the IANA timezone database format (also see above)\&.
 .PP
 The following special expressions may be used as shorthands for longer normalized forms:
 .sp
@@ -377,6 +381,7 @@ Wed\&.\&.Sat,Tue 12\-10\-15 1:2:3 → Tue\&.\&.Sat 2012\-10\-15 01:02:03
                   daily UTC → *\-*\-* 00:00:00 UTC
                     monthly → *\-*\-01 00:00:00
                      weekly → Mon *\-*\-* 00:00:00
+    weekly Pacific/Auckland → Mon *\-*\-* 00:00:00 Pacific/Auckland
                      yearly → *\-01\-01 00:00:00
                    annually → *\-01\-01 00:00:00
                       *:2/3 → *\-*\-* *:02/3:00

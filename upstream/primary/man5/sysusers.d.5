@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSUSERS\&.D" "5" "" "systemd 234" "sysusers.d"
+.TH "SYSUSERS\&.D" "5" "" "systemd 235" "sysusers.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,6 +23,10 @@
 sysusers.d \- Declarative allocation of system users and groups
 .SH "SYNOPSIS"
 .PP
+/etc/sysusers\&.d/*\&.conf
+.PP
+/run/sysusers\&.d/*\&.conf
+.PP
 /usr/lib/sysusers\&.d/*\&.conf
 .SH "DESCRIPTION"
 .PP
@@ -34,12 +38,32 @@ directory to create system users and groups at package installation or boot time
 and
 /etc/group
 directly, bypassing any more complex user databases, for example any database involving NIS or LDAP\&.
-.SH "CONFIGURATION FORMAT"
+.SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 Each configuration file shall be named in the style of
 \fIpackage\fR\&.conf
 or
 \fIpackage\fR\-\fIpart\fR\&.conf\&. The second variant should be used when it is desirable to make it easy to override just this part of configuration\&.
+.PP
+Files in
+/etc/sysusers\&.d
+override files with the same name in
+/usr/lib/sysusers\&.d
+and
+/run/sysusers\&.d\&. Files in
+/run/sysusers\&.d
+override files with the same name in
+/usr/lib/sysusers\&.d\&. Packages should install their configuration files in
+/usr/lib/sysusers\&.d\&. Files in
+/etc/sysusers\&.d
+are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same path, the entry in the file with the lexicographically earliest name will be applied\&. All later entries for the same user and group names will be logged as warnings\&.
+.PP
+If the administrator wants to disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
+/dev/null
+in
+/etc/sysusers\&.d/
+bearing the same filename\&.
+.SH "CONFIGURATION FILE FORMAT"
 .PP
 The file format is one line per user or group containing name, ID, GECOS field description and home directory:
 .sp
@@ -47,12 +71,12 @@ The file format is one line per user or group containing name, ID, GECOS field d
 .RS 4
 .\}
 .nf
-# Type Name ID GECOS
-u httpd 440 "HTTP User"
-u authd /usr/bin/authd "Authorization user"
-g input \- \-
-m authd input
-u root 0 "Superuser" /root
+#Type  Name   ID              GECOS                 Home directory
+u      httpd  440             "HTTP User"
+u      authd  /usr/bin/authd  "Authorization user"
+g      input  \-               \-
+m      authd  input
+u      root   0               "Superuser"           /root
 .fi
 .if n \{\
 .RE
@@ -141,31 +165,6 @@ Only applies to lines of type
 \fIu\fR
 and should otherwise be left unset, or be set to
 "\-"\&.
-.SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
-.PP
-Configuration files are read from directories in
-/etc/,
-/run/, and
-/lib/, in order of precedence\&. Each configuration file in these configuration directories shall be named in the style of
-\fIfilename\fR\&.conf\&. Files in
-/etc/
-override files with the same name in
-/run/
-and
-/lib/\&. Files in
-/run/
-override files with the same name in
-/lib/\&.
-.PP
-Packages should install their configuration files in
-/lib/\&. Files in
-/etc/
-are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same option, the entry in the file with the lexicographically latest name will take precedence\&. It is recommended to prefix all filenames with a two\-digit number and a dash, to simplify the ordering of the files\&.
-.PP
-If the administrator wants to disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
-/dev/null
-in the configuration directory in
-/etc/, with the same filename as the vendor configuration file\&. If the vendor configuration file is included in the initrd image, the image has to be regenerated\&.
 .SH "IDEMPOTENCE"
 .PP
 Note that
