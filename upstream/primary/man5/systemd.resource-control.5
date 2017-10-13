@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 234" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 235" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,8 +52,18 @@ by systemd are listed in
 See the
 \m[blue]\fBNew Control Group Interfaces\fR\m[]\&\s-2\u[1]\d\s+2
 for an introduction on how to make use of resource control APIs from programs\&.
-.SH "AUTOMATIC DEPENDENCIES"
+.SH "IMPLICIT DEPENDENCIES"
 .PP
+The following dependencies are implicitly added:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Units with the
 \fISlice=\fR
 setting set automatically acquire
@@ -61,6 +71,7 @@ setting set automatically acquire
 and
 \fIAfter=\fR
 dependencies on the specified slice unit\&.
+.RE
 .SH "UNIFIED AND LEGACY CONTROL GROUP HIERARCHIES"
 .PP
 The unified control group hierarchy is the new version of kernel control group interface, see
@@ -363,6 +374,130 @@ or
 \fIStartupBlockIO\fR\&.
 .RE
 .PP
+\fIIPAccounting=\fR
+.RS 4
+Takes a boolean argument\&. If true, turns on IPv4 and IPv6 network traffic accounting for packets sent or received by the unit\&. When this option is turned on, all IPv4 and IPv6 sockets created by any process of the unit are accounted for\&. When this option is used in socket units, it applies to all IPv4 and IPv6 sockets associated with it (including both listening and connection sockets where this applies)\&. Note that for socket\-activated services, this configuration setting and the accounting data of the service unit and the socket unit are kept separate, and displayed separately\&. No propagation of the setting and the collected statistics is done, in either direction\&. Moreover, any traffic sent or received on any of the socket unit\*(Aqs sockets is accounted to the socket unit \(em and never to the service unit it might have activated, even if the socket is used by it\&. Note that IP accounting is currently not supported for slice units, and enabling this option for them has no effect\&. The system default for this setting may be controlled with
+\fIDefaultIPAccounting=\fR
+in
+\fBsystemd-system.conf\fR(5)\&.
+.RE
+.PP
+\fIIPAddressAllow=\fR\fI\fIADDDRESS[/PREFIXLENGTH]\&...\fR\fR, \fIIPAddressDeny=\fR\fI\fIADDRESS[/PREFIXLENGTH]\&...\fR\fR
+.RS 4
+Turn on address range network traffic filtering for packets sent and received over AF_INET and AF_INET6 sockets\&. Both directives take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length (separated by a
+"/"
+character)\&. If the latter is omitted, the address is considered a host address, i\&.e\&. the prefix covers the whole address (32 for IPv4, 128 for IPv6)\&.
+.sp
+The access lists configured with this option are applied to all sockets created by processes of this unit (or in the case of socket units, associated with it)\&. The lists are implicitly combined with any lists configured for any of the parent slice units this unit might be a member of\&. By default all access lists are empty\&. When configured the lists are enforced as follows:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Access will be granted in case its destination/source address matches any entry in the
+\fIIPAddressAllow=\fR
+setting\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Otherwise, access will be denied in case its destination/source address matches any entry in the
+\fIIPAddressDeny=\fR
+setting\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Otherwise, access will be granted\&.
+.RE
+.sp
+In order to implement a whitelisting IP firewall, it is recommended to use a
+\fIIPAddressDeny=\fR\fBany\fR
+setting on an upper\-level slice unit (such as the root slice
+\-\&.slice
+or the slice containing all system services
+system\&.slice
+\(en see
+\fBsystemd.special\fR(7)
+for details on these slice units), plus individual per\-service
+\fIIPAddressAllow=\fR
+lines permitting network access to relevant services, and only them\&.
+.sp
+Note that for socket\-activated services, the IP access list configured on the socket unit applies to all sockets associated with it directly, but not to any sockets created by the ultimately activated services for it\&. Conversely, the IP access list configured for the service is not applied to any sockets passed into the service via socket activation\&. Thus, it is usually a good idea, to replicate the IP access lists on both the socket and the service unit, however it often makes sense to maintain one list more open and the other one more restricted, depending on the usecase\&.
+.sp
+If these settings are used multiple times in the same unit the specified lists are combined\&. If an empty string is assigned to these settings the specific access list is reset and all previous settings undone\&.
+.sp
+In place of explicit IPv4 or IPv6 address and prefix length specifications a small set of symbolic names may be used\&. The following names are defined:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Special address/network names
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Symbolic Name
+T}:T{
+Definition
+T}:T{
+Meaning
+T}
+.T&
+l l l
+l l l
+l l l
+l l l.
+T{
+\fBany\fR
+T}:T{
+0\&.0\&.0\&.0/0 ::/0
+T}:T{
+Any host
+T}
+T{
+\fBlocalhost\fR
+T}:T{
+127\&.0\&.0\&.0/8 ::1/128
+T}:T{
+All addresses on the local loopback
+T}
+T{
+\fBlink\-local\fR
+T}:T{
+169\&.254\&.0\&.0/16 fe80::/64
+T}:T{
+All link\-local IP addresses
+T}
+T{
+\fBmulticast\fR
+T}:T{
+224\&.0\&.0\&.0/4 ff00::/8
+T}:T{
+All IP multicasting addresses
+T}
+.TE
+.sp 1
+Note that these settings might not be supported on some systems (for example if eBPF control group support is not enabled in the underlying kernel or container manager)\&. These settings will have no effect in that case\&. If compatibility with such systems is desired it is hence recommended to not exclusively rely on them for IP security\&.
+.RE
+.PP
 \fIDeviceAllow=\fR
 .RS 4
 Control access to specific device nodes by the executed processes\&. Takes two space\-separated strings: a device node specifier followed by a combination of
@@ -384,7 +519,7 @@ The device node specifier is either a path to a device node in the file system, 
 or
 "block\-"
 followed by a device group name, as listed in
-/proc/devices\&. The latter is useful to whitelist all current and future devices belonging to a specific device group at once\&. The device group is matched according to file name globbing rules, you may hence use the
+/proc/devices\&. The latter is useful to whitelist all current and future devices belonging to a specific device group at once\&. The device group is matched according to filename globbing rules, you may hence use the
 "*"
 and
 "?"
@@ -441,7 +576,7 @@ For units of type slice, the only accepted value for this setting is the parent 
 Special care should be taken when relying on the default slice assignment in templated service units that have
 \fIDefaultDependencies=no\fR
 set, see
-\fBsystemd.service\fR(5), section "Automatic Dependencies" for details\&.
+\fBsystemd.service\fR(5), section "Default Dependencies" for details\&.
 .RE
 .PP
 \fIDelegate=\fR

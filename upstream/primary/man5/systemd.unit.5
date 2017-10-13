@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 234" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 235" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -194,6 +194,8 @@ take precedence over those in
 which in turn take precedence over those in
 /lib\&. Drop\-in files under any of these directories take precedence over unit files wherever located\&. Multiple drop\-in files with different names are applied in lexicographic order, regardless of which of the directories they reside in\&.
 .PP
+Note that while systemd offers a flexible dependency system between units it is recommended to use this functionality only sparingly and instead rely on techniques such as bus\-based or socket\-based activation which make dependencies implicit, resulting in a both simpler and more flexible system\&.
+.PP
 Some unit names reflect paths existing in the file system namespace\&. Example: a device unit
 dev\-sda\&.device
 refers to a device with the device node
@@ -222,29 +224,40 @@ If a unit file is empty (i\&.e\&. has the file size 0) or is symlinked to
 .PP
 The unit file format is covered by the
 \m[blue]\fBInterface Stability Promise\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.SH "AUTOMATIC DEPENDENCIES"
+.SH "IMPLICIT DEPENDENCIES"
 .PP
-Note that while systemd offers a flexible dependency system between units it is recommended to use this functionality only sparingly and instead rely on techniques such as bus\-based or socket\-based activation which make dependencies implicit, resulting in a both simpler and more flexible system\&.
+A number of unit dependencies are implicitly established, depending on unit type and unit configuration\&. These implicit dependencies can make unit configuration file cleaner\&. For the implicit dependencies in each unit type, please refer to section "Implicit Dependencies" in respective man pages\&.
 .PP
-A number of unit dependencies are automatically established, depending on unit configuration\&. On top of that, for units with
-\fIDefaultDependencies=yes\fR
-(the default) a couple of additional dependencies are added\&. The precise effect of
-\fIDefaultDependencies=yes\fR
-depends on the unit type (see below)\&.
+For example, service units with
+\fIType=dbus\fR
+automatically acquire dependencies of type
+\fIRequires=\fR
+and
+\fIAfter=\fR
+on
+dbus\&.socket\&. See
+\fBsystemd.service\fR(5)
+for details\&.
+.SH "DEFAULT DEPENDENCIES"
 .PP
-If
-\fIDefaultDependencies=yes\fR
-is set, units that are referenced by other units of type
-\&.target
-via a
+Default dependencies are similar to implicit dependencies, but can be turned on and off by setting
+\fIDefaultDependencies=\fR
+to
+\fIyes\fR
+(the default) and
+\fIno\fR, while implicit dependencies are always in effect\&. See section "Default Dependencies" in respective man pages for the effect of enabling
+\fIDefaultDependencies=\fR
+in each unit types\&.
+.PP
+For example, target units will complement all configured dependencies of type type
 \fIWants=\fR
 or
 \fIRequires=\fR
-dependency might automatically gain an
-\fIBefore=\fR
-dependency too\&. See
+with dependencies of type
+\fIAfter=\fR\&. See
 \fBsystemd.target\fR(5)
-for details\&.
+for details\&. Note that this behavior can be turned off by setting
+\fIDefaultDependencies=no\fR\&.
 .SH "UNIT FILE LOAD PATH"
 .PP
 Unit files are loaded from a set of paths determined during compilation, described in the two tables below\&. Unit files found in directories listed earlier override files with the same name in directories lower in the list\&.
@@ -388,7 +401,9 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 .PP
 \fIRequires=\fR
 .RS 4
-Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units gets deactivated or its activation fails, this unit will be deactivated\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
+Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
+\fIAfter=\fR
+on the failing unit is set, this unit will not be started\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
 \fIAfter=\fR
 or
 \fIBefore=\fR
@@ -411,7 +426,7 @@ in order to achieve a system that is more robust when dealing with failing servi
 .sp
 Note that this dependency type does not imply that the other unit always has to be in active state when this unit is running\&. Specifically: failing condition checks (such as
 \fIConditionPathExists=\fR,
-\fIConditionPathExists=\fR, \&... \(em see below) do not cause the start job of a unit with a
+\fIConditionPathIsSymbolicLink=\fR, \&... \(em see below) do not cause the start job of a unit with a
 \fIRequires=\fR
 dependency on it to fail\&. Also, some unit types may deactivate on their own (for example, a service process may decide to exit cleanly, or a device may be unplugged by the user), which is not propagated to units having a
 \fIRequires=\fR
@@ -583,7 +598,10 @@ option for details on the possible values\&. If this is set to
 .RS 4
 Takes a boolean argument\&. If
 \fBtrue\fR, this unit will not be stopped when isolating another unit\&. Defaults to
-\fBfalse\fR\&.
+\fBfalse\fR
+for service, target, socket, busname, timer, and path units, and
+\fBtrue\fR
+for slice, scope, device, swap, mount, and automount units\&.
 .RE
 .PP
 \fIStopWhenUnneeded=\fR
@@ -634,11 +652,8 @@ defaults to
 in service units) as the job timeout has no effect on the unit itself, only on the job that might be pending for it\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
 .sp
 \fIJobTimeoutAction=\fR
-optionally configures an additional action to take when the time\-out is hit\&. It takes the same values as the per\-service
-\fIStartLimitAction=\fR
-setting, see
-\fBsystemd.service\fR(5)
-for details\&. Defaults to
+optionally configures an additional action to take when the time\-out is hit\&. It takes the same values as
+\fIStartLimitAction=\fR\&. Defaults to
 \fBnone\fR\&.
 \fIJobTimeoutRebootArgument=\fR
 configures an optional reboot string to pass to the
@@ -939,7 +954,7 @@ unit file drop\-ins (see above)\&.
 .PP
 \fIAlias=\fR
 .RS 4
-A space\-separated list of additional names this unit shall be installed under\&. The names listed here must have the same suffix (i\&.e\&. type) as the unit file name\&. This option may be specified more than once, in which case all listed names are used\&. At installation time,
+A space\-separated list of additional names this unit shall be installed under\&. The names listed here must have the same suffix (i\&.e\&. type) as the unit filename\&. This option may be specified more than once, in which case all listed names are used\&. At installation time,
 \fBsystemctl enable\fR
 will create symlinks from these names to the unit filename\&. Note that not all unit types support such alias names, and this setting is not supported for them\&. Specifically, mount, slice, swap, and automount units do not support aliasing\&.
 .RE

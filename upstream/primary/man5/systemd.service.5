@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 234" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 235" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,8 +50,18 @@ If a service is requested under a certain name but no unit configuration file is
 suffix removed) and dynamically creates a service unit from that script\&. This is useful for compatibility with SysV\&. Note that this compatibility is quite comprehensive but not 100%\&. For details about the incompatibilities, see the
 \m[blue]\fBIncompatibilities with SysV\fR\m[]\&\s-2\u[1]\d\s+2
 document\&.
-.SH "AUTOMATIC DEPENDENCIES"
+.SH "IMPLICIT DEPENDENCIES"
 .PP
+The following dependencies are implicitly added:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Services with
 \fIType=dbus\fR
 set automatically acquire dependencies of type
@@ -60,7 +70,16 @@ and
 \fIAfter=\fR
 on
 dbus\&.socket\&.
-.PP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Socket activated services are automatically ordered after their activating
 \&.socket
 units via an automatic
@@ -74,13 +93,27 @@ via automatic
 and
 \fIAfter=\fR
 dependencies\&.
+.RE
 .PP
-Unless
-\fIDefaultDependencies=\fR
-in the
-"[Unit]"
-is set to
-\fBfalse\fR, service units will implicitly have dependencies of type
+Additional implicit dependencies may be added as result of execution and resource control parameters as documented in
+\fBsystemd.exec\fR(5)
+and
+\fBsystemd.resource-control\fR(5)\&.
+.SH "DEFAULT DEPENDENCIES"
+.PP
+The following dependencies are added unless
+\fIDefaultDependencies=no\fR
+is set:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Service units will have dependencies of type
 \fIRequires=\fR
 and
 \fIAfter=\fR
@@ -95,7 +128,16 @@ and
 \fIBefore=\fR
 on
 shutdown\&.target\&. These ensure that normal service units pull in basic system initialization, and are terminated cleanly prior to system shutdown\&. Only services involved with early boot or late system shutdown should disable this option\&.
-.PP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Instanced service units (i\&.e\&. service units with an
 "@"
 in their name) are assigned by default a per\-template slice unit (see
@@ -106,11 +148,7 @@ in the template unit, and either define your own per\-template slice unit file t
 \fISlice=system\&.slice\fR
 (or another suitable slice) in the template unit\&. Also see
 \fBsystemd.resource-control\fR(5)\&.
-.PP
-Additional implicit dependencies may be added as result of execution and resource control parameters as documented in
-\fBsystemd.exec\fR(5)
-and
-\fBsystemd.resource-control\fR(5)\&.
+.RE
 .SH "OPTIONS"
 .PP
 Service files must include a
@@ -215,7 +253,7 @@ is unset because for the other types or with an explicitly configured PID file, 
 .PP
 \fIPIDFile=\fR
 .RS 4
-Takes an absolute file name pointing to the PID file of this daemon\&. Use of this option is recommended for services where
+Takes an absolute filename pointing to the PID file of this daemon\&. Use of this option is recommended for services where
 \fIType=\fR
 is set to
 \fBforking\fR\&. systemd will read the PID of the main process of the daemon after start\-up of the service\&. systemd will not write to the file configured here, although it will remove the file after the service has shut down if it still exists\&.
@@ -250,17 +288,68 @@ and
 \fIExecStop=\fR
 are not valid\&.)
 .sp
-For each of the specified commands, the first argument must be an absolute path to an executable\&. Optionally, if this file name is prefixed with
-"@", the second token will be passed as
-"argv[0]"
-to the executed process, followed by the further arguments specified\&. If the absolute filename is prefixed with
-"\-", an exit code of the command normally considered a failure (i\&.e\&. non\-zero exit status or abnormal exit due to signal) is ignored and considered success\&. If the absolute path is prefixed with
+For each of the specified commands, the first argument must be an absolute path to an executable\&. Optionally, this filename may be prefixed with a number of special characters:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Special executable prefixes
+.TS
+allbox tab(:);
+lB lB.
+T{
+Prefix
+T}:T{
+Effect
+T}
+.T&
+l l
+l l
+l l
+l l
+l l.
+T{
+"@"
+T}:T{
+If the executable path is prefixed with "@", the second specified token will be passed as "argv[0]" to the executed process (instead of the actual filename), followed by the further arguments specified\&.
+T}
+T{
+"\-"
+T}:T{
+If the executable path is prefixed with "\-", an exit code of the command normally considered a failure (i\&.e\&. non\-zero exit status or abnormal exit due to signal) is ignored and considered success\&.
+T}
+T{
 "+"
-then it is executed with full privileges\&.
+T}:T{
+If the executable path is prefixed with "+" then the process is executed with full privileges\&. In this mode privilege restrictions configured with \fIUser=\fR, \fIGroup=\fR, \fICapabilityBoundingSet=\fR or the various file system namespacing options (such as \fIPrivateDevices=\fR, \fIPrivateTmp=\fR) are not applied to the invoked command line (but still affect any other \fIExecStart=\fR, \fIExecStop=\fR, \&... lines)\&.
+T}
+T{
+"!"
+T}:T{
+Similar to the "+" character discussed above this permits invoking command lines with elevated privileges\&. However, unlike "+" the "!" character exclusively alters the effect of \fIUser=\fR, \fIGroup=\fR and \fISupplementaryGroups=\fR, i\&.e\&. only the stanzas the affect user and group credentials\&. Note that this setting may be combined with \fIDynamicUser=\fR, in which case a dynamic user/group pair is allocated before the command is invoked, but credential changing is left to the executed process itself\&.
+T}
+T{
+"!!"
+T}:T{
+This prefix is very similar to "!!", however it only has an effect on systems lacking support for ambient process capabilities, i\&.e\&. without support for \fIAmbientCapabilities=\fR\&. It\*(Aqs intended to be used for unit files that take benefit of ambient capabilities to run processes with minimal privileges wherever possible while remaining compatible with systems that lack ambient capabilities support\&. Note that when "!!" is used, and a system lacking ambient capability support is detected any configured \fISystemCallFilter=\fR and \fICapabilityBoundingSet=\fR stanzas are implicitly modified, in order to permit spawned processes to drop credentials and capabilities themselves, even if this is configured to not be allowed\&. Moreover, if this prefix is used and a system lacking ambient capability support is detected \fIAmbientCapabilities=\fR will be skipped and not be applied\&. On systems supporting ambient capabilities, "!!" has no effect and is redundant\&.
+T}
+.TE
+.sp 1
 "@",
-"\-", and
-"+"
-may be used together and they can appear in any order\&.
+"\-", and one of
+"+"/"!"/"!!"
+may be used together and they can appear in any order\&. However, only one of
+"+",
+"!",
+"!!"
+may be used at a time\&. Note that these prefixes are also supported for the other command line settings, i\&.e\&.
+\fIExecStartPre=\fR,
+\fIExecStartPost=\fR,
+\fIExecReload\fR,
+\fIExecStop=\fR
+and
+\fIExecStopPost=\fR\&.
 .sp
 If more than one command is specified, the commands are invoked sequentially in the order they appear in the unit file\&. If one of the commands fails (and is not prefixed with
 "\-"), other lines are not executed, and the unit is considered failed\&.
@@ -524,7 +613,7 @@ or
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&1.\ \&Exit causes and the effect of the \fIRestart=\fR settings on them
+.B Table\ \&2.\ \&Exit causes and the effect of the \fIRestart=\fR settings on them
 .TS
 allbox tab(:);
 lB lB lB lB lB lB lB lB.
@@ -682,11 +771,6 @@ ensures that exit codes 1, 2, 8 and the termination signal
 \fBSIGKILL\fR
 are considered clean service terminations\&.
 .sp
-Note that if a process has a signal handler installed and exits by calling
-\fB_exit\fR(2)
-in response to a signal, the information about the signal is lost\&. Programs should instead perform cleanup and kill themselves with the same signal instead\&. See
-\m[blue]\fBProper handling of SIGINT/SIGQUIT \(em How to be a proper program\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
 This option may appear more than once, in which case the list of successful exit statuses is merged\&. If the empty string is assigned to this option, the list is reset, all prior assignments of this option will have no effect\&.
 .RE
 .PP
@@ -843,7 +927,7 @@ is seen on them, or when the service is fully stopped and no job is queued or be
 \fIUSBFunctionDescriptors=\fR
 .RS 4
 Configure the location of a file containing
-\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[3]\d\s+2
+\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[2]\d\s+2
 descriptors, for implementation of USB gadget functions\&. This is used only in conjunction with a socket unit with
 \fIListenUSBFunction=\fR
 configured\&. The contents of this file are written to the
@@ -1016,7 +1100,7 @@ with five arguments:
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&2.\ \&C escapes supported in command lines and environment variables
+.B Table\ \&3.\ \&C escapes supported in command lines and environment variables
 .TS
 allbox tab(:);
 lB lB.
@@ -1362,11 +1446,6 @@ Incompatibilities with SysV
 \%https://www.freedesktop.org/wiki/Software/systemd/Incompatibilities
 .RE
 .IP " 2." 4
-Proper handling of SIGINT/SIGQUIT \(em How to be a proper program
-.RS 4
-\%http://www.cons.org/cracauer/sigint.html
-.RE
-.IP " 3." 4
 USB FunctionFS
 .RS 4
 \%https://www.kernel.org/doc/Documentation/usb/functionfs.txt

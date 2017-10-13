@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 234" "systemd-resolved.service"
+.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 235" "systemd-resolved.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -186,7 +186,7 @@ host name are never routed to LLMNR\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Multi\-label names are routed to all local interfaces that have a DNS sever configured, plus the globally configured DNS server if there is one\&. Address lookups from the link\-local address range are never routed to DNS\&.
+Multi\-label names are routed to all local interfaces that have a DNS server configured, plus the globally configured DNS server if there is one\&. Address lookups from the link\-local address range are never routed to DNS\&.
 .RE
 .PP
 If lookups are routed to multiple interfaces, the first successful response is returned (thus effectively merging the lookup zones on all matching interfaces)\&. If the lookup failed on all interfaces, the last failing response is returned\&.
@@ -270,18 +270,41 @@ or lists 127\&.0\&.0\&.53 as DNS server\&.
 .PP
 \fBSIGUSR1\fR
 .RS 4
-Upon reception of the SIGUSR1 process signal
+Upon reception of the
+\fBSIGUSR1\fR
+process signal
 \fBsystemd\-resolved\fR
-will dump the contents of all DNS resource record caches it maintains into the system logs\&.
+will dump the contents of all DNS resource record caches it maintains, as well as all feature level information it learnt about configured DNS servers into the system logs\&.
 .RE
 .PP
 \fBSIGUSR2\fR
 .RS 4
-Upon reception of the SIGUSR2 process signal
+Upon reception of the
+\fBSIGUSR2\fR
+process signal
 \fBsystemd\-resolved\fR
 will flush all caches it maintains\&. Note that it should normally not be necessary to request this explicitly \(en except for debugging purposes \(en as
 \fBsystemd\-resolved\fR
-flushes the caches automatically anyway any time the host\*(Aqs network configuration changes\&.
+flushes the caches automatically anyway any time the host\*(Aqs network configuration changes\&. Sending this signal to
+\fBsystemd\-resolved\fR
+is equivalent to the
+\fBsystemd\-resolve \-\-flush\-caches\fR
+command, however the latter is recommended since it operates in a synchronous way\&.
+.RE
+.PP
+\fBSIGRTMIN+1\fR
+.RS 4
+Upon reception of the
+\fBSIGRTMIN+1\fR
+process signal
+\fBsystemd\-resolved\fR
+will forget everything it learnt about the configured DNS servers\&. Specifically any information about server feature support is flushed out, and the server feature probing logic is restarted on the next request, starting with the most fully featured level\&. Note that it should normally not be necessary to request this explicitly \(en except for debugging purposes \(en as
+\fBsystemd\-resolved\fR
+automatically forgets learnt information any time the DNS server configuration changes\&. Sending this signal to
+\fBsystemd\-resolved\fR
+is equivalent to the
+\fBsystemd\-resolve \-\-reset\-server\-features\fR
+command, however the latter is recommended since it operates in a synchronous way\&.
 .RE
 .SH "SEE ALSO"
 .PP
