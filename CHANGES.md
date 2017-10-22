@@ -1,5 +1,11 @@
 # Changelog for manpages-de
 
+## Version 2.2
+
+*Sun Oct 22 13:14:03 CEST 2017*
+
+* Updated many translations
+
 ## Version 2.1
 
 *Thu Sep 28 15:44:19 CEST 2017*
