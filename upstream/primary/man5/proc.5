@@ -1,5 +1,5 @@
 .\" Copyright (C) 1994, 1995 by Daniel Quinlan (quinlan@yggdrasil.com)
-.\" and Copyright (C) 2002-2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2002-2008,2017 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" with networking additions from Alan Cox (A.Cox@swansea.ac.uk)
 .\" and scsi additions from Michael Neuffer (neuffer@mail.uni-mainz.de)
 .\" and sysctl additions from Andries Brouwer (aeb@cwi.nl)
@@ -671,7 +671,7 @@ and
 in
 .IR /proc/self/fd .
 Thus the example command above could be written as:
-.PP
+.IP
 .in +4n
 .EX
 .RB "$" " foobar \-i /dev/stdin \-o /dev/stdout ..."
@@ -684,6 +684,31 @@ the symbolic links in this directory is governed by a ptrace access mode
 .B PTRACE_MODE_READ_FSCREDS
 check; see
 .BR ptrace (2).
+.IP
+Note that for file descriptors referring to inodes (pipes and sockets, see above),
+those inodes still have permission bits and ownership information
+distinct from those of the
+.I /proc/[pid]/fd
+entry,
+and that the owner may differ from the user and group IDs of the process.
+An unprivileged process may lack permissions to open them, as in this example:
+.IP
+.in +4n
+.EX
+.RB "$" " echo test | sudo -u nobody cat"
+test
+.RB "$" " echo test | sudo -u nobody cat /proc/self/fd/0"
+cat: /proc/self/fd/0: Permission denied
+.EE
+.in
+.IP
+File descriptor 0 refers to the pipe created by the shell
+and owned by that shell's user, which is not
+.IR nobody ,
+so
+.B cat
+does not have permission to create a new file descriptor to read from that inode,
+even though it can still read from its existing file descriptor 0.
 .TP
 .IR /proc/[pid]/fdinfo/ " (since Linux 2.6.22)"
 This is a subdirectory containing one entry for each file which the
@@ -1219,7 +1244,24 @@ mount ID: a unique ID for the mount (may be reused after
 .TP
 (2)
 parent ID: the ID of the parent mount
-(or of self for the top of the mount tree).
+(or of self for the root of this mount namespace's mount tree).
+.IP
+If the parent mount point lies outside the process's root directory (see
+.BR chroot (2)),
+the ID shown here won't have a corresponding record in
+.I mountinfo
+whose mount ID (field 1) matches this parent mount ID
+(because mount points that lie outside the process's root directory
+are not shown in
+.IR mountinfo ).
+As a special case of this point,
+the process's root mount point may have a parent mount
+(for the initramfs filesystem) that lies
+.\" Miklos Szeredi, Nov 2017: The hidden one is the initramfs, I believe
+.\" mtk: In the initial mount namespace, this hidden ID has the value 0
+outside the process's root directory,
+and an entry for that mount point will not appear in
+.IR mountinfo .
 .TP
 (3)
 major:minor: the value of
@@ -1370,7 +1412,9 @@ Since Linux 2.6.36, use of this file is deprecated in favor of
 .IR /proc/[pid]/oom_score_adj .
 .TP
 .IR /proc/[pid]/oom_score " (since Linux 2.6.11)"
-.\" See mm/oom_kill.c::badness() in the 2.6.25 sources
+.\" See mm/oom_kill.c::badness() in pre 2.6.36 sources
+.\" See mm/oom_kill.c::oom_badness() after 2.6.36
+.\" commit a63d83f427fbce97a6cea0db2e64b0eb8435cd10
 This file displays the current score that the kernel gives to
 this process for the purpose of selecting a process
 for the OOM-killer.
@@ -1378,7 +1422,16 @@ A higher score means that the process is more likely to be
 selected by the OOM-killer.
 The basis for this score is the amount of memory used by the process,
 with increases (+) or decreases (\-) for factors including:
-.\" See mm/oom_kill.c::badness() in the 2.6.25 sources
+.\" See mm/oom_kill.c::badness() in pre 2.6.36 sources
+.\" See mm/oom_kill.c::oom_badness() after 2.6.36
+.\" commit a63d83f427fbce97a6cea0db2e64b0eb8435cd10
+.RS
+.IP * 2
+whether the process is privileged (\-).
+.\" More precisely, if it has CAP_SYS_ADMIN or (pre 2.6.36) CAP_SYS_RESOURCE
+.RE
+.IP
+Before kernel 2.6.36 the following factors were also used in the calculation of oom_score:
 .RS
 .IP * 2
 whether the process creates a lot of children using
@@ -1388,10 +1441,7 @@ whether the process creates a lot of children using
 whether the process has been running a long time,
 or has used a lot of CPU time (\-);
 .IP *
-whether the process has a low nice value (i.e., > 0) (+);
-.IP *
-whether the process is privileged (\-); and
-.\" More precisely, if it has CAP_SYS_ADMIN or CAP_SYS_RESOURCE
+whether the process has a low nice value (i.e., > 0) (+); and
 .IP *
 whether the process is making direct hardware access (\-).
 .\" More precisely, if it has CAP_SYS_RAWIO
@@ -1490,9 +1540,14 @@ If set, the page is in swap space
 61 (since Linux 3.5)
 The page is a file-mapped page or a shared anonymous page.
 .TP
-60\(en56 (since Linux 3.11)
+60\(en57 (since Linux 3.11)
 Zero
 .\" Not quite true; see commit 541c237c0923f567c9c4cabb8a81635baadc713f
+.TP
+56 (since Linux 4.2)
+.\" commit 77bb499bb60f4b79cca7d139c8041662860fcf87
+.\" commit 83b4b0bb635eee2b8e075062e4e008d1bc110ed7
+The page is exclusively mapped.
 .TP
 55 (since Linux 3.11)
 PTE is soft-dirty
@@ -2678,7 +2733,7 @@ a higher order (thus with double the size) to satisfy allocation
 requests and to counter memory fragmentation.
 The order matches the column number, when starting to count at zero.
 .IP
-For example on a x86_64 system:
+For example on an x86-64 system:
 .IP
 .in -12n
 .EX
@@ -2866,7 +2921,7 @@ utility provides access to this information in a friendly format.
 .I /proc/interrupts
 This is used to record the number of interrupts per CPU per IO device.
 Since Linux 2.6.24,
-for the i386 and x86_64 architectures, at least, this also includes
+for the i386 and x86-64 architectures, at least, this also includes
 interrupts internal to the system (that is, not associated with a device
 as such), such as NMI (nonmaskable interrupt), LOC (local timer interrupt),
 and for SMP systems, TLB (TLB flush interrupt), RES (rescheduling
@@ -2924,6 +2979,19 @@ Information in this file is retrieved with the
 .BR dmesg (1)
 program.
 .TP
+.IR /proc/kpagecgroup " (since Linux 4.3)"
+.\" commit 80ae2fdceba8313b0433f899bdd9c6c463291a17
+This file contains a 64-bit inode number of
+the memory cgroup each page is charged to,
+indexed by page frame number (see the discussion of
+.IR /proc/[pid]/pagemap ).
+.IP
+The
+.IR /proc/kpagecgroup
+file is present only if the
+.B CONFIG_MEMCG
+kernel configuration option is enabled.
+.TP
 .IR /proc/kpagecount " (since Linux 2.6.25)"
 This file contains a 64-bit count of the number of
 times each physical page frame is mapped,
@@ -2959,12 +3027,18 @@ The bits are as follows:
     14 - KPF_SWAPBACKED     (since Linux 2.6.31)
     15 - KPF_COMPOUND_HEAD  (since Linux 2.6.31)
     16 - KPF_COMPOUND_TAIL  (since Linux 2.6.31)
-    16 - KPF_HUGE           (since Linux 2.6.31)
+    17 - KPF_HUGE           (since Linux 2.6.31)
     18 - KPF_UNEVICTABLE    (since Linux 2.6.31)
     19 - KPF_HWPOISON       (since Linux 2.6.31)
     20 - KPF_NOPAGE         (since Linux 2.6.31)
     21 - KPF_KSM            (since Linux 2.6.32)
     22 - KPF_THP            (since Linux 3.4)
+    23 - KPF_BALLOON        (since Linux 3.18)
+.\" KPF_BALLOON: commit 09316c09dde33aae14f34489d9e3d243ec0d5938
+    24 - KPF_ZERO_PAGE      (since Linux 4.0)
+.\" KPF_ZERO_PAGE: commit 56873f43abdcd574b25105867a990f067747b2f4
+    25 - KPF_IDLE           (since Linux 4.3)
+.\" KPF_IDLE: commit f074a8f49eb87cde95ac9d040ad5e7ea4f029738
 .IP
 For further details on the meanings of these bits,
 see the kernel source file
@@ -3009,6 +3083,103 @@ This file shows current file locks
 .RB ( flock "(2) and " fcntl (2))
 and leases
 .RB ( fcntl (2)).
+.IP
+An example of the content shown in this file is the following:
+.IP
+.in +4n
+.EX
+1: POSIX  ADVISORY  READ  5433 08:01:7864448 128 128
+2: FLOCK  ADVISORY  WRITE 2001 08:01:7864554 0 EOF
+3: FLOCK  ADVISORY  WRITE 1568 00:2f:32388 0 EOF
+4: POSIX  ADVISORY  WRITE 699 00:16:28457 0 EOF
+5: POSIX  ADVISORY  WRITE 764 00:16:21448 0 0
+6: POSIX  ADVISORY  READ  3548 08:01:7867240 1 1
+7: POSIX  ADVISORY  READ  3548 08:01:7865567 1826 2335
+8: OFDLCK ADVISORY  WRITE -1 08:01:8713209 128 191
+.EE
+.in
+.IP
+The fields shown in each line are as follows:
+.RS
+.IP (1) 4
+The ordinal position of the lock in the list.
+.IP (2)
+The lock type.
+Values that may appear here include:
+.RS
+.TP
+.B FLOCK
+This is a BSD file lock created using
+.BR flock (2).
+.TP
+.B OFDLCK
+This is an open file description (OFD) lock created using
+.BR fcntl (2).
+.TP
+.B POSIX
+This is a POSIX byte-range lock created using
+.BR fcntl (2).
+.RE
+.IP (3)
+Among the strings that can appear here are the following:
+.RS
+.TP
+.B ADVISORY
+This is an advisory lock.
+.TP
+.B MANDATORY
+This is a mandatory lock.
+.RE
+.IP (4)
+The type of lock.
+Values that can appear here are:
+.RS
+.TP
+.B READ
+This is a POSIX or OFD read lock, or a BSD shared lock.
+.TP
+.B WRITE
+This is a POSIX or OFD write lock, or a BSD exclusive lock.
+.RE
+.IP (5)
+The PID of the process that owns the lock.
+.IP
+Because OFD locks are not owned by a single process
+(since multiple processes may have file descriptors that
+refer to the same open file description),
+the value \-1 is displayed in this field for OFD locks.
+(Before kernel 4.14,
+.\" commit 9d5b86ac13c573795525ecac6ed2db39ab23e2a8
+a bug meant that the PID of the process that
+initially acquired the lock was displayed instead of the value \-1.)
+.IP (6)
+Three colon-separated subfields that identify the major and minor device
+ID of the device containing the filesystem where the locked file resides,
+followed by the inode number of the locked file.
+.IP (7)
+The byte offset of the first byte of the lock.
+For BSD locks, this value is always 0.
+.IP (8)
+The byte offset of the last byte of the lock.
+.B EOF
+in this field means that the lock extends to the end of the file.
+For BSD locks, the value shown is always
+.IR EOF .
+.RE
+.IP
+Since Linux 4.9,
+.\" commit d67fd44f697dff293d7cdc29af929241b669affe
+the list of locks shown in
+.I /proc/locks
+is filtered to show just the locks for the processes in the PID
+namespace (see
+.BR pid_namespaces (7))
+for which the
+.I /proc
+filesystem was mounted.
+(In the initial PID namespace,
+there is no filtering of the records shown in this file.)
+.IP
 The
 .BR lslocks (8)
 command provides a bit more information about each lock.
@@ -4522,6 +4693,10 @@ message queue.
 This is a read-only file that displays the upper limit on the
 number of a process's group memberships.
 .TP
+.IR /proc/sys/kernel/ns_last_pid " (since Linux 3.3)"
+See
+.BR pid_namespaces (7).
+.TP
 .IR /proc/sys/kernel/ostype " and " /proc/sys/kernel/osrelease
 These files
 give substrings of
@@ -4691,6 +4866,14 @@ See
 .IR /proc/sys/kernel/sched_rt_runtime_us " (since Linux 2.6.25)"
 See
 .BR sched (7).
+.TP
+.IR /proc/sys/kernel/seccomp " (since Linux 4.14)"
+.\" commit 8e5f1ad116df6b0de65eac458d5e7c318d1c05af
+This directory provides additional seccomp information and
+configuration.
+See
+.BR seccomp (2)
+for further details.
 .TP
 .IR /proc/sys/kernel/sem " (since Linux 2.4)"
 This file contains 4 numbers defining limits for System V IPC semaphores.
@@ -4968,7 +5151,7 @@ cache management.
 .IR /proc/sys/vm/admin_reserve_kbytes " (since Linux 3.10)"
 .\" commit 4eeab4f5580d11bffedc697684b91b0bca0d5009
 This file defines the amount of free memory (in KiB) on the system that
-that should be reserved for users with the capability
+should be reserved for users with the capability
 .BR CAP_SYS_ADMIN .
 .IP
 The default value in this file is the minimum of [3% of free pages, 8MiB]
@@ -4987,7 +5170,7 @@ for the full virtual memory size of the programs used to recover (e.g.,
 and
 .BR top (1))
 Otherwise, the superuser may not be able to log in to recover the system.
-For example, on x86_64 a suitable value is 131072 (128MiB reserved).
+For example, on x86-64 a suitable value is 131072 (128MiB reserved).
 .IP
 Changing the value in this file takes effect whenever
 an application requests memory.
@@ -5463,7 +5646,7 @@ the callback function that is associated with the timer.
 During the Linux 4.11 development cycle,
 this file  was removed because of security concerns,
 as it exposes information across namespaces.
-Furthermore, it is possibile to obtain
+Furthermore, it is possible to obtain
 the same information via in-kernel tracing facilities such as ftrace.
 .TP
 .I /proc/tty
@@ -5498,7 +5681,7 @@ Linux version 1.0.9 (quinlan@phaze) #1 Sat May 14 01:51:54 EDT 1994
 This file displays various virtual memory statistics.
 Each line of this file contains a single name-value pair,
 delimited by white space.
-Some files are present only if the kernel was configured with
+Some lines are present only if the kernel was configured with
 suitable options.
 (In some cases, the options required for particular files have changed
 across kernel versions, so they are not listed here.
@@ -6238,7 +6421,7 @@ The Linux kernel source files:
 and
 .IR Documentation/sysctl/vm.txt .
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

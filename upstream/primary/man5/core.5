@@ -57,7 +57,7 @@ where
 is the ID of the process that dumped core,
 and is created in the current working directory.
 See below for details on naming.)
-Writing the core file will fail if the directory in which
+Writing the core file fails if the directory in which
 it is to be created is nonwritable,
 or if a file with the same name exists and
 is not writable
@@ -106,6 +106,23 @@ operation, and the description of the
 file in
 .BR proc (5).)
 .IP *
+.I /proc/sys/kernel/core_pattern
+is empty and
+.I /proc/sys/kernel/core_uses_pid
+contains the value 0.
+(These files are described below.)
+Note that if
+.I /proc/sys/kernel/core_pattern
+is empty and
+.I /proc/sys/kernel/core_uses_pid
+contains the value 1,
+core dump files will have names of the form
+.IR .pid ,
+and such files are hidden unless one uses the
+.BR ls (1)
+.I -a
+option.
+.IP *
 (Since Linux 3.7)
 .\" commit 046d662f481830e652ac34cd112249adde16452a
 The kernel was configured without the
@@ -117,6 +134,15 @@ a core dump may exclude part of the address space of the process if the
 .BR madvise (2)
 .B MADV_DONTDUMP
 flag was employed.
+.PP
+On systems that employ
+.BR systemd (1)
+as the
+.I init
+framework, core dumps may instead be placed in a location determined by
+.BR systemd (1).
+See below for further details.
+.\"
 .SS Naming of core dump files
 By default, a core dump file is named
 .IR core ,
@@ -172,7 +198,7 @@ TID of thread that triggered core dump, as seen in the initial PID namespace
 PID of dumped process,
 as seen in the PID namespace in which the process resides
 .TP
-.PP
+%P
 .\" Added in git commit 65aafb1e7484b7434a0c1d4c593191ebe5776a2f
 PID of dumped process, as seen in the initial PID namespace
 (since Linux 3.12)
@@ -291,6 +317,11 @@ specifier to change to the location of the dumping process via
 Command-line arguments can be supplied to the
 program (since Linux 2.6.24),
 delimited by white space (up to a total line length of 128 bytes).
+.IP *
+The
+.B RLIMIT_CORE
+limit is not enforced for core dumps that are piped to a program
+via this mechanism.
 .\"
 .SS /proc/sys/kernel/core_pipe_limit
 When collecting core dumps via a pipe to a user-space program,
@@ -412,6 +443,89 @@ in the parent shell before running a program, for example:
 This file is provided only if the kernel was built with the
 .B CONFIG_ELF_CORE
 configuration option.
+.\"
+.SS Core dumps and systemd
+On systems using the
+.BR systemd (1)
+.I init
+framework, core dumps may be placed in a location determined by
+.BR systemd (1).
+To do this,
+.BR systemd (1)
+employs the
+.I core_pattern
+feature that allows piping core dumps to a program.
+One can verify this by checking whether core dumps are being piped to the
+.BR systemd-coredump (8)
+program:
+.PP
+.in +4n
+.EX
+$ \fBcat /proc/sys/kernel/core_pattern\fP
+|/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %e
+.EE
+.in
+.PP
+In this case, core dumps will be placed in the location configured for
+.BR systemd-coredump (8),
+typically as
+.BR lz4 (1)
+compressed files in the directory
+.IR /var/lib/systemd/coredump/ .
+One can list the core dumps that have been recorded by
+.BR systemd-coredump (8)
+using
+.BR coredumpctl (1):
+.PP
+.in +2n
+.EX
+$ \fBcoredumpctl list | tail -5\fP
+Wed 2017-10-11 22:25:30 CEST  2748 1000 1000 3 present  /usr/bin/sleep
+Thu 2017-10-12 06:29:10 CEST  2716 1000 1000 3 present  /usr/bin/sleep
+Thu 2017-10-12 06:30:50 CEST  2767 1000 1000 3 present  /usr/bin/sleep
+Thu 2017-10-12 06:37:40 CEST  2918 1000 1000 3 present  /usr/bin/cat
+Thu 2017-10-12 08:13:07 CEST  2955 1000 1000 3 present  /usr/bin/cat
+.EE
+.in
+.PP
+The information shown for each core dump includes the date and time
+of the dump, the PID, UID, and GID  of the dumping process,
+the signal number that caused the core dump,
+and the pathname of the executable that was being run by the dumped process.
+Various options to
+.BR coredumpctl (1)
+allow a specified coredump file to be pulled from the
+.BR systemd (1)
+location into a specified file.
+For example, to extract the core dump for PID 2955 shown above to a file named
+.IR core
+in the current directory, one could use:
+.PP
+.in +4n
+.EX
+$ \fBcoredumpctl dump 2955 -o core\fP
+.EE
+.in
+.PP
+For more extensive details, see the
+.BR coredumpctl (1)
+manual page.
+.PP
+To disable the
+.BR systemd (1)
+mechanism that archives core dumps, restoring to something more like
+traditional Linux behavior, one can set an override for the
+.BR systemd (1)
+mechanism, using something like:
+.PP
+.in +2n
+.EX
+# echo "kernel.core_pattern=core.%p" > /etc/sysctl.d/50-coredump.conf
+# /lib/systemd/systemd-sysctl
+.EE
+.in
+.PP
+.\"
 .SH NOTES
 The
 .BR gdb (1)
@@ -529,6 +643,7 @@ main(int argc, char *argv[])
 .EE
 .SH SEE ALSO
 .BR bash (1),
+.BR coredumpctl (1),
 .BR gdb (1),
 .BR getrlimit (2),
 .BR mmap (2),
@@ -537,9 +652,10 @@ main(int argc, char *argv[])
 .BR elf (5),
 .BR proc (5),
 .BR pthreads (7),
-.BR signal (7)
+.BR signal (7),
+.BR systemd-coredump (8)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

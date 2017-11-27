@@ -22,7 +22,7 @@ capget, capset \- set/get capabilities of thread(s)
 .PP
 .BI "int capset(cap_user_header_t " hdrp ", const cap_user_data_t " datap );
 .SH DESCRIPTION
-As of Linux 2.2,
+Since Linux 2.2,
 the power of the superuser (root) has been partitioned into
 a set of discrete capabilities.
 Each thread has a set of effective capabilities identifying
@@ -118,7 +118,7 @@ and
 whereas 32-bit capabilities use only
 .IR datap [0].
 .PP
-On kernels that support file capabilities (VFS capability support),
+On kernels that support file capabilities (VFS capabilities support),
 these system calls behave slightly differently.
 This support was added as an option in Linux 2.6.24,
 and became fixed (nonoptional) in Linux 2.6.33.
@@ -129,22 +129,27 @@ calls, one can probe the capabilities of any process by specifying its
 process ID with the
 .I hdrp->pid
 field value.
-.SS With VFS capability support
-VFS Capability support creates a file-attribute method for adding
-capabilities to privileged executables.
+.SS With VFS capabilities support
+VFS capabilities employ a file extended attribute (see
+.BR xattr (7))
+to allow capabilities to be attached to executables.
 This privilege model obsoletes kernel support for one process
 asynchronously setting the capabilities of another.
-That is, with VFS support, for
-.BR capset ()
-calls the only permitted values for
+That is, on kernels that have VFS capabilities support, when calling
+.BR capset (),
+the only permitted values for
 .I hdrp->pid
-are 0 or
-.BR gettid (2),
-which are equivalent.
-.SS Without VFS capability support
-When the kernel does not support VFS capabilities,
+are 0 or, equivalently, the value returned by
+.BR gettid (2).
+.\"
+.SS Without VFS capabilities support
+On older kernels that do not provide VFS capabilities support
 .BR capset ()
-calls can operate on the capabilities of the thread specified by the
+can, if the caller has the
+.BR CAP_SETPCAP
+capability, be used to change not only the caller's own capabilities,
+but also the capabilities of other threads.
+The call operates on the capabilities of the thread specified by the
 .I pid
 field of
 .I hdrp
@@ -176,7 +181,7 @@ On error, \-1 is returned, and
 .I errno
 is set appropriately.
 .PP
-The calls will fail with the error
+The calls fail with the error
 .BR EINVAL ,
 and set the
 .I version
@@ -243,7 +248,7 @@ library and is available here:
 .BR gettid (2),
 .BR capabilities (7)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

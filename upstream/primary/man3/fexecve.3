@@ -60,10 +60,12 @@ is specified via a file descriptor,
 rather than via a pathname.
 The file descriptor
 .I fd
-must be opened read-only,
+must be opened read-only
+.RB ( O_RDONLY )
+or with the
+.B O_PATH
+flag
 and the caller must have permission to execute the file that it refers to.
-.\" POSIX.1-2008 specifies the O_EXEC flag for open as an alternative,
-.\" but Linux doesn't support this flag yet.
 .SH RETURN VALUE
 A successful call to
 .BR fexecve ()
@@ -110,17 +112,22 @@ This function is not specified in POSIX.1-2001,
 and is not widely available on other systems.
 It is specified in POSIX.1-2008.
 .SH NOTES
-On Linux,
+On Linux with glibc versions 2.26 and earlier,
 .BR fexecve ()
 is implemented using the
 .BR proc (5)
 filesystem, so
 .I /proc
 needs to be mounted and available at the time of the call.
-.\" FIXME .
-.\" With the addition of the execveat(2), fexecve() can be implemented
-.\" even where /proc is unavailable. Review future glibc releases to
-.\" see if the implementation is changed to use execveat(2).
+Since glibc 2.27,
+.\" glibc commit 43ffc53a352a67672210c9dd4959f6c6b7407e60
+if the underlying kernel supports the
+.BR execveat (2)
+system call, then
+.BR fexecve ()
+is implemented using that system call, with the benefit that
+.IR /proc
+does not need to be mounted.
 .PP
 The idea behind
 .BR fexecve ()
@@ -179,7 +186,7 @@ if it refers to a script, leading to the problems described in NOTES.
 .BR execve (2),
 .BR execveat (2)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

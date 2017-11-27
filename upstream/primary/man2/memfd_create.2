@@ -100,6 +100,35 @@ If this flag is not set, the initial set of seals will be
 meaning that no other seals can be set on the file.
 .\" FIXME Why is the MFD_ALLOW_SEALING behavior not simply the default?
 .\" Is it worth adding some text explaining this?
+.TP
+.BR MFD_HUGETLB " (since Linux 4.14)"
+.\" commit 749df87bd7bee5a79cef073f5d032ddb2b211de8
+The anonymous file will be created in the hugetlbfs filesystem using
+huge pages.
+See the Linux kernel source file
+.I Documentation/vm/hugetlbpage.txt
+for more information about hugetlbfs.
+The hugetlbfs filesystem does not support file-sealing operations.
+Therefore, specifying both
+.B MFD_HUGETLB
+and
+.B MFD_ALLOW_SEALING
+in
+.I flags
+is disallowed.
+.TP
+.BR MFD_HUGE_2MB ", " MFD_HUGE_1GB ", " "..."
+Used in conjunction with
+.B MFD_HUGETLB
+to select alternative hugetlb page sizes (respectively, 2\ MB, 1\ GB, ...)
+on systems that support multiple hugetlb page sizes.
+Definitions for known
+huge page sizes are included in the header file
+.I <sys/memfd.h>.
+.IP
+For details on encoding huge page sizes not included in the header file,
+see the discussion of the similarly named constants in
+.BR mmap (2).
 .PP
 Unused bits in
 .I flags
@@ -141,11 +170,23 @@ The address in
 points to invalid memory.
 .TP
 .B EINVAL
-An unsupported value was specified in one of the arguments:
 .I flags
-included unknown bits, or
+included unknown bits.
+.TP
+.B EINVAL
 .I name
 was too long.
+(The limit is
+.\" NAME_MAX - strlen("memfd:")
+249 bytes, excluding the terminating null byte.)
+.TP
+.B EINVAL
+Both
+.B MFD_HUGETLB
+and
+.B MFD_ALLOW_SEALING
+were specified in
+.IR flags .
 .TP
 .B EMFILE
 The per-process limit on the number of open file descriptors has been reached.
@@ -494,7 +535,7 @@ main(int argc, char *argv[])
 .BR shmget (2),
 .BR shm_open (3)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,
