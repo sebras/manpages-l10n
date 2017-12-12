@@ -1,5 +1,14 @@
 # Changelog for manpages-de
 
+## Version 2.3
+
+*Wed Dec 13 00:20:25 CET 2017*
+
+* Fix wrong translation in find.1, spotted by Sven Bartscher.
+  Thanks! Closes: [#883077](https://bugs.debian.org/883077)
+* Fix in signal.7, reported by Nicolai Voget. Thanks!
+* Updated many translations
+
 ## Version 2.2
 
 *Sun Oct 22 13:14:03 CEST 2017*
