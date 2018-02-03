@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RUN" "1" "" "systemd 235" "systemd-run"
+.TH "SYSTEMD\-RUN" "1" "" "systemd 237" "systemd-run"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,10 +20,14 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-systemd-run \- Run programs in transient scope units, service units, or timer\-scheduled service units
+systemd-run \- Run programs in transient scope units, service units, or path\-, socket\-, or timer\-triggered service units
 .SH "SYNOPSIS"
 .HP \w'\fBsystemd\-run\fR\ 'u
 \fBsystemd\-run\fR [OPTIONS...] \fICOMMAND\fR\ [ARGS...] 
+.HP \w'\fBsystemd\-run\fR\ 'u
+\fBsystemd\-run\fR [OPTIONS...] [PATH\ OPTIONS...] {\fICOMMAND\fR} [ARGS...]
+.HP \w'\fBsystemd\-run\fR\ 'u
+\fBsystemd\-run\fR [OPTIONS...] [SOCKET\ OPTIONS...] {\fICOMMAND\fR} [ARGS...]
 .HP \w'\fBsystemd\-run\fR\ 'u
 \fBsystemd\-run\fR [OPTIONS...] [TIMER\ OPTIONS...] {\fICOMMAND\fR} [ARGS...]
 .SH "DESCRIPTION"
@@ -36,6 +40,8 @@ or
 unit and run the specified
 \fICOMMAND\fR
 in it\&. It may also be used to create and start a transient
+\&.path,
+\&.socket, or
 \&.timer
 unit, that activates a
 \&.service
@@ -58,17 +64,19 @@ itself as parent process and will thus inherit the execution environment of the 
 \fB\-\-scope\fR
 switch (see below)\&.
 .PP
-If a command is run with timer options such as
+If a command is run with path, socket, or timer options such as
 \fB\-\-on\-calendar=\fR
-(see below), a transient timer unit is created alongside the service unit for the specified command\&. Only the transient timer unit is started immediately, the transient service unit will be started when the timer elapses\&. If the
+(see below), a transient path, socket, or timer unit is created alongside the service unit for the specified command\&. Only the transient path, socket, or timer unit is started immediately, the transient service unit will be triggered by the path, socket, or timer unit\&. If the
 \fB\-\-unit=\fR
 option is specified, the
 \fICOMMAND\fR
 may be omitted\&. In this case,
 \fBsystemd\-run\fR
 creates only a
+\&.path,
+\&.socket, or
 \&.timer
-unit that invokes the specified unit when elapsing\&.
+unit that triggers the specified unit\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -102,7 +110,7 @@ command\&.
 .PP
 \fB\-\-description=\fR
 .RS 4
-Provide a description for the service, scope or timer unit\&. If not specified, the command itself will be used as a description\&. See
+Provide a description for the service, scope, path, socket, or timer unit\&. If not specified, the command itself will be used as a description\&. See
 \fIDescription=\fR
 in
 \fBsystemd.unit\fR(5)\&.
@@ -118,7 +126,7 @@ unit part of the specified slice, instead of
 system\&.slice\&.
 .RE
 .PP
-\fB\-\-remain\-after\-exit\fR
+\fB\-r\fR, \fB\-\-remain\-after\-exit\fR
 .RS 4
 After the service process has terminated, keep the service around until it is explicitly stopped\&. This is useful to collect runtime information about the service after it finished running\&. Also see
 \fIRemainAfterExit=\fR
@@ -203,6 +211,15 @@ are used in combination the more appropriate option is automatically determined 
 \fB\-\-pty\fR
 is used, and otherwise
 \fB\-\-pipe\fR\&.
+.sp
+When this option is used the original file descriptors
+\fBsystemd\-run\fR
+receives are passed to the service processes as\-is\&. If the service runs with different privileges than
+\fBsystemd\-run\fR, this means the service might not be able to re\-open the passed file descriptors, due to normal file descriptor access restrictions\&. If the invoked process is a shell script that uses the
+\fBecho "hello" > /dev/stderr\fR
+construct for writing messages to stderr, this might cause problems, as this only works if stderr can be re\-opened\&. To mitigate this use the construct
+\fBecho "hello" >&2\fR
+instead, which is mostly equivalent and avoids this pitfall\&.
 .RE
 .PP
 \fB\-\-quiet\fR, \fB\-q\fR
@@ -223,7 +240,9 @@ and
 \fIOnUnitInactiveSec=\fR
 in
 \fBsystemd.timer\fR(5)
-for details\&. These options may not be combined with
+for details\&. These options are shortcuts for
+\fB\-\-timer\-property=\fR
+with the relevant properties\&. These options may not be combined with
 \fB\-\-scope\fR
 or
 \fB\-\-pty\fR\&.
@@ -234,27 +253,24 @@ or
 Defines a calendar timer for starting the specified command\&. See
 \fIOnCalendar=\fR
 in
-\fBsystemd.timer\fR(5)\&. This option may not be combined with
+\fBsystemd.timer\fR(5)\&. This option is a shortcut for
+\fB\-\-timer\-property=OnCalendar=\fR\&. This option may not be combined with
 \fB\-\-scope\fR
 or
 \fB\-\-pty\fR\&.
 .RE
 .PP
-\fB\-\-timer\-property=\fR
+\fB\-\-path\-property=\fR, \fB\-\-socket\-property=\fR, \fB\-\-timer\-property=\fR
 .RS 4
-Sets a property on the timer unit that is created\&. This option is similar to
+Sets a property on the path, socket, or timer unit that is created\&. This option is similar to
 \fB\-\-property=\fR
-but applies to the transient timer unit rather than the transient service unit created\&. This option only has an effect in conjunction with
-\fB\-\-on\-active=\fR,
-\fB\-\-on\-boot=\fR,
-\fB\-\-on\-startup=\fR,
-\fB\-\-on\-unit\-active=\fR,
-\fB\-\-on\-unit\-inactive=\fR
-or
-\fB\-\-on\-calendar=\fR\&. This option takes an assignment in the same format as
+but applies to the transient path, socket, or timer unit rather than the transient service unit created\&. This option takes an assignment in the same format as
 \fBsystemctl\fR(1)\*(Aqs
 \fBset\-property\fR
-command\&.
+command\&. These options may not be combined with
+\fB\-\-scope\fR
+or
+\fB\-\-pty\fR\&.
 .RE
 .PP
 \fB\-\-no\-block\fR
@@ -273,7 +289,19 @@ was set) and the exit code and status of the main process\&. This output may be 
 \fB\-\-quiet\fR\&. This option may not be combined with
 \fB\-\-no\-block\fR,
 \fB\-\-scope\fR
-or the various timer options\&.
+or the various path, socket, or timer options\&.
+.RE
+.PP
+\fB\-G\fR, \fB\-\-collect\fR
+.RS 4
+Unload the transient unit after it completed, even if it failed\&. Normally, without this option, all units that ran and failed are kept in memory until the user explicitly resets their failure state with
+\fBsystemctl reset\-failed\fR
+or an equivalent command\&. On the other hand, units that ran successfully are unloaded immediately\&. If this option is turned on the "garbage collection" of units is more aggressive, and unloads units regardless if they exited successfully or failed\&. This option is a shortcut for
+\fB\-\-property=CollectMode=inactive\-or\-failed\fR, see the explanation for
+\fICollectMode=\fR
+in
+\fBsystemd.unit\fR(5)
+for further information\&.
 .RE
 .PP
 \fB\-\-user\fR
@@ -309,7 +337,7 @@ Print a short help text and exit\&.
 Print a short version string and exit\&.
 .RE
 .PP
-All command line arguments after the first non\-option argument become part of the command line of the launched process\&. If a command is run as service unit, its first argument needs to be an absolute binary path\&.
+All command line arguments after the first non\-option argument become part of the command line of the launched process\&. If a command is run as service unit, the first argument needs to be an absolute program path\&.
 .SH "EXIT STATUS"
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.

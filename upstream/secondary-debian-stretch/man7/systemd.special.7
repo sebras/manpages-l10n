@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 234" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 236" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,7 +23,6 @@
 systemd.special \- Special systemd units
 .SH "SYNOPSIS"
 .PP
-
 basic\&.target,
 bluetooth\&.target,
 cryptsetup\-pre\&.target,
@@ -34,6 +33,7 @@ emergency\&.target,
 exit\&.target,
 final\&.target,
 getty\&.target,
+getty\-pre\&.target,
 graphical\&.target,
 halt\&.target,
 hibernate\&.target,
@@ -56,6 +56,7 @@ paths\&.target,
 poweroff\&.target,
 printer\&.target,
 reboot\&.target,
+remote\-cryptsetup\&.target,
 remote\-fs\-pre\&.target,
 remote\-fs\&.target,
 rescue\&.target,
@@ -74,25 +75,32 @@ sound\&.target,
 suspend\&.target,
 swap\&.target,
 sysinit\&.target,
-syslog\&.socket,
 system\-update\&.target,
 time\-sync\&.target,
 timers\&.target,
 umount\&.target,
-
 \-\&.slice,
 system\&.slice,
 user\&.slice,
 machine\&.slice,
-
+\-\&.mount,
 dbus\&.service,
 dbus\&.socket,
 display\-manager\&.service,
+init\&.scope,
+syslog\&.socket,
 system\-update\-cleanup\&.service
 .SH "DESCRIPTION"
 .PP
 A few units are treated specially by systemd\&. Many of them have special internal semantics and cannot be renamed, while others simply have a standard meaning and should be present on all systems\&.
 .SH "SPECIAL SYSTEM UNITS"
+.PP
+\-\&.mount
+.RS 4
+The root mount point, i\&.e\&. the mount unit for the
+/
+path\&. This unit is unconditionally active, during the entire time the system is up, as this mount point is where the basic userspace is running from\&.
+.RE
 .PP
 basic\&.target
 .RS 4
@@ -180,7 +188,7 @@ A special service unit for shutting down the system or user service manager\&. I
 poweroff\&.target
 on non\-container systems, and also works in containers\&.
 .sp
-systemd will start this unit when it receives a request to shut down over D\-Bus or a
+systemd will start this unit when it receives the
 \fBSIGTERM\fR
 or
 \fBSIGINT\fR
@@ -200,6 +208,14 @@ getty\&.target
 A special target unit that pulls in statically configured local TTY
 getty
 instances\&.
+.RE
+.PP
+getty\-pre\&.target
+.RS 4
+A special passive target unit\&. Users of this target are expected to pull it in the boot transaction via a dependency (e\&.g\&.
+\fIWants=\fR)\&. Order your unit before this unit if you want to make use of the console just before
+getty
+is started\&.
 .RE
 .PP
 graphical\&.target
@@ -235,7 +251,19 @@ A special target unit for shutting down and halting the system\&. Note that this
 poweroff\&.target
 in that it generally really just halts the system rather than powering it down\&.
 .sp
-Applications wanting to halt the system should start this unit\&.
+Applications wanting to halt the system should not start this unit directly, but should instead execute
+\fBsystemctl halt\fR
+(possibly with the
+\fB\-\-no\-block\fR
+option) or call
+\fBsystemd\fR(1)\*(Aqs
+\fBorg\&.freedesktop\&.systemd1\&.Manager\&.Halt\fR
+D\-Bus method directly\&.
+.RE
+.PP
+init\&.scope
+.RS 4
+This scope unit is where the system and service manager (PID 1) itself resides\&. It is active as long as the system is running\&.
 .RE
 .PP
 initrd\-fs\&.target
@@ -256,15 +284,21 @@ mount options set\&.
 .PP
 kbrequest\&.target
 .RS 4
-systemd starts this target whenever Alt+ArrowUp is pressed on the console\&. This is a good candidate to be aliased (symlinked) to
-rescue\&.target\&.
+systemd starts this target whenever Alt+ArrowUp is pressed on the console\&. Note that any user with physical access to the machine will be able to do this, without authentication, so this should be used carefully\&.
 .RE
 .PP
 kexec\&.target
 .RS 4
 A special target unit for shutting down and rebooting the system via kexec\&.
 .sp
-Applications wanting to reboot the system with kexec should start this unit\&.
+Applications wanting to reboot the system should not start this unit directly, but should instead execute
+\fBsystemctl kexec\fR
+(possibly with the
+\fB\-\-no\-block\fR
+option) or call
+\fBsystemd\fR(1)\*(Aqs
+\fBorg\&.freedesktop\&.systemd1\&.Manager\&.KExec\fR
+D\-Bus method directly\&.
 .RE
 .PP
 local\-fs\&.target
@@ -322,6 +356,8 @@ is not, except when at least one unit requires it\&. Also see
 for more information\&.
 .sp
 All mount units for remote network file systems automatically pull in this unit, and order themselves after it\&. Note that networking daemons that simply provide functionality to other hosts generally do not need to pull this in\&.
+.sp
+Note that this unit is only useful during the original system start\-up logic\&. After the system has completed booting up, it will not track the online state of the system anymore\&. Due to this it cannot be used as a network connection monitor concept, it is purely a one\-time system start\-up concept\&.
 .RE
 .PP
 paths\&.target
@@ -343,7 +379,14 @@ poweroff\&.target
 .RS 4
 A special target unit for shutting down and powering off the system\&.
 .sp
-Applications wanting to power off the system should start this unit\&.
+Applications wanting to reboot the system should not start this unit directly, but should instead execute
+\fBsystemctl poweroff\fR
+(possibly with the
+\fB\-\-no\-block\fR
+option) or call
+\fBsystemd-logind\fR(8)\*(Aqs
+\fBorg\&.freedesktop\&.login1\&.Manager\&.PowerOff\fR
+D\-Bus method directly\&.
 .sp
 runlevel0\&.target
 is an alias for this target unit, for compatibility with SysV\&.
@@ -353,10 +396,26 @@ reboot\&.target
 .RS 4
 A special target unit for shutting down and rebooting the system\&.
 .sp
-Applications wanting to reboot the system should start this unit\&.
+Applications wanting to reboot the system should not start this unit directly, but should instead execute
+\fBsystemctl reboot\fR
+(possibly with the
+\fB\-\-no\-block\fR
+option) or call
+\fBsystemd-logind\fR(8)\*(Aqs
+\fBorg\&.freedesktop\&.login1\&.Manager\&.Reboot\fR
+D\-Bus method directly\&.
 .sp
 runlevel6\&.target
 is an alias for this target unit, for compatibility with SysV\&.
+.RE
+.PP
+remote\-cryptsetup\&.target
+.RS 4
+Similar to
+cryptsetup\&.target, but for encrypted devices which are accessed over the network\&. It is used for
+\fBcrypttab\fR(8)
+entries marked with
+\fB_netdev\fR\&.
 .RE
 .PP
 remote\-fs\&.target
@@ -374,7 +433,9 @@ facility\&.
 rescue\&.target
 .RS 4
 A special target unit that pulls in the base system (including system mounts) and spawns a rescue shell\&. Isolate to this target in order to administer the system in single\-user mode with all file systems mounted but with no services running, except for the most basic\&. Compare with
-emergency\&.target, which is much more reduced and does not provide the file systems or most basic services\&.
+emergency\&.target, which is much more reduced and does not provide the file systems or most basic services\&. Compare with
+multi\-user\&.target, this target could be seen as
+single\-user\&.target\&.
 .sp
 runlevel1\&.target
 is an alias for this target unit, for compatibility with SysV\&.
@@ -446,12 +507,9 @@ slices\&.target
 A special target unit that sets up all slice units (see
 \fBsystemd.slice\fR(5)
 for details) that shall be active after boot\&. By default the generic
-user\&.slice,
-system\&.slice,
-machines\&.slice
-slice units, as well as the root slice unit
-\-\&.slice
-are pulled in and ordered before this unit (see below)\&.
+system\&.slice
+slice unit, as well as the root slice unit
+\-\&.slice, is pulled in and ordered before this unit (see below)\&.
 .sp
 It\*(Aqs a good idea to add
 \fIWantedBy=slices\&.target\fR
@@ -649,7 +707,8 @@ should be used\&. All services for which the availability of the full user/group
 .PP
 remote\-fs\-pre\&.target
 .RS 4
-This target unit is automatically ordered before all remote mount point units (see above)\&. It can be used to run certain units before the remote mounts are established\&. Note that this unit is generally not part of the initial transaction, unless the unit that wants to be ordered before all remote mounts pulls it in via a
+This target unit is automatically ordered before all mount point units (see above) and cryptsetup devices marked with the
+\fB_netdev\fR\&. It can be used to run certain units before remote encrypted devices and mounts are established\&. Note that this unit is generally not part of the initial transaction, unless the unit that wants to be ordered before all remote mounts pulls it in via a
 \fIWants=\fR
 type dependency\&. If the unit wants to be pulled in by the first remote mount showing up, it should use
 network\-online\&.target
@@ -758,11 +817,13 @@ gnome\-session\&.target\&.
 .PP
 There are four
 "\&.slice"
-units which form the basis of the hierarchy for assignment of resources for services, users, and virtual machines or containers\&.
+units which form the basis of the hierarchy for assignment of resources for services, users, and virtual machines or containers\&. See
+\fBsystemd.slice\fR(7)
+for details about slice units\&.
 .PP
 \-\&.slice
 .RS 4
-The root slice is the root of the hierarchy\&. It usually does not contain units directly, but may be used to set defaults for the whole tree\&.
+The root slice is the root of the slice hierarchy\&. It usually does not contain units directly, but may be used to set defaults for the whole tree\&.
 .RE
 .PP
 system\&.slice
@@ -774,14 +835,16 @@ are found in this slice\&.
 .PP
 user\&.slice
 .RS 4
-By default, all user processes and services started on behalf of the user, including the per\-user systemd instance are found in this slice\&.
+By default, all user processes and services started on behalf of the user, including the per\-user systemd instance are found in this slice\&. This is pulled in by
+systemd\-logind\&.service
 .RE
 .PP
 machine\&.slice
 .RS 4
 By default, all virtual machines and containers registered with
 \fBsystemd\-machined\fR
-are found in this slice\&.
+are found in this slice\&. This is pulled in by
+systemd\-machined\&.service
 .RE
 .SH "SEE ALSO"
 .PP

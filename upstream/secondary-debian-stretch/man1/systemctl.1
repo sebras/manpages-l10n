@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 234" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 236" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -200,7 +200,8 @@ If
 is specified, operate like
 "replace", but also mark the new jobs as irreversible\&. This prevents future conflicting transactions from replacing these jobs (or even being enqueued while the irreversible jobs are still pending)\&. Irreversible jobs can still be cancelled using the
 \fBcancel\fR
-command\&.
+command\&. This job mode should be used on any transaction which pulls in
+shutdown\&.target\&.
 .sp
 "isolate"
 is only valid for start operations and causes all other units to be stopped when the specified unit is started\&. This mode is always used when the
@@ -234,6 +235,22 @@ command, if no units were killed, the operation results in an error\&.
 When system shutdown or a sleep state is requested, ignore inhibitor locks\&. Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (regardless of whether privileged or not) and a list of active locks is printed\&. However, if
 \fB\-\-ignore\-inhibitors\fR
 is specified, the locks are ignored and not printed, and the operation attempted anyway, possibly requiring additional privileges\&.
+.RE
+.PP
+\fB\-\-dry\-run\fR
+.RS 4
+Just print what would be done\&. Currently supported by verbs
+\fBhalt\fR,
+\fBpoweroff\fR,
+\fBreboot\fR,
+\fBkexec\fR,
+\fBsuspend\fR,
+\fBhibernate\fR,
+\fBhybrid\-sleep\fR,
+\fBdefault\fR,
+\fBrescue\fR,
+\fBemergency\fR, and
+\fBexit\fR\&.
 .RE
 .PP
 \fB\-q\fR, \fB\-\-quiet\fR
@@ -275,7 +292,7 @@ List units in failed state\&. This is equivalent to
 .PP
 \fB\-\-no\-wall\fR
 .RS 4
-Do not send wall message before halt, power\-off, reboot\&.
+Do not send wall message before halt, power\-off and reboot\&.
 .RE
 .PP
 \fB\-\-global\fR
@@ -361,17 +378,16 @@ twice with any of these operations might result in data loss\&. Note that when
 \fB\-\-force\fR
 is specified twice the selected operation is executed by
 \fBsystemctl\fR
-itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager hangs or crashed\&.
+itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .RE
 .PP
 \fB\-\-message=\fR
 .RS 4
 When used with
 \fBhalt\fR,
-\fBpoweroff\fR,
-\fBreboot\fR
+\fBpoweroff\fR
 or
-\fBkexec\fR, set a short message explaining the reason for the operation\&. The message will be logged together with the default shutdown message\&.
+\fBreboot\fR, set a short message explaining the reason for the operation\&. The message will be logged together with the default shutdown message\&.
 .RE
 .PP
 \fB\-\-now\fR
@@ -568,7 +584,7 @@ shows has long as passed since the timer laset ran\&.
 shows the name of the timer
 .sp
 \fIACTIVATES\fR
-shows the the name the service the timer activates when it runs\&.
+shows the name the service the timer activates when it runs\&.
 .sp
 Also see
 \fB\-\-all\fR
@@ -608,6 +624,15 @@ command\&.
 \fBrestart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
 Stop and then start one or more units specified on the command line\&. If the units are not running yet, they will be started\&.
+.sp
+Note that restarting a unit with this command does not necessarily flush out all of the unit\*(Aqs resources before it is started again\&. For example, the per\-service file descriptor storage facility (see
+\fIFileDescriptoreStoreMax=\fR
+in
+\fBsystemd.service\fR(5)) will remain intact as long as the unit has a job pending, and is only cleared when the unit is fully stopped and no jobs are pending anymore\&. If it is intended that the file descriptor store is flushed out, too, during a restart operation an explicit
+\fBsystemctl stop\fR
+command followed by
+\fBsystemctl start\fR
+should be issued\&.
 .RE
 .PP
 \fBtry\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -617,17 +642,20 @@ Stop and then start one or more units specified on the command line if the units
 .PP
 \fBreload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
-Reload one or more units if they support it\&. If not, restart them instead\&. If the units are not running yet, they will be started\&.
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. If the units are not running yet, they will be started\&.
 .RE
 .PP
 \fBtry\-reload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
-Reload one or more units if they support it\&. If not, restart them instead\&. This does nothing if the units are not running\&.
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. This does nothing if the units are not running\&.
 .RE
 .PP
 \fBisolate \fR\fB\fINAME\fR\fR
 .RS 4
-Start the unit specified on the command line and its dependencies and stop all others\&. If a unit name with no extension is given, an extension of
+Start the unit specified on the command line and its dependencies and stop all others, unless they have
+\fBIgnoreOnIsolate=yes\fR
+(see
+\fBsystemd.unit\fR(5))\&. If a unit name with no extension is given, an extension of
 "\&.target"
 will be assumed\&.
 .sp
@@ -686,7 +714,7 @@ or
 \fBjournalctl \-\-user\-unit=\fR\fB\fINAME\fR\fR
 use a similar filter for messages and might be more convenient\&.
 .sp
-Systemd implicitly loads units as necessary, so just running the
+systemd implicitly loads units as necessary, so just running the
 \fBstatus\fR
 will attempt to load a file\&. The command is thus not useful for determining if something was already loaded or not\&. The units may possibly also be quickly unloaded after the operation is completed if there\*(Aqs no reason to keep it in memory thereafter\&.
 .PP
@@ -807,7 +835,7 @@ Reset the
 "failed"
 state of the specified units, or if no unit name is passed, reset the state of all units\&. When a unit fails in some way (i\&.e\&. process exiting with non\-zero error code, terminating abnormally or timing out), it will automatically enter the
 "failed"
-state and its exit code and status is recorded for introspection by the administrator until the service is restarted or reset with this command\&.
+state and its exit code and status is recorded for introspection by the administrator until the service is stopped/re\-started or reset with this command\&.
 .RE
 .PP
 \fBlist\-dependencies\fR [\fINAME\fR]
@@ -876,7 +904,7 @@ Depending on whether
 \fB\-\-user\fR,
 \fB\-\-runtime\fR, or
 \fB\-\-global\fR
-is specified, this enables the unit for the system, for the calling user only, for only this boot of the system, or for all future logins of all users, or only this boot\&. Note that in the last case, no systemd daemon configuration is reloaded\&.
+is specified, this enables the unit for the system, for the calling user only, for only this boot of the system, or for all future logins of all users\&. Note that in the last case, no systemd daemon configuration is reloaded\&.
 .sp
 Using
 \fBenable\fR
@@ -1008,7 +1036,7 @@ l l l.
 T{
 "enabled"
 T}:T{
-Enabled via \&.wants/, \&.requires/ or alias symlinks (permanently in /etc/systemd/system/, or transiently in /run/systemd/system/)\&.
+Enabled via \&.wants/, \&.requires/ or \fIAlias=\fR symlinks (permanently in /etc/systemd/system/, or transiently in /run/systemd/system/)\&.
 T}:T{
 0
 T}
@@ -1045,7 +1073,7 @@ T}
 T{
 "indirect"
 T}:T{
-The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled\&.
+The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in Also=\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
 T}:T{
 0
 T}
@@ -1370,59 +1398,73 @@ T}
 .PP
 \fBdefault\fR
 .RS 4
-Enter default mode\&. This is mostly equivalent to
-\fBisolate default\&.target\fR\&.
+Enter default mode\&. This is equivalent to
+\fBsystemctl isolate default\&.target\fR\&. This operation is blocking by default, use
+\fB\-\-no\-block\fR
+to request asynchronous behavior\&.
 .RE
 .PP
 \fBrescue\fR
 .RS 4
-Enter rescue mode\&. This is mostly equivalent to
-\fBisolate rescue\&.target\fR, but also prints a wall message to all users\&.
+Enter rescue mode\&. This is equivalent to
+\fBsystemctl isolate rescue\&.target\fR\&. This operation is blocking by default, use
+\fB\-\-no\-block\fR
+to request asynchronous behavior\&.
 .RE
 .PP
 \fBemergency\fR
 .RS 4
-Enter emergency mode\&. This is mostly equivalent to
-\fBisolate emergency\&.target\fR, but also prints a wall message to all users\&.
+Enter emergency mode\&. This is equivalent to
+\fBsystemctl isolate emergency\&.target\fR\&. This operation is blocking by default, use
+\fB\-\-no\-block\fR
+to request asynchronous behavior\&.
 .RE
 .PP
 \fBhalt\fR
 .RS 4
 Shut down and halt the system\&. This is mostly equivalent to
-\fBstart halt\&.target \-\-job\-mode=replace\-irreversibly\fR, but also prints a wall message to all users\&. If combined with
+\fBsystemctl start halt\&.target \-\-job\-mode=replace\-irreversibly \-\-no\-block\fR, but also prints a wall message to all users\&. This command is asynchronous; it will return after the halt operation is enqueued, without waiting for it to complete\&. Note that this operation will simply halt the OS kernel after shutting down, leaving the hardware powered on\&. Use
+\fBsystemctl poweroff\fR
+for powering off the system (see below)\&.
+.sp
+If combined with
 \fB\-\-force\fR, shutdown of all running services is skipped, however all processes are killed and all file systems are unmounted or mounted read\-only, immediately followed by the system halt\&. If
 \fB\-\-force\fR
 is specified twice, the operation is immediately executed without terminating any processes or unmounting any file systems\&. This may result in data loss\&. Note that when
 \fB\-\-force\fR
 is specified twice the halt operation is executed by
 \fBsystemctl\fR
-itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager hangs or crashed\&.
+itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .RE
 .PP
 \fBpoweroff\fR
 .RS 4
 Shut down and power\-off the system\&. This is mostly equivalent to
-\fBstart poweroff\&.target \-\-job\-mode=replace\-irreversibly\fR, but also prints a wall message to all users\&. If combined with
+\fBsystemctl start poweroff\&.target \-\-job\-mode=replace\-irreversibly \-\-no\-block\fR, but also prints a wall message to all users\&. This command is asynchronous; it will return after the power\-off operation is enqueued, without waiting for it to complete\&.
+.sp
+If combined with
 \fB\-\-force\fR, shutdown of all running services is skipped, however all processes are killed and all file systems are unmounted or mounted read\-only, immediately followed by the powering off\&. If
 \fB\-\-force\fR
 is specified twice, the operation is immediately executed without terminating any processes or unmounting any file systems\&. This may result in data loss\&. Note that when
 \fB\-\-force\fR
 is specified twice the power\-off operation is executed by
 \fBsystemctl\fR
-itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager hangs or crashed\&.
+itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .RE
 .PP
 \fBreboot \fR\fB[\fIarg\fR]\fR
 .RS 4
 Shut down and reboot the system\&. This is mostly equivalent to
-\fBstart reboot\&.target \-\-job\-mode=replace\-irreversibly\fR, but also prints a wall message to all users\&. If combined with
+\fBsystemctl start reboot\&.target \-\-job\-mode=replace\-irreversibly \-\-no\-block\fR, but also prints a wall message to all users\&. This command is asynchronous; it will return after the reboot operation is enqueued, without waiting for it to complete\&.
+.sp
+If combined with
 \fB\-\-force\fR, shutdown of all running services is skipped, however all processes are killed and all file systems are unmounted or mounted read\-only, immediately followed by the reboot\&. If
 \fB\-\-force\fR
 is specified twice, the operation is immediately executed without terminating any processes or unmounting any file systems\&. This may result in data loss\&. Note that when
 \fB\-\-force\fR
 is specified twice the reboot operation is executed by
 \fBsystemctl\fR
-itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager hangs or crashed\&.
+itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .sp
 If the optional argument
 \fIarg\fR
@@ -1439,22 +1481,25 @@ update\&.
 .PP
 \fBkexec\fR
 .RS 4
-Shut down and reboot the system via kexec\&. This is mostly equivalent to
-\fBstart kexec\&.target \-\-job\-mode=replace\-irreversibly\fR, but also prints a wall message to all users\&. If combined with
+Shut down and reboot the system via
+\fBkexec\fR\&. This is equivalent to
+\fBsystemctl start kexec\&.target \-\-job\-mode=replace\-irreversibly \-\-no\-block\fR\&. This command is asynchronous; it will return after the reboot operation is enqueued, without waiting for it to complete\&.
+.sp
+If combined with
 \fB\-\-force\fR, shutdown of all running services is skipped, however all processes are killed and all file systems are unmounted or mounted read\-only, immediately followed by the reboot\&.
 .RE
 .PP
 \fBexit \fR\fB[\fIEXIT_CODE\fR]\fR
 .RS 4
-Ask the systemd manager to quit\&. This is only supported for user service managers (i\&.e\&. in conjunction with the
+Ask the service manager to quit\&. This is only supported for user service managers (i\&.e\&. in conjunction with the
 \fB\-\-user\fR
 option) or in containers and is equivalent to
 \fBpoweroff\fR
-otherwise\&.
+otherwise\&. This command is asynchronous; it will return after the exit operation is enqueued, without waiting for it to complete\&.
 .sp
-The systemd manager can exit with a non\-zero exit code if the optional argument
+The service manager will exit with the specified exit code, if
 \fIEXIT_CODE\fR
-is given\&.
+is passed\&.
 .RE
 .PP
 \fBswitch\-root \fR\fB\fIROOT\fR\fR\fB \fR\fB[\fIINIT\fR]\fR
@@ -1464,23 +1509,20 @@ Switches to a different root directory and executes a new system manager process
 .PP
 \fBsuspend\fR
 .RS 4
-Suspend the system\&. This will trigger activation of the special
-suspend\&.target
-target\&.
+Suspend the system\&. This will trigger activation of the special target unit
+suspend\&.target\&. This command is asynchronous, and will return after the suspend operation is successfully enqueued\&. It will not wait for the suspend/resume cycle to complete\&.
 .RE
 .PP
 \fBhibernate\fR
 .RS 4
-Hibernate the system\&. This will trigger activation of the special
-hibernate\&.target
-target\&.
+Hibernate the system\&. This will trigger activation of the special target unit
+hibernate\&.target\&. This command is asynchronous, and will return after the hibernation operation is successfully enqueued\&. It will not wait for the hibernate/thaw cycle to complete\&.
 .RE
 .PP
 \fBhybrid\-sleep\fR
 .RS 4
-Hibernate and suspend the system\&. This will trigger activation of the special
-hybrid\-sleep\&.target
-target\&.
+Hibernate and suspend the system\&. This will trigger activation of the special target unit
+hybrid\-sleep\&.target\&. This command is asynchronous, and will return after the hybrid sleep operation is successfully enqueued\&. It will not wait for the sleep/wake\-up cycle to complete\&.
 .RE
 .SS "Parameter Syntax"
 .PP

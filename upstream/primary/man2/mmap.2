@@ -37,7 +37,7 @@
 .\" 2007-07-10, mtk, Added an example program.
 .\" 2008-11-18, mtk, document MAP_STACK
 .\"
-.TH MMAP 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH MMAP 2 2017-12-18 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mmap, munmap \- map or unmap files or devices into memory
 .SH SYNOPSIS
@@ -212,7 +212,9 @@ Don't interpret
 .I addr
 as a hint: place the mapping at exactly that address.
 .I addr
-must be a multiple of the page size.
+must be suitably aligned: for most architectures a multiple of the page
+size is sufficient; however, some architectures may impose additional
+restrictions.
 If the memory region specified by
 .I addr
 and
@@ -222,8 +224,42 @@ part of the existing mapping(s) will be discarded.
 If the specified address cannot be used,
 .BR mmap ()
 will fail.
-Because requiring a fixed address for a mapping is less portable,
-the use of this option is discouraged.
+Software that aspires to be portable should use this option with care,
+keeping in mind that the exact layout of a process's memory mappings
+is allowed to change significantly between kernel versions,
+C library versions, and operating system releases.
+.IP
+Furthermore, this option is extremely hazardous (when used on its own),
+because it forcibly removes preexisting mappings,
+making it easy for a multithreaded process to corrupt its own address space.
+.IP
+For example, thread A looks through
+.I /proc/<pid>/maps
+and locates an available address range,
+while thread B simultaneously acquires part or all of that same
+address range.
+Thread A then calls
+.BR mmap(MAP_FIXED) ,
+effectively overwriting the mapping that thread B created.
+.IP
+Thread B need not create a mapping directly; simply making a library call
+that, internally, uses
+.BR dlopen (3)
+to load some other shared library, will
+suffice.
+The
+.BR dlopen (3)
+call will map the library into the process's address space.
+Furthermore, almost any library call may be implemented in a way that
+adds memory mappings to the address space, either with this technique,
+or by simply allocating memory.
+Examples include
+.BR brk (2),
+.BR malloc (3),
+.BR pthread_create (3),
+and the PAM libraries
+.UR http://www.linux-pam.org
+.UE .
 .TP
 .B MAP_GROWSDOWN
 This flag is used for stacks.
@@ -274,10 +310,11 @@ can be discovered by listing the subdirectories in
 .IR /sys/kernel/mm/hugepages .
 .TP
 .BR MAP_LOCKED " (since Linux 2.5.37)"
-Mark the mmaped region to be locked in the same way as
+Mark the mapped region to be locked in the same way as
 .BR mlock (2).
-This implementation will try to populate (prefault) the whole range but
-the mmap call doesn't fail with
+This implementation will try to populate (prefault) the whole range but the
+.BR mmap ()
+call doesn't fail with
 .B ENOMEM
 if this fails.
 Therefore major faults might happen later on.
@@ -859,7 +896,7 @@ B.O. Gallmeister, POSIX.4, O'Reilly, pp. 128\(en129 and 389\(en391.
 .\" Repeat after me: private read-only mappings are 100% equivalent to
 .\" shared read-only mappings. No ifs, buts, or maybes. -- Linus
 .SH COLOPHON
-This page is part of release 4.14 of the Linux
+This page is part of release 4.15 of the Linux
 .I man-pages
 project.
 A description of the project,

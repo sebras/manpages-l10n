@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.GENERATOR" "7" "" "systemd 234" "systemd.generator"
+.TH "SYSTEMD\&.GENERATOR" "7" "" "systemd 236" "systemd.generator"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-systemd.generator \- Systemd unit generators
+systemd.generator \- systemd unit generators
 .SH "SYNOPSIS"
 .HP \w'\fB/path/to/generator\fR\ 'u
 \fB/path/to/generator\fR \fInormal\-dir\fR \fIearly\-dir\fR \fIlate\-dir\fR
@@ -41,11 +41,13 @@ systemd.generator \- Systemd unit generators
 .sp
 .SH "DESCRIPTION"
 .PP
-Generators are small binaries that live in
-/usr/lib/systemd/user\-generators/
+Generators are small executables that live in
+/lib/systemd/system\-generators/
 and other directories listed above\&.
 \fBsystemd\fR(1)
-will execute those binaries very early at bootup and at configuration reload time \(em before unit files are loaded\&. Generators can dynamically generate unit files or create symbolic links to unit files to add additional dependencies, thus extending or overriding existing definitions\&. Their main purpose is to convert configuration files that are not native unit files dynamically into native unit files\&.
+will execute those binaries very early at bootup and at configuration reload time \(em before unit files are loaded\&. Generators may dynamically generate unit files (regular ones, instances as well as templates) and unit file
+\&.d/
+drop\-ins, or create symbolic links to unit files to add additional dependencies or instantiate existing templates, thus extending or overriding existing definitions\&. Their main purpose is to convert configuration files that are not native unit files dynamically into native unit files\&.
 .PP
 Generators are loaded from a set of paths determined during compilation, as listed above\&. System and user generators are loaded from directories with names ending in
 system\-generators/
@@ -80,6 +82,8 @@ Generators are invoked with three arguments: paths to runtime directories where 
 .sp
 argv[1] may be used to override unit files in
 /usr, but not those in
+/run
+or in
 /etc\&. This means that unit files placed in this directory take precedence over vendor unit configuration but not over native user/administrator unit configuration\&.
 .RE
 .sp
@@ -94,7 +98,8 @@ argv[1] may be used to override unit files in
 \fIearly\-dir\fR
 .sp
 argv[2] may be used to override unit files in
-/usr
+/usr, in
+/run
 and in
 /etc\&. This means that unit files placed in this directory take precedence over all configuration, both vendor and user/administrator\&.
 .RE
@@ -168,7 +173,7 @@ itself\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Generators should only be used to generate unit files, not any other kind of configuration\&. Due to the lifecycle logic mentioned above, generators are not a good fit to generate dynamic configuration for other services\&. If you need to generate dynamic configuration for other services, do so in normal services you order before the service in question\&.
+Generators should only be used to generate unit files and symlinks to them, not any other kind of configuration\&. Due to the lifecycle logic mentioned above, generators are not a good fit to generate dynamic configuration for other services\&. If you need to generate dynamic configuration for other services, do so in normal services you order before the service in question\&.
 .RE
 .sp
 .RS 4

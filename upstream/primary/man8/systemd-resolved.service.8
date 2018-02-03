@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 235" "systemd-resolved.service"
+.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 237" "systemd-resolved.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -89,6 +89,8 @@ and
 for details about systemd\*(Aqs own configuration files for DNS servers\&. To improve compatibility,
 /etc/resolv\&.conf
 is read in order to discover configured system DNS servers, but only if it is not a symlink to
+/run/systemd/resolve/stub\-resolv\&.conf
+or
 /run/systemd/resolve/resolv\&.conf
 (see below)\&.
 .PP
@@ -133,7 +135,7 @@ or
 .IP \(bu 2.3
 .\}
 The hostname
-"gateway"
+"_gateway"
 is resolved to all current default routing gateway addresses, ordered by their metric\&. This assigns a stable hostname to the current gateway, useful for referencing it independently of the current network configuration state\&.
 .RE
 .sp
@@ -174,7 +176,7 @@ are never routed to the network\&. (A few other, special domains are handled the
 .IP \(bu 2.3
 .\}
 Single\-label names are routed to all local interfaces capable of IP multicasting, using the LLMNR protocol\&. Lookups for IPv4 addresses are only sent via LLMNR on IPv4, and lookups for IPv6 addresses are only sent via LLMNR on IPv6\&. Lookups for the locally configured host name and the
-"gateway"
+"_gateway"
 host name are never routed to LLMNR\&.
 .RE
 .sp
@@ -202,10 +204,32 @@ systemd\-resolved
 provides\&.
 .SH "/ETC/RESOLV\&.CONF"
 .PP
-Three modes of handling
+Four modes of handling
 /etc/resolv\&.conf
 (see
 \fBresolv.conf\fR(5)) are supported:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBsystemd\-resolved\fR
+maintains the
+/run/systemd/resolve/stub\-resolv\&.conf
+file for compatibility with traditional Linux programs\&. This file may be symlinked from
+/etc/resolv\&.conf\&. This file lists the 127\&.0\&.0\&.53 DNS stub (see above) as the only DNS server\&. It also contains a list of search domains that are in use by systemd\-resolved\&. The list of search domains is always kept up\-to\-date\&. Note that
+/run/systemd/resolve/stub\-resolv\&.conf
+should not be used directly by applications, but only through a symlink from
+/etc/resolv\&.conf\&. This file may be symlinked from
+/etc/resolv\&.conf
+in order to connect all local clients that bypass local DNS APIs to
+\fBsystemd\-resolved\fR
+with correct search domains settings\&. This mode of operation is recommended\&.
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -220,7 +244,7 @@ A static file
 is provided that lists the 127\&.0\&.0\&.53 DNS stub (see above) as only DNS server\&. This file may be symlinked from
 /etc/resolv\&.conf
 in order to connect all local clients that bypass local DNS APIs to
-\fBsystemd\-resolved\fR\&. This mode of operation is recommended\&.
+\fBsystemd\-resolved\fR\&. This file does not contain any search domains\&.
 .RE
 .sp
 .RS 4

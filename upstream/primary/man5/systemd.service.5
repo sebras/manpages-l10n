@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 235" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 237" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -232,7 +232,7 @@ will not work if used in combination with
 Behavior of
 \fBidle\fR
 is very similar to
-\fBsimple\fR; however, actual execution of the service binary is delayed until all active jobs are dispatched\&. This may be used to avoid interleaving of output of shell services with the status output on the console\&. Note that this type is useful only to improve console output, it is not useful as a general unit ordering tool, and the effect of this service type is subject to a 5s time\-out, after which the service binary is invoked anyway\&.
+\fBsimple\fR; however, actual execution of the service program is delayed until all active jobs are dispatched\&. This may be used to avoid interleaving of output of shell services with the status output on the console\&. Note that this type is useful only to improve console output, it is not useful as a general unit ordering tool, and the effect of this service type is subject to a 5s time\-out, after which the service program is invoked anyway\&.
 .RE
 .PP
 \fIRemainAfterExit=\fR
@@ -253,10 +253,10 @@ is unset because for the other types or with an explicitly configured PID file, 
 .PP
 \fIPIDFile=\fR
 .RS 4
-Takes an absolute filename pointing to the PID file of this daemon\&. Use of this option is recommended for services where
+Takes an absolute path referring to the PID file of the service\&. Usage of this option is recommended for services where
 \fIType=\fR
 is set to
-\fBforking\fR\&. systemd will read the PID of the main process of the daemon after start\-up of the service\&. systemd will not write to the file configured here, although it will remove the file after the service has shut down if it still exists\&.
+\fBforking\fR\&. The service manager will read the PID of the main process of the service from this file after start\-up of the service\&. The service manager will not write to the file configured here, although it will remove the file after the service has shut down if it still exists\&. The PID file does not need to be owned by a privileged user, but if it is owned by an unprivileged user additional safety restrictions are enforced: the file may not be a symlink to a file owned by a different user (neither directly nor indirectly), and the PID file must refer to a process already belonging to the service\&.
 .RE
 .PP
 \fIBusName=\fR
@@ -332,7 +332,7 @@ T}
 T{
 "!!"
 T}:T{
-This prefix is very similar to "!!", however it only has an effect on systems lacking support for ambient process capabilities, i\&.e\&. without support for \fIAmbientCapabilities=\fR\&. It\*(Aqs intended to be used for unit files that take benefit of ambient capabilities to run processes with minimal privileges wherever possible while remaining compatible with systems that lack ambient capabilities support\&. Note that when "!!" is used, and a system lacking ambient capability support is detected any configured \fISystemCallFilter=\fR and \fICapabilityBoundingSet=\fR stanzas are implicitly modified, in order to permit spawned processes to drop credentials and capabilities themselves, even if this is configured to not be allowed\&. Moreover, if this prefix is used and a system lacking ambient capability support is detected \fIAmbientCapabilities=\fR will be skipped and not be applied\&. On systems supporting ambient capabilities, "!!" has no effect and is redundant\&.
+This prefix is very similar to "!", however it only has an effect on systems lacking support for ambient process capabilities, i\&.e\&. without support for \fIAmbientCapabilities=\fR\&. It\*(Aqs intended to be used for unit files that take benefit of ambient capabilities to run processes with minimal privileges wherever possible while remaining compatible with systems that lack ambient capabilities support\&. Note that when "!!" is used, and a system lacking ambient capability support is detected any configured \fISystemCallFilter=\fR and \fICapabilityBoundingSet=\fR stanzas are implicitly modified, in order to permit spawned processes to drop credentials and capabilities themselves, even if this is configured to not be allowed\&. Moreover, if this prefix is used and a system lacking ambient capability support is detected \fIAmbientCapabilities=\fR will be skipped and not be applied\&. On systems supporting ambient capabilities, "!!" has no effect and is redundant\&.
 T}
 .TE
 .sp 1
@@ -346,7 +346,7 @@ may be used together and they can appear in any order\&. However, only one of
 may be used at a time\&. Note that these prefixes are also supported for the other command line settings, i\&.e\&.
 \fIExecStartPre=\fR,
 \fIExecStartPost=\fR,
-\fIExecReload\fR,
+\fIExecReload=\fR,
 \fIExecStop=\fR
 and
 \fIExecStopPost=\fR\&.
@@ -467,7 +467,11 @@ or
 failed (and weren\*(Aqt prefixed with
 "\-", see above) or timed out\&. Use
 \fIExecStopPost=\fR
-to invoke commands when a service failed to start up correctly and is shut down again\&.
+to invoke commands when a service failed to start up correctly and is shut down again\&. Also note that, service restart requests are implemented as stop operations followed by start operations\&. This means that
+\fIExecStop=\fR
+and
+\fIExecStopPost=\fR
+are executed during a service restart operation\&.
 .sp
 It is recommended to use this setting for commands that communicate with the service requesting clean termination\&. When the commands specified with this option are executed it should be assumed that the service is still fully up and is able to react correctly to all commands\&. For post\-mortem clean\-up steps use
 \fIExecStopPost=\fR
@@ -513,6 +517,19 @@ from the manager configuration file, except when
 \fIType=oneshot\fR
 is used, in which case the timeout is disabled by default (see
 \fBsystemd-system.conf\fR(5))\&.
+.sp
+If a service of
+\fIType=notify\fR
+sends
+"EXTEND_TIMEOUT_USEC=\&...", this may cause the start time to be extended beyond
+\fITimeoutStartSec=\fR\&. The first receipt of this message must occur before
+\fITimeoutStartSec=\fR
+is exceeded, and once the start time has exended beyond
+\fITimeoutStartSec=\fR, the service manager will allow the service to continue to start, provided the service repeats
+"EXTEND_TIMEOUT_USEC=\&..."
+within the interval specified until the service startup status is finished by
+"READY=1"\&. (see
+\fBsd_notify\fR(3))\&.
 .RE
 .PP
 \fITimeoutStopSec=\fR
@@ -529,6 +546,18 @@ to disable the timeout logic\&. Defaults to
 \fIDefaultTimeoutStopSec=\fR
 from the manager configuration file (see
 \fBsystemd-system.conf\fR(5))\&.
+.sp
+If a service of
+\fIType=notify\fR
+sends
+"EXTEND_TIMEOUT_USEC=\&...", this may cause the stop time to be extended beyond
+\fITimeoutStopSec=\fR\&. The first receipt of this message must occur before
+\fITimeoutStopSec=\fR
+is exceeded, and once the stop time has exended beyond
+\fITimeoutStopSec=\fR, the service manager will allow the service to continue to stop, provided the service repeats
+"EXTEND_TIMEOUT_USEC=\&..."
+within the interval specified, or terminates itself (see
+\fBsd_notify\fR(3))\&.
 .RE
 .PP
 \fITimeoutSec=\fR
@@ -547,6 +576,20 @@ Configures a maximum time for the service to run\&. If this is used and the serv
 services, as they terminate immediately after activation completed\&. Pass
 "infinity"
 (the default) to configure no runtime limit\&.
+.sp
+If a service of
+\fIType=notify\fR
+sends
+"EXTEND_TIMEOUT_USEC=\&...", this may cause the runtime to be extended beyond
+\fIRuntimeMaxSec=\fR\&. The first receipt of this message must occur before
+\fIRuntimeMaxSec=\fR
+is exceeded, and once the runtime has exended beyond
+\fIRuntimeMaxSec=\fR, the service manager will allow the service to continue to run, provided the service repeats
+"EXTEND_TIMEOUT_USEC=\&..."
+within the interval specified until the service shutdown is acheived by
+"STOPPING=1"
+(or termination)\&. (see
+\fBsd_notify\fR(3))\&.
 .RE
 .PP
 \fIWatchdogSec=\fR
@@ -740,7 +783,7 @@ Note that service restart is subject to unit start rate limiting configured with
 and
 \fIStartLimitBurst=\fR, see
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. A restarted service enters the failed state only after the start limits are reached\&.
 .sp
 Setting this to
 \fBon\-failure\fR
@@ -898,15 +941,6 @@ setting of the
 it refers to\&.
 .sp
 This option may appear more than once, in which case the list of socket units is merged\&. If the empty string is assigned to this option, the list of sockets is reset, and all prior uses of this setting will have no effect\&.
-.RE
-.PP
-\fIFailureAction=\fR
-.RS 4
-Configure the action to take when the service enters a failed state\&. Takes the same values as the unit setting
-\fIStartLimitAction=\fR
-and executes the same actions (see
-\fBsystemd.unit\fR(5))\&. Defaults to
-\fBnone\fR\&.
 .RE
 .PP
 \fIFileDescriptorStoreMax=\fR

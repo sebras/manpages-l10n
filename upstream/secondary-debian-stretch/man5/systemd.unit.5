@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 234" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 236" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -176,9 +176,7 @@ files, followed by the template
 "\&.d/"
 subdirectory and the
 "\&.conf"
-files there\&. Also note that settings from the
-"[Install]"
-section are not honored in drop\-in unit files, and have no effect\&.
+files there\&.
 .PP
 In addition to
 /etc/systemd/system, the drop\-in
@@ -194,13 +192,7 @@ take precedence over those in
 which in turn take precedence over those in
 /lib\&. Drop\-in files under any of these directories take precedence over unit files wherever located\&. Multiple drop\-in files with different names are applied in lexicographic order, regardless of which of the directories they reside in\&.
 .PP
-Some unit names reflect paths existing in the file system namespace\&. Example: a device unit
-dev\-sda\&.device
-refers to a device with the device node
-/dev/sda
-in the file system namespace\&. If this applies, a special way to escape the path name is used, so that the result is usable as part of a filename\&. Basically, given a path, "/" is replaced by "\-", and all other characters which are not ASCII alphanumerics are replaced by C\-style "\ex2d" escapes (except that "_" is never replaced and "\&." is only replaced when it would be the first character in the escaped path)\&. The root directory "/" is encoded as single dash, while otherwise the initial and ending "/" are removed from all paths during transformation\&. This escaping is reversible\&. Properly escaped paths can be generated using the
-\fBsystemd-escape\fR(1)
-command\&.
+Note that while systemd offers a flexible dependency system between units it is recommended to use this functionality only sparingly and instead rely on techniques such as bus\-based or socket\-based activation which make dependencies implicit, resulting in a both simpler and more flexible system\&.
 .PP
 Optionally, units may be instantiated from a template file at runtime\&. This allows creation of multiple units from a single configuration file\&. If systemd looks for a unit configuration file, it will first search for the literal unit name in the file system\&. If that yields no success and the unit name contains an
 "@"
@@ -222,29 +214,81 @@ If a unit file is empty (i\&.e\&. has the file size 0) or is symlinked to
 .PP
 The unit file format is covered by the
 \m[blue]\fBInterface Stability Promise\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.SH "AUTOMATIC DEPENDENCIES"
+.SH "STRING ESCAPING FOR INCLUSION IN UNIT NAMES"
 .PP
-Note that while systemd offers a flexible dependency system between units it is recommended to use this functionality only sparingly and instead rely on techniques such as bus\-based or socket\-based activation which make dependencies implicit, resulting in a both simpler and more flexible system\&.
+Sometimes it is useful to convert arbitrary strings into unit names\&. To facilitate this, a method of string escaping is used, in order to map strings containing arbitrary byte values (except NUL) into valid unit names and their restricted character set\&. A common special case are unit names that reflect paths to objects in the file system hierarchy\&. Example: a device unit
+dev\-sda\&.device
+refers to a device with the device node
+/dev/sda
+in the file system\&.
 .PP
-A number of unit dependencies are automatically established, depending on unit configuration\&. On top of that, for units with
-\fIDefaultDependencies=yes\fR
-(the default) a couple of additional dependencies are added\&. The precise effect of
-\fIDefaultDependencies=yes\fR
-depends on the unit type (see below)\&.
+The escaping algorithm operates as follows: given a string, any
+"/"
+character is replaced by
+"\-", and all other characters which are not ASCII alphanumerics or
+"_"
+are replaced by C\-style
+"\ex2d"
+escapes\&. In addition,
+"\&."
+is replaced with such a C\-style escape when it would appear as the first character in the escaped string\&.
 .PP
-If
-\fIDefaultDependencies=yes\fR
-is set, units that are referenced by other units of type
-\&.target
-via a
+When the input qualifies as absolute file system path, this algorithm is extended slightly: the path to the root directory
+"/"
+is encoded as single dash
+"\-"\&. In addition, any leading, trailing or duplicate
+"/"
+characters are removed from the string before transformation\&. Example:
+/foo//bar/baz/
+becomes
+"foo\-bar\-baz"\&.
+.PP
+This escaping is fully reversible, as long as it is known whether the escaped string was a path (the unescaping results are different for paths and non\-path strings)\&. The
+\fBsystemd-escape\fR(1)
+command may be used to apply and reverse escaping on arbitrary strings\&. Use
+\fBsystemd\-escape \-\-path\fR
+to escape path strings, and
+\fBsystemd\-escape\fR
+without
+\fB\-\-path\fR
+otherwise\&.
+.SH "IMPLICIT DEPENDENCIES"
+.PP
+A number of unit dependencies are implicitly established, depending on unit type and unit configuration\&. These implicit dependencies can make unit configuration file cleaner\&. For the implicit dependencies in each unit type, please refer to section "Implicit Dependencies" in respective man pages\&.
+.PP
+For example, service units with
+\fIType=dbus\fR
+automatically acquire dependencies of type
+\fIRequires=\fR
+and
+\fIAfter=\fR
+on
+dbus\&.socket\&. See
+\fBsystemd.service\fR(5)
+for details\&.
+.SH "DEFAULT DEPENDENCIES"
+.PP
+Default dependencies are similar to implicit dependencies, but can be turned on and off by setting
+\fIDefaultDependencies=\fR
+to
+\fIyes\fR
+(the default) and
+\fIno\fR, while implicit dependencies are always in effect\&. See section "Default Dependencies" in respective man pages for the effect of enabling
+\fIDefaultDependencies=\fR
+in each unit types\&.
+.PP
+For example, target units will complement all configured dependencies of type
 \fIWants=\fR
 or
 \fIRequires=\fR
-dependency might automatically gain an
-\fIBefore=\fR
-dependency too\&. See
+with dependencies of type
+\fIAfter=\fR
+unless
+\fIDefaultDependencies=no\fR
+is set in the specified units\&. See
 \fBsystemd.target\fR(5)
-for details\&.
+for details\&. Note that this behavior can be turned off by setting
+\fIDefaultDependencies=no\fR\&.
 .SH "UNIT FILE LOAD PATH"
 .PP
 Unit files are loaded from a set of paths determined during compilation, described in the two tables below\&. Unit files found in directories listed earlier override files with the same name in directories lower in the list\&.
@@ -360,6 +404,106 @@ Additional units might be loaded into systemd ("linked") from directories not on
 command for
 \fBsystemctl\fR(1)\&. Also, some units are dynamically created via a
 \fBsystemd.generator\fR(7)\&.
+.SH "UNIT GARBAGE COLLECTION"
+.PP
+The system and service manager loads a unit\*(Aqs configuration automatically when a unit is referenced for the first time\&. It will automatically unload the unit configuration and state again when the unit is not needed anymore ("garbage collection")\&. A unit may be referenced through a number of different mechanisms:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Another loaded unit references it with a dependency such as
+\fIAfter=\fR,
+\fIWants=\fR, \&...
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+The unit is currently starting, running, reloading or stopping\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+The unit is currently in the
+\fBfailed\fR
+state\&. (But see below\&.)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+A job for the unit is pending\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  5." 4.2
+.\}
+The unit is pinned by an active IPC client program\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 6.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  6." 4.2
+.\}
+The unit is a special "perpetual" unit that is always active and loaded\&. Examples for perpetual units are the root mount unit
+\-\&.mount
+or the scope unit
+init\&.scope
+that the service manager itself lives in\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 7.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  7." 4.2
+.\}
+The unit has running processes associated with it\&.
+.RE
+.PP
+The garbage collection logic may be altered with the
+\fICollectMode=\fR
+option, which allows configuration whether automatic unloading of units that are in
+\fBfailed\fR
+state is permissible, see below\&.
+.PP
+Note that when a unit\*(Aqs configuration and state is unloaded, all execution results, such as exit codes, exit signals, resource consumption and other statistics are lost, except for what is stored in the log subsystem\&.
+.PP
+Use
+\fBsystemctl daemon\-reload\fR
+or an equivalent command to reload unit configuration while the unit is already loaded\&. In this case all configuration settings are flushed out and replaced with the new configuration (which however might not be in effect immediately), however all runtime state is saved/restored\&.
 .SH "[UNIT] SECTION OPTIONS"
 .PP
 The unit file may include a [Unit] section, which carries generic information about the unit that is not dependent on the type of unit:
@@ -388,7 +532,10 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 .PP
 \fIRequires=\fR
 .RS 4
-Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units gets deactivated or its activation fails, this unit will be deactivated\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
+Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
+\fIAfter=\fR
+on the failing unit is set, this unit will not be started\&. Besides, with or without specifying
+\fIAfter=\fR, this unit will be deactivated if one of the other units get deactivated\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
 \fIAfter=\fR
 or
 \fIBefore=\fR
@@ -411,7 +558,7 @@ in order to achieve a system that is more robust when dealing with failing servi
 .sp
 Note that this dependency type does not imply that the other unit always has to be in active state when this unit is running\&. Specifically: failing condition checks (such as
 \fIConditionPathExists=\fR,
-\fIConditionPathExists=\fR, \&... \(em see below) do not cause the start job of a unit with a
+\fIConditionPathIsSymbolicLink=\fR, \&... \(em see below) do not cause the start job of a unit with a
 \fIRequires=\fR
 dependency on it to fail\&. Also, some unit types may deactivate on their own (for example, a service process may decide to exit cleanly, or a device may be unplugged by the user), which is not propagated to units having a
 \fIRequires=\fR
@@ -430,6 +577,16 @@ directory accompanying the unit file\&. For details, see above\&.
 .RS 4
 Similar to
 \fIRequires=\fR\&. However, if the units listed here are not started already, they will not be started and the transaction will fail immediately\&.
+.sp
+When
+\fIRequisite=b\&.service\fR
+is used on
+a\&.service, this dependency will show as
+\fIRequisiteOf=a\&.service\fR
+in property listing of
+b\&.service\&.
+\fIRequisiteOf=\fR
+dependency cannot be specified directly\&.
 .RE
 .PP
 \fIWants=\fR
@@ -459,12 +616,32 @@ is even stronger\&. In this case, the unit bound to strictly has to be in active
 \fIBindsTo=\fR
 with
 \fIAfter=\fR\&.
+.sp
+When
+\fIBindsTo=b\&.service\fR
+is used on
+a\&.service, this dependency will show as
+\fIBoundBy=a\&.service\fR
+in property listing of
+b\&.service\&.
+\fIBoundBy=\fR
+dependency cannot be specified directly\&.
 .RE
 .PP
 \fIPartOf=\fR
 .RS 4
 Configures dependencies similar to
 \fIRequires=\fR, but limited to stopping and restarting of units\&. When systemd stops or restarts the units listed here, the action is propagated to this unit\&. Note that this is a one\-way dependency\ \&\(em changes to this unit do not affect the listed units\&.
+.sp
+When
+\fIPartOf=b\&.service\fR
+is used on
+a\&.service, this dependency will show as
+\fIConsistsOf=a\&.service\fR
+in property listing of
+b\&.service\&.
+\fIConsistsOf=\fR
+dependency cannot be specified directly\&.
 .RE
 .PP
 \fIConflicts=\fR
@@ -583,7 +760,10 @@ option for details on the possible values\&. If this is set to
 .RS 4
 Takes a boolean argument\&. If
 \fBtrue\fR, this unit will not be stopped when isolating another unit\&. Defaults to
-\fBfalse\fR\&.
+\fBfalse\fR
+for service, target, socket, busname, timer, and path units, and
+\fBtrue\fR
+for slice, scope, device, swap, mount, and automount units\&.
 .RE
 .PP
 \fIStopWhenUnneeded=\fR
@@ -617,6 +797,32 @@ Takes a boolean argument\&. If
 \fBfalse\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
 .RE
 .PP
+\fICollectMode=\fR
+.RS 4
+Tweaks the "garbage collection" algorithm for this unit\&. Takes one of
+\fBinactive\fR
+or
+\fBinactive\-or\-failed\fR\&. If set to
+\fBinactive\fR
+the unit will be unloaded if it is in the
+\fBinactive\fR
+state and is not referenced by clients, jobs or other units \(em however it is not unloaded if it is in the
+\fBfailed\fR
+state\&. In
+\fBfailed\fR
+mode, failed units are not unloaded until the user invoked
+\fBsystemctl reset\-failed\fR
+on them to reset the
+\fBfailed\fR
+state, or an equivalent command\&. This behaviour is altered if this option is set to
+\fBinactive\-or\-failed\fR: in this case the unit is unloaded even if the unit is in a
+\fBfailed\fR
+state, and thus an explicitly resetting of the
+\fBfailed\fR
+state is not necessary\&. Note that if this mode is used unit results (such as exit codes, exit signals, consumed resources, \&...) are flushed out immediately after the unit completed, except for what is stored in the logging subsystem\&. Defaults to
+\fBinactive\fR\&.
+.RE
+.PP
 \fIJobTimeoutSec=\fR, \fIJobRunningTimeoutSec=\fR, \fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
 .RS 4
 When a job for this unit is queued, a time\-out
@@ -634,11 +840,8 @@ defaults to
 in service units) as the job timeout has no effect on the unit itself, only on the job that might be pending for it\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
 .sp
 \fIJobTimeoutAction=\fR
-optionally configures an additional action to take when the time\-out is hit\&. It takes the same values as the per\-service
-\fIStartLimitAction=\fR
-setting, see
-\fBsystemd.service\fR(5)
-for details\&. Defaults to
+optionally configures an additional action to take when the time\-out is hit\&. It takes the same values as
+\fIStartLimitAction=\fR\&. Defaults to
 \fBnone\fR\&.
 \fIJobTimeoutRebootArgument=\fR
 configures an optional reboot string to pass to the
@@ -646,13 +849,17 @@ configures an optional reboot string to pass to the
 system call\&.
 .RE
 .PP
-\fIStartLimitIntervalSec=\fR, \fIStartLimitBurst=\fR
+\fIStartLimitIntervalSec=\fR\fI\fIinterval\fR\fR, \fIStartLimitBurst=\fR\fI\fIburst\fR\fR
 .RS 4
-Configure unit start rate limiting\&. By default, units which are started more than 5 times within 10 seconds are not permitted to start any more times until the 10 second interval ends\&. With these two options, this rate limiting may be modified\&. Use
+Configure unit start rate limiting\&. Units which are started more than
+\fIburst\fR
+times within an
+\fIinterval\fR
+time interval are not permitted to start any more\&. Use
 \fIStartLimitIntervalSec=\fR
 to configure the checking interval (defaults to
 \fIDefaultStartLimitIntervalSec=\fR
-in manager configuration file, set to 0 to disable any kind of rate limiting)\&. Use
+in manager configuration file, set it to 0 to disable any kind of rate limiting)\&. Use
 \fIStartLimitBurst=\fR
 to configure how many starts per interval are allowed (defaults to
 \fIDefaultStartLimitBurst=\fR
@@ -663,9 +870,13 @@ in manager configuration file)\&. These configuration options are particularly u
 \fIRestart=\fR
 logic\&. Note that units which are configured for
 \fIRestart=\fR
-and which reach the start limit are not attempted to be restarted anymore; however, they may still be restarted manually at a later point, from which point on, the restart logic is again activated\&. Note that
+and which reach the start limit are not attempted to be restarted anymore; however, they may still be restarted manually at a later point, after the
+\fIinterval\fR
+has passed\&. From this point on, the restart logic is activated again\&. Note that
 \fBsystemctl reset\-failed\fR
-will cause the restart rate counter for a service to be flushed, which is useful if the administrator wants to manually start a unit and the start limit interferes with that\&. Note that this rate\-limiting is enforced after any unit condition checks are executed, and hence unit activations with failing conditions are not counted by this rate limiting\&. Slice, target, device and scope units do not enforce this setting, as they are unit types whose activation may either never fail, or may succeed only a single time\&.
+will cause the restart rate counter for a service to be flushed, which is useful if the administrator wants to manually start a unit and the start limit interferes with that\&. Note that this rate\-limiting is enforced after any unit condition checks are executed, and hence unit activations with failing conditions do not count towards this rate limit\&. This setting does not apply to slice, target, device, and scope units, since they are unit types whose activation may either never fail, or may succeed only a single time\&.
+.sp
+When a unit is unloaded due to the garbage collection logic (see above) its rate limit counters are flushed out too\&. This means that configuring start rate limiting for a unit that is not referenced continously has no effect\&.
 .RE
 .PP
 \fIStartLimitAction=\fR
@@ -702,13 +913,22 @@ have the effect of powering down the system with similar semantics\&. Defaults t
 \fBnone\fR\&.
 .RE
 .PP
+\fIFailureAction=\fR, \fISuccessAction=\fR
+.RS 4
+Configure the action to take when the unit stops and enters a failed state or inactive state\&. Takes the same values as the setting
+\fIStartLimitAction=\fR
+setting and executes the same actions (see
+\fBsystemd.unit\fR(5))\&. Both options default to
+\fBnone\fR\&.
+.RE
+.PP
 \fIRebootArgument=\fR
 .RS 4
 Configure the optional argument for the
 \fBreboot\fR(2)
 system call if
 \fIStartLimitAction=\fR
-or a service\*(Aqs
+or
 \fIFailureAction=\fR
 is a reboot action\&. This works just like the optional argument to
 \fBsystemctl reboot\fR
@@ -801,6 +1021,7 @@ may be used to check whether a specific kernel command line option is set (or if
 may be used to check whether the given security module is enabled on the system\&. Currently, the recognized values are
 \fIselinux\fR,
 \fIapparmor\fR,
+\fItomoyo\fR,
 \fIima\fR,
 \fIsmack\fR
 and
@@ -919,6 +1140,146 @@ Similar to the
 .RS 4
 A path to a configuration file this unit has been generated from\&. This is primarily useful for implementation of generator tools that convert configuration from an external configuration file format into native unit files\&. This functionality should not be used in normal units\&.
 .RE
+.SH "MAPPING OF UNIT PROPERTIES TO THEIR INVERSES"
+.PP
+Unit settings that create a relationship with a second unit usually show up in properties of both units, for example in
+\fBsystemctl show\fR
+output\&. In some cases the name of the property is the same as the name of the configuration setting, but not always\&. This table lists the pairs of properties that are shown on two units which are connected through some dependency, and shows which property on "source" unit corresponds to which property on the "target" unit\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&3.\ \& "Forward" and "reverse" unit properties
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+"Forward" property
+T}:T{
+"Reverse" property
+T}:T{
+Where used
+T}
+.T&
+l l l
+l l ^
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l ^.
+T{
+\fIBefore=\fR
+T}:T{
+\fIAfter=\fR
+T}:T{
+Both are unit file options
+T}
+T{
+\fIAfter=\fR
+T}:T{
+\fIBefore=\fR
+T}:
+T{
+\fIRequires=\fR
+T}:T{
+\fIRequiredBy=\fR
+T}:T{
+A unit file option; an option in the [Install] section
+T}
+T{
+\fIWants=\fR
+T}:T{
+\fIWantedBy=\fR
+T}:T{
+A unit file option; an option in the [Install] section
+T}
+T{
+\fIPartOf=\fR
+T}:T{
+\fIConsistsOf=\fR
+T}:T{
+A unit file option; an automatic property
+T}
+T{
+\fIBindsTo=\fR
+T}:T{
+\fIBoundBy=\fR
+T}:T{
+A unit file option; an automatic property
+T}
+T{
+\fIRequisite=\fR
+T}:T{
+\fIRequisiteOf=\fR
+T}:T{
+A unit file option; an automatic property
+T}
+T{
+\fITriggers=\fR
+T}:T{
+\fITriggeredBy=\fR
+T}:T{
+Automatic properties, see notes below
+T}
+T{
+\fIConflicts=\fR
+T}:T{
+\fIConflictedBy=\fR
+T}:T{
+A unit file option; an automatic property
+T}
+T{
+\fIPropagatesReloadTo=\fR
+T}:T{
+\fIReloadPropagatedFrom=\fR
+T}:T{
+Both are unit file options
+T}
+T{
+\fIReloadPropagatedFrom=\fR
+T}:T{
+\fIPropagatesReloadTo=\fR
+T}:
+.TE
+.sp 1
+.PP
+Note:
+\fIWantedBy=\fR
+and
+\fIRequiredBy=\fR
+are used in the [Install] section to create symlinks in
+\&.wants/
+and
+\&.requires/
+directories\&. They cannot be used directly as a unit configuration setting\&.
+.PP
+Note:
+\fIConsistsOf=\fR,
+\fIBoundBy=\fR,
+\fIRequisiteOf=\fR,
+\fIConflictedBy=\fR
+are created implicitly along with their reverse and cannot be specified directly\&.
+.PP
+Note:
+\fITriggers=\fR
+is created implicitly between a socket, path unit, or an automount unit, and the unit they activate\&. By default a unit with the same name is triggered, but this can be overriden using
+\fISockets=\fR,
+\fIService=\fR, and
+\fIUnit=\fR
+settings\&. See
+\fBsystemd.service\fR(5),
+\fBsystemd.socket\fR(5),
+\fBsystemd.path\fR(5), and
+\fBsystemd.automount\fR(5)
+for details\&.
+\fITriggersBy=\fR
+is created implicitly on the triggered unit\&.
 .SH "[INSTALL] SECTION OPTIONS"
 .PP
 Unit files may include an
@@ -931,15 +1292,11 @@ and
 \fBdisable\fR
 commands of the
 \fBsystemctl\fR(1)
-tool during installation of a unit\&. Note that settings in the
-"[Install]"
-section may not appear in
-\&.d/*\&.conf
-unit file drop\-ins (see above)\&.
+tool during installation of a unit\&.
 .PP
 \fIAlias=\fR
 .RS 4
-A space\-separated list of additional names this unit shall be installed under\&. The names listed here must have the same suffix (i\&.e\&. type) as the unit file name\&. This option may be specified more than once, in which case all listed names are used\&. At installation time,
+A space\-separated list of additional names this unit shall be installed under\&. The names listed here must have the same suffix (i\&.e\&. type) as the unit filename\&. This option may be specified more than once, in which case all listed names are used\&. At installation time,
 \fBsystemctl enable\fR
 will create symlinks from these names to the unit filename\&. Note that not all unit types support such alias names, and this setting is not supported for them\&. Specifically, mount, slice, swap, and automount units do not support aliasing\&.
 .RE
@@ -1003,13 +1360,13 @@ In template unit files, this specifies for which instance the unit shall be enab
 The following specifiers are interpreted in the Install section: %n, %N, %p, %i, %U, %u, %m, %H, %b, %v\&. For their meaning see the next section\&.
 .SH "SPECIFIERS"
 .PP
-Many settings resolve specifiers which may be used to write generic unit files referring to runtime or unit parameters that are replaced when the unit files are loaded\&. The following specifiers are understood:
+Many settings resolve specifiers which may be used to write generic unit files referring to runtime or unit parameters that are replaced when the unit files are loaded\&. Specifiers must be known and resolvable for the setting to be valid\&. The following specifiers are understood:
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&3.\ \&Specifiers available in unit files
+.B Table\ \&4.\ \&Specifiers available in unit files
 .TS
 allbox tab(:);
 lB lB lB.
@@ -1021,6 +1378,9 @@ T}:T{
 Details
 T}
 .T&
+l l l
+l l l
+l l l
 l l l
 l l l
 l l l
@@ -1050,7 +1410,7 @@ T{
 T}:T{
 Unescaped full unit name
 T}:T{
-Same as "%n", but with escaping undone
+Same as "%n", but with escaping undone\&. This undoes the escaping used when generating unit names from arbitrary strings (see above)\&.
 T}
 T{
 "%p"
@@ -1085,14 +1445,35 @@ T{
 T}:T{
 Unescaped filename
 T}:T{
-This is either the unescaped instance name (if applicable) with / prepended (if applicable), or the unescaped prefix name prepended with /\&.
+This is either the unescaped instance name (if applicable) with / prepended (if applicable), or the unescaped prefix name prepended with /\&. This implements unescaping according to the rules for escaping absolute file system paths discussed above\&.
 T}
 T{
 "%t"
 T}:T{
-Runtime directory
+Runtime directory root
 T}:T{
 This is either /run (for the system manager) or the path "$XDG_RUNTIME_DIR" resolves to (for user managers)\&.
+T}
+T{
+"%S"
+T}:T{
+State directory root
+T}:T{
+This is either /var/lib (for the system manager) or the path "$XDG_CONFIG_HOME" resolves to (for user managers)\&.
+T}
+T{
+"%C"
+T}:T{
+Cache directory root
+T}:T{
+This is either /var/cache (for the system manager) or the path "$XDG_CACHE_HOME" resolves to (for user managers)\&.
+T}
+T{
+"%L"
+T}:T{
+Log directory root
+T}:T{
+This is either /var/log (for the system manager) or the path "$XDG_CONFIG_HOME" resolves to with /log appended (for user managers)\&.
 T}
 T{
 "%u"
@@ -1210,12 +1591,6 @@ The advantage of the first method is that one easily overrides the complete unit
 .PP
 The advantage of the second method is that one only overrides the settings one specifically wants, where updates to the unit by the vendor automatically apply\&. This has the disadvantage that some future updates by the vendor might be incompatible with the local changes\&.
 .PP
-Note that for drop\-in files, if one wants to remove entries from a setting that is parsed as a list (and is not a dependency), such as
-\fIConditionPathExists=\fR
-(or e\&.g\&.
-\fIExecStart=\fR
-in service units), one needs to first clear the list before re\-adding all entries except the one that is to be removed\&. See below for an example\&.
-.PP
 This also applies for user instances of systemd, but with different locations for the unit files\&. See the section on unit load paths for further details\&.
 .PP
 Suppose there is a vendor\-supplied unit
@@ -1305,7 +1680,11 @@ PrivateTmp=yes
 .RE
 .\}
 .PP
-Note that dependencies (\fIAfter=\fR, etc\&.) cannot be reset to an empty list, so dependencies can only be added in drop\-ins\&. If you want to remove dependencies, you have to override the entire unit\&.
+Note that for drop\-in files, if one wants to remove entries from a setting that is parsed as a list (and is not a dependency), such as
+\fIAssertPathExists=\fR
+(or e\&.g\&.
+\fIExecStart=\fR
+in service units), one needs to first clear the list before re\-adding all entries except the one that is to be removed\&. Dependencies (\fIAfter=\fR, etc\&.) cannot be reset to an empty list, so dependencies can only be added in drop\-ins\&. If you want to remove dependencies, you have to override the entire unit\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

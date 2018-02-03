@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 235" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 237" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -147,6 +147,16 @@ in
 for details\&.
 .RE
 .PP
+\fIKernelVersion=\fR
+.RS 4
+Checks whether the kernel version (as reported by
+\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. See
+"ConditionKernelVersion="
+in
+\fBsystemd.unit\fR(5)
+for details\&.
+.RE
+.PP
 \fIArchitecture=\fR
 .RS 4
 Checks whether the system is running on a specific architecture\&. See
@@ -187,6 +197,20 @@ A boolean\&. When
 "no"\&.
 .sp
 This is useful for preventing later matching network files from interfering with certain interfaces that are fully controlled by other applications\&.
+.RE
+.PP
+\fIRequiredForOnline=\fR
+.RS 4
+A boolean\&. When
+"yes", the network is deemed required when determining whether the system is online when running
+"systemd\-networkd\-wait\-online"\&. When
+"no", the network is ignored when checking for online state\&. Defaults to
+"yes"\&.
+.sp
+The network will be brought up normally in all cases, but in the event that there is no address being assigned by DHCP or the cable is not plugged in, the link will simply remain offline and be skipped automatically by
+"systemd\-networkd\-wait\-online"
+if
+"RequiredForOnline=true"\&.
 .RE
 .SH "[NETWORK] SECTION OPTIONS"
 .PP
@@ -464,12 +488,26 @@ has been set to false\&. Defaults to unset\&.
 .PP
 \fIIPv6PrefixDelegation=\fR
 .RS 4
-Whether to enable or disable Router Advertisement sending on a link\&. Defaults to
+Whether to enable or disable Router Advertisement sending on a link\&. Allowed values are
+"static"
+which distributes prefixes as defined in the
+"[IPv6PrefixDelegation]"
+and any
+"[IPv6Prefix]"
+sections,
+"dhcpv6"
+which requests prefixes using a DHCPv6 client configured for another link and any values configured in the
+"[IPv6PrefixDelegation]"
+section while ignoring all static prefix configuration sections,
+"yes"
+which uses both static configuration and DHCPv6, and
+"false"
+which turns off IPv6 prefix delegation altogether\&. Defaults to
 "false"\&. See the
 "[IPv6PrefixDelegation]"
 and the
 "[IPv6Prefix]"
-sections for configuration options\&.
+sections for more configuration options\&.
 .RE
 .PP
 \fIBridge=\fR
@@ -691,6 +729,16 @@ Specifies the priority of this rule\&.
 \fIPriority=\fR
 is an unsigned integer\&. Higher number means lower priority, and rules get processed in order of increasing number\&.
 .RE
+.PP
+\fIIncomingInterface=\fR
+.RS 4
+Specifies incoming device to match\&. If the interface is loopback, the rule only matches packets originating from this host\&.
+.RE
+.PP
+\fIOutgoingInterface=\fR
+.RS 4
+Specifies the outgoing device to match\&. The outgoing interface is only available for packets originating from local sockets that are bound to a device\&.
+.RE
 .SH "[ROUTE] SECTION OPTIONS"
 .PP
 The
@@ -786,6 +834,21 @@ packets are discarded and the ICMP message host unreachable is generated,
 "prohibit"
 packets are discarded and the ICMP message communication administratively prohibited is generated\&. Defaults to
 "unicast"\&.
+.RE
+.PP
+\fIInitialCongestionWindow=\fR
+.RS 4
+The TCP initial congestion window is used during the start of a TCP connection\&. During the start of a TCP session, when a client requests a resource, the server\*(Aqs initial congestion window determines how many data bytes will be sent during the initial burst of data\&. Takes a size in bytes between 1 and 4294967295 (2^32 \- 1)\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&. Defaults to unset\&.
+.RE
+.PP
+\fIInitialAdvertisedReceiveWindow=\fR
+.RS 4
+The TCP initial advertised receive window is the amount of receive data (in bytes) that can initally be buffered at one time on a connection\&. The sending host can send only that amount of data before waiting for an acknowledgment and window update from the receiving host\&. Takes a size in bytes between 1 and 4294967295 (2^32 \- 1)\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&. Defaults to unset\&.
+.RE
+.PP
+\fIQuickAck=\fR
+.RS 4
+Takes a boolean argument\&. When true enables TCP quick ack mode for the route\&. Defaults to unset\&.
 .RE
 .SH "[DHCP] SECTION OPTIONS"
 .PP
@@ -949,6 +1012,13 @@ the VRF\*(Aqs routing table is used unless this parameter is specified\&.
 .RS 4
 Allow setting custom port for the DHCP client to listen on\&.
 .RE
+.PP
+\fIRapidCommit=\fR
+.RS 4
+A boolean\&. The DHCPv6 client can obtain configuration parameters from a DHCPv6 server through a rapid two\-message exchange (solicit and reply)\&. When the rapid commit option is enabled by both the DHCPv6 client and the DHCPv6 server, the two\-message exchange is used, rather than the default four\-method exchange (solicit, advertise, request, and reply)\&. The two\-message exchange provides faster client configuration and is beneficial in environments in which networks are under a heavy load\&. See
+\m[blue]\fBRFC 3315\fR\m[]\&\s-2\u[14]\d\s+2
+for details\&. Defaults to true\&.
+.RE
 .SH "[IPV6ACCEPTRA] SECTION OPTIONS"
 .PP
 The
@@ -1111,14 +1181,39 @@ for details\&. Defaults to
 "medium"\&.
 .RE
 .PP
-\fIDNS=\fR
+\fIEmitDNS=\fR, \fIDNS=\fR
 .RS 4
-A list of recursive DNS server IPv6 addresses distributed via Router Advertisement messages\&.
+\fIDNS=\fR
+specifies a list of recursive DNS server IPv6 addresses that distributed via Router Advertisement messages when
+\fIEmitDNS=\fR
+is true\&. If
+\fIDNS= \fR
+is empty, DNS servers are read from the
+"[Network]"
+section\&. If the
+"[Network]"
+section does not contain any DNS servers either, DNS servers from the uplink with the highest priority default route are used\&. When
+\fIEmitDNS=\fR
+is false, no DNS server information is sent in Router Advertisement messages\&.
+\fIEmitDNS=\fR
+defaults to true\&.
 .RE
 .PP
-\fIDomains=\fR
+\fIEmitDomains=\fR, \fIDomains=\fR
 .RS 4
-A list of DNS search domains distributed via Router Advertisement messages\&. Defaults to empty, i\&.e\&. no search domains are sent\&.
+A list of DNS search domains distributed via Router Advertisement messages when
+\fIEmitDomains=\fR
+is true\&. If
+\fIDomains=\fR
+is empty, DNS search domains are read from the
+"[Network]"
+section\&. If the
+"[Network]"
+section does not contain any DNS search domains either, DNS search domains from the uplink with the highest priority default route are used\&. When
+\fIEmitDomains=\fR
+is false, no DNS search domain information is sent in Router Advertisement messages\&.
+\fIEmitDomains=\fR
+defaults to true\&.
 .RE
 .PP
 \fIDNSLifetimeSec=\fR
@@ -1133,7 +1228,7 @@ and search domains listed in
 One or more
 "[IPv6Prefix]"
 sections contain the IPv6 prefixes that are announced via Router Advertisements\&. See
-\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[14]\d\s+2
+\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[15]\d\s+2
 for further details\&.
 .PP
 \fIAddressAutoconfiguration=\fR, \fIOnLink=\fR
@@ -1217,7 +1312,7 @@ section\&. This key is mandatory\&.
 .PP
 \fIVLANId=\fR
 .RS 4
-The VLAN ID for the new static MAC table entry\&. If omitted, no VLAN ID info is appended to the new static MAC table entry\&.
+The VLAN ID for the new static MAC table entry\&. If omitted, no VLAN ID information is appended to the new static MAC table entry\&.
 .RE
 .SH "[BRIDGEVLAN] SECTION OPTIONS"
 .PP
@@ -1649,6 +1744,11 @@ RFC 7844
 \%https://tools.ietf.org/html/rfc7844
 .RE
 .IP "14." 4
+RFC 3315
+.RS 4
+\%https://tools.ietf.org/html/rfc3315#section-17.2.1
+.RE
+.IP "15." 4
 RFC 4861
 .RS 4
 \%https://tools.ietf.org/html/rfc4861

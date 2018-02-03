@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 234" "systemd.mount"
+.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 236" "systemd.mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,16 +65,44 @@ description in
 .PP
 Some file systems have special semantics as API file systems for kernel\-to\-userspace and userspace\-to\-userspace interfaces\&. Some of them may not be changed via mount units, and cannot be disabled\&. For a longer discussion see
 \m[blue]\fBAPI File Systems\fR\m[]\&\s-2\u[1]\d\s+2\&.
-.SH "AUTOMATIC DEPENDENCIES"
+.SH "IMPLICIT DEPENDENCIES"
 .PP
+The following dependencies are implicitly added:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 If a mount unit is beneath another mount unit in the file system hierarchy, both a requirement dependency and an ordering dependency between both units are created automatically\&.
-.PP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Block device backed file systems automatically gain
 \fIBindsTo=\fR
 and
 \fIAfter=\fR
 type dependencies on the device unit encapsulating the block device (see below)\&.
-.PP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 If traditional file system quota is enabled for a mount unit, automatic
 \fIWants=\fR
 and
@@ -84,15 +112,67 @@ systemd\-quotacheck\&.service
 and
 quotaon\&.service
 are added\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Additional implicit dependencies may be added as result of execution and resource control parameters as documented in
+\fBsystemd.exec\fR(5)
+and
+\fBsystemd.resource-control\fR(5)\&.
+.RE
+.SH "DEFAULT DEPENDENCIES"
 .PP
-For mount units with
-\fIDefaultDependencies=yes\fR
-in the
-"[Unit]"
-section (the default) a couple additional dependencies are added\&. Mount units referring to local file systems automatically gain an
+The following dependencies are added unless
+\fIDefaultDependencies=no\fR
+is set:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+All mount units acquire automatic
+\fIBefore=\fR
+and
+\fIConflicts=\fR
+on
+umount\&.target
+in order to be stopped during shutdown\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Mount units referring to local file systems automatically gain an
 \fIAfter=\fR
 dependency on
-local\-fs\-pre\&.target\&. Network mount units automatically acquire
+local\-fs\-pre\&.target\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Network mount units automatically acquire
 \fIAfter=\fR
 dependencies on
 remote\-fs\-pre\&.target,
@@ -100,20 +180,12 @@ network\&.target
 and
 network\-online\&.target\&. Towards the latter a
 \fIWants=\fR
-unit is added as well\&. Mount units referring to local and network file systems are distinguished by their file system type specification\&. In some cases this is not sufficient (for example network block device based mounts, such as iSCSI), in which case
-\fB_netdev\fR
-may be added to the mount option string of the unit, which forces systemd to consider the mount unit a network mount\&. Mount units (regardless if local or network) also acquire automatic
-\fIBefore=\fR
-and
-\fIConflicts=\fR
-on
-umount\&.target
-in order to be stopped during shutdown\&.
+unit is added as well\&.
+.RE
 .PP
-Additional implicit dependencies may be added as result of execution and resource control parameters as documented in
-\fBsystemd.exec\fR(5)
-and
-\fBsystemd.resource-control\fR(5)\&.
+Mount units referring to local and network file systems are distinguished by their file system type specification\&. In some cases this is not sufficient (for example network block device based mounts, such as iSCSI), in which case
+\fB_netdev\fR
+may be added to the mount option string of the unit, which forces systemd to consider the mount unit a network mount\&.
 .SH "FSTAB"
 .PP
 Mount units may either be configured via unit files, or via
@@ -265,15 +337,65 @@ See
 below for details\&.
 .RE
 .PP
+\fBx\-systemd\&.makefs\fR
+.RS 4
+The file system or swap structure will be intialized on the device\&. If the device is not "empty", i\&.e\&. it contains any signature, the operation will be skipped\&. It is hence expected that this option remains set even after the device has been initalized\&.
+.sp
+Note that this option can only be used in
+/etc/fstab, and will be ignored when part of the
+\fIOptions=\fR
+setting in a unit file\&.
+.sp
+See
+\fBsystemd-makefs@.service\fR(8)\&.
+.sp
+\fBwipefs\fR(8)
+may be used to remove any signatures from a block device to force
+\fBx\-systemd\&.makefs\fR
+to reinitialize the device\&.
+.RE
+.PP
+\fBx\-systemd\&.growfs\fR
+.RS 4
+The file system will be grown to occupy the full block device\&. If the file system is already at maximum size, no action will be performed\&. It is hence expected that this option remains set even after the file system has been grown\&. Only certain file system types are supported, see
+\fBsystemd-makefs@.service\fR(8)
+for details\&.
+.sp
+Note that this option can only be used in
+/etc/fstab, and will be ignored when part of the
+\fIOptions=\fR
+setting in a unit file\&.
+.RE
+.PP
+\fB_netdev\fR
+.RS 4
+Normally the file system type is used to determine if a mount is a "network mount", i\&.e\&. if it should only be started after the network is available\&. Using this option overrides this detection and specifies that the mount requires network\&.
+.sp
+Network mount units are ordered between
+remote\-fs\-pre\&.target
+and
+remote\-fs\&.target, instead of
+local\-fs\-pre\&.target
+and
+local\-fs\&.target\&. They also pull in
+network\-online\&.target
+and are ordered after it and
+network\&.target\&.
+.RE
+.PP
 \fBnoauto\fR, \fBauto\fR
 .RS 4
 With
-\fBnoauto\fR, this mount will not be added as a dependency for
+\fBnoauto\fR, the mount unit will not be added as a dependency for
 local\-fs\&.target
 or
 remote\-fs\&.target\&. This means that it will not be mounted automatically during boot, unless it is pulled in by some other unit\&. The
 \fBauto\fR
-option has the opposite meaning and is the default\&.
+option has the opposite meaning and is the default\&. Note that the
+\fBnoauto\fR
+option has an effect on the mount unit itself only \(em if
+\fBx\-systemd\&.automount\fR
+is used (see above), then the matching automount unit will still be pulled in by these targets\&.
 .RE
 .PP
 \fBnofail\fR

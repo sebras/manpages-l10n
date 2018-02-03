@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 234" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 236" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,11 +23,21 @@
 tmpfiles.d \- Configuration for creation, deletion and cleaning of volatile and temporary files
 .SH "SYNOPSIS"
 .PP
+.nf
 /etc/tmpfiles\&.d/*\&.conf
-.PP
 /run/tmpfiles\&.d/*\&.conf
-.PP
 /usr/lib/tmpfiles\&.d/*\&.conf
+    
+.fi
+.PP
+.nf
+~/\&.config/user\-tmpfiles\&.d/*\&.conf
+$XDG_RUNTIME_DIR/user\-tmpfiles\&.d/*\&.conf
+~/\&.local/share/user\-tmpfiles\&.d/*\&.conf
+\&...
+/usr/share/user\-tmpfiles\&.d/*\&.conf
+    
+.fi
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-tmpfiles\fR
@@ -54,7 +64,7 @@ to place communication sockets and similar in\&. For these, consider declaring t
 (see
 \fBsystemd.exec\fR(5)
 for details), if this is feasible\&.
-.SH "CONFIGURATION FORMAT"
+.SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 Each configuration file shall be named in the style of
 \fIpackage\fR\&.conf
@@ -79,6 +89,7 @@ If the administrator wants to disable a configuration file supplied by the vendo
 in
 /etc/tmpfiles\&.d/
 bearing the same filename\&.
+.SH "CONFIGURATION FILE FORMAT"
 .PP
 The configuration format is one line per path containing type, path, mode, ownership, age, and argument fields:
 .sp
@@ -207,7 +218,7 @@ and a file already exists where the pipe is to be created, it will be removed an
 .RS 4
 Create a symlink if it does not exist yet\&. If suffixed with
 \fI+\fR
-and a file already exists where the symlink is to be created, it will be removed and be replaced by the symlink\&. If the argument is omitted, symlinks to files with the same name residing in the directory
+and a file or directory already exists where the symlink is to be created, it will be removed and be replaced by the symlink\&. If the argument is omitted, symlinks to files with the same name residing in the directory
 /usr/share/factory/
 are created\&. Note that permissions and ownership on symlinks are ignored\&.
 .RE
@@ -342,10 +353,10 @@ For example:
 .\}
 .nf
 # Make sure these are created by default so that nobody else can
-      d /tmp/\&.X11\-unix 1777 root root 10d
+d /tmp/\&.X11\-unix 1777 root root 10d
 
-      # Unlink the X11 lock files
-      r! /tmp/\&.X[0\-9]*\-lock
+# Unlink the X11 lock files
+r! /tmp/\&.X[0\-9]*\-lock
 .fi
 .if n \{\
 .RE
@@ -355,66 +366,7 @@ The second line in contrast to the first one would break a running system, and w
 \fB\-\-boot\fR\&.
 .SS "Path"
 .PP
-The file system path specification supports simple specifier expansion\&. The following expansions are understood:
-.sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.B Table\ \&1.\ \&Specifiers available
-.TS
-allbox tab(:);
-lB lB lB.
-T{
-Specifier
-T}:T{
-Meaning
-T}:T{
-Details
-T}
-.T&
-l l l
-l l l
-l l l
-l l l
-l l l.
-T{
-"%m"
-T}:T{
-Machine ID
-T}:T{
-The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
-T}
-T{
-"%b"
-T}:T{
-Boot ID
-T}:T{
-The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
-T}
-T{
-"%H"
-T}:T{
-Host name
-T}:T{
-The hostname of the running system\&.
-T}
-T{
-"%v"
-T}:T{
-Kernel release
-T}:T{
-Identical to \fBuname \-r\fR output\&.
-T}
-T{
-"%%"
-T}:T{
-Escaped %
-T}:T{
-Single percent sign\&.
-T}
-.TE
-.sp 1
+The file system path specification supports simple specifier expansion, see below\&. The path (after expansion) must be absolute\&.
 .SS "Mode"
 .PP
 The file access mode to use when creating this file or directory\&. If omitted or when set to
@@ -507,6 +459,126 @@ and
 \fIh\fR
 and
 \fIH\fR, determines the file attributes to set\&. Ignored for all other lines\&.
+.PP
+This field can contain specifiers, see below\&.
+.SH "SPECIFIERS"
+.PP
+Specifiers can be used in the "path" and "argument" fields\&. An unknown or unresolvable specifier is treated as invalid configuration\&. The following expansions are understood:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Specifiers available
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Specifier
+T}:T{
+Meaning
+T}:T{
+Details
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+"%m"
+T}:T{
+Machine ID
+T}:T{
+The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%b"
+T}:T{
+Boot ID
+T}:T{
+The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
+T}
+T{
+"%H"
+T}:T{
+Host name
+T}:T{
+The hostname of the running system\&.
+T}
+T{
+"%v"
+T}:T{
+Kernel release
+T}:T{
+Identical to \fBuname \-r\fR output\&.
+T}
+T{
+"%U"
+T}:T{
+User UID
+T}:T{
+This is the numeric UID of the user running the service manager instance\&. In case of the system manager this resolves to \fB0\fR\&.
+T}
+T{
+"%u"
+T}:T{
+User name
+T}:T{
+This is the name of the user running the service manager instance\&. In case of the system manager this resolves to "root"\&.
+T}
+T{
+"%h"
+T}:T{
+User home directory
+T}:T{
+This is the home directory of the user running the service manager instance\&. In case of the system manager this resolves to "/root"\&.
+T}
+T{
+"%t"
+T}:T{
+System or user runtime directory
+T}:T{
+In \-\-user mode, this is the same \fI$XDG_RUNTIME_DIR\fR, and /run otherwise\&.
+T}
+T{
+"%S"
+T}:T{
+System or user state directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CONFIG_HOME\fR, and /var/lib otherwise\&.
+T}
+T{
+"%C"
+T}:T{
+System or user cache directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CACHE_HOME\fR, and /var/cache otherwise\&.
+T}
+T{
+"%L"
+T}:T{
+System or user log directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CONFIG_HOME\fR with /log appended, and /var/log otherwise\&.
+T}
+T{
+"%%"
+T}:T{
+Escaped "%"
+T}:T{
+Single percent sign\&.
+T}
+.TE
+.sp 1
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Create directories with specific mode and ownership\fR
@@ -584,14 +656,14 @@ d /var/tmp/abrt 0755 abrt abrt \-
 r! /var/cache/dnf/*/*/download_lock\&.pid
 r! /var/cache/dnf/*/*/metadata_lock\&.pid
 r! /var/lib/dnf/rpmdb_lock\&.pid
-e  /var/chache/dnf/ \- \- \- 30d
+e  /var/cache/dnf/ \- \- \- 30d
 .fi
 .if n \{\
 .RE
 .\}
 .PP
 The lock files will be removed during boot\&. Any files and directories in
-/var/chache/dnf/
+/var/cache/dnf/
 will be removed after they have not been accessed in 30 days\&.
 .PP
 \fBExample\ \&5.\ \&Empty the contents of a cache directory on boot\fR

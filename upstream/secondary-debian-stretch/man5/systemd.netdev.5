@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 234" "systemd.network"
+.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 236" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,6 +91,7 @@ T}:T{
 Description
 T}
 .T&
+l l
 l l
 l l
 l l
@@ -229,6 +230,11 @@ T{
 T}:T{
 The virtual CAN driver (vcan)\&. Similar to the network loopback devices, vcan offers a virtual local CAN interface\&.
 T}
+T{
+\fIvxcan\fR
+T}:T{
+The virtual CAN tunnel driver (vxcan)\&. Similar to the virtual ethernet driver veth, vxcan implements a local CAN traffic tunnel between two virtual CAN network devices\&. When creating a vxcan, two vxcan devices are created as pair\&. When one end receives the packet it appears on its pair and vice versa\&. The vxcan can be used for cross namespace communication\&.
+T}
 .TE
 .sp 1
 .SH "[MATCH] SECTION OPTIONS"
@@ -343,6 +349,11 @@ This specifies the number of seconds a MAC Address will be kept in the forwardin
 \fIPriority=\fR
 .RS 4
 The priority of the bridge\&. An integer between 0 and 65535\&. A lower value means higher priority\&. The bridge having the lowest priority will be elected as root bridge\&.
+.RE
+.PP
+\fIGroupForwardMask=\fR
+.RS 4
+A 16\-bit bitmask represented as an integer which allows forwarding of link local frames with 802\&.1D reserved addresses (01:80:C2:00:00:0X)\&. A logical AND is performed between the specified bitmask and the exponentiation of 2^X, the lower nibble of the last octet of the MAC address\&. For example, a value of 8 would allow forwarding of frames addressed to 01:80:C2:00:00:03 (802\&.1X PAE)\&.
 .RE
 .PP
 \fIDefaultPVID=\fR
@@ -563,7 +574,7 @@ section only applies for netdevs of kind
 .PP
 \fIId=\fR
 .RS 4
-Specifies the Virtual Network Identifer (VNI) to use\&. Ranges [0\-16777215]\&.
+Specifies the Virtual Network Identifier (VNI) to use\&. Ranges [0\-16777215]\&.
 .RE
 .PP
 \fIRemote=\fR
@@ -710,6 +721,12 @@ for IPv4 over IPv6 or
 "any"
 for either\&.
 .RE
+.PP
+\fIIndependent=\fR
+.RS 4
+A boolean\&. When true tunnel does not require \&.network file\&. Created as "tunnel@NONE"\&. Defaults to
+"false"\&.
+.RE
 .SH "[PEER] SECTION OPTIONS"
 .PP
 The
@@ -726,6 +743,18 @@ The interface name used when creating the netdev\&. This option is compulsory\&.
 \fIMACAddress=\fR
 .RS 4
 The peer MACAddress, if not set, it is generated in the same way as the MAC address of the main interface\&.
+.RE
+.SH "[VXCAN] SECTION OPTIONS"
+.PP
+The
+"[VXCAN]"
+section only applies for netdevs of kind
+"vxcan"
+and accepts the following key:
+.PP
+\fIPeer=\fR
+.RS 4
+The peer interface name used when creating the netdev\&. This option is compulsory\&.
 .RE
 .SH "[TUN] SECTION OPTIONS"
 .PP
@@ -916,28 +945,6 @@ A boolean\&. Specifies that duplicate frames (received on inactive ports) should
 \fIMinLinks=\fR
 .RS 4
 Specifies the minimum number of links that must be active before asserting carrier\&. The default value is 0\&.
-.RE
-.PP
-\fIActiveSlave=\fR
-.RS 4
-A boolean\&. Specifies the new active slave\&. The
-"ActiveSlave="
-option is only valid for following modes:
-"active\-backup",
-"balance\-alb"
-and
-"balance\-tlb"\&. Defaults to false\&.
-.RE
-.PP
-\fIPrimarySlave=\fR
-.RS 4
-A boolean\&. Specifies which slave is the primary device\&. The specified device will always be the active slave while it is available\&. Only when the primary is off\-line will alternate devices be used\&. This is useful when one slave is preferred over another, e\&.g\&. when one slave has higher throughput than another\&. The
-"PrimarySlave="
-option is only valid for following modes:
-"active\-backup",
-"balance\-alb"
-and
-"balance\-tlb"\&. Defaults to false\&.
 .RE
 .PP
 For more detail information see
@@ -1138,7 +1145,7 @@ Name=vrf\-test
 Kind=vrf
 
 [VRF]
-TableId=42
+Table=42
 .fi
 .if n \{\
 .RE

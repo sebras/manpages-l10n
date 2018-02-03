@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-JOURNALD\&.SERVICE" "8" "" "systemd 235" "systemd-journald.service"
+.TH "SYSTEMD\-JOURNALD\&.SERVICE" "8" "" "systemd 237" "systemd-journald.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -100,16 +100,26 @@ The daemon will implicitly collect numerous metadata fields for each log message
 \fBsystemd.journal-fields\fR(7)
 for more information about the collected metadata\&.
 .PP
-Log data collected by the journal is primarily text\-based but can also include binary data where necessary\&. All objects stored in the journal can be up to 2^64\-1 bytes in size\&.
+Log data collected by the journal is primarily text\-based but can also include binary data where necessary\&. Individual fields making up a log record stored in the journal may be up to 2^64\-1 bytes in size\&.
 .PP
-By default, the journal stores log data in
-/run/log/journal/\&. Since
-/run/
-is volatile, log data is lost at reboot\&. To make the data persistent, it is sufficient to create
+The journal service stores log data either persistently below
+/var/log/journal
+or in a volatile way below
+/run/log/journal/
+(in the latter case it is lost at reboot)\&. By default, log data is stored persistently if
 /var/log/journal/
-where
-systemd\-journald
-will then store the data:
+exists during boot, with an implicit fallback to volatile storage otherwise\&. Use
+\fIStorage=\fR
+in
+\fBjournald.conf\fR(5)
+to configure where log data is placed, independently of the existence of
+/var/log/journal/\&.
+.PP
+On systems where
+/var/log/journal/
+does not exist yet but where persistent logging is desired (and the default
+journald\&.conf
+is used), it is sufficient to create the directory, and ensure it has the correct access modes and ownership:
 .sp
 .if n \{\
 .RS 4
@@ -140,7 +150,7 @@ If
 systemd\-journald\&.service
 is stopped, the stream connections associated with all services are terminated\&. Further writes to those streams by the service will result in
 \fBEPIPE\fR
-errors\&. In order to react gracefully in this case it is recommended that programs logging to standard output/error ignore such errors\&. If the the
+errors\&. In order to react gracefully in this case it is recommended that programs logging to standard output/error ignore such errors\&. If the
 \fBSIGPIPE\fR
 UNIX signal handler is not blocked or turned off, such write attempts will also result in such process signals being generated, see
 \fBsignal\fR(7)\&. To mitigate this issue, systemd service manager explicitly turns off the
@@ -164,13 +174,13 @@ systemd\-journald\&.service, but stopping it is not recommended\&.
 .PP
 Note that the log record metadata for records transferred via such standard output/error streams reflect the metadata of the peer the stream was originally created for\&. If the stream connection is passed on to other processes (such as further child processes forked off the main service process), the log records will not reflect their metadata, but will continue to describe the original process\&. This is different from the other logging transports listed above, which are inherently record based and where the metadata is always associated with the individual record\&.
 .PP
-In addition to the the implicit standard output/error logging of services, stream logging is also available via the
+In addition to the implicit standard output/error logging of services, stream logging is also available via the
 \fBsystemd-cat\fR(1)
 command line tool\&.
 .PP
 Currently, the number of parallel log streams
 systemd\-journald
-will accept is limited to 4096\&. When this limit is reached further log streams may be established but will receieve
+will accept is limited to 4096\&. When this limit is reached further log streams may be established but will receive
 \fBEPIPE\fR
 right from the beginning\&.
 .SH "SIGNALS"

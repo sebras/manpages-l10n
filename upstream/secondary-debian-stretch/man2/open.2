@@ -86,13 +86,24 @@ _ATFILE_SOURCE
 .ad
 .PD
 .SH DESCRIPTION
-Given a
-.I pathname
-for a file,
+The
 .BR open ()
-returns a file descriptor, a small, nonnegative integer
-for use in subsequent system calls
-.RB ( read "(2), " write "(2), " lseek "(2), " fcntl "(2), etc.)."
+system call opens the file specified by
+.IR pathname .
+If the specified file does not exist,
+it may optionally (if
+.B O_CREAT
+is specified in
+.IR flags )
+be created by
+.BR open ().
+.PP
+The return value of
+.BR open ()
+is a file descriptor, a small, nonnegative integer that is used
+in subsequent system calls
+.RB ( read "(2), " write "(2), " lseek "(2), " fcntl (2),
+etc.) to refer to the open file.
 The file descriptor returned by a successful call will be
 the lowest-numbered file descriptor not currently open for the process.
 .PP
@@ -249,7 +260,9 @@ flag to deal with this problem.)
 .\" returned by accept(), pipe(), etc.
 .TP
 .B O_CREAT
-If the file does not exist, it will be created.
+If
+.I pathname
+does not exist, create it as a regular file.
 .IP
 The owner (user ID) of the new file is set to the effective user ID
 of the process.
@@ -416,7 +429,8 @@ and
 .I pathname
 already exists, then
 .BR open ()
-will fail.
+fails with the error
+.BR EEXIST .
 .IP
 When these two flags are specified, symbolic links are not followed:
 .\" POSIX.1-2001 explicitly requires this behavior.
@@ -424,7 +438,7 @@ if
 .I pathname
 is a symbolic link, then
 .BR open ()
-fails regardless of where the symbolic link points to.
+fails regardless of where the symbolic link points.
 .IP
 In general, the behavior of
 .B O_EXCL
@@ -595,12 +609,16 @@ The following operations
 be performed on the resulting file descriptor:
 .RS
 .IP * 3
-.BR close (2);
-.BR fchdir (2)
-(since Linux 3.5);
+.BR close (2).
+.IP *
+.BR fchdir (2),
+if the file descriptor refers to a directory
+(since Linux 3.5).
 .\" commit 332a2e1244bd08b9e3ecd378028513396a004a24
+.IP *
 .BR fstat (2)
-(since Linux 3.6);
+(since Linux 3.6).
+.IP *
 .\" fstat(): commit 55815f70147dcfa3ead5738fd56d3574e2e3c1c2
 .BR fstatfs (2)
 (since Linux 3.12).
@@ -655,6 +673,24 @@ and
 .BR O_NOFOLLOW
 are ignored.
 .IP
+Opening a file or directory with the
+.B O_PATH
+flag requires no permissions on the object itself
+(but does require execute permission on the directories in the path prefix).
+Depending on the subsequent operation,
+a check for suitable file permissions may be performed (e.g.,
+.BR fchdir (2)
+requires execute permission on the directory referred to
+by its file descriptor argument).
+By contrast,
+obtaining a reference to a filesystem object by opening it with the
+.B O_RDONLY
+flag requires that the caller have read permission on the object,
+even when the subsequent operation (e.g.,
+.BR fchdir (2),
+.BR fstat (2))
+does not require read permission on the object.
+.IP
 If
 .I pathname
 is a symbolic link and the
@@ -680,6 +716,29 @@ descriptor referring to the automount directory without triggering a mount.
 can then be used to determine if it is, in fact, an untriggered
 automount point
 .RB ( ".f_type == AUTOFS_SUPER_MAGIC" ).
+.IP
+One use of
+.B O_PATH
+for regular files is to provide the equivalent of POSIX.1's
+.B O_EXEC
+functionality.
+This permits us to open a file for which we have execute
+permission but not read permission, and then execute that file,
+with steps something like the following:
+.IP
+.in +4n
+.EX
+char buf[PATH_MAX];
+fd = open("some_prog", O_PATH);
+snprintf(buf, "/proc/self/fd/%d", fd);
+execl(buf, "some_prog", (char *) NULL);
+.EE
+.in
+.IP
+An
+.B O_PATH
+file descriptor can also be passed as the argument of
+.BR fexecve (3).
 .TP
 .B O_SYNC
 Write operations on the file will complete according to the requirements of
@@ -695,8 +754,8 @@ provided by
 .IP
 By the time
 .BR write (2)
-(and similar)
-return, the output data and associated file metadata
+(or similar)
+returns, the output data and associated file metadata
 have been transferred to the underlying hardware
 (i.e., as though each
 .BR write (2)
@@ -708,7 +767,7 @@ was followed by a call to
 .\" commit 60545d0d4610b02e55f65d141c95b18ccf855b6e
 .\" commit f4e0c30c191f87851c4a53454abb55ee276f4a7e
 .\" commit bb458c644a59dbba3a1fe59b27106c5e68e1c4bd
-Create an unnamed temporary file.
+Create an unnamed temporary regular file.
 The
 .I pathname
 argument specifies a directory;
@@ -832,7 +891,7 @@ The
 system call operates in exactly the same way as
 .BR open (),
 except for the differences described here.
-.IP
+.PP
 If the pathname given in
 .I pathname
 is relative, then it is interpreted relative to the directory
@@ -842,7 +901,7 @@ referred to by the file descriptor
 the calling process, as is done by
 .BR open ()
 for a relative pathname).
-.IP
+.PP
 If
 .I pathname
 is relative and
@@ -854,7 +913,7 @@ then
 is interpreted relative to the current working
 directory of the calling process (like
 .BR open ()).
-.IP
+.PP
 If
 .I pathname
 is absolute, then
@@ -934,6 +993,15 @@ but neither
 nor
 .B O_RDWR
 was specified.
+.TP
+.B EINVAL
+.B O_CREAT
+was specified in
+.I flags
+and the final component ("basename") of the new file's
+.I pathname
+is invalid
+(e.g., it contains characters not permitted by the underlying filesystem).
 .TP
 .B EISDIR
 .I pathname
@@ -1348,6 +1416,16 @@ new headers get at least
 .BR O_DSYNC
 semantics on pre-2.6.33 kernels.
 .\"
+.SS C library/kernel differences
+Since version 2.26,
+the glibc wrapper function for
+.BR open ()
+employs the
+.BR openat ()
+system call, rather than the kernel's
+.BR open ()
+system call.
+For certain architectures, this is also true in glibc versions before 2.26.
 .\"
 .SS NFS
 There are many infelicities in the protocol underlying NFS, affecting
@@ -1450,14 +1528,14 @@ of the directory prefix given to
 could be changed in parallel with the call to
 .BR open ().
 Suppose, for example, that we wish to create the file
-.I path/to/xxx.dep
+.I dir1/dir2/xxx.dep
 if the file
-.I path/to/xxx
+.I dir1/dir2/xxx
 exists.
-The problem is that between the existence check and the file creation step,
-.I path
+The problem is that between the existence check and the file-creation step,
+.I dir1
 or
-.I to
+.I dir2
 (which might be symbolic links)
 could be modified to point to a different location.
 Such races can be avoided by
@@ -1568,9 +1646,9 @@ a flag of the same name, but without alignment restrictions.
 .B O_DIRECT
 support was added under Linux in kernel version 2.4.10.
 Older Linux kernels simply ignore this flag.
-Some filesystems may not implement the flag and
+Some filesystems may not implement the flag, in which case
 .BR open ()
-will fail with
+fails with the error
 .B EINVAL
 if it is used.
 .PP
@@ -1677,7 +1755,7 @@ is ignored).
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

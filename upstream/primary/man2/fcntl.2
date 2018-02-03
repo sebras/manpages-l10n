@@ -65,7 +65,7 @@
 .\" 2017-06-26, Jens Axboe <axboe@kernel.dk>
 .\"     Document F_{GET,SET}_RW_HINT and F_{GET,SET}_FILE_RW_HINT
 .\"
-.TH FCNTL 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH FCNTL 2 2018-02-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fcntl \- manipulate file descriptor
 .SH SYNOPSIS
@@ -669,6 +669,33 @@ and
 Mandatory locking is not specified by POSIX.
 Some other systems also support mandatory locking,
 although the details of how to enable it vary across systems.
+.\"
+.SS Lost locks
+When an advisory lock is obtained on a networked filesystem such as
+NFS it is possible that the lock might get lost.
+This may happen due to administrative action on the server, or due to a
+network partition (i.e., loss of network connectivity with the server)
+which lasts long enough for the server to assume
+that the client is no longer functioning.
+.PP
+When the filesystem determines that a lock has been lost, future
+.BR read (2)
+or
+.BR write (2)
+requests may fail with the error
+.BR EIO .
+This error will persist until the lock is removed or the file
+descriptor is closed.
+Since Linux 3.12,
+.\" commit ef1820f9be27b6ad158f433ab38002ab8131db4d
+this happens at least for NFSv4 (including all minor versions).
+.PP
+Some versions of UNIX send a signal
+.RB ( SIGLOST )
+in this circumstance.
+Linux does not define this signal, and does not provide any
+asynchronous notification of lost locks.
+.\"
 .SS Managing signals
 .BR F_GETOWN ,
 .BR F_SETOWN ,
@@ -2074,7 +2101,7 @@ directory, and
 is called
 .IR mandatory.txt )
 .SH COLOPHON
-This page is part of release 4.14 of the Linux
+This page is part of release 4.15 of the Linux
 .I man-pages
 project.
 A description of the project,

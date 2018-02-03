@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 234" "systemd-tmpfiles"
+.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 236" "systemd-tmpfiles"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -25,13 +25,22 @@ systemd-tmpfiles, systemd-tmpfiles-setup.service, systemd-tmpfiles-setup-dev.ser
 .HP \w'\fBsystemd\-tmpfiles\fR\ 'u
 \fBsystemd\-tmpfiles\fR [OPTIONS...] [\fICONFIGFILE\fR...]
 .PP
+System units:
+.sp
+.nf
 systemd\-tmpfiles\-setup\&.service
-.PP
 systemd\-tmpfiles\-setup\-dev\&.service
-.PP
 systemd\-tmpfiles\-clean\&.service
-.PP
 systemd\-tmpfiles\-clean\&.timer
+.fi
+.PP
+User units:
+.sp
+.nf
+systemd\-tmpfiles\-setup\&.service
+systemd\-tmpfiles\-clean\&.service
+systemd\-tmpfiles\-clean\&.timer
+.fi
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-tmpfiles\fR
@@ -88,6 +97,13 @@ or
 are removed\&.
 .RE
 .PP
+\fB\-\-user\fR
+.RS 4
+Execute "user" configuration, i\&.e\&.
+tmpfiles\&.d
+files in user configuration directories\&.
+.RE
+.PP
 \fB\-\-boot\fR
 .RS 4
 Also execute lines with an exclamation mark\&.
@@ -108,6 +124,8 @@ Ignore rules with paths that start with the specified prefix\&. This option can 
 Takes a directory path as an argument\&. All paths will be prefixed with the given alternate
 \fIroot\fR
 path, including config search paths\&.
+.sp
+Note that this option does not alter how the users and groups specified in the configuration files are resolved\&. With or without this option, users and groups are always resolved according to the host\*(Aqs user and group databases, any such databases stored under the specified root directories are not consulted\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
@@ -143,7 +161,15 @@ tries to avoid changing the access and modification times on the directories it 
 privileges\&. When running as non\-root, directories which are checked for files to clean up will have their access time bumped, which might prevent their cleanup\&.
 .SH "EXIT STATUS"
 .PP
-On success, 0 is returned, a non\-zero failure code otherwise\&.
+On success, 0 is returned\&. If the configuration was invalid (invalid syntax, missing arguments, \&...), so some lines had to be ignored, but no other errors occurred,
+\fB65\fR
+is returned (\fBEX_DATAERR\fR
+from
+/usr/include/sysexits\&.h)\&. Otherwise,
+\fB1\fR
+is returned (\fBEXIT_FAILURE\fR
+from
+/usr/include/stdlib\&.h)\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 235" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 237" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,11 +23,21 @@
 tmpfiles.d \- Configuration for creation, deletion and cleaning of volatile and temporary files
 .SH "SYNOPSIS"
 .PP
+.nf
 /etc/tmpfiles\&.d/*\&.conf
-.PP
 /run/tmpfiles\&.d/*\&.conf
-.PP
 /usr/lib/tmpfiles\&.d/*\&.conf
+    
+.fi
+.PP
+.nf
+~/\&.config/user\-tmpfiles\&.d/*\&.conf
+$XDG_RUNTIME_DIR/user\-tmpfiles\&.d/*\&.conf
+~/\&.local/share/user\-tmpfiles\&.d/*\&.conf
+\&...
+/usr/share/user\-tmpfiles\&.d/*\&.conf
+    
+.fi
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-tmpfiles\fR
@@ -104,7 +114,7 @@ The following line types are understood:
 .PP
 \fIf\fR
 .RS 4
-Create a file if it does not exist yet\&. If the argument parameter is given, it will be written to the file\&. Does not follow symlinks\&.
+Create a file if it does not exist yet\&. If the argument parameter is given and the file did not exist yet, it will be written to the file\&. Does not follow symlinks\&.
 .RE
 .PP
 \fIF\fR
@@ -354,68 +364,20 @@ r! /tmp/\&.X[0\-9]*\-lock
 .sp
 The second line in contrast to the first one would break a running system, and will only be executed with
 \fB\-\-boot\fR\&.
+.PP
+Note that for all line types that result in creation of any kind of file node (i\&.e\&.
+\fIf\fR/\fIF\fR,
+\fId\fR/\fID\fR/\fIv\fR/\fIq\fR/\fIQ\fR,
+\fIp\fR,
+\fIL\fR,
+\fIc\fR/\fIb\fR
+and
+\fIC\fR) leading directories are implicitly created if needed, owned by root with an access mode of 0755\&. In order to create them with different modes or ownership make sure to add appropriate
+\fId\fR
+lines\&.
 .SS "Path"
 .PP
-The file system path specification supports simple specifier expansion\&. The following expansions are understood:
-.sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.B Table\ \&1.\ \&Specifiers available
-.TS
-allbox tab(:);
-lB lB lB.
-T{
-Specifier
-T}:T{
-Meaning
-T}:T{
-Details
-T}
-.T&
-l l l
-l l l
-l l l
-l l l
-l l l.
-T{
-"%m"
-T}:T{
-Machine ID
-T}:T{
-The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
-T}
-T{
-"%b"
-T}:T{
-Boot ID
-T}:T{
-The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
-T}
-T{
-"%H"
-T}:T{
-Host name
-T}:T{
-The hostname of the running system\&.
-T}
-T{
-"%v"
-T}:T{
-Kernel release
-T}:T{
-Identical to \fBuname \-r\fR output\&.
-T}
-T{
-"%%"
-T}:T{
-Escaped %
-T}:T{
-Single percent sign\&.
-T}
-.TE
-.sp 1
+The file system path specification supports simple specifier expansion, see below\&. The path (after expansion) must be absolute\&.
 .SS "Mode"
 .PP
 The file access mode to use when creating this file or directory\&. If omitted or when set to
@@ -508,6 +470,126 @@ and
 \fIh\fR
 and
 \fIH\fR, determines the file attributes to set\&. Ignored for all other lines\&.
+.PP
+This field can contain specifiers, see below\&.
+.SH "SPECIFIERS"
+.PP
+Specifiers can be used in the "path" and "argument" fields\&. An unknown or unresolvable specifier is treated as invalid configuration\&. The following expansions are understood:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Specifiers available
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Specifier
+T}:T{
+Meaning
+T}:T{
+Details
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+"%m"
+T}:T{
+Machine ID
+T}:T{
+The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%b"
+T}:T{
+Boot ID
+T}:T{
+The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
+T}
+T{
+"%H"
+T}:T{
+Host name
+T}:T{
+The hostname of the running system\&.
+T}
+T{
+"%v"
+T}:T{
+Kernel release
+T}:T{
+Identical to \fBuname \-r\fR output\&.
+T}
+T{
+"%U"
+T}:T{
+User UID
+T}:T{
+This is the numeric UID of the user running the service manager instance\&. In case of the system manager this resolves to \fB0\fR\&.
+T}
+T{
+"%u"
+T}:T{
+User name
+T}:T{
+This is the name of the user running the service manager instance\&. In case of the system manager this resolves to "root"\&.
+T}
+T{
+"%h"
+T}:T{
+User home directory
+T}:T{
+This is the home directory of the user running the service manager instance\&. In case of the system manager this resolves to "/root"\&.
+T}
+T{
+"%t"
+T}:T{
+System or user runtime directory
+T}:T{
+In \-\-user mode, this is the same \fI$XDG_RUNTIME_DIR\fR, and /run otherwise\&.
+T}
+T{
+"%S"
+T}:T{
+System or user state directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CONFIG_HOME\fR, and /var/lib otherwise\&.
+T}
+T{
+"%C"
+T}:T{
+System or user cache directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CACHE_HOME\fR, and /var/cache otherwise\&.
+T}
+T{
+"%L"
+T}:T{
+System or user log directory
+T}:T{
+In \fB\-\-user\fR mode, this is the same as \fI$XDG_CONFIG_HOME\fR with /log appended, and /var/log otherwise\&.
+T}
+T{
+"%%"
+T}:T{
+Escaped "%"
+T}:T{
+Single percent sign\&.
+T}
+.TE
+.sp 1
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Create directories with specific mode and ownership\fR
@@ -528,7 +610,7 @@ d /run/uscreens 0755 root screen 10d12h
 .PP
 Contents of
 /run/screens
-and /run/uscreens will cleaned up after 10 and 10\(12 days, respectively\&.
+and /run/uscreens will be cleaned up after 10 and 10\(12 days, respectively\&.
 .PP
 \fBExample\ \&2.\ \&Create a directory with a SMACK attribute\fR
 .sp

@@ -189,7 +189,7 @@ pages.
 .IP
 In the initial implementation, only
 .BR tmpfs (5)
-is supported
+was supported
 .BR MADV_REMOVE ;
 but since Linux 3.5,
 .\" commit 3f31d07571eeea18a7d34db9af21d2285b807a17
@@ -198,7 +198,7 @@ any filesystem which supports the
 .BR FALLOC_FL_PUNCH_HOLE
 mode also supports
 .BR MADV_REMOVE .
-Hugetlbfs will fail with the error
+Hugetlbfs fails with the error
 .BR EINVAL
 and other filesystems fail with the error
 .BR EOPNOTSUPP .
@@ -405,6 +405,33 @@ can be applied only to private anonymous pages (see
 .BR mmap (2)).
 On a swapless system, freeing pages in a given range happens instantly,
 regardless of memory pressure.
+.TP
+.BR MADV_WIPEONFORK " (since Linux 4.14)"
+.\" commit d2cd9ede6e193dd7d88b6d27399e96229a551b19
+Present the child process with zero-filled memory in this range after a
+.BR fork (2).
+This is useful in forking servers in order to ensure
+that sensitive per-process data
+(for example, PRNG seeds, cryptographic secrets, and so on)
+is not handed to child processes.
+.IP
+The
+.B MADV_WIPEONFORK
+operation can be applied only to private anonymous pages (see
+.BR mmap (2)).
+.IP
+Within the child created by
+.BR fork (2),
+the
+.B MADV_WIPEONFORK
+setting remains in place on the specified address range.
+This setting is cleared during
+.BR execve (2).
+.TP
+.BR MADV_KEEPONFORK " (since Linux 4.14)"
+.\" commit d2cd9ede6e193dd7d88b6d27399e96229a551b19
+Undo the effect of an earlier
+.BR MADV_WIPEONFORK .
 .SH RETURN VALUE
 On success,
 .BR madvise ()
@@ -456,6 +483,18 @@ or
 .BR MADV_UNMERGEABLE ,
 but the kernel was not configured with
 .BR CONFIG_KSM .
+.TP
+.B EINVAL
+.I advice
+is
+.BR MADV_FREE
+or
+.BR MADV_WIPEONFORK
+but the specified address range includes file, Huge TLB,
+.BR MAP_SHARED ,
+or
+.BR VM_PFNMAP
+ranges.
 .TP
 .B EIO
 (for
@@ -535,7 +574,7 @@ from the system call, as it should).
 .BR posix_madvise (3),
 .BR core (5)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

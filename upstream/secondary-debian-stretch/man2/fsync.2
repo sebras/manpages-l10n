@@ -122,11 +122,33 @@ is not a valid open file descriptor.
 .TP
 .B EIO
 An error occurred during synchronization.
+This error may relate to data written to some other file descriptor
+on the same file.
+Since Linux 4.13,
+.\" commit 088737f44bbf6378745f5b57b035e57ee3dc4750
+errors from write-back will be reported to
+all file descriptors that might have written the data which triggered
+the error.
+Some filesystems (e.g., NFS) keep close track of which data
+came through which file descriptor, and give more precise reporting.
+Other filesystems (e.g., most local filesystems) will report errors to
+all file descriptors that where open on the file when the error was recorded.
+.TP
+.B ENOSPC
+Disk space was exhausted while synchronizing.
 .TP
 .BR EROFS ", " EINVAL
 .I fd
 is bound to a special file (e.g., a pipe, FIFO, or socket)
 which does not support synchronization.
+.TP
+.BR ENOSPC ", " EDQUOT
+.I fd
+is bound to a file on NFS or another filesystem which does not allocate
+space at the time of a
+.BR write (2)
+system call, and some previous write failed due to insufficient
+storage space.
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008, 4.3BSD.
 .SH AVAILABILITY
@@ -177,7 +199,7 @@ to guarantee safe operation.
 .BR hdparm (8),
 .BR mount (8)
 .SH COLOPHON
-This page is part of release 4.13 of the Linux
+This page is part of release 4.14 of the Linux
 .I man-pages
 project.
 A description of the project,

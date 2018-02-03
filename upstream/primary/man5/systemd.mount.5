@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 235" "systemd.mount"
+.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 237" "systemd.mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,16 +37,22 @@ for the common options of all unit configuration files\&. The common configurati
 Additional options are listed in
 \fBsystemd.exec\fR(5), which define the execution environment the
 \fBmount\fR(8)
-binary is executed in, and in
+program is executed in, and in
 \fBsystemd.kill\fR(5), which define the way the processes are terminated, and in
-\fBsystemd.resource-control\fR(5), which configure resource control settings for the processes of the service\&. Note that the User= and Group= options are not particularly useful for mount units specifying a
-"Type="
-option or using configuration not specified in
-/etc/fstab;
+\fBsystemd.resource-control\fR(5), which configure resource control settings for the processes of the service\&.
+.PP
+Note that the options
+\fIUser=\fR
+and
+\fIGroup=\fR
+are not useful for mount units\&. systemd passes two parameters to
+\fBmount\fR(8); the values of
+\fIWhat=\fR
+and
+\fIWhere=\fR\&. When invoked in this way,
 \fBmount\fR(8)
-will refuse options that are not listed in
-/etc/fstab
-if it is not run as UID 0\&.
+does not read any options from
+/etc/fstab, and must be run as UID 0\&.
 .PP
 Mount units must be named after the mount point directories they control\&. Example: the mount point
 /home/lennart
@@ -337,6 +343,36 @@ See
 below for details\&.
 .RE
 .PP
+\fBx\-systemd\&.makefs\fR
+.RS 4
+The file system or swap structure will be intialized on the device\&. If the device is not "empty", i\&.e\&. it contains any signature, the operation will be skipped\&. It is hence expected that this option remains set even after the device has been initalized\&.
+.sp
+Note that this option can only be used in
+/etc/fstab, and will be ignored when part of the
+\fIOptions=\fR
+setting in a unit file\&.
+.sp
+See
+\fBsystemd-makefs@.service\fR(8)\&.
+.sp
+\fBwipefs\fR(8)
+may be used to remove any signatures from a block device to force
+\fBx\-systemd\&.makefs\fR
+to reinitialize the device\&.
+.RE
+.PP
+\fBx\-systemd\&.growfs\fR
+.RS 4
+The file system will be grown to occupy the full block device\&. If the file system is already at maximum size, no action will be performed\&. It is hence expected that this option remains set even after the file system has been grown\&. Only certain file system types are supported, see
+\fBsystemd-makefs@.service\fR(8)
+for details\&.
+.sp
+Note that this option can only be used in
+/etc/fstab, and will be ignored when part of the
+\fIOptions=\fR
+setting in a unit file\&.
+.RE
+.PP
 \fB_netdev\fR
 .RS 4
 Normally the file system type is used to determine if a mount is a "network mount", i\&.e\&. if it should only be started after the network is available\&. Using this option overrides this detection and specifies that the mount requires network\&.
@@ -356,12 +392,16 @@ network\&.target\&.
 \fBnoauto\fR, \fBauto\fR
 .RS 4
 With
-\fBnoauto\fR, this mount will not be added as a dependency for
+\fBnoauto\fR, the mount unit will not be added as a dependency for
 local\-fs\&.target
 or
 remote\-fs\&.target\&. This means that it will not be mounted automatically during boot, unless it is pulled in by some other unit\&. The
 \fBauto\fR
-option has the opposite meaning and is the default\&.
+option has the opposite meaning and is the default\&. Note that the
+\fBnoauto\fR
+option has an effect on the mount unit itself only \(em if
+\fBx\-systemd\&.automount\fR
+is used (see above), then the matching automount unit will still be pulled in by these targets\&.
 .RE
 .PP
 \fBnofail\fR

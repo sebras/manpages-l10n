@@ -45,7 +45,7 @@
 .\"     other capabilities where the permitted or inheritable bit is set.
 .\" 2011-09-07, mtk/Serge hallyn: Add CAP_SYSLOG
 .\"
-.TH CAPABILITIES 7 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH CAPABILITIES 7 2018-02-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 capabilities \- overview of Linux capabilities
 .SH DESCRIPTION
@@ -274,20 +274,10 @@ write a group ID mapping in a user namespace (see
 .RE
 .TP
 .BR CAP_SETFCAP " (since Linux 2.6.24)"
-Set file capabilities.
+Set arbitrary capabilities on a file.
 .TP
 .B CAP_SETPCAP
-If file capabilities are not supported:
-grant or remove any capability in the
-caller's permitted capability set to or from any other process.
-(This property of
-.B CAP_SETPCAP
-is not available when the kernel is configured to support
-file capabilities, since
-.B CAP_SETPCAP
-has entirely different semantics for such kernels.)
-.IP
-If file capabilities are supported:
+If file capabilities are supported (i.e., since Linux 2.6.24):
 add any capability from the calling thread's bounding set
 to its inheritable set;
 drop capabilities from the bounding set (via
@@ -296,6 +286,16 @@ drop capabilities from the bounding set (via
 make changes to the
 .I securebits
 flags.
+.IP
+If file capabilities are not supported (i.e., kernels before Linux 2.6.24):
+grant or remove any capability in the
+caller's permitted capability set to or from any other process.
+(This property of
+.B CAP_SETPCAP
+is not available when the kernel is configured to support
+file capabilities, since
+.B CAP_SETPCAP
+has entirely different semantics for such kernels.)
 .TP
 .B CAP_SETUID
 .RS
@@ -803,7 +803,7 @@ If you have determined that it really is necessary to create
 a new capability for your feature,
 don't make or name it as a "single-use" capability.
 Thus, for example, the addition of the highly specific
-.BR CAP_PACCT
+.BR CAP_SYS_PACCT
 was probably a mistake.
 Instead, try to identify and name your new capability as a broader
 silo into which other related future use cases might fit.
@@ -1106,11 +1106,11 @@ permitted set when it
 a file that has the capability in its inheritable set.
 .PP
 Note that the bounding set masks the file permitted capabilities,
-but not the inherited capabilities.
-If a thread maintains a capability in its inherited set
+but not the inheritable capabilities.
+If a thread maintains a capability in its inheritable set
 that is not in its bounding set,
 then it can still gain that capability in its permitted set
-by executing a file that has the capability in its inherited set.
+by executing a file that has the capability in its inheritable set.
 .PP
 Depending on the kernel version, the capability bounding set is either
 a system-wide attribute, or a per-process attribute.
@@ -1128,7 +1128,7 @@ signed decimal number in
 Only the
 .B init
 process may set capabilities in the capability bounding set;
-other than that, the superuser (more precisely: programs with the
+other than that, the superuser (more precisely: a process with the
 .B CAP_SYS_MODULE
 capability) may only clear capabilities from this set.
 .PP
@@ -1191,9 +1191,9 @@ because this capability has a different meaning when there are
 no file capabilities.
 .PP
 Removing a capability from the bounding set does not remove it
-from the thread's inherited set.
+from the thread's inheritable set.
 However it does prevent the capability from being added
-back into the thread's inherited set in the future.
+back into the thread's inheritable set in the future.
 .\"
 .\"
 .SS Effect of user ID changes on capabilities
@@ -1209,7 +1209,7 @@ or similar):
 If one or more of the real, effective or saved set user IDs
 was previously 0, and as a result of the UID changes all of these IDs
 have a nonzero value,
-then all capabilities are cleared from the permitted and effective
+then all capabilities are cleared from the permitted, effective, and ambient
 capability sets.
 .IP 2.
 If the effective user ID is changed from 0 to nonzero,
@@ -1239,9 +1239,6 @@ are enabled in the effective set.
 If a thread that has a 0 value for one or more of its user IDs wants
 to prevent its permitted capability set being cleared when it resets
 all of its user IDs to nonzero values, it can do so using the
-.BR prctl (2)
-.B PR_SET_KEEPCAPS
-operation or the
 .B SECBIT_KEEP_CAPS
 securebits flag described below.
 .\"
@@ -1290,18 +1287,29 @@ These flags are as follows:
 .TP
 .B SECBIT_KEEP_CAPS
 Setting this flag allows a thread that has one or more 0 UIDs to retain
-its capabilities when it switches all of its UIDs to a nonzero value.
+capabilities in its permitted and effective sets
+when it switches all of its UIDs to nonzero values.
 If this flag is not set,
-then such a UID switch causes the thread to lose all capabilities.
+then such a UID switch causes the thread to lose all capabilities
+in those sets.
 This flag is always cleared on an
 .BR execve (2).
-(This flag provides the same functionality as the older
+.IP
+The setting of the
+.B SECBIT_KEEP_CAPS
+flag is ignored if the
+.B SECBIT_NO_SETUID_FIXUP
+flag is set.
+(The latter flag provides a superset of the effect of the former flag.)
+.IP
+This flag provides the same functionality as the older
 .BR prctl (2)
 .B PR_SET_KEEPCAPS
-operation.)
+operation.
 .TP
 .B SECBIT_NO_SETUID_FIXUP
-Setting this flag stops the kernel from adjusting capability sets when
+Setting this flag stops the kernel from adjusting the process's
+permitted, effective, and ambient capability sets when
 the thread's effective and filesystem UIDs are switched between
 zero and nonzero values.
 (See the subsection
@@ -1367,7 +1375,7 @@ prctl(PR_SET_SECUREBITS,
         SECBIT_NO_SETUID_FIXUP_LOCKED |
         SECBIT_NOROOT |
         SECBIT_NOROOT_LOCKED);
-        /* Setting/locking SECURE_NO_CAP_AMBIENT_RAISE
+        /* Setting/locking SECBIT_NO_CAP_AMBIENT_RAISE
            is not required */
 .EE
 .in
@@ -1468,7 +1476,7 @@ created on the system.
 .I include/linux/capability.h
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 4.14 of the Linux
+This page is part of release 4.15 of the Linux
 .I man-pages
 project.
 A description of the project,

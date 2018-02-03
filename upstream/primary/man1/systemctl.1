@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 235" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 237" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -235,6 +235,22 @@ command, if no units were killed, the operation results in an error\&.
 When system shutdown or a sleep state is requested, ignore inhibitor locks\&. Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (regardless of whether privileged or not) and a list of active locks is printed\&. However, if
 \fB\-\-ignore\-inhibitors\fR
 is specified, the locks are ignored and not printed, and the operation attempted anyway, possibly requiring additional privileges\&.
+.RE
+.PP
+\fB\-\-dry\-run\fR
+.RS 4
+Just print what would be done\&. Currently supported by verbs
+\fBhalt\fR,
+\fBpoweroff\fR,
+\fBreboot\fR,
+\fBkexec\fR,
+\fBsuspend\fR,
+\fBhibernate\fR,
+\fBhybrid\-sleep\fR,
+\fBdefault\fR,
+\fBrescue\fR,
+\fBemergency\fR, and
+\fBexit\fR\&.
 .RE
 .PP
 \fB\-q\fR, \fB\-\-quiet\fR
@@ -608,6 +624,15 @@ command\&.
 \fBrestart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
 Stop and then start one or more units specified on the command line\&. If the units are not running yet, they will be started\&.
+.sp
+Note that restarting a unit with this command does not necessarily flush out all of the unit\*(Aqs resources before it is started again\&. For example, the per\-service file descriptor storage facility (see
+\fIFileDescriptoreStoreMax=\fR
+in
+\fBsystemd.service\fR(5)) will remain intact as long as the unit has a job pending, and is only cleared when the unit is fully stopped and no jobs are pending anymore\&. If it is intended that the file descriptor store is flushed out, too, during a restart operation an explicit
+\fBsystemctl stop\fR
+command followed by
+\fBsystemctl start\fR
+should be issued\&.
 .RE
 .PP
 \fBtry\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -617,12 +642,12 @@ Stop and then start one or more units specified on the command line if the units
 .PP
 \fBreload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
-Reload one or more units if they support it\&. If not, restart them instead\&. If the units are not running yet, they will be started\&.
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. If the units are not running yet, they will be started\&.
 .RE
 .PP
 \fBtry\-reload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
-Reload one or more units if they support it\&. If not, restart them instead\&. This does nothing if the units are not running\&.
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. This does nothing if the units are not running\&.
 .RE
 .PP
 \fBisolate \fR\fB\fINAME\fR\fR
@@ -689,7 +714,7 @@ or
 \fBjournalctl \-\-user\-unit=\fR\fB\fINAME\fR\fR
 use a similar filter for messages and might be more convenient\&.
 .sp
-Systemd implicitly loads units as necessary, so just running the
+systemd implicitly loads units as necessary, so just running the
 \fBstatus\fR
 will attempt to load a file\&. The command is thus not useful for determining if something was already loaded or not\&. The units may possibly also be quickly unloaded after the operation is completed if there\*(Aqs no reason to keep it in memory thereafter\&.
 .PP
@@ -810,7 +835,7 @@ Reset the
 "failed"
 state of the specified units, or if no unit name is passed, reset the state of all units\&. When a unit fails in some way (i\&.e\&. process exiting with non\-zero error code, terminating abnormally or timing out), it will automatically enter the
 "failed"
-state and its exit code and status is recorded for introspection by the administrator until the service is restarted or reset with this command\&.
+state and its exit code and status is recorded for introspection by the administrator until the service is stopped/re\-started or reset with this command\&.
 .RE
 .PP
 \fBlist\-dependencies\fR [\fINAME\fR]
@@ -1472,7 +1497,7 @@ option) or in containers and is equivalent to
 \fBpoweroff\fR
 otherwise\&. This command is asynchronous; it will return after the exit operation is enqueued, without waiting for it to complete\&.
 .sp
-The service manager will exit with the the specified exit code, if
+The service manager will exit with the specified exit code, if
 \fIEXIT_CODE\fR
 is passed\&.
 .RE

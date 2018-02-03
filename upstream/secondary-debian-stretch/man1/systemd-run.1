@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RUN" "1" "" "systemd 234" "systemd-run"
+.TH "SYSTEMD\-RUN" "1" "" "systemd 236" "systemd-run"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -172,14 +172,46 @@ in
 .PP
 \fB\-\-pty\fR, \fB\-t\fR
 .RS 4
-When invoking the command, the transient service connects its standard input and output to the terminal
+When invoking the command, the transient service connects its standard input, output and error to the terminal
 \fBsystemd\-run\fR
-is invoked on, via a pseudo TTY device\&. This allows running binaries that expect interactive user input as services, such as interactive command shells\&.
+is invoked on, via a pseudo TTY device\&. This allows running programs that expect interactive user input/output as services, such as interactive command shells\&.
 .sp
 Note that
 \fBmachinectl\fR(1)\*(Aqs
 \fBshell\fR
 command is usually a better alternative for requesting a new, interactive login session on the local host or a local container\&.
+.sp
+See below for details on how this switch combines with
+\fB\-\-pipe\fR\&.
+.RE
+.PP
+\fB\-\-pipe\fR, \fB\-P\fR
+.RS 4
+If specified, standard input, output, and error of the transient service are inherited from the
+\fBsystemd\-run\fR
+command itself\&. This allows
+\fBsystemd\-run\fR
+to be used within shell pipelines\&. Note that this mode is not suitable for interactive command shells and similar, as the service process will not become a TTY controller when invoked on a terminal\&. Use
+\fB\-\-pty\fR
+instead in that case\&.
+.sp
+When both
+\fB\-\-pipe\fR
+and
+\fB\-\-pty\fR
+are used in combination the more appropriate option is automatically determined and used\&. Specifically, when invoked with standard input, output and error connected to a TTY
+\fB\-\-pty\fR
+is used, and otherwise
+\fB\-\-pipe\fR\&.
+.sp
+When this option is used the original file descriptors
+\fBsystemd\-run\fR
+receives are passed to the service processes as\-is\&. If the service runs with different privileges than
+\fBsystemd\-run\fR, this means the service might not be able to re\-open the passed file descriptors, due to normal file descriptor access restrictions\&. If the invoked process is a shell script that uses the
+\fBecho "hello" > /dev/stderr\fR
+construct for writing messages to stderr, this might cause problems, as this only works if stderr can be re\-opened\&. To mitigate this use the construct
+\fBecho "hello" >&2\fR
+instead, which is mostly equivalent and avoids this pitfall\&.
 .RE
 .PP
 \fB\-\-quiet\fR, \fB\-q\fR
@@ -251,6 +283,18 @@ was set) and the exit code and status of the main process\&. This output may be 
 \fB\-\-no\-block\fR,
 \fB\-\-scope\fR
 or the various timer options\&.
+.RE
+.PP
+\fB\-G\fR, \fB\-\-collect\fR
+.RS 4
+Unload the transient unit after it completed, even if it failed\&. Normally, without this option, all units that ran and failed are kept in memory until the user explicitly resets their failure state with
+\fBsystemctl reset\-failed\fR
+or an equivalent command\&. On the other hand, units that ran successfully are unloaded immediately\&. If this option is turned on the "garbage collection" of units is more aggressive, and unloads units regardless if they exited successfully or failed\&. This option is a shortcut for
+\fB\-\-property=CollectMode=inactive\-or\-failed\fR, see the explanation for
+\fICollectMode=\fR
+in
+\fBsystemd.unit\fR(5)
+for further information\&.
 .RE
 .PP
 \fB\-\-user\fR
