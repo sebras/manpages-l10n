@@ -31,6 +31,12 @@ while read package; do
 		grep "http://ftp.de.debian.org/debian/pool/" |
 		sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
 	fi
+	# If the URL is still not set, try security.d.o
+	if [ -z "$url" ]; then
+		url=$(wget --quiet -O - "http://packages.debian.org/stretch/amd64/$package/download" |
+		grep "http://security.debian.org/debian-security/pool/" |
+		sed -e "s,.*\(http://security.debian.org/debian-security/pool/[^\"]*\).*,\1,")
+	fi
 	wget --quiet --directory-prefix=downloads "$url"
 done < packages.txt
 
