@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 237" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 238" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -173,7 +173,8 @@ Configures unit\-specific bind mounts\&. A bind mount makes a particular file or
 "rbind"
 or
 "norbind"
-for configuring a recursive or non\-recursive bind mount\&. If the destination path is omitted, the option string must be omitted too\&.
+for configuring a recursive or non\-recursive bind mount\&. If the destination path is omitted, the option string must be omitted too\&. Each bind mount definition may be prefixed with
+"\-", in which case it will be ignored when its source path does not exist\&.
 .sp
 \fIBindPaths=\fR
 creates regular writable bind mounts (unless the source file system mount is already marked read\-only), while
@@ -640,9 +641,9 @@ is selected the unique invocation ID for the unit (see below) is added as a prot
 "invocation_id"
 to the newly created session keyring\&. Defaults to
 \fBprivate\fR
-for the system service manager and to
+for services of the system service manager and to
 \fBinherit\fR
-for the user service manager\&.
+for non\-service units and for services of the user service manager\&.
 .RE
 .PP
 \fIOOMScoreAdjust=\fR
@@ -785,14 +786,35 @@ and related calls, see below\&. Defaults to off\&.
 .PP
 \fIProtectHome=\fR
 .RS 4
-Takes a boolean argument or
-"read\-only"\&. If true, the directories
+Takes a boolean argument or the special values
+"read\-only"
+or
+"tmpfs"\&. If true, the directories
 /home,
 /root
 and
 /run/user
 are made inaccessible and empty for processes invoked by this unit\&. If set to
-"read\-only", the three directories are made read\-only instead\&. It is recommended to enable this setting for all long\-running services (in particular network\-facing ones), to ensure they cannot get access to private user data, unless the services actually require access to the user\*(Aqs private data\&. This setting is implied if
+"read\-only", the three directories are made read\-only instead\&. If set to
+"tmpfs", temporary file systems are mounted on the three directories in read\-only mode\&. The value
+"tmpfs"
+is useful to hide home directories not relevant to the processes invoked by the unit, while necessary directories are still visible by combining with
+\fIBindPaths=\fR
+or
+\fIBindReadOnlyPaths=\fR\&.
+.sp
+Setting this to
+"yes"
+is mostly equivalent to set the three directories in
+\fIInaccessiblePaths=\fR\&. Similary,
+"read\-only"
+is mostly equivalent to
+\fIReadOnlyPaths=\fR, and
+"tmpfs"
+is mostly equivalent to
+\fITemporaryFileSystem=\fR\&.
+.sp
+It is recommended to enable this setting for all long\-running services (in particular network\-facing ones), to ensure they cannot get access to private user data, unless the services actually require access to the user\*(Aqs private data\&. This setting is implied if
 \fIDynamicUser=\fR
 is set\&. For this setting the same restrictions regarding mount propagation and privileges apply as for
 \fIReadOnlyPaths=\fR
@@ -963,9 +985,17 @@ in order to provide writable subdirectories within read\-only directories\&. Use
 \fIReadWritePaths=\fR
 in order to whitelist specific paths for write access if
 \fIProtectSystem=strict\fR
-is used\&. Paths listed in
+is used\&.
+.sp
+Paths listed in
 \fIInaccessiblePaths=\fR
-will be made inaccessible for processes inside the namespace (along with everything below them in the file system hierarchy)\&.
+will be made inaccessible for processes inside the namespace along with everything below them in the file system hierarchy\&. This may be more restrictive than desired, because it is not possible to nest
+\fIReadWritePaths=\fR,
+\fIReadOnlyPaths=\fR,
+\fIBindPaths=\fR, or
+\fIBindReadOnlyPaths=\fR
+inside it\&. For a more flexible option, see
+\fITemporaryFileSystem=\fR\&.
 .sp
 Note that restricting access with these options does not extend to submounts of a directory that are created later on\&. Non\-directory paths may be specified as well\&. These options may be specified more than once, in which case all paths listed will have limited access from within the namespace\&. If the empty string is assigned to this option, the specific list is reset, and all prior assignments have no effect\&.
 .sp
@@ -992,6 +1022,42 @@ Note that using this setting will disconnect propagation of mounts from the serv
 \fICapabilityBoundingSet=~CAP_SYS_ADMIN\fR
 or
 \fISystemCallFilter=~@mount\fR\&.
+.RE
+.PP
+\fITemporaryFileSystem=\fR
+.RS 4
+Takes a space\-separated list of mount points for temporary file systems (tmpfs)\&. If set, a new file system namespace is set up for executed processes, and a temporary file system is mounted on each mount point\&. This option may be specified more than once, in which case temporary file systems are mounted on all listed mount points\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&. Each mount point may optionally be suffixed with a colon (":") and mount options such as
+"size=10%"
+or
+"ro"\&. By default, each temporary file system is mounted with
+"nodev,strictatime,mode=0755"\&. These can be disabled by explicitly specifying the corresponding mount options, e\&.g\&.,
+"dev"
+or
+"nostrictatime"\&.
+.sp
+This is useful to hide files or directories not relevant to the processes invoked by the unit, while necessary files or directories can be still accessed by combining with
+\fIBindPaths=\fR
+or
+\fIBindReadOnlyPaths=\fR\&. See the example below\&.
+.sp
+Example: if a unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+TemporaryFileSystem=/var:ro
+BindReadOnlyPaths=/var/lib/systemd
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then the invoked processes by the unit cannot see any files or directories under
+/var
+except for
+/var/lib/systemd
+or its contents\&.
 .RE
 .PP
 \fIPrivateTmp=\fR
@@ -1598,18 +1664,18 @@ described in
 \fBx32\fR,
 \fBmips64\-n32\fR,
 \fBmips64\-le\-n32\fR, and the special identifier
-\fBnative\fR\&. Only system calls of the specified architectures will be permitted to processes of this unit\&. This is an effective way to disable compatibility with non\-native architectures for processes, for example to prohibit execution of 32\-bit x86 binaries on 64\-bit x86\-64 systems\&. The special
+\fBnative\fR\&. The special identifier
 \fBnative\fR
-identifier implicitly maps to the native architecture of the system (or more strictly: to the architecture the system manager is compiled for)\&. If running in user mode, or in system mode, but without the
+implicitly maps to the native architecture of the system (or more precisely: to the architecture the system manager is compiled for)\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
 \fIUser=nobody\fR),
 \fINoNewPrivileges=yes\fR
-is implied\&. Note that setting this option to a non\-empty list implies that
-\fBnative\fR
-is included too\&. By default, this option is set to the empty list, i\&.e\&. no system call architecture filtering is applied\&.
+is implied\&. By default, this option is set to the empty list, i\&.e\&. no system call architecture filtering is applied\&.
 .sp
-Note that system call filtering is not equally effective on all architectures\&. For example, on x86 filtering of network socket\-related calls is not possible, due to ABI limitations \(em a limitation that x86\-64 does not have, however\&. On systems supporting multiple ABIs at the same time \(em such as x86/x86\-64 \(em it is hence recommended to limit the set of permitted system call architectures so that secondary ABIs may not be used to circumvent the restrictions applied to the native ABI of the system\&. In particular, setting
+If this setting is used, processes of this unit will only be permitted to call native system calls, and system calls of the specified architectures\&. For the purposes of this option, the x32 architecture is treated as including x86\-64 system calls\&. However, this setting still fulfills its purpose, as explained below, on x32\&.
+.sp
+System call filtering is not equally effective on all architectures\&. For example, on x86 filtering of network socket\-related calls is not possible, due to ABI limitations \(em a limitation that x86\-64 does not have, however\&. On systems supporting multiple ABIs at the same time \(em such as x86/x86\-64 \(em it is hence recommended to limit the set of permitted system call architectures so that secondary ABIs may not be used to circumvent the restrictions applied to the native ABI of the system\&. In particular, setting
 \fISystemCallArchitectures=native\fR
 is a good choice for disabling non\-native ABIs\&.
 .sp

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 237" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 238" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,7 +23,7 @@
 systemctl \- Control the systemd system and service manager
 .SH "SYNOPSIS"
 .HP \w'\fBsystemctl\fR\ 'u
-\fBsystemctl\fR [OPTIONS...] COMMAND [NAME...]
+\fBsystemctl\fR [OPTIONS...] COMMAND [UNIT...]
 .SH "DESCRIPTION"
 .PP
 \fBsystemctl\fR
@@ -650,7 +650,7 @@ Reload one or more units if they support it\&. If not, stop and then start them 
 Reload one or more units if they support it\&. If not, stop and then start them instead\&. This does nothing if the units are not running\&.
 .RE
 .PP
-\fBisolate \fR\fB\fINAME\fR\fR
+\fBisolate \fR\fB\fIUNIT\fR\fR
 .RS 4
 Start the unit specified on the command line and its dependencies and stop all others, unless they have
 \fBIgnoreOnIsolate=yes\fR
@@ -809,10 +809,10 @@ Show backing files of one or more units\&. Prints the "fragment" and "drop\-ins"
 command wasn\*(Aqt issued since\&.
 .RE
 .PP
-\fBset\-property \fR\fB\fINAME\fR\fR\fB \fR\fB\fIASSIGNMENT\fR\fR\fB\&...\fR
+\fBset\-property \fR\fB\fIUNIT\fR\fR\fB \fR\fB\fIPROPERTY\fR\fR\fB=\fR\fB\fIVALUE\fR\fR\fB\&...\fR
 .RS 4
 Set the specified unit properties at runtime where this is supported\&. This allows changing configuration parameter properties such as resource control settings at runtime\&. Not all properties may be changed at runtime, but many resource control settings (primarily those in
-\fBsystemd.resource-control\fR(5)) may\&. The changes are applied instantly, and stored on disk for future boots, unless
+\fBsystemd.resource-control\fR(5)) may\&. The changes are applied immediately, and stored on disk for future boots, unless
 \fB\-\-runtime\fR
 is passed, in which case the settings only apply until the next reboot\&. The syntax of the property assignment follows closely the syntax of assignments in unit files\&.
 .sp
@@ -821,7 +821,7 @@ Example:
 .sp
 If the specified unit appears to be inactive, the changes will be only stored on disk as described previously hence they will be effective when the unit will be started\&.
 .sp
-Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&. Like unit file configuration settings, assigning the empty list to list parameters will reset the list\&.
+Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&. Like with unit file configuration settings, assigning an empty list will reset the property\&.
 .RE
 .PP
 \fBhelp \fR\fB\fIPATTERN\fR\fR\fB\&...|\fR\fB\fIPID\fR\fR\fB\&...\fR
@@ -838,7 +838,7 @@ state of the specified units, or if no unit name is passed, reset the state of a
 state and its exit code and status is recorded for introspection by the administrator until the service is stopped/re\-started or reset with this command\&.
 .RE
 .PP
-\fBlist\-dependencies\fR [\fINAME\fR]
+\fBlist\-dependencies\fR [\fIUNIT\fR]
 .RS 4
 Shows units required and wanted by the specified unit\&. This recursively lists units following the
 \fIRequires=\fR,
@@ -869,7 +869,7 @@ List unit files installed on the system, in combination with their enablement st
 \fIPATTERN\fRs are specified, only unit files whose name matches one of them are shown (patterns matching unit file system paths are not supported)\&.
 .RE
 .PP
-\fBenable \fR\fB\fINAME\fR\fR\fB\&...\fR, \fBenable \fR\fB\fIPATH\fR\fR\fB\&...\fR
+\fBenable \fR\fB\fIUNIT\fR\fR\fB\&...\fR, \fBenable \fR\fB\fIPATH\fR\fR\fB\&...\fR
 .RS 4
 Enable one or more units or unit instances\&. This will create a set of symlinks, as encoded in the
 "[Install]"
@@ -884,7 +884,11 @@ with appropriate arguments later\&. Note that in case of unit instance enablemen
 foo@bar\&.service), symlinks named the same as instances are created in the unit configuration directory, however they point to the single template unit file they are instantiated from\&.
 .sp
 This command expects either valid unit names (in which case various unit file directories are automatically searched for unit files with appropriate names), or absolute paths to unit files (in which case these files are read directly)\&. If a specified unit file is located outside of the usual unit file directories, an additional symlink is created, linking it into the unit configuration path, thus ensuring it is found when requested by commands such as
-\fBstart\fR\&.
+\fBstart\fR\&. The file system where the linked unit files are located must be accessible when systemd is started (e\&.g\&. anything underneath
+/home
+or
+/var
+is not allowed, unless those directories are located on the root file system)\&.
 .sp
 This command will print the file system operations executed\&. This output may be suppressed by passing
 \fB\-\-quiet\fR\&.
@@ -911,7 +915,7 @@ Using
 on masked units is not supported and results in an error\&.
 .RE
 .PP
-\fBdisable \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBdisable \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Disables one or more units\&. This removes all symlinks to the unit files backing the specified units from the unit configuration directory, and hence undoes any changes made by
 \fBenable\fR
@@ -957,7 +961,7 @@ in a similar way as
 \fBenable\fR\&.
 .RE
 .PP
-\fBreenable \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBreenable \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Reenable one or more units, as specified on the command line\&. This is a combination of
 \fBdisable\fR
@@ -968,7 +972,7 @@ and is useful to reset the symlinks a unit file is enabled with to the defaults 
 section\&. This command expects a unit name only, it does not accept paths to unit files\&.
 .RE
 .PP
-\fBpreset \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBpreset \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Reset the enable/disable status one or more unit files, as specified on the command line, to the defaults configured in the preset policy files\&. This has the same effect as
 \fBdisable\fR
@@ -980,7 +984,7 @@ Use
 to control whether units shall be enabled and disabled, or only enabled, or only disabled\&.
 .sp
 If the unit carries no install information, it will be silently ignored by this command\&.
-\fINAME\fR
+\fIUNIT\fR
 must be the real unit name, any alias names are ignored silently\&.
 .sp
 For more information on the preset policy format, see
@@ -998,7 +1002,7 @@ Use
 to control whether units shall be enabled and disabled, or only enabled, or only disabled\&.
 .RE
 .PP
-\fBis\-enabled \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBis\-enabled \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Checks whether any of the specified unit files are enabled (as with
 \fBenable\fR)\&. Returns an exit code of 0 if at least one is enabled, non\-zero otherwise\&. Prints the current enable status (see table)\&. To suppress this output, use
@@ -1109,7 +1113,7 @@ T}
 .sp 1
 .RE
 .PP
-\fBmask \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBmask \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Mask one or more units, as specified on the command line\&. This will link these unit files to
 /dev/null, making it impossible to start them\&. This is a stronger version of
@@ -1120,7 +1124,7 @@ option to only mask temporarily until the next reboot of the system\&. The
 option may be used to ensure that the units are also stopped\&. This command expects valid unit names only, it does not accept unit file paths\&.
 .RE
 .PP
-\fBunmask \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBunmask \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Unmask one or more unit files, as specified on the command line\&. This will undo the effect of
 \fBmask\fR\&. This command expects valid unit names only, it does not accept unit file paths\&.
@@ -1130,10 +1134,14 @@ Unmask one or more unit files, as specified on the command line\&. This will und
 .RS 4
 Link a unit file that is not in the unit file search paths into the unit file search path\&. This command expects an absolute path to a unit file\&. The effect of this may be undone with
 \fBdisable\fR\&. The effect of this command is that a unit file is made available for commands such as
-\fBstart\fR, even though it is not installed directly in the unit search path\&.
+\fBstart\fR, even though it is not installed directly in the unit search path\&. The file system where the linked unit files are located must be accessible when systemd is started (e\&.g\&. anything underneath
+/home
+or
+/var
+is not allowed, unless those directories are located on the root file system)\&.
 .RE
 .PP
-\fBrevert \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBrevert \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Revert one or more unit files to their vendor versions\&. This command removes drop\-in configuration files that modify the specified units, as well as any user\-configured unit file that overrides a matching vendor supplied unit file\&. Specifically, for a unit
 "foo\&.service"
@@ -1157,7 +1165,7 @@ and
 and puts the original unit file with its settings back in effect\&.
 .RE
 .PP
-\fBadd\-wants \fR\fB\fITARGET\fR\fR\fB \fR\fB\fINAME\fR\fR\fB\&...\fR, \fBadd\-requires \fR\fB\fITARGET\fR\fR\fB \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBadd\-wants \fR\fB\fITARGET\fR\fR\fB \fR\fB\fIUNIT\fR\fR\fB\&...\fR, \fBadd\-requires \fR\fB\fITARGET\fR\fR\fB \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Adds
 "Wants="
@@ -1177,7 +1185,7 @@ in a way similar to
 \fBenable\fR\&.
 .RE
 .PP
-\fBedit \fR\fB\fINAME\fR\fR\fB\&...\fR
+\fBedit \fR\fB\fIUNIT\fR\fR\fB\&...\fR
 .RS 4
 Edit a drop\-in snippet or a whole replacement file if
 \fB\-\-full\fR
@@ -1221,7 +1229,7 @@ default\&.target
 is aliased (symlinked) to\&.
 .RE
 .PP
-\fBset\-default \fR\fB\fINAME\fR\fR
+\fBset\-default \fR\fB\fITARGET\fR\fR
 .RS 4
 Set the default target to boot into\&. This sets (symlinks) the
 default\&.target
@@ -1527,7 +1535,7 @@ hybrid\-sleep\&.target\&. This command is asynchronous, and will return after th
 .SS "Parameter Syntax"
 .PP
 Unit commands listed above take either a single unit name (designated as
-\fINAME\fR), or multiple unit specifications (designated as
+\fIUNIT\fR), or multiple unit specifications (designated as
 \fIPATTERN\fR\&...)\&. In the first case, the unit name with or without a suffix must be given\&. If the suffix is not specified (unit name is "abbreviated"), systemctl will append a suitable suffix,
 "\&.service"
 by default, and a type\-specific suffix in case of commands which operate only on specific unit types\&. For example,
@@ -1630,7 +1638,7 @@ sshd@\&.service
 instances\&. Note that alias names of units, and units that aren\*(Aqt in memory are not considered for glob expansion\&.
 .PP
 For unit file commands, the specified
-\fINAME\fR
+\fIUNIT\fR
 should be the name of the unit file (possibly abbreviated, see above), or the absolute path to the unit file:
 .sp
 .if n \{\

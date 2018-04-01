@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 237" "systemd-tmpfiles"
+.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 238" "systemd-tmpfiles"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,11 +47,13 @@ systemd\-tmpfiles\-clean\&.timer
 creates, deletes, and cleans up volatile and temporary files and directories, based on the configuration file format and location specified in
 \fBtmpfiles.d\fR(5)\&.
 .PP
-If invoked with no arguments, it applies all directives from all configuration files\&. If one or more absolute filenames are passed on the command line, only the directives in these files are applied\&. If
+If invoked with no arguments, it applies all directives from all configuration files\&. When invoked with
+\fB\-\-replace=\fR\fB\fIPATH\fR\fR, arguments specified on the command line are used instead of the configuration file
+\fIPATH\fR\&. Otherwise, if one or more absolute filenames are passed on the command line, only the directives in these files are applied\&. If
 "\-"
 is specified instead of a filename, directives are read from standard input\&. If only the basename of a configuration file is specified, all configuration directories as specified in
 \fBtmpfiles.d\fR(5)
-are searched for a matching file\&.
+are searched for a matching file and the file found that has the highest priority is executed\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -128,6 +130,16 @@ path, including config search paths\&.
 Note that this option does not alter how the users and groups specified in the configuration files are resolved\&. With or without this option, users and groups are always resolved according to the host\*(Aqs user and group databases, any such databases stored under the specified root directories are not consulted\&.
 .RE
 .PP
+\fB\-\-replace=\fR\fB\fIPATH\fR\fR
+.RS 4
+When this option is given, one ore more positional arguments must be specified\&. All configuration files found in the directories listed in
+\fBtmpfiles.d\fR(5)
+will be read, and the configuration given on the command line will be handled instead of and with the same priority as the configuration file
+\fIPATH\fR\&.
+.sp
+This option is intended to be used when package installation scripts are running and files belonging to that package are not yet available on disk, so their contents must be given on the command line, but the admin configuration might already exist and should be given higher priority\&.
+.RE
+.PP
 \fB\-h\fR, \fB\-\-help\fR
 .RS 4
 Print a short help text and exit\&.
@@ -157,7 +169,7 @@ systemd\-tmpfiles \-\-remove \-\-create
 .PP
 \fBsystemd\-tmpfiles\fR
 tries to avoid changing the access and modification times on the directories it accesses, which requires
-\fBCAP_ADMIN\fR
+\fBCAP_FOWNER\fR
 privileges\&. When running as non\-root, directories which are checked for files to clean up will have their access time bumped, which might prevent their cleanup\&.
 .SH "EXIT STATUS"
 .PP

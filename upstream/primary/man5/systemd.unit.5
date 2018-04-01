@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 237" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 238" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,21 +36,33 @@ systemd.unit \- Unit configuration
 \fIscope\fR\&.scope
 .PP
 .nf
+/etc/systemd/system\&.control/*
+/run/systemd/system\&.control/*
+/run/systemd/transient/*
+/run/systemd/generator\&.early/*
 /etc/systemd/system/*
 /run/systemd/system/*
-/lib/systemd/system/*
+/run/systemd/generator/*
 \&...
+/lib/systemd/system/*
+/run/systemd/generator\&.late/*
     
 .fi
 .PP
 .nf
+~/\&.config/systemd/user\&.control/*
+$XDG_RUNTIME_DIR/systemd/user\&.control/*
+$XDG_RUNTIME_DIR/systemd/transient/*
+$XDG_RUNTIME_DIR/systemd/generator\&.early/*
 ~/\&.config/systemd/user/*
 /etc/systemd/user/*
 $XDG_RUNTIME_DIR/systemd/user/*
 /run/systemd/user/*
+$XDG_RUNTIME_DIR/systemd/generator/*
 ~/\&.local/share/systemd/user/*
-/usr/lib/systemd/user/*
 \&...
+/usr/lib/systemd/user/*
+$XDG_RUNTIME_DIR/systemd/generator\&.late/*
     
 .fi
 .SH "DESCRIPTION"
@@ -314,8 +326,33 @@ Description
 T}
 .T&
 l l
+l ^
 l l
+l l
+l l
+l l
+l l
+l l
+l ^
 l l.
+T{
+/etc/systemd/system\&.control
+T}:T{
+Persistent and transient configuration created using the dbus API
+T}
+T{
+/run/systemd/system\&.control
+T}:
+T{
+/run/systemd/transient
+T}:T{
+Dynamic configuration for transient units
+T}
+T{
+/run/systemd/generator\&.early
+T}:T{
+Generated units with high priority (see \fIearly\-dir\fR in \fBsystem.generator\fR(7))
+T}
 T{
 /etc/systemd/system
 T}:T{
@@ -327,9 +364,22 @@ T}:T{
 Runtime units
 T}
 T{
-/lib/systemd/system
+/run/systemd/generator
+T}:T{
+Generated units with medium priority (see \fInormal\-dir\fR in \fBsystem.generator\fR(7))
+T}
+T{
+/usr/local/lib/systemd/system
 T}:T{
 Units of installed packages
+T}
+T{
+/lib/systemd/system
+T}:
+T{
+/run/systemd/generator\&.late
+T}:T{
+Generated units with low priority (see \fIlate\-dir\fR in \fBsystem.generator\fR(7))
 T}
 .TE
 .sp 1
@@ -349,22 +399,41 @@ Description
 T}
 .T&
 l l
+l ^
 l l
 l l
 l l
 l l
 l l
 l l
+l l
+l l
+l l
+l l
+l ^
 l l.
 T{
-$XDG_CONFIG_HOME/systemd/user
+$XDG_CONFIG_HOME/systemd/user\&.control or ~/\&.config/systemd/user\&.control
 T}:T{
-User configuration (only used when $XDG_CONFIG_HOME is set)
+Persistent and transient configuration created using the dbus API (\fI$XDG_CONFIG_HOME\fR is used if set, ~/\&.config otherwise)
 T}
 T{
-$HOME/\&.config/systemd/user
+$XDG_RUNTIME_DIR/systemd/user\&.control
+T}:
+T{
+/run/systemd/transient
 T}:T{
-User configuration (only used when $XDG_CONFIG_HOME is not set)
+Dynamic configuration for transient units
+T}
+T{
+/run/systemd/generator\&.early
+T}:T{
+Generated units with high priority (see \fIearly\-dir\fR in \fBsystem.generator\fR(7))
+T}
+T{
+$XDG_CONFIG_HOME/systemd/user or $HOME/\&.config/systemd/user
+T}:T{
+User configuration (\fI$XDG_CONFIG_HOME\fR is used if set, ~/\&.config otherwise)
 T}
 T{
 /etc/systemd/user
@@ -382,28 +451,58 @@ T}:T{
 Runtime units
 T}
 T{
-$XDG_DATA_HOME/systemd/user
+$XDG_RUNTIME_DIR/systemd/generator
 T}:T{
-Units of packages that have been installed in the home directory (only used when $XDG_DATA_HOME is set)
+Generated units with medium priority (see \fInormal\-dir\fR in \fBsystem.generator\fR(7))
 T}
 T{
-$HOME/\&.local/share/systemd/user
+$XDG_DATA_HOME/systemd/user or $HOME/\&.local/share/systemd/user
 T}:T{
-Units of packages that have been installed in the home directory (only used when $XDG_DATA_HOME is not set)
+Units of packages that have been installed in the home directory (\fI$XDG_DATA_HOME\fR is used if set, ~/\&.local/share otherwise)
+T}
+T{
+$dir/systemd/user for each \fI$dir\fR in \fI$XDG_DATA_DIRS\fR
+T}:T{
+Additional locations for installed user units, one for each entry in \fI$XDG_DATA_DIRS\fR
+T}
+T{
+/usr/local/lib/systemd/user
+T}:T{
+Units of packages that have been installed system\-wide
 T}
 T{
 /usr/lib/systemd/user
+T}:
+T{
+$XDG_RUNTIME_DIR/systemd/generator\&.late
 T}:T{
-Units of packages that have been installed system\-wide
+Generated units with low priority (see \fIlate\-dir\fR in \fBsystem.generator\fR(7))
 T}
 .TE
 .sp 1
 .PP
-Additional units might be loaded into systemd ("linked") from directories not on the unit load path\&. See the
+The set of load paths for the user manager instance may be augmented or changed using various environment variables\&. And environment variables may in turn be set using environment generators, see
+\fBsystem.environment-generator\fR(7)\&. In particular,
+\fI$XDG_DATA_HOME\fR
+and
+\fI$XDG_DATA_DIRS\fR
+may be easily set using
+\fBsystemd-environment-d-generator\fR(8)\&. Thus, directories listed here are just the defaults\&. To see the actual list that would be used based on compilation options and current environment use
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+systemd\-analyze \-\-user unit\-paths
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Moreover, additional units might be loaded into systemd ("linked") from directories not on the unit load path\&. See the
 \fBlink\fR
 command for
-\fBsystemctl\fR(1)\&. Also, some units are dynamically created via a
-\fBsystemd.generator\fR(7)\&.
+\fBsystemctl\fR(1)\&.
 .SH "UNIT GARBAGE COLLECTION"
 .PP
 The system and service manager loads a unit\*(Aqs configuration automatically when a unit is referenced for the first time\&. It will automatically unload the unit configuration and state again when the unit is not needed anymore ("garbage collection")\&. A unit may be referenced through a number of different mechanisms:
@@ -919,8 +1018,7 @@ have the effect of powering down the system with similar semantics\&. Defaults t
 .RS 4
 Configure the action to take when the unit stops and enters a failed state or inactive state\&. Takes the same values as the setting
 \fIStartLimitAction=\fR
-setting and executes the same actions (see
-\fBsystemd.unit\fR(5))\&. Both options default to
+setting and executes the same actions\&. Both options default to
 \fBnone\fR\&.
 .RE
 .PP
@@ -998,6 +1096,8 @@ to test against a generic type of virtualization solution, or one of
 \fIxen\fR,
 \fIbochs\fR,
 \fIuml\fR,
+\fIbhyve\fR,
+\fIqnx\fR,
 \fIopenvz\fR,
 \fIlxc\fR,
 \fIlxc\-libvirt\fR,

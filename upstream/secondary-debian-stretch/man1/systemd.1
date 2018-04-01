@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD" "1" "" "systemd 236" "systemd"
+.TH "SYSTEMD" "1" "" "systemd 237" "systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -203,6 +203,13 @@ to
 Override the machine\-id set on the hard drive, useful for network booting or for containers\&. May not be set to all zeros\&.
 .RE
 .PP
+\fB\-\-service\-watchdogs=\fR
+.RS 4
+Globally enable/disable all service watchdog timeouts and emergency actions\&. This setting may also be specified during boot, on the kernel command line via the
+\fIsystemd\&.service_watchdogs=\fR
+option, see below\&. Defaults to enabled\&.
+.RE
+.PP
 \fB\-h\fR, \fB\-\-help\fR
 .RS 4
 Print a short help text and exit\&.
@@ -215,7 +222,7 @@ Print a short version string and exit\&.
 .SH "CONCEPTS"
 .PP
 systemd provides a dependency system between various entities called "units" of 11 different types\&. Units encapsulate various objects that are relevant for system boot\-up and maintenance\&. The majority of units are configured in unit configuration files, whose syntax and basic set of options is described in
-\fBsystemd.unit\fR(5), however some are created automatically from other configuration, dynamically from system state or programmatically at runtime\&. Units may be "active" (meaning started, bound, plugged in, \&..., depending on the unit type, see below), or "inactive" (meaning stopped, unbound, unplugged, \&...), as well as in the process of being activated or deactivated, i\&.e\&. between the two states (these states are called "activating", "deactivating")\&. A special "failed" state is available as well, which is very similar to "inactive" and is entered when the service failed in some way (process returned error code on exit, or crashed, or an operation timed out)\&. If this state is entered, the cause will be logged, for later reference\&. Note that the various unit types may have a number of additional substates, which are mapped to the five generalized unit states described here\&.
+\fBsystemd.unit\fR(5), however some are created automatically from other configuration, dynamically from system state or programmatically at runtime\&. Units may be "active" (meaning started, bound, plugged in, \&..., depending on the unit type, see below), or "inactive" (meaning stopped, unbound, unplugged, \&...), as well as in the process of being activated or deactivated, i\&.e\&. between the two states (these states are called "activating", "deactivating")\&. A special "failed" state is available as well, which is very similar to "inactive" and is entered when the service failed in some way (process returned error code on exit, or crashed, an operation timed out, or after too many restarts)\&. If this state is entered, the cause will be logged, for later reference\&. Note that the various unit types may have a number of additional substates, which are mapped to the five generalized unit states described here\&.
 .PP
 The following unit types are available:
 .sp
@@ -484,7 +491,7 @@ unit when this signal is received\&. This is mostly equivalent to
 Upon receiving this signal the systemd system manager will start the
 ctrl\-alt\-del\&.target
 unit\&. This is mostly equivalent to
-\fBsystemctl start ctl\-alt\-del\&.target \-\-job\-mode=replace\-irreversible\fR\&. If this signal is received more than 7 times per 2s, an immediate reboot is triggered\&. Note that pressing Ctrl\-Alt\-Del on the console will trigger this signal\&. Hence, if a reboot is hanging, pressing Ctrl\-Alt\-Del more than 7 times in 2s is a relatively safe way to trigger an immediate reboot\&.
+\fBsystemctl start ctrl\-alt\-del\&.target \-\-job\-mode=replace\-irreversible\fR\&. If this signal is received more than 7 times per 2s, an immediate reboot is triggered\&. Note that pressing Ctrl\-Alt\-Del on the console will trigger this signal\&. Hence, if a reboot is hanging, pressing Ctrl\-Alt\-Del more than 7 times in 2s is a relatively safe way to trigger an immediate reboot\&.
 .sp
 systemd user managers treat this signal the same way as
 \fBSIGTERM\fR\&.
@@ -771,6 +778,15 @@ Takes a boolean argument or a path to the virtual console where the confirmation
 "ttyS0") is provided, the virtual console pointed to by this path or described by the give name will be used instead\&. Defaults to disabled\&.
 .RE
 .PP
+\fIsystemd\&.service_watchdogs=\fR
+.RS 4
+Takes a boolean argument\&. If disabled, all service runtime watchdogs (\fBWatchdogSec=\fR) and emergency actions (e\&.g\&.
+\fBOnFailure=\fR
+or
+\fBStartLimitAction=\fR) are ignored by the system manager (PID 1); see
+\fBsystemd.service\fR(5)\&. Defaults to enabled, i\&.e\&. watchdogs and failure actions are processed normally\&. The hardware watchdog is not affected by this option\&.
+.RE
+.PP
 \fIsystemd\&.show_status\fR
 .RS 4
 Takes a boolean argument or the constant
@@ -935,7 +951,7 @@ The
 .IP " 1." 4
 cgroups.txt
 .RS 4
-\%https://www.kernel.org/doc/Documentation/cgroups/cgroups.txt
+\%https://www.kernel.org/doc/Documentation/cgroup-v1/cgroups.txt
 .RE
 .IP " 2." 4
 Original Design Document

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 236" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 237" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -535,7 +535,7 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
 \fIAfter=\fR
 on the failing unit is set, this unit will not be started\&. Besides, with or without specifying
-\fIAfter=\fR, this unit will be deactivated if one of the other units get deactivated\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
+\fIAfter=\fR, this unit will be stopped if one of the other units is explicitly stopped\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
 \fIAfter=\fR
 or
 \fIBefore=\fR
@@ -695,7 +695,9 @@ when all its configured start\-up commands have been invoked and they either fai
 .RS 4
 A space\-separated list of one or more units that are activated when this unit enters the
 "failed"
-state\&.
+state\&. A service unit using
+\fIRestart=\fR
+enters the failed state only after the start limits are reached\&.
 .RE
 .PP
 \fIPropagatesReloadTo=\fR, \fIReloadPropagatedFrom=\fR
@@ -935,7 +937,7 @@ is a reboot action\&. This works just like the optional argument to
 command\&.
 .RE
 .PP
-\fIConditionArchitecture=\fR, \fIConditionVirtualization=\fR, \fIConditionHost=\fR, \fIConditionKernelCommandLine=\fR, \fIConditionSecurity=\fR, \fIConditionCapability=\fR, \fIConditionACPower=\fR, \fIConditionNeedsUpdate=\fR, \fIConditionFirstBoot=\fR, \fIConditionPathExists=\fR, \fIConditionPathExistsGlob=\fR, \fIConditionPathIsDirectory=\fR, \fIConditionPathIsSymbolicLink=\fR, \fIConditionPathIsMountPoint=\fR, \fIConditionPathIsReadWrite=\fR, \fIConditionDirectoryNotEmpty=\fR, \fIConditionFileNotEmpty=\fR, \fIConditionFileIsExecutable=\fR, \fIConditionUser=\fR, \fIConditionGroup=\fR
+\fIConditionArchitecture=\fR, \fIConditionVirtualization=\fR, \fIConditionHost=\fR, \fIConditionKernelCommandLine=\fR, \fIConditionKernelVersion=\fR, \fIConditionSecurity=\fR, \fIConditionCapability=\fR, \fIConditionACPower=\fR, \fIConditionNeedsUpdate=\fR, \fIConditionFirstBoot=\fR, \fIConditionPathExists=\fR, \fIConditionPathExistsGlob=\fR, \fIConditionPathIsDirectory=\fR, \fIConditionPathIsSymbolicLink=\fR, \fIConditionPathIsMountPoint=\fR, \fIConditionPathIsReadWrite=\fR, \fIConditionDirectoryNotEmpty=\fR, \fIConditionFileNotEmpty=\fR, \fIConditionFileIsExecutable=\fR, \fIConditionUser=\fR, \fIConditionGroup=\fR, \fIConditionControlGroupController=\fR
 .RS 4
 Before starting a unit, verify that the specified condition is true\&. If it is not true, the starting of the unit will be (mostly silently) skipped, however all ordering dependencies of it are still respected\&. A failing condition will not result in the unit being moved into a failure state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require its functionality\&. Use the various
 \fIAssertArchitecture=\fR,
@@ -1016,6 +1018,18 @@ may be used to match against the hostname or machine ID of the host\&. This eith
 \fIConditionKernelCommandLine=\fR
 may be used to check whether a specific kernel command line option is set (or if prefixed with the exclamation mark unset)\&. The argument must either be a single word, or an assignment (i\&.e\&. two words, separated
 "=")\&. In the former case the kernel command line is searched for the word appearing as is, or as left hand side of an assignment\&. In the latter case, the exact assignment is looked for with right and left hand side matching\&.
+.sp
+\fIConditionKernelVersion=\fR
+may be used to check whether the kernel version (as reported by
+\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a single string\&. If the string starts with one of
+"<",
+"<=",
+"=",
+">=",
+">"
+a relative version comparison is done, otherwise the specified string is matched with shell\-style globs\&.
+.sp
+Note that using the kernel version string is an unreliable way to determine which features are supported by a kernel, because of the widespread practice of backporting drivers, features, and fixes from newer upstream kernels into older versions provided by distributions\&. Hence, this check is inherently unportable and should not be used for units which may be used on different distributions\&.
 .sp
 \fIConditionSecurity=\fR
 may be used to check whether the given security module is enabled on the system\&. Currently, the recognized values are
@@ -1125,11 +1139,23 @@ is similar to
 but verifies that the service manager\*(Aqs real or effective group, or any of its auxiliary groups match the specified group or GID\&. This setting does not have a special value
 "@system"\&.
 .sp
+\fIConditionControlGroupController=\fR
+takes a cgroup controller name (eg\&.
+\fBcpu\fR), verifying that it is available for use on the system\&. For example, a particular controller may not be available if it was disabled on the kernel command line with
+"cgroup_disable="\fIcontroller\fR\&. Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
+\fBcpu\fR,
+\fBcpuacct\fR,
+\fBio\fR,
+\fBblkio\fR,
+\fBmemory\fR,
+\fBdevices\fR, and
+\fBpids\fR\&.
+.sp
 If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol (|) in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
 \fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 237" "systemd-analyze"
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 238" "systemd-analyze"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,8 @@ systemd-analyze \- Analyze and debug system manager
 \fBsystemd\-analyze\fR [OPTIONS...] dot [\fIPATTERN\fR...] [>\ file\&.dot]
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] dump
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] unit\-paths
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] log\-level [\fILEVEL\fR]
 .HP \w'\fBsystemd\-analyze\fR\ 'u
@@ -78,6 +80,32 @@ is passed, the generated graph will show both ordering and requirement dependenc
 .PP
 \fBsystemd\-analyze dump\fR
 outputs a (usually very long) human\-readable serialization of the complete server state\&. Its format is subject to change without notice and should not be parsed by applications\&.
+.PP
+\fBsystemd\-analyze unit\-paths\fR
+outputs a list of all directories from which unit files,
+\&.d
+overrides, and
+\&.wants,
+\&.requires
+symlinks may be loaded\&. Combine with
+\fB\-\-user\fR
+to retrieve the list for the user manager instance, and
+\fB\-\-global\fR
+for the global configuration of user manager instances\&. Note that this verb prints the list that is compiled into
+\fBsystemd\-analyze\fR
+itself, and does not comunicate with the running manager\&. Use
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+systemctl [\-\-user] [\-\-global] show \-p UnitPath \-\-value
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+to retrieve the actual list that the manager uses, with any empty directories omitted\&.
 .PP
 \fBsystemd\-analyze log\-level\fR
 prints the current log level of the
@@ -143,14 +171,19 @@ is implied\&.
 .PP
 The following options are understood:
 .PP
+\fB\-\-system\fR
+.RS 4
+Operates on the system systemd instance\&. This is the implied default\&.
+.RE
+.PP
 \fB\-\-user\fR
 .RS 4
 Operates on the user systemd instance\&.
 .RE
 .PP
-\fB\-\-system\fR
+\fB\-\-global\fR
 .RS 4
-Operates on the system systemd instance\&. This is the implied default\&.
+Operates on the system\-wide configuration for user systemd instance\&.
 .RE
 .PP
 \fB\-\-order\fR, \fB\-\-require\fR
@@ -205,7 +238,7 @@ Do not invoke man to verify the existence of man pages listed in
 \fB\-\-generators\fR
 .RS 4
 Invoke unit generators, see
-\fBsystemd.generator\fR(7)\&. Some generators require root privileges\&. When run under a normal users, enabling generators will generally result in some warnings\&.
+\fBsystemd.generator\fR(7)\&. Some generators require root privileges\&. Under a normal user, running with generators enabled will generally result in some warnings\&.
 .RE
 .PP
 \fB\-H\fR, \fB\-\-host=\fR
