@@ -11,7 +11,7 @@ Projekt von Dr. Tobias Quathamer <toddy@debian.org> weitergeführt.
 Informationen zum aktuellen Status des Projekts stehen unter
 folgender URL zur Verfügung:
 
-        http://manpages-de.alioth.debian.org/
+        https://salsa.debian.org/manpages-de-team/manpages-de
 
 Wenn Du an diesem Projekt teilnehmen und ein paar Seiten übersetzen,
 korrekturlesen oder sonst mithelfen möchtest, melde Dich einfach
