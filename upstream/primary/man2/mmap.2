@@ -37,7 +37,7 @@
 .\" 2007-07-10, mtk, Added an example program.
 .\" 2008-11-18, mtk, document MAP_STACK
 .\"
-.TH MMAP 2 2017-12-18 "Linux" "Linux Programmer's Manual"
+.TH MMAP 2 2018-04-30 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mmap, munmap \- map or unmap files or devices into memory
 .SH SYNOPSIS
@@ -64,7 +64,8 @@ argument specifies the length of the mapping (which must be greater than 0).
 If
 .I addr
 is NULL,
-then the kernel chooses the address at which to create the mapping;
+then the kernel chooses the (page-aligned) address
+at which to create the mapping;
 this is the most portable method of creating a new mapping.
 If
 .I addr
@@ -125,6 +126,23 @@ are carried through to the underlying file.
 to the underlying file requires the use of
 .BR msync (2).)
 .TP
+.BR MAP_SHARED_VALIDATE " (since Linux 4.15)"
+This flag provides the same behavior as
+.B MAP_SHARED
+except that
+.B MAP_SHARED
+mappings ignore unknown flags in
+.IR flags .
+By contrast, when creating a mapping using
+.BR MAP_SHARED_VALIDATE ,
+the kernel verifies all passed flags are known and fails the
+mapping with the error
+.BR EOPNOTSUPP
+for unknown flags.
+This mapping type is also required to be able to use some mapping flags
+(e.g.,
+.BR MAP_SYNC ).
+.TP
 .B MAP_PRIVATE
 Create a private copy-on-write mapping.
 Updates to the mapping are not visible to other processes
@@ -134,7 +152,13 @@ It is unspecified whether changes made to the file after the
 .BR mmap ()
 call are visible in the mapped region.
 .PP
-Both of these flags are described in POSIX.1-2001 and POSIX.1-2008.
+Both
+.B MAP_SHARED
+and
+.B MAP_PRIVATE
+are described in POSIX.1-2001 and POSIX.1-2008.
+.B MAP_SHARED_VALIDATE
+is a Linux extension.
 .PP
 In addition, zero or more of the following values can be ORed in
 .IR flags :
@@ -188,8 +212,8 @@ is supported on Linux only since kernel 2.4.
 .B MAP_DENYWRITE
 This flag is ignored.
 .\" Introduced in 1.1.36, removed in 1.3.24.
-(Long ago, it signaled that attempts to write to the underlying file
-should fail with
+(Long ago\(emLinux 2.0 and earlier\(emit signaled
+that attempts to write to the underlying file should fail with
 .BR ETXTBUSY .
 But this was a source of denial-of-service attacks.)
 .TP
@@ -224,42 +248,40 @@ part of the existing mapping(s) will be discarded.
 If the specified address cannot be used,
 .BR mmap ()
 will fail.
-Software that aspires to be portable should use this option with care,
+.IP
+Software that aspires to be portable should use the
+.BR MAP_FIXED
+flag with care,
 keeping in mind that the exact layout of a process's memory mappings
 is allowed to change significantly between kernel versions,
 C library versions, and operating system releases.
+.IR "Carefully read the discussion of this flag in NOTES!"
+.TP
+.BR MAP_FIXED_NOREPLACE " (since Linux 4.17)"
+.\" commit a4ff8e8620d3f4f50ac4b41e8067b7d395056843
+This flag provides behavior that is similar to
+.B MAP_FIXED
+with respect to the
+.I addr
+enforcement, but differs in that
+.B MAP_FIXED_NOREPLACE
+never clobbers a preexisting mapped range.
+If the requested range would collide with an existing mapping,
+then this call fails with the error
+.B EEXIST.
+This flag can therefore be used as a way to atomically
+(with respect to other threads) attempt to map an address range:
+one thread will succeed; all others will report failure.
 .IP
-Furthermore, this option is extremely hazardous (when used on its own),
-because it forcibly removes preexisting mappings,
-making it easy for a multithreaded process to corrupt its own address space.
-.IP
-For example, thread A looks through
-.I /proc/<pid>/maps
-and locates an available address range,
-while thread B simultaneously acquires part or all of that same
-address range.
-Thread A then calls
-.BR mmap(MAP_FIXED) ,
-effectively overwriting the mapping that thread B created.
-.IP
-Thread B need not create a mapping directly; simply making a library call
-that, internally, uses
-.BR dlopen (3)
-to load some other shared library, will
-suffice.
-The
-.BR dlopen (3)
-call will map the library into the process's address space.
-Furthermore, almost any library call may be implemented in a way that
-adds memory mappings to the address space, either with this technique,
-or by simply allocating memory.
-Examples include
-.BR brk (2),
-.BR malloc (3),
-.BR pthread_create (3),
-and the PAM libraries
-.UR http://www.linux-pam.org
-.UE .
+Note that older kernels which do not recognize the
+.BR MAP_FIXED_NOREPLACE
+flag will typically (upon detecting a collision with a preexisting mapping)
+fall back to a "non-\c
+.B MAP_FIXED\c
+" type of behavior:
+they will return an address that is different from the requested address.
+Therefore, backward-compatible software
+should check the returned address against the requested address.
 .TP
 .B MAP_GROWSDOWN
 This flag is used for stacks.
@@ -292,7 +314,7 @@ More generally, the desired huge page size can be configured by encoding
 the base-2 logarithm of the desired page size in the six bits at the offset
 .BR MAP_HUGE_SHIFT .
 (A value of zero in this bit field provides the default huge page size;
-the default huge page size can be discovered vie the
+the default huge page size can be discovered via the
 .I Hugepagesize
 field exposed by
 .IR /proc/meminfo .)
@@ -379,6 +401,27 @@ support can later be transparently implemented for glibc.
 .\" http://thread.gmane.org/gmane.linux.kernel/720412
 .\" "pthread_create() slow for many threads; also time to revisit 64b
 .\"  context switch optimization?"
+.TP
+.BR MAP_SYNC " (since Linux 4.15)"
+This flag is available only with the
+.B MAP_SHARED_VALIDATE
+mapping type;
+mappings of type
+.B MAP_SHARED
+will silently ignore this flag.
+This flag is supported only for files supporting DAX
+(direct mapping of persistent memory).
+For other files, creating a mapping with this flag results in an
+.B EOPNOTSUPP
+error.
+.IP
+Shared file mappings with this flag provide the guarantee that while
+some memory is writably mapped in the address space of the process,
+it will be visible in the same file at the same offset even after
+the system crashes or is rebooted.
+In conjunction with the use of appropriate CPU instructions,
+this provides users of such mappings with a more efficient way
+of making data modifications persistent.
 .TP
 .BR MAP_UNINITIALIZED " (since Linux 2.6.33)"
 Don't clear anonymous pages.
@@ -485,6 +528,16 @@ The file has been locked, or too much memory has been locked (see
 is not a valid file descriptor (and
 .B MAP_ANONYMOUS
 was not set).
+.TP
+.B EEXIST
+.BR MAP_FIXED_NOREPLACE
+was specified in
+.IR flags ,
+and the range covered by
+.IR addr
+and
+.IR length
+is clashes with an existing mapping.
 .TP
 .B EINVAL
 We don't like
@@ -674,6 +727,53 @@ and
 An application can determine which pages of a mapping are
 currently resident in the buffer/page cache using
 .BR mincore (2).
+.\"
+.SS Using MAP_FIXED safely
+The only safe use for
+.BR MAP_FIXED
+is where the address range specified by
+.IR addr
+and
+.I length
+was previously reserved using another mapping;
+otherwise, the use of
+.BR MAP_FIXED
+is hazardous because it forcibly removes preexisting mappings,
+making it easy for a multithreaded process to corrupt its own address space.
+.PP
+For example, suppose that thread A looks through
+.I /proc/<pid>/maps
+and in order to locate an unused address range that it can map using
+.BR MAP_FIXED ,
+while thread B simultaneously acquires part or all of that same
+address range.
+When thread A subsequently employs
+.BR mmap(MAP_FIXED) ,
+it will effectively clobber the mapping that thread B created.
+In this scenario,
+thread B need not create a mapping directly; simply making a library call
+that, internally, uses
+.BR dlopen (3)
+to load some other shared library, will suffice.
+The
+.BR dlopen (3)
+call will map the library into the process's address space.
+Furthermore, almost any library call may be implemented in a way that
+adds memory mappings to the address space, either with this technique,
+or by simply allocating memory.
+Examples include
+.BR brk (2),
+.BR malloc (3),
+.BR pthread_create (3),
+and the PAM libraries
+.UR http://www.linux-pam.org
+.UE .
+.PP
+Since Linux 4.17, a multithreaded program can use the
+.BR MAP_FIXED_NOREPLACE
+flag to avoid the hazard described above
+when attempting to create a mapping at a fixed address
+that has not been reserved by a preexisting mapping.
 .\"
 .SS Timestamps changes for file-backed mappings
 For file-backed mappings, the
@@ -896,7 +996,7 @@ B.O. Gallmeister, POSIX.4, O'Reilly, pp. 128\(en129 and 389\(en391.
 .\" Repeat after me: private read-only mappings are 100% equivalent to
 .\" shared read-only mappings. No ifs, buts, or maybes. -- Linus
 .SH COLOPHON
-This page is part of release 4.15 of the Linux
+This page is part of release 4.16 of the Linux
 .I man-pages
 project.
 A description of the project,
