@@ -106,7 +106,11 @@ must be NULL.
 .IP
 This operation is functionally identical to the call:
 .IP
-    prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
+.in +4n
+.EX
+prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
+.EE
+.in
 .TP
 .BR SECCOMP_SET_MODE_FILTER
 The system calls allowed are defined by a pointer to a Berkeley Packet
@@ -145,7 +149,11 @@ bit set.
 If that bit was not already set by an ancestor of this thread,
 the thread must make the following call:
 .IP
-    prctl(PR_SET_NO_NEW_PRIVS, 1);
+.in +4n
+.EX
+prctl(PR_SET_NO_NEW_PRIVS, 1);
+.EE
+.in
 .IP
 Otherwise, the
 .BR SECCOMP_SET_MODE_FILTER
@@ -184,7 +192,11 @@ When
 .IR flags
 is 0, this operation is functionally identical to the call:
 .IP
-    prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, args);
+.in +4n
+.EX
+prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, args);
+.EE
+.in
 .IP
 The recognized
 .IR flags
@@ -285,8 +297,11 @@ struct seccomp_data {
 .PP
 Because numbering of system calls varies between architectures and
 some architectures (e.g., x86-64) allow user-space code to use
-the calling conventions of multiple architectures, it is usually
-necessary to verify the value of the
+the calling conventions of multiple architectures
+(and the convention being used may vary over the life of a process that uses
+.BR execve (2)
+to execute binaries that employ the different conventions),
+it is usually necessary to verify the value of the
 .IR arch
 field.
 .PP
@@ -773,9 +788,34 @@ operation (which does not support
 .IR flags ).
 .PP
 Since Linux 4.4, the
-.BR prctl (2)
+.BR ptrace (2)
 .B PTRACE_SECCOMP_GET_FILTER
 operation can be used to dump a process's seccomp filters.
+.\"
+.SS Architecture support for seccomp BPF
+Architecture support for seccomp BPF filtering
+.\" Check by grepping for HAVE_ARCH_SECCOMP_FILTER in Kconfig files in
+.\" kernel source. Last checked in Linux 4.16-rc source.
+is available on the following architectures:
+.IP * 3
+x86-64, i386, x32 (since Linux 3.5)
+.PD 0
+.IP *
+ARM (since Linux 3.8)
+.IP *
+s390 (since Linux 3.8)
+.IP *
+MIPS (since Linux 3.16)
+.IP *
+ARM-64 (since Linux 3.19)
+.IP *
+PowerPC (since Linux 4.3)
+.IP *
+Tile (since Linux 4.3)
+.IP *
+PA-RISC (since Linux 4.6)
+.\" User mode Linux since Linux 4.6
+.PD
 .\"
 .SS Caveats
 There are various subtleties to consider when applying seccomp filters
@@ -983,7 +1023,9 @@ install_filter(int syscall_nr, int t_arch, int f_errno)
 {
     unsigned int upper_nr_limit = 0xffffffff;
 
-    /* Assume that AUDIT_ARCH_X86_64 means the normal x86-64 ABI */
+    /* Assume that AUDIT_ARCH_X86_64 means the normal x86-64 ABI
+       (in the x32 ABI, all system calls have bit 30 set in the
+       'nr' field, meaning the numbers are >= X32_SYSCALL_BIT) */
     if (t_arch == AUDIT_ARCH_X86_64)
         upper_nr_limit = X32_SYSCALL_BIT - 1;
 
@@ -1099,7 +1141,7 @@ Proceedings of the USENIX Winter 1993 Conference
 .UR http://www.tcpdump.org/papers/bpf\-usenix93.pdf
 .UE
 .SH COLOPHON
-This page is part of release 4.15 of the Linux
+This page is part of release 4.16 of the Linux
 .I man-pages
 project.
 A description of the project,
