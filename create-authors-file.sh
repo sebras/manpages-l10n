@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2012 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2012-2018 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,26 +16,30 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Generate AUTHORS file
-echo "The following people have contributed to the german translation" > AUTHORS
-echo "of Linux manpages. The list is sorted alphabetically." >> AUTHORS
-echo >> AUTHORS
+echo "# Authors" > AUTHORS.md
+echo >> AUTHORS.md
+echo "The following people have contributed to the german translation" >> AUTHORS.md
+echo "of Linux manpages. The list is sorted alphabetically." >> AUTHORS.md
+echo >> AUTHORS.md
 
 # Extract all translators from the copyright headers
-for translation in `find po/man? -name "*po" | sort`; do
+files=$(find po/primary/man? -name "*po" | sort)
+files="$files $(find po/secondary-*/man? -name "*po" | sort)"
+for translation in $files; do
 	# Use the header up until the first msgid
 	# and remove the comment character
-	translators=`sed '/msgid/q;s/^#\s\+//' "$translation" |
+	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
 	# Throw away the common (non translator) lines
 	grep -v "German translation of manpages" |
 	grep -v "This file is distributed under the same license as the manpages-de package." |
 	grep -v "Copyright © of this file:" |
 	grep -v "msgid" |
 	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d","`
+	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
 	echo "$translators" >> translators.list
 done
-# Sort, unique and remove blank lines from file
-sort translators.list | uniq | sed -e "/^$/d" > tmp.list
-cat tmp.list >> AUTHORS
+# Sort, unique, remove blank lines from file, and indent with an asterisk
+sort translators.list | uniq | sed -e "/^$/d; s/^/* /" > tmp.list
+cat tmp.list >> AUTHORS.md
 rm tmp.list translators.list
