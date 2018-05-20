@@ -11,6 +11,10 @@ Projekt von Dr. Tobias Quathamer <toddy@debian.org> weitergeführt.
 Informationen zum aktuellen Status des Projekts stehen unter
 folgender URL zur Verfügung:
 
+        https://manpages-de-team.pages.debian.net/manpages-de/
+
+Das git-Repository und weitere Informationen sind hier zu finden:
+
         https://salsa.debian.org/manpages-de-team/manpages-de
 
 Wenn Du an diesem Projekt teilnehmen und ein paar Seiten übersetzen,
