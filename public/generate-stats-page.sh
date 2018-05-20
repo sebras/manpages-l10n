@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Create header
-timestamp=$(date "+%d.%m.%Y, %H:%M Uhr")
+# Create header, using MET/MEST
+timestamp=$(TZ='Europe/Berlin' date "+%d.%m.%Y, %H:%M Uhr")
 cat<<-END_OF_HEADER
 <!doctype html>
 <html lang="en">
