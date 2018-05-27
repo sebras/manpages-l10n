@@ -41,7 +41,8 @@ for directory in $directories; do
 	distribution_count=0
 	previous_section=""
 	section_count=0
-	translations=$(find "../po/$directory"/man* -name "*.po" | LC_ALL=C sort)
+	translations_tmp=$(find "../po/$directory"/man* -name "*.po" | LC_ALL=C sort)
+	translations="$translations_tmp ../po/$directory/man1/cat.1.po"
 	for translation in $translations; do
 		man_name=$(basename $translation)
 		man_section=$(echo "$translation" | cut -d/ -f4)
