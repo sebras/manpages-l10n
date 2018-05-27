@@ -29,7 +29,10 @@ cat<<-END_OF_HEADER
   <body>
 	  <div class="container-fluid">
       <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
-		  <p>Stand: $timestamp</p>
+      <p>Stand: $timestamp</p>
+      <p>
+        <a class="btn btn-primary" href="https://salsa.debian.org/manpages-de-team/manpages-de">Git-Repository ansehen</a>
+      </p>
 END_OF_HEADER
 
 # Determine directory names from upstream directory.
