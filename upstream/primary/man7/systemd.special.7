@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 238" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 239" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,7 @@ graphical\&.target,
 halt\&.target,
 hibernate\&.target,
 hybrid\-sleep\&.target,
+suspend\-then\-hibernate\&.target,
 initrd\-fs\&.target,
 initrd\-root\-device\&.target,
 initrd\-root\-fs\&.target,
@@ -76,6 +77,7 @@ suspend\&.target,
 swap\&.target,
 sysinit\&.target,
 system\-update\&.target,
+system\-update\-pre\&.target,
 time\-sync\&.target,
 timers\&.target,
 umount\&.target,
@@ -237,6 +239,12 @@ A special target unit for hibernating and suspending the system at the same time
 sleep\&.target\&.
 .RE
 .PP
+suspend\-then\-hibernate\&.target
+.RS 4
+A special target unit for suspending the system for a period of time, waking it and putting it into hibernate\&. This pulls in
+sleep\&.target\&.
+.RE
+.PP
 halt\&.target
 .RS 4
 A special target unit for shutting down and halting the system\&. Note that this target is distinct from
@@ -367,6 +375,14 @@ is not, except when at least one unit requires it\&. Also see
 for more information\&.
 .sp
 All mount units for remote network file systems automatically pull in this unit, and order themselves after it\&. Note that networking daemons that simply provide functionality to other hosts generally do not need to pull this in\&.
+.sp
+systemd automatically adds dependencies of type
+\fIWants=\fR
+and
+\fIAfter=\fR
+for this target unit to all SysV init script service units with an LSB header referring to the
+"$network"
+facility\&.
 .sp
 Note that this unit is only useful during the original system start\-up logic\&. After the system has completed booting up, it will not track the online state of the system anymore\&. Due to this it cannot be used as a network connection monitor concept, it is purely a one\-time system start\-up concept\&.
 .RE
@@ -559,7 +575,7 @@ The socket unit syslog implementations should listen on\&. All userspace log mes
 document\&.
 .RE
 .PP
-system\-update\&.target, system\-update\-cleanup\&.service
+system\-update\&.target, system\-update\-pre\&.target, system\-update\-cleanup\&.service
 .RS 4
 A special target unit that is used for offline system updates\&.
 \fBsystemd-system-update-generator\fR(8)
@@ -570,7 +586,9 @@ exists\&. For more information see
 .sp
 Updates should happen before the
 system\-update\&.target
-is reached, and the services which implement them should cause the machine to reboot\&. As a safety measure, if this does not happen, and
+is reached, and the services which implement them should cause the machine to reboot\&. The main units executing the update should order themselves after
+system\-update\-pre\&.target
+but not pull it in\&. Services which want to run during system updates only, but before the actual system update is executed should order themselves before this unit and pull it in\&. As a safety measure, if this does not happen, and
 /system\-update
 still exists after
 system\-update\&.target
@@ -674,12 +692,6 @@ will be stopped before the network \(em to whatever level it might be set up the
 for more information\&. Also see
 network\-online\&.target
 described above\&.
-.sp
-systemd automatically adds dependencies of type
-\fIAfter=\fR
-for this target unit to all SysV init script service units with an LSB header referring to the
-"$network"
-facility\&.
 .RE
 .PP
 network\-pre\&.target
@@ -689,7 +701,7 @@ This passive target unit may be pulled in by services that want to run before an
 .PP
 nss\-lookup\&.target
 .RS 4
-A target that should be used as synchronization point for all host/network name service lookups\&. Note that this is independent of user/group name lookups for which
+A target that should be used as synchronization point for all host/network name service lookups\&. Note that this is independent of UNIX user/group name lookups for which
 nss\-user\-lookup\&.target
 should be used\&. All services for which the availability of full host/network name resolution is essential should be ordered after this target, but not pull it in\&. systemd automatically adds dependencies of type
 \fIAfter=\fR
@@ -700,9 +712,9 @@ facility\&.
 .PP
 nss\-user\-lookup\&.target
 .RS 4
-A target that should be used as synchronization point for all user/group name service lookups\&. Note that this is independent of host/network name lookups for which
+A target that should be used as synchronization point for all regular UNIX user/group name service lookups\&. Note that this is independent of host/network name lookups for which
 nss\-lookup\&.target
-should be used\&. All services for which the availability of the full user/group database is essential should be ordered after this target, but not pull it in\&. Note that system users are always resolvable, and hence do not require any special ordering against this target\&.
+should be used\&. All services for which the availability of the full user/group database is essential should be ordered after this target, but not pull it in\&. All services which provide parts of the user/group database should be ordered before this target, and pull it in\&. Note that this unit is only relevant for regular users and groups \(em system users and groups are required to be resolvable during earliest boot already, and hence do not need any special ordering against this target\&.
 .RE
 .PP
 remote\-fs\-pre\&.target

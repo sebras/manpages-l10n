@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 238" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 239" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -290,8 +290,8 @@ for details\&. Takes a whitespace\-separated list of capability names, e\&.g\&.
 \fBCAP_DAC_OVERRIDE\fR,
 \fBCAP_SYS_PTRACE\fR\&. Capabilities listed will be included in the bounding set, all others are removed\&. If the list of capabilities is prefixed with
 "~", all but the listed capabilities will be included, the effect of the assignment inverted\&. Note that this option also affects the respective capabilities in the effective, permitted and inheritable capability sets\&. If this option is not used, the capability bounding set is not modified on process execution, hence no limits on the capabilities of the process are enforced\&. This option may appear more than once, in which case the bounding sets are merged by
-\fBAND\fR, or by
-\fBOR\fR
+\fBOR\fR, or by
+\fBAND\fR
 if the lines are prefixed with
 "~"
 (see below)\&. If the empty string is assigned to this option, the bounding set is reset to the empty capability set, and all prior settings have no effect\&. If set to
@@ -740,14 +740,22 @@ Sets the I/O scheduling class for executed processes\&. Takes an integer between
 \fBrealtime\fR,
 \fBbest\-effort\fR
 or
-\fBidle\fR\&. See
+\fBidle\fR\&. If the empty string is assigned to this option, all prior assignments to both
+\fIIOSchedulingClass=\fR
+and
+\fIIOSchedulingPriority=\fR
+have no effect\&. See
 \fBioprio_set\fR(2)
 for details\&.
 .RE
 .PP
 \fIIOSchedulingPriority=\fR
 .RS 4
-Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. The available priorities depend on the selected I/O scheduling class (see above)\&. See
+Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. The available priorities depend on the selected I/O scheduling class (see above)\&. If the empty string is assigned to this option, all prior assignments to both
+\fIIOSchedulingClass=\fR
+and
+\fIIOSchedulingPriority=\fR
+have no effect\&. See
 \fBioprio_set\fR(2)
 for details\&.
 .RE
@@ -806,7 +814,7 @@ or
 Setting this to
 "yes"
 is mostly equivalent to set the three directories in
-\fIInaccessiblePaths=\fR\&. Similary,
+\fIInaccessiblePaths=\fR\&. Similarly,
 "read\-only"
 is mostly equivalent to
 \fIReadOnlyPaths=\fR, and
@@ -824,30 +832,66 @@ and related calls, see below\&.
 \fIRuntimeDirectory=\fR, \fIStateDirectory=\fR, \fICacheDirectory=\fR, \fILogsDirectory=\fR, \fIConfigurationDirectory=\fR
 .RS 4
 These options take a whitespace\-separated list of directory names\&. The specified directory names must be relative, and may not include
-"\&."
-or
-"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below
-/run
-(or
-\fI$XDG_RUNTIME_DIR\fR
-for user services),
-/var/lib
-(or
-\fI$XDG_CONFIG_HOME\fR
-for user services),
-/var/cache
-(or
-\fI$XDG_CACHE_HOME\fR
-for user services),
-/var/log
-(or
-\fI$XDG_CONFIG_HOME\fR/log
-for user services), or
-/etc
-(or
-\fI$XDG_CONFIG_HOME\fR
-for user services), respectively, when the unit is started\&.
+"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below the locations defined in the following table, when the unit is started\&.
 .sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&2.\ \&Automatic directory creation
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Locations
+T}:T{
+for system
+T}:T{
+for users
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+\fIRuntimeDirectory=\fR
+T}:T{
+/run
+T}:T{
+\fI$XDG_RUNTIME_DIR\fR
+T}
+T{
+\fIStateDirectory=\fR
+T}:T{
+/var/lib
+T}:T{
+\fI$XDG_CONFIG_HOME\fR
+T}
+T{
+\fICacheDirectory=\fR
+T}:T{
+/var/cache
+T}:T{
+\fI$XDG_CACHE_HOME\fR
+T}
+T{
+\fILogsDirectory=\fR
+T}:T{
+/var/log
+T}:T{
+\fI$XDG_CONFIG_HOME\fR/log
+T}
+T{
+\fIConfigurationDirectory=\fR
+T}:T{
+/etc
+T}:T{
+\fI$XDG_CONFIG_HOME\fR
+T}
+.TE
+.sp 1
 In case of
 \fIRuntimeDirectory=\fR
 the lowest subdirectories are removed when the unit is stopped\&. It is possible to preserve the specified directories in this case if
@@ -1211,7 +1255,7 @@ is implied\&.
 .PP
 \fIProtectKernelModules=\fR
 .RS 4
-Takes a boolean argument\&. If true, explicit module loading will be denied\&. This allows to turn off module load and unload operations on modular kernels\&. It is recommended to turn this on for most services that do not need special file systems or extra kernel modules to work\&. Defaults to off\&. Enabling this option removes
+Takes a boolean argument\&. If true, explicit module loading will be denied\&. This allows module load and unload operations to be turned off on modular kernels\&. It is recommended to turn this on for most services that do not need special file systems or extra kernel modules to work\&. Defaults to off\&. Enabling this option removes
 \fBCAP_SYS_MODULE\fR
 from the capability bounding set for the unit, and installs a system call filter to block module system calls, also
 /usr/lib/modules
@@ -1285,7 +1329,12 @@ Restricts access to Linux namespace functionality for the processes of this unit
 \fBpid\fR,
 \fBuser\fR
 and
-\fButs\fR\&. Any namespace type listed is made accessible to the unit\*(Aqs processes, access to namespace types not listed is prohibited (whitelisting)\&. By prepending the list with a single tilde character ("~") the effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted (blacklisting)\&. If the empty string is assigned, the default namespace restrictions are applied, which is equivalent to false\&. Internally, this setting limits access to the
+\fButs\fR\&. Any namespace type listed is made accessible to the unit\*(Aqs processes, access to namespace types not listed is prohibited (whitelisting)\&. By prepending the list with a single tilde character ("~") the effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted (blacklisting)\&. If the empty string is assigned, the default namespace restrictions are applied, which is equivalent to false\&. This option may appear more than once, in which case the namespace types are merged by
+\fBOR\fR, or by
+\fBAND\fR
+if the lines are prefixed with
+"~"
+(see examples below)\&. Internally, this setting limits access to the
 \fBunshare\fR(2),
 \fBclone\fR(2)
 and
@@ -1298,6 +1347,41 @@ capability (e\&.g\&. setting
 \fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&.
+.sp
+Example: if a unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RestrictNamespaces=cgroup ipc
+RestrictNamespaces=cgroup net
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then
+\fBcgroup\fR,
+\fBipc\fR, and
+\fBnet\fR
+are set\&. If the second line is prefixed with
+"~", e\&.g\&.,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RestrictNamespaces=cgroup ipc
+RestrictNamespaces=~cgroup net
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then, only
+\fBipc\fR
+is set\&.
 .RE
 .PP
 \fILockPersonality=\fR
@@ -1372,42 +1456,75 @@ are used\&. It has no effect on IPC objects owned by the root user\&. Specifical
 is set\&.
 .RE
 .PP
-\fIMountFlags=\fR
+\fIPrivateMounts=\fR
 .RS 4
-Takes a mount propagation flag:
-\fBshared\fR,
-\fBslave\fR
-or
-\fBprivate\fR, which control whether mounts in the file system namespace set up for this unit\*(Aqs processes will receive or propagate mounts and unmounts\&. See
-\fBmount\fR(2)
-for details\&. Defaults to
-\fBshared\fR\&. Use
-\fBshared\fR
-to ensure that mounts and unmounts are propagated from systemd\*(Aqs namespace to the service\*(Aqs namespace and vice versa\&. Use
-\fBslave\fR
-to run processes so that none of their mounts and unmounts will propagate to the host\&. Use
-\fBprivate\fR
-to also ensure that no mounts and unmounts from the host will propagate into the unit processes\*(Aq namespace\&. If this is set to
-\fBslave\fR
-or
-\fBprivate\fR, any mounts created by spawned processes will be unmounted after the completion of the current command line of
-\fIExecStartPre=\fR,
-\fIExecStartPost=\fR,
-\fIExecStart=\fR, and
-\fIExecStopPost=\fR\&. Note that
-\fBslave\fR
-means that file systems mounted on the host might stay mounted continuously in the unit\*(Aqs namespace, and thus keep the device busy\&. Note that the file system namespace related options (\fIPrivateTmp=\fR,
+Takes a boolean parameter\&. If set, the processes of this unit will be run in their own private file system (mount) namespace with all mount propagation from the processes towards the host\*(Aqs main file system namespace turned off\&. This means any file system mount points established or removed by the unit\*(Aqs processes will be private to them and not be visible to the host\&. However, file system mount points established or removed on the host will be propagated to the unit\*(Aqs processes\&. See
+\fBmount_namespaces\fR(7)
+for details on file system namespaces\&. Defaults to off\&.
+.sp
+When turned on, this executes three operations for each invoked process: a new
+\fBCLONE_NEWNS\fR
+namespace is created, after which all existing mounts are remounted to
+\fBMS_SLAVE\fR
+to disable propagation from the unit\*(Aqs processes to the host (but leaving propagation in the opposite direction in effect)\&. Finally, the mounts are remounted again to the propagation mode configured with
+\fIMountFlags=\fR, see below\&.
+.sp
+File system namespaces are set up individually for each process forked off by the service manager\&. Mounts established in the namespace of the process created by
+\fIExecStartPre=\fR
+will hence be cleaned up automatically as soon as that process exits and will not be available to subsequent processes forked off for
+\fIExecStart=\fR
+(and similar applies to the various other commands configured for units)\&. Similarly,
+\fIJoinsNamespaceOf=\fR
+does not permit sharing kernel mount namespaces between units, it only enables sharing of the
+/tmp/
+and
+/var/tmp/
+directories\&.
+.sp
+Other file system namespace unit settings \(em
+\fIPrivateMounts=\fR,
+\fIPrivateTmp=\fR,
 \fIPrivateDevices=\fR,
 \fIProtectSystem=\fR,
 \fIProtectHome=\fR,
-\fIProtectKernelTunables=\fR,
-\fIProtectControlGroups=\fR,
 \fIReadOnlyPaths=\fR,
 \fIInaccessiblePaths=\fR,
-\fIReadWritePaths=\fR) require that mount and unmount propagation from the unit\*(Aqs file system namespace is disabled, and hence downgrade
+\fIReadWritePaths=\fR, \&... \(em also enable file system namespacing in a fashion equivalent to this option\&. Hence it is primarily useful to explicitly request this behaviour if none of the other settings are used\&.
+.RE
+.PP
+\fIMountFlags=\fR
+.RS 4
+Takes a mount propagation setting:
+\fBshared\fR,
+\fBslave\fR
+or
+\fBprivate\fR, which controls whether file system mount points in the file system namespaces set up for this unit\*(Aqs processes will receive or propagate mounts and unmounts from other file system namespaces\&. See
+\fBmount\fR(2)
+for details on mount propagation, and the three propagation flags in particular\&.
+.sp
+This setting only controls the
+\fIfinal\fR
+propagation setting in effect on all mount points of the file system namespace created for each process of this unit\&. Other file system namespacing unit settings (see the discussion in
+\fIPrivateMounts=\fR
+above) will implicitly disable mount and unmount propagation from the unit\*(Aqs processes towards the host by changing the propagation setting of all mount points in the unit\*(Aqs file system namepace to
+\fBslave\fR
+first\&. Setting this option to
 \fBshared\fR
-to
+does not reestablish propagation in that case\&. Conversely, if this option is set, but no other file system namespace setting is used, then new file system namespaces will be created for the unit\*(Aqs processes and this propagation flag will be applied right away to all mounts within it, without the intermediary application of
 \fBslave\fR\&.
+.sp
+If not set \(en but file system namespaces are enabled through another file system namespace unit setting \(en
+\fBshared\fR
+mount propagation is used, but \(em as mentioned \(em as
+\fBslave\fR
+is applied first, propagation from the unit\*(Aqs processes to the host is still turned off\&.
+.sp
+It is not recommended to to use
+\fBprivate\fR
+mount propagation for units, as this means temporary mounts (such as removable media) of the host will stay mounted and thus indefinitely busy in forked off processes, as unmount propagation events won\*(Aqt be received by the file system namespace of the unit\&.
+.sp
+Usually, it is best to leave this setting unmodified, and use higher level file system namespacing options instead, in particular
+\fIPrivateMounts=\fR, see above\&.
 .RE
 .SH "SYSTEM CALL FILTERING"
 .PP
@@ -1462,7 +1579,7 @@ character, followed by name of the set\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&2.\ \&Currently predefined system call sets
+.B Table\ \&3.\ \&Currently predefined system call sets
 .TS
 allbox tab(:);
 lB lB.
@@ -1472,6 +1589,7 @@ T}:T{
 Description
 T}
 .T&
+l l
 l l
 l l
 l l
@@ -1618,6 +1736,11 @@ T}:T{
 Synchronizing files and memory to disk: (\fBfsync\fR(2), \fBmsync\fR(2), and related calls)
 T}
 T{
+@system\-service
+T}:T{
+A reasonable set of system calls used by common system services, excluding any special purpose calls\&. This is the recommended starting point for whitelisting system calls for system services, as it contains what is typically needed by system services, but excludes overly specific interfaces\&. For example, the following APIs are excluded: "@clock", "@mount", "@swap", "@reboot"\&.
+T}
+T{
 @timer
 T}:T{
 System calls for scheduling operations by time (\fBalarm\fR(2), \fBtimer_create\fR(2), \&...)
@@ -1627,6 +1750,20 @@ T}
 Note, that as new system calls are added to the kernel, additional system calls might be added to the groups above\&. Contents of the sets may also change between systemd versions\&. In addition, the list of system calls depends on the kernel version and architecture for which systemd was compiled\&. Use
 \fBsystemd\-analyze\ \&syscall\-filter\fR
 to list the actual list of system calls in each filter\&.
+.sp
+Generally, whitelisting system calls (rather than blacklisting) is the safer mode of operation\&. It is recommended to enforce system call whitelists for all long\-running system services\&. Specifically, the following lines are a relatively safe basic choice for the majority of system services:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Service]
+SystemCallFilter=@system\-service
+SystemCallErrorNumber=EPERM
+.fi
+.if n \{\
+.RE
+.\}
 .sp
 It is recommended to combine the file system namespacing related options with
 \fISystemCallFilter=~@mount\fR, in order to prohibit the unit\*(Aqs processes to undo the mappings\&. Specifically these are the options
@@ -1918,7 +2055,7 @@ work in a similar way as the three options above but copy the output to the syst
 The
 \fBfile:\fR\fB\fIpath\fR\fR
 option may be used to connect a specific file system object to standard output\&. The semantics are similar to the same option of
-\fIStandardInputText=\fR, see above\&. If standard input and output are directed to the same file path, it is opened only once, for reading as well as writing and duplicated\&. This is particular useful when the specified path refers to an
+\fIStandardInput=\fR, see above\&. If standard input and output are directed to the same file path, it is opened only once, for reading as well as writing and duplicated\&. This is particular useful when the specified path refers to an
 \fBAF_UNIX\fR
 socket in the file system, as in that case only a single stream connection is created for both input and output\&.
 .sp
@@ -1989,7 +2126,7 @@ is set to
 .sp
 \fIStandardInputText=\fR
 accepts arbitrary textual data\&. C\-style escapes for special characters as well as the usual
-"%"\-specifiers are resolved\&. Each time this setting is used the the specified text is appended to the per\-unit data buffer, followed by a newline character (thus every use appends a new line to the end of the buffer)\&. Note that leading and trailing whitespace of lines configured with this option is removed\&. If an empty line is specified the buffer is cleared (hence, in order to insert an empty line, add an additional
+"%"\-specifiers are resolved\&. Each time this setting is used the specified text is appended to the per\-unit data buffer, followed by a newline character (thus every use appends a new line to the end of the buffer)\&. Note that leading and trailing whitespace of lines configured with this option is removed\&. If an empty line is specified the buffer is cleared (hence, in order to insert an empty line, add an additional
 "\en"
 to the end or beginning of a line)\&.
 .sp
@@ -2046,7 +2183,7 @@ log level, one of
 for details\&. By default no filtering is applied (i\&.e\&. the default maximum log level is
 \fBdebug\fR)\&. Use this option to configure the logging system to drop log messages of a specific service above the specified level\&. For example, set
 \fILogLevelMax=\fR\fBinfo\fR
-in order to turn off debug logging of a particularly chatty unit\&. Note that the the configured level is applied to any log messages written by any of the processes belonging to this unit, sent via any supported logging protocol\&. The filtering is applied early in the logging pipeline, before any kind of further processing is done\&. Moreover, messages which pass through this filter successfully might still be dropped by filters applied at a later stage in the logging subsystem\&. For example,
+in order to turn off debug logging of a particularly chatty unit\&. Note that the configured level is applied to any log messages written by any of the processes belonging to this unit, sent via any supported logging protocol\&. The filtering is applied early in the logging pipeline, before any kind of further processing is done\&. Moreover, messages which pass through this filter successfully might still be dropped by filters applied at a later stage in the logging subsystem\&. For example,
 \fIMaxLevelStore=\fR
 configured in
 \fBjournald.conf\fR(5)
@@ -2338,7 +2475,7 @@ If the same environment variables are set by multiple of these sources, the late
 \fIUnsetEnvironment=\fR
 are removed again from the compiled environment variable list, immediately before it is passed to the executed process\&.
 .PP
-The following select environment variables are set by the service manager itself for each invoked process:
+The following select environment variables are set or propagated by the service manager for each invoked process:
 .PP
 \fI$PATH\fR
 .RS 4
@@ -2373,21 +2510,14 @@ Contains a randomized, unique 128bit ID identifying each runtime cycle of the un
 .PP
 \fI$XDG_RUNTIME_DIR\fR
 .RS 4
-The directory for volatile state\&. Set for the user
+The directory to use for runtime objects (such as IPC objects) and volatile state\&. Set for all services run by the user
 \fBsystemd\fR
-instance, and also in user sessions\&. See
-\fBpam_systemd\fR(8)\&.
-.RE
-.PP
-\fI$XDG_SESSION_ID\fR, \fI$XDG_SEAT\fR, \fI$XDG_VTNR\fR
-.RS 4
-The identifier of the session, the seat name, and virtual terminal of the session\&. Set by
+instance, as well as any system services that use
+\fIPAMName=\fR
+with a PAM stack that includes
+\fBpam_systemd\fR\&. See below and
 \fBpam_systemd\fR(8)
-for login sessions\&.
-\fI$XDG_SEAT\fR
-and
-\fI$XDG_VTNR\fR
-will only be set when attached to a seat and a tty\&.
+for more information\&.
 .RE
 .PP
 \fI$MAINPID\fR
@@ -2460,7 +2590,7 @@ processes, and encodes the service "result"\&. Currently, the following values a
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&3.\ \&Defined \fI$SERVICE_RESULT\fR values
+.B Table\ \&4.\ \&Defined \fI$SERVICE_RESULT\fR values
 .TS
 allbox tab(:);
 lB lB.
@@ -2554,7 +2684,7 @@ is
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&4.\ \&Summary of possible service result variable values
+.B Table\ \&5.\ \&Summary of possible service result variable values
 .TS
 allbox tab(:);
 lB lB lB.
@@ -2669,6 +2799,16 @@ T}
 .TE
 .sp 1
 .RE
+.PP
+For system services, when
+\fIPAMName=\fR
+is enabled and
+\fBpam_systemd\fR
+is part of the selected PAM stack, additional environment variables defined by systemd may be set for services\&. Specifically, these are
+\fI$XDG_SEAT\fR,
+\fI$XDG_VTNR\fR, see
+\fBpam_systemd\fR(8)
+for details\&.
 .SH "PROCESS EXIT CODES"
 .PP
 When invoking a unit process the service manager possibly fails to apply the execution parameters configured with the settings above\&. In that case the already created service process will exit with a non\-zero exit code before the configured command line is executed\&. (Or in other words, the child process possibly exits with these error codes, after having been created by the
@@ -2683,7 +2823,7 @@ The following basic service exit codes are defined by the C library\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&5.\ \&Basic C library exit codes
+.B Table\ \&6.\ \&Basic C library exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -2721,7 +2861,7 @@ The following service exit codes are defined by the
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&6.\ \&LSB service exit codes
+.B Table\ \&7.\ \&LSB service exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -2790,7 +2930,7 @@ The LSB specification suggests that error codes 200 and above are reserved for i
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&7.\ \&systemd\-specific exit codes
+.B Table\ \&8.\ \&systemd\-specific exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3121,6 +3261,147 @@ T}:T{
 \fBEXIT_CONFIGURATION_DIRECTORY\fR
 T}:T{
 Failed to set up unit\*(Aqs configuration directory\&. See \fIConfigurationDirectory=\fR above\&.
+T}
+.TE
+.sp 1
+.PP
+Finally, the BSD operating systems define a set of exit codes, typically defined on Linux systems too:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&9.\ \&BSD exit codes
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Exit Code
+T}:T{
+Symbolic Name
+T}:T{
+Description
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+64
+T}:T{
+\fBEX_USAGE\fR
+T}:T{
+Command line usage error
+T}
+T{
+65
+T}:T{
+\fBEX_DATAERR\fR
+T}:T{
+Data format error
+T}
+T{
+66
+T}:T{
+\fBEX_NOINPUT\fR
+T}:T{
+Cannot open input
+T}
+T{
+67
+T}:T{
+\fBEX_NOUSER\fR
+T}:T{
+Addressee unknown
+T}
+T{
+68
+T}:T{
+\fBEX_NOHOST\fR
+T}:T{
+Host name unknown
+T}
+T{
+69
+T}:T{
+\fBEX_UNAVAILABLE\fR
+T}:T{
+Service unavailable
+T}
+T{
+70
+T}:T{
+\fBEX_SOFTWARE\fR
+T}:T{
+internal software error
+T}
+T{
+71
+T}:T{
+\fBEX_OSERR\fR
+T}:T{
+System error (e\&.g\&., can\*(Aqt fork)
+T}
+T{
+72
+T}:T{
+\fBEX_OSFILE\fR
+T}:T{
+Critical OS file missing
+T}
+T{
+73
+T}:T{
+\fBEX_CANTCREAT\fR
+T}:T{
+Can\*(Aqt create (user) output file
+T}
+T{
+74
+T}:T{
+\fBEX_IOERR\fR
+T}:T{
+Input/output error
+T}
+T{
+75
+T}:T{
+\fBEX_TEMPFAIL\fR
+T}:T{
+Temporary failure; user is invited to retry
+T}
+T{
+76
+T}:T{
+\fBEX_PROTOCOL\fR
+T}:T{
+Remote error in protocol
+T}
+T{
+77
+T}:T{
+\fBEX_NOPERM\fR
+T}:T{
+Permission denied
+T}
+T{
+78
+T}:T{
+\fBEX_CONFIG\fR
+T}:T{
+Configuration error
 T}
 .TE
 .sp 1

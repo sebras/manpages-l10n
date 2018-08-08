@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 238" "systemd-resolved.service"
+.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 239" "systemd-resolved.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -29,7 +29,7 @@ systemd\-resolved\&.service
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-resolved\fR
-is a system service that provides network name resolution to local applications\&. It implements a caching and validating DNS/DNSSEC stub resolver, as well as an LLMNR resolver and responder\&. Local applications may submit network name resolution requests via three interfaces:
+is a system service that provides network name resolution to local applications\&. It implements a caching and validating DNS/DNSSEC stub resolver, as well as an LLMNR and MulticastDNS resolver and responder\&. Local applications may submit network name resolution requests via three interfaces:
 .sp
 .RS 4
 .ie n \{\
@@ -82,7 +82,9 @@ provides a local DNS stub listener on IP address 127\&.0\&.0\&.53 on the local l
 The DNS servers contacted are determined from the global settings in
 /etc/systemd/resolved\&.conf, the per\-link static settings in
 /etc/systemd/network/*\&.network
-files, the per\-link dynamic settings received over DHCP and any DNS server information made available by other system services\&. See
+files (in case
+\fBsystemd-networkd.service\fR(8)
+is used), the per\-link dynamic settings received over DHCP, and any DNS server information made available by other system services\&. See
 \fBresolved.conf\fR(5)
 and
 \fBsystemd.network\fR(5)
@@ -152,7 +154,7 @@ The mappings defined in
 are resolved to their configured addresses and back, but they will not affect lookups for non\-address types (like MX)\&.
 .RE
 .PP
-Lookup requests are routed to the available DNS servers and LLMNR interfaces according to the following rules:
+Lookup requests are routed to the available DNS servers, LLMNR and MulticastDNS interfaces according to the following rules:
 .sp
 .RS 4
 .ie n \{\
@@ -188,7 +190,28 @@ host name are never routed to LLMNR\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Multi\-label names are routed to all local interfaces that have a DNS server configured, plus the globally configured DNS server if there is one\&. Address lookups from the link\-local address range are never routed to DNS\&.
+Multi\-label names with the domain suffix
+"\&.local"
+are routed to all local interfaces capable of IP multicasting, using the MulticastDNS protocol\&. As with LLMNR IPv4 address lookups are sent via IPv4 and IPv6 address lookups are sent via IPv6\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Other multi\-label names are routed to all local interfaces that have a DNS server configured, plus the globally configured DNS server if there is one\&. Address lookups from the link\-local address range are never routed to DNS\&. Note that by default lookups for domains with the
+"\&.local"
+suffix are not routed to DNS servers, unless the domain is specified explicitly as routing or search domain for the DNS server and interface\&. This means that on networks where the
+"\&.local"
+domain is defined in a site\-specific DNS server, explicit search or routing domains need to be configured to make lookups within this DNS domain work\&. Note that today it\*(Aqs generally recommended to avoid defining
+"\&.local"
+in a DNS server, as
+\m[blue]\fBRFC6762\fR\m[]\&\s-2\u[3]\d\s+2
+reserves this domain for exclusive MulticastDNS use\&.
 .RE
 .PP
 If lookups are routed to multiple interfaces, the first successful response is returned (thus effectively merging the lookup zones on all matching interfaces)\&. If the lookup failed on all interfaces, the last failing response is returned\&.
@@ -312,7 +335,7 @@ will flush all caches it maintains\&. Note that it should normally not be necess
 flushes the caches automatically anyway any time the host\*(Aqs network configuration changes\&. Sending this signal to
 \fBsystemd\-resolved\fR
 is equivalent to the
-\fBsystemd\-resolve \-\-flush\-caches\fR
+\fBresolvectl \-\-flush\-caches\fR
 command, however the latter is recommended since it operates in a synchronous way\&.
 .RE
 .PP
@@ -327,7 +350,7 @@ will forget everything it learnt about the configured DNS servers\&. Specificall
 automatically forgets learnt information any time the DNS server configuration changes\&. Sending this signal to
 \fBsystemd\-resolved\fR
 is equivalent to the
-\fBsystemd\-resolve \-\-reset\-server\-features\fR
+\fBresolvectl \-\-reset\-server\-features\fR
 command, however the latter is recommended since it operates in a synchronous way\&.
 .RE
 .SH "SEE ALSO"
@@ -336,7 +359,7 @@ command, however the latter is recommended since it operates in a synchronous wa
 \fBresolved.conf\fR(5),
 \fBdnssec-trust-anchors.d\fR(5),
 \fBnss-resolve\fR(8),
-\fBsystemd-resolve\fR(1),
+\fBresolvectl\fR(1),
 \fBresolv.conf\fR(5),
 \fBhosts\fR(5),
 \fBsystemd.network\fR(5),
@@ -351,4 +374,9 @@ API Documentation
 RFC3493
 .RS 4
 \%https://tools.ietf.org/html/rfc3493
+.RE
+.IP " 3." 4
+RFC6762
+.RS 4
+\%https://tools.ietf.org/html/rfc6762
 .RE

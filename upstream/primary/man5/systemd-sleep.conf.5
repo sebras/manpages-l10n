@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SLEEP\&.CONF" "5" "" "systemd 238" "systemd-sleep.conf"
+.TH "SYSTEMD\-SLEEP\&.CONF" "5" "" "systemd 239" "systemd-sleep.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ systemd-sleep.conf, sleep.conf.d \- Suspend and hibernation configuration file
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\fR
-supports three general power\-saving modes:
+supports four general power\-saving modes:
 .PP
 suspend
 .RS 4
@@ -50,6 +50,12 @@ hybrid\-sleep
 a low\-power state where execution of the OS is paused, which might be slow to enter, and on complete power loss does not result in lost data but might be slower to exit in that case\&. This mode is called suspend\-to\-both by the kernel\&.
 .RE
 .PP
+suspend\-then\-hibernate
+.RS 4
+A low power state where the system is initially suspended (the state is stored in RAM)\&. If not interrupted within the delay specified by
+\fBHibernateDelaySec=\fR, the system will be woken using an RTC alarm and hibernated (the state is then stored on disk)\&.
+.RE
+.PP
 Settings in these files determine what strings will be written to
 /sys/power/disk
 and
@@ -58,7 +64,9 @@ by
 \fBsystemd-sleep\fR(8)
 when
 \fBsystemd\fR(1)
-attempts to suspend or hibernate the machine\&.
+attempts to suspend or hibernate the machine\&. See
+\fBsystemd.syntax\fR(5)
+for a general description of the syntax\&.
 .SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 The default configuration is defined during compilation, so a configuration file is only needed when it is necessary to deviate from those defaults\&. By default, the configuration file in
@@ -92,8 +100,9 @@ The string to be written to
 /sys/power/disk
 by, respectively,
 \fBsystemd-suspend.service\fR(8),
-\fBsystemd-hibernate.service\fR(8), or
-\fBsystemd-hybrid-sleep.service\fR(8)\&. More than one value can be specified by separating multiple values with whitespace\&. They will be tried in turn, until one is written without error\&. If neither succeeds, the operation will be aborted\&.
+\fBsystemd-hibernate.service\fR(8),
+\fBsystemd-hybrid-sleep.service\fR(8), or
+\fBsystemd-suspend-then-hibernate.service\fR(8)\&. More than one value can be specified by separating multiple values with whitespace\&. They will be tried in turn, until one is written without error\&. If neither succeeds, the operation will be aborted\&.
 .RE
 .PP
 \fISuspendState=\fR, \fIHibernateState=\fR, \fIHybridSleepState=\fR
@@ -102,8 +111,15 @@ The string to be written to
 /sys/power/state
 by, respectively,
 \fBsystemd-suspend.service\fR(8),
-\fBsystemd-hibernate.service\fR(8), or
-\fBsystemd-hybrid-sleep.service\fR(8)\&. More than one value can be specified by separating multiple values with whitespace\&. They will be tried in turn, until one is written without error\&. If neither succeeds, the operation will be aborted\&.
+\fBsystemd-hibernate.service\fR(8),
+\fBsystemd-hybrid-sleep.service\fR(8), or
+\fBsystemd-suspend-then-hibernate.service\fR(8)\&. More than one value can be specified by separating multiple values with whitespace\&. They will be tried in turn, until one is written without error\&. If neither succeeds, the operation will be aborted\&.
+.RE
+.PP
+\fIHibernateDelaySec=\fR
+.RS 4
+The amount of time in seconds that will pass before the system is automatically put into hibernate when using
+\fBsystemd-suspend-then-hibernate.service\fR(8)\&.
 .RE
 .SH "EXAMPLE: FREEZE"
 .PP
@@ -129,5 +145,6 @@ SuspendState=freeze
 \fBsystemd-suspend.service\fR(8),
 \fBsystemd-hibernate.service\fR(8),
 \fBsystemd-hybrid-sleep.service\fR(8),
+\fBsystemd-suspend-then-hibernate.service\fR(8),
 \fBsystemd\fR(1),
 \fBsystemd.directives\fR(7)

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 238" "systemd-analyze"
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 239" "systemd-analyze"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,6 +35,8 @@ systemd-analyze \- Analyze and debug system manager
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] dump
 .HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] cat\-config \fINAME\fR|\fIPATH\fR...
+.HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] unit\-paths
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] log\-level [\fILEVEL\fR]
@@ -57,7 +59,10 @@ may be used to determine system boot\-up performance statistics and retrieve oth
 prints the time spent in the kernel before userspace has been reached, the time spent in the initial RAM disk (initrd) before normal system userspace has been reached, and the time normal system userspace took to initialize\&. Note that these measurements simply measure the time passed up to the point where all system services have been spawned, but not necessarily until they fully finished initialization or the disk is idle\&.
 .PP
 \fBsystemd\-analyze blame\fR
-prints a list of all running units, ordered by the time they took to initialize\&. This information may be used to optimize boot\-up times\&. Note that the output might be misleading as the initialization of one service might be slow simply because it waits for the initialization of another service to complete\&.
+prints a list of all running units, ordered by the time they took to initialize\&. This information may be used to optimize boot\-up times\&. Note that the output might be misleading as the initialization of one service might be slow simply because it waits for the initialization of another service to complete\&. Also note:
+\fBsystemd\-analyze blame\fR
+doesn\*(Aqt display results for services with
+\fIType=simple\fR, because systemd considers such services to be started immediately, hence no measurement of the initialization delays can be done\&.
 .PP
 \fBsystemd\-analyze critical\-chain [\fR\fB\fIUNIT\&...\fR\fR\fB]\fR
 prints a tree of the time\-critical chain of units (for each of the specified
@@ -80,6 +85,38 @@ is passed, the generated graph will show both ordering and requirement dependenc
 .PP
 \fBsystemd\-analyze dump\fR
 outputs a (usually very long) human\-readable serialization of the complete server state\&. Its format is subject to change without notice and should not be parsed by applications\&.
+.PP
+\fBsystemd\-analyze cat\-config\fR
+is similar to
+\fBsystemctl cat\fR, but operates on config files\&. It will copy the contents of a config file and any drop\-ins to standard output, using the usual systemd set of directories and rules for precedence\&. Each argument must be either an absolute path including the prefix (such as
+/etc/systemd/logind\&.conf
+or
+/usr/lib/systemd/logind\&.conf), or a name relative to the prefix (such as
+systemd/logind\&.conf)\&.
+.PP
+\fBExample\ \&1.\ \&Showing logind configuration\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze cat\-config systemd/logind\&.conf
+# /etc/systemd/logind\&.conf
+\&.\&.\&.
+[Login]
+NAutoVTs=8
+\&.\&.\&.
+
+# /usr/lib/systemd/logind\&.conf\&.d/20\-test\&.conf
+\&.\&.\&. some override from another package
+
+# /etc/systemd/logind\&.conf\&.d/50\-override\&.conf
+\&.\&.\&. some administrator override
+      
+.fi
+.if n \{\
+.RE
+.\}
 .PP
 \fBsystemd\-analyze unit\-paths\fR
 outputs a list of all directories from which unit files,
@@ -241,6 +278,13 @@ Invoke unit generators, see
 \fBsystemd.generator\fR(7)\&. Some generators require root privileges\&. Under a normal user, running with generators enabled will generally result in some warnings\&.
 .RE
 .PP
+\fB\-\-root=\fR\fB\fIPATH\fR\fR
+.RS 4
+With
+\fBcat\-files\fR, show config files underneath the specified root path
+\fIPATH\fR\&.
+.RE
+.PP
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
@@ -273,7 +317,7 @@ Do not pipe output into a pager\&.
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "EXAMPLES FOR DOT"
 .PP
-\fBExample\ \&1.\ \&Plots all dependencies of any unit whose name starts with "avahi\-daemon"\fR
+\fBExample\ \&2.\ \&Plots all dependencies of any unit whose name starts with "avahi\-daemon"\fR
 .sp
 .if n \{\
 .RS 4
@@ -286,7 +330,7 @@ $ eog avahi\&.svg
 .RE
 .\}
 .PP
-\fBExample\ \&2.\ \&Plots the dependencies between all known target units\fR
+\fBExample\ \&3.\ \&Plots the dependencies between all known target units\fR
 .sp
 .if n \{\
 .RS 4
@@ -350,7 +394,7 @@ commands listed in
 and similar which are not found in the system or not executable\&.
 .RE
 .PP
-\fBExample\ \&3.\ \&Misspelt directives\fR
+\fBExample\ \&4.\ \&Misspelt directives\fR
 .sp
 .if n \{\
 .RS 4
@@ -379,7 +423,7 @@ user\&.slice: man nosuchfile(1) command failed with code 16
 .RE
 .\}
 .PP
-\fBExample\ \&4.\ \&Missing service units\fR
+\fBExample\ \&5.\ \&Missing service units\fR
 .sp
 .if n \{\
 .RS 4

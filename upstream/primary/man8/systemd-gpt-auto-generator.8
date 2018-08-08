@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-GPT\-AUTO\-GENERATOR" "8" "" "systemd 238" "systemd-gpt-auto-generator"
+.TH "SYSTEMD\-GPT\-AUTO\-GENERATOR" "8" "" "systemd 239" "systemd-gpt-auto-generator"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,16 +30,17 @@ systemd\-gpt\-auto\-generator
 is a unit generator that automatically discovers root,
 /home,
 /srv
-and swap partitions and creates mount and swap units for them, based on the partition type GUIDs of GUID partition tables (GPT)\&. It implements the
-\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&. Note that this generator has no effect on non\-GPT systems, or where the directories under the mount points are already non\-empty\&. Also, on systems where the units are explicitly configured (for example, listed in
+and swap partitions and creates mount and swap units for them, based on the partition type GUIDs of GUID partition tables (GPT), see
+\m[blue]\fBUEFI Specification\fR\m[]\&\s-2\u[1]\d\s+2, chapter 5\&. It implements the
+\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[2]\d\s+2\&. Note that this generator has no effect on non\-GPT systems, or where the directories under the mount points are already non\-empty\&. Also, on systems where the units are explicitly configured (for example, listed in
 \fBfstab\fR(5)), the units this generator creates are overridden, but additional implicit dependencies might be created\&.
 .PP
-This generator will only look for root partitions on the same physical disk the EFI System Partition (ESP) is located on\&. It will only look for the other partitions on the same physical disk the root file system is located on\&. These partitions will not be searched on systems where the root file system is distributed on multiple disks, for example via btrfs RAID\&.
+This generator will only look for root partitions on the same physical disk the EFI System Partition (ESP) is located on\&. It will only look for the other partitions on the same physical disk the root file system is located on\&. These partitions will not be searched for on systems where the root file system is distributed on multiple disks, for example via btrfs RAID\&.
 .PP
 systemd\-gpt\-auto\-generator
-is useful for centralizing file system configuration in the partition table and making manual configuration in
+is useful for centralizing file system configuration in the partition table and making configuration in
 /etc/fstab
-or suchlike unnecessary\&.
+unnecessary\&.
 .PP
 This generator looks for the partitions based on their partition type GUID\&. The following partition type GUIDs are identified:
 .sp
@@ -134,6 +135,59 @@ T}
 .TE
 .sp 1
 .PP
+This generator understands the following attribute flags for partitions:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&2.\ \&Partition Attributes
+.TS
+allbox tab(:);
+lB lB lB lB.
+T{
+Name
+T}:T{
+Value
+T}:T{
+Applicable to
+T}:T{
+Explanation
+T}
+.T&
+l l l l
+l l l l
+l l l l.
+T{
+\fBGPT_FLAG_READ_ONLY\fR
+T}:T{
+0x1000000000000000
+T}:T{
+/, /srv, /home
+T}:T{
+Partition is mounted read\-only
+T}
+T{
+\fBGPT_FLAG_NO_AUTO\fR
+T}:T{
+0x8000000000000000
+T}:T{
+/, /srv, /home
+T}:T{
+Partition is not mounted automatically
+T}
+T{
+\fBGPT_FLAG_NO_BLOCK_IO_PROTOCOL\fR
+T}:T{
+0x0000000000000002
+T}:T{
+ESP
+T}:T{
+Partition is not mounted automatically
+T}
+.TE
+.sp 1
+.PP
 The
 /home
 and
@@ -176,6 +230,11 @@ implements
 \fBbtrfs\fR(8)
 .SH "NOTES"
 .IP " 1." 4
+UEFI Specification
+.RS 4
+\%http://www.uefi.org/specifications
+.RE
+.IP " 2." 4
 Discoverable Partitions Specification
 .RS 4
 \%https://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec/

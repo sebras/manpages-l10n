@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 238" "systemd-system.conf"
+.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 239" "systemd-system.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,7 +42,9 @@ directories; when run as a user instance, systemd interprets the configuration f
 user\&.conf
 and the files in
 user\&.conf\&.d
-directories\&. These configuration files contain a few settings controlling basic manager operations\&.
+directories\&. These configuration files contain a few settings controlling basic manager operations\&. See
+\fBsystemd.syntax\fR(5)
+for a general description of the syntax\&.
 .SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 The default configuration is defined during compilation, so a configuration file is only needed when it is necessary to deviate from those defaults\&. By default, the configuration file in
@@ -110,9 +112,25 @@ is set to a non\-zero value, the watchdog hardware (/dev/watchdog
 or the path specified with
 \fIWatchdogDevice=\fR
 or the kernel option
-\fIsystemd\&.watchdog\-device=\fR) will be programmed to automatically reboot the system if it is not contacted within the specified timeout interval\&. The system manager will ensure to contact it at least once in half the specified timeout interval\&. This feature requires a hardware watchdog device to be present, as it is commonly the case in embedded and server systems\&. Not all hardware watchdogs allow configuration of the reboot timeout, in which case the closest available timeout is picked\&.
+\fIsystemd\&.watchdog\-device=\fR) will be programmed to automatically reboot the system if it is not contacted within the specified timeout interval\&. The system manager will ensure to contact it at least once in half the specified timeout interval\&. This feature requires a hardware watchdog device to be present, as it is commonly the case in embedded and server systems\&. Not all hardware watchdogs allow configuration of all possible reboot timeout values, in which case the closest available timeout is picked\&.
 \fIShutdownWatchdogSec=\fR
-may be used to configure the hardware watchdog when the system is asked to reboot\&. It works as a safety net to ensure that the reboot takes place even if a clean reboot attempt times out\&. By default
+may be used to configure the hardware watchdog when the system is asked to reboot\&. It works as a safety net to ensure that the reboot takes place even if a clean reboot attempt times out\&. Note that the
+\fIShutdownWatchdogSec=\fR
+timeout applies only to the second phase of the reboot, i\&.e\&. after all regular services are already terminated, and after the system and service manager process (PID 1) got replaced by the
+systemd\-shutdown
+binary, see system
+\fBbootup\fR(7)
+for details\&. During the first phase of the shutdown operation the system and service manager remains running and hence
+\fIRuntimeWatchdogSec=\fR
+is still honoured\&. In order to define a timeout on this first phase of system shutdown, configure
+\fIJobTimeoutSec=\fR
+and
+\fIJobTimeoutAction=\fR
+in the
+"[Unit]"
+section of the
+shutdown\&.target
+unit\&. By default
 \fIRuntimeWatchdogSec=\fR
 defaults to 0 (off), and
 \fIShutdownWatchdogSec=\fR
@@ -133,6 +151,14 @@ for details\&. Takes a whitespace\-separated list of capability names as read by
 \fBcap_from_name\fR(3)\&. Capabilities listed will be included in the bounding set, all others are removed\&. If the list of capabilities is prefixed with ~, all but the listed capabilities will be included, the effect of the assignment inverted\&. Note that this option also affects the respective capabilities in the effective, permitted and inheritable capability sets\&. The capability bounding set may also be individually configured for units using the
 \fICapabilityBoundingSet=\fR
 directive for units, but note that capabilities dropped for PID 1 cannot be regained in individual units, they are lost for good\&.
+.RE
+.PP
+\fINoNewPrivileges=\fR
+.RS 4
+Takes a boolean argument\&. If true, ensures that PID 1 and all its children can never gain new privileges through
+\fBexecve\fR(2)
+(e\&.g\&. via setuid or setgid bits, or filesystem capabilities)\&. Defaults to false\&. General purpose distributions commonly rely on executables with setuid or setgid bits and will thus not function properly with this option enabled\&. Individual units cannot disable this option\&. Also see
+\m[blue]\fBNo New Privileges Flag\fR\m[]\&\s-2\u[1]\d\s+2\&.
 .RE
 .PP
 \fISystemCallArchitectures=\fR
@@ -249,7 +275,7 @@ for details on the per\-unit settings\&.
 \fIDefaultTasksAccounting=\fR
 defaults to on,
 \fIDefaultMemoryAccounting=\fR
-to on, the other three settings to off\&.
+to yes, the other three settings to off\&.
 .RE
 .PP
 \fIDefaultTasksMax=\fR
@@ -289,3 +315,9 @@ will be rounded up implicitly to multiples of 1s\&. These settings may be overri
 \fBsystemd.service\fR(5),
 \fBenviron\fR(7),
 \fBcapabilities\fR(7)
+.SH "NOTES"
+.IP " 1." 4
+No New Privileges Flag
+.RS 4
+\%https://www.kernel.org/doc/html/latest/userspace-api/no_new_privs.html
+.RE

@@ -1,5 +1,5 @@
 '\" t
-.TH "TIMEDATECTL" "1" "" "systemd 238" "timedatectl"
+.TH "TIMEDATECTL" "1" "" "systemd 239" "timedatectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,6 +32,10 @@ may be used to query and change the system clock and its settings\&.
 Use
 \fBsystemd-firstboot\fR(1)
 to initialize the system time zone for mounted (but not booted) system images\&.
+.PP
+\fBtimedatectl\fR
+may be used to show the current status of
+\fBsystemd-timesyncd.service\fR(8)\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -46,6 +50,37 @@ Do not query the user for authentication for privileged operations\&.
 If
 \fBset\-local\-rtc\fR
 is invoked and this option is passed, the system clock is synchronized from the RTC again, taking the new setting into account\&. Otherwise, the RTC is synchronized from the system clock\&.
+.RE
+.PP
+\fB\-\-monitor\fR
+.RS 4
+If
+\fBtimesync\-status\fR
+is invoked and this option is passed, then
+\fBtimedatectl\fR
+monitors the status of
+\fBsystemd-timesyncd.service\fR(8)
+and updates the outputs\&. Use Ctrl\-C to terminate the monitoring\&.
+.RE
+.PP
+\fB\-a\fR, \fB\-all\fR
+.RS 4
+When showing properties of
+\fBsystemd-timesyncd.service\fR(8), show all properties regardless of whether they are set or not\&.
+.RE
+.PP
+\fB\-p\fR, \fB\-\-property=\fR
+.RS 4
+When showing properties of
+\fBsystemd-timesyncd.service\fR(8), limit display to certain properties as specified as argument\&. If not specified, all set properties are shown\&. The argument should be a property name, such as
+"ServerName"\&. If specified more than once, all properties with the specified names are shown\&.
+.RE
+.PP
+\fB\-\-value\fR
+.RS 4
+When printing properties with
+\fBshow\-timesync\fR, only print the value, and skip the property name and
+"="\&.
 .RE
 .PP
 \fB\-H\fR, \fB\-\-host=\fR
@@ -75,6 +110,7 @@ Print a short version string and exit\&.
 .RS 4
 Do not pipe output into a pager\&.
 .RE
+.SH "COMMANDS"
 .PP
 The following commands are understood:
 .PP
@@ -82,7 +118,20 @@ The following commands are understood:
 .RS 4
 Show current settings of the system clock and RTC, including whether network time synchronization through
 systemd\-timesyncd\&.service
-is active\&. Even if it is inactive, a different service might still synchronize the clock\&.
+is active\&. Even if it is inactive, a different service might still synchronize the clock\&. If no command is specified, this is the implied default\&.
+.RE
+.PP
+\fBshow\fR
+.RS 4
+Show the same information as
+\fBstatus\fR, but in machine readable form\&. This command is intended to be used whenever computer\-parsable output is required\&. Use
+\fBstatus\fR
+if you are looking for formatted human\-readable output\&.
+.sp
+By default, empty properties are suppressed\&. Use
+\fB\-\-all\fR
+to show those too\&. To select specific properties to show, use
+\fB\-\-property=\fR\&.
 .RE
 .PP
 \fBset\-time [TIME]\fR
@@ -119,18 +168,36 @@ is passed (see above)\&. This command will change the 3rd line of
 .PP
 \fBset\-ntp [BOOL]\fR
 .RS 4
-Takes a boolean argument\&. Controls whether network time synchronization is active and enabled (if available)\&. This enables and starts, or disables and stops the
-systemd\-timesyncd\&.service
-unit\&. It does not affect the state of any other, unrelated network time synchronization services that might be installed on the system\&. This command is hence mostly equivalent to:
-\fBsystemctl enable \-\-now systemd\-timesyncd\&.service\fR
-and
-\fBsystemctl disable \-\-now systemd\-timesyncd\&.service\fR, but is protected by a different access policy\&.
+Takes a boolean argument\&. Controls whether network time synchronization is active and enabled (if available)\&. If the argument is true, this enables and starts the first existed service listed in the environment variable
+\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR
+of
+systemd\-timedated\&.service\&. If the argument is false, then this disables and stops the all services listed in
+\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR\&.
+.RE
+.SS "systemd\-timesyncd Commands"
+.PP
+The following commands are specific to
+\fBsystemd-timesyncd.service\fR(8)\&.
+.PP
+\fBtimesync\-status\fR
+.RS 4
+Show current status of
+\fBsystemd-timesyncd.service\fR(8)\&. If
+\fB\-\-monitor\fR
+is specified, then this will monitor the status updates\&.
+.RE
+.PP
+\fBshow\-timesync\fR
+.RS 4
+Show the same information as
+\fBtimesync\-status\fR, but in machine readable form\&. This command is intended to be used whenever computer\-parsable output is required\&. Use
+\fBtimesync\-status\fR
+if you are looking for formatted human\-readable output\&.
 .sp
-Note that even if time synchronization is turned off with this command, another unrelated system service might still synchronize the clock with the network\&. Also note that, strictly speaking,
-systemd\-timesyncd\&.service
-does more than just network time synchronization, as it ensures a monotonic clock on systems without RTC even if no network is available\&. See
-\fBsystemd-timesyncd.service\fR(8)
-for details about this\&.
+By default, empty properties are suppressed\&. Use
+\fB\-\-all\fR
+to show those too\&. To select specific properties to show, use
+\fB\-\-property=\fR\&.
 .RE
 .SH "EXIT STATUS"
 .PP
@@ -179,13 +246,13 @@ Show current settings:
 .\}
 .nf
 $ timedatectl
-                      Local time: Thu 2017\-09\-21 16:08:56 CEST
-                  Universal time: Thu 2017\-09\-21 14:08:56 UTC
-                        RTC time: Thu 2017\-09\-21 14:08:56
-                       Time zone: Europe/Warsaw (CEST, +0200)
-       System clock synchronized: yes
-systemd\-timesyncd\&.service active: yes
-                 RTC in local TZ: no
+               Local time: Thu 2017\-09\-21 16:08:56 CEST
+           Universal time: Thu 2017\-09\-21 14:08:56 UTC
+                 RTC time: Thu 2017\-09\-21 14:08:56
+                Time zone: Europe/Warsaw (CEST, +0200)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
 .fi
 .if n \{\
 .RE
@@ -224,6 +291,32 @@ $ systemctl status systemd\-timesyncd\&.service
    CGroup: /system\&.slice/systemd\-timesyncd\&.service
            └─595 /lib/systemd/systemd\-timesyncd
 \&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Show current status of
+\fBsystemd-timesyncd.service\fR(8):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ timedatectl timesync\-status
+       Server: 216\&.239\&.38\&.15 (time4\&.google\&.com)
+Poll interval: 1min 4s (min: 32s; max 34min 8s)
+         Leap: normal
+      Version: 4
+      Stratum: 1
+    Reference: GPS
+    Precision: 1us (\-20)
+Root distance: 335us (max: 5s)
+       Offset: +316us
+        Delay: 349us
+       Jitter: 0
+ Packet count: 1
+    Frequency: \-8\&.802ppm
 .fi
 .if n \{\
 .RE
