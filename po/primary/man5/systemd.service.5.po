@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
 "POT-Creation-Date: 2018-08-08 17:13+0200\n"
-"PO-Revision-Date: 2018-09-15 13:52+0200\n"
+"PO-Revision-Date: 2018-09-15 21:24+0200\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -227,7 +227,12 @@ msgid ""
 "\\&. Also see B<systemd.resource-control>(5)\\&."
 msgstr ""
 "Instanziierte Dienste-Units (d\\&.h\\&. Dienste-Units mit einem »@« in ihrem "
-"Namen) werden … Diese Scheibe wird normalerweise beim Runterfahren … Siehe "
+"Namen) werden … Diese Scheibe wird normalerweise beim Herunterfahren … Falls "
+"dies nicht gewünscht ist, setzen Sie I<DefaultDependencies=no> in der "
+"Vorlagen-Unit und definieren entweder Ihre eigene, vorlagenbezogene Scheiben-"
+"Unit-Datei, die auch I<DefaultDependencies=no> setzt oder setzen "
+"I<Slice=system\\&.slice> (oder eine andere geeignete Scheibe) in der "
+"Vorlagen-Unit\\&. Siehe "
 "auch B<systemd.resource-control>(5)\\&."
 
 #. type: SH
@@ -2309,10 +2314,13 @@ msgid ""
 "exited, invoking B<systemctl start> on that unit again will cause no action "
 "to be taken\\&."
 msgstr ""
+"Da die Unit als laufend betrachtet wird, nachdem sich die Start-Aktion "
+"beendet hat, wird der Aufruf von B<systemctl start> auf dieser Unit zu "
+"keiner Aktion führen\\."
 
 #. type: Plain text
 msgid "B<Example\\ \\&4.\\ \\&Traditional forking services>"
-msgstr ""
+msgstr "B<Beispiel\\ \\&4.\\ \\&Traditioneller forkender Dienst>"
 
 #. type: Plain text
 msgid ""
@@ -2323,6 +2331,13 @@ msgid ""
 "still running\\&. Once it exits successfully and at least a process remains "
 "(and I<RemainAfterExit=>B<no>), the service is considered started\\&."
 msgstr ""
+"Viele traditionelle Daemons/Dienste bringen sich selbst in den Hintergrund "
+"(d\\&.h\\&. forken, daemonisieren sich), wenn sie starten\\&. Setzen Sie "
+"I<Type=>B<forking> in der Unit-Datei des Dienstes, um diesen Betriebsmodus "
+"zu unterstützen\\&. Systemd wird den Dienst im Prozess der Initialisierung "
+"betrachten, während das ursprüngliche Programm noch läuft\\&. Sobald es sich "
+"erfolgreich beendet und mindestens ein Prozess verbleibt (und "
+"I<RemainAfterExit=>B<no>), wird der Dienst als gestartet betrachtet\\&."
 
 #. type: Plain text
 msgid ""
@@ -2332,6 +2347,11 @@ msgid ""
 "I<$MAINPID> variable will be available in I<ExecReload=>, I<ExecStop=>, etc"
 "\\&."
 msgstr ""
+"Oft besteht ein traditioneller Daemon nur aus einem Prozess\\&. Daher wird "
+"Systemd diesen Prozess als den Hauptprozess des Dienstes betrachten, falls "
+"nur ein Prozess nach Beendigung des ursprünglichen Prozesses verbleibt\\&. "
+"In diesem Fall wird die Variable I<$MAINPID> in I<ExecReload=>, I<ExecStop=> "
+"usw\\&. verfügbar sein\\&."
 
 #. type: Plain text
 msgid ""
@@ -2343,12 +2363,23 @@ msgid ""
 "write that file before finishing with its initialization\\&. Otherwise, "
 "systemd might try to read the file before it exists\\&."
 msgstr ""
+"Falls mehr als ein Prozess verbleibt, wird Systemd nicht in der Lage sein, "
+"den Hauptprozess zu bestimmen und wird daher annehmen, dass es keinen gibt"
+"\\&. In diesem Fall wird I<$MAINPID> nicht auf etwas expandiert\\&. Falls "
+"allerdings der Prozess entscheidet, eine traditionelle PID-Datei zu "
+"schreiben, wird Systemd in der Lage sein, die Haupt-PID von dort zu bestimmen"
+"\\&. Bitte setzen Sie I<PIDFile=> entsprechend\\&. Beachten Sie, dass der "
+"Daemon diese Datei schreiben sollte, bevor er seine Initialisierung "
+"abschließt\\&. Andernfalls könnte Systemd versuchen, die Datei zu lesen, "
+"bevor sie existiert\\&."
 
 #. type: Plain text
 msgid ""
 "The following example shows a simple daemon that forks and just starts one "
 "process in the background:"
 msgstr ""
+"Das folgende Beispiel zeigt einen einfachen Daemon, der forkt und einfach "
+"einen Prozess im Hintergrund startet:"
 
 #. type: Plain text
 #, no-wrap
@@ -2375,10 +2406,12 @@ msgid ""
 "Please see B<systemd.kill>(5)  for details on how you can influence the way "
 "systemd terminates the service\\&."
 msgstr ""
+"Bitte lesen Sie B<systemd.kill>(5) für Details wie Sie die Art, wie Systemd "
+"die Dienste beendet, beeinflussen können\\&."
 
 #. type: Plain text
 msgid "B<Example\\ \\&5.\\ \\&DBus services>"
-msgstr ""
+msgstr "B<Beispiel\\ \\&5.\\ \\&DBus-Dienste>"
 
 #. type: Plain text
 msgid ""
@@ -2388,6 +2421,11 @@ msgid ""
 "name has been acquired on the system bus\\&. The following example shows a "
 "typical DBus service:"
 msgstr ""
+"Für Dienste, die einen Namen auf dem DBus-Systembus erlangen, verwenden Sie "
+"I<Type=>B<dbus> und setzen I<BusName=> entsprechend\\&. Der Dienste sollte "
+"nicht forken (daemonisieren)\\&. Systemd wird den Dienst als initialisiert "
+"betrachten, sobald der Name auf dem Systembus erlangt wurde\\&. Das folgende "
+"Beispiel zeigt einen typischen DBus-Dienst:"
 
 #. type: Plain text
 #, no-wrap
@@ -2418,6 +2456,11 @@ msgid ""
 "corresponding DBus service file, for example (/usr/share/dbus-1/system-"
 "services/org\\&.example\\&.simple-dbus-service\\&.service):"
 msgstr ""
+"Für I<Bus-aktivierbare> Dienste nehmen Sie keinen Abschnitt »[Install]« in "
+"der Systemd-Dienstedatei auf, sondern verwenden die Option "
+"I<SystemdService=> in der entsprechenden DBus-Dienstedatei, beispielsweise (/"
+"usr/share/dbus-1/system-services/org\\&.example\\&.simple-dbus-service\\&."
+"service):"
 
 #. type: Plain text
 #, no-wrap
