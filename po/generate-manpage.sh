@@ -18,6 +18,9 @@
 # This is the filename of the localized manpage
 localized="$1"
 
+# If the filename ends with ".po", remove that part.
+localized=$(echo "$1" | sed -e "s/\.po$//")
+
 # Set up the path to the original manpage
 master="../upstream/$localized"
 
