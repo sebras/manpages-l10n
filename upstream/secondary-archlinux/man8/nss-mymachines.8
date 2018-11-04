@@ -1,0 +1,96 @@
+'\" t
+.TH "NSS\-MYMACHINES" "8" "" "systemd 239" "nss-mymachines"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nss-mymachines, libnss_mymachines.so.2 \- Provide hostname resolution for local container instances\&.
+.SH "SYNOPSIS"
+.PP
+libnss_mymachines\&.so\&.2
+.SH "DESCRIPTION"
+.PP
+\fBnss\-mymachines\fR
+is a plug\-in module for the GNU Name Service Switch (NSS) functionality of the GNU C Library (\fBglibc\fR), providing hostname resolution for the names of containers running locally that are registered with
+\fBsystemd-machined.service\fR(8)\&. The container names are resolved to the IP addresses of the specific container, ordered by their scope\&. This functionality only applies to containers using network namespacing\&.
+.PP
+The module also resolves user and group IDs used by containers to user and group names indicating the container name, and back\&. This functionality only applies to containers using user namespacing\&.
+.PP
+To activate the NSS module, add
+"mymachines"
+to the lines starting with
+"hosts:",
+"passwd:"
+and
+"group:"
+in
+/etc/nsswitch\&.conf\&.
+.PP
+It is recommended to place
+"mymachines"
+after the
+"files"
+or
+"compat"
+entry of the
+/etc/nsswitch\&.conf
+lines to make sure that its mappings are preferred over other resolvers such as DNS, but so that
+/etc/hosts,
+/etc/passwd
+and
+/etc/group
+based mappings take precedence\&.
+.SH "EXAMPLE"
+.PP
+Here is an example
+/etc/nsswitch\&.conf
+file that enables
+\fBnss\-mymachines\fR
+correctly:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+passwd:         compat \fBmymachines\fR systemd
+group:          compat \fBmymachines\fR systemd
+shadow:         compat
+
+hosts:          files \fBmymachines\fR resolve [!UNAVAIL=return] dns myhostname
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.PP
+\fBsystemd\fR(1),
+\fBsystemd-machined.service\fR(8),
+\fBnss-systemd\fR(8),
+\fBnss-resolve\fR(8),
+\fBnss-myhostname\fR(8),
+\fBnsswitch.conf\fR(5),
+\fBgetent\fR(1)

@@ -1,0 +1,134 @@
+'\" t
+.TH "LOADER\&.CONF" "5" "" "systemd 239" "loader.conf"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+loader.conf \- Configuration file for systemd\-boot
+.SH "SYNOPSIS"
+.PP
+\fIESP\fR/loader/loader\&.conf,
+\fIESP\fR/loader/loader\&.conf\&.d/*\&.conf
+.SH "DESCRIPTION"
+.PP
+\fBsystemd-boot\fR(7)
+will read
+/loader/loader\&.conf
+and any files with the
+"\&.conf"
+extension under
+/loader/loader\&.conf\&.d/
+on the EFI system partition (ESP)\&.
+.PP
+Each configuration file must consist of an option name, followed by whitespace, and the option value\&.
+"#"
+may be used to start a comment line\&. Empty and comment lines are ignored\&.
+.PP
+Boolean arguments may be written as
+"yes"/"y"/"true"/"1"
+or
+"no"/"n"/"false"/"0"\&.
+.SH "OPTIONS"
+.PP
+The following configuration options are understood:
+.PP
+default
+.RS 4
+A glob pattern to select the default entry\&. The default entry may be changed in the boot menu itself, in which case the name of the selected entry will be stored as an EFI variable, overriding this option\&.
+.RE
+.PP
+timeout
+.RS 4
+How long the boot menu should be shown before the default entry is booted, in seconds\&. This may be changed in the boot menu itself and will be stored as an EFI variable in that case, overriding this option\&.
+.sp
+If the timeout is disabled, the default entry will be booted immediately\&. The menu can be shown by pressing and holding a key before systemd\-boot is launched\&.
+.RE
+.PP
+console\-mode
+.RS 4
+This option configures the resolution of the console\&. Takes a number or one of the special values listed below\&. The following values may be used:
+.PP
+0
+.RS 4
+Standard UEFI 80x25 mode
+.RE
+.PP
+1
+.RS 4
+80x50 mode, not supported by all devices
+.RE
+.PP
+2
+.RS 4
+the first non\-standard mode provided by the device firmware, if any
+.RE
+.PP
+auto
+.RS 4
+Pick a suitable mode automatically using heuristics
+.RE
+.PP
+max
+.RS 4
+Pick the highest\-numbered available mode
+.RE
+.PP
+keep
+.RS 4
+Keep the mode selected by firmware (the default)
+.RE
+.RE
+.PP
+editor
+.RS 4
+Takes a boolean argument\&. Enable (the default) or disable the editor\&. The editor should be disabled if the machine can be accessed by unauthorized persons\&.
+.RE
+.PP
+auto\-entries
+.RS 4
+Takes a boolean argument\&. Enable (the default) or disable entries for other boot entries found on the boot partition\&. In particular, this may be useful when loader entries are created to show replacement descriptions for those entries\&.
+.RE
+.PP
+auto\-firmware
+.RS 4
+Takes a boolean argument\&. Enable (the default) or disable the "Reboot into firmware" entry\&.
+.RE
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /boot/efi/loader/loader\&.conf
+timeout 0
+default 01234567890abcdef1234567890abdf0\-*
+editor no
+    
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The menu will not be shown by default (the menu can still be shown by pressing and holding a key during boot)\&. One of the entries with files with a name starting with
+"01234567890abcdef1234567890abdf0\-"
+will be selected by default\&. If more than one entry matches, the one with the highest priority will be selected (generally the one with the highest version number)\&. The editor will be disabled, so it is not possible to alter the kernel command line\&.
+.SH "SEE ALSO"
+.PP
+\fBsystemd-boot\fR(7),
+\fBbootctl\fR(1)
