@@ -51,6 +51,11 @@ for upstream in $upstreams; do
         coding="ISO-8859-1"
       fi
 
+      # manpages from archlinux are in UTF-8, so default to that encoding.
+      if [ "$upstream" = "secondary-archlinux" ]; then
+        coding="UTF-8"
+      fi
+
       # Create pot with po4a
       po4a-gettextize -f man \
        --option groff_code=verbatim \
