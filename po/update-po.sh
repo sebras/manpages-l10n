@@ -54,7 +54,8 @@ msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
 msgattrib --no-obsolete "$tmppo" > "$1"
 
 # Translate dates, if possible
-./translate-dates.sh "$1" "$potfile"
+./translate-dates.pl < "$1" > "$tmppo"
+mv "$tmppo" "$1"
 
 # If this is a secondary translation, use the primary .po
 # file as a reference, too. This way, typo fixes and better
