@@ -1,5 +1,5 @@
 '\" t
-.TH "PAM_SYSTEMD" "8" "" "systemd 239" "pam_systemd"
+.TH "PAM_SYSTEMD" "8" "" "systemd 240" "pam_systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -114,7 +114,9 @@ The following options are understood:
 .PP
 \fBclass=\fR
 .RS 4
-Takes a string argument which sets the session class\&. The XDG_SESSION_CLASS environmental variable takes precedence\&. One of
+Takes a string argument which sets the session class\&. The
+\fIXDG_SESSION_CLASS\fR
+environment variable (see below) takes precedence\&. One of
 "user",
 "greeter",
 "lock\-screen"
@@ -126,7 +128,9 @@ for details about the session class\&.
 .PP
 \fBtype=\fR
 .RS 4
-Takes a string argument which sets the session type\&. The XDG_SESSION_TYPE environmental variable takes precedence\&. One of
+Takes a string argument which sets the session type\&. The
+\fIXDG_SESSION_TYPE\fR
+environment variable (see below) takes precedence\&. One of
 "unspecified",
 "tty",
 "x11",
@@ -135,6 +139,20 @@ or
 "mir"\&. See
 \fBsd_session_get_type\fR(3)
 for details about the session type\&.
+.RE
+.PP
+\fBdesktop=\fR
+.RS 4
+Takes a single, short identifier string for the desktop environment\&. The
+\fIXDG_SESSION_DESKTOP\fR
+environment variable (see below) takes precedence\&. This may be used to indicate the session desktop used, where this applies and if this information is available\&. For example:
+"GNOME", or
+"KDE"\&. It is recommended to use the same identifiers and capitalization as for
+\fI$XDG_CURRENT_DESKTOP\fR, as defined by the
+\m[blue]\fBDesktop Entry Specification\fR\m[]\&\s-2\u[1]\d\s+2\&. (However, note that the option only takes a single item, and not a colon\-separated list like
+\fI$XDG_CURRENT_DESKTOP\fR\&.) See
+\fBsd_session_get_desktop\fR(3)
+for further details\&.
 .RE
 .PP
 \fBdebug\fR\fB[=]\fR
@@ -148,12 +166,13 @@ Only
 is provided\&.
 .SH "ENVIRONMENT"
 .PP
-The following environment variables are set for the processes of the user\*(Aqs session:
+The following environment variables are initialized by the module and available to the processes of the user\*(Aqs session:
 .PP
 \fI$XDG_SESSION_ID\fR
 .RS 4
-A session identifier, suitable to be used in filenames\&. The string itself should be considered opaque, although often it is just the audit session ID as reported by
-/proc/self/sessionid\&. Each ID will be assigned only once during machine uptime\&. It may hence be used to uniquely label files or other resources of this session\&.
+A short session identifier, suitable to be used in filenames\&. The string itself should be considered opaque, although often it is just the audit session ID as reported by
+/proc/self/sessionid\&. Each ID will be assigned only once during machine uptime\&. It may hence be used to uniquely label files or other resources of this session\&. Combine this ID with the boot identifier, as returned by
+\fBsd_id128_get_boot\fR(3), for a globally unique identifier for the current session\&.
 .RE
 .PP
 \fI$XDG_RUNTIME_DIR\fR
@@ -165,12 +184,12 @@ and the same contents\&. If a user logs in once, then logs out again, and logs i
 in the filename\&. This directory shall be used for runtime file system objects such as
 \fBAF_UNIX\fR
 sockets, FIFOs, PID files and similar\&. It is guaranteed that this directory is local and offers the greatest possible file system feature set the operating system provides\&. For further details, see the
-\m[blue]\fBXDG Base Directory Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+\m[blue]\fBXDG Base Directory Specification\fR\m[]\&\s-2\u[2]\d\s+2\&.
 \fI$XDG_RUNTIME_DIR\fR
 is not set if the current user is not the original user of the session\&.
 .RE
 .PP
-The following environment variables are read by the module and may be used by the PAM service to pass metadata to the module:
+The following environment variables are read by the module and may be used by the PAM service to pass metadata to the module\&. If these variables are not set when the PAM module is invoked but can be determined otherwise they are set by the module, so that these variables are initialized for the session and applications if known at all\&.
 .PP
 \fI$XDG_SESSION_TYPE\fR
 .RS 4
@@ -188,16 +207,9 @@ on the module parameter line, and is usually preferred\&.
 .PP
 \fI$XDG_SESSION_DESKTOP\fR
 .RS 4
-A single, short identifier string for the desktop environment\&. This may be used to indicate the session desktop used, where this applies and if this information is available\&. For example:
-"GNOME", or
-"KDE"\&. It is recommended to use the same identifiers and capitalization as for
-\fI$XDG_CURRENT_DESKTOP\fR, as defined by the
-\m[blue]\fBDesktop Entry Specification\fR\m[]\&\s-2\u[2]\d\s+2\&. (However, note that
-\fI$XDG_SESSION_DESKTOP\fR
-only takes a single item, and not a colon\-separated list like
-\fI$XDG_CURRENT_DESKTOP\fR\&.) See
-\fBsd_session_get_desktop\fR(3)
-for more details\&.
+The desktop identifier\&. This may be used instead of
+\fBdesktop=\fR
+on the module parameter line, and is usually preferred\&.
 .RE
 .PP
 \fI$XDG_SEAT\fR
@@ -213,13 +225,13 @@ The VT number the session shall be registered for, if any\&. (Only applies to se
 .PP
 If not set,
 \fBpam_systemd\fR
-will determine the values for
+will initialize
 \fI$XDG_SEAT\fR
 and
 \fI$XDG_VTNR\fR
 based on the
 \fI$DISPLAY\fR
-variable\&.
+variable (if the latter is set)\&.
 .SH "SESSION LIMITS"
 .PP
 PAM modules earlier in the stack, that is those that come before
@@ -308,12 +320,12 @@ session    required     pam_systemd\&.so
 \fBsystemd.service\fR(5)
 .SH "NOTES"
 .IP " 1." 4
-XDG Base Directory Specification
-.RS 4
-\%http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
-.RE
-.IP " 2." 4
 Desktop Entry Specification
 .RS 4
 \%http://standards.freedesktop.org/desktop-entry-spec/latest/
+.RE
+.IP " 2." 4
+XDG Base Directory Specification
+.RS 4
+\%http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
 .RE

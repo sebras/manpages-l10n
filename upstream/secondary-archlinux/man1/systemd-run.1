@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RUN" "1" "" "systemd 239" "systemd-run"
+.TH "SYSTEMD\-RUN" "1" "" "systemd 240" "systemd-run"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -77,6 +77,27 @@ creates only a
 \&.socket, or
 \&.timer
 unit that triggers the specified unit\&.
+.PP
+By default, services created with
+\fBsystemd\-run\fR
+default to the
+\fBsimple\fR
+type, see the description of
+\fIType=\fR
+in
+\fBsystemd.service\fR(5)
+for details\&. Note that when this type is used the service manager (and thus the
+\fBsystemd\-run\fR
+command) considers service start\-up successful as soon as the
+\fBfork()\fR
+for the main service process succeeded, i\&.e\&. before the
+\fBexecve()\fR
+is invoked, and thus even if the specified command cannot be started\&. Consider using the
+\fBexec\fR
+service type (i\&.e\&.
+\fB\-\-property=Type=exec\fR) to ensure that
+\fBsystemd\-run\fR
+returns successfully only if the specified command line has been successfully started\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -170,6 +191,21 @@ in
 \fBsystemd.exec\fR(5)\&.
 .RE
 .PP
+\fB\-\-working\-directory=\fR
+.RS 4
+Runs the service process with the specified working directory\&. Also see
+\fIWorkingDirectory=\fR
+in
+\fBsystemd.exec\fR(5)\&.
+.RE
+.PP
+\fB\-\-same\-dir\fR, \fB\-d\fR
+.RS 4
+Similar to
+\fB\-\-working\-directory=\fR
+but uses the current working directory of the caller for the service to execute\&.
+.RE
+.PP
 \fB\-E \fR\fB\fINAME\fR\fR\fB=\fR\fB\fIVALUE\fR\fR, \fB\-\-setenv=\fR\fB\fINAME\fR\fR\fB=\fR\fB\fIVALUE\fR\fR
 .RS 4
 Runs the service process with the specified environment variable set\&. Also see
@@ -220,6 +256,12 @@ receives are passed to the service processes as\-is\&. If the service runs with 
 construct for writing messages to stderr, this might cause problems, as this only works if stderr can be re\-opened\&. To mitigate this use the construct
 \fBecho "hello" >&2\fR
 instead, which is mostly equivalent and avoids this pitfall\&.
+.RE
+.PP
+\fB\-\-shell\fR, \fB\-S\fR
+.RS 4
+A shortcut for
+"\-\-pty \-\-same\-dir \-\-wait \-\-collect \-\-service\-type=exec $SHELL", i\&.e\&. requests an interactive shell in the current working directory, running in service context, accessible with a single switch\&.
 .RE
 .PP
 \fB\-\-quiet\fR, \fB\-q\fR
@@ -317,9 +359,10 @@ Talk to the service manager of the system\&. This is the implied default\&.
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a container name, separated by
-":", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
-\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&.
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
 .RE
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR

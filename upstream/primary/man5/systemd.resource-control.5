@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 239" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 240" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -146,9 +146,6 @@ applies to normal runtime of the system, and if the former is not set also to th
 \fIStartupCPUWeight=\fR
 allows prioritizing specific services at boot\-up differently than during normal runtime\&.
 .sp
-Implies
-"CPUAccounting=true"\&.
-.sp
 These settings replace
 \fICPUShares=\fR
 and
@@ -164,14 +161,11 @@ attribute on the unified control group hierarchy and
 on legacy\&. For details about these control group attributes, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2
 and
-\m[blue]\fBsched\-design\-CFS\&.txt\fR\m[]\&\s-2\u[4]\d\s+2\&.
+\m[blue]\fBsched\-bwc\&.txt\fR\m[]\&\s-2\u[5]\d\s+2\&.
 .sp
 Example:
 \fICPUQuota=20%\fR
 ensures that the executed processes will never get more than 20% CPU time on one CPU\&.
-.sp
-Implies
-"CPUAccounting=true"\&.
 .RE
 .PP
 \fIMemoryAccounting=\fR
@@ -182,6 +176,19 @@ in
 \fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
+\fIMemoryMin=\fR\fI\fIbytes\fR\fR
+.RS 4
+Specify the memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their minimum boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed\&.
+.sp
+Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. This controls the
+"memory\&.min"
+control group attribute\&. For details about this control group attribute, see
+\m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.sp
+This setting is supported only if the unified control group hierarchy is used and disables
+\fIMemoryLimit=\fR\&.
+.RE
+.PP
 \fIMemoryLow=\fR\fI\fIbytes\fR\fR
 .RS 4
 Specify the best\-effort memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their low boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed as long as memory can be reclaimed from unprotected units\&.
@@ -190,9 +197,6 @@ Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the 
 "memory\&.low"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
-Implies
-"MemoryAccounting=true"\&.
 .sp
 This setting is supported only if the unified control group hierarchy is used and disables
 \fIMemoryLimit=\fR\&.
@@ -207,9 +211,6 @@ Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the 
 "memory\&.high"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
-Implies
-"MemoryAccounting=true"\&.
 .sp
 This setting is supported only if the unified control group hierarchy is used and disables
 \fIMemoryLimit=\fR\&.
@@ -229,9 +230,6 @@ Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the 
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .sp
-Implies
-"MemoryAccounting=true"\&.
-.sp
 This setting replaces
 \fIMemoryLimit=\fR\&.
 .RE
@@ -245,9 +243,6 @@ Takes a swap size in bytes\&. If the value is suffixed with K, M, G or T, the sp
 "memory\&.swap\&.max"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
-Implies
-"MemoryAccounting=true"\&.
 .sp
 This setting is supported only if the unified control group hierarchy is used and disables
 \fIMemoryLimit=\fR\&.
@@ -267,10 +262,9 @@ Specify the maximum number of tasks that may be created in the unit\&. This ensu
 "infinity", no tasks limit is applied\&. This controls the
 "pids\&.max"
 control group attribute\&. For details about this control group attribute, see
-\m[blue]\fBpids\&.txt\fR\m[]\&\s-2\u[5]\d\s+2\&.
+\m[blue]\fBpids\&.txt\fR\m[]\&\s-2\u[6]\d\s+2\&.
 .sp
-Implies
-"TasksAccounting=true"\&. The system default for this setting may be controlled with
+The system default for this setting may be controlled with
 \fIDefaultTasksMax=\fR
 in
 \fBsystemd-system.conf\fR(5)\&.
@@ -304,9 +298,6 @@ only applies to the startup phase of the system,
 \fIIOWeight=\fR
 applies to the later runtime of the system, and if the former is not set also to the startup phase\&. This allows prioritizing specific services at boot\-up differently than during runtime\&.
 .sp
-Implies
-"IOAccounting=true"\&.
-.sp
 These settings replace
 \fIBlockIOWeight=\fR
 and
@@ -319,13 +310,11 @@ or
 .PP
 \fIIODeviceWeight=\fR\fI\fIdevice\fR\fR\fI \fR\fI\fIweight\fR\fR
 .RS 4
-Set the per\-device overall block I/O weight for the executed processes, if the unified control group hierarchy is used on the system\&. Takes a space\-separated pair of a file path and a weight value to specify the device specific weight value, between 1 and 10000\&. (Example: "/dev/sda 1000")\&. The file path may be specified as path to a block device node or as any other file, in which case the backing block device of the file system of the file is determined\&. This controls the
+Set the per\-device overall block I/O weight for the executed processes, if the unified control group hierarchy is used on the system\&. Takes a space\-separated pair of a file path and a weight value to specify the device specific weight value, between 1 and 10000\&. (Example:
+"/dev/sda 1000")\&. The file path may be specified as path to a block device node or as any other file, in which case the backing block device of the file system of the file is determined\&. This controls the
 "io\&.weight"
 control group attribute, which defaults to 100\&. Use this option multiple times to set weights for multiple devices\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
-Implies
-"IOAccounting=true"\&.
 .sp
 This setting replaces
 \fIBlockIODeviceWeight=\fR
@@ -341,9 +330,6 @@ Set the per\-device overall block I/O bandwidth maximum limit for the executed p
 "io\&.max"
 control group attributes\&. Use this option multiple times to set bandwidth limits for multiple devices\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
-.sp
-Implies
-"IOAccounting=true"\&.
 .sp
 These settings replace
 \fIBlockIOReadBandwidth=\fR
@@ -362,13 +348,23 @@ Set the per\-device overall block I/O IOs\-Per\-Second maximum limit for the exe
 control group attributes\&. Use this option multiple times to set IOPS limits for multiple devices\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .sp
-Implies
-"IOAccounting=true"\&.
-.sp
 These settings are supported only if the unified control group hierarchy is used and disable settings prefixed with
 \fIBlockIO\fR
 or
 \fIStartupBlockIO\fR\&.
+.RE
+.PP
+\fIIODeviceLatencyTargetSec=\fR\fI\fIdevice\fR\fR\fI \fR\fI\fItarget\fR\fR
+.RS 4
+Set the per\-device average target I/O latency for the executed processes, if the unified control group hierarchy is used on the system\&. Takes a file path and a timespan separated by a space to specify the device specific latency target\&. (Example: "/dev/sda 25ms")\&. The file path may be specified as path to a block device node or as any other file, in which case the backing block device of the file system of the file is determined\&. This controls the
+"io\&.latency"
+control group attribute\&. Use this option multiple times to set latency target for multiple devices\&. For details about this control group attribute, see
+\m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.sp
+Implies
+"IOAccounting=yes"\&.
+.sp
+These settings are supported only if the unified control group hierarchy is used\&.
 .RE
 .PP
 \fIIPAccounting=\fR
@@ -512,7 +508,7 @@ to control
 and
 "devices\&.deny"
 control group attributes\&. For details about these control group attributes, see
-\m[blue]\fBdevices\&.txt\fR\m[]\&\s-2\u[6]\d\s+2\&.
+\m[blue]\fBdevices\&.txt\fR\m[]\&\s-2\u[7]\d\s+2\&.
 .sp
 The device node specifier is either a path to a device node in the file system, starting with
 /dev/, or a string starting with either
@@ -596,6 +592,31 @@ The following controller names may be specified:
 \fBmemory\fR,
 \fBdevices\fR,
 \fBpids\fR\&. Not all of these controllers are available on all kernels however, and some are specific to the unified hierarchy while others are specific to the legacy hierarchy\&. Also note that the kernel might support further controllers, which aren\*(Aqt covered here yet as delegation is either not supported at all for them or not defined cleanly\&.
+.sp
+For further details on the delegation model consult
+\m[blue]\fBControl Group APIs and Delegation\fR\m[]\&\s-2\u[8]\d\s+2\&.
+.RE
+.PP
+\fIDisableControllers=\fR
+.RS 4
+Disables controllers from being enabled for a unit\*(Aqs children\&. If a controller listed is already in use in its subtree, the controller will be removed from the subtree\&. This can be used to avoid child units being able to implicitly or explicitly enable a controller\&. Defaults to not disabling any controllers\&.
+.sp
+It may not be possible to successfully disable a controller if the unit or any child of the unit in question delegates controllers to its children, as any delegated subtree of the cgroup hierarchy is unmanaged by systemd\&.
+.sp
+Multiple controllers may be specified, separated by spaces\&. You may also pass
+\fIDisableControllers=\fR
+multiple times, in which case each new instance adds another controller to disable\&. Passing
+\fIDisableControllers=\fR
+by itself with no controller name present resets the disabled controller list\&.
+.sp
+Valid controllers are
+\fBcpu\fR,
+\fBcpuacct\fR,
+\fBio\fR,
+\fBblkio\fR,
+\fBmemory\fR,
+\fBdevices\fR, and
+\fBpids\fR\&.
 .RE
 .SH "DEPRECATED OPTIONS"
 .PP
@@ -617,7 +638,7 @@ applies to normal runtime of the system, and if the former is not set also to th
 allows prioritizing specific services at boot\-up differently than during normal runtime\&.
 .sp
 Implies
-"CPUAccounting=true"\&.
+"CPUAccounting=yes"\&.
 .sp
 These settings are deprecated\&. Use
 \fICPUWeight=\fR
@@ -632,10 +653,10 @@ Specify the limit on maximum memory usage of the executed processes\&. The limit
 "infinity", no memory limit is applied\&. This controls the
 "memory\&.limit_in_bytes"
 control group attribute\&. For details about this control group attribute, see
-\m[blue]\fBmemory\&.txt\fR\m[]\&\s-2\u[7]\d\s+2\&.
+\m[blue]\fBmemory\&.txt\fR\m[]\&\s-2\u[9]\d\s+2\&.
 .sp
 Implies
-"MemoryAccounting=true"\&.
+"MemoryAccounting=yes"\&.
 .sp
 This setting is deprecated\&. Use
 \fIMemoryMax=\fR
@@ -659,7 +680,7 @@ instead\&.
 Set the default overall block I/O weight for the executed processes, if the legacy control group hierarchy is used on the system\&. Takes a single weight value (between 10 and 1000) to set the default block I/O weight\&. This controls the
 "blkio\&.weight"
 control group attribute, which defaults to 500\&. For details about this control group attribute, see
-\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[8]\d\s+2\&. The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight\&.
+\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[10]\d\s+2\&. The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight\&.
 .sp
 While
 \fIStartupBlockIOWeight=\fR
@@ -668,7 +689,7 @@ only applies to the startup phase of the system,
 applies to the later runtime of the system, and if the former is not set also to the startup phase\&. This allows prioritizing specific services at boot\-up differently than during runtime\&.
 .sp
 Implies
-"BlockIOAccounting=true"\&.
+"BlockIOAccounting=yes"\&.
 .sp
 These settings are deprecated\&. Use
 \fIIOWeight=\fR
@@ -682,10 +703,10 @@ instead\&.
 Set the per\-device overall block I/O weight for the executed processes, if the legacy control group hierarchy is used on the system\&. Takes a space\-separated pair of a file path and a weight value to specify the device specific weight value, between 10 and 1000\&. (Example: "/dev/sda 500")\&. The file path may be specified as path to a block device node or as any other file, in which case the backing block device of the file system of the file is determined\&. This controls the
 "blkio\&.weight_device"
 control group attribute, which defaults to 1000\&. Use this option multiple times to set weights for multiple devices\&. For details about this control group attribute, see
-\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[8]\d\s+2\&.
+\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[10]\d\s+2\&.
 .sp
 Implies
-"BlockIOAccounting=true"\&.
+"BlockIOAccounting=yes"\&.
 .sp
 This setting is deprecated\&. Use
 \fIIODeviceWeight=\fR
@@ -699,10 +720,10 @@ Set the per\-device overall block I/O bandwidth limit for the executed processes
 and
 "blkio\&.throttle\&.write_bps_device"
 control group attributes\&. Use this option multiple times to set bandwidth limits for multiple devices\&. For details about these control group attributes, see
-\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[8]\d\s+2\&.
+\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[10]\d\s+2\&.
 .sp
 Implies
-"BlockIOAccounting=true"\&.
+"BlockIOAccounting=yes"\&.
 .sp
 These settings are deprecated\&. Use
 \fIIOReadBandwidthMax=\fR
@@ -724,9 +745,10 @@ instead\&.
 \fBsystemd.directives\fR(7),
 \fBsystemd.special\fR(7), The documentation for control groups and specific controllers in the Linux kernel:
 \m[blue]\fBcgroups\&.txt\fR\m[]\&\s-2\u[3]\d\s+2,
-\m[blue]\fBcpuacct\&.txt\fR\m[]\&\s-2\u[9]\d\s+2,
-\m[blue]\fBmemory\&.txt\fR\m[]\&\s-2\u[7]\d\s+2,
-\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[8]\d\s+2\&.
+\m[blue]\fBcpuacct\&.txt\fR\m[]\&\s-2\u[11]\d\s+2,
+\m[blue]\fBmemory\&.txt\fR\m[]\&\s-2\u[9]\d\s+2,
+\m[blue]\fBblkio\-controller\&.txt\fR\m[]\&\s-2\u[10]\d\s+2\&.
+\m[blue]\fBsched\-bwc\&.txt\fR\m[]\&\s-2\u[5]\d\s+2\&.
 .SH "NOTES"
 .IP " 1." 4
 New Control Group Interfaces
@@ -749,26 +771,36 @@ sched-design-CFS.txt
 \%https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt
 .RE
 .IP " 5." 4
+sched-bwc.txt
+.RS 4
+\%https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
+.RE
+.IP " 6." 4
 pids.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/cgroup-v1/pids.txt
 .RE
-.IP " 6." 4
+.IP " 7." 4
 devices.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/cgroup-v1/devices.txt
 .RE
-.IP " 7." 4
+.IP " 8." 4
+Control Group APIs and Delegation
+.RS 4
+\%https://systemd.io/CGROUP_DELEGATION
+.RE
+.IP " 9." 4
 memory.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/cgroup-v1/memory.txt
 .RE
-.IP " 8." 4
+.IP "10." 4
 blkio-controller.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/cgroup-v1/blkio-controller.txt
 .RE
-.IP " 9." 4
+.IP "11." 4
 cpuacct.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/cgroup-v1/cpuacct.txt

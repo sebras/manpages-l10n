@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 239" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 240" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,6 +28,7 @@ bluetooth\&.target,
 cryptsetup\-pre\&.target,
 cryptsetup\&.target,
 ctrl\-alt\-del\&.target,
+boot\-complete\&.target,
 default\&.target,
 emergency\&.target,
 exit\&.target,
@@ -95,7 +96,8 @@ system\-update\-cleanup\&.service
 .SH "DESCRIPTION"
 .PP
 A few units are treated specially by systemd\&. Many of them have special internal semantics and cannot be renamed, while others simply have a standard meaning and should be present on all systems\&.
-.SH "SPECIAL SYSTEM UNITS"
+.SH "UNITS MANAGED BY THE SYSTEM\*(AQS SERVICE MANAGER"
+.SS "Special System Units"
 .PP
 \-\&.mount
 .RS 4
@@ -122,6 +124,24 @@ and
 This target usually does not pull in any non\-target units directly, but rather does so indirectly via other early boot targets\&. It is instead meant as a synchronization point for late boot services\&. Refer to
 \fBbootup\fR(7)
 for details on the targets involved\&.
+.RE
+.PP
+boot\-complete\&.target
+.RS 4
+This target is intended as generic synchronization point for services that shall determine or act on whether the boot process completed successfully\&. Order units that are required to succeed for a boot process to be considered successful before this unit, and add a
+\fIRequires=\fR
+dependency from the target unit to them\&. Order units that shall only run when the boot process is considered successful after the target unit and pull in the target from it, also with
+\fIRequires=\fR\&. Note that by default this target unit is not part of the initial boot transaction, but is supposed to be pulled in only if required by units that want to run only on successful boots\&.
+.sp
+See
+\fBsystemd-boot-check-no-failures.service\fR(8)
+for a service that implements a generic system health check and orders itself before
+boot\-complete\&.target\&.
+.sp
+See
+\fBsystemd-bless-boot.service\fR(8)
+for a service that propagates boot success information to the boot loader, and orders itself after
+boot\-complete\&.target\&.
 .RE
 .PP
 ctrl\-alt\-del\&.target
@@ -514,16 +534,21 @@ slices\&.target
 .RS 4
 A special target unit that sets up all slice units (see
 \fBsystemd.slice\fR(5)
-for details) that shall be active after boot\&. By default the generic
+for details) that shall always be active after boot\&. By default the generic
 system\&.slice
-slice unit, as well as the root slice unit
-\-\&.slice, is pulled in and ordered before this unit (see below)\&.
+slice unit as well as the root slice unit
+\-\&.slice
+are pulled in and ordered before this unit (see below)\&.
 .sp
-It\*(Aqs a good idea to add
+Adding slice units to
+slices\&.target
+is generally not necessary\&. Instead, when some unit that uses
+\fISlice=\fR
+is started, the specified slice will be started automatically\&. Adding
 \fIWantedBy=slices\&.target\fR
 lines to the
 "[Install]"
-section of all slices units that may be installed dynamically\&.
+section should only be done for units that need to be always active\&. In that case care needs to be taken to avoid creating a loop through the automatic dependencies on "parent" slices\&.
 .RE
 .PP
 sockets\&.target
@@ -620,7 +645,7 @@ Mounts that shall be unmounted on system shutdown shall add Conflicts dependenci
 \fIDefaultDependencies=yes\fR
 is set (the default)\&.
 .RE
-.SH "SPECIAL SYSTEM UNITS FOR DEVICES"
+.SS "Special System Units for Devices"
 .PP
 Some target units are automatically pulled in as devices of certain kinds show up in the system\&. These may be used to automatically activate various services based on the specific type of the available hardware\&.
 .PP
@@ -651,7 +676,7 @@ This target is started automatically as soon as a sound card is plugged in or be
 .sp
 This may be used to pull in audio management daemons dynamically when audio hardware is found\&.
 .RE
-.SH "SPECIAL PASSIVE SYSTEM UNITS"
+.SS "Special Passive System Units"
 .PP
 A number of special system targets are defined that can be used to properly order boot\-up of optional services\&. These targets are generally not part of the initial boot transaction, unless they are explicitly pulled in by one of the implementing services\&. Note specifically that these
 \fIpassive\fR
@@ -744,7 +769,41 @@ for this target unit to all SysV init script service units with an LSB header re
 "$time"
 facility\&.
 .RE
-.SH "SPECIAL USER UNITS"
+.SS "Special Slice Units"
+.PP
+There are four
+"\&.slice"
+units which form the basis of the hierarchy for assignment of resources for services, users, and virtual machines or containers\&. See
+\fBsystemd.slice\fR(7)
+for details about slice units\&.
+.PP
+\-\&.slice
+.RS 4
+The root slice is the root of the slice hierarchy\&. It usually does not contain units directly, but may be used to set defaults for the whole tree\&.
+.RE
+.PP
+system\&.slice
+.RS 4
+By default, all system services started by
+\fBsystemd\fR
+are found in this slice\&.
+.RE
+.PP
+user\&.slice
+.RS 4
+By default, all user processes and services started on behalf of the user, including the per\-user systemd instance are found in this slice\&. This is pulled in by
+systemd\-logind\&.service
+.RE
+.PP
+machine\&.slice
+.RS 4
+By default, all virtual machines and containers registered with
+\fBsystemd\-machined\fR
+are found in this slice\&. This is pulled in by
+systemd\-machined\&.service
+.RE
+.SH "UNITS MANAGED BY THE USER\*(AQS SERVICE MANAGER"
+.SS "Special User Units"
 .PP
 When systemd runs as a user instance, the following special units are available, which have similar definitions as their system counterparts:
 exit\&.target,
@@ -757,7 +816,7 @@ bluetooth\&.target,
 printer\&.target,
 smartcard\&.target,
 sound\&.target\&.
-.SH "SPECIAL PASSIVE USER UNITS"
+.SS "Special Passive User Units"
 .PP
 graphical\-session\&.target
 .RS 4
@@ -793,9 +852,9 @@ pulls in Nautilus as top\-level service:
 .\}
 .nf
 [Unit]
-Description=User systemd services for GNOME graphical session
-Wants=nautilus\&.service
-BindsTo=graphical\-session\&.target
+  Description=User systemd services for GNOME graphical session
+  Wants=nautilus\&.service
+  BindsTo=graphical\-session\&.target
 .fi
 .if n \{\
 .RE
@@ -809,11 +868,11 @@ gets stopped when the session stops:
 .\}
 .nf
 [Unit]
-Description=Render the desktop icons with Nautilus
-PartOf=graphical\-session\&.target
+  Description=Render the desktop icons with Nautilus
+  PartOf=graphical\-session\&.target
 
-[Service]
-\&...
+  [Service]
+  \&...
 .fi
 .if n \{\
 .RE
@@ -825,39 +884,6 @@ graphical\-session\-pre\&.target
 This target contains services which set up the environment or global configuration of a graphical session, such as SSH/GPG agents (which need to export an environment variable into all desktop processes) or migration of obsolete d\-conf keys after an OS upgrade (which needs to happen before starting any process that might use them)\&. This target must be started before starting a graphical session like
 gnome\-session\&.target\&.
 .RE
-.SH "SPECIAL SLICE UNITS"
-.PP
-There are four
-"\&.slice"
-units which form the basis of the hierarchy for assignment of resources for services, users, and virtual machines or containers\&. See
-\fBsystemd.slice\fR(7)
-for details about slice units\&.
-.PP
-\-\&.slice
-.RS 4
-The root slice is the root of the slice hierarchy\&. It usually does not contain units directly, but may be used to set defaults for the whole tree\&.
-.RE
-.PP
-system\&.slice
-.RS 4
-By default, all system services started by
-\fBsystemd\fR
-are found in this slice\&.
-.RE
-.PP
-user\&.slice
-.RS 4
-By default, all user processes and services started on behalf of the user, including the per\-user systemd instance are found in this slice\&. This is pulled in by
-systemd\-logind\&.service
-.RE
-.PP
-machine\&.slice
-.RS 4
-By default, all virtual machines and containers registered with
-\fBsystemd\-machined\fR
-are found in this slice\&. This is pulled in by
-systemd\-machined\&.service
-.RE
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
@@ -867,7 +893,8 @@ systemd\-machined\&.service
 \fBsystemd.target\fR(5),
 \fBsystemd.slice\fR(5),
 \fBbootup\fR(7),
-\fBsystemd-fstab-generator\fR(8)
+\fBsystemd-fstab-generator\fR(8),
+\fBuser@.service\fR(5)
 .SH "NOTES"
 .IP " 1." 4
 Running Services After the Network is up

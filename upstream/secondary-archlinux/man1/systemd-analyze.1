@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 239" "systemd-analyze"
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 240" "systemd-analyze"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,6 +50,10 @@ systemd-analyze \- Analyze and debug system manager
 \fBsystemd\-analyze\fR [OPTIONS...] calendar \fISPECS\fR...
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] service\-watchdogs [\fIBOOL\fR]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] timespan \fISPAN\fR...
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] security \fIUNIT\fR...
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-analyze\fR
@@ -201,6 +205,13 @@ or
 \fBStartLimitAction=\fR); see
 \fBsystemd.service\fR(5)\&. The hardware watchdog is not affected by this setting\&.
 .PP
+\fBsystemd\-analyze timespan\fR
+parses a time span and outputs the equivalent value in microseconds, and as a reformatted timespan\&. The time span should adhere to the same syntax documented in
+\fBsystemd.time\fR(7)\&. Values without associated magnitudes are parsed as seconds\&.
+.PP
+\fBsystemd\-analyze security\fR
+analyzes the security and sandboxing settings of one or more specified service units\&. If at least one unit name is specified the security settings of the specified service units are inspected and a detailed analysis is shown\&. If no unit name is specified, all currently loaded, long\-running service units are inspected and a terse table with results shown\&. The command checks for various security\-related service settings, assigning each a numeric "exposure level" value, depending on how important a setting is\&. It then calculates an overall exposure level for the whole unit, which is an estimation in the range 0\&.0\&...10\&.0 indicating how exposed a service is security\-wise\&. High exposure levels indicate very little applied sandboxing\&. Low exposure levels indicate tight sandboxing and strongest security restrictions\&. Note that this only analyzes the per\-service security features systemd itself implements\&. This means that any additional security mechanisms applied by the service code itself are not accounted for\&. The exposure level determined this way should not be misunderstood: a high exposure level neither means that there is no effective sandboxing applied by the service code itself, nor that the service is actually vulnerable to remote or local attacks\&. High exposure levels do indicate however that most likely the service might benefit from additional settings applied to them\&. Please note that many of the security and sandboxing settings individually can be circumvented \(em unless combined with others\&. For example, if a service retains the privilege to establish or undo mount points many of the sandboxing options can be undone by the service code itself\&. Due to that is essential that each service uses the most comprehensive and strict sandboxing and security settings possible\&. The tool will take into account some of these combinations and relationships between the settings, but not all\&. Also note that the security and sandboxing settings analyzed here only apply to the operations executed by the service code itself\&. If a service has access to an IPC system (such as D\-Bus) it might request operations from other services that are not subject to the same restrictions\&. Any comprehensive security and sandboxing analysis is hence incomplete if the IPC access policy is not validated too\&.
+.PP
 If no command is passed,
 \fBsystemd\-analyze time\fR
 is implied\&.
@@ -288,9 +299,10 @@ With
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a container name, separated by
-":", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
-\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&.
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
 .RE
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
@@ -473,6 +485,18 @@ Override the options passed to
 \fBless\fR
 (by default
 "FRSXMK")\&.
+.sp
+If the value of
+\fI$SYSTEMD_LESS\fR
+does not include
+"K", and the pager that is invoked is
+\fBless\fR,
+Ctrl+C
+will be ignored by the executable\&. This allows
+\fBless\fR
+to handle
+Ctrl+C
+itself\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR

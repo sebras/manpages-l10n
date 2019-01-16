@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 239" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 240" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,6 +34,7 @@ systemd.unit \- Unit configuration
 \fItimer\fR\&.timer,
 \fIslice\fR\&.slice,
 \fIscope\fR\&.scope
+.SS "System Unit Search Path"
 .PP
 .nf
 /etc/systemd/system\&.control/*
@@ -41,13 +42,15 @@ systemd.unit \- Unit configuration
 /run/systemd/transient/*
 /run/systemd/generator\&.early/*
 /etc/systemd/system/*
+/etc/systemd/systemd\&.attached/*
 /run/systemd/system/*
+/run/systemd/systemd\&.attached/*
 /run/systemd/generator/*
 \&...
 /usr/lib/systemd/system/*
 /run/systemd/generator\&.late/*
-    
 .fi
+.SS "User Unit Search Path"
 .PP
 .nf
 ~/\&.config/systemd/user\&.control/*
@@ -63,7 +66,6 @@ $XDG_RUNTIME_DIR/systemd/generator/*
 \&...
 /usr/lib/systemd/user/*
 $XDG_RUNTIME_DIR/systemd/generator\&.late/*
-    
 .fi
 .SH "DESCRIPTION"
 .PP
@@ -99,34 +101,6 @@ and other specifiers, see below\&.
 .PP
 Unit files may contain additional options on top of those listed here\&. If systemd encounters an unknown option, it will write a warning log message but continue loading the unit\&. If an option or section name is prefixed with
 \fBX\-\fR, it is ignored completely by systemd\&. Options within an ignored section do not need the prefix\&. Applications may use this to include additional information in the unit files\&.
-.PP
-Boolean arguments used in unit files can be written in various formats\&. For positive settings the strings
-\fB1\fR,
-\fByes\fR,
-\fBtrue\fR
-and
-\fBon\fR
-are equivalent\&. For negative settings, the strings
-\fB0\fR,
-\fBno\fR,
-\fBfalse\fR
-and
-\fBoff\fR
-are equivalent\&.
-.PP
-Time span values encoded in unit files can be written in various formats\&. A stand\-alone number specifies a time in seconds\&. If suffixed with a time unit, the unit is honored\&. A concatenation of multiple values with units is supported, in which case the values are added up\&. Example:
-"50"
-refers to 50 seconds;
-"2min\ \&200ms"
-refers to 2 minutes and 200 milliseconds, i\&.e\&. 120200\ \&ms\&. The following time units are understood:
-"s",
-"min",
-"h",
-"d",
-"w",
-"ms",
-"us"\&. For details see
-\fBsystemd.time\fR(7)\&.
 .PP
 Units can be aliased (have an alternative name), by creating a symlink from the new name to the existing name in one of the unit search paths\&. For example,
 systemd\-networkd\&.service
@@ -359,7 +333,7 @@ T}
 T{
 /run/systemd/generator\&.early
 T}:T{
-Generated units with high priority (see \fIearly\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with high priority (see \fIearly\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 T{
 /etc/systemd/system
@@ -374,7 +348,7 @@ T}
 T{
 /run/systemd/generator
 T}:T{
-Generated units with medium priority (see \fInormal\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with medium priority (see \fInormal\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 T{
 /usr/local/lib/systemd/system
@@ -387,7 +361,7 @@ T}:
 T{
 /run/systemd/generator\&.late
 T}:T{
-Generated units with low priority (see \fIlate\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with low priority (see \fIlate\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 .TE
 .sp 1
@@ -436,7 +410,7 @@ T}
 T{
 /run/systemd/generator\&.early
 T}:T{
-Generated units with high priority (see \fIearly\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with high priority (see \fIearly\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 T{
 $XDG_CONFIG_HOME/systemd/user or $HOME/\&.config/systemd/user
@@ -461,7 +435,7 @@ T}
 T{
 $XDG_RUNTIME_DIR/systemd/generator
 T}:T{
-Generated units with medium priority (see \fInormal\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with medium priority (see \fInormal\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 T{
 $XDG_DATA_HOME/systemd/user or $HOME/\&.local/share/systemd/user
@@ -484,7 +458,7 @@ T}:
 T{
 $XDG_RUNTIME_DIR/systemd/generator\&.late
 T}:T{
-Generated units with low priority (see \fIlate\-dir\fR in \fBsystem.generator\fR(7))
+Generated units with low priority (see \fIlate\-dir\fR in \fBsystemd.generator\fR(7))
 T}
 .TE
 .sp 1
@@ -617,13 +591,23 @@ The unit file may include a [Unit] section, which carries generic information ab
 .PP
 \fIDescription=\fR
 .RS 4
-A free\-form string describing the unit\&. This is intended for use in UIs to show descriptive information along with the unit name\&. The description should contain a name that means something to the end user\&.
+A human readable name for the unit\&. This is used by
+\fBsystemd\fR
+(and other UIs) as the label for the unit, so this string should identify the unit rather than describe it, despite the name\&.
 "Apache2 Web Server"
 is a good example\&. Bad examples are
 "high\-performance light\-weight HTTP server"
 (too generic) or
 "Apache2"
 (too specific and meaningless for people who do not know Apache)\&.
+\fBsystemd\fR
+will use this string as a noun in status messages ("Starting \fIdescription\fR\&.\&.\&.",
+"Started \fIdescription\fR\&.",
+"Reached target \fIdescription\fR\&.",
+"Failed to start \fIdescription\fR\&."), so it should be capitalized, and should not be a full sentence or a phrase with a continous verb\&. Bad examples include
+"exiting the container"
+or
+"updating the database once per day\&."\&.
 .RE
 .PP
 \fIDocumentation=\fR
@@ -764,7 +748,7 @@ and
 \fIBefore=\fR
 ordering dependencies\&.
 .sp
-If a unit A that conflicts with a unit B is scheduled to be started at the same time as B, the transaction will either fail (in case both are required part of the transaction) or be modified to be fixed (in case one or both jobs are not a required part of the transaction)\&. In the latter case, the job that is not the required will be removed, or in case both are not required, the unit that conflicts will be started and the unit that is conflicted is stopped\&.
+If a unit A that conflicts with a unit B is scheduled to be started at the same time as B, the transaction will either fail (in case both are required parts of the transaction) or be modified to be fixed (in case one or both jobs are not a required part of the transaction)\&. In the latter case, the job that is not required will be removed, or in case both are not required, the unit that conflicts will be started and the unit that is conflicted is stopped\&.
 .RE
 .PP
 \fIBefore=\fR, \fIAfter=\fR
@@ -935,9 +919,67 @@ state is not necessary\&. Note that if this mode is used unit results (such as e
 \fBinactive\fR\&.
 .RE
 .PP
-\fIJobTimeoutSec=\fR, \fIJobRunningTimeoutSec=\fR, \fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
+\fIFailureAction=\fR, \fISuccessAction=\fR
 .RS 4
-When a job for this unit is queued, a time\-out
+Configure the action to take when the unit stops and enters a failed state or inactive state\&. Takes one of
+\fBnone\fR,
+\fBreboot\fR,
+\fBreboot\-force\fR,
+\fBreboot\-immediate\fR,
+\fBpoweroff\fR,
+\fBpoweroff\-force\fR,
+\fBpoweroff\-immediate\fR,
+\fBexit\fR, and
+\fBexit\-force\fR\&. In system mode, all options are allowed\&. In user mode, only
+\fBnone\fR,
+\fBexit\fR, and
+\fBexit\-force\fR
+are allowed\&. Both options default to
+\fBnone\fR\&.
+.sp
+If
+\fBnone\fR
+is set, no action will be triggered\&.
+\fBreboot\fR
+causes a reboot following the normal shutdown procedure (i\&.e\&. equivalent to
+\fBsystemctl reboot\fR)\&.
+\fBreboot\-force\fR
+causes a forced reboot which will terminate all processes forcibly but should cause no dirty file systems on reboot (i\&.e\&. equivalent to
+\fBsystemctl reboot \-f\fR) and
+\fBreboot\-immediate\fR
+causes immediate execution of the
+\fBreboot\fR(2)
+system call, which might result in data loss (i\&.e\&. equivalent to
+\fBsystemctl reboot \-ff\fR)\&. Similarly,
+\fBpoweroff\fR,
+\fBpoweroff\-force\fR,
+\fBpoweroff\-immediate\fR
+have the effect of powering down the system with similar semantics\&.
+\fBexit\fR
+causes the manager to exit following the normal shutdown procedure, and
+\fBexit\-force\fR
+causes it terminate without shutting down services\&. When
+\fBexit\fR
+or
+\fBexit\-force\fR
+is used by default the exit status of the main process of the unit (if this applies) is returned from the service manager\&. However, this may be overriden with
+\fIFailureActionExitStatus=\fR/\fISuccessActionExitStatus=\fR, see below\&.
+.RE
+.PP
+\fIFailureActionExitStatus=\fR, \fISuccessActionExitStatus=\fR
+.RS 4
+Controls the exit status to propagate back to an invoking container manager (in case of a system service) or service manager (in case of a user manager) when the
+\fIFailureAction=\fR/\fISuccessAction=\fR
+are set to
+\fBexit\fR
+or
+\fBexit\-force\fR
+and the action is triggered\&. By default the exit status of the main process of the triggering unit (if this applies) is propagated\&. Takes a value in the range 0\&...255 or the empty string to request default behaviour\&.
+.RE
+.PP
+\fIJobTimeoutSec=\fR, \fIJobRunningTimeoutSec=\fR
+.RS 4
+When a job for this unit is queued, a timeout
 \fIJobTimeoutSec=\fR
 may be configured\&. Similarly,
 \fIJobRunningTimeoutSec=\fR
@@ -950,9 +992,16 @@ defaults to
 \fIDefaultTimeoutStartSec=\fR)\&. NB: this timeout is independent from any unit\-specific timeout (for example, the timeout set with
 \fITimeoutStartSec=\fR
 in service units) as the job timeout has no effect on the unit itself, only on the job that might be pending for it\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
-.sp
+.RE
+.PP
+\fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
+.RS 4
 \fIJobTimeoutAction=\fR
-optionally configures an additional action to take when the time\-out is hit\&. It takes the same values as
+optionally configures an additional action to take when the timeout is hit, see description of
+\fIJobTimeoutSec=\fR
+and
+\fIJobRunningTimeoutSec=\fR
+above\&. It takes the same values as
 \fIStartLimitAction=\fR\&. Defaults to
 \fBnone\fR\&.
 \fIJobTimeoutRebootArgument=\fR
@@ -993,43 +1042,15 @@ When a unit is unloaded due to the garbage collection logic (see above) its rate
 .PP
 \fIStartLimitAction=\fR
 .RS 4
-Configure the action to take if the rate limit configured with
+Configure an additional action to take if the rate limit configured with
 \fIStartLimitIntervalSec=\fR
 and
 \fIStartLimitBurst=\fR
-is hit\&. Takes one of
-\fBnone\fR,
-\fBreboot\fR,
-\fBreboot\-force\fR,
-\fBreboot\-immediate\fR,
-\fBpoweroff\fR,
-\fBpoweroff\-force\fR
-or
-\fBpoweroff\-immediate\fR\&. If
+is hit\&. Takes the same values as the setting
+\fIFailureAction=\fR/\fISuccessAction=\fR
+settings and executes the same actions\&. If
 \fBnone\fR
-is set, hitting the rate limit will trigger no action besides that the start will not be permitted\&.
-\fBreboot\fR
-causes a reboot following the normal shutdown procedure (i\&.e\&. equivalent to
-\fBsystemctl reboot\fR)\&.
-\fBreboot\-force\fR
-causes a forced reboot which will terminate all processes forcibly but should cause no dirty file systems on reboot (i\&.e\&. equivalent to
-\fBsystemctl reboot \-f\fR) and
-\fBreboot\-immediate\fR
-causes immediate execution of the
-\fBreboot\fR(2)
-system call, which might result in data loss\&. Similarly,
-\fBpoweroff\fR,
-\fBpoweroff\-force\fR,
-\fBpoweroff\-immediate\fR
-have the effect of powering down the system with similar semantics\&. Defaults to
-\fBnone\fR\&.
-.RE
-.PP
-\fIFailureAction=\fR, \fISuccessAction=\fR
-.RS 4
-Configure the action to take when the unit stops and enters a failed state or inactive state\&. Takes the same values as the setting
-\fIStartLimitAction=\fR
-setting and executes the same actions\&. Both options default to
+is set, hitting the rate limit will trigger no action besides that the start will not be permitted\&. Defaults to
 \fBnone\fR\&.
 .RE
 .PP
@@ -1048,9 +1069,11 @@ command\&.
 .PP
 \fIConditionArchitecture=\fR, \fIConditionVirtualization=\fR, \fIConditionHost=\fR, \fIConditionKernelCommandLine=\fR, \fIConditionKernelVersion=\fR, \fIConditionSecurity=\fR, \fIConditionCapability=\fR, \fIConditionACPower=\fR, \fIConditionNeedsUpdate=\fR, \fIConditionFirstBoot=\fR, \fIConditionPathExists=\fR, \fIConditionPathExistsGlob=\fR, \fIConditionPathIsDirectory=\fR, \fIConditionPathIsSymbolicLink=\fR, \fIConditionPathIsMountPoint=\fR, \fIConditionPathIsReadWrite=\fR, \fIConditionDirectoryNotEmpty=\fR, \fIConditionFileNotEmpty=\fR, \fIConditionFileIsExecutable=\fR, \fIConditionUser=\fR, \fIConditionGroup=\fR, \fIConditionControlGroupController=\fR
 .RS 4
-Before starting a unit, verify that the specified condition is true\&. If it is not true, the starting of the unit will be (mostly silently) skipped, however all ordering dependencies of it are still respected\&. A failing condition will not result in the unit being moved into a failure state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require its functionality\&. Use the various
+Before starting a unit, verify that the specified condition is true\&. If it is not true, the starting of the unit will be (mostly silently) skipped, however all ordering dependencies of it are still respected\&. A failing condition will not result in the unit being moved into the
+"failed"
+state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require their functionality\&. Use the various
 \fIAssertArchitecture=\fR,
-\fIAssertVirtualization=\fR, \&... options for a similar mechanism that puts the unit in a failure state and logs about the failed check (see below)\&.
+\fIAssertVirtualization=\fR, \&... options for a similar mechanism that causes the job to fail (instead of being skipped) and results in logging about the failed check (instead of being silently processed)\&. For details about assertion conditions see below\&.
 .sp
 \fIConditionArchitecture=\fR
 may be used to check whether the system is running on a specific architecture\&. Takes one of
@@ -1254,7 +1277,7 @@ but verifies that the service manager\*(Aqs real or effective group, or any of i
 \fIConditionControlGroupController=\fR
 takes a cgroup controller name (eg\&.
 \fBcpu\fR), verifying that it is available for use on the system\&. For example, a particular controller may not be available if it was disabled on the kernel command line with
-"cgroup_disable="\fIcontroller\fR\&. Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
+\fIcgroup_disable=controller\fR\&. Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
 \fBcpu\fR,
 \fBcpuacct\fR,
 \fBio\fR,
@@ -1271,7 +1294,11 @@ If multiple conditions are specified, the unit will be executed if all of them a
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
-\fIConditionVirtualization=\fR, \&..., condition settings described above, these settings add assertion checks to the start\-up of the unit\&. However, unlike the conditions settings, any assertion setting that is not met results in failure of the start job (which means this is logged loudly)\&. Use assertion expressions for units that cannot operate when specific requirements are not met, and when this is something the administrator or user should look into\&.
+\fIConditionVirtualization=\fR, \&..., condition settings described above, these settings add assertion checks to the start\-up of the unit\&. However, unlike the conditions settings, any assertion setting that is not met results in failure of the start job (which means this is logged loudly)\&. Note that hitting a configured assertion does not cause the unit to enter the
+"failed"
+state (or in fact result in any state change of the unit), it affects only the job queued for it\&. Use assertion expressions for units that cannot operate when specific requirements are not met, and when this is something the administrator or user should look into\&.
+.sp
+Note that neither assertion nor condition expressions result in unit state changes\&. Also note that both are checked at the time the job is to be executed, i\&.e\&. long after depending jobs and it itself were queued\&. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies\&.
 .RE
 .PP
 \fISourcePath=\fR
@@ -1507,7 +1534,7 @@ This option may be used more than once, or a space\-separated list of unit names
 In template unit files, this specifies for which instance the unit shall be enabled if the template is enabled without any explicitly set instance\&. This option has no effect in non\-template unit files\&. The specified string must be usable as instance identifier\&.
 .RE
 .PP
-The following specifiers are interpreted in the Install section: %n, %N, %p, %i, %j, %U, %u, %m, %H, %b, %v\&. For their meaning see the next section\&.
+The following specifiers are interpreted in the Install section: %n, %N, %p, %i, %j, %g, %G, %U, %u, %m, %H, %b, %v\&. For their meaning see the next section\&.
 .SH "SPECIFIERS"
 .PP
 Many settings resolve specifiers which may be used to write generic unit files referring to runtime or unit parameters that are replaced when the unit files are loaded\&. Specifiers must be known and resolvable for the setting to be valid\&. The following specifiers are understood:
@@ -1528,6 +1555,8 @@ T}:T{
 Details
 T}
 .T&
+l l l
+l l l
 l l l
 l l l
 l l l
@@ -1692,6 +1721,20 @@ T}:T{
 Directory for temporary files
 T}:T{
 This is either /tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&.
+T}
+T{
+"%g"
+T}:T{
+User group
+T}:T{
+This is the name of the group running the service manager instance\&. In case of the system manager this resolves to "root"\&.
+T}
+T{
+"%G"
+T}:T{
+User GID
+T}:T{
+This is the numeric GID of the user running the service manager instance\&. In case of the system manager this resolves to "0"\&.
 T}
 T{
 "%u"

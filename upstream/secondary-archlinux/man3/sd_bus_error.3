@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_ERROR" "3" "" "systemd 239" "sd_bus_error"
+.TH "SD_BUS_ERROR" "3" "" "systemd 240" "sd_bus_error"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_bus_error, SD_BUS_ERROR_MAKE_CONST, SD_BUS_ERROR_NULL, sd_bus_error_free, sd_bus_error_set, sd_bus_error_setf, sd_bus_error_set_const, sd_bus_error_set_errno, sd_bus_error_set_errnof, sd_bus_error_set_errnofv, sd_bus_error_get_errno, sd_bus_error_copy, sd_bus_error_is_set, sd_bus_error_has_name \- sd\-bus error handling
+sd_bus_error, SD_BUS_ERROR_MAKE_CONST, SD_BUS_ERROR_NULL, sd_bus_error_free, sd_bus_error_set, sd_bus_error_setf, sd_bus_error_set_const, sd_bus_error_set_errno, sd_bus_error_set_errnof, sd_bus_error_set_errnofv, sd_bus_error_get_errno, sd_bus_error_copy, sd_bus_error_move, sd_bus_error_is_set, sd_bus_error_has_name \- sd\-bus error handling
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -55,11 +55,13 @@ typedef struct {
 .HP \w'int\ sd_bus_error_set_errnof('u
 .BI "int sd_bus_error_set_errnof(sd_bus_error\ *" "e" ", int\ " "error" ", const\ char\ *" "format" ", \&...);"
 .HP \w'int\ sd_bus_error_set_errnofv('u
-.BI "int sd_bus_error_set_errnofv(sd_bus_error\ *" "e" ", int\ " "error" ", const\ char\ *" "format" ", va_list\ ap);"
+.BI "int sd_bus_error_set_errnofv(sd_bus_error\ *" "e" ", int\ " "error" ", const\ char\ *" "format" ", va_list\ " "ap" ");"
 .HP \w'int\ sd_bus_error_get_errno('u
 .BI "int sd_bus_error_get_errno(const\ sd_bus_error\ *" "e" ");"
 .HP \w'int\ sd_bus_error_copy('u
 .BI "int sd_bus_error_copy(sd_bus_error\ *" "dst" ", const\ sd_bus_error\ *" "e" ");"
+.HP \w'int\ sd_bus_error_move('u
+.BI "int sd_bus_error_move(sd_bus_error\ *" "dst" ", sd_bus_error\ *" "e" ");"
 .HP \w'int\ sd_bus_error_is_set('u
 .BI "int sd_bus_error_is_set(const\ sd_bus_error\ *" "e" ");"
 .HP \w'int\ sd_bus_error_has_name('u
@@ -179,6 +181,26 @@ were set using
 \fBsd_bus_error_set_const()\fR, they will be shared\&. Otherwise, they will be copied\&. Returns a converted
 \fIerrno\fR\-like, negative error code\&.
 .PP
+\fBsd_bus_error_move()\fR
+is similar to
+\fBsd_bus_error_copy()\fR, but will move any error information from
+\fIe\fR
+into
+\fIdst\fR, resetting the former\&. This function cannot fail, as no new memory is allocated\&. Note that if
+\fIe\fR
+is not set (or
+\fBNULL\fR)
+\fIdst\fR
+is initializated to
+\fBSD_BUS_ERROR_NULL\fR\&. Moreover, if
+\fIdst\fR
+is
+\fBNULL\fR
+no operation is executed on it and and resources held by
+\fIe\fR
+are freed and reset\&. Returns a converted
+\fIerrno\fR\-like, negative error code\&.
+.PP
 \fBsd_bus_error_is_set()\fR
 will return a non\-zero value if
 \fIe\fR
@@ -227,7 +249,9 @@ is
 otherwise\&.
 .PP
 \fBsd_bus_error_copy()\fR
-returns 0 or a positive integer on success, and a negative error value converted from the error name otherwise\&.
+and
+\fBsd_bus_error_move()\fR
+return 0 or a positive integer on success, and a negative error value converted from the error name otherwise\&.
 .PP
 \fBsd_bus_error_is_set()\fR
 returns a non\-zero value when

@@ -1,5 +1,5 @@
 '\" t
-.TH "MACHINECTL" "1" "" "systemd 239" "machinectl"
+.TH "MACHINECTL" "1" "" "systemd 240" "machinectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -93,7 +93,7 @@ Directory trees containing an OS, including the top\-level directories
 .sp -1
 .IP \(bu 2.3
 .\}
-btrfs subvolumes containing OS trees, similar to normal directory trees\&.
+btrfs subvolumes containing OS trees, similar to regular directory trees\&.
 .RE
 .sp
 .RS 4
@@ -104,7 +104,18 @@ btrfs subvolumes containing OS trees, similar to normal directory trees\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Binary "raw" disk images containing MBR or GPT partition tables and Linux file system partitions\&.
+Binary "raw" disk image files containing MBR or GPT partition tables and Linux file systems\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Similarly, block devices containing MBR or GPT partition tables and file systems\&.
 .RE
 .sp
 .RS 4
@@ -284,9 +295,10 @@ Suppresses additional informational output while running\&.
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a container name, separated by
-":", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
-\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&.
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
 .RE
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
@@ -581,19 +593,7 @@ Sets the maximum size in bytes that a specific container or VM image, or all ima
 "\-"
 as size\&.
 .sp
-Note that per\-container size limits are only supported on btrfs file systems\&. Also note that, if
-\fBset\-limit\fR
-is invoked without an image parameter, and
-/var/lib/machines
-is empty, and the directory is not located on btrfs, a btrfs loopback file is implicitly created as
-/var/lib/machines\&.raw
-with the given size, and mounted to
-/var/lib/machines\&. The size of the loopback may later be readjusted with
-\fBset\-limit\fR, as well\&. If such a loopback\-mounted
-/var/lib/machines
-directory is used,
-\fBset\-limit\fR
-without an image name alters both the quota setting within the file system as well as the loopback file and file system size itself\&.
+Note that per\-container size limits are only supported on btrfs file systems\&.
 .RE
 .PP
 \fBclean\fR
@@ -721,13 +721,7 @@ is used, the file specified as the first argument should be a tar archive, possi
 is used, the file should be a qcow2 or raw disk image, possibly compressed with xz, gzip or bzip2\&. If the second argument (the resulting image name) is not specified, it is automatically derived from the file name\&. If the filename is passed as
 "\-", the image is read from standard input, in which case the second argument is mandatory\&.
 .sp
-Both
-\fBpull\-tar\fR
-and
-\fBpull\-raw\fR
-will resize
-/var/lib/machines\&.raw
-and the filesystem therein as necessary\&. Optionally, the
+Optionally, the
 \fB\-\-read\-only\fR
 switch may be used to create a read\-only container or VM image\&. No cryptographic validation is done when importing the images\&.
 .sp
@@ -735,6 +729,15 @@ Much like image downloads, ongoing imports may be listed with
 \fBlist\-transfers\fR
 and aborted with
 \fBcancel\-transfer\fR\&.
+.RE
+.PP
+\fBimport\-fs\fR \fIDIRECTORY\fR [\fINAME\fR]
+.RS 4
+Imports a container image stored in a local directory into
+/var/lib/machines/, operates similar to
+\fBimport\-tar\fR
+or
+\fBimport\-raw\fR, but the first argument is the source directory\&. If supported, this command will create btrfs snapshot or subvolume for the new image\&.
 .RE
 .PP
 \fBexport\-tar\fR \fINAME\fR [\fIFILE\fR], \fBexport\-raw\fR \fINAME\fR [\fIFILE\fR]
@@ -804,20 +807,7 @@ are always considered read\-only\&. It is possible to symlink machines images fr
 to make them available for control with
 \fBmachinectl\fR\&.
 .PP
-Note that some image operations are only supported, efficient or atomic on btrfs file systems\&. Due to this, if the
-\fBpull\-tar\fR,
-\fBpull\-raw\fR,
-\fBimport\-tar\fR,
-\fBimport\-raw\fR
-and
-\fBset\-limit\fR
-commands notice that
-/var/lib/machines
-is empty and not located on btrfs, they will implicitly set up a loopback file
-/var/lib/machines\&.raw
-containing a btrfs file system that is mounted to
-/var/lib/machines\&. The size of this loopback file may be controlled dynamically with
-\fBset\-limit\fR\&.
+Note that some image operations are only supported, efficient or atomic on btrfs file systems\&.
 .PP
 Disk images are understood by
 \fBsystemd-nspawn\fR(1)
@@ -970,6 +960,18 @@ Override the options passed to
 \fBless\fR
 (by default
 "FRSXMK")\&.
+.sp
+If the value of
+\fI$SYSTEMD_LESS\fR
+does not include
+"K", and the pager that is invoked is
+\fBless\fR,
+Ctrl+C
+will be ignored by the executable\&. This allows
+\fBless\fR
+to handle
+Ctrl+C
+itself\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SOCKET" "5" "" "systemd 239" "systemd.socket"
+.TH "SYSTEMD\&.SOCKET" "5" "" "systemd 240" "systemd.socket"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,9 +57,9 @@ foo\&.socket
 needs a matching service
 foo\&.service
 if
-\fBAccept=false\fR
+\fBAccept=no\fR
 is set\&. If
-\fBAccept=true\fR
+\fBAccept=yes\fR
 is set, a service template file
 foo@\&.service
 must exist from which services are instantiated for each incoming connection\&.
@@ -80,6 +80,13 @@ for details) or via the traditional
 \fBinetd\fR(8)\-style socket passing (i\&.e\&. sockets passed in via standard input and output, using
 \fIStandardInput=socket\fR
 in the service file)\&.
+.PP
+All network sockets allocated through
+\&.socket
+units are allocated in the host\*(Aqs network namespace (see
+\fBnetwork_namespaces\fR(7))\&. This does not mean however that the service activated by a configured socket unit has to be part of the host\*(Aqs network namespace as well\&. It is supported and even good practice to run services in their own network namespace (for example through
+\fIPrivateNetwork=\fR, see
+\fBsystemd.exec\fR(5)), receiving only the sockets configured through socket\-activation from the host\*(Aqs namespace\&. In such a set\-up communication within the host\*(Aqs network namespace is only permitted through the activation sockets passed in while all sockets allocated from the service code itself will be associated with the service\*(Aqs own namespace, and thus possibly subject to a a much more restrictive configuration\&.
 .SH "AUTOMATIC DEPENDENCIES"
 .SS "Implicit Dependencies"
 .PP
@@ -296,7 +303,7 @@ options set\&.
 .PP
 \fISocketProtocol=\fR
 .RS 4
-Takes a one of
+Takes one of
 \fBudplite\fR
 or
 \fBsctp\fR\&. Specifies a socket protocol (\fBIPPROTO_UDPLITE\fR) UDP\-Lite (\fBIPPROTO_SCTP\fR) SCTP socket respectively\&.
@@ -304,7 +311,7 @@ or
 .PP
 \fIBindIPv6Only=\fR
 .RS 4
-Takes a one of
+Takes one of
 \fBdefault\fR,
 \fBboth\fR
 or
@@ -353,17 +360,17 @@ If listening on a file system socket or FIFO, the parent directories are automat
 .RS 4
 Takes a boolean argument\&. If true, a service instance is spawned for each incoming connection and only the connection socket is passed to it\&. If false, all listening sockets themselves are passed to the started service unit, and only one service unit is spawned for all connections (also see above)\&. This value is ignored for datagram sockets and FIFOs where a single service unit unconditionally handles all incoming traffic\&. Defaults to
 \fBfalse\fR\&. For performance reasons, it is recommended to write new daemons only in a way that is suitable for
-\fBAccept=false\fR\&. A daemon listening on an
+\fBAccept=no\fR\&. A daemon listening on an
 \fBAF_UNIX\fR
 socket may, but does not need to, call
 \fBclose\fR(2)
 on the received socket before exiting\&. However, it must not unlink the socket from a file system\&. It should not invoke
 \fBshutdown\fR(2)
 on sockets it got with
-\fIAccept=false\fR, but it may do so for sockets it got with
-\fIAccept=true\fR
+\fIAccept=no\fR, but it may do so for sockets it got with
+\fIAccept=yes\fR
 set\&. Setting
-\fIAccept=true\fR
+\fIAccept=yes\fR
 is mostly useful to allow daemons designed for usage with
 \fBinetd\fR(8)
 to work unmodified with systemd socket activation\&.
@@ -384,9 +391,9 @@ Takes a boolean argument\&. May only be used in conjunction with
 \fIMaxConnections=\fR
 .RS 4
 The maximum number of connections to simultaneously run services instances for, when
-\fBAccept=true\fR
+\fBAccept=yes\fR
 is set\&. If more concurrent connections are coming in, they will be refused until at least one existing connection is terminated\&. This setting has no effect on sockets configured with
-\fBAccept=false\fR
+\fBAccept=no\fR
 or datagram sockets\&. Defaults to 64\&.
 .RE
 .PP

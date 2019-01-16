@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 239" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 240" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -111,6 +111,10 @@ systemd\-journald\&.socket\&.
 .RE
 .SH "PATHS"
 .PP
+The following settings may be used to change a service\*(Aqs view of the filesystem\&. Please note that the paths must be absolute and must not contain a
+"\&.\&."
+path component\&.
+.PP
 \fIWorkingDirectory=\fR
 .RS 4
 Takes a directory path relative to the service\*(Aqs root directory specified by
@@ -149,6 +153,36 @@ Takes a path to a block device node or regular file as argument\&. This call is 
 \fIRootDirectory=\fR
 however mounts a file system hierarchy from a block device node or loopback file instead of a directory\&. The device node or file system image file needs to contain a file system without a partition table, or a file system within an MBR/MS\-DOS or GPT partition table with only a single Linux\-compatible partition, or a set of file systems within a GPT partition table that follows the
 \m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+.sp
+When
+\fIDevicePolicy=\fR
+is set to
+"closed"
+or
+"strict", or set to
+"auto"
+and
+\fIDeviceAllow=\fR
+is set, then this setting adds
+/dev/loop\-control
+with
+\fBrw\fR
+mode,
+"block\-loop"
+and
+"block\-blkext"
+with
+\fBrwm\fR
+mode to
+\fIDeviceAllow=\fR\&. See
+\fBsystemd.resource-control\fR(5)
+for the details about
+\fIDevicePolicy=\fR
+or
+\fIDeviceAllow=\fR\&. Also, see
+\fIPrivateDevices=\fR
+below, as it may change the setting of
+\fIDevicePolicy=\fR\&.
 .RE
 .PP
 \fIMountAPIVFS=\fR
@@ -761,6 +795,15 @@ for details\&.
 .RE
 .SH "SANDBOXING"
 .PP
+The following sandboxing options are an effective way to limit the exposure of the system towards the unit\*(Aqs processes\&. It is recommended to turn on as many of these options for each unit as is possible without negatively affecting the process\*(Aq ability to operate\&. Note that many of these sandboxing features are gracefully turned off on systems where the underlying security mechanism is not available\&. For example,
+\fIProtectSystem=\fR
+has no effect if the kernel is built without file system namespacing or if the service manager runs in a container manager that makes file system namespacing unavailable to its payload\&. Similar,
+\fIRestrictRealtime=\fR
+has no effect on systems that lack support for SECCOMP system call filtering, or in containers where support for this is turned off\&.
+.PP
+Also note that some sandboxing functionality is generally not available in user services (i\&.e\&. services run by the per\-user service manager)\&. Specifically, the various settings requiring file system namespacing support (such as
+\fIProtectSystem=\fR) are not available, as the underlying kernel functionality is only accessible to privileged processes\&.
+.PP
 \fIProtectSystem=\fR
 .RS 4
 Takes a boolean argument or the special values
@@ -787,9 +830,8 @@ and
 \fIReadWritePaths=\fR
 may be used to exclude specific directories from being made read\-only\&. This setting is implied if
 \fIDynamicUser=\fR
-is set\&. For this setting the same restrictions regarding mount propagation and privileges apply as for
-\fIReadOnlyPaths=\fR
-and related calls, see below\&. Defaults to off\&.
+is set\&. This setting cannot ensure protection in all cases\&. In general it has the same limitations as
+\fIReadOnlyPaths=\fR, see below\&. Defaults to off\&.
 .RE
 .PP
 \fIProtectHome=\fR
@@ -824,43 +866,46 @@ is mostly equivalent to
 .sp
 It is recommended to enable this setting for all long\-running services (in particular network\-facing ones), to ensure they cannot get access to private user data, unless the services actually require access to the user\*(Aqs private data\&. This setting is implied if
 \fIDynamicUser=\fR
-is set\&. For this setting the same restrictions regarding mount propagation and privileges apply as for
-\fIReadOnlyPaths=\fR
-and related calls, see below\&.
+is set\&. This setting cannot ensure protection in all cases\&. In general it has the same limitations as
+\fIReadOnlyPaths=\fR, see below\&.
 .RE
 .PP
 \fIRuntimeDirectory=\fR, \fIStateDirectory=\fR, \fICacheDirectory=\fR, \fILogsDirectory=\fR, \fIConfigurationDirectory=\fR
 .RS 4
 These options take a whitespace\-separated list of directory names\&. The specified directory names must be relative, and may not include
-"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below the locations defined in the following table, when the unit is started\&.
+"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below the locations defined in the following table, when the unit is started\&. Also, the corresponding environment variable is defined with the full path of directories\&. If multiple directories are set, then int the environment variable the paths are concatenated with colon (":")\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&2.\ \&Automatic directory creation
+.B Table\ \&2.\ \&Automatic directory creation and environment variables
 .TS
 allbox tab(:);
-lB lB lB.
+lB lB lB lB.
 T{
 Locations
 T}:T{
 for system
 T}:T{
 for users
+T}:T{
+Environment variable
 T}
 .T&
-l l l
-l l l
-l l l
-l l l
-l l l.
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l.
 T{
 \fIRuntimeDirectory=\fR
 T}:T{
 /run
 T}:T{
 \fI$XDG_RUNTIME_DIR\fR
+T}:T{
+\fI$RUNTIME_DIRECTORY\fR
 T}
 T{
 \fIStateDirectory=\fR
@@ -868,6 +913,8 @@ T}:T{
 /var/lib
 T}:T{
 \fI$XDG_CONFIG_HOME\fR
+T}:T{
+\fI$STATE_DIRECTORY\fR
 T}
 T{
 \fICacheDirectory=\fR
@@ -875,6 +922,8 @@ T}:T{
 /var/cache
 T}:T{
 \fI$XDG_CACHE_HOME\fR
+T}:T{
+\fI$CACHE_DIRECTORY\fR
 T}
 T{
 \fILogsDirectory=\fR
@@ -882,6 +931,8 @@ T}:T{
 /var/log
 T}:T{
 \fI$XDG_CONFIG_HOME\fR/log
+T}:T{
+\fI$LOGS_DIRECTORY\fR
 T}
 T{
 \fIConfigurationDirectory=\fR
@@ -889,6 +940,8 @@ T}:T{
 /etc
 T}:T{
 \fI$XDG_CONFIG_HOME\fR
+T}:T{
+\fI$CONFIGURATION_DIRECTORY\fR
 T}
 .TE
 .sp 1
@@ -977,6 +1030,27 @@ are owned by the user and group specified in
 \fIUser=\fR
 and
 \fIGroup=\fR, and removed when the service is stopped\&.
+.sp
+Example: if a system service unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RuntimeDirectory=foo/bar
+StateDirectory=aaa/bbb ccc
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then the environment variable
+"RUNTIME_DIRECTORY"
+is set with
+"/run/foo/bar", and
+"STATE_DIRECTORY"
+is set with
+"/var/lib/aaa/bbb:/var/lib/ccc"\&.
 .RE
 .PP
 \fIRuntimeDirectoryMode=\fR, \fIStateDirectoryMode=\fR, \fICacheDirectoryMode=\fR, \fILogsDirectoryMode=\fR, \fIConfigurationDirectoryMode=\fR
@@ -1041,7 +1115,7 @@ will be made inaccessible for processes inside the namespace along with everythi
 inside it\&. For a more flexible option, see
 \fITemporaryFileSystem=\fR\&.
 .sp
-Note that restricting access with these options does not extend to submounts of a directory that are created later on\&. Non\-directory paths may be specified as well\&. These options may be specified more than once, in which case all paths listed will have limited access from within the namespace\&. If the empty string is assigned to this option, the specific list is reset, and all prior assignments have no effect\&.
+Non\-directory paths may be specified as well\&. These options may be specified more than once, in which case all paths listed will have limited access from within the namespace\&. If the empty string is assigned to this option, the specific list is reset, and all prior assignments have no effect\&.
 .sp
 Paths in
 \fIReadWritePaths=\fR,
@@ -1062,7 +1136,14 @@ first, and
 "+"
 second\&.
 .sp
-Note that using this setting will disconnect propagation of mounts from the service to the host (propagation in the opposite direction continues to work)\&. This means that this setting may not be used for services which shall be able to install mount points in the main mount namespace\&. Note that the effect of these settings may be undone by privileged processes\&. In order to set up an effective sandboxed environment for a unit it is thus recommended to combine these settings with either
+Note that these settings will disconnect propagation of mounts from the unit\*(Aqs processes to the host\&. This means that this setting may not be used for services which shall be able to install mount points in the main mount namespace\&. For
+\fIReadWritePaths=\fR
+and
+\fIReadOnlyPaths=\fR
+propagation in the other direction is not affected, i\&.e\&. mounts created on the host generally appear in the unit processes\*(Aq namespace, and mounts removed on the host also disappear there too\&. In particular, note that mount propagation from host to unit will result in unmodified mounts to be created in the unit\*(Aqs namespace, i\&.e\&. writable mounts appearing on the host will be writable in the unit\*(Aqs namespace too, even when propagated below a path marked with
+\fIReadOnlyPaths=\fR! Restricting access with these options hence does not extend to submounts of a directory that are created later on\&. This means the lock\-down offered by that setting is not complete, and does not offer full protection\&.
+.sp
+Note that the effect of these settings may be undone by privileged processes\&. In order to set up an effective sandboxed environment for a unit it is thus recommended to combine these settings with either
 \fICapabilityBoundingSet=~CAP_SYS_ADMIN\fR
 or
 \fISystemCallFilter=~@mount\fR\&.
@@ -1192,7 +1273,18 @@ inside it\&. No other network devices will be available to the executed process\
 \fIJoinsNamespaceOf=\fR
 directive, see
 \fBsystemd.unit\fR(5)
-for details\&. Note that this option will disconnect all socket families from the host, this includes AF_NETLINK and AF_UNIX\&. The latter has the effect that AF_UNIX sockets in the abstract socket namespace will become unavailable to the processes (however, those located in the file system will continue to be accessible)\&.
+for details\&. Note that this option will disconnect all socket families from the host, including
+\fBAF_NETLINK\fR
+and
+\fBAF_UNIX\fR\&. Effectively, for
+\fBAF_NETLINK\fR
+this means that device configuration events received from
+\fBsystemd-udevd.service\fR(8)
+are not delivered to the unit\*(Aqs processes\&. And for
+\fBAF_UNIX\fR
+this has the effect that
+\fBAF_UNIX\fR
+sockets in the abstract socket namespace of the host will become unavailable to the unit\*(Aqs processes (however, those located in the file system will continue to be accessible)\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if network namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
 .RE
@@ -1510,8 +1602,7 @@ above) will implicitly disable mount and unmount propagation from the unit\*(Aqs
 \fBslave\fR
 first\&. Setting this option to
 \fBshared\fR
-does not reestablish propagation in that case\&. Conversely, if this option is set, but no other file system namespace setting is used, then new file system namespaces will be created for the unit\*(Aqs processes and this propagation flag will be applied right away to all mounts within it, without the intermediary application of
-\fBslave\fR\&.
+does not reestablish propagation in that case\&.
 .sp
 If not set \(en but file system namespaces are enabled through another file system namespace unit setting \(en
 \fBshared\fR
@@ -1852,6 +1943,8 @@ with the values
 See
 \fBenviron\fR(7)
 for details about environment variables\&.
+.sp
+Note that environment variables are not suitable for passing secrets (such as passwords, key material, \&...) to service processes\&. Environment variables set for a unit are exposed to unprivileged clients via D\-Bus IPC, and generally not understood as being data that requires protection\&. Moreover, environment variables are propagated down the process tree, including across security boundaries (such as setuid/setgid executables), and hence might leak to processes that should not have access to the secret data\&.
 .RE
 .PP
 \fIEnvironmentFile=\fR
@@ -2001,6 +2094,16 @@ for more details about named file descriptors and their ordering\&.
 .sp
 This setting defaults to
 \fBnull\fR\&.
+.sp
+Note that services which specify
+\fBDefaultDependencies=no\fR
+and use
+\fIStandardInput=\fR
+or
+\fIStandardOutput=\fR
+with
+\fBtty\fR/\fBtty\-force\fR/\fBtty\-fail\fR, should specify
+\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty intialization is finished before they start\&.
 .RE
 .PP
 \fIStandardOutput=\fR
@@ -2016,6 +2119,7 @@ Controls where file descriptor 1 (STDOUT) of the executed processes is connected
 \fBsyslog+console\fR,
 \fBkmsg+console\fR,
 \fBfile:\fR\fB\fIpath\fR\fR,
+\fBappend:\fR\fB\fIpath\fR\fR,
 \fBsocket\fR
 or
 \fBfd:\fR\fB\fIname\fR\fR\&.
@@ -2055,9 +2159,16 @@ work in a similar way as the three options above but copy the output to the syst
 The
 \fBfile:\fR\fB\fIpath\fR\fR
 option may be used to connect a specific file system object to standard output\&. The semantics are similar to the same option of
-\fIStandardInput=\fR, see above\&. If standard input and output are directed to the same file path, it is opened only once, for reading as well as writing and duplicated\&. This is particular useful when the specified path refers to an
+\fIStandardInput=\fR, see above\&. If
+\fIpath\fR
+refers to a regular file on the filesystem, it is opened (created if it doesn\*(Aqt exist yet) for writing at the beginning of the file, but without truncating it\&. If standard input and output are directed to the same file path, it is opened only once, for reading as well as writing and duplicated\&. This is particularly useful when the specified path refers to an
 \fBAF_UNIX\fR
 socket in the file system, as in that case only a single stream connection is created for both input and output\&.
+.sp
+\fBappend:\fR\fB\fIpath\fR\fR
+is similar to
+\fBfile:\fR\fB\fIpath \fR\fR
+above, but it opens the file in append mode\&.
 .sp
 \fBsocket\fR
 connects standard output to a socket acquired via socket activation\&. The semantics are similar to the same option of
@@ -2199,6 +2310,23 @@ Configures additional log metadata fields to include in all log records generate
 separated by whitespace\&. See
 \fBsystemd.journal-fields\fR(7)
 for details on the journal field concept\&. Even though the underlying journal implementation permits binary field values, this setting accepts only valid UTF\-8 values\&. To include space characters in a journal field value, enclose the assignment in double quotes (")\&. The usual specifiers are expanded in all assignments (see below)\&. Note that this setting is not only useful for attaching additional metadata to log records of a unit, but given that all fields and values are indexed may also be used to implement cross\-unit log record matching\&. Assign an empty string to reset the list\&.
+.RE
+.PP
+\fILogRateLimitIntervalSec=\fR, \fILogRateLimitBurst=\fR
+.RS 4
+Configures the rate limiting that is applied to messages generated by this unit\&. If, in the time interval defined by
+\fILogRateLimitIntervalSec=\fR, more messages than specified in
+\fILogRateLimitBurst=\fR
+are logged by a service, all further messages within the interval are dropped until the interval is over\&. A message about the number of dropped messages is generated\&. The time specification for
+\fILogRateLimitIntervalSec=\fR
+may be specified in the following units: "s", "min", "h", "ms", "us" (see
+\fBsystemd.time\fR(7)
+for details)\&. The default settings are set by
+\fIRateLimitIntervalSec=\fR
+and
+\fIRateLimitBurst=\fR
+configured in
+\fBjournald.conf\fR(5)\&.
 .RE
 .PP
 \fISyslogIdentifier=\fR
