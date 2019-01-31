@@ -25,7 +25,7 @@ proofread_translation=$1
 tmppo1=$(mktemp)
 tmppo2=$(mktemp)
 
-for pofile in $(find common-primary/ -type f | LC_ALL=C sort); do
+for pofile in $(find common/ -type f | LC_ALL=C sort); do
 	# First, extract all translations which are
 	# *not* in the proofread translation.
 	# The proofread translation needs to be listed twice,
