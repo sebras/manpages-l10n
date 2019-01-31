@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ if [ -z "$distribution" ]; then
 fi
 
 # Safety net
-if [ ! -d "upstream/secondary-$distribution" ]; then
+if [ ! -d "upstream/$distribution" ]; then
 	echo "The distribution '$distribution' does not exist."
 	echo "Please start with the first part of this script."
 	exit
@@ -31,7 +31,7 @@ fi
 
 # Make sure that the update-manpages.sh script has been run
 # Start with clean directories and no leftover links.txt
-cd "upstream/secondary-$distribution"
+cd "upstream/$distribution"
 rm -rf man* links.txt
 ./update-manpages.sh
 # Sort the file links.txt
@@ -43,46 +43,22 @@ git add .
 git commit -m "Add manpages for '$distribution'"
 cd ../..
 
-
-# Create the po directory
-cd "po"
-mkdir "secondary-$distribution"
-cp -r primary/* secondary-$distribution
-git add secondary-$distribution
-git commit -m "Copy all translations from primary to secondary-$distribution"
-cd ..
-
-# Create the templates directory
+# Create the templates
 cd "templates"
-mkdir "secondary-$distribution"
-./update-templates.sh
-if [ ! -d "common-secondary" ]; then
-	# Create a new secondary directory from primary
-	mkdir "common-secondary"
-	cp common-primary/* common-secondary
-fi
+./update-all-templates.sh
+git add man*
+git commit -m "Add templates for new distribution '$distribution'"
 ./create-common-templates.sh
-git add common-secondary/*
+git add common/*
 git commit -m "Add common templates for new distribution '$distribution'"
 cd ..
 
-# Create the common po directory
+# Update po files
 cd "po"
-if [ ! -d "common-secondary" ]; then
-	# Create a new secondary directory from primary
-	mkdir "common-secondary"
-	cp common-primary/* common-secondary
-fi
-compendium=$(mktemp)
-msgcat secondary-$distribution/man*/*po > "$compendium"
-for pofile in common-secondary/*po; do
-	# Find the pot file by adding the letter 't'
-	potfile="../templates/$pofile""t"
-	msgmerge --previous --compendium "$compendium" "$pofile" "$potfile" > tmp.po
-	# Remove obsolete strings
-	msgattrib --force-po --no-obsolete tmp.po > "$pofile"
-done
-git add common-secondary
-git commit -m "Fill up common translations from manpages"
-rm -f "$compendium" tmp.po
+./update-translations.sh
+git add man*
+git commit -m "Update .po files for new distribution '$distribution'"
+./update-common.sh
+git add common/*
+git commit -m "Update common .po files for new distribution '$distribution'"
 cd ..

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# If there's a commandline argument, it's the upstream directory.
-if [ "$1" ]; then
-	directories="$1"
-else
-	# Determine directory names from upstream directory.
-	directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+# Require distribution name
+if [ -z "$1" ]; then
+	echo "Please specify the distribution." >&2
+	exit 1
 fi
+distribution=$1
 
-for directory in $directories; do
-	echo "Processing directory '$directory'"
-	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
-	for translation in $translations; do
-		./generate-manpage.sh "$translation"
-	done
+echo "Processing distribution '$distribution'"
+manpages=$(find "../upstream/$distribution"/man* -type f | cut -d/ -f4- | LC_ALL=C sort)
+for manpage in $manpages; do
+	if [ -f "$manpage.po" ]; then
+		./generate-manpage.sh $distribution "$manpage"
+	fi
 done

@@ -1,6 +1,6 @@
 # Makefile for manpages-de
 #
-# Copyright © 2012-2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2012-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,19 +26,12 @@ update-upstream:
 	git commit -m "Update upstream manpages" || true
 
 # Update all template files from upstream manpages.
-# In order to re-use translations from 'primary' for
-# the secondary translations before they get overwritten
-# by changes to the primary templates, it's needed to
-# update all translations (with 'make update-po') first,
-# and afterwards update the templates, the common
-# templates, and then the translations again.
 .PHONY: update-translations
 update-translations:
-	cd $(top_srcdir)/po ; \
-	$(MAKE) update-po ; \
-	cd .. ; \
 	cd $(top_srcdir)/templates ; \
-	./update-templates.sh ; \
+	./update-all-templates.sh ; \
+	git add . ; \
+	git commit -m "Update templates" || true ; \
 	./create-common-templates.sh ; \
 	git add . ; \
 	git commit -m "Update common templates" || true ; \

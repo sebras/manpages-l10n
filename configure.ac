@@ -22,20 +22,11 @@ AM_INIT_AUTOMAKE([foreign dist-xz no-dist-gzip])
 # Add option for selection of distribution
 AC_ARG_ENABLE([distribution],
   AS_HELP_STRING([--enable-distribution=DIST],
-    [Enable translations for specific distribution. @<:@default=debian@:>@.]
+    [Enable translations for specific distribution. @<:@default=debian-unstable@:>@.]
   ),
   ,
-  [enable_distribution="debian"]
+  [enable_distribution="debian-unstable"]
 )
-
-# Handle the distribution and set up the upstream directory name
-AS_IF([test "x$enable_distribution" = "xdebian"],
-  dnl Special case: Debian uses the name "primary".
-  [upstream="primary"],
-  dnl All other cases: Prepend "secondary-" to the name.
-  [upstream="secondary-$enable_distribution"]
-)
-AC_SUBST([upstream])
 
 # Show the wanted distribution
 AC_MSG_CHECKING([name of wanted distribution])
@@ -44,13 +35,14 @@ AC_MSG_RESULT([$enable_distribution])
 # Check if the wanted distribution has
 # own translations in an upstream directory
 AC_MSG_CHECKING([that "$enable_distribution" has own translations])
-AS_IF([test -d "upstream/$upstream"],
+AS_IF([test -d "upstream/$enable_distribution"],
   [AC_MSG_RESULT([yes])],
   [
     AC_MSG_RESULT([no])
     AC_MSG_ERROR([there are no translations for "$enable_distribution".])
   ]
 )
+AC_SUBST([distribution], [$enable_distribution])
 
 # Check that po4a is available on the system
 AC_PATH_PROG([po4a], [po4a], [no])

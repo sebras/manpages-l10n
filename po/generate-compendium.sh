@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,10 +24,6 @@ if [ -z "$2" ]; then
 	echo "Specify the compendium filename."
 	exit 1
 fi
-if [ -z "$3" ]; then
-	echo "Specify the level."
-	exit 1
-fi
 
 # Extract header entry for compendium (first line until first blank line)
 header=$(mktemp)
@@ -35,11 +31,7 @@ sed -n "1,/^$/p" "$1" > "$header"
 
 # Join all files into one compendium
 giant=$(mktemp)
-if [ "$3" = "secondary" ]; then
-	msgcat common-primary/*po common-secondary/*po > "$giant"
-else
-	msgcat common-primary/*po > "$giant"
-fi
+msgcat common/*po > "$giant"
 
 # Remove untranslated and fuzzy entries
 tmpcompendium=$(mktemp)
@@ -47,4 +39,4 @@ msgattrib --translated --no-fuzzy "$giant" > "$tmpcompendium"
 
 # Create a custom compendium with the header from the translation
 msgcat --use-first "$header" "$tmpcompendium" > "$2"
-rm -f "$giant" "$tmpcompendium"
+rm -f "$header" "$giant" "$tmpcompendium"

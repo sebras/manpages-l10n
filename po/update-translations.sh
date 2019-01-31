@@ -15,14 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Determine directory names from upstream directory.
-directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
-
-for directory in $directories; do
-	echo "Processing directory '$directory'"
-	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
-	for translation in $translations; do
-		echo $(basename "$translation")
-		./update-po.sh "$translation"
-	done
+translations=$(find man* -name "*.po" | LC_ALL=C sort)
+for translation in $translations; do
+	echo $(basename "$translation")
+	./update-po.sh "$translation"
 done

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# This is the distribution for which the manpage should be generated
+distribution="$1"
+
 # This is the filename of the localized manpage
-localized="$1"
+localized="$2"
 
 # If the filename ends with ".po", remove that part.
-localized=$(echo "$1" | sed -e "s/\.po$//")
+localized=$(echo "$localized" | sed -e "s/\.po$//")
 
 # Set up the path to the original manpage
-master="../upstream/$localized"
+master="../upstream/$distribution/$localized"
 
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
-	echo "The original manpage for '$localized' could not be found." >&2
+	echo "The original manpage for '$localized' could not be found in '$distribution'." >&2
 	exit
 fi
 
@@ -40,9 +43,20 @@ fi
 # Set up the filename of the translation
 translation="$localized.po"
 
+# Append the output directory
+localized="$distribution/$localized"
+
 # Create the addendum for this manpage
 addendum=$(mktemp)
 ./generate-addendum.sh "$translation" "$addendum"
+
+# Create a separate .po file for this distribution,
+# otherwise po4a will emit really a lot of warnings
+# about an outdated translation, because the number
+# of translations in the (internally generated) pot
+# and po file do not match.
+pofile=$(mktemp)
+msggrep --location="$distribution" $translation > $pofile
 
 # Actual translation
 po4a-translate \
@@ -53,7 +67,7 @@ po4a-translate \
 	--option unknown_macros=untranslated \
 	-m "$master" \
 	-M "$coding" \
-	-p "$translation" \
+	-p "$pofile" \
 	-a "$addendum" \
 	-a "../lizenz.add" \
 	-L UTF-8 \
@@ -75,3 +89,5 @@ if [ -f "$localized" ]; then
 	mv "$manpage" "$localized"
 	rm "$encoding"
 fi
+
+rm -f "$addendum" "$pofile"

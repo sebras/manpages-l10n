@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,14 +23,14 @@ if [ -z "$distribution" ]; then
 fi
 
 # Safety net
-if [ -d "upstream/secondary-$distribution" ]; then
+if [ -d "upstream/$distribution" ]; then
 	echo "The distribution '$distribution' already exists."
 	exit
 fi
 
 # Create the upstream directory
-mkdir "upstream/secondary-$distribution"
-cd "upstream/secondary-$distribution"
+mkdir "upstream/$distribution"
+cd "upstream/$distribution"
 touch links.txt
 touch update-manpages.sh
 chmod +x update-manpages.sh
@@ -40,7 +40,7 @@ git commit -m "Add skeleton for new distribution '$distribution'"
 echo "Done."
 echo "Please edit this script:"
 echo
-echo "  upstream/secondary-$distribution/update-manpages.sh"
+echo "  upstream/$distribution/update-manpages.sh"
 echo
 echo "See upstream/README.md for details."
 echo "When ready, run the second part of this setup script."

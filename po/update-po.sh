@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,10 +28,6 @@ templatedir="../templates"
 potfile="$templatedir/$1""t"
 if [ ! -f "$potfile" ]; then
 	echo "The potfile '$potfile' could not be found." >&2
-	echo >&2
-	echo "Please go to the templates directory and run './update-templates.sh'." >&2
-	echo "$ cd ../templates" >&2
-	echo "$ ./update-templates.sh" >&2
 	exit 1
 fi
 
@@ -39,12 +35,9 @@ fi
 backup=$(mktemp)
 cp "$1" "$backup"
 
-# Determine the translation level, primary or secondary
-level=$(echo "$1" | cut -d/ -f1 | cut -d- -f1)
-
 # Generate compendium
 compendium=$(mktemp)
-./generate-compendium.sh "$1" "$compendium" "$level"
+./generate-compendium.sh "$1" "$compendium"
 
 # Update .po file from .pot file
 tmppo=$(mktemp)
@@ -55,29 +48,9 @@ msgattrib --no-obsolete "$tmppo" > "$1"
 
 # Translate dates, if possible
 ./translate-dates.pl < "$1" > "$tmppo"
-mv "$tmppo" "$1"
-
-# If this is a secondary translation, use the primary .po
-# file as a reference, too. This way, typo fixes and better
-# wordings in the primary translation will automatically
-# migrate to all secondary translations.
-if [ "x$level" = "xsecondary" ]; then
-	# Construct the path by removing the first directory
-	primary=$(echo "$1" | cut -d/ -f2-)
-	primary="primary/$primary"
-	# Make sure the corresponding file in primary exists,
-	# otherwise msgmerge will fail and then remove the
-	# .po file which should be updated.
-	if [ -f "$primary" ]; then
-		# Prefer the translations from the primary .po file
-		msgmerge --previous --compendium "$primary" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
-		mv "$tmppo" "$1"
-	fi
-fi
 
 # Prefer the translations from the compendium
-msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$1" > "$tmppo"
-mv "$tmppo" "$1"
+msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$tmppo" > "$1"
 
 # Determine if the only change is the "POT-Creation-Date:" header
 # If so, copy back the backup to revert that change
