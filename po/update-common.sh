@@ -17,29 +17,15 @@
 
 # Handle primary messages
 compendium=$(mktemp)
-msgcat --use-first common-primary/*po > "$compendium"
-rm -f common-primary/*po
+msgcat --use-first common/*po > "$compendium"
+rm -f common/*po
 tmppo=$(mktemp)
-for potfile in ../templates/common-primary/*pot; do
+for potfile in ../templates/common/*pot; do
 	pofile=$(basename "$potfile")
 	# Remove the letter "t" at the end
 	pofile=${pofile%t}
 	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
-	mv "$tmppo" "common-primary/$pofile"
-done
-
-# Handle secondary messages, using also the compendium
-# from primary, because some strings may have shifted
-# between levels.
-msgcat --use-first common-secondary/*po "$compendium" > "$tmppo"
-mv "$tmppo" "$compendium"
-rm -f common-secondary/*po
-for potfile in ../templates/common-secondary/*pot; do
-	pofile=$(basename "$potfile")
-	# Remove the letter "t" at the end
-	pofile=${pofile%t}
-	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
-	mv "$tmppo" "common-secondary/$pofile"
+	mv "$tmppo" "common/$pofile"
 done
 
 rm -f "$compendium" "$tmppo"
