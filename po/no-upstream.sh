@@ -19,21 +19,25 @@
 # upstream manpage, e.g. when a package has been removed.
 
 # Determine directory names from upstream directory.
-directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
+distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sort)
 
 # path to the upstream manpages
 upstreamdir="../upstream"
 
-for directory in $directories; do
-	echo "Processing directory '$directory'"
-	translations=$(find "$directory"/man* -name "*.po" | LC_ALL=C sort)
-	for translation in $translations; do
-		# Find the manpage by removing the .po extension
-		manpage=$(basename $translation .po)
-		mandir=$(dirname $translation)
-		manpage="$upstreamdir/$mandir/$manpage"
-		if [ ! -f "$manpage" ]; then
-			echo "No upstream found for '$translation'"
+translations=$(find man* -name "*.po" | LC_ALL=C sort)
+for translation in $translations; do
+	found_upstream="no"
+	# Find the manpage by removing the .po extension
+	manpage=$(basename $translation .po)
+	mandir=$(dirname $translation)
+	for distribution in $distributions; do
+		upstream_manpage="$upstreamdir/$distribution/$mandir/$manpage"
+		if [ -f "$upstream_manpage" ]; then
+			found_upstream="yes"
+			break
 		fi
 	done
+	if [ $found_upstream = "no" ]; then
+		echo "No upstream found for '$translation'"
+	fi
 done
