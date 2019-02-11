@@ -53,3 +53,12 @@ if [ -f links.txt ]; then
 	LC_ALL=C sort links.txt > tmp.links
 	mv tmp.links links.txt
 fi
+
+# Another special case for man.7, which uses \c and
+# is therefore not translatable by po4a.
+# Reformat the part to display equally in the man browser.
+# Line 272 and 273:
+# .B \&.UE \c
+# .RI [ trailer ]
+# Reformat to: \fB\&.UE\fP [ \fItrailer\fP ]
+sed -i -e "/^\.B \\\&\.UE \\\c/{N; s/.*/\\\fB\\\\\&.UE\\\fP [ \\\fItrailer\\\fP ]/}" man7/man.7
