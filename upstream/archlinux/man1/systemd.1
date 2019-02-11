@@ -403,7 +403,7 @@ systemd only keeps a minimal set of units loaded into memory\&. Specifically, th
 .IP "  1." 4.2
 .\}
 It is in an active, activating, deactivating or failed state (i\&.e\&. in any unit state except for
-"dead")
+"inactive")
 .RE
 .sp
 .RS 4
@@ -473,6 +473,8 @@ utmp
 database are supported\&.
 .PP
 systemd has a minimal transaction system: if a unit is requested to start up or shut down it will add it and all its dependencies to a temporary transaction\&. Then, it will verify if the transaction is consistent (i\&.e\&. whether the ordering of all units is cycle\-free)\&. If it is not, systemd will try to fix it up, and removes non\-essential jobs from the transaction that might remove the loop\&. Also, systemd tries to suppress non\-essential jobs in the transaction that would stop a running service\&. Finally it is checked whether the jobs of the transaction contradict jobs that have already been queued, and optionally the transaction is aborted then\&. If all worked out and the transaction is consistent and minimized in its impact it is merged with all already outstanding jobs and added to the run queue\&. Effectively this means that before executing a requested operation, systemd will verify that it makes sense, fixing it if possible, and only failing if it really cannot work\&.
+.PP
+Note that transactions are generated independently of a unit\*(Aqs state at runtime, hence, for example, if a start job is requested on an already started unit, it will still generate a transaction and wake up any inactive dependencies (and cause propagation of other jobs as per the defined relationships)\&. This is because the enqueued job is at the time of execution compared to the target unit\*(Aqs state and is marked successful and complete when both satisfy\&. However, this job also pulls in other dependencies due to the defined relationships and thus leads to, in our our example, start jobs for any of those inactive units getting queued as well\&.
 .PP
 systemd contains native implementations of various tasks that need to be executed as part of the boot process\&. For example, it sets the hostname or configures the loopback network device\&. It also sets up and mounts various API file systems, such as
 /sys
