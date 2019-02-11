@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,18 +24,9 @@ for directory in $directories; do
 	echo "Processing directory '$directory'"
 	cd $directory
 
-	# Start with clean directories and no leftover links.txt
-	rm -rf man* links.txt
-
 	# Call the script inside the directory for handling
 	# the needed instructions for the given distribution.
 	./update-manpages.sh
-
-	# Sort the file links.txt
-	if [ -f links.txt ]; then
-		LC_ALL=C sort links.txt > tmp.links
-		mv tmp.links links.txt
-	fi
 
 	cd ..
 done
