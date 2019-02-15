@@ -19,7 +19,7 @@
 echo "Generating pot files for common msgids ..."
 
 previous_step=""
-steps="100 50 40 30 20 18 16 14 12 10 9 8 7 6 5 4 3 2"
+steps="100 20 10 4 3 2"
 
 for step in $steps; do
   if [ "X$previous_step" = "X" ] ; then
