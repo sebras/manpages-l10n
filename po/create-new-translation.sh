@@ -30,7 +30,12 @@ potfile=../templates/$mandir/$manpage.pot
 # Create the template
 cd ../templates
 ./generate-one-template.sh $manpage
+# Update common templates
+./create-common-templates.sh
 cd ../po
+
+# Update common translations
+./update-common.sh
 
 # Ensure that there is a .po file
 if [ ! -f $mandir/$manpage.po ]; then
