@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 240" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 241" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -873,7 +873,7 @@ is set\&. This setting cannot ensure protection in all cases\&. In general it ha
 \fIRuntimeDirectory=\fR, \fIStateDirectory=\fR, \fICacheDirectory=\fR, \fILogsDirectory=\fR, \fIConfigurationDirectory=\fR
 .RS 4
 These options take a whitespace\-separated list of directory names\&. The specified directory names must be relative, and may not include
-"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below the locations defined in the following table, when the unit is started\&. Also, the corresponding environment variable is defined with the full path of directories\&. If multiple directories are set, then int the environment variable the paths are concatenated with colon (":")\&.
+"\&.\&."\&. If set, one or more directories by the specified names will be created (including their parents) below the locations defined in the following table, when the unit is started\&. Also, the corresponding environment variable is defined with the full path of directories\&. If multiple directories are set, then in the environment variable the paths are concatenated with colon (":")\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -1508,7 +1508,12 @@ set and
 \fBshmat\fR(2)
 system calls with
 \fBSHM_EXEC\fR
-set\&. Note that this option is incompatible with programs and libraries that generate program code dynamically at runtime, including JIT execution engines, executable stacks, and code "trampoline" feature of various C compilers\&. This option improves service security, as it makes harder for software exploits to change running code dynamically\&. Note that this feature is fully available on x86\-64, and partially on x86\&. Specifically, the
+set\&. Note that this option is incompatible with programs and libraries that generate program code dynamically at runtime, including JIT execution engines, executable stacks, and code "trampoline" feature of various C compilers\&. This option improves service security, as it makes harder for software exploits to change running code dynamically\&. However, the protection can be circumvented, if the service can write to a filesystem, which is not mounted with
+\fBnoexec\fR
+(such as
+/dev/shm), or it can use
+\fBmemfd_create()\fR\&. This can be prevented by making such file systems inaccessible to the service (e\&.g\&.
+\fIInaccessiblePaths=/dev/shm\fR) and installing further system call filters (\fISystemCallFilter=~memfd_create\fR)\&. Note that this feature is fully available on x86\-64, and partially on x86\&. Specifically, the
 \fBshmat()\fR
 protection is not available on x86\&. Note that on systems supporting multiple ABIs (such as x86/x86\-64) it is recommended to turn off alternative ABIs for services, so that they cannot be used to circumvent the restrictions of this option\&. Specifically, it is recommended to combine this option with
 \fISystemCallArchitectures=native\fR
@@ -3538,7 +3543,8 @@ T}
 \fBsystemd\fR(1),
 \fBsystemctl\fR(1),
 \fBsystemd-analyze\fR(1),
-\fBjournalctl\fR(8),
+\fBjournalctl\fR(1),
+\fBsystemd-system.conf\fR(5),
 \fBsystemd.unit\fR(5),
 \fBsystemd.service\fR(5),
 \fBsystemd.socket\fR(5),

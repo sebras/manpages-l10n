@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_NEW" "3" "" "systemd 240" "sd_bus_new"
+.TH "SD_BUS_NEW" "3" "" "systemd 241" "sd_bus_new"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_bus_new, sd_bus_ref, sd_bus_unref, sd_bus_unrefp, sd_bus_flush_close_unref, sd_bus_flush_close_unrefp \- Create a new bus object and create or destroy references to it
+sd_bus_new, sd_bus_ref, sd_bus_unref, sd_bus_unrefp, sd_bus_close_unref, sd_bus_close_unrefp, sd_bus_flush_close_unref, sd_bus_flush_close_unrefp \- Create a new bus object and create or destroy references to it
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -34,10 +34,14 @@ sd_bus_new, sd_bus_ref, sd_bus_unref, sd_bus_unrefp, sd_bus_flush_close_unref, s
 .BI "sd_bus *sd_bus_ref(sd_bus\ *" "bus" ");"
 .HP \w'sd_bus\ *sd_bus_unref('u
 .BI "sd_bus *sd_bus_unref(sd_bus\ *" "bus" ");"
-.HP \w'void\ sd_bus_unrefp('u
-.BI "void sd_bus_unrefp(sd_bus\ **" "busp" ");"
+.HP \w'sd_bus\ *sd_bus_close_unref('u
+.BI "sd_bus *sd_bus_close_unref(sd_bus\ *" "bus" ");"
 .HP \w'sd_bus\ *sd_bus_flush_close_unref('u
 .BI "sd_bus *sd_bus_flush_close_unref(sd_bus\ *" "bus" ");"
+.HP \w'void\ sd_bus_unrefp('u
+.BI "void sd_bus_unrefp(sd_bus\ **" "busp" ");"
+.HP \w'void\ sd_bus_close_unrefp('u
+.BI "void sd_bus_close_unrefp(sd_bus\ **" "busp" ");"
 .HP \w'void\ sd_bus_flush_close_unrefp('u
 .BI "void sd_bus_flush_close_unrefp(sd_bus\ **" "busp" ");"
 .SH "DESCRIPTION"
@@ -110,16 +114,24 @@ will first dereference its argument, which must not be
 is
 \fBNULL\fR\&.
 .PP
+\fBsd_bus_close_unref()\fR
+is similar to
+\fBsd_bus_unref()\fR, but first executes
+\fBsd_bus_close\fR(3), ensuring that the connection is terminated before the reference to the connection is dropped and possibly the object freed\&.
+.PP
 \fBsd_bus_flush_close_unref()\fR
 is similar to
 \fBsd_bus_unref()\fR, but first executes
 \fBsd_bus_flush\fR(3)
 as well as
-\fBsd_bus_close\fR(3), ensuring that any pending messages are properly flushed out before the reference to the connection is dropped and possibly the object freed\&. This call is particularly useful immediately before exiting from a program as it ensures that any pending outgoing messages are written out, and unprocessed but queued incoming messages released before the connection is terminated and released\&.
+\fBsd_bus_close\fR(3), ensuring that any pending messages are synchronously flushed out before the reference to the connection is dropped and possibly the object freed\&. This call is particularly useful immediately before exiting from a program as it ensures that any pending outgoing messages are written out, and unprocessed but queued incoming messages released before the connection is terminated and released\&.
 .PP
+\fBsd_bus_close_unrefp()\fR
+is similar to
+\fBsd_bus_close_unref()\fR, but may be used in GCC\*(Aqs and LLVM\*(Aqs Clean\-up Variable Attribute, see above\&. Similarly,
 \fBsd_bus_flush_close_unrefp()\fR
 is similar to
-\fBsd_bus_flush_close_unref()\fR, but may be used in GCC\*(Aqs and LLVM\*(Aqs Clean\-up Variable Attribute, see above\&.
+\fBsd_bus_flush_close_unref()\fR\&.
 .SH "RETURN VALUE"
 .PP
 On success,
