@@ -26,20 +26,20 @@
 .\" 2007-12-17, Samuel Thibault <samuel.thibault@ens-lyon.org>:
 .\"     document the VT_GETHIFONTMASK ioctl
 .\" "
-.TH VCS 4 2017-05-03 "Linux" "Linux Programmer's Manual"
+.TH VCS 4 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 vcs, vcsa \- virtual console memory
 .SH DESCRIPTION
 .I /dev/vcs0
 is a character device with major number 7 and minor number
-0, usually of mode 0644 and owner root.tty.
+0, usually with mode 0644 and ownership root:tty.
 It refers to the memory of the currently
 displayed virtual console terminal.
 .PP
 .I /dev/vcs[1\-63]
 are character devices for virtual console
 terminals, they have major number 7 and minor number 1 to 63, usually
-mode 0644 and owner root.tty.
+mode 0644 and ownership root:tty.
 .IR /dev/vcsa[0\-63]
 are the same, but
 using
@@ -140,7 +140,8 @@ main(void)
     struct {unsigned char lines, cols, x, y;} scrn;
     unsigned short s;
     unsigned short mask;
-    unsigned char ch, attrib;
+    unsigned char attrib;
+    int ch;
 
     fd = open(console, O_RDWR);
     if (fd < 0) {
@@ -158,16 +159,16 @@ main(void)
         exit(EXIT_FAILURE);
     }
     (void) read(fd, &scrn, 4);
-    (void) lseek(fd, 4 + 2*(scrn.y*scrn.cols + scrn.x), 0);
+    (void) lseek(fd, 4 + 2*(scrn.y*scrn.cols + scrn.x), SEEK_SET);
     (void) read(fd, &s, 2);
     ch = s & 0xff;
-    if (attrib & mask)
+    if (s & mask)
         ch |= 0x100;
     attrib = ((s & ~mask) >> 8);
-    printf("ch=\(aq%c\(aq attrib=0x%02x\\n", ch, attrib);
-    attrib ^= 0x10;
-    (void) lseek(fd, \-1, 1);
-    (void) write(fd, &attrib, 1);
+    printf("ch=0x%03x attrib=0x%02x\en", ch, attrib);
+    s ^= 0x1000;
+    (void) lseek(fd, \-2, SEEK_CUR);
+    (void) write(fd, &s, 2);
     exit(EXIT_SUCCESS);
 }
 .EE
@@ -177,7 +178,7 @@ main(void)
 .BR ttyS (4),
 .BR gpm (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

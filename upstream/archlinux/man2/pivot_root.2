@@ -7,7 +7,7 @@
 .\" Written 2000-02-23 by Werner Almesberger
 .\" Modified 2004-06-17 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.TH PIVOT_ROOT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH PIVOT_ROOT 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pivot_root \- change the root filesystem
 .SH SYNOPSIS
@@ -112,6 +112,9 @@ or a filesystem is already mounted on \fIput_old\fP.
 .B EINVAL
 \fIput_old\fP is not underneath \fInew_root\fP.
 .TP
+.B EINVAL
+The current root is on the rootfs (initial ramfs) filesystem.
+.TP
 .B ENOTDIR
 \fInew_root\fP or \fIput_old\fP is not a directory.
 .TP
@@ -128,6 +131,18 @@ is Linux-specific and hence is not portable.
 .SH NOTES
 Glibc does not provide a wrapper for this system call; call it using
 .BR syscall (2).
+.PP
+The rootfs (initial ramfs) cannot be
+.BR pivot_root ()ed.
+The recommended method of changing the root filesystem in this case is
+to delete everything in rootfs, overmount rootfs with the new root, attach
+.IR stdin / stdout / stderr
+to the new
+.IR /dev/console ,
+and exec the new
+.BR init (1).
+Helper programs for this process exist; see
+.BR switch_root (8).
 .SH BUGS
 .BR pivot_root ()
 should not have to change root and current working directory of all other
@@ -145,7 +160,7 @@ insanity.
 .BR pivot_root (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

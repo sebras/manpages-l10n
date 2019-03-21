@@ -5,7 +5,7 @@
 .\" Licensed under the GPLv2
 .\" %%%LICENSE_END
 .\"
-.TH SETNS 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH SETNS 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 setns \- reassociate thread with a namespace
 .SH SYNOPSIS
@@ -83,38 +83,32 @@ and wants to ensure that the namespace is of a particular type.
 .IR fd
 if the file descriptor was opened by another process and, for example,
 passed to the caller via a UNIX domain socket.)
-.PP
-If
-.I fd
-refers to a PID namespaces, the semantics are somewhat different
-from other namespace types:
-reassociating the calling thread with a PID namespace changes only
-the PID namespace that subsequently created child processes of
-the caller will be placed in;
-it does not change the PID namespace of the caller itself.
-Reassociating with a PID namespace is allowed only if the
-PID namespace specified by
-.IR fd
-is a descendant (child, grandchild, etc.)
-of the PID namespace of the caller.
-For further details on PID namespaces, see
-.BR pid_namespaces (7).
-.PP
+.\"
+.SS Details for specific namespace types
+Note the following details and restrictions when reassociating with
+specific namespace types:
+.TP
+User namespaces
 A process reassociating itself with a user namespace must have the
 .B CAP_SYS_ADMIN
 .\" See kernel/user_namespace.c:userns_install() [3.8 source]
 capability in the target user namespace.
+(This necessarily implies that it is only possible to join
+a descendant user namespace.)
 Upon successfully joining a user namespace,
 a process is granted all capabilities in that namespace,
 regardless of its user and group IDs.
+.IP
 A multithreaded process may not change user namespace with
 .BR setns ().
+.IP
 It is not permitted to use
 .BR setns ()
 to reenter the caller's current user namespace.
 This prevents a caller that has dropped capabilities from regaining
 those capabilities via a call to
 .BR setns ().
+.IP
 For security reasons,
 .\" commit e66eded8309ebf679d3d3c1f5820d1f2ca332c71
 .\" https://lwn.net/Articles/543273/
@@ -124,27 +118,70 @@ filesystem-related attributes
 .BR clone (2)
 .B CLONE_FS
 flag) with another process.
+.IP
 For further details on user namespaces, see
 .BR user_namespaces (7).
-.PP
-A process may not be reassociated with a new mount namespace if it is
-multithreaded.
-.\" Above check is in fs/namespace.c:mntns_install() [3.8 source]
+.TP
+Mount namespaces
 Changing the mount namespace requires that the caller possess both
 .B CAP_SYS_CHROOT
 and
 .BR CAP_SYS_ADMIN
 capabilities in its own user namespace and
 .BR CAP_SYS_ADMIN
-in the target mount namespace.
+in the user namespace that owns the target mount namespace.
+.IP
+A process may not be reassociated with a new mount namespace if it is
+multithreaded.
+.\" Above check is in fs/namespace.c:mntns_install() [3.8 source]
+.IP
 See
 .BR user_namespaces (7)
 for details on the interaction of user namespaces and mount namespaces.
-.PP
+.TP
+PID namespaces
+In order to reassociate itself with a new PID namespace,
+the caller must have the
+.B CAP_SYS_ADMIN
+capability both in its own user namespace and in the user namespace
+that owns the target PID namespace.
+.IP
+If
+.I fd
+refers to a PID namespace, the semantics are somewhat different
+from other namespace types:
+reassociating the calling thread with a PID namespace changes only
+the PID namespace that subsequently created child processes of
+the caller will be placed in;
+it does not change the PID namespace of the caller itself.
+.IP
+Reassociating with a PID namespace is allowed only if the
+PID namespace specified by
+.IR fd
+is a descendant (child, grandchild, etc.)
+of the PID namespace of the caller.
+.IP
+For further details on PID namespaces, see
+.BR pid_namespaces (7).
+.TP
+Cgroup namespaces
+In order to reassociate itself with a new cgroup namespace,
+the caller must have the
+.B CAP_SYS_ADMIN
+capability both in its own user namespace and in the user namespace
+that owns the target cgroup namespace.
+.IP
 Using
 .BR setns ()
 to change the caller's cgroup namespace does not change
 the caller's cgroup memberships.
+.TP
+Network, IPC, and UTS namespaces
+In order to reassociate itself with a new network, IPC, or UTS namespace,
+the caller must have the
+.B CAP_SYS_ADMIN
+capability both in its own user namespace and in the user namespace
+that owns the target namespace.
 .SH RETURN VALUE
 On success,
 .BR setns ()
@@ -271,7 +308,7 @@ bizarro
 #include <stdlib.h>
 #include <stdio.h>
 
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \\
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
                         } while (0)
 
 int
@@ -280,7 +317,7 @@ main(int argc, char *argv[])
     int fd;
 
     if (argc < 3) {
-        fprintf(stderr, "%s /proc/PID/ns/FILE cmd args...\\n", argv[0]);
+        fprintf(stderr, "%s /proc/PID/ns/FILE cmd args...\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -304,7 +341,7 @@ main(int argc, char *argv[])
 .BR namespaces (7),
 .BR unix (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

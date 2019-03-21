@@ -24,7 +24,7 @@
 .\" This document is based on the perf_event.h header file, the
 .\" tools/perf/design.txt file, and a lot of bitter experience.
 .\"
-.TH PERF_EVENT_OPEN 2 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH PERF_EVENT_OPEN 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 perf_event_open \- set up performance monitoring
 .SH SYNOPSIS
@@ -321,7 +321,7 @@ This indicates a hardware breakpoint as provided by the CPU.
 Breakpoints can be read/write accesses to an address as well as
 execution of an instruction address.
 .TP
-.RB "dynamic PMU"
+dynamic PMU
 Since Linux 2.6.38,
 .\" commit 2e80a82a49c4c7eca4e35734380f28298ba5db19
 .BR perf_event_open ()
@@ -662,7 +662,6 @@ for more details.
 .RE
 .TP
 .IR kprobe_func ", " uprobe_path ", " kprobe_addr ", and " probe_offset
-.EE
 These fields describe the kprobe/uprobe for dynamic PMUs
 .BR kprobe
 and
@@ -684,7 +683,6 @@ use
 .I uprobe_path
 and
 .IR probe_offset .
-.RE
 .TP
 .IR sample_period ", " sample_freq
 A "sampling" event is one that generates an overflow notification
@@ -963,7 +961,9 @@ Extra support is needed for handling hypervisor measurements on most
 machines.
 .TP
 .IR "exclude_idle"
-If set, don't count when the CPU is idle.
+If set, don't count when the CPU is running the idle task.
+While you can currently enable this for any event type, it is ignored
+for all but software events.
 .TP
 .IR "mmap"
 The
@@ -1101,7 +1101,7 @@ struct sample_id {
     { u64 id;       }   /* if PERF_SAMPLE_IDENTIFIER set */
 };
 .EE
-,in
+.in
 .TP
 .IR "exclude_host" " (since Linux 3.2)"
 .\" commit a240f76165e6255384d4bdb8139895fac7988799
@@ -1460,10 +1460,9 @@ was specified.
 .IR time_enabled ", " time_running
 Total time the event was enabled and running.
 Normally these values are the same.
-If more events are started,
-then available counter slots on the PMU, then multiplexing
-happens and events run only part of the time.
-In that case, the
+Multiplexing happens if the number of events is more than the
+number of available PMU counter slots.
+In that case the events run only part of the time and the
 .I time_enabled
 and
 .I time running
@@ -2928,19 +2927,86 @@ The argument is a BPF program file descriptor that was created by
 a previous
 .BR bpf (2)
 system call.
+.TP
+.BR PERF_EVENT_IOC_PAUSE_OUTPUT " (since Linux 4.7)"
+.\" commit 86e7972f690c1017fd086cdfe53d8524e68c661c
+This allows pausing and resuming the event's ring-buffer.
+A paused ring-buffer does not prevent generation of samples,
+but simply discards them.
+The discarded samples are considered lost, and cause a
+.BR PERF_RECORD_LOST
+sample to be generated when possible.
+An overflow signal may still be triggered by the discarded sample
+even though the ring-buffer remains empty.
+.IP
+The argument is an unsigned 32-bit integer.
+A nonzero value pauses the ring-buffer, while a
+zero value resumes the ring-buffer.
+.TP
+.BR PERF_EVENT_MODIFY_ATTRIBUTES " (since Linux 4.17)"
+.\" commit 32ff77e8cc9e66cc4fb38098f64fd54cc8f54573
+This allows modifying an existing event without the overhead
+of closing and reopening a new event.
+Currently this is supported only for breakpoint events.
+.IP
+The argument is a pointer to a
+.I perf_event_attr
+structure containing the updated event settings.
+.TP
+.BR PERF_EVENT_IOC_QUERY_BPF " (since Linux 4.16)"
+.\" commit f371b304f12e31fe30207c41ca7754564e0ea4dc
+This allows querying which Berkeley Packet Filter (BPF)
+programs are attached to an existing kprobe tracepoint.
+You can only attach one BPF program per event, but you can
+have multiple events attached to a tracepoint.
+Querying this value on one tracepoint event returns the id
+of all BPF programs in all events attached to the tracepoint.
+You need
+.B CAP_SYS_ADMIN
+privileges to use this ioctl.
+.IP
+The argument is a pointer to a structure
+.in +4n
+.EX
+struct perf_event_query_bpf {
+    __u32    ids_len;
+    __u32    prog_cnt;
+    __u32    ids[0];
+};
+.EE
+.IP
+The
+.I ids_len
+field indicates the number of ids that can fit in the provided
+.I ids
+array.
+The
+.I prog_cnt
+value is filled in by the kernel with the number of attached
+BPF programs.
+The
+.I ids
+array is filled with the id of each attached BPF program.
+If there are more programs than will fit in the array, then the
+kernel will return
+.B ENOSPC
+and
+.I ids_len
+will indicate the number of program IDs that were successfully copied.
+.\"
 .SS Using prctl(2)
-A process can enable or disable all the event groups that are
-attached to it using the
+A process can enable or disable all currently open event groups
+using the
 .BR prctl (2)
 .B PR_TASK_PERF_EVENTS_ENABLE
 and
 .B PR_TASK_PERF_EVENTS_DISABLE
 operations.
-This applies to all counters on the calling process, whether created by
-this process or by another, and does not affect any counters that this
-process has created on other processes.
-It enables or disables only
-the group leaders, not any other members in the groups.
+This applies only to events created locally by the calling process.
+This does not apply to events created by other processes attached
+to the calling process or inherited events from a parent process.
+Only group leaders are enabled and disabled,
+not any other members of the groups.
 .SS perf_event related configuration files
 .PP
 Files in
@@ -3362,19 +3428,19 @@ main(int argc, char **argv)
 
     fd = perf_event_open(&pe, 0, \-1, \-1, 0);
     if (fd == \-1) {
-       fprintf(stderr, "Error opening leader %llx\\n", pe.config);
+       fprintf(stderr, "Error opening leader %llx\en", pe.config);
        exit(EXIT_FAILURE);
     }
 
     ioctl(fd, PERF_EVENT_IOC_RESET, 0);
     ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 
-    printf("Measuring instruction count for this printf\\n");
+    printf("Measuring instruction count for this printf\en");
 
     ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     read(fd, &count, sizeof(long long));
 
-    printf("Used %lld instructions\\n", count);
+    printf("Used %lld instructions\en", count);
 
     close(fd);
 }
@@ -3387,7 +3453,7 @@ main(int argc, char **argv)
 .BR prctl (2),
 .BR read (2)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,
