@@ -52,7 +52,7 @@
 .\" to see what information could be imported from that file
 .\" into this file.
 .\"
-.TH PROC 5 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH PROC 5 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 proc \- process information pseudo-filesystem
 .SH DESCRIPTION
@@ -153,25 +153,115 @@ This group should be used instead of approaches such as putting
 nonroot users into the
 .BR sudoers (5)
 file.
+.\"
+.SS Overview
+Underneath
+.IR /proc ,
+there are the following general groups of files and subdirectories:
+.TP
+.IR /proc/[pid] " subdirectories"
+Each one of these subdirectories contains files and subdirectories
+exposing information about the process with the corresponding process ID.
+.IP
+Underneath each of the
+.I /proc/[pid]
+directories, a
+.I task
+subdirectory contains subdirectories of the form
+.IR task/[tid] ,
+which contain corresponding information about each of the threads
+in the process, where
+.I tid
+is the kernel thread ID of the thread.
+.IP
+The
+.I /proc/[pid]
+subdirectories are visible when iterating through
+.I /proc
+with
+.BR getdents (2)
+(and thus are visible when one uses
+.BR ls (1)
+to view the contents of
+.IR /proc ).
+.TP
+.IR /proc/[tid] " subdirectories"
+Each one of these subdirectories contains files and subdirectories
+exposing information about the thread with the corresponding thread ID.
+The contents of these directories are the same as the corresponding
+.IR /proc/[pid]/task/[tid]
+directories.
+.IP
+The
+.I /proc/[tid]
+subdirectories are
+.I not
+visible when iterating through
+.I /proc
+with
+.BR getdents (2)
+(and thus are
+.I not
+visible when one uses
+.BR ls (1)
+to view the contents of
+.IR /proc ).
+.TP
+.I /proc/self
+When a process accesses this magic symbolic link,
+it resolves to the process's own
+.I /proc/[pid]
+directory.
+.TP
+.I /proc/thread-self
+When a thread accesses this magic symbolic link,
+it resolves to the process's own
+.I /proc/self/task/[tid]
+directory.
+.TP
+.I /proc/[a-z]*
+Various other files and subdirectories under
+.I /proc
+expose system-wide information.
+.PP
+All of the above are described in more detail below.
+.\"
 .SS Files and directories
-The following list describes many of the files and directories under the
+The following list provides details of many of the files and directories
+under the
 .I /proc
 hierarchy.
 .TP
 .I /proc/[pid]
 There is a numerical subdirectory for each running process; the
 subdirectory is named by the process ID.
-.IP
 Each
 .I /proc/[pid]
-subdirectory contains the
-pseudo-files and directories described below.
-These files are normally owned by the effective user and
+subdirectory contains the pseudo-files and directories described below.
+.IP
+The files inside each
+.I /proc/[pid]
+directory are normally owned by the effective user and
 effective group ID of the process.
 However, as a security measure, the ownership is made
 .IR root:root
 if the process's "dumpable" attribute is set to a value other than 1.
-This attribute may change for the following reasons:
+.IP
+Before Linux 4.11,
+.\" commit 68eb94f16227336a5773b83ecfa8290f1d6b78ce
+.IR root:root
+meant the "global" root user ID and group ID
+(i.e., UID 0 and GID 0 in the initial user namespace).
+Since Linux 4.11,
+if the process is in a noninitial user namespace that has a
+valid mapping for user (group) ID 0 inside the namespace, then
+the user (group) ownership of the files under
+.I /proc/[pid]
+is instead made the same as the root user (group) ID of the namespace.
+This means that inside a container,
+things work as expected for the container "root" user.
+.IP
+The process's "dumpable" attribute may change for the following reasons:
 .RS
 .IP * 3
 The attribute was explicitly set via the
@@ -187,7 +277,7 @@ The attribute was reset to the value in the file
 .IP
 Resetting the "dumpable" attribute to 1 reverts the ownership of the
 .IR /proc/[pid]/*
-files to the process's real UID and real GID.
+files to the process's effective UID and GID.
 .TP
 .I /proc/[pid]/attr
 .\" https://lwn.net/Articles/28222/
@@ -317,7 +407,8 @@ all subsequently created sockets will be labeled with this context.
 See
 .BR sched (7).
 .TP
-.IR /proc/[pid]/auxv " (since 2.6.0-test7)"
+.IR /proc/[pid]/auxv " (since 2.6.0)"
+.\" Precisely: Linux 2.6.0-test7
 This contains the contents of the ELF interpreter information passed
 to the process at exec time.
 The format is one \fIunsigned long\fP ID
@@ -417,7 +508,7 @@ unless the process is a zombie.
 In the latter case, there is nothing in this file:
 that is, a read on this file will return 0 characters.
 The command-line arguments appear in this file as a set of
-strings separated by null bytes (\(aq\\0\(aq),
+strings separated by null bytes (\(aq\e0\(aq),
 with a further null byte after the last string.
 .TP
 .IR /proc/[pid]/comm " (since Linux 2.6.33)"
@@ -497,13 +588,13 @@ check; see
 This file contains the initial environment that was set
 when the currently executing program was started via
 .BR execve (2).
-The entries are separated by null bytes (\(aq\\0\(aq),
+The entries are separated by null bytes (\(aq\e0\(aq),
 and there may be a null byte at the end.
 Thus, to print out the environment of process 1, you would do:
 .IP
 .in +4n
 .EX
-.RB "$" " strings /proc/1/environ"
+.RB "$" " cat /proc/1/environ | tr \(aq\e000\(aq \(aq\en\(aq"
 .EE
 .in
 .IP
@@ -932,6 +1023,71 @@ The mask of events that are ignored for this mark
 .IP
 For details on these fields, see
 .BR fanotify_mark (2).
+.IP
+For timerfd file descriptors (see
+.BR timerfd (2)),
+we see (since Linux 3.17)
+.\" commit af9c4957cf212ad9cf0bee34c95cb11de5426e85
+the following fields:
+.IP
+.in +4n
+.EX
+pos:    0
+flags:  02004002
+mnt_id: 13
+clockid: 0
+ticks: 0
+settime flags: 03
+it_value: (7695568592, 640020877)
+it_interval: (0, 0)
+.EE
+.in
+.RS
+.TP
+.I clockid
+This is the numeric value of the clock ID
+(corresponding to one of the
+.B CLOCK_*
+constants defined via
+.IR <time.h> )
+that is used to mark the progress of the timer (in this example, 0 is
+.BR CLOCK_REALTIME ).
+.TP
+.I ticks
+This is the number of timer expirations that have occurred,
+(i.e., the value that
+.BR read (2)
+on it would return).
+.TP
+.I settime flags
+This field lists the flags with which the timerfd was last armed (see
+.BR timerfd_settime (2)),
+in octal
+(in this example, both
+.B TFD_TIMER_ABSTIME
+and
+.B TFD_TIMER_CANCEL_ON_SET
+are set).
+.TP
+.I it_value
+This field contains the amount of time until the timer will next expire,
+expressed in seconds and nanoseconds.
+This is always expressed as a relative value,
+regardless of whether the timer was created using the
+.B TFD_TIMER_ABSTIME
+flag.
+.TP
+.I it_interval
+This field contains the interval of the timer,
+in seconds and nanoseconds.
+(The
+.I it_value
+and
+.I it_interval
+fields contain the values that
+.BR timerfd_gettime (2)
+on this file descriptor would return.)
+.RE
 .TP
 .IR /proc/[pid]/gid_map " (since Linux 3.5)"
 See
@@ -1168,14 +1324,17 @@ There are additional helpful pseudo-paths:
 .IR [stack]
 The initial process's (also known as the main thread's) stack.
 .TP
-.IR [stack:<tid>] " (since Linux 3.4)"
-.\" commit b76437579d1344b612cf1851ae610c636cec7db0
+.IR [stack:<tid>] " (from Linux 3.4 to 4.4)"
+.\" commit b76437579d1344b612cf1851ae610c636cec7db0 (added)
+.\" commit 65376df582174ffcec9e6471bf5b0dd79ba05e4a (removed)
 A thread's stack (where the
 .IR <tid>
 is a thread ID).
 It corresponds to the
 .IR /proc/[pid]/task/[tid]/
 path.
+This field was removed in Linux 4.5, since providing this information
+for a process with large numbers of threads is expensive.
 .TP
 .IR [vdso]
 The virtual dynamically linked shared object.
@@ -1197,6 +1356,18 @@ short of running it through
 .BR gdb (1),
 .BR strace (1),
 or similar.
+.IP
+.I pathname
+is shown unescaped except for newline characters, which are replaced
+with an octal escape sequence.
+As a result, it is not possible to determine whether the original
+pathname contained a newline character or the literal
+.I \ee012
+character sequence.
+.IP
+If the mapping is file-backed and the file has been deleted, the string
+" (deleted)" is appended to the pathname.
+Note that this is ambiguous too.
 .IP
 Under Linux 2.0, there is no field giving pathname.
 .TP
@@ -1246,6 +1417,16 @@ mount ID: a unique ID for the mount (may be reused after
 parent ID: the ID of the parent mount
 (or of self for the root of this mount namespace's mount tree).
 .IP
+If a new mount is stacked on top of a previous existing mount
+(so that it hides the existing mount) at pathname P,
+then the parent of the new mount is the previous mount at that location.
+Thus, when looking at all the mounts stacked at a particular location,
+the top-most mount is the one that is not the parent
+of any other mount at the same location.
+(Note, however, that this top-most mount will be accessible only if
+the longest path subprefix of P that is a mount point
+is not itself hidden by a stacked mount.)
+.IP
 If the parent mount point lies outside the process's root directory (see
 .BR chroot (2)),
 the ID shown here won't have a corresponding record in
@@ -1278,7 +1459,8 @@ mount point: the pathname of the mount point relative
 to the process's root directory.
 .TP
 (6)
-mount options: per-mount options.
+mount options: per-mount options (see
+.BR mount (2)).
 .TP
 (7)
 optional fields: zero or more fields of the form "tag[:value]"; see below.
@@ -1293,7 +1475,8 @@ filesystem type: the filesystem type in the form "type[.subtype]".
 mount source: filesystem-specific information or "none".
 .TP
 (11)
-super options: per-superblock options.
+super options: per-superblock options (see
+.BR mount (2)).
 .RE
 .IP
 Currently, the possible optional fields are
@@ -1523,6 +1706,12 @@ Writing to
 or
 .IR /proc/[pid]/oom_adj
 will change the other with its scaled value.
+.IP
+The
+.BR choom (1)
+program provides a command-line interface for adjusting the
+.I oom_score_adj
+value of a running process or a newly executed command.
 .TP
 .IR /proc/[pid]/pagemap " (since Linux 2.6.25)"
 This file shows the mapping of each of the process's virtual pages
@@ -1552,7 +1741,7 @@ The page is exclusively mapped.
 55 (since Linux 3.11)
 PTE is soft-dirty
 (see the kernel source file
-.IR Documentation/vm/soft-dirty.txt ).
+.IR Documentation/admin-guide/mm/soft-dirty.rst ).
 .TP
 54\(en0
 If the page is present in RAM (bit 63), then these bits
@@ -2248,6 +2437,7 @@ VmPTE:	      76 kB
 VmPMD:	      12 kB
 VmSwap:	       0 kB
 HugetlbPages:          0 kB		# 4.4
+CoreDumping:	0                       # 4.15
 Threads:        1
 SigQ:   0/3067
 SigPnd: 0000000000000000
@@ -2262,6 +2452,7 @@ CapBnd: ffffffffffffffff
 CapAmb:	0000000000000000
 NoNewPrivs:     0
 Seccomp:        0
+Speculation_Store_Bypass:       vulnerable
 Cpus_allowed:   00000001
 Cpus_allowed_list:      0
 Mems_allowed:   1
@@ -2319,17 +2510,18 @@ Number of file descriptor slots currently allocated.
 .IR Groups :
 Supplementary group list.
 .IP *
-.I NStgid :
+.IR NStgid :
 Thread group ID (i.e., PID) in each of the PID namespaces of which
 .I [pid]
 is a member.
 The leftmost entry shows the value with respect to the PID namespace
-of the reading process,
+of the process that mounted this procfs (or the root namespace
+if mounted by the kernel),
 followed by the value in successively nested inner namespaces.
 .\" commit e4bc33245124db69b74a6d853ac76c2976f472d5
 (Since Linux 4.1.)
 .IP *
-.IR NSpid:
+.IR NSpid :
 Thread ID in each of the PID namespaces of which
 .I [pid]
 is a member.
@@ -2362,7 +2554,7 @@ Virtual memory size.
 .IP *
 .IR VmLck :
 Locked memory size (see
-.BR mlock (3)).
+.BR mlock (2)).
 .IP *
 .IR VmPin :
 Pinned memory size
@@ -2411,7 +2603,7 @@ Page table entries size (since Linux 2.6.10).
 .IP *
 .IR VmPMD :
 .\" commit dc6c9a35b66b520cf67e05d8ca60ebecad3b0479
-Size of second-level page tables (since Linux 4.0).
+Size of second-level page tables (added in Linux 4.0; removed in Linux 4.15).
 .IP *
 .IR VmSwap :
 .\" commit b084d4353ff99d824d3bc5a5c2c22c70b1fba722
@@ -2419,9 +2611,18 @@ Swapped-out virtual memory size by anonymous private pages;
 shmem swap usage is not included (since Linux 2.6.34).
 .IP *
 .IR HugetlbPages :
-Size of hugetlb memory portions.
+Size of hugetlb memory portions
 .\" commit 5d317b2b6536592a9b51fe65faed43d65ca9158e
 (since Linux 4.4).
+.IP *
+.IR CoreDumping :
+Contains the value 1 if the process is currently dumping core,
+and 0 if it is not
+.\" commit c643401218be0f4ab3522e0c0a63016596d6e9ca
+(since Linux 4.15).
+This information can be used by a monitoring process to avoid killing
+a process that is currently dumping core,
+which could result in a corrupted core dump file.
 .IP *
 .IR Threads :
 Number of threads in process containing this thread.
@@ -2485,6 +2686,12 @@ This field is provided only if the kernel was built with the
 .BR CONFIG_SECCOMP
 kernel configuration option enabled.
 .IP *
+.IR Speculation_Store_Bypass :
+.\" commit fae1fa0fc6cca8beee3ab8ed71d54f9a78fa3f64
+Speculation flaw mitigation state
+(since Linux 4.17, see
+.BR prctl (2)).
+.IP *
 .IR Cpus_allowed :
 Mask of CPUs on which this process may run
 (since Linux 2.6.24, see
@@ -2530,13 +2737,15 @@ Permission to access this file is governed by a ptrace access mode
 check; see
 .BR ptrace (2).
 .TP
-.IR /proc/[pid]/task " (since Linux 2.6.0-test6)"
+.IR /proc/[pid]/task " (since Linux 2.6.0)"
+.\" Precisely: Linux 2.6.0-test6
 This is a directory that contains one subdirectory
 for each thread in the process.
 The name of each subdirectory is the numerical thread ID
 .RI ( [tid] )
 of the thread (see
 .BR gettid (2)).
+.IP
 Within each of these subdirectories, there is a set of
 files with the same names and contents as under the
 .I /proc/[pid]
@@ -2564,6 +2773,7 @@ files may be different for each thread),
 or they might not exist in
 .I /proc/[pid]
 at all.
+.IP
 .\" The following was still true as at kernel 2.6.13
 In a multithreaded process, the contents of the
 .I /proc/[pid]/task
@@ -2708,6 +2918,36 @@ Permission to access this file is governed by a ptrace access mode
 .B PTRACE_MODE_READ_FSCREDS
 check; see
 .BR ptrace (2).
+.TP
+.IR /proc/[tid]
+There  is a numerical subdirectory for each running thread
+that is not a thread group leader
+(i.e., a thread whose thread ID is not the same as its process ID);
+the subdirectory is named by the thread ID.
+Each one of these subdirectories contains files and subdirectories
+exposing information about the thread with the thread ID
+.IR tid .
+The contents of these directories are the same as the corresponding
+.IR /proc/[pid]/task/[tid]
+directories.
+.IP
+The
+.I /proc/[tid]
+subdirectories are
+.I not
+visible when iterating through
+.I /proc
+with
+.BR getdents (2)
+(and thus are
+.I not
+visible when one uses
+.BR ls (1)
+to view the contents of
+.IR /proc ).
+However, the pathnames of these directories are visible to
+(i.e., usable as arguments in)
+system calls that operate on pathnames.
 .TP
 .I /proc/apm
 Advanced power management version and battery information when
@@ -3042,7 +3282,7 @@ The bits are as follows:
 .IP
 For further details on the meanings of these bits,
 see the kernel source file
-.IR Documentation/vm/pagemap.txt .
+.IR Documentation/admin-guide/mm/pagemap.rst .
 Before kernel 2.6.29,
 .\" commit ad3bdefe877afb47480418fdb05ecd42842de65e
 .\" commit e07a4b9217d1e97d2f3a62b6b070efdc61212110
@@ -3325,6 +3565,13 @@ Amount of memory consumed in
 .BR tmpfs (5)
 filesystems.
 .TP
+.IR KReclaimable " %lu (since Linux 4.20)"
+Kernel allocations that the kernel will attempt to reclaim
+under memory pressure.
+Includes
+.I SReclaimable
+(below), and other direct allocations with a shrinker.
+.TP
 .IR Slab " %lu"
 In-kernel data structures cache.
 (See
@@ -3368,7 +3615,7 @@ only if strict overcommit accounting is enabled (mode 2 in
 The limit is calculated according to the formula described under
 .IR /proc/sys/vm/overcommit_memory .
 For further details, see the kernel source file
-.IR Documentation/vm/overcommit-accounting .
+.IR Documentation/vm/overcommit-accounting.rst .
 .TP
 .IR Committed_AS " %lu"
 The amount of memory presently allocated on the system.
@@ -3396,13 +3643,28 @@ Total size of vmalloc memory area.
 .TP
 .IR VmallocUsed " %lu"
 Amount of vmalloc area which is used.
+Since Linux 4.4,
+.\" commit a5ad88ce8c7fae7ddc72ee49a11a75aa837788e0
+this field is no longer calculated, and is hard coded as 0.
+See
+.IR /proc/vmallocinfo .
 .TP
 .IR VmallocChunk " %lu"
 Largest contiguous block of vmalloc area which is free.
+Since Linux 4.4,
+.\" commit a5ad88ce8c7fae7ddc72ee49a11a75aa837788e0
+this field is no longer calculated and is hard coded as 0.
+See
+.IR /proc/vmallocinfo .
 .TP
 .IR HardwareCorrupted " %lu (since Linux 2.6.32)"
 (\fBCONFIG_MEMORY_FAILURE\fP is required.)
 [To be documented.]
+.TP
+.IR LazyFree " %lu (since Linux 4.12)"
+Shows the amount of memory marked by
+.BR madvise (2)
+.BR MADV_FREE .
 .TP
 .IR AnonHugePages " %lu (since Linux 2.6.38)"
 (\fBCONFIG_TRANSPARENT_HUGEPAGE\fP is required.)
@@ -3720,7 +3982,7 @@ sockets, it is 0005.
 the internal state of the socket.
 .TP
 .IR Path :
-the bound path (if any) of the socket.
+the bound pathname (if any) of the socket.
 Sockets in the abstract namespace are included in the list,
 and are shown with a
 .I Path
@@ -3953,10 +4215,12 @@ The value in this field may
 in certain conditions.
 .RE
 .TP
-.IR irq " (since Linux 2.6.0-test4)"
+.IR irq " (since Linux 2.6.0)"
+.\" Precisely: Linux 2.6.0-test4
 (6) Time servicing interrupts.
 .TP
-.IR softirq " (since Linux 2.6.0-test4)"
+.IR softirq " (since Linux 2.6.0"
+.\" Precisely: Linux 2.6.0-test4
 (7) Time servicing softirqs.
 .TP
 .IR steal " (since Linux 2.6.11)"
@@ -4034,13 +4298,13 @@ the \fI/proc\fP filesystem, and the (deprecated)
 .BR sysctl (2)
 system call.
 .IP
-String values may be terminated by either \(aq\\0\(aq or \(aq\\n\(aq.
+String values may be terminated by either \(aq\e0\(aq or \(aq\en\(aq.
 .IP
 Integer and long values may be written either in decimal or in
 hexadecimal notation (e.g. 0x3FFF).
 When writing multiple integer or long values, these may be separated
 by any of the following whitespace characters:
-\(aq\ \(aq, \(aq\\t\(aq, or \(aq\\n\(aq.
+\(aq\ \(aq, \(aq\et\(aq, or \(aq\en\(aq.
 Using other separators leads to the error
 .BR EINVAL .
 .TP
@@ -4592,7 +4856,7 @@ man page.
 .TP
 .I /proc/sys/kernel/hotplug
 This file
-contains the path for the hotplug policy agent.
+contains the pathname for the hotplug policy agent.
 The default value in this file is
 .IR /sbin/hotplug .
 .TP
@@ -4645,7 +4909,7 @@ If 0, the cache is disabled.
 Enabled if nonzero.
 .TP
 .I /proc/sys/kernel/modprobe
-This file contains the path for the kernel module loader.
+This file contains the pathname for the kernel module loader.
 The default value is
 .IR /sbin/modprobe .
 The file is present only if the kernel is built with the
@@ -5424,7 +5688,7 @@ is instead calculated as:
     CommitLimit = overcommit_kbytes + total_swap
 .IP
 See also the description of
-.IR /proc/sys/vm/admiin_reserve_kbytes
+.IR /proc/sys/vm/admin_reserve_kbytes
 and
 .IR /proc/sys/vm/user_reserve_kbytes .
 .TP
@@ -5654,8 +5918,9 @@ Subdirectory containing the pseudo-files and subdirectories for
 tty drivers and line disciplines.
 .TP
 .I /proc/uptime
-This file contains two numbers: the uptime of the system (seconds),
-and the amount of time spent in idle process (seconds).
+This file contains two numbers (values in seconds): the uptime of the
+system (including time spent in suspend) and the amount of time spent
+in the idle process.
 .TP
 .I /proc/version
 This string identifies the kernel version that is currently running.
@@ -6168,7 +6433,7 @@ Number of free CMA (Contiguous Memory Allocator) pages.
 .IR compact_stall " (since Linux 2.6.35)"
 .\" commit 56de7263fcf3eb10c8dcdf8d59a9cec831795f3f
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6177,7 +6442,7 @@ See the kernel source file
 .IR compact_fail " (since Linux 2.6.35)"
 .\" commit 56de7263fcf3eb10c8dcdf8d59a9cec831795f3f
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6186,7 +6451,7 @@ See the kernel source file
 .IR compact_success " (since Linux 2.6.35)"
 .\" commit 56de7263fcf3eb10c8dcdf8d59a9cec831795f3f
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6245,7 +6510,7 @@ See the kernel source file
 .IR thp_fault_alloc " (since Linux 2.6.39)"
 .\" commit 81ab4201fb7d91d6b0cd9ad5b4b16776e4bed145
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6254,7 +6519,7 @@ See the kernel source file
 .IR thp_fault_fallback " (since Linux 2.6.39)"
 .\" commit 81ab4201fb7d91d6b0cd9ad5b4b16776e4bed145
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6263,7 +6528,7 @@ See the kernel source file
 .IR thp_collapse_alloc " (since Linux 2.6.39)"
 .\" commit 81ab4201fb7d91d6b0cd9ad5b4b16776e4bed145
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6272,7 +6537,7 @@ See the kernel source file
 .IR thp_collapse_alloc_failed " (since Linux 2.6.39)"
 .\" commit 81ab4201fb7d91d6b0cd9ad5b4b16776e4bed145
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6281,7 +6546,7 @@ See the kernel source file
 .IR thp_split " (since Linux 2.6.39)"
 .\" commit 81ab4201fb7d91d6b0cd9ad5b4b16776e4bed145
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6290,7 +6555,7 @@ See the kernel source file
 .IR thp_zero_page_alloc " (since Linux 3.8)"
 .\" commit d8a8e1f0da3d29d7268b3300c96a059d63901b76
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6299,7 +6564,7 @@ See the kernel source file
 .IR thp_zero_page_alloc_failed " (since Linux 3.8)"
 .\" commit d8a8e1f0da3d29d7268b3300c96a059d63901b76
 See the kernel source file
-.IR Documentation/vm/transhuge.txt .
+.IR Documentation/admin-guide/mm/transhuge.rst .
 .\" Present only if the kernel was configured with
 .\" .BR CONFIG_VM_EVENT_COUNTERS
 .\" and
@@ -6372,12 +6637,17 @@ This file display information about memory zones.
 This is useful for analyzing virtual memory behavior.
 .\" FIXME more should be said about /proc/zoneinfo
 .SH NOTES
-Many strings (i.e., the environment and command line) are in
-the internal format, with subfields terminated by null bytes (\(aq\\0\(aq),
-so you
-may find that things are more readable if you use \fIod \-c\fP or \fItr
-"\\000" "\\n"\fP to read them.
-Alternatively, \fIecho \`cat <file>\`\fP works well.
+Many files contain strings (e.g., the environment and command line)
+that are in the internal format,
+with subfields terminated by null bytes (\(aq\e0\(aq).
+When inspecting such files, you may find that the results are more readable
+if you use a command of the following form to display them:
+.PP
+.in +4n
+.EX
+.RB "$" " cat \fIfile\fP | tr \(aq\e000\(aq \(aq\en\(aq"
+.EE
+.in
 .PP
 This manual page is incomplete, possibly inaccurate, and is the kind
 of thing that needs to be updated very often.
@@ -6389,8 +6659,10 @@ of thing that needs to be updated very often.
 .BR dmesg (1),
 .BR find (1),
 .BR free (1),
+.BR htop (1),
 .BR init (1),
 .BR ps (1),
+.BR pstree (1),
 .BR tr (1),
 .BR uptime (1),
 .BR chroot (2),
@@ -6414,14 +6686,14 @@ of thing that needs to be updated very often.
 .BR sysctl (8)
 .PP
 The Linux kernel source files:
-.IR Documentation/filesystems/proc.txt
+.IR Documentation/filesystems/proc.txt ,
 .IR Documentation/sysctl/fs.txt ,
 .IR Documentation/sysctl/kernel.txt ,
 .IR Documentation/sysctl/net.txt ,
 and
 .IR Documentation/sysctl/vm.txt .
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

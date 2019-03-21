@@ -33,13 +33,20 @@
 .\"     to EXAMPLE text.
 .\" 2008-10-10, mtk: add description of pipe2()
 .\"
-.TH PIPE 2 2017-11-26 "Linux" "Linux Programmer's Manual"
+.TH PIPE 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pipe, pipe2 \- create pipe
 .SH SYNOPSIS
 .nf
 .B #include <unistd.h>
 .PP
+/* On Alpha, IA-64, MIPS, SuperH, and SPARC/SPARC64; see NOTES */
+.B struct fd_pair {
+.B "    long fd[2];"
+.B "};"
+.B struct fd_pair pipe();
+.PP
+/* On all other architectures */
 .BI "int pipe(int " pipefd "[2]);"
 
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
@@ -134,7 +141,8 @@ setting of a pipe file descriptor using
 .B O_NONBLOCK
 Set the
 .BR O_NONBLOCK
-file status flag on the two new open file descriptions.
+file status flag on the open file descriptions
+referred to by the new file descriptors.
 Using this flag saves extra calls to
 .BR fcntl (2)
 to achieve the same result.
@@ -183,6 +191,23 @@ has been reached and the caller is not privileged; see
 was added to Linux in version 2.6.27;
 glibc support is available starting with
 version 2.9.
+.SH NOTES
+.\" See http://math-atlas.sourceforge.net/devel/assembly/64.psabi.1.33.ps.Z
+.\" for example, section 3.2.1 "Registers and the Stack Frame".
+The SystemV ABI on some architectures allows the use of more than one register
+for returning multiple values; several architectures
+(namely, Alpha, IA-64, MIPS, SuperH, and SPARC/SPARC64)
+(ab)use this feature in order to implement the
+.BR pipe ()
+system call in a functional manner:
+the call doesn't take any arguments and returns
+a pair of file descriptors as the return value on success.
+The glibc
+.BR pipe ()
+wrapper function transparently deals with this.
+See
+.BR syscall (2)
+for information regarding registers used for storing second file descriptor.
 .SH CONFORMING TO
 .BR pipe ():
 POSIX.1-2001, POSIX.1-2008.
@@ -222,7 +247,7 @@ main(int argc, char *argv[])
     char buf;
 
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s <string>\\n", argv[0]);
+        fprintf(stderr, "Usage: %s <string>\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -243,7 +268,7 @@ main(int argc, char *argv[])
         while (read(pipefd[0], &buf, 1) > 0)
             write(STDOUT_FILENO, &buf, 1);
 
-        write(STDOUT_FILENO, "\\n", 1);
+        write(STDOUT_FILENO, "\en", 1);
         close(pipefd[0]);
         _exit(EXIT_SUCCESS);
 
@@ -267,7 +292,7 @@ main(int argc, char *argv[])
 .BR popen (3),
 .BR pipe (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

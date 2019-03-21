@@ -40,7 +40,7 @@
 .\" Modified 2002-07-17 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.TH SOCKET 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH SOCKET 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 socket \- create an endpoint for communication
 .SH SYNOPSIS
@@ -62,17 +62,24 @@ argument specifies a communication domain; this selects the protocol
 family which will be used for communication.
 These families are defined in
 .IR <sys/socket.h> .
-The currently understood formats include:
+The formats currently understood by the Linux kernel include:
 .TS
 tab(:);
-l l l.
+l1 lw40 l.
 Name:Purpose:Man page
 T{
-.BR AF_UNIX ", " AF_LOCAL
+.BR AF_UNIX
 T}:T{
 Local communication
 T}:T{
 .BR unix (7)
+T}
+T{
+.B AF_LOCAL
+T}:T{
+Synonym for
+.B AF_UNIX
+T}:T{
 T}
 T{
 .B AF_INET
@@ -80,13 +87,41 @@ T}:IPv4 Internet protocols:T{
 .BR ip (7)
 T}
 T{
+.B AF_AX25
+T}:T{
+Amateur radio AX.25 protocol
+T}:T{
+.\" Part of ax25-tools
+.BR ax25 (4)
+T}
+T{
+.B AF_IPX
+T}:IPX \- Novell protocols:
+T{
+.B AF_APPLETALK
+T}:AppleTalk:T{
+.BR ddp (7)
+T}
+T{
+.B AF_X25
+T}:ITU-T X.25 / ISO-8208 protocol:T{
+.BR x25 (7)
+T}
+T{
 .B AF_INET6
 T}:IPv6 Internet protocols:T{
 .BR ipv6 (7)
 T}
 T{
-.B AF_IPX
-T}:IPX \- Novell protocols:
+.B AF_DECnet
+T}:T{
+DECet protocol sockets
+T}
+T{
+.B AF_KEY
+T}:T{
+Key management protocol, originally developed for usage with IPsec
+T}
 T{
 .B AF_NETLINK
 T}:T{
@@ -95,36 +130,98 @@ T}:T{
 .BR netlink (7)
 T}
 T{
-.B AF_X25
-T}:ITU-T X.25 / ISO-8208 protocol:T{
-.BR x25 (7)
-T}
-T{
-.B AF_AX25
-T}:T{
-Amateur radio AX.25 protocol
-T}:
-T{
-.B AF_ATMPVC
-T}:Access to raw ATM PVCs:
-T{
-.B AF_APPLETALK
-T}:AppleTalk:T{
-.BR ddp (7)
-T}
-T{
 .B AF_PACKET
 T}:T{
-Low level packet interface
+Low-level packet interface
 T}:T{
 .BR packet (7)
 T}
 T{
+.B AF_RDS
+T}:T{
+.\" commit: 639b321b4d8f4e412bfbb2a4a19bfebc1e68ace4
+Reliable Datagram Sockets (RDS) protocol
+T}:T{
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds.7
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds-rdma.7
+.BR rds (7)
+.br
+.BR rds-rdma (7)
+T}
+T{
+.B AF_PPPOX
+T}:T{
+Generic PPP transport layer, for setting up up L2 tunnels
+(L2TP and PPPoE)
+T}
+T{
+.B AF_LLC
+T}:T{
+.\" linux-history commit: 34beb106cde7da233d4df35dd3d6cf4fee937caa
+Logical link control (IEEE 802.2 LLC) protocol
+T}
+T{
+.B AF_IB
+T}:T{
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+InfiniBand native addressing
+T}
+T{
+.B AF_MPLS
+T}:T{
+.\" commits: 0189197f441602acdca3f97750d392a895b778fd
+Multiprotocol Label Switching
+T}
+T{
+.B AF_CAN
+T}:T{
+.\" commits: 8dbde28d9711475a..5423dd67bd0108a1
+Controller Area Network automotive bus protocol
+T}
+T{
+.B AF_TIPC
+T}:T{
+.\" commits: b97bf3fd8f6a16966d4f18983b2c40993ff937d4
+TIPC, "cluster domain sockets" protocol
+T}
+T{
+.B AF_BLUETOOTH
+T}:T{
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+Bluetooth low-level socket protocol
+T}
+T{
 .B AF_ALG
 T}:T{
+.\" commit: 03c8efc1ffeb6b82a22c1af8dd908af349563314
 Interface to kernel crypto API
 T}
+T{
+.B AF_VSOCK
+T}:T{
+.\" commit: d021c344051af91f42c5ba9fdedc176740cbd238
+VSOCK (originally "VMWare VSockets") protocol
+for hypervisor-guest communication
+T}:T{
+.BR vsock (7)
+T}
+T{
+.B AF_KCM
+T}:T{
+.\" commit: 03c8efc1ffeb6b82a22c1af8dd908af349563314
+KCM (kernel connection multiplexor) interface
+T}
+T{
+.B AF_XDP
+T}:T{
+.\" commit: c0c77d8fb787cfe0c3fca689c2a30d1dad4eaba7
+XDP (express data path) interface
+T}
 .TE
+.PP
+Further details of the above address families,
+as well as information on several other address families, can be found in
+.BR address_families (7).
 .PP
 The socket has the indicated
 .IR type ,
@@ -169,7 +266,9 @@ to modify the behavior of
 .B SOCK_NONBLOCK
 Set the
 .BR O_NONBLOCK
-file status flag on the new open file description.
+file status flag on the open file description (see
+.BR open (2))
+referred to by the new file descriptor.
 Using this flag saves extra calls to
 .BR fcntl (2)
 to achieve the same result.
@@ -314,7 +413,7 @@ The functions
 .BR setsockopt (2)
 and
 .BR getsockopt (2)
-are used to set and get options, respectively.
+are used to set and get options.
 .SH RETURN VALUE
 On success, a file descriptor for the new socket is returned.
 On error, \-1 is returned, and
@@ -386,13 +485,6 @@ families.
 However, already the BSD man page promises: "The protocol
 family generally is the same as the address family", and subsequent
 standards use AF_* everywhere.
-.PP
-The
-.B AF_ALG
-protocol type was added in Linux 2.6.38.
-More information on this interface is provided with the kernel HTML
-documentation at
-.IR https://www.kernel.org/doc/htmldocs/crypto\-API/User.html .
 .SH EXAMPLE
 An example of the use of
 .BR socket ()
@@ -417,6 +509,7 @@ is shown in
 .BR socketpair (2),
 .BR write (2),
 .BR getprotoent (3),
+.BR address_families (7),
 .BR ip (7),
 .BR socket (7),
 .BR tcp (7),
@@ -429,7 +522,7 @@ and
 reprinted in
 .I UNIX Programmer's Supplementary Documents Volume 1.
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

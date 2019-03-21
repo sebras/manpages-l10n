@@ -25,7 +25,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SECCOMP 2 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH SECCOMP 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 seccomp \- operate on Secure Computing state of the process
 .SH SYNOPSIS
@@ -141,7 +141,7 @@ the existing filters will be preserved across a call to
 .IP
 In order to use the
 .BR SECCOMP_SET_MODE_FILTER
-operation, either the caller must have the
+operation, either the calling thread must have the
 .BR CAP_SYS_ADMIN
 capability in its user namespace, or the thread must already have the
 .I no_new_privs
@@ -228,6 +228,10 @@ An administrator may override this filter flag by preventing specific
 actions from being logged via the
 .IR /proc/sys/kernel/seccomp/actions_logged
 file.
+.TP
+.BR SECCOMP_FILTER_FLAG_SPEC_ALLOW " (since Linux 4.17)"
+.\" commit 00a02d0c502a06d15e07b857f8ff921e3e402675
+Disable Speculative Store Bypass mitigation.
 .RE
 .TP
 .BR SECCOMP_GET_ACTION_AVAIL " (since Linux 4.14)"
@@ -690,7 +694,7 @@ is set to indicate the cause of the error.
 .BR seccomp ()
 can fail for the following reasons:
 .TP
-.BR EACCESS
+.BR EACCES
 The caller did not have the
 .BR CAP_SYS_ADMIN
 capability in its user namespace, or had not set
@@ -881,7 +885,6 @@ when the filters cause unexpected failures for legitimate operations
 that the application might need to perform.
 Such bugs may not easily be discovered when testing the seccomp
 filters if the bugs occur in rarely used application code paths.
-.RS 3
 .\"
 .SS Seccomp-specific BPF details
 Note the following BPF details specific to seccomp filters:
@@ -940,7 +943,7 @@ numbers on this architecture:
 $ \fBuname -m\fP
 x86_64
 $ \fBsyscall_nr() {
-    cat /usr/src/linux/arch/x86/syscalls/syscall_64.tbl | \\
+    cat /usr/src/linux/arch/x86/syscalls/syscall_64.tbl | \e
     awk '$2 != "x32" && $3 == "'$1'" { print $1 }'
 }\fP
 .EE
@@ -1084,10 +1087,10 @@ main(int argc, char **argv)
 {
     if (argc < 5) {
         fprintf(stderr, "Usage: "
-                "%s <syscall_nr> <arch> <errno> <prog> [<args>]\\n"
-                "Hint for <arch>: AUDIT_ARCH_I386: 0x%X\\n"
-                "                 AUDIT_ARCH_X86_64: 0x%X\\n"
-                "\\n", argv[0], AUDIT_ARCH_I386, AUDIT_ARCH_X86_64);
+                "%s <syscall_nr> <arch> <errno> <prog> [<args>]\en"
+                "Hint for <arch>: AUDIT_ARCH_I386: 0x%X\en"
+                "                 AUDIT_ARCH_X86_64: 0x%X\en"
+                "\en", argv[0], AUDIT_ARCH_I386, AUDIT_ARCH_X86_64);
         exit(EXIT_FAILURE);
     }
 
@@ -1107,6 +1110,7 @@ main(int argc, char **argv)
 }
 .EE
 .SH SEE ALSO
+.BR bpfc (1),
 .BR strace (1),
 .BR bpf (2),
 .BR prctl (2),
@@ -1135,13 +1139,13 @@ and
 .IR Documentation/prctl/seccomp_filter.txt
 before Linux 4.13).
 .PP
-McCanne, S. and Jacobson, V. (1992)
+McCanne, S.\& and Jacobson, V.\& (1992)
 .IR "The BSD Packet Filter: A New Architecture for User-level Packet Capture" ,
 Proceedings of the USENIX Winter 1993 Conference
 .UR http://www.tcpdump.org/papers/bpf\-usenix93.pdf
 .UE
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,

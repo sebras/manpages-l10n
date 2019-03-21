@@ -22,7 +22,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY 7 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY 7 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify \- monitoring filesystem events
 .SH DESCRIPTION
@@ -56,8 +56,8 @@ system call creates and initializes an fanotify notification group
 and returns a file descriptor referring to it.
 .PP
 An fanotify notification group is a kernel-internal object that holds
-a list of files, directories, and mount points for which events shall be
-created.
+a list of files, directories, filesystems, and mount points for which
+events shall be created.
 .PP
 For each entry in an fanotify notification group, two bit masks exist: the
 .I mark
@@ -66,14 +66,14 @@ mask and the
 mask.
 The mark mask defines file activities for which an event shall be created.
 The ignore mask defines activities for which no event shall be generated.
-Having these two types of masks permits a mount point or directory to be
-marked for receiving events, while at the same time ignoring events for
-specific objects under that mount point or directory.
+Having these two types of masks permits a filesystem, mount point, or
+directory to be marked for receiving events, while at the same time
+ignoring events for specific objects under a mount point or directory.
 .PP
 The
 .BR fanotify_mark (2)
-system call adds a file, directory, or mount to a notification group
-and specifies which events
+system call adds a file, directory, filesystem or mount point to a
+notification group and specifies which events
 shall be reported (or ignored), or removes or modifies such an entry.
 .PP
 A possible usage of the ignore mask is for a file cache.
@@ -93,8 +93,8 @@ The entries in the fanotify notification groups refer to files and
 directories via their inode number and to mounts via their mount ID.
 If files or directories are renamed or moved within the same mount,
 the respective entries survive.
-If files or directories are deleted or moved to another mount or if mounts are
-unmounted, the corresponding entries are deleted.
+If files or directories are deleted or moved to another mount or if
+filesystems or mounts are unmounted, the corresponding entries are deleted.
 .SS The event queue
 As events occur on the filesystem objects monitored by a notification group,
 the fanotify system generates events that are collected in a queue.
@@ -223,7 +223,13 @@ Hence, when the receiver of the fanotify event accesses the notified file or
 directory using this file descriptor, no additional events will be created.
 .TP
 .I pid
-This is the ID of the process that caused the event.
+If flag
+.B FAN_REPORT_TID
+was set in
+.BR fanotify_init (2),
+this is the TID of the thread that caused the event.
+Otherwise, this the PID of the process that caused the event.
+.PP
 A program listening to fanotify events can compare this PID
 to the PID returned by
 .BR getpid (2),
@@ -249,6 +255,12 @@ A file or a directory (but see BUGS) was accessed (read).
 .TP
 .B FAN_OPEN
 A file or a directory was opened.
+.TP
+.B FAN_OPEN_EXEC
+A file was opened with the intent to be executed.
+See NOTES in
+.BR fanotify_mark (2)
+for additional details.
 .TP
 .B FAN_MODIFY
 A file was modified.
@@ -285,6 +297,14 @@ access the filesystem object shall be granted.
 An application wants to open a file or directory.
 The reader must write a response that determines whether the permission to
 open the filesystem object shall be granted.
+.TP
+.B FAN_OPEN_EXEC_PERM
+An application wants to open a file for execution.
+The reader must write a response that determines whether the permission to
+open the filesystem object for execution shall be granted.
+See NOTES in
+.BR fanotify_mark (2)
+for additional details.
 .PP
 To check for any close event, the following bit mask may be used:
 .TP
@@ -481,6 +501,8 @@ additional marks must be created.
 subdirectory has been created under a marked directory,
 which makes recursive monitoring difficult.)
 Monitoring mounts offers the capability to monitor a whole directory tree.
+Monitoring filesystems offers the capability to monitor changes made from
+any mount of a filesystem instance.
 .PP
 The event queue can overflow.
 In this case, events are lost.
@@ -530,7 +552,7 @@ Thus, the reading application has no way to detect the error.
 The following program demonstrates the usage of the fanotify API.
 It marks the mount point passed as a command-line argument
 and waits for events of type
-.B FAN_PERM_OPEN
+.B FAN_OPEN_PERM
 and
 .BR FAN_CLOSE_WRITE .
 When a permission event occurs, a
@@ -613,7 +635,7 @@ handle_events(int fd)
 
             if (metadata\->vers != FANOTIFY_METADATA_VERSION) {
                 fprintf(stderr,
-                        "Mismatch of fanotify metadata version.\\n");
+                        "Mismatch of fanotify metadata version.\en");
                 exit(EXIT_FAILURE);
             }
 
@@ -652,8 +674,8 @@ handle_events(int fd)
                     exit(EXIT_FAILURE);
                 }
 
-                path[path_len] = '\\0';
-                printf("File %s\\n", path);
+                path[path_len] = '\e0';
+                printf("File %s\en", path);
 
                 /* Close the file descriptor of the event */
 
@@ -678,11 +700,11 @@ main(int argc, char *argv[])
     /* Check mount point is supplied */
 
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s MOUNT\\n", argv[0]);
+        fprintf(stderr, "Usage: %s MOUNT\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    printf("Press enter key to terminate.\\n");
+    printf("Press enter key to terminate.\en");
 
     /* Create the file descriptor for accessing the fanotify API */
 
@@ -721,7 +743,7 @@ main(int argc, char *argv[])
 
     /* This is the loop to wait for incoming events */
 
-    printf("Listening for events.\\n");
+    printf("Listening for events.\en");
 
     while (1) {
         poll_num = poll(fds, nfds, \-1);
@@ -738,7 +760,7 @@ main(int argc, char *argv[])
 
                 /* Console input is available: empty stdin and quit */
 
-                while (read(STDIN_FILENO, &buf, 1) > 0 && buf != '\\n')
+                while (read(STDIN_FILENO, &buf, 1) > 0 && buf != '\en')
                     continue;
                 break;
             }
@@ -752,7 +774,7 @@ main(int argc, char *argv[])
         }
     }
 
-    printf("Listening for events stopped.\\n");
+    printf("Listening for events stopped.\en");
     exit(EXIT_SUCCESS);
 }
 .EE
@@ -762,7 +784,7 @@ main(int argc, char *argv[])
 .BR fanotify_mark (2),
 .BR inotify (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.00 of the Linux
 .I man-pages
 project.
 A description of the project,
