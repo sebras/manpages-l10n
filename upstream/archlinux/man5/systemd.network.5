@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 241" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 242" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,16 +34,18 @@ The main network file must have the extension
 .PP
 The
 \&.network
-files are read from the files located in the system network directory
-/usr/lib/systemd/network, the volatile runtime network directory
+files are read from the files located in the system network directories
+/usr/lib/systemd/network
+and
+/usr/local/lib/systemd/network, the volatile runtime network directory
 /run/systemd/network
 and the local administration network directory
 /etc/systemd/network\&. All configuration files are collectively sorted and processed in lexical order, regardless of the directories in which they live\&. However, files with identical filenames replace each other\&. Files in
 /etc
 have the highest priority, files in
 /run
-take precedence over files with the same name in
-/usr/lib\&. This can be used to override a system\-supplied configuration file with a local file if needed\&. As a special case, an empty file (file size 0) or symlink with the same name pointing to
+take precedence over files with the same name under
+/usr\&. This can be used to override a system\-supplied configuration file with a local file if needed\&. As a special case, an empty file (file size 0) or symlink with the same name pointing to
 /dev/null
 disables the configuration file entirely (it is "masked")\&.
 .PP
@@ -66,11 +68,7 @@ directories\&. Drop\-in files in
 take precedence over those in
 /run
 which in turn take precedence over those in
-/usr/lib\&. Drop\-in files under any of these directories take precedence over the main netdev file wherever located\&. (Of course, since
-/run
-is temporary and
-/usr/lib
-is for vendors, it is unlikely drop\-ins should be used in either of those places\&.)
+/usr/lib\&. Drop\-in files under any of these directories take precedence over the main netdev file wherever located\&.
 .PP
 Note that an interface without any static IPv6 addresses configured, and neither DHCPv6 nor IPv6LL enabled, shall be considered to have no IPv6 support\&. IPv6 will be automatically disabled for that interface by writing "1" to
 /proc/sys/net/ipv6/conf/\fIifname\fR/disable_ipv6\&.
@@ -82,9 +80,25 @@ section, which determines if a given network file may be applied to a given devi
 "[Network]"
 section specifying how the device should be configured\&. The first (in lexical order) of the network files that matches a given device is applied, all later files are ignored, even if they match as well\&.
 .PP
-A network file is said to match a device if each of the entries in the
+A network file is said to match a network interface if all matches specified by the
 "[Match]"
-section matches, or if the section is empty\&. The following keys are accepted:
+section are satisfied\&. When a network file does not contain valid settings in
+"[Match]"
+section, then the file will match all interfaces and
+\fBsystemd\-networkd\fR
+warns about that\&. Hint: to avoid the warning and to make it clear that all interfaces shall be matched, add the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Name=*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The following keys are accepted:
 .PP
 \fIMACAddress=\fR
 .RS 4
@@ -138,7 +152,7 @@ Matches against the hostname or machine ID of the host\&. See
 "ConditionHost="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIVirtualization=\fR
@@ -147,26 +161,26 @@ Checks whether the system is executed in a virtualized environment and optionall
 "ConditionVirtualization="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelCommandLine=\fR
 .RS 4
-Checks whether a specific kernel command line option is set (or if prefixed with the exclamation mark unset)\&. See
+Checks whether a specific kernel command line option is set\&. See
 "ConditionKernelCommandLine="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelVersion=\fR
 .RS 4
 Checks whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. See
+\fBuname \-r\fR) matches a certain expression\&. See
 "ConditionKernelVersion="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIArchitecture=\fR
@@ -175,7 +189,7 @@ Checks whether the system is running on a specific architecture\&. See
 "ConditionArchitecture="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .SH "[LINK] SECTION OPTIONS"
 .PP
@@ -223,14 +237,18 @@ This is useful for preventing later matching network files from interfering with
 .PP
 \fIRequiredForOnline=\fR
 .RS 4
-Takes a boolean\&. When
+Takes a boolean or operational state\&. Please see
+\fBnetworkctl\fR(1)
+for possible operational states\&. When
 "yes", the network is deemed required when determining whether the system is online when running
-"systemd\-networkd\-wait\-online"\&. When
-"no", the network is ignored when checking for online state\&. Defaults to
+\fBsystemd\-networkd\-wait\-online\fR\&. When
+"no", the network is ignored when checking for online state\&. When an operational state is set,
+"yes"
+is implied, and this controls the operational state required for the network interface to be considered online\&. Defaults to
 "yes"\&.
 .sp
 The network will be brought up normally in all cases, but in the event that there is no address being assigned by DHCP or the cable is not plugged in, the link will simply remain offline and be skipped automatically by
-"systemd\-networkd\-wait\-online"
+\fBsystemd\-networkd\-wait\-online\fR
 if
 "RequiredForOnline=no"\&.
 .RE
@@ -269,7 +287,7 @@ section below for further configuration options for the DHCP client support\&.
 \fIDHCPServer=\fR
 .RS 4
 Takes a boolean\&. If set to
-"yes", DHCPv4 server will be start\&. Defaults to
+"yes", DHCPv4 server will be started\&. Defaults to
 "no"\&. Further settings for the DHCP server may be set in the
 "[DHCPServer]"
 section described below\&.
@@ -281,7 +299,10 @@ Enables link\-local address autoconfiguration\&. Accepts
 "yes",
 "no",
 "ipv4", or
-"ipv6"\&. Defaults to
+"ipv6"\&. If
+\fIBridge=\fR
+is set, defaults to
+"no", and if not, defaults to
 "ipv6"\&.
 .RE
 .PP
@@ -393,7 +414,11 @@ A static IPv4 or IPv6 address and its prefix length, separated by a
 character\&. Specify this key more than once to configure several addresses\&. The format of the address must be as described in
 \fBinet_pton\fR(3)\&. This is a short\-hand for an [Address] section only containing an Address key (see below)\&. This option may be specified more than once\&.
 .sp
-If the specified address is 0\&.0\&.0\&.0 (for IPv4) or [::] (for IPv6), a new address range of the requested size is automatically allocated from a system\-wide pool of unused ranges\&. The allocated range is checked against all current network interfaces and all known network configuration files to avoid address range conflicts\&. The default system\-wide pool consists of 192\&.168\&.0\&.0/16, 172\&.16\&.0\&.0/12 and 10\&.0\&.0\&.0/8 for IPv4, and fc00::/7 for IPv6\&. This functionality is useful to manage a large number of dynamically created network interfaces with the same network configuration and automatic address range assignment\&.
+If the specified address is
+"0\&.0\&.0\&.0"
+(for IPv4) or
+"::"
+(for IPv6), a new address range of the requested size is automatically allocated from a system\-wide pool of unused ranges\&. Note that the prefix length must be equal or larger than 8 for IPv4, and 64 for IPv6\&. The allocated range is checked against all current network interfaces and all known network configuration files to avoid address range conflicts\&. The default system\-wide pool consists of 192\&.168\&.0\&.0/16, 172\&.16\&.0\&.0/12 and 10\&.0\&.0\&.0/8 for IPv4, and fd00::/8 for IPv6\&. This functionality is useful to manage a large number of dynamically created network interfaces with the same network configuration and automatic address range assignment\&.
 .RE
 .PP
 \fIGateway=\fR
@@ -494,6 +519,8 @@ in the kernel documentation regarding
 \fB1\fR
 (i\&.e\&. true) corresponds to kernel\*(Aqs setting of
 \fB2\fR\&.
+.sp
+Note that if this option is enabled a userspace implementation of the IPv6 RA protocol is used, and the kernel\*(Aqs own implementation remains disabled, since `networkd` needs to know all details supplied in the advertisements, and these are not available from the kernel if the kernel\*(Aqs own implementation is used\&.
 .RE
 .PP
 \fIIPv6DuplicateAddressDetection=\fR
@@ -632,6 +659,11 @@ and
 .RS 4
 Takes a boolean\&. Allows networkd to configure a specific link even if it has no carrier\&. Defaults to false\&.
 .RE
+.PP
+\fIIgnoreCarrierLoss=\fR
+.RS 4
+A boolean\&. Allows networkd to retain both the static and dynamic configuration of the interface even if its carrier is lost\&. Defaults to false\&.
+.RE
 .SH "[ADDRESS] SECTION OPTIONS"
 .PP
 An
@@ -644,13 +676,17 @@ sections to configure several addresses\&.
 .RS 4
 As in the
 "[Network]"
-section\&. This key is mandatory\&.
+section\&. This key is mandatory\&. Each
+"[Address]"
+section can contain one
+\fIAddress=\fR
+setting\&.
 .RE
 .PP
 \fIPeer=\fR
 .RS 4
 The peer address in a point\-to\-point connection\&. Accepts the same format as the
-"Address"
+\fIAddress=\fR
 key\&.
 .RE
 .PP
@@ -658,7 +694,7 @@ key\&.
 .RS 4
 The broadcast address, which must be in the format described in
 \fBinet_pton\fR(3)\&. This key only applies to IPv4 addresses\&. If it is not given, it is derived from the
-"Address"
+\fIAddress=\fR
 key\&.
 .RE
 .PP
@@ -839,7 +875,7 @@ for
 .PP
 \fIInvertRule=\fR
 .RS 4
-A boolean\&. Specifies wheather the rule to be inverted\&. Defaults to false\&.
+A boolean\&. Specifies whether the rule to be inverted\&. Defaults to false\&.
 .RE
 .SH "[ROUTE] SECTION OPTIONS"
 .PP
@@ -856,7 +892,7 @@ As in the
 section\&.
 .RE
 .PP
-\fIGatewayOnlink=\fR
+\fIGatewayOnLink=\fR
 .RS 4
 Takes a boolean\&. If set to true, the kernel does not have to check if the gateway is reachable directly by the current machine (i\&.e\&., the kernel does not need to check if the gateway is attached to the local network), so that we can insert the route in the kernel table without it being complained about\&. Defaults to
 "no"\&.
@@ -940,7 +976,7 @@ The TCP initial congestion window is used during the start of a TCP connection\&
 .PP
 \fIInitialAdvertisedReceiveWindow=\fR
 .RS 4
-The TCP initial advertised receive window is the amount of receive data (in bytes) that can initally be buffered at one time on a connection\&. The sending host can send only that amount of data before waiting for an acknowledgment and window update from the receiving host\&. Takes a size in bytes between 1 and 4294967295 (2^32 \- 1)\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&. When unset, the kernel\*(Aqs default will be used\&.
+The TCP initial advertised receive window is the amount of receive data (in bytes) that can initially be buffered at one time on a connection\&. The sending host can send only that amount of data before waiting for an acknowledgment and window update from the receiving host\&. Takes a size in bytes between 1 and 4294967295 (2^32 \- 1)\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIQuickAck=\fR
@@ -1005,6 +1041,8 @@ Note that this configuration will overwrite others\&. In concrete, the following
 \fIUseMTU=\fR,
 \fIVendorClassIdentifier=\fR,
 \fIUseTimezone=\fR\&.
+.sp
+With this option enabled DHCP requests will mimic those generated by Microsoft Windows, in order to reduce the ability to fingerprint and recognize installations\&. This means DHCP request sizes will grow and lease data will be more comprehensive than normally, though most of the requested data is not actually used\&.
 .RE
 .PP
 \fISendHostname=\fR
@@ -1181,6 +1219,16 @@ option in
 .RS 4
 The table identifier for the routes received in the Router Advertisement (a number between 1 and 4294967295, or 0 to unset)\&. The table can be retrieved using
 \fBip route show table \fR\fB\fInum\fR\fR\&.
+.RE
+.PP
+\fIUseAutonomousPrefix=\fR
+.RS 4
+When true (the default), the autonomous prefix received in the Router Advertisement will be used and take precedence over any statically configured ones\&.
+.RE
+.PP
+\fIUseOnLinkPrefix=\fR
+.RS 4
+When true (the default), the onlink prefix received in the Router Advertisement will be used and take precedence over any statically configured ones\&.
 .RE
 .SH "[DHCPSERVER] SECTION OPTIONS"
 .PP
@@ -1383,9 +1431,24 @@ section accepts the following keys\&.
 Takes a boolean\&. Controls whether the bridge should flood traffic for which an FDB entry is missing and the destination is unknown through this port\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
+\fIMulticastFlood=\fR
+.RS 4
+Takes a boolean\&. Controls whether the bridge should flood traffic for which an MDB entry is missing and the destination is unknown through this port\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
 \fIMulticastToUnicast=\fR
 .RS 4
 Takes a boolean\&. Multicast to unicast works on top of the multicast snooping feature of the bridge\&. Which means unicast copies are only delivered to hosts which are interested in it\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fINeighborSuppression=\fR
+.RS 4
+Takes a boolean\&. Configures whether ARP and ND neighbor suppression is enabled for this port\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fILearning=\fR
+.RS 4
+Takes a boolean\&. Configures whether MAC address learning is enabled for this port\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIHairPin=\fR
@@ -1467,6 +1530,12 @@ postfix\&. Using
 or
 "0"
 will turn the automatic restart off\&. By default automatic restart is disabled\&.
+.RE
+.PP
+\fITripleSampling=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", three samples (instead of one) are used to determine the value of a received bit by majority rule\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .SH "[BRIDGEVLAN] SECTION OPTIONS"
 .PP

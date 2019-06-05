@@ -22,12 +22,14 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH TSEARCH 3  2018-04-30 "GNU" "Linux Programmer's Manual"
+.TH TSEARCH 3  2019-05-09 "GNU" "Linux Programmer's Manual"
 .SH NAME
 tsearch, tfind, tdelete, twalk, tdestroy \- manage a binary search tree
 .SH SYNOPSIS
 .nf
 .B #include <search.h>
+.PP
+.BI "typedef enum { preorder, postorder, endorder, leaf } VISIT;"
 .PP
 .BI "void *tsearch(const void *" key ", void **" rootp ,
 .BI "                int (*" compar ")(const void *, const void *));"
@@ -38,12 +40,17 @@ tsearch, tfind, tdelete, twalk, tdestroy \- manage a binary search tree
 .BI "void *tdelete(const void *" key ", void **" rootp ,
 .BI "                int (*" compar ")(const void *, const void *));"
 .PP
-.BI "void twalk(const void *" root ", void (*" action ")(const void *" nodep ,
-.BI "                                   const VISIT " which ,
-.BI "                                   const int " depth "));"
-
+.BI "void twalk(const void *" root ,
+.BI "                void (*" action ")(const void *" nodep ", VISIT " which ,
+.BI "                               int " depth "));"
+.PP
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
 .B #include <search.h>
+.PP
+.BI "void twalk_r(const void *" root ,
+.BI "                void (*" action ")(const void *" nodep ", VISIT " which ,
+.BI "                               void *" closure "),
+.BI "                void *" closure );
 .PP
 .BI "void tdestroy(void *" root ", void (*" free_node ")(void *" nodep ));
 .fi
@@ -152,6 +159,19 @@ Thus, the choice of name
 .B post\%order
 is rather confusing.)
 .PP
+.BR twalk_r ()
+is similar to
+.BR twalk (),
+but instead of the
+.I depth
+argument, the
+.I closure
+argument pointer is passed to each invocation of the action callback,
+unchanged.
+This pointer can be used to pass information to and from
+the callback function in a thread-safe fashion, without resorting
+to global variables.
+.PP
 .BR tdestroy ()
 removes the whole tree pointed to by
 .IR root ,
@@ -192,6 +212,9 @@ also
 return NULL if
 .I rootp
 was NULL on entry.
+.SH VERSIONS
+.BR twalk_r ()
+is available in glibc since version 2.30.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
@@ -210,14 +233,19 @@ T{
 .BR twalk ()
 T}	Thread safety	MT-Safe race:root
 T{
+.BR twalk_r ()
+T}	Thread safety	MT-Safe race:root
+T{
 .BR tdestroy ()
 T}	Thread safety	MT-Safe
 .TE
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008, SVr4.
-The function
+The functions
 .BR tdestroy ()
-is a GNU extension.
+and
+.BR twalk_r ()
+are GNU extensions.
 .SH NOTES
 .BR twalk ()
 takes a pointer to the root, while the other functions
@@ -271,7 +299,7 @@ compare(const void *pa, const void *pb)
 }
 
 static void
-action(const void *nodep, const VISIT which, const int depth)
+action(const void *nodep, VISIT which, int depth)
 {
     int *datap;
 
@@ -318,7 +346,7 @@ main(void)
 .BR lsearch (3),
 .BR qsort (3)
 .SH COLOPHON
-This page is part of release 5.00 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

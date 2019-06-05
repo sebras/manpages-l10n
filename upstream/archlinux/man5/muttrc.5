@@ -26,7 +26,7 @@
 .ft
 .fi
 ..
-.TH muttrc 5 "September 2002" Unix "User Manuals"
+.TH muttrc 5 "January 2019" Unix "User Manuals"
 .SH NAME
 muttrc \- Configuration file for the Mutt Mail User Agent
 .SH DESCRIPTION
@@ -221,9 +221,9 @@ This command binds the given \fIsequence\fP of keys to the given
 specify multiple maps, put only a comma between the maps.
 .PP
 .nf
-\fBcolor\fP \fIobject\fP \fIforeground\fP \fIbackground\fP [ \fIregexp\fP ]
-\fBcolor\fP index \fIforeground\fP \fIbackground\fP [ \fIpattern\fP ]
-\fBcolor\fP compose \fIcomposeobject\fP \fIforeground\fP \fIbackground\fP
+\fBcolor\fP \fIobject\fP [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP [ \fIregexp\fP ]
+\fBcolor\fP index [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP [ \fIpattern\fP ]
+\fBcolor\fP compose \fIcomposeobject\fP [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP
 \fBuncolor\fP index \fIpattern\fP [ \fIpattern\fP ... ]
 .fi
 .IP
@@ -251,6 +251,10 @@ Valid composeobjects include
 Valid colors include:
 .BR white ", " black ", " green ", " magenta ", " blue ", "
 .BR cyan ", " yellow ", " red ", " default ", " color\fIN\fP .
+.IP
+Valid attributes include:
+.BR none ", " bold ", " underline ", "
+.BR reverse ", and " standout .
 .PP
 .nf
 \fBmono\fP \fIobject\fP \fIattribute\fP [ \fIregexp\fP ]
@@ -258,9 +262,7 @@ Valid colors include:
 .fi
 .IP
 For terminals which don't support color, you can still assign
-attributes to objects.  Valid attributes include:
-.BR none ", " bold ", " underline ", " 
-.BR reverse ", and " standout .
+attributes to objects.
 .TP
 [\fBun\fP]\fBignore\fP \fIpattern\fP [ \fIpattern\fP ... ]
 The \fBignore\fP command permits you to specify header fields which
@@ -1140,6 +1142,20 @@ this except to override that default.
 
 
 .TP
+.B auto_subscribe
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt assumes the presence of a List\-Post header
+means the recipient is subscribed to the list.  Unless the mailing list
+is in the \(lqunsubscribe\(rq or \(lqunlist\(rq lists, it will be added
+to the \(lqsubscribe\(rq list.  Parsing and checking these things slows
+header reading down, so this option is disabled by default.
+
+
+.TP
 .B auto_tag
 .nf
 Type: boolean
@@ -1555,6 +1571,89 @@ this option for the current message.
 If $crypt_autoencrypt or $crypt_replyencrypt enable encryption for
 a message, this option will be disabled for that message.  It can
 be manually re\-enabled in the pgp or smime menus.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_read
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When set, Mutt will display protected headers (\(rqMemory Hole\(rq) in the pager,
+and will update the index and header cache with revised headers.
+Protected headers are stored inside the encrypted or signed part of an
+an email, to prevent disclosure or tampering.
+For more information see https://github.com/autocrypt/memoryhole.
+Currently Mutt only supports the Subject header.
+.IP
+Encrypted messages using protected headers often substitute the exposed
+Subject header with a dummy value (see $crypt_protected_headers_subject).
+Mutt will update its concept of the correct subject \fBafter\fP the
+message is opened, i.e. via the \fC<display\-message>\fP function.
+If you reply to a message before opening it, Mutt will end up using
+the dummy Subject header, so be sure to open such a message first.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_save
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When $crypt_protected_headers_read is set, and a message with a
+protected Subject is opened, Mutt will save the updated Subject
+into the header cache by default.  This allows searching/limiting
+based on the protected Subject header if the mailbox is
+re\-opened, without having to re\-open the message each time.
+However, for mbox/mh mailbox types, or if header caching is not
+set up, you would need to re\-open the message each time the
+mailbox was reopened before you could see or search/limit on the
+protected subject again.
+.IP
+When this variable is set, Mutt additionally saves the protected
+Subject back \fBin the clear\-text message headers\fP.  This
+provides better usability, but with the tradeoff of reduced
+security.  The protected Subject header, which may have
+previously been encrypted, is now stored in clear\-text in the
+message headers.  Copying the message elsewhere, via Mutt or
+external tools, could expose this previously encrypted data.
+Please make sure you understand the consequences of this before
+you enable this variable.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_subject
+.nf
+Type: string
+Default: \(lqEncrypted subject\(rq
+.fi
+.IP
+When $crypt_protected_headers_write is set, and the message is marked
+for encryption, this will be substituted into the Subject field in the
+message headers.
+To prevent a subject from being substituted, unset this variable, or set it
+to the empty string.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_write
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, Mutt will generate protected headers (\(rqMemory Hole\(rq) for
+signed and encrypted emails.
+Protected headers are stored inside the encrypted or signed part of an
+an email, to prevent disclosure or tampering.
+For more information see https://github.com/autocrypt/memoryhole.
+Currently Mutt only supports the Subject header.
 (Crypto only)
 
 
@@ -2109,6 +2208,20 @@ Also see the $record variable.
 
 
 .TP
+.B forward_attachments
+.nf
+Type: quadoption
+Default: ask\-yes
+.fi
+.IP
+When forwarding inline (i.e. $mime_forward \fIunset\fP or
+answered with \(lqno\(rq and $forward_decode \fIset\fP), attachments
+which cannot be decoded in a reasonable manner will be attached
+to the newly composed message if this quadoption is \fIset\fP or
+answered with \(lqyes\(rq.
+
+
+.TP
 .B forward_attribution_intro
 .nf
 Type: string
@@ -2615,6 +2728,20 @@ helps in using the \(lq=\(rq shortcut for your \fIfolder\fP variable.
 
 
 .TP
+.B imap_fetch_chunk_size
+.nf
+Type: number (long)
+Default: 0
+.fi
+.IP
+When set to a value greater than 0, new headers will be downloaded
+in sets of this size.  If you have a very large mailbox, this might
+prevent a timeout and disconnect when opening the mailbox, by sending
+a FETCH per set of this size instead of a single FETCH for all new
+headers.
+
+
+.TP
 .B imap_headers
 .nf
 Type: string
@@ -2838,6 +2965,22 @@ Default: ask\-yes
 .IP
 Controls whether or not a copy of the message(s) you are replying to
 is included in your reply.
+
+
+.TP
+.B include_encrypted
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+Controls whether or not Mutt includes separately encrypted attachment
+contents when replying.
+.IP
+This variable was added to prevent accidental exposure of encrypted
+contents when replying to an attacker.  If a previously encrypted message
+were attached by the attacker, they could trick an unwary recipient into
+decrypting and including the message in their reply.
 
 
 .TP
@@ -3141,7 +3284,8 @@ Default: \(lq\(rq
 .fi
 .IP
 This variable specifies which files to consult when attempting to
-display MIME bodies not directly supported by Mutt.
+display MIME bodies not directly supported by Mutt.  The default value
+is generated during startup: see the \(lqmailcap\(rq section of the manual.
 
 
 .TP
@@ -3610,6 +3754,9 @@ Using an external pager may have some disadvantages: Additional
 keystrokes are necessary because you can't call mutt functions
 directly from the pager, and screen resizes cause lines longer than
 the screen width to be badly formatted in the help menu.
+.IP
+When using an external pager, also see $prompt_after which defaults
+\fIset\fP.
 
 
 .TP
@@ -4023,6 +4170,8 @@ incorrect key generation dates.
 .IP
 This is a format string, see the $pgp_decode_command command for
 possible \fCprintf(3)\fP\-like sequences.
+Note that in this case, %r expands to the search string, which is a list of
+one or more quoted values such as email address, name, or keyid.
 (PGP only)
 
 
@@ -4051,6 +4200,8 @@ incorrect key generation dates.
 .IP
 This is a format string, see the $pgp_decode_command command for
 possible \fCprintf(3)\fP\-like sequences.
+Note that in this case, %r expands to the search string, which is a list of
+one or more quoted values such as email address, name, or keyid.
 (PGP only)
 
 
@@ -4242,12 +4393,24 @@ not used.
 .B pgp_use_gpg_agent
 .nf
 Type: boolean
-Default: no
+Default: yes
 .fi
 .IP
-If \fIset\fP, mutt will use a possibly\-running \fCgpg\-agent(1)\fP process.
-Note that as of version 2.1, GnuPG no longer exports GPG_AGENT_INFO, so
-mutt no longer verifies if the agent is running.
+If \fIset\fP, mutt expects a \fCgpg\-agent(1)\fP process will handle
+private key passphrase prompts.  If \fIunset\fP, mutt will prompt
+for the passphrase and pass it via stdin to the pgp command.
+.IP
+Note that as of version 2.1, GnuPG automatically spawns an agent
+and requires the agent be used for passphrase management.  Since
+that version is increasingly prevalent, this variable now
+defaults \fIset\fP.
+.IP
+Mutt works with a GUI or curses pinentry program.  A TTY pinentry
+should not be used.
+.IP
+If you are using an older version of GnuPG without an agent running,
+or another encryption program without an agent, you will need to
+\fIunset\fP this variable.
 (PGP only)
 
 
@@ -6241,9 +6404,9 @@ Type: boolean
 Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use SSLv2 in the
-SSL authentication process. Note that SSLv2 and SSLv3 are now
-considered fundamentally insecure and are no longer recommended.
+If \fIset\fP , Mutt will use SSLv2 when communicating with servers that
+request it. \fBN.B. As of 2011, SSLv2 is considered insecure, and using
+is inadvisable. See https://tools.ietf.org/html/rfc6176 .\fP
 (OpenSSL only)
 
 
@@ -6254,31 +6417,33 @@ Type: boolean
 Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use SSLv3 in the
-SSL authentication process. Note that SSLv2 and SSLv3 are now
-considered fundamentally insecure and are no longer recommended.
+If \fIset\fP , Mutt will use SSLv3 when communicating with servers that
+request it. \fBN.B. As of 2015, SSLv3 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
 .B ssl_use_tlsv1
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.0 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.0 when communicating with servers that
+request it. \fBN.B. As of 2015, TLSv1.0 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
 .B ssl_use_tlsv1_1
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.1 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.1 when communicating with servers that
+request it. \fBN.B. As of 2015, TLSv1.1 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
@@ -6288,8 +6453,8 @@ Type: boolean
 Default: yes
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.2 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.2 when communicating with servers that
+request it.
 
 
 .TP

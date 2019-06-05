@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 241" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 242" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -79,9 +79,11 @@ swap\&.target,
 sysinit\&.target,
 system\-update\&.target,
 system\-update\-pre\&.target,
+time\-set\&.target,
 time\-sync\&.target,
 timers\&.target,
 umount\&.target,
+usb\-gadget\&.target,
 \-\&.slice,
 system\&.slice,
 user\&.slice,
@@ -676,6 +678,13 @@ This target is started automatically as soon as a sound card is plugged in or be
 .sp
 This may be used to pull in audio management daemons dynamically when audio hardware is found\&.
 .RE
+.PP
+usb\-gadget\&.target
+.RS 4
+This target is started automatically as soon as a USB Device Controller becomes available at boot\&.
+.sp
+This may be used to pull in usb gadget dynamically when UDC hardware is found\&.
+.RE
 .SS "Special Passive System Units"
 .PP
 A number of special system targets are defined that can be used to properly order boot\-up of optional services\&. These targets are generally not part of the initial boot transaction, unless they are explicitly pulled in by one of the implementing services\&. Note specifically that these
@@ -761,6 +770,12 @@ for this target unit to all SysV init script service units with an LSB header re
 facility\&.
 .RE
 .PP
+time\-set\&.target
+.RS 4
+Services responsible for setting the system clock from a local source (such as a maintained timestamp file or imprecise real\-time clock) should pull in this target and order themselves before it\&. Services where approximate time is desired should be ordered after this unit, but not pull it in\&. This target does not provide the accuracy guarantees of
+time\-sync\&.target\&.
+.RE
+.PP
 time\-sync\&.target
 .RS 4
 Services responsible for synchronizing the system clock from a remote source (such as NTP client implementations) should pull in this target and order themselves before it\&. All services where correct time is essential should be ordered after this unit, but not pull it in\&. systemd automatically adds dependencies of type
@@ -805,9 +820,19 @@ systemd\-machined\&.service
 .SH "UNITS MANAGED BY THE USER\*(AQS SERVICE MANAGER"
 .SS "Special User Units"
 .PP
-When systemd runs as a user instance, the following special units are available, which have similar definitions as their system counterparts:
+When systemd runs as a user instance, the following special units are available:
+.PP
+default\&.target
+.RS 4
+This is the main target of the user session, started by default\&. Various services that compose the normal user session should be pulled into this target\&. In this regard,
+default\&.target
+is similar to
+multi\-user\&.target
+in the system instance, but it is a real unit, not an alias\&.
+.RE
+.PP
+In addition, the following units are available which have definitions similar to their system counterparts:
 exit\&.target,
-default\&.target,
 shutdown\&.target,
 sockets\&.target,
 timers\&.target,

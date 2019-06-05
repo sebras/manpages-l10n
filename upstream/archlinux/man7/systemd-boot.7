@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-BOOT" "7" "" "systemd 241" "systemd-boot"
+.TH "SYSTEMD\-BOOT" "7" "" "systemd 242" "systemd-boot"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -25,13 +25,16 @@ systemd-boot, sd-boot \- A simple UEFI boot manager
 .PP
 \fBsystemd\-boot\fR
 (short:
-\fBsd\-boot\fR) is a simple UEFI boot manager\&. It provides a graphical menu to select the entry to boot and an editor for the kernel command line\&. systemd\-boot supports systems with UEFI firmware only\&.
+\fBsd\-boot\fR) is a simple UEFI boot manager\&. It provides a graphical menu to select the entry to boot and an editor for the kernel command line\&.
+\fBsystemd\-boot\fR
+supports systems with UEFI firmware only\&.
 .PP
 systemd\-boot loads boot entry information from the EFI system partition (ESP), usually mounted at
-/boot,
-/efi, or
-/boot/efi
-during OS runtime\&. Configuration file fragments, kernels, initrds and other EFI images to boot generally need to reside on the ESP\&. Linux kernels must be built with
+/efi/,
+/boot/, or
+/boot/efi/
+during OS runtime, as well as from the Extended Boot Loader partition if it exists (usually mounted to
+/boot/)\&. Configuration file fragments, kernels, initrds and other EFI images to boot generally need to reside on the ESP or the Extended Boot Loader partition\&. Linux kernels must be built with
 \fBCONFIG_EFI_STUB\fR
 to be able to be directly executed as an EFI image\&. During boot systemd\-boot automatically assembles a list of boot entries from the following sources:
 .sp
@@ -47,7 +50,7 @@ Boot entries defined with
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 description files located in
 /loader/entries/
-on the ESP\&. These usually describe Linux kernel images with associated initrd images, but alternatively may also describe arbitrary other EFI executables\&.
+on the ESP and the Extended Boot Loader Partition\&. These usually describe Linux kernel images with associated initrd images, but alternatively may also describe arbitrary other EFI executables\&.
 .RE
 .sp
 .RS 4
@@ -61,7 +64,7 @@ on the ESP\&. These usually describe Linux kernel images with associated initrd 
 Unified kernel images following the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2, as executable EFI binaries in
 /EFI/Linux/
-on the ESP\&.
+on the ESP and the Extended Boot Loader Partition\&.
 .RE
 .sp
 .RS 4
@@ -109,9 +112,11 @@ A reboot into the UEFI firmware setup option, if supported by the firmware
 .RE
 .PP
 \fBkernel-install\fR(8)
-may be used to copy kernel images onto the ESP and to generate description files compliant with the Boot Loader Specification\&.
+may be used to copy kernel images onto the ESP or the Extended Boot Loader Partition and to generate description files compliant with the Boot Loader Specification\&.
 \fBbootctl\fR(1)
-may be used from a running system to locate the ESP, list available entries, and install systemd\-boot itself\&.
+may be used from a running system to locate the ESP and the Extended Boot Loader Partition, list available entries, and install
+\fBsystemd\-boot\fR
+itself\&.
 .PP
 systemd\-boot will provide information about the time spent in UEFI firmware using the
 \m[blue]\fBBoot Loader Interface\fR\m[]\&\s-2\u[2]\d\s+2\&. This information can be displayed using
@@ -237,23 +242,28 @@ Boot entry with the edited command line
 Note that unless configured otherwise in the UEFI firmware, systemd\-boot will use the US keyboard layout, so key labels might not match for keys like +/\-\&.
 .SH "FILES"
 .PP
-The files systemd\-boot reads generally reside on the UEFI ESP which is usually mounted to
-/boot/,
-/efi/
+The files
+\fBsystemd\-boot\fR
+processes generally reside on the UEFI ESP which is usually mounted to
+/efi/,
+/boot/
 or
-/boot/efi
-during OS runtime\&. systemd\-boot reads runtime configuration such as the boot timeout and default entry from
+/boot/efi/
+during OS runtime\&. It also processes files on the Extended Boot Loader partition which is typically mounted to
+/boot/, if it exists\&.
+\fBsystemd\-boot\fR
+reads runtime configuration such as the boot timeout and default entry from
 /loader/loader\&.conf
 on the ESP (in combination with data read from EFI variables)\&. See
 \fBloader.conf\fR(5)\&. Boot entry description files following the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 are read from
 /loader/entries/
-on the ESP\&. Unified kernel boot entries following the
+on the ESP and the Extended Boot Loader partition\&. Unified kernel boot entries following the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 are read from
 /EFI/Linux/
-on the ESP\&.
+on the ESP and the Extended Boot Loader partition\&.
 .SH "EFI VARIABLES"
 .PP
 The following EFI variables are defined, set and read by
@@ -357,7 +367,7 @@ to view this data\&. These variables are defined by the
 .PP
 \fBsystemd\-boot\fR
 implements a simple boot counting mechanism on top of the
-\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2, for automatic and unattended fallback to older kernel versions/boot loader entries when a specific entry continously fails\&. Any boot loader entry file and unified kernel image file that contains a
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2, for automatic and unattended fallback to older kernel versions/boot loader entries when a specific entry continuously fails\&. Any boot loader entry file and unified kernel image file that contains a
 "+"
 followed by one or two numbers (if two they need to be separated by a
 "\-"), before the

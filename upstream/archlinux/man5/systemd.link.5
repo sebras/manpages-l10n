@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.LINK" "5" "" "systemd 241" "systemd.link"
+.TH "SYSTEMD\&.LINK" "5" "" "systemd 242" "systemd.link"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -56,7 +56,25 @@ for diagnosing problems with
 files\&.
 .SH "[MATCH] SECTION OPTIONS"
 .PP
-A link file is said to match a device if each of the entries in the [Match] section matches, or if the section is empty\&. The following keys are accepted:
+A link file is said to match a device if all matches specified by the
+"[Match]"
+section are satisfied\&. When a link file does not contain valid settings in
+"[Match]"
+section, then the file will match all devices and
+\fBsystemd\-udevd\fR
+warns about that\&. Hint: to avoid the warning and to make it clear that all interfaces shall be matched, add the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+OriginalName=*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The following keys are accepted:
 .PP
 \fIMACAddress=\fR
 .RS 4
@@ -107,7 +125,7 @@ Matches against the hostname or machine ID of the host\&. See
 \fIConditionHost=\fR
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIVirtualization=\fR
@@ -116,26 +134,26 @@ Checks whether the system is executed in a virtualized environment and optionall
 \fIConditionVirtualization=\fR
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelCommandLine=\fR
 .RS 4
-Checks whether a specific kernel command line option is set (or if prefixed with the exclamation mark unset)\&. See
+Checks whether a specific kernel command line option is set\&. See
 \fIConditionKernelCommandLine=\fR
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelVersion=\fR
 .RS 4
 Checks whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. See
+\fBuname \-r\fR) matches a certain expression\&. See
 \fIConditionKernelVersion=\fR
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIArchitecture=\fR
@@ -144,7 +162,7 @@ Checks whether the system is running on a specific architecture\&. See
 \fIConditionArchitecture=\fR
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .SH "[LINK] SECTION OPTIONS"
 .PP
@@ -200,7 +218,8 @@ An ordered, space\-separated list of policies by which the interface name should
 may be disabled by specifying
 \fBnet\&.ifnames=0\fR
 on the kernel command line\&. Each of the policies may fail, and the first successful one is used\&. The name is not set directly, but is exported to udev as the property
-\fBID_NET_NAME\fR, which is, by default, used by a udev rule to set
+\fBID_NET_NAME\fR, which is, by default, used by a
+\fBudev\fR(7), rule to set
 \fINAME\fR\&. The available policies are:
 .PP
 \fBkernel\fR
@@ -246,11 +265,11 @@ If the device already had a name given by userspace (as part of creation of the 
 .PP
 \fIName=\fR
 .RS 4
-The interface name to use in case all the policies specified in
+The interface name to use\&. This option has lower precedence than
+\fINamePolicy=\fR, so for this setting to take effect,
 \fINamePolicy=\fR
-fail, or in case
-\fINamePolicy=\fR
-is missing or disabled\&.
+must either be unset, empty, disabled, or all policies configured there must fail\&. Also see the example below with
+"Name=dmz0"\&.
 .sp
 Note that specifying a name that the kernel might use for another interface (for example
 "eth0") is dangerous because the name assignment done by udev will race with the assignment done by the kernel, and only one interface may use the name\&. Depending on the order of operations, either udev or the kernel will win, making the naming unpredictable\&. It is best to use some different prefix, for example
@@ -584,7 +603,92 @@ Name=dmz0
 .RE
 .\}
 .PP
-\fBExample\ \&3.\ \&/etc/systemd/network/10\-internet\&.link\fR
+\fINamePolicy=\fR
+is not set, so
+\fIName=\fR
+takes effect\&. We use the
+"10\-"
+prefix to order this file early in the list\&. Note that it needs to before
+"99\-link", i\&.e\&. it needs a numerical prefix, to have any effect at all\&.
+.PP
+\fBExample\ \&3.\ \&Debugging \fINamePolicy=\fR assignments\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ sudo SYSTEMD_LOG_LEVEL=debug udevadm test\-builtin net_setup_link /sys/class/net/hub0
+\&...
+Parsed configuration file /usr/lib/systemd/network/99\-default\&.link
+Parsed configuration file /etc/systemd/network/10\-eth0\&.link
+ID_NET_DRIVER=cdc_ether
+Config file /etc/systemd/network/10\-eth0\&.link applies to device hub0
+link_config: autonegotiation is unset or enabled, the speed and duplex are not writable\&.
+hub0: Device has name_assign_type=4
+Using default interface naming scheme \*(Aqv240\*(Aq\&.
+hub0: Policies didn\*(Aqt yield a name, using specified Name=hub0\&.
+ID_NET_LINK_FILE=/etc/systemd/network/10\-eth0\&.link
+ID_NET_NAME=hub0
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Explicit
+\fIName=\fR
+configuration wins in this case\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sudo SYSTEMD_LOG_LEVEL=debug udevadm test\-builtin net_setup_link /sys/class/net/enp0s31f6
+\&...
+Parsed configuration file /usr/lib/systemd/network/99\-default\&.link
+Parsed configuration file /etc/systemd/network/10\-eth0\&.link
+Created link configuration context\&.
+ID_NET_DRIVER=e1000e
+Config file /usr/lib/systemd/network/99\-default\&.link applies to device enp0s31f6
+link_config: autonegotiation is unset or enabled, the speed and duplex are not writable\&.
+enp0s31f6: Device has name_assign_type=4
+Using default interface naming scheme \*(Aqv240\*(Aq\&.
+enp0s31f6: Policy *keep*: keeping existing userspace name
+enp0s31f6: Device has addr_assign_type=0
+enp0s31f6: MAC on the device already matches policy *persistent*
+ID_NET_LINK_FILE=/usr/lib/systemd/network/99\-default\&.link
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+In this case, the interface was already renamed, so the
+\fBkeep\fR
+policy specified as the first option in
+99\-default\&.link
+means that the existing name is preserved\&. If
+\fBkeep\fR
+was removed, or if were in boot before the renaming has happened, we might get the following instead:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+enp0s31f6: Policy *path* yields "enp0s31f6"\&.
+enp0s31f6: Device has addr_assign_type=0
+enp0s31f6: MAC on the device already matches policy *persistent*
+ID_NET_LINK_FILE=/usr/lib/systemd/network/99\-default\&.link
+ID_NET_NAME=enp0s31f6
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Please note that the details of output are subject to change\&.
+.PP
+\fBExample\ \&4.\ \&/etc/systemd/network/10\-internet\&.link\fR
 .PP
 This example assigns the fixed name
 "internet0"
@@ -605,7 +709,7 @@ Name=internet0
 .RE
 .\}
 .PP
-\fBExample\ \&4.\ \&/etc/systemd/network/25\-wireless\&.link\fR
+\fBExample\ \&5.\ \&/etc/systemd/network/25\-wireless\&.link\fR
 .PP
 Here\*(Aqs an overly complex example that shows the use of a large number of [Match] and [Link] settings\&.
 .sp

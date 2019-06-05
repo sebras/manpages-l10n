@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-MOUNT" "1" "" "systemd 241" "systemd-mount"
+.TH "SYSTEMD\-MOUNT" "1" "" "systemd 242" "systemd-mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,7 +51,9 @@ schedules it through the service manager job queue, so that it may pull in furth
 The command takes either one or two arguments\&. If only one argument is specified it should refer to a block device or regular file containing a file system (e\&.g\&.
 "/dev/sdb1"
 or
-"/path/to/disk\&.img")\&. If it is a block device, which is then probed for a label and other metadata, and is mounted to a directory whose name is generated from the label\&. In this mode the block device must exist at the time of invocation of the command, so that it may be probed\&. If the device is found to be a removable block device (e\&.g\&. a USB stick) an automount point instead of a regular mount point is created (i\&.e\&. the
+"/path/to/disk\&.img")\&. The block device or image file is then probed for a file system label and other metadata, and is mounted to a directory below
+/run/media/system/
+whose name is generated from the file system label\&. In this mode the block device or image file must exist at the time of invocation of the command, so that it may be probed\&. If the device is found to be a removable block device (e\&.g\&. a USB stick) an automount point instead of a regular mount point is created (i\&.e\&. the
 \fB\-\-automount=\fR
 option is implied, see below)\&.
 .PP
@@ -246,7 +248,7 @@ Talk to the service manager of the system\&. This is the implied default\&.
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
 ":", and then a container name, separated by
 "/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
 \fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
@@ -288,6 +290,20 @@ is not used\&.
 .RS 4
 The file system path to place the mount point at, instead of the automatically generated one\&.
 .RE
+.SH "EXAMPLE"
+.PP
+Use a udev rule like the following to automatically mount all USB storage plugged in:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+ACTION=="add", SUBSYSTEMS=="usb", SUBSYSTEM=="block", ENV{ID_FS_USAGE}=="filesystem", \e
+        RUN{program}+="/usr/bin/systemd\-mount \-\-no\-block \-\-automount=yes \-\-collect $devnode"
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

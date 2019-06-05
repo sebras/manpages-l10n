@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 241" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 242" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -145,6 +145,8 @@ and
 \fIPrivateUsers=\fR
 settings are particularly useful in conjunction with
 \fIRootDirectory=\fR\&. For details, see below\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIRootImage=\fR
@@ -183,6 +185,8 @@ or
 \fIPrivateDevices=\fR
 below, as it may change the setting of
 \fIDevicePolicy=\fR\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIMountAPIVFS=\fR
@@ -199,6 +203,8 @@ file system of the host is bind mounted if this option is used without
 \fIPrivateDevices=\fR\&. To run the service with a private, minimal version of
 /dev/, combine this option with
 \fIPrivateDevices=\fR\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIBindPaths=\fR, \fIBindReadOnlyPaths=\fR
@@ -218,8 +224,25 @@ creates read\-only bind mounts\&. These settings may be used more than once, eac
 This option is particularly useful when
 \fIRootDirectory=\fR/\fIRootImage=\fR
 is used\&. In this case the source path refers to a path on the host file system, while the destination path refers to a path below the root directory of the unit\&.
+.sp
+Note that the destination directory must exist or systemd must be able to create it\&. Thus, it is not possible to use those options for mount points nested underneath paths specified in
+\fIInaccessiblePaths=\fR, or under
+/home/
+and other protected directories if
+\fIProtectHome=yes\fR
+is specified\&.
+\fITemporaryFileSystem=\fR
+with
+":ro"
+or
+\fIProtectHome=tmpfs\fR
+should be used instead\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .SH "CREDENTIALS"
+.PP
+These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .PP
 \fIUser=\fR, \fIGroup=\fR
 .RS 4
@@ -272,7 +295,11 @@ are implied\&. This ensures that the lifetime of IPC objects and temporary files
 /tmp
 and
 /var/tmp
-are usually the only world\-writable directories on a system this ensures that a unit making use of dynamic user/group allocation cannot leave files around after unit termination\&. Moreover
+are usually the only world\-writable directories on a system this ensures that a unit making use of dynamic user/group allocation cannot leave files around after unit termination\&. Furthermore
+\fINoNewPrivileges=\fR
+and
+\fIRestrictSUIDSGID=\fR
+are implicitly enabled to ensure that processes invoked cannot take benefit or create SUID/SGID files or directories\&. Moreover
 \fIProtectSystem=strict\fR
 and
 \fIProtectHome=read\-only\fR
@@ -284,7 +311,11 @@ are implied, thus prohibiting the service to write to arbitrary file system loca
 \fICacheDirectory=\fR
 and
 \fILogsDirectory=\fR
-in order to assign a set of writable directories for specific purposes to the service in a way that they are protected from vulnerabilities due to UID reuse (see below)\&. Defaults to off\&.
+in order to assign a set of writable directories for specific purposes to the service in a way that they are protected from vulnerabilities due to UID reuse (see below)\&. If this option is enabled, care should be taken that the unit\*(Aqs processes do not get access to directories outside of these explicitly configured and managed ones\&. Specifically, do not use
+\fIBindPaths=\fR
+and be careful with
+\fBAF_UNIX\fR
+file descriptor passing for directory file descriptors, as this would permit processes to create files or directories owned by the dynamic user/group that are not subject to the lifecycle and access guarantees of the service\&. Defaults to off\&.
 .RE
 .PP
 \fISupplementaryGroups=\fR
@@ -314,6 +345,8 @@ in combination with
 \fINotifyAccess=\fR\fBall\fR\&.
 .RE
 .SH "CAPABILITIES"
+.PP
+These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .PP
 \fICapabilityBoundingSet=\fR
 .RS 4
@@ -404,7 +437,10 @@ Takes a boolean argument\&. If true, ensures that the service process and all it
 \fIProtectKernelTunables=\fR,
 \fIProtectKernelModules=\fR,
 \fIMemoryDenyWriteExecute=\fR,
-\fIRestrictRealtime=\fR, or
+\fIRestrictRealtime=\fR,
+\fIRestrictSUIDSGID=\fR,
+\fIDynamicUser=\fR
+or
 \fILockPersonality=\fR
 are specified\&. Note that even if this setting is overridden by them,
 \fBsystemctl show\fR
@@ -426,6 +462,8 @@ Controls the secure bits set for the executed process\&. Takes a space\-separate
 for details\&.
 .RE
 .SH "MANDATORY ACCESS CONTROL"
+.PP
+These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .PP
 \fISELinuxContext=\fR
 .RS 4
@@ -841,14 +879,13 @@ Takes a boolean argument or the special values
 or
 "tmpfs"\&. If true, the directories
 /home,
-/root
-and
+/root, and
 /run/user
 are made inaccessible and empty for processes invoked by this unit\&. If set to
 "read\-only", the three directories are made read\-only instead\&. If set to
 "tmpfs", temporary file systems are mounted on the three directories in read\-only mode\&. The value
 "tmpfs"
-is useful to hide home directories not relevant to the processes invoked by the unit, while necessary directories are still visible by combining with
+is useful to hide home directories not relevant to the processes invoked by the unit, while still allowing necessary directories to be made visible when listed in
 \fIBindPaths=\fR
 or
 \fIBindReadOnlyPaths=\fR\&.
@@ -862,12 +899,16 @@ is mostly equivalent to
 \fIReadOnlyPaths=\fR, and
 "tmpfs"
 is mostly equivalent to
-\fITemporaryFileSystem=\fR\&.
+\fITemporaryFileSystem=\fR
+with
+":ro"\&.
 .sp
 It is recommended to enable this setting for all long\-running services (in particular network\-facing ones), to ensure they cannot get access to private user data, unless the services actually require access to the user\*(Aqs private data\&. This setting is implied if
 \fIDynamicUser=\fR
 is set\&. This setting cannot ensure protection in all cases\&. In general it has the same limitations as
 \fIReadOnlyPaths=\fR, see below\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIRuntimeDirectory=\fR, \fIStateDirectory=\fR, \fICacheDirectory=\fR, \fILogsDirectory=\fR, \fIConfigurationDirectory=\fR
@@ -884,13 +925,13 @@ These options take a whitespace\-separated list of directory names\&. The specif
 allbox tab(:);
 lB lB lB lB.
 T{
-Locations
+Directory
 T}:T{
-for system
+Below path for system units
 T}:T{
-for users
+Below path for user units
 T}:T{
-Environment variable
+Environment variable set
 T}
 .T&
 l l l l
@@ -901,7 +942,7 @@ l l l l.
 T{
 \fIRuntimeDirectory=\fR
 T}:T{
-/run
+/run/
 T}:T{
 \fI$XDG_RUNTIME_DIR\fR
 T}:T{
@@ -910,7 +951,7 @@ T}
 T{
 \fIStateDirectory=\fR
 T}:T{
-/var/lib
+/var/lib/
 T}:T{
 \fI$XDG_CONFIG_HOME\fR
 T}:T{
@@ -919,7 +960,7 @@ T}
 T{
 \fICacheDirectory=\fR
 T}:T{
-/var/cache
+/var/cache/
 T}:T{
 \fI$XDG_CACHE_HOME\fR
 T}:T{
@@ -928,16 +969,16 @@ T}
 T{
 \fILogsDirectory=\fR
 T}:T{
-/var/log
+/var/log/
 T}:T{
-\fI$XDG_CONFIG_HOME\fR/log
+\fI$XDG_CONFIG_HOME\fR/log/
 T}:T{
 \fI$LOGS_DIRECTORY\fR
 T}
 T{
 \fIConfigurationDirectory=\fR
 T}:T{
-/etc
+/etc/
 T}:T{
 \fI$XDG_CONFIG_HOME\fR
 T}:T{
@@ -947,7 +988,7 @@ T}
 .sp 1
 In case of
 \fIRuntimeDirectory=\fR
-the lowest subdirectories are removed when the unit is stopped\&. It is possible to preserve the specified directories in this case if
+the innermost subdirectories are removed when the unit is stopped\&. It is possible to preserve the specified directories in this case if
 \fIRuntimeDirectoryPreserve=\fR
 is configured to
 \fBrestart\fR
@@ -1147,6 +1188,8 @@ Note that the effect of these settings may be undone by privileged processes\&. 
 \fICapabilityBoundingSet=~CAP_SYS_ADMIN\fR
 or
 \fISystemCallFilter=~@mount\fR\&.
+.sp
+These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fITemporaryFileSystem=\fR
@@ -1163,7 +1206,7 @@ or
 This is useful to hide files or directories not relevant to the processes invoked by the unit, while necessary files or directories can be still accessed by combining with
 \fIBindPaths=\fR
 or
-\fIBindReadOnlyPaths=\fR\&. See the example below\&.
+\fIBindReadOnlyPaths=\fR:
 .sp
 Example: if a unit has the following,
 .sp
@@ -1183,6 +1226,8 @@ then the invoked processes by the unit cannot see any files or directories under
 except for
 /var/lib/systemd
 or its contents\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIPrivateTmp=\fR
@@ -1221,6 +1266,8 @@ ordering on
 is added\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if mount namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIPrivateDevices=\fR
@@ -1263,6 +1310,8 @@ capability (e\&.g\&. setting
 is implied\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if mount namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIPrivateNetwork=\fR
@@ -1287,6 +1336,31 @@ this has the effect that
 sockets in the abstract socket namespace of the host will become unavailable to the unit\*(Aqs processes (however, those located in the file system will continue to be accessible)\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if network namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+When this option is used on a socket unit any sockets bound on behalf of this unit will be bound within a private network namespace\&. This may be combined with
+\fIJoinsNamespaceOf=\fR
+to listen on sockets inside of network namespaces of other services\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fINetworkNamespacePath=\fR
+.RS 4
+Takes an absolute file system path refererring to a Linux network namespace pseudo\-file (i\&.e\&. a file like
+/proc/$PID/ns/net
+or a bind mount or symlink to one)\&. When set the invoked processes are added to the network namespace referenced by that path\&. The path has to point to a valid namespace file at the moment the processes are forked off\&. If this option is used
+\fIPrivateNetwork=\fR
+has no effect\&. If this option is used together with
+\fIJoinsNamespaceOf=\fR
+then it only has an effect if this unit is started before any of the listed units that have
+\fIPrivateNetwork=\fR
+or
+\fINetworkNamespacePath=\fR
+configured, as otherwise the network namespace of those units is reused\&.
+.sp
+When this option is used on a socket unit any sockets bound on behalf of this unit will be bound within the specified network namespace\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIPrivateUsers=\fR
@@ -1312,6 +1386,19 @@ This setting is particularly useful in conjunction with
 and the unit\*(Aqs own user and group\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if user namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fIProtectHostname=\fR
+.RS 4
+Takes a boolean argument\&. When set, sets up a new UTS namespace for the executed processes\&. In addition, changing hostname or domainname is prevented\&. Defaults to off\&.
+.sp
+Note that the implementation of this setting might be impossible (for example if UTS namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+Note that when this option is enabled for a service hostname changes no longer propagate from the system into the service, it is hence not suitable for services that need to take notice of system hostname changes dynamically\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIProtectKernelTunables=\fR
@@ -1343,6 +1430,8 @@ may be used to make relevant IPC file system objects inaccessible\&. If
 is set,
 \fIMountAPIVFS=yes\fR
 is implied\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIProtectKernelModules=\fR
@@ -1364,6 +1453,8 @@ capability (e\&.g\&. setting
 \fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIProtectControlGroups=\fR
@@ -1377,6 +1468,8 @@ and related calls, see above\&. Defaults to off\&. If
 is set,
 \fIMountAPIVFS=yes\fR
 is implied\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIRestrictAddressFamilies=\fR
@@ -1399,7 +1492,7 @@ or similar\&. If running in user mode, or in system mode, but without the
 capability (e\&.g\&. setting
 \fIUser=nobody\fR),
 \fINoNewPrivileges=yes\fR
-is implied\&. By default, no restrictions apply, all address families are accessible to processes\&. If assigned the empty string, any previous address familiy restriction changes are undone\&. This setting does not affect commands prefixed with
+is implied\&. By default, no restrictions apply, all address families are accessible to processes\&. If assigned the empty string, any previous address family restriction changes are undone\&. This setting does not affect commands prefixed with
 "+"\&.
 .sp
 Use this option to limit exposure of processes to remote access, in particular via exotic and sensitive network protocols, such as
@@ -1541,6 +1634,19 @@ capability (e\&.g\&. setting
 is implied\&. Realtime scheduling policies may be used to monopolize CPU time for longer periods of time, and may hence be used to lock up or otherwise trigger Denial\-of\-Service situations on the system\&. It is hence recommended to restrict access to realtime scheduling to the few programs that actually require them\&. Defaults to off\&.
 .RE
 .PP
+\fIRestrictSUIDSGID=\fR
+.RS 4
+Takes a boolean argument\&. If set, any attempts to set the set\-user\-ID (SUID) or set\-group\-ID (SGID) bits on files or directories will be denied (for details on these bits see
+\fBinode\fR(7))\&. If running in user mode, or in system mode, but without the
+\fBCAP_SYS_ADMIN\fR
+capability (e\&.g\&. setting
+\fIUser=\fR),
+\fINoNewPrivileges=yes\fR
+is implied\&. As the SUID/SGID bits are mechanisms to elevate privileges, and allows users to acquire the identity of other users, it is recommended to restrict creation of SUID/SGID files to the few programs that actually require them\&. Note that this restricts marking of any type of file system object with these bits, including both regular files and directories (where the SGID is a different meaning than for files, see documentation)\&. This option is implied if
+\fIDynamicUser=\fR
+is enabled\&. Defaults to off\&.
+.RE
+.PP
 \fIRemoveIPC=\fR
 .RS 4
 Takes a boolean parameter\&. If set, all System V and POSIX IPC objects owned by the user and group the processes of this unit are run as are removed when the unit is stopped\&. This setting only has an effect if at least one of
@@ -1551,6 +1657,8 @@ and
 are used\&. It has no effect on IPC objects owned by the root user\&. Specifically, this removes System V semaphores, as well as System V and POSIX shared memory segments and message queues\&. If multiple units use the same user or group the IPC objects are removed when the last of these units is stopped\&. This setting is implied if
 \fIDynamicUser=\fR
 is set\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIPrivateMounts=\fR
@@ -1587,6 +1695,8 @@ Other file system namespace unit settings \(em
 \fIReadOnlyPaths=\fR,
 \fIInaccessiblePaths=\fR,
 \fIReadWritePaths=\fR, \&... \(em also enable file system namespacing in a fashion equivalent to this option\&. Hence it is primarily useful to explicitly request this behaviour if none of the other settings are used\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fIMountFlags=\fR
@@ -1621,6 +1731,8 @@ mount propagation for units, as this means temporary mounts (such as removable m
 .sp
 Usually, it is best to leave this setting unmodified, and use higher level file system namespacing options instead, in particular
 \fIPrivateMounts=\fR, see above\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .SH "SYSTEM CALL FILTERING"
 .PP
@@ -2108,7 +2220,7 @@ or
 \fIStandardOutput=\fR
 with
 \fBtty\fR/\fBtty\-force\fR/\fBtty\-fail\fR, should specify
-\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty intialization is finished before they start\&.
+\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty initialization is finished before they start\&.
 .RE
 .PP
 \fIStandardOutput=\fR
@@ -2931,6 +3043,15 @@ Note: the process may be also terminated by a signal not sent by systemd\&. In p
 T}
 .TE
 .sp 1
+.RE
+.PP
+\fI$PIDFILE\fR
+.RS 4
+The path to the configured PID file, in case the process is forked off on behalf of a service that uses the
+\fIPIDFile=\fR
+setting, see
+\fBsystemd.service\fR(5)
+for details\&. Service code may use this environment variable to automatically generate a PID file at the location configured in the unit file\&. This field is set to an absolute path in the file system\&.
 .RE
 .PP
 For system services, when
