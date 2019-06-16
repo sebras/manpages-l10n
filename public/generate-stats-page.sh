@@ -45,7 +45,33 @@ cat > index.html <<-END_OF_HEADER
     <div class="container-fluid">
       <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
       <p>Stand: $timestamp</p>
+      <p>
+        <a class="btn btn-primary" href="untranslated.html">Unübersetzte Handbuchseiten</a>
+      </p>
 END_OF_HEADER
+
+# Create an overview of untranslated manpages
+cat > untranslated.html <<-END_OF_HEADER
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Deutsche Übersetzung der Handbuchseiten</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h1>Liste der Dateien, die nicht übersetzt sind</h1>
+      <p>Stand: $timestamp</p>
+      <p>
+        <a class="btn btn-primary" href="index.html">Übersicht</a>
+      </p>
+END_OF_HEADER
+
+for distribution in $distributions; do
+  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated.html
+done
 
 # Set up files for each distribution
 for distribution in $distributions; do
@@ -146,7 +172,49 @@ EOF_TABLE
   echo "</div>" >> $distribution.html
   echo "</body>" >> $distribution.html
   echo "</html>" >> $distribution.html
+
+  # Create an overview of untranslated manpages
+  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated.html
+
+  cat >> untranslated.html <<-EOF_TABLE
+  <table class="table table-striped table-bordered table-sm">
+    <thead class="thead-dark">
+      <tr>
+        <th scope="col" width="25%">Paket</th>
+        <th scope="col" width="75%">Handbuchseiten</th>
+      </tr>
+    </thead>
+    <tbody>
+EOF_TABLE
+
+  previous_package=""
+  while read line; do
+    package=$(echo "$line" | cut -d":" -f1)
+    manpage=$(echo "$line" | cut -d":" -f2)
+    # Special case: If this is the first line, previous_package is empty.
+    if [ -z "$previous_package" ]; then
+      previous_package="$package"
+      manpages="$manpage"
+    fi
+    if [ "$previous_package" != "$package" ]; then
+      echo "<tr>" >> untranslated.html
+      echo "<td>$previous_package</td>" >> untranslated.html
+      echo "<td>$manpages</td>" >> untranslated.html
+      echo "</tr>" >> untranslated.html
+      previous_package="$package"
+      manpages="$manpage"
+    else
+      manpages="$manpages $manpage"
+    fi
+  done < ../upstream/$distribution/untranslated.txt
+
+  echo "</tbody>" >> untranslated.html
+  echo "</table>" >> untranslated.html
 done
+
+echo "</div>" >> untranslated.html
+echo "</body>" >> untranslated.html
+echo "</html>" >> untranslated.html
 
 echo "</div>" >> index.html
 echo "</body>" >> index.html
