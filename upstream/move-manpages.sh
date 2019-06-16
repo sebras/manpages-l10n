@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Get the current package, so that a list of untranslated
+# files can be created.
+package="$1"
+
 for mandir in tmp/usr/share/man/man*; do
   section=$(echo $mandir | cut -d/ -f5)
   # Only copy directories with files
@@ -42,6 +46,13 @@ for mandir in tmp/usr/share/man/man*; do
         if [ -n "$existing" ]; then
           echo $existing.gz $section/$(basename $manpage).gz >> links.txt
           rm $manpage
+        fi
+      done
+      # The remaining manpages should be scanned for untranslated files
+      for manpage in tmp/$section/*; do
+        translation="../../po/$section/"$(basename "$manpage")".po"
+        if [ ! -f $translation ]; then
+          echo "$package: $section/"$(basename "$manpage") >> untranslated.txt
         fi
       done
       # Copy remaining manpages

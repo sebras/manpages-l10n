@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Start with clean directories and no leftover links.txt
-rm -rf man* links.txt
+rm -rf man* links.txt untranslated.txt
 
 mkdir man1 man2 man3 man4 man5 man6 man7 man8
 
@@ -40,7 +40,7 @@ while read package; do
 		data_tar=$(ar t $latest_deb | grep data.tar)
 		ar x $latest_deb $data_tar
 		tar xaf $data_tar --directory=tmp 2>/dev/null
-		../move-manpages.sh
+		../move-manpages.sh "$package"
 	fi
 	# Finally, remove the tarball, so that the regexp
 	# matching does not match the wrong tarball.
@@ -51,6 +51,11 @@ done < packages.txt
 if [ -f links.txt ]; then
 	LC_ALL=C sort links.txt > tmp.links
 	mv tmp.links links.txt
+fi
+
+if [ -f untranslated.txt ]; then
+	LC_ALL=C sort untranslated.txt > tmp.untranslated
+	mv tmp.untranslated untranslated.txt
 fi
 
 # Special case for init.8, because the manpage contains
