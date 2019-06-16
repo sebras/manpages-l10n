@@ -209,6 +209,12 @@ EOF_TABLE
 
   echo "</tbody>" >> untranslated.html
   echo "</table>" >> untranslated.html
+
+  echo '<div class="alert alert-primary" role="alert">' >> untranslated.html
+  echo "Insgesamt sind " >> untranslated.html
+  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated.html
+  echo " Dateien nicht übersetzt." >> untranslated.html
+  echo "</div>" >> untranslated.html
 done
 
 echo "</div>" >> untranslated.html
