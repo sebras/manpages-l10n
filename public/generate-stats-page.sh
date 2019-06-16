@@ -194,7 +194,6 @@ EOF_TABLE
     # Special case: If this is the first line, previous_package is empty.
     if [ -z "$previous_package" ]; then
       previous_package="$package"
-      manpages="$manpage"
     fi
     if [ "$previous_package" != "$package" ]; then
       echo "<tr>" >> untranslated.html
