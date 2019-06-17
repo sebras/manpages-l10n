@@ -35,6 +35,9 @@ install-data-hook: $(manpages)
 		$(mkinstalldirs) $(DESTDIR)$(mandir)/de/$$mansection ; \
 	done
 	for manpage in $(manpages); do \
+		if test ! -f "$$manpage"; then \
+			continue ; \
+		fi ; \
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
 		$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
