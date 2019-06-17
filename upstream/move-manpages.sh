@@ -21,6 +21,7 @@ package="$1"
 
 for mandir in tmp/usr/share/man/man*; do
   section=$(echo $mandir | cut -d/ -f5)
+  mkdir -p $section
   # Only copy directories with files
   files=$(ls $mandir)
   if [ -n "$files" ]; then
@@ -92,3 +93,35 @@ for mandir in tmp/usr/share/man/man*; do
     fi
   fi
 done
+
+# Make the sorting order of generated files reproducible
+temp=$(mktemp)
+if [ -f links.txt ]; then
+	LC_ALL=C sort links.txt > $temp
+	mv $temp links.txt
+fi
+
+if [ -f untranslated.txt ]; then
+	LC_ALL=C sort untranslated.txt > $temp
+	mv $temp untranslated.txt
+fi
+rm -f $temp
+
+# Special case for init.8, because the manpage contains
+# a syntax error, so that the manpage cannot be translated
+# with po4a. The bug has been reported upstream.
+# https://savannah.nongnu.org/bugs/?55678
+if [ -f man8/init.8 ]; then
+  sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" man8/init.8
+fi
+
+# Another special case for man.7, which uses \c and
+# is therefore not translatable by po4a.
+# Reformat the part to display equally in the man browser.
+# Line 272 and 273:
+# .B \&.UE \c
+# .RI [ trailer ]
+# Reformat to: \fB\&.UE\fP [ \fItrailer\fP ]
+if [ -f man7/man.7 ]; then
+  sed -i -e "/^\.B \\\&\.UE \\\c/{N; s/.*/\\\fB\\\\\&.UE\\\fP [ \\\fItrailer\\\fP ]/}" man7/man.7
+fi

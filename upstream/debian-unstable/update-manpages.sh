@@ -18,8 +18,6 @@
 # Start with clean directories and no leftover links.txt
 rm -rf man* links.txt untranslated.txt
 
-mkdir man1 man2 man3 man4 man5 man6 man7 man8
-
 # Process packages
 while read package; do
 	mkdir tmp
@@ -47,28 +45,3 @@ while read package; do
 	# See pacman and pacman-contrib for an example.
 	rm -rf tmp data.tar.*
 done < packages.txt
-
-if [ -f links.txt ]; then
-	LC_ALL=C sort links.txt > tmp.links
-	mv tmp.links links.txt
-fi
-
-if [ -f untranslated.txt ]; then
-	LC_ALL=C sort untranslated.txt > tmp.untranslated
-	mv tmp.untranslated untranslated.txt
-fi
-
-# Special case for init.8, because the manpage contains
-# a syntax error, so that the manpage cannot be translated
-# with po4a. The bug has been reported upstream.
-# https://savannah.nongnu.org/bugs/?55678
-sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" man8/init.8
-
-# Another special case for man.7, which uses \c and
-# is therefore not translatable by po4a.
-# Reformat the part to display equally in the man browser.
-# Line 272 and 273:
-# .B \&.UE \c
-# .RI [ trailer ]
-# Reformat to: \fB\&.UE\fP [ \fItrailer\fP ]
-sed -i -e "/^\.B \\\&\.UE \\\c/{N; s/.*/\\\fB\\\\\&.UE\\\fP [ \\\fItrailer\\\fP ]/}" man7/man.7
