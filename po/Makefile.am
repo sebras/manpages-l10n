@@ -38,7 +38,9 @@ install-data-hook: $(manpages)
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
 		$(INSTALL_DATA) $(distribution)/$$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
-		gzip --best $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		if test "$(compressor)" != "none" ; then \
+			$(compressor) $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		fi ; \
 	done
 	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
 		$(top_srcdir)/upstream/$(distribution)/links.txt
