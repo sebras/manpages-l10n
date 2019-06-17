@@ -1,0 +1,512 @@
+'\" t
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 241" "systemd-analyze"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+systemd-analyze \- Analyze and debug system manager
+.SH "SYNOPSIS"
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] [time]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] blame
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] critical\-chain [\fIUNIT\fR...]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] plot [>\ file\&.svg]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] dot [\fIPATTERN\fR...] [>\ file\&.dot]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] dump
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] cat\-config \fINAME\fR|\fIPATH\fR...
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] unit\-paths
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] log\-level [\fILEVEL\fR]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] log\-target [\fITARGET\fR]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] syscall\-filter [\fISET\fR\&...]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] verify [\fIFILES\fR...]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] calendar \fISPECS\fR...
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] service\-watchdogs [\fIBOOL\fR]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] timespan \fISPAN\fR...
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] security \fIUNIT\fR...
+.SH "DESCRIPTION"
+.PP
+\fBsystemd\-analyze\fR
+may be used to determine system boot\-up performance statistics and retrieve other state and tracing information from the system and service manager, and to verify the correctness of unit files\&. It is also used to access special functions useful for advanced system manager debugging\&.
+.PP
+\fBsystemd\-analyze time\fR
+prints the time spent in the kernel before userspace has been reached, the time spent in the initial RAM disk (initrd) before normal system userspace has been reached, and the time normal system userspace took to initialize\&. Note that these measurements simply measure the time passed up to the point where all system services have been spawned, but not necessarily until they fully finished initialization or the disk is idle\&.
+.PP
+\fBsystemd\-analyze blame\fR
+prints a list of all running units, ordered by the time they took to initialize\&. This information may be used to optimize boot\-up times\&. Note that the output might be misleading as the initialization of one service might be slow simply because it waits for the initialization of another service to complete\&. Also note:
+\fBsystemd\-analyze blame\fR
+doesn\*(Aqt display results for services with
+\fIType=simple\fR, because systemd considers such services to be started immediately, hence no measurement of the initialization delays can be done\&.
+.PP
+\fBsystemd\-analyze critical\-chain [\fR\fB\fIUNIT\&...\fR\fR\fB]\fR
+prints a tree of the time\-critical chain of units (for each of the specified
+\fIUNIT\fRs or for the default target otherwise)\&. The time after the unit is active or started is printed after the "@" character\&. The time the unit takes to start is printed after the "+" character\&. Note that the output might be misleading as the initialization of one service might depend on socket activation and because of the parallel execution of units\&.
+.PP
+\fBsystemd\-analyze plot\fR
+prints an SVG graphic detailing which system services have been started at what time, highlighting the time they spent on initialization\&.
+.PP
+\fBsystemd\-analyze dot\fR
+generates textual dependency graph description in dot format for further processing with the GraphViz
+\fBdot\fR(1)
+tool\&. Use a command line like
+\fBsystemd\-analyze dot | dot \-Tsvg > systemd\&.svg\fR
+to generate a graphical dependency tree\&. Unless
+\fB\-\-order\fR
+or
+\fB\-\-require\fR
+is passed, the generated graph will show both ordering and requirement dependencies\&. Optional pattern globbing style specifications (e\&.g\&.
+*\&.target) may be given at the end\&. A unit dependency is included in the graph if any of these patterns match either the origin or destination node\&.
+.PP
+\fBsystemd\-analyze dump\fR
+outputs a (usually very long) human\-readable serialization of the complete server state\&. Its format is subject to change without notice and should not be parsed by applications\&.
+.PP
+\fBsystemd\-analyze cat\-config\fR
+is similar to
+\fBsystemctl cat\fR, but operates on config files\&. It will copy the contents of a config file and any drop\-ins to standard output, using the usual systemd set of directories and rules for precedence\&. Each argument must be either an absolute path including the prefix (such as
+/etc/systemd/logind\&.conf
+or
+/usr/lib/systemd/logind\&.conf), or a name relative to the prefix (such as
+systemd/logind\&.conf)\&.
+.PP
+\fBExample\ \&1.\ \&Showing logind configuration\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze cat\-config systemd/logind\&.conf
+# /etc/systemd/logind\&.conf
+\&.\&.\&.
+[Login]
+NAutoVTs=8
+\&.\&.\&.
+
+# /usr/lib/systemd/logind\&.conf\&.d/20\-test\&.conf
+\&.\&.\&. some override from another package
+
+# /etc/systemd/logind\&.conf\&.d/50\-override\&.conf
+\&.\&.\&. some administrator override
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBsystemd\-analyze unit\-paths\fR
+outputs a list of all directories from which unit files,
+\&.d
+overrides, and
+\&.wants,
+\&.requires
+symlinks may be loaded\&. Combine with
+\fB\-\-user\fR
+to retrieve the list for the user manager instance, and
+\fB\-\-global\fR
+for the global configuration of user manager instances\&. Note that this verb prints the list that is compiled into
+\fBsystemd\-analyze\fR
+itself, and does not comunicate with the running manager\&. Use
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+systemctl [\-\-user] [\-\-global] show \-p UnitPath \-\-value
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+to retrieve the actual list that the manager uses, with any empty directories omitted\&.
+.PP
+\fBsystemd\-analyze log\-level\fR
+prints the current log level of the
+\fBsystemd\fR
+daemon\&. If an optional argument
+\fILEVEL\fR
+is provided, then the command changes the current log level of the
+\fBsystemd\fR
+daemon to
+\fILEVEL\fR
+(accepts the same values as
+\fB\-\-log\-level=\fR
+described in
+\fBsystemd\fR(1))\&.
+.PP
+\fBsystemd\-analyze log\-target\fR
+prints the current log target of the
+\fBsystemd\fR
+daemon\&. If an optional argument
+\fITARGET\fR
+is provided, then the command changes the current log target of the
+\fBsystemd\fR
+daemon to
+\fITARGET\fR
+(accepts the same values as
+\fB\-\-log\-target=\fR, described in
+\fBsystemd\fR(1))\&.
+.PP
+\fBsystemd\-analyze syscall\-filter \fR\fB[\fISET\fR\&...]\fR
+will list system calls contained in the specified system call set
+\fISET\fR, or all known sets if no sets are specified\&. Argument
+\fISET\fR
+must include the
+"@"
+prefix\&.
+.PP
+\fBsystemd\-analyze verify\fR
+will load unit files and print warnings if any errors are detected\&. Files specified on the command line will be loaded, but also any other units referenced by them\&. The full unit search path is formed by combining the directories for all command line arguments, and the usual unit load paths (variable
+\fI$SYSTEMD_UNIT_PATH\fR
+is supported, and may be used to replace or augment the compiled in set of unit load paths; see
+\fBsystemd.unit\fR(5))\&. All units files present in the directories containing the command line arguments will be used in preference to the other paths\&.
+.PP
+\fBsystemd\-analyze calendar\fR
+will parse and normalize repetitive calendar time events, and will calculate when they will elapse next\&. This takes the same input as the
+\fIOnCalendar=\fR
+setting in
+\fBsystemd.timer\fR(5), following the syntax described in
+\fBsystemd.time\fR(7)\&.
+.PP
+\fBsystemd\-analyze service\-watchdogs\fR
+prints the current state of service runtime watchdogs of the
+\fBsystemd\fR
+daemon\&. If an optional boolean argument is provided, then globally enables or disables the service runtime watchdogs (\fBWatchdogSec=\fR) and emergency actions (e\&.g\&.
+\fBOnFailure=\fR
+or
+\fBStartLimitAction=\fR); see
+\fBsystemd.service\fR(5)\&. The hardware watchdog is not affected by this setting\&.
+.PP
+\fBsystemd\-analyze timespan\fR
+parses a time span and outputs the equivalent value in microseconds, and as a reformatted timespan\&. The time span should adhere to the same syntax documented in
+\fBsystemd.time\fR(7)\&. Values without associated magnitudes are parsed as seconds\&.
+.PP
+\fBsystemd\-analyze security\fR
+analyzes the security and sandboxing settings of one or more specified service units\&. If at least one unit name is specified the security settings of the specified service units are inspected and a detailed analysis is shown\&. If no unit name is specified, all currently loaded, long\-running service units are inspected and a terse table with results shown\&. The command checks for various security\-related service settings, assigning each a numeric "exposure level" value, depending on how important a setting is\&. It then calculates an overall exposure level for the whole unit, which is an estimation in the range 0\&.0\&...10\&.0 indicating how exposed a service is security\-wise\&. High exposure levels indicate very little applied sandboxing\&. Low exposure levels indicate tight sandboxing and strongest security restrictions\&. Note that this only analyzes the per\-service security features systemd itself implements\&. This means that any additional security mechanisms applied by the service code itself are not accounted for\&. The exposure level determined this way should not be misunderstood: a high exposure level neither means that there is no effective sandboxing applied by the service code itself, nor that the service is actually vulnerable to remote or local attacks\&. High exposure levels do indicate however that most likely the service might benefit from additional settings applied to them\&. Please note that many of the security and sandboxing settings individually can be circumvented \(em unless combined with others\&. For example, if a service retains the privilege to establish or undo mount points many of the sandboxing options can be undone by the service code itself\&. Due to that is essential that each service uses the most comprehensive and strict sandboxing and security settings possible\&. The tool will take into account some of these combinations and relationships between the settings, but not all\&. Also note that the security and sandboxing settings analyzed here only apply to the operations executed by the service code itself\&. If a service has access to an IPC system (such as D\-Bus) it might request operations from other services that are not subject to the same restrictions\&. Any comprehensive security and sandboxing analysis is hence incomplete if the IPC access policy is not validated too\&.
+.PP
+If no command is passed,
+\fBsystemd\-analyze time\fR
+is implied\&.
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-\-system\fR
+.RS 4
+Operates on the system systemd instance\&. This is the implied default\&.
+.RE
+.PP
+\fB\-\-user\fR
+.RS 4
+Operates on the user systemd instance\&.
+.RE
+.PP
+\fB\-\-global\fR
+.RS 4
+Operates on the system\-wide configuration for user systemd instance\&.
+.RE
+.PP
+\fB\-\-order\fR, \fB\-\-require\fR
+.RS 4
+When used in conjunction with the
+\fBdot\fR
+command (see above), selects which dependencies are shown in the dependency graph\&. If
+\fB\-\-order\fR
+is passed, only dependencies of type
+\fIAfter=\fR
+or
+\fIBefore=\fR
+are shown\&. If
+\fB\-\-require\fR
+is passed, only dependencies of type
+\fIRequires=\fR,
+\fIRequisite=\fR,
+\fIWants=\fR
+and
+\fIConflicts=\fR
+are shown\&. If neither is passed, this shows dependencies of all these types\&.
+.RE
+.PP
+\fB\-\-from\-pattern=\fR, \fB\-\-to\-pattern=\fR
+.RS 4
+When used in conjunction with the
+\fBdot\fR
+command (see above), this selects which relationships are shown in the dependency graph\&. Both options require a
+\fBglob\fR(7)
+pattern as an argument, which will be matched against the left\-hand and the right\-hand, respectively, nodes of a relationship\&.
+.sp
+Each of these can be used more than once, in which case the unit name must match one of the values\&. When tests for both sides of the relation are present, a relation must pass both tests to be shown\&. When patterns are also specified as positional arguments, they must match at least one side of the relation\&. In other words, patterns specified with those two options will trim the list of edges matched by the positional arguments, if any are given, and fully determine the list of edges shown otherwise\&.
+.RE
+.PP
+\fB\-\-fuzz=\fR\fItimespan\fR
+.RS 4
+When used in conjunction with the
+\fBcritical\-chain\fR
+command (see above), also show units, which finished
+\fItimespan\fR
+earlier, than the latest unit in the same level\&. The unit of
+\fItimespan\fR
+is seconds unless specified with a different unit, e\&.g\&. "50ms"\&.
+.RE
+.PP
+\fB\-\-man=no\fR
+.RS 4
+Do not invoke man to verify the existence of man pages listed in
+\fIDocumentation=\fR\&.
+.RE
+.PP
+\fB\-\-generators\fR
+.RS 4
+Invoke unit generators, see
+\fBsystemd.generator\fR(7)\&. Some generators require root privileges\&. Under a normal user, running with generators enabled will generally result in some warnings\&.
+.RE
+.PP
+\fB\-\-root=\fR\fB\fIPATH\fR\fR
+.RS 4
+With
+\fBcat\-files\fR, show config files underneath the specified root path
+\fIPATH\fR\&.
+.RE
+.PP
+\fB\-H\fR, \fB\-\-host=\fR
+.RS 4
+Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
+.RE
+.PP
+\fB\-M\fR, \fB\-\-machine=\fR
+.RS 4
+Execute operation on a local container\&. Specify a container name to connect to\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
+.PP
+\fB\-\-no\-pager\fR
+.RS 4
+Do not pipe output into a pager\&.
+.RE
+.SH "EXIT STATUS"
+.PP
+On success, 0 is returned, a non\-zero failure code otherwise\&.
+.SH "EXAMPLES FOR DOT"
+.PP
+\fBExample\ \&2.\ \&Plots all dependencies of any unit whose name starts with "avahi\-daemon"\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze dot \*(Aqavahi\-daemon\&.*\*(Aq | dot \-Tsvg > avahi\&.svg
+$ eog avahi\&.svg
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&3.\ \&Plots the dependencies between all known target units\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze dot \-\-to\-pattern=\*(Aq*\&.target\*(Aq \-\-from\-pattern=\*(Aq*\&.target\*(Aq | dot \-Tsvg > targets\&.svg
+$ eog targets\&.svg
+.fi
+.if n \{\
+.RE
+.\}
+.SH "EXAMPLES FOR VERIFY"
+.PP
+The following errors are currently detected:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+unknown sections and directives,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+missing dependencies which are required to start the given unit,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+man pages listed in
+\fIDocumentation=\fR
+which are not found in the system,
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+commands listed in
+\fIExecStart=\fR
+and similar which are not found in the system or not executable\&.
+.RE
+.PP
+\fBExample\ \&4.\ \&Misspelt directives\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cat \&./user\&.slice
+[Unit]
+WhatIsThis=11
+Documentation=man:nosuchfile(1)
+Requires=different\&.service
+
+[Service]
+Description=x
+
+$ systemd\-analyze verify \&./user\&.slice
+[\&./user\&.slice:9] Unknown lvalue \*(AqWhatIsThis\*(Aq in section \*(AqUnit\*(Aq
+[\&./user\&.slice:13] Unknown section \*(AqService\*(Aq\&. Ignoring\&.
+Error: org\&.freedesktop\&.systemd1\&.LoadFailed:
+   Unit different\&.service failed to load:
+   No such file or directory\&.
+Failed to create user\&.slice/start: Invalid argument
+user\&.slice: man nosuchfile(1) command failed with code 16
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&5.\ \&Missing service units\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ tail \&./a\&.socket \&./b\&.socket
+==> \&./a\&.socket <==
+[Socket]
+ListenStream=100
+
+==> \&./b\&.socket <==
+[Socket]
+ListenStream=100
+Accept=yes
+
+$ systemd\-analyze verify \&./a\&.socket \&./b\&.socket
+Service a\&.service not loaded, a\&.socket cannot be started\&.
+Service b@0\&.service not loaded, b\&.socket cannot be started\&.
+      
+.fi
+.if n \{\
+.RE
+.\}
+.SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_PAGER\fR
+.RS 4
+Pager to use when
+\fB\-\-no\-pager\fR
+is not given; overrides
+\fI$PAGER\fR\&. If neither
+\fI$SYSTEMD_PAGER\fR
+nor
+\fI$PAGER\fR
+are set, a set of well\-known pager implementations are tried in turn, including
+\fBless\fR(1)
+and
+\fBmore\fR(1), until one is found\&. If no pager implementation is discovered no pager is invoked\&. Setting this environment variable to an empty string or the value
+"cat"
+is equivalent to passing
+\fB\-\-no\-pager\fR\&.
+.RE
+.PP
+\fI$SYSTEMD_LESS\fR
+.RS 4
+Override the options passed to
+\fBless\fR
+(by default
+"FRSXMK")\&.
+.sp
+If the value of
+\fI$SYSTEMD_LESS\fR
+does not include
+"K", and the pager that is invoked is
+\fBless\fR,
+Ctrl+C
+will be ignored by the executable\&. This allows
+\fBless\fR
+to handle
+Ctrl+C
+itself\&.
+.RE
+.PP
+\fI$SYSTEMD_LESSCHARSET\fR
+.RS 4
+Override the charset passed to
+\fBless\fR
+(by default
+"utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBsystemd\fR(1),
+\fBsystemctl\fR(1)
