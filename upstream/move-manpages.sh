@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2018 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,8 +28,24 @@ for mandir in tmp/usr/share/man/man*; do
     for manpage in $mandir/*; do
       existing=$(readlink $manpage)
       if [ -n "$existing" ]; then
-        linked_section=$(basename $existing .gz | sed -e "s/.\+\.//")
-        echo man$linked_section/$(basename $existing) $section/$(basename $manpage) >> links.txt
+        # Get the filenames of manpage and link
+        ex_filename=$(basename $existing)
+        mp_filename=$(basename $manpage)
+        # Get the manpage section of the link
+        ex_section=$(basename $(dirname $existing))
+        # If the link is in the same directory, there's no dirname.
+        if [ "$ex_section" = "." ]; then
+          ex_section=$(basename $mandir)
+        fi
+        # Strip various compression extensions (.gz or similar)
+        ex_filename=${ex_filename%.gz}
+        ex_filename=${ex_filename%.bz2}
+        ex_filename=${ex_filename%.xz}
+        mp_filename=${mp_filename%.gz}
+        mp_filename=${mp_filename%.bz2}
+        mp_filename=${mp_filename%.xz}
+        echo $ex_section/$ex_filename $section/$mp_filename >> links.txt
+        # Remove the link, as it cannot be translated
         rm $manpage
       fi
     done
@@ -39,12 +55,28 @@ for mandir in tmp/usr/share/man/man*; do
       mkdir tmp/$section
       # Copy remaining manpages
       cp $mandir/* tmp/$section
-      gzip -d tmp/$section/*
+      # Decompress all manpages, using various decompressors
+      extension=$(echo "$manpage" | sed -e "s/.*\.//")
+      for manpage in tmp/$section/*; do
+        if [ "$extension" = "gz" ]; then
+          gzip -d $manpage
+        elif [ "$extension" = "bz2" ]; then
+          bzip2 -d $manpage
+        elif [ "$extension" = "xz" ]; then
+          xz -d $manpage
+        fi
+      done
       # Remove manpages which contain only .so links
       for manpage in tmp/$section/*; do
-        existing=$(grep "^\.so" $manpage | sed -e "s/^\.so //")
+        existing=$(grep "^\.so" $manpage | sed -e "s/^\.so.//")
         if [ -n "$existing" ]; then
-          echo $existing.gz $section/$(basename $manpage).gz >> links.txt
+          ex_filename=$(basename $existing)
+          # Try to get the mansection from the linked filename
+          ex_section=$(basename $(dirname $existing))
+          if [ "$ex_section" = "." ]; then
+            ex_section=$section
+          fi
+          echo $ex_section/$ex_filename $section/$(basename $manpage) >> links.txt
           rm $manpage
         fi
       done
