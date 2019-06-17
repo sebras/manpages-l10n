@@ -45,18 +45,18 @@ install-data-hook: $(manpages)
 			$(compressor) $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
 		fi ; \
 	done
-	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
+	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de $(comp_extension) \
 		$(top_srcdir)/upstream/$(distribution)/links.txt
 
 # Uninstall localized manpages for given distribution
 uninstall-hook:
 	for link in $$(cut -d" " -f2 $(top_srcdir)/upstream/$(distribution)/links.txt); do \
-		rm -f $(DESTDIR)$(mandir)/de/$$link ; \
+		rm -f $(DESTDIR)$(mandir)/de/$$link$(comp_extension) ; \
 	done
 	for manpage in $(manpages); do \
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
-		rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
+		rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename$(comp_extension) ; \
 	done
 
 # Reformat all .po files and commit changes
