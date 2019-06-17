@@ -17,13 +17,13 @@
 
 # Filter out the 'common' directory
 pofiles = $(sort $(wildcard $(srcdir)/man*/*.po))
-manpages = $(patsubst %.po,%, $(pofiles))
+manpages = $(addprefix $(distribution)/, $(patsubst %.po,%, $(pofiles)))
 
 MOSTLYCLEANFILES = $(manpages)
 
 # Common rules for all manpage sections
-%: %.po
-	$(srcdir)/generate-manpage.sh $(distribution) $@
+$(distribution)/%: %.po
+	$(srcdir)/generate-manpage.sh $(distribution) $<
 
 # Generate all localized manpages for given distribution
 all-local: $(manpages)
@@ -37,7 +37,7 @@ install-data-hook: $(manpages)
 	for manpage in $(manpages); do \
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
-		$(INSTALL_DATA) $(distribution)/$$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
+		$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
 		if test "$(compressor)" != "none" ; then \
 			$(compressor) $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
 		fi ; \
