@@ -177,6 +177,8 @@ am__untar = @am__untar@
 bindir = @bindir@
 build_alias = @build_alias@
 builddir = @builddir@
+comp_extension = @comp_extension@
+compressor = @compressor@
 datadir = @datadir@
 datarootdir = @datarootdir@
 distribution = @distribution@
@@ -212,7 +214,7 @@ top_srcdir = @top_srcdir@
 
 # Filter out the 'common' directory
 pofiles = $(sort $(wildcard $(srcdir)/man*/*.po))
-manpages = $(patsubst %.po,%, $(pofiles))
+manpages = $(addprefix $(distribution)/, $(patsubst %.po,%, $(pofiles)))
 MOSTLYCLEANFILES = $(manpages)
 all: all-am
 
@@ -407,8 +409,8 @@ uninstall-am:
 
 
 # Common rules for all manpage sections
-%: %.po
-	$(srcdir)/generate-manpage.sh $(distribution) $@
+$(distribution)/%: %.po
+	$(srcdir)/generate-manpage.sh $(distribution) $<
 
 # Generate all localized manpages for given distribution
 all-local: $(manpages)
@@ -420,23 +422,28 @@ install-data-hook: $(manpages)
 		$(mkinstalldirs) $(DESTDIR)$(mandir)/de/$$mansection ; \
 	done
 	for manpage in $(manpages); do \
+		if test ! -f "$$manpage"; then \
+			continue ; \
+		fi ; \
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
-		$(INSTALL_DATA) $(distribution)/$$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
-		gzip --best $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		$(INSTALL_DATA) $$manpage $(DESTDIR)$(mandir)/de/$$mansection ; \
+		if test "$(compressor)" != "none" ; then \
+			$(compressor) $(DESTDIR)$(mandir)/de/$$mansection/$$filename ; \
+		fi ; \
 	done
-	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de \
+	perl $(top_srcdir)/create-links.pl $(DESTDIR)$(mandir)/de $(comp_extension) \
 		$(top_srcdir)/upstream/$(distribution)/links.txt
 
 # Uninstall localized manpages for given distribution
 uninstall-hook:
 	for link in $$(cut -d" " -f2 $(top_srcdir)/upstream/$(distribution)/links.txt); do \
-		rm -f $(DESTDIR)$(mandir)/de/$$link ; \
+		rm -f $(DESTDIR)$(mandir)/de/$$link$(comp_extension) ; \
 	done
 	for manpage in $(manpages); do \
 		filename=$$(basename $$manpage) ; \
 		mansection=$$(basename $$(dirname $$manpage)) ; \
-		rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename.gz ; \
+		rm -f $(DESTDIR)$(mandir)/de/$$mansection/$$filename$(comp_extension) ; \
 	done
 
 # Reformat all .po files and commit changes

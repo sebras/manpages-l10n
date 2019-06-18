@@ -44,6 +44,63 @@ AS_IF([test -d "upstream/$enable_distribution"],
 )
 AC_SUBST([distribution], [$enable_distribution])
 
+# Add option for compression of translated manpages
+AC_ARG_ENABLE([compression],
+  AS_HELP_STRING([--enable-compression=COMP],
+    [Enable compression for translated manpages.
+     Supported values are gzip, bzip2, xz, and none.
+     @<:@default=gzip@:>@.]
+  ),
+  ,
+  [enable_compression="gzip"]
+)
+
+# Show the wanted compression
+AC_MSG_CHECKING([compression for translated manpages])
+AC_MSG_RESULT([$enable_compression])
+
+# Check if the wanted compression is supported by this package
+AC_MSG_CHECKING([that "$enable_compression" is supported])
+AS_IF(
+  [test "$enable_compression" = "gzip"],
+  [
+    AC_MSG_RESULT([yes])
+    AC_PATH_PROG([compressor], [gzip], [no])
+    AS_IF([test "x$compressor" = "xno"],
+      [AC_MSG_ERROR([You need to install gzip])]
+    )
+    AC_SUBST([comp_extension], [.gz])
+  ],
+  [test "$enable_compression" = "bzip2"],
+  [
+    AC_MSG_RESULT([yes])
+    AC_PATH_PROG([compressor], [bzip2], [no])
+    AS_IF([test "x$compressor" = "xno"],
+      [AC_MSG_ERROR([You need to install bzip2])]
+    )
+    AC_SUBST([comp_extension], [.bz2])
+  ],
+  [test "$enable_compression" = "xz"],
+  [
+    AC_MSG_RESULT([yes])
+    AC_PATH_PROG([compressor], [xz], [no])
+    AS_IF([test "x$compressor" = "xno"],
+      [AC_MSG_ERROR([You need to install xz])]
+    )
+    AC_SUBST([comp_extension], [.xz])
+  ],
+  [test "$enable_compression" = "none"],
+  [
+    AC_MSG_RESULT([yes])
+    AC_SUBST([compressor], [none])
+    AC_SUBST([comp_extension], [])
+  ],
+  [
+    AC_MSG_RESULT([no])
+    AC_MSG_ERROR([compression "$enable_compression" is not supported by manpages-de.])
+  ]
+)
+
 # Check that po4a is available on the system
 AC_PATH_PROG([po4a], [po4a], [no])
 AS_IF([test "x$po4a" = "xno"],
