@@ -18,45 +18,56 @@
 use strict;
 use warnings;
 
-# Get the installation path and compressor from Makefile
-my $install_path = $ARGV[0] || die "Please specify the installation path.";
-my $comp_extension = $ARGV[1] || die "Please specify the compression extension.";
-my $filename = $ARGV[2] || die "Please specify the filename with links.";
+# Get the installation path and compression extension from Makefile
+my $install_path = $ARGV[0]
+  or die "Please specify the installation path.";
+my $comp_extension = $ARGV[1]
+  or die "Please specify the compression extension.";
+my $filename = $ARGV[2]
+  or die "Please specify the filename with links.";
 
-open(LINKS, '<', $filename) or die "Cannot open link file: " . $!;
+open( LINKS, '<', $filename ) or die "Cannot open link file: " . $!;
 
 # Read the whole file
 while (<LINKS>) {
-	# Remove trailing newline
-	chop();
-	# Format is source, destination with their corresponding manpage section
-	# e.g. man1/access.1 or man5/complex.5
-	(my $source, my $destination) = split(/ /);
-	# Determine whether the manpage section is equal
-	my @source_parts = split(/\//, $source);
-	my @destination_parts = split(/\//, $destination);
-	# If the manpages are in different sections, use a relative link
-	if ($source_parts[0] ne $destination_parts[0]) {
-		$source = '../' . $source;
-	}
-	else {
-		# The sections are equal, remove them
-		$source = $source_parts[1];
-	}
-	# Change directory to destination manpage for linking
-	my $working_directory = $install_path . '/' . $destination_parts[0];
-	# We always change the working directory to the destination manpage,
-	# so remove the section directory
-	$destination = $destination_parts[1];
-	# Add the compression extension, if there is one.
-	$source = "$source$comp_extension";
-	$destination = "$destination$comp_extension";
-	# Finally, make sure that the source file really exists.
-	# As these are translated manpages, some translations might not
-	# be available.
-	if (-e $working_directory . '/' . $source) {
-		system("( cd $working_directory ; ln -sf $source $destination )");
-	}
+
+    # Remove trailing newline
+    chop();
+
+    # Format is source, destination with their corresponding manpage section
+    # e.g. man1/access.1 or man5/complex.5
+    ( my $source, my $destination ) = split(/ /);
+
+    # Determine whether the manpage section is equal
+    my @source_parts      = split( /\//, $source );
+    my @destination_parts = split( /\//, $destination );
+
+    # If the manpages are in different sections, use a relative link
+    if ( $source_parts[0] ne $destination_parts[0] ) {
+        $source = '../' . $source;
+    }
+    else {
+        # The sections are equal, remove them
+        $source = $source_parts[1];
+    }
+
+    # Change directory to destination manpage for linking
+    my $working_directory = $install_path . '/' . $destination_parts[0];
+
+    # We always change the working directory to the destination manpage,
+    # so remove the section directory
+    $destination = $destination_parts[1];
+
+    # Add the compression extension, if there is one.
+    $source      = "$source$comp_extension";
+    $destination = "$destination$comp_extension";
+
+    # Finally, make sure that the source file really exists.
+    # As these are translated manpages, some translations might not
+    # be available.
+    if ( -e $working_directory . '/' . $source ) {
+        system("( cd $working_directory ; ln -sf $source $destination )");
+    }
 }
 
 close(LINKS);
