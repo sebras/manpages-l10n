@@ -41,7 +41,7 @@ while read package; do
 		echo "Warning: Could not find .rpm for package '$package'"
 	else
 		rpm2cpio $latest_rpm > $cpio_archive
-		cd tmp && cpio -i --make-directories < "$cpio_archive"
+		cd tmp && bsdcpio -i --make-directories < "$cpio_archive"
 		cd ..
 		../move-manpages.sh "$package"
 	fi
