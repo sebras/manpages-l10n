@@ -30,6 +30,8 @@ is subject to change.  So whenever possible, you should avoid using default
 outputs in your scripts.  Always explicitly define expected columns by using
 .B \-\-output
 .I columns-list
+and
+.B \-\-list
 in environments where a stable output is required.
 .PP
 Note that
@@ -51,17 +53,22 @@ Print the SIZE column in bytes rather than in a human-readable format.
 .BR \-D , " \-\-discard"
 Print information about the discarding capabilities (TRIM, UNMAP) for each device.
 .TP
-.BR \-z , " \-\-zoned"
-Print the zone model for each device.
-.TP
 .BR \-d , " \-\-nodeps"
 Do not print holder devices or slaves.  For example, \fBlsblk --nodeps /dev/sda\fR prints
 information about the sda device only.
 .TP
+.BR \-E , " \-\-dedup " \fIcolumn\fP
+Use \fIcolumn\fP as a de-duplication key to de-duplicate output tree. If the
+key is not available for the device, or the device is a partition and parental
+whole-disk device provides the same key than the device is always printed.
+
+The usual use case is to de-duplicate output on system multi-path devices, for
+example by \fB\-E WWN\fR.
+.TP
 .BR \-e , " \-\-exclude " \fIlist\fP
 Exclude the devices specified by the comma-separated \fIlist\fR of major device numbers.
-Note that RAM disks (major=1) are excluded by default if \fB\-\-all\fR is no specified.
-The filter is applied to the top-level devices only. This maybe be confusing for
+Note that RAM disks (major=1) are excluded by default if \fB\-\-all\fR is not specified.
+The filter is applied to the top-level devices only. This may be confusing for
 \fB\-\-list\fR output format where hierarchy of the devices is not obvious.
 .TP
 .BR \-f , " \-\-fs"
@@ -76,17 +83,24 @@ Display help text and exit.
 .TP
 .BR \-I , " \-\-include " \fIlist\fP
 Include devices specified by the comma-separated \fIlist\fR of major device numbers.
-The filter is applied to the top-level devices only. This maybe be confusing for
+The filter is applied to the top-level devices only. This may be confusing for
 \fB\-\-list\fR output format where hierarchy of the devices is not obvious.
 .TP
 .BR \-i , " \-\-ascii"
 Use ASCII characters for tree formatting.
 .TP
 .BR \-J , " \-\-json"
-Use JSON output format.
+Use JSON output format.  It's strongly recommended to use \fB\-\-output\fR and
+also \fB\-\-tree\fR if necessary.
 .TP
 .BR \-l , " \-\-list"
-Produce output in the form of a list.
+Produce output in the form of a list. The output does not provide information
+about relationships between devices and since version 2.34 every device is
+printed only once.
+.TP
+.BR \-M , " \-\-merge"
+Group parents of sub-trees to provide more readable output for RAIDs and
+Multi-path devices. The tree-like output is required.
 .TP
 .BR \-m , " \-\-perms"
 Output info about device owner, group and mode.  This option is equivalent to
@@ -98,7 +112,8 @@ Do not print a header line.
 .BR \-o , " \-\-output " \fIlist\fP
 Specify which output columns to print.  Use
 .B \-\-help
-to get a list of all supported columns.
+to get a list of all supported columns.  The columns may affect tree-like output.
+The default is to use tree for the column 'NAME' (see also \fB\-\-tree\fR).
 
 The default list of columns may be extended if \fIlist\fP is
 specified in the format \fI+list\fP (e.g. \fBlsblk -o +UUID\fP).
@@ -124,6 +139,10 @@ Output info about SCSI devices only.  All partitions, slaves and holder devices 
 Print dependencies in inverse order. If the \fB\-\-list\fR output is requested then
 the lines are still ordered by dependencies.
 .TP
+.BR \-T , " \-\-tree" [ =\fIcolumn ]
+Force tree-like output format.  If \fIcolumn\fP is specified, then a tree is printed in the column.
+The default is NAME column.
+.TP
 .BR \-t , " \-\-topology"
 Output info about block-device topology.
 This option is equivalent to
@@ -136,6 +155,9 @@ Display version information and exit.
 Sort output lines by \fIcolumn\fP. This option enables \fB\-\-list\fR output format by default.
 It is possible to use the option \fI\-\-tree\fP to force tree-like output and
 than the tree branches are sorted by the \fIcolumn\fP.
+.TP
+.BR \-z , " \-\-zoned"
+Print the zone model for each device.
 .TP
 .BR " \-\-sysroot " \fIdirectory\fP
 Gather data for a Linux instance other than the instance from which the lsblk
