@@ -1,5 +1,11 @@
 # Changelog for manpages-de
 
+## Version 2.14
+
+*Tue Jul  9 11:42:18 CEST 2019*
+
+* Updated many translations
+
 ## Version 2.13
 
 *Sun May 19 13:41:23 CEST 2019*
