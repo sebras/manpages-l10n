@@ -23,11 +23,11 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH CGROUPS 7 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH CGROUPS 7 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 cgroups \- Linux control groups
 .SH DESCRIPTION
-Control cgroups, usually referred to as cgroups,
+Control groups, usually referred to as cgroups,
 are a Linux kernel feature which allow processes to
 be organized into hierarchical groups whose usage of
 various types of resources can then be limited and monitored.
@@ -516,6 +516,13 @@ An example of this is the
 cgroup hierarchy that is used by
 .BR systemd (1)
 to track services and user sessions.
+.PP
+Since Linux 5.0, the
+.I cgroup_no_v1
+kernel boot option (described below) can be used to disable cgroup v1
+named hierarchies, by specifying
+.IR cgroup_no_v1=named .
+
 .\"
 .SH CGROUPS VERSION 2
 In cgroups v2,
@@ -565,7 +572,8 @@ the addition in Linux 4.14 of "thread mode" (described below).
 In cgroups v1, the ability to mount different controllers
 against different hierarchies was intended to allow great flexibility
 for application design.
-In practice, though, the flexibility turned out to less useful than expected,
+In practice, though,
+the flexibility turned out to be less useful than expected,
 and in many cases added complexity.
 Therefore, in cgroups v2,
 all available controllers are mounted against a single hierarchy.
@@ -870,13 +878,16 @@ to this file means that no limit is imposed.
 The default value in this file is
 .IR """max""" .
 .\"
-.SS Cgroups v2 delegation: delegation to a less privileged user
+.SH CGROUPS DELEGATION: DELEGATING A HIERARCHY TO A LESS PRIVILEGED USER
 In the context of cgroups,
 delegation means passing management of some subtree
-of the cgroup hierarchy to a nonprivileged process.
-Cgroups v1 provides support for delegation that was
-accidental and not fully secure.
-Cgroups v2 supports delegation by explicit design.
+of the cgroup hierarchy to a nonprivileged user.
+Cgroups v1 provides support for delegation based on file permissions
+in the cgroup hierarchy but with less strict containment rules than v2
+(as noted below).
+Cgroups v2 supports delegation with containment by explicit design.
+The focus of the discussion in this section is on delegation in cgroups v2,
+with some differences for cgroups v1 noted along the way.
 .PP
 Some terminology is required in order to describe delegation.
 A
@@ -907,7 +918,7 @@ will also be owned by the delegatee.
 Changing the ownership of this file means that the delegatee
 can move processes into the root of the delegated subtree.
 .TP
-.IR /dlgt_grp/cgroup.subtree_control
+.IR /dlgt_grp/cgroup.subtree_control " (cgroups v2 only)"
 Changing the ownership of this file means that that the delegatee
 can enable controllers (that are present in
 .IR /dlgt_grp/cgroup.controllers )
@@ -915,7 +926,7 @@ in order to further redistribute resources at lower levels in the subtree.
 (As an alternative to changing the ownership of this file,
 the delegater might instead add selected controllers to this file.)
 .TP
-.IR /dlgt_grp/cgroup.threads
+.IR /dlgt_grp/cgroup.threads " (cgroups v2 only)"
 Changing the ownership of this file is necessary if a threaded subtree
 is being delegated (see the description of "thread mode", below).
 This permits the delegatee to write thread IDs to the file.
@@ -923,8 +934,12 @@ This permits the delegatee to write thread IDs to the file.
 a domain subtree, but currently this serves no purpose,
 since, as described below, it is not possible to move a thread between
 domain cgroups by writing its thread ID to the
-.IR cgroup.tasks
+.IR cgroup.threads
 file.)
+.IP
+In cgroups v1, the corresponding file that should instead be delegated is the
+.I tasks
+file.
 .PP
 The delegater should
 .I not
@@ -940,7 +955,7 @@ the resources that are distributed into the delegated subtree.
 .PP
 See also the discussion of the
 .IR /sys/kernel/cgroup/delegate
-file in NOTES.
+file in NOTES for information about further delegatable files in cgroups v2.
 .PP
 After the aforementioned steps have been performed,
 the delegatee can create child cgroups within the delegated subtree
@@ -956,7 +971,7 @@ of the corresponding resources into the delegated subtree.
 .SS Cgroups v2 delegation: nsdelegate and cgroup namespaces
 Starting with Linux 4.13,
 .\" commit 5136f6365ce3eace5a926e10f16ed2a233db5ba9
-there is a second way to perform cgroup delegation.
+there is a second way to perform cgroup delegation in the cgroups v2 hierarchy.
 This is done by mounting or remounting the cgroup v2 filesystem with the
 .I nsdelegate
 mount option.
@@ -967,7 +982,7 @@ option as follows:
 .PP
 .in +4n
 .EX
-mount -t cgroup2 -o remount,nsdelegate \\
+mount -t cgroup2 -o remount,nsdelegate \e
                  none /sys/fs/cgroup/unified
 .EE
 .in
@@ -1022,7 +1037,7 @@ because both hierarchies are owned by the unprivileged user
 the following illegitimate actions could be performed:
 .IP * 3
 A process in the inferior hierarchy could change the
-resource controller settings in the root directory of the that hierarchy.
+resource controller settings in the root directory of that hierarchy.
 (These resource controller settings are intended to allow control to
 be exercised from the
 .I parent
@@ -1049,9 +1064,24 @@ On some systems,
 automatically mounts the cgroup v2 filesystem.
 In order to experiment with the
 .I nsdelegate
-operation, it may be desirable to
+operation, it may be useful to boot the kernel with
+the following command-line options:
+.PP
+.in +4n
+.EX
+cgroup_no_v1=all systemd.legacy_systemd_cgroup_controller
+.EE
+.in
+.PP
+These options cause the kernel to boot with the cgroups v1 controllers
+disabled (meaning that the controllers are available in the v2 hierarchy),
+and tells
+.BR systemd (1)
+not to mount and use the cgroup v2 hierarchy,
+so that the v2 hierarchy can be manually mounted
+with the desired options after boot-up.
 .\"
-.SS Cgroup v2 delegation containment rules
+.SS Cgroup delegation containment rules
 Some delegation
 .IR "containment rules"
 ensure that the delegatee can move processes between cgroups within the
@@ -1069,19 +1099,25 @@ file in the destination cgroup.
 .IP *
 The writer has write permission on the
 .I cgroup.procs
-file in the common ancestor of the source and destination cgroups.
-(In some cases,
-the common ancestor may be the source or destination cgroup itself.)
+file in the nearest common ancestor of the source and destination cgroups.
+Note that in some cases,
+the nearest common ancestor may be the source or destination cgroup itself.
+This requirement is not enforced for cgroups v1 hierarchies,
+with the consequence that containment in v1 is less strict than in v2.
+(For example, in cgroups v1 the user that owns two distinct
+delegated subhierarchies can move a process between the hierarchies.)
 .IP *
 If the cgroup v2 filesystem was mounted with the
 .I nsdelegate
 option, the writer must be able to see the source and destination cgroups
 from its cgroup namespace.
 .IP *
-Before Linux 4.11:
-.\" commit 576dd464505fc53d501bb94569db76f220104d28
+In cgroups v1:
 the effective UID of the writer (i.e., the delegatee) matches the
 real user ID or the saved set-user-ID of the target process.
+Before Linux 4.11,
+.\" commit 576dd464505fc53d501bb94569db76f220104d28
+this requirement also applied in cgroups v2
 (This was a historical requirement inherited from cgroups v1
 that was later deemed unnecessary,
 since the other rules suffice for containment in cgroups v2.)
@@ -1199,7 +1235,7 @@ controllers: these controllers support thread-granularity for
 resource control and can be enabled inside threaded subtrees,
 with the result that the corresponding controller-interface files
 appear inside the cgroups in the threaded subtree.
-As at Linux 4.15, the following controllers are threaded:
+As at Linux 4.19, the following controllers are threaded:
 .IR cpu ,
 .IR perf_event ,
 and
@@ -1408,24 +1444,27 @@ In other words, the only explicit transition that is possible is to convert a
 cgroup to type
 .IR threaded .
 .IP *
-The string
+The effect of writing
 .IR """threaded"""
-can be written only if the current value in
-.IR cgroup.type
-is one of the following
+depends on the current value in
+.IR cgroup.type ,
+as follows:
 .RS
 .IP \(bu 3
-.IR domain ,
-to start the creation of a threaded subtree via
+.IR domain
+or
+.IR "domain threaded" :
+start the creation of a threaded subtree
+(whose root is the parent of this cgroup) via
 the first of the pathways described above;
 .IP \(bu
-.IR "domain\ invalid" ,
-to convert one of the cgroups in a threaded subtree into a usable (i.e.,
+.IR "domain\ invalid" :
+convert this cgroup (which is inside a threaded subtree) to a usable (i.e.,
 .IR threaded )
 state;
 .IP \(bu
-.IR threaded ,
-which has no effect (a "no-op").
+.IR threaded :
+no effect (a "no-op").
 .RE
 .IP *
 We can't write to a
@@ -1535,25 +1574,35 @@ allow a threaded cgroup that employs the
 controller to be placed as high as possible in the hierarchy,
 so as to minimize the (small) cost of traversing the cgroup hierarchy.
 .\"
-.SS The cgroups v2 """cpu""" controller and realtime processes
-As at Linux 4.15, the cgroups v2
+.SS The cgroups v2 """cpu""" controller and realtime threads
+As at Linux 4.19, the cgroups v2
 .I cpu
-controller does not support control of realtime processes,
-and the controller can be enabled in the root cgroup only
+controller does not support control of realtime threads
+(specifically threads scheduled under any of the policies
+.BR SCHED_FIFO ,
+.BR SCHED_RR ,
+described
+.BR SCHED_DEADLINE ;
+see
+.BR sched (7)).
+Therefore, the
+.I cpu
+controller can be enabled in the root cgroup only
 if all realtime threads are in the root cgroup.
-(If there are realtime processes in nonroot cgroups, then a
+(If there are realtime threads in nonroot cgroups, then a
 .BR write (2)
 of the string
 .IR """+cpu"""
 to the
 .I cgroup.subtree_control
 file fails with the error
-.BR EINVAL .
-However, on some systems,
+.BR EINVAL .)
+.PP
+On some systems,
 .BR systemd (1)
-places certain realtime processes in nonroot cgroups in the v2 hierarchy.
+places certain realtime threads in nonroot cgroups in the v2 hierarchy.
 On such systems,
-these processes must first be moved to the root cgroup before the
+these threads must first be moved to the root cgroup before the
 .I cpu
 controller can be enabled.
 .\"
@@ -1727,7 +1776,7 @@ mount option.
 .BR sched (7),
 .BR user_namespaces (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

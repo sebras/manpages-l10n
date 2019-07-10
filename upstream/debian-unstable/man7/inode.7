@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH INODE 7 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH INODE 7 2019-05-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 inode \- file inode information
 .SH DESCRIPTION
@@ -182,7 +182,7 @@ and is not currently supported by most Linux filesystems.
 .\" FIXME Is it supported on ext4 and XFS?
 .TP
 Last modification timestamp (mtime)
-\fIstat.st_atime\fP; \fIstatx.stx_mtime\fP
+\fIstat.st_mtime\fP; \fIstatx.stx_mtime\fP
 .IP
 This is the file's last modification timestamp.
 It is changed by file modifications, for example, by
@@ -206,10 +206,26 @@ This is the file's last status change timestamp.
 It is changed by writing or by setting inode information
 (i.e., owner, group, link count, mode, etc.).
 .PP
+The timestamp fields report time measured with a zero point at the
+.IR Epoch ,
+1970-01-02 00:00:00 +0000, UTC (see
+.BR time (7)).
+.PP
 Nanosecond timestamps are supported on XFS, JFS, Btrfs, and
 ext4 (since Linux 2.6.23).
 .\" commit ef7f38359ea8b3e9c7f2cae9a4d4935f55ca9e80
 Nanosecond timestamps are not supported in ext2, ext3, and Reiserfs.
+In order to return timestamps with nanosecond precision,
+the timestamp fields in the
+.I stat
+and
+.I statx
+structures are defined as structures that include a nanosecond component.
+See
+.BR stat (2)
+and
+.BR statx (2)
+for details.
 On filesystems that do not support subsecond timestamps,
 the nanosecond fields in the
 .I stat
@@ -351,7 +367,7 @@ field:
 .in +4n
 .TS
 lB l l.
-S_ISUID	  04000	set-user-ID bit
+S_ISUID	  04000	set-user-ID bit (see \fBexecve\fP(2))
 S_ISGID	  02000	set-group-ID bit (see below)
 S_ISVTX	  01000	sticky bit (see below)
 
@@ -377,12 +393,15 @@ S_IXOTH	  00001	others have execute permission
 The set-group-ID bit
 .RB ( S_ISGID )
 has several special uses.
-For a directory, it indicates that BSD semantics is to be used
+For a directory, it indicates that BSD semantics are to be used
 for that directory: files created there inherit their group ID from
 the directory, not from the effective group ID of the creating process,
 and directories created there will also get the
 .B S_ISGID
 bit set.
+For an executable file, the set-group-ID bit causes the effective group ID
+of a process that executes the file to change as described in
+.BR execve (2).
 For a file that does not have the group execution bit
 .RB ( S_IXGRP )
 set,
@@ -455,14 +474,13 @@ report a size of 4096 bytes, even though the file content is smaller.
 For such files, one should simply try to read as many bytes as possible
 (and append \(aq\e0\(aq to the returned buffer
 if it is to be interpreted as a string).
-.IR st_atimensec .
 .SH SEE ALSO
 .BR stat (1),
 .BR stat (2),
 .BR statx (2),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

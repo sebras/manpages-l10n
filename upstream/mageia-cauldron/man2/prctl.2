@@ -51,7 +51,7 @@
 .\" 2014-11-10 Dave Hansen, document PR_MPX_{EN,DIS}ABLE_MANAGEMENT
 .\"
 .\"
-.TH PRCTL 2 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH PRCTL 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 prctl \- operations on a process
 .SH SYNOPSIS
@@ -112,6 +112,15 @@ In all of the above operations,
 and
 .I arg5
 must be specified as 0.
+.IP
+Higher-level interfaces layered on top of the above operations are
+provided in the
+.BR libcap (3)
+library in the form of
+.BR cap_get_ambient (3),
+.BR cap_set_ambient (3),
+and
+.BR cap_reset_ambient (3).
 .TP
 .BR PR_CAPBSET_READ " (since Linux 2.6.25)"
 Return (as the function result) 1 if the capability specified in
@@ -129,6 +138,11 @@ If the capability specified in
 .I arg2
 is not valid, then the call fails with the error
 .BR EINVAL .
+.IP
+A higher-level interface layered on top of this operation is provided in the
+.BR libcap (3)
+library in the form of
+.BR cap_get_bound (3).
 .TP
 .BR PR_CAPBSET_DROP " (since Linux 2.6.25)"
 If the calling thread has the
@@ -150,6 +164,11 @@ does not represent a valid capability; or
 .BR EINVAL
 if file capabilities are not enabled in the kernel,
 in which case bounding sets are not supported.
+.IP
+A higher-level interface layered on top of this operation is provided in the
+.BR libcap (3)
+library in the form of
+.BR cap_drop_bound (3).
 .TP
 .BR PR_SET_CHILD_SUBREAPER " (since Linux 3.4)"
 .\" commit ebec18a6d3aa1e7d84aab16225e87fd25170ec2b
@@ -178,7 +197,8 @@ signal and will be able to
 .BR wait (2)
 on the process to discover its termination status.
 .IP
-The setting of this bit is not inherited by children created by
+The setting of the "child subreaper" attribute
+is not inherited by children created by
 .BR fork (2)
 and
 .BR clone (2).
@@ -533,10 +553,8 @@ and
 .I arg5
 arguments must be zero if unused.
 .IP
-.\" commit 52b3694157e3aa6df871e283115652ec6f2d31e0
-Since Linux 3.10,
-this feature is available all the time.
 Before Linux 3.10,
+.\" commit 52b3694157e3aa6df871e283115652ec6f2d31e0
 this feature is available only if the kernel is built with the
 .BR CONFIG_CHECKPOINT_RESTORE
 option enabled.
@@ -648,11 +666,16 @@ memory area for the ELF
 .IR \.text
 section).
 .IP
-The second limitation is that such transitions can be done only once
-in a process life time.
-Any further attempts will be rejected.
-This should help system administrators monitor unusual
-symbolic-link transitions over all processes running on a system.
+In Linux 4.9 and earlier, the
+.\" commit 3fb4afd9a504c2386b8435028d43283216bf588e
+.BR PR_SET_MM_EXE_FILE
+operation can be performed only once in a process's lifetime;
+attempting to perform the operation a second time results in the error
+.BR EPERM .
+This restriction was enforced for security reasons that were subsequently
+deemed specious,
+and the restriction was removed in Linux 4.10 because some
+user-space applications needed to perform this operation more than once.
 .PP
 The following options are available since Linux 3.18.
 .\" commit f606b77f1a9e362451aca8f81d8f36a3a112139e
@@ -735,7 +758,11 @@ configuration option.
 You can check whether the CPU supports MPX by looking for the 'mpx'
 CPUID bit, like with the following command:
 .IP
-	cat /proc/cpuinfo | grep ' mpx '
+.in +4n
+.EX
+cat /proc/cpuinfo | grep ' mpx '
+.EE
+.in
 .IP
 A thread may not switch in or out of long (64-bit) mode while MPX is
 enabled.
@@ -783,7 +810,7 @@ the returned string will be null-terminated.
 .BR PR_SET_NO_NEW_PRIVS " (since Linux 3.5)"
 Set the calling thread's
 .I no_new_privs
-bit to the value in
+attribute to the value in
 .IR arg2 .
 With
 .I no_new_privs
@@ -795,8 +822,10 @@ that could not have been done without the
 call (for example,
 rendering the set-user-ID and set-group-ID mode bits,
 and file capabilities non-functional).
-Once set, this bit cannot be unset.
-The setting of this bit is inherited by children created by
+Once set, this the
+.I no_new_privs
+attribute cannot be unset.
+The setting of this attribute is inherited by children created by
 .BR fork (2)
 and
 .BR clone (2),
@@ -806,7 +835,7 @@ and preserved across
 Since Linux 4.10,
 the value of a thread's
 .I no_new_privs
-bit can be viewed via the
+attribute can be viewed via the
 .I NoNewPrivs
 field in the
 .IR /proc/[pid]/status
@@ -824,7 +853,7 @@ See also
 .BR PR_GET_NO_NEW_PRIVS " (since Linux 3.5)"
 Return (as the function result) the value of the
 .I no_new_privs
-bit for the calling thread.
+attribute for the calling thread.
 A value of 0 indicates the regular
 .BR execve (2)
 behavior.
@@ -833,19 +862,11 @@ A value of 1 indicates
 will operate in the privilege-restricting mode described above.
 .TP
 .BR PR_SET_PDEATHSIG " (since Linux 2.1.57)"
-Set the parent death signal
+Set the parent-death signal
 of the calling process to \fIarg2\fP (either a signal value
 in the range 1..maxsig, or 0 to clear).
 This is the signal that the calling process will get when its
 parent dies.
-This value is cleared for the child of a
-.BR fork (2)
-and (since Linux 2.4.36 / 2.6.23)
-when executing a set-user-ID or set-group-ID binary,
-or a binary that has associated capabilities (see
-.BR capabilities (7)).
-This value is preserved across
-.BR execve (2).
 .IP
 .IR Warning :
 .\" https://bugzilla.kernel.org/show_bug.cgi?id=43300
@@ -856,6 +877,38 @@ In other words, the signal will be sent when that thread terminates
 (via, for example,
 .BR pthread_exit (3)),
 rather than after all of the threads in the parent process terminate.
+.IP
+The parent-death signal is sent upon subsequent termination of the parent
+thread and also upon termination of each subreaper process
+(see the description of
+.B PR_SET_CHILD_SUBREAPER
+above) to which the caller is subsequently reparented.
+If the parent thread and all ancestor subreapers have already terminated
+by the time of the
+.BR PR_SET_PDEATHSIG
+operation, then no parent-death signal is sent to the caller.
+.IP
+The parent-death signal is process-directed (see
+.BR signal (7))
+and, if the child installs a handler using the
+.BR sigaction (2)
+.B SA_SIGINFO
+flag, the
+.I si_pid
+field of the
+.I siginfo_t
+argument of the handler contains the PID of the terminating parent process.
+.IP
+The parent-death signal setting is cleared for the child of a
+.BR fork (2).
+It is also
+(since Linux 2.4.36 / 2.6.23)
+.\" commit d2d56c5f51028cb9f3d800882eb6f4cbd3f9099f
+cleared when executing a set-user-ID or set-group-ID binary,
+or a binary that has associated capabilities (see
+.BR capabilities (7));
+otherwise, this value is preserved across
+.BR execve (2).
 .TP
 .BR PR_GET_PDEATHSIG " (since Linux 2.3.15)"
 Return the current value of the parent process death signal,
@@ -1008,6 +1061,106 @@ the "securebits" flags of the calling thread.
 See
 .BR capabilities (7).
 .TP
+.BR PR_GET_SPECULATION_CTRL " (since Linux 4.17)"
+Returns the state of the speculation misfeature specified in
+.IR arg2 .
+Currently, the only permitted value for this argument is
+.BR PR_SPEC_STORE_BYPASS
+(otherwise the call fails with the error
+.BR ENODEV ).
+.IP
+The return value uses bits 0-3 with the following meaning:
+.RS
+.TP
+.BR PR_SPEC_PRCTL
+Mitigation can be controlled per thread by
+.B PR_SET_SPECULATION_CTRL
+.TP
+.BR PR_SPEC_ENABLE
+The speculation feature is enabled, mitigation is disabled.
+.TP
+.BR PR_SPEC_DISABLE
+The speculation feature is disabled, mitigation is enabled
+.TP
+.BR PR_SPEC_FORCE_DISABLE
+Same as
+.B PR_SPEC_DISABLE
+but cannot be undone.
+.RE
+.IP
+If all bits are 0,
+then the CPU is not affected by the speculation misfeature.
+.IP
+If
+.B PR_SPEC_PRCTL
+is set, then per-thread control of the mitigation is available.
+If not set,
+.BR prctl ()
+for the speculation misfeature will fail.
+.IP
+The
+.IR arg3 ,
+.IR arg4 ,
+and
+.I arg5
+arguments must be specified as 0; otherwise the call fails with the error
+.BR EINVAL .
+.TP
+.BR PR_SET_SPECULATION_CTRL " (since Linux 4.17)"
+.\" commit b617cfc858161140d69cc0b5cc211996b557a1c7
+.\" commit 356e4bfff2c5489e016fdb925adbf12a1e3950ee
+Sets the state of the speculation misfeature specified in
+.IR arg2 .
+Currently, the only permitted value for this argument is
+.B PR_SPEC_STORE_BYPASS
+(otherwise the call fails with the error
+.BR ENODEV ).
+This setting is a per-thread attribute.
+The
+.IR arg3
+argument is used to hand in the control value,
+which is one of the following:
+.RS
+.TP
+.BR PR_SPEC_ENABLE
+The speculation feature is enabled, mitigation is disabled.
+.TP
+.BR PR_SPEC_DISABLE
+The speculation feature is disabled, mitigation is enabled
+.TP
+.BR PR_SPEC_FORCE_DISABLE
+Same as
+.B PR_SPEC_DISABLE
+but cannot be undone.
+A subsequent
+.B
+prctl(..., PR_SPEC_ENABLE)
+will fail with the error
+.BR EPERM .
+.RE
+.IP
+Any other value in
+.IR arg3
+will result in the call failing with the error
+.BR ERANGE .
+.IP
+The
+.I arg4
+and
+.I arg5
+arguments must be specified as 0; otherwise the call fails with the error
+.BR EINVAL .
+.IP
+The speculation feature can also be controlled by the
+.B spec_store_bypass_disable
+boot parameter.
+This parameter may enforce a read-only policy which will result in the
+.BR prctl (2)
+call failing with the error
+.BR ENXIO .
+For further details, see the kernel source file
+.IR Documentation/admin-guide/kernel-parameters.txt .
+.TP
 .BR PR_SET_THP_DISABLE " (since Linux 3.15)"
 .\" commit a0715cc22601e8830ace98366c0c2bd8da52af52
 Set the state of the "THP disable" flag for the calling thread.
@@ -1151,7 +1304,8 @@ See
 Return (as the function result)
 the "current" timer slack value of the calling thread.
 .TP
-.BR PR_SET_TIMING " (since Linux 2.6.0-test4)"
+.BR PR_SET_TIMING " (since Linux 2.6.0)"
+.\" Precisely: Linux 2.6.0-test4
 Set whether to use (normal, traditional) statistical process timing or
 accurate timestamp-based process timing, by passing
 .B PR_TIMING_STATISTICAL
@@ -1168,7 +1322,8 @@ is not currently implemented
 .\" and looking at the patch history, it appears
 .\" that it never did anything.
 .TP
-.BR PR_GET_TIMING " (since Linux 2.6.0-test4)"
+.BR PR_GET_TIMING " (since Linux 2.6.0)"
+.\" Precisely: Linux 2.6.0-test4
 Return (as the function result) which process timing method is currently
 in use.
 .TP
@@ -1501,6 +1656,12 @@ and
 .IR arg3
 does not specify a valid capability.
 .TP
+.B ENODEV
+.I option
+was
+.BR PR_SET_SPECULATION_CTRL
+the kernel or CPU does not support the requested speculation misfeature.
+.TP
 .B ENXIO
 .I option
 was
@@ -1509,6 +1670,15 @@ or
 .BR PR_MPX_DISABLE_MANAGEMENT
 and the kernel or the CPU does not support MPX management.
 Check that the kernel and processor have MPX support.
+.TP
+.B ENXIO
+.I option
+was
+.BR PR_SET_SPECULATION_CTRL
+implies that the control of the selected speculation misfeature is not possible.
+See
+.BR PR_GET_SPECULATION_CTRL
+for the bit fields to determine which option is available.
 .TP
 .B EOPNOTSUPP
 .I option
@@ -1529,6 +1699,14 @@ or tried to unset a "locked" flag,
 or tried to set a flag whose corresponding locked flag was set
 (see
 .BR capabilities (7)).
+.TP
+.B EPERM
+.I option
+is
+.BR PR_SET_SPECULATION_CTRL
+wherein the speculation was disabled with
+.B PR_SPEC_FORCE_DISABLE
+and caller tried to enable it again.
 .TP
 .B EPERM
 .I option
@@ -1570,6 +1748,28 @@ is not present in the process's permitted and inheritable capability sets,
 or the
 .B PR_CAP_AMBIENT_LOWER
 securebit has been set.
+.TP
+.B ERANGE
+.I option
+was
+.BR PR_SET_SPECULATION_CTRL
+and
+.IR arg3
+is neither
+.BR PR_SPEC_ENABLE ,
+.BR PR_SPEC_DISABLE ,
+nor
+.BR PR_SPEC_FORCE_DISABLE .
+.TP
+.B EINVAL
+.I option
+was
+.BR PR_GET_SPECULATION_CTRL
+or
+.BR PR_SET_SPECULATION_CTRL
+and unused arguments to
+.BR prctl ()
+are not 0.
 .SH VERSIONS
 The
 .BR prctl ()
@@ -1597,7 +1797,7 @@ get or set the maximum stack size, and so on.
 .BR signal (2),
 .BR core (5)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

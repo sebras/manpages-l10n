@@ -45,7 +45,7 @@
 .\"     other capabilities where the permitted or inheritable bit is set.
 .\" 2011-09-07, mtk/Serge hallyn: Add CAP_SYSLOG
 .\"
-.TH CAPABILITIES 7 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH CAPABILITIES 7 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 capabilities \- overview of Linux capabilities
 .SH DESCRIPTION
@@ -82,6 +82,7 @@ Allow reading the audit log via a multicast netlink socket.
 .TP
 .BR CAP_AUDIT_WRITE " (since Linux 2.6.11)"
 Write records to kernel auditing log.
+.\" FIXME Add FAN_ENABLE_AUDIT
 .TP
 .BR CAP_BLOCK_SUSPEND " (since Linux 3.5)"
 Employ features that can block system suspend
@@ -486,9 +487,16 @@ and
 .BR kexec_load (2).
 .TP
 .B CAP_SYS_CHROOT
+.RS
+.PD 0
+.IP * 2
 Use
-.BR chroot (2).
-.\" FIXME . There is a use case in mntns_install()
+.BR chroot (2);
+.IP *
+change mount namespaces using
+.BR setns (2).
+.PD
+.RE
 .TP
 .B CAP_SYS_MODULE
 .RS
@@ -518,7 +526,7 @@ set real-time scheduling policies for calling process,
 and set scheduling policies and priorities for arbitrary processes
 .RB ( sched_setscheduler (2),
 .BR sched_setparam (2),
-.BR shed_setattr (2));
+.BR sched_setattr (2));
 .IP *
 set CPU affinity for arbitrary processes
 .RB ( sched_setaffinity (2));
@@ -772,7 +780,7 @@ To determine which existing capability might best be associated
 with your new feature, review the list of capabilities above in order
 to find a "silo" into which your new feature best fits.
 One approach to take is to determine if there are other features
-requiring capabilities that will always be use along with the new feature.
+requiring capabilities that will always be used along with the new feature.
 If the new feature is useless without these other features,
 you should use the same capability as the other features.
 .IP *
@@ -804,10 +812,10 @@ Instead, try to identify and name your new capability as a broader
 silo into which other related future use cases might fit.
 .\"
 .SS Thread capability sets
-Each thread has three capability sets containing zero or more
+Each thread has the following capability sets containing zero or more
 of the above capabilities:
 .TP
-.IR Permitted :
+.IR Permitted
 This is a limiting superset for the effective
 capabilities that the thread may assume.
 It is also a limiting superset for the capabilities that
@@ -821,7 +829,7 @@ it can never reacquire that capability (unless it
 either a set-user-ID-root program, or
 a program whose associated file capabilities grant that capability).
 .TP
-.IR Inheritable :
+.IR Inheritable
 This is a set of capabilities preserved across an
 .BR execve (2).
 Inheritable capabilities remain inheritable when executing any program,
@@ -834,11 +842,23 @@ when running as a non-root user, applications that wish to run helper
 programs with elevated capabilities should consider using
 ambient capabilities, described below.
 .TP
-.IR Effective :
+.IR Effective
 This is the set of capabilities used by the kernel to
 perform permission checks for the thread.
 .TP
-.IR Ambient " (since Linux 4.3):"
+.IR Bounding " (per-thread since Linux 2.6.25)"
+The capability bounding set is a mechanism that can be used
+to limit the capabilities that are gained during
+.BR execve (2).
+.IP
+Since Linux 2.6.25, this is a per-thread capability set.
+In older kernels, the capability bounding set was a system wide attribute
+shared by all threads on the system.
+.IP
+.IP
+For more details on the capability bounding set, see below.
+.TP
+.IR Ambient " (since Linux 4.3)"
 .\" commit 58319057b7847667f0c9585b9de0e8932b0fdb08
 This is a set of capabilities that are preserved across an
 .BR execve (2)
@@ -858,6 +878,11 @@ Ambient capabilities are added to the permitted set and
 assigned to the effective set when
 .BR execve (2)
 is called.
+If ambient capabilities cause a process's permitted and effective
+capabilities to increase during an
+.BR execve (2),
+this does not trigger the secure-execution mode described in
+.BR ld.so (8).
 .PP
 A child created via
 .BR fork (2)
@@ -932,7 +957,7 @@ then the effective flag must also be specified as enabled
 for all other capabilities for which the corresponding permitted or
 inheritable flags is enabled.
 .\"
-.SS File capability mask versioning
+.SS File capability extended attribute versioning
 To allow extensibility,
 the kernel supports a scheme to encode a version number inside the
 .I security.capability
@@ -976,14 +1001,15 @@ there may be some files with version 2 capabilities
 while others have version 3 capabilities.
 .PP
 Before Linux 4.14,
-the only kind of capability mask that could be attached to a file was a
+the only kind of file capability extended attribute
+that could be attached to a file was a
 .B VFS_CAP_REVISION_2
-mask.
+attribute.
 Since Linux 4.14,
-the version of the capability mask that is attached to a file
-depends on the circumstances in which the
+the version of the
 .I security.capability
-extended attribute was created.
+extended attribute that is attached to a file
+depends on the circumstances in which the attribute was created.
 .PP
 Starting with Linux 4.14, a
 .I security.capability
@@ -992,7 +1018,7 @@ a version 3
 .RB ( VFS_CAP_REVISION_3 )
 attribute if both of the following are true:
 .IP (1) 4
-The thread writing the attribute resides in a noninitial namespace.
+The thread writing the attribute resides in a noninitial user namespace.
 (More precisely: the thread resides in a user namespace other
 than the one from which the underlying filesystem was mounted.)
 .IP (2)
@@ -1004,9 +1030,6 @@ meaning that (a) the thread has the
 capability in its own user namespace;
 and (b) the UID and GID of the file inode have mappings in
 the writer's user namespace.
-.\" FIXME
-.\" Does there also need to be some kind of credential match
-.\" between the file and the namespace creator UID?
 .PP
 When a
 .BR VFS_CAP_REVISION_3
@@ -1014,16 +1037,45 @@ When a
 extended attribute is created, the root user ID of the creating thread's
 user namespace is saved in the extended attribute.
 .PP
-By contrast, creating a
+By contrast, creating or modifying a
 .I security.capability
 extended attribute from a privileged
 .RB ( CAP_SETFCAP )
 thread that resides in the
 namespace where the underlying filesystem was mounted
 (this normally means the initial user namespace)
-automatically results in a version 2
+automatically results in the creation of a version 2
 .RB ( VFS_CAP_REVISION_2 )
 attribute.
+.PP
+Note that the creation of a version 3
+.I security.capability
+extended attribute is automatic.
+That is to say, when a user-space application writes
+.RB ( setxattr (2))
+a
+.I security.capability
+attribute in the version 2 format,
+the kernel will automatically create a version 3 attribute
+if the attribute is created in the circumstances described above.
+Correspondingly, when a version 3
+.I security.capability
+attribute is retrieved
+.RB ( getxattr (2))
+by a process that resides inside a user namespace that was created by the
+root user ID (or a descendant of that user namespace),
+the returned attribute is (automatically)
+simplified to appear as a version 2 attribute
+(i.e., the returned value is the size of a version 2 attribute and does
+not include the root user ID).
+These automatic translations mean that no changes are required to
+user-space tools (e.g.,
+.BR setcap (1)
+and
+.BR getcap (1))
+in order for those tools to be used to create and retrieve version 3
+.I security.capability
+attributes.
 .PP
 Note that a file can have either a version 2 or a version 3
 .I security.capability
@@ -1046,37 +1098,52 @@ the process using the following algorithm:
 P'(ambient)     = (file is privileged) ? 0 : P(ambient)
 
 P'(permitted)   = (P(inheritable) & F(inheritable)) |
-                  (F(permitted) & cap_bset) | P'(ambient)
+                  (F(permitted) & P(bounding)) | P'(ambient)
 
 P'(effective)   = F(effective) ? P'(permitted) : P'(ambient)
 
 P'(inheritable) = P(inheritable)    [i.e., unchanged]
+
+P'(bounding)    = P(bounding)       [i.e., unchanged]
 .EE
 .in
 .PP
 where:
 .RS 4
-.IP P 10
+.IP P() 6
 denotes the value of a thread capability set before the
 .BR execve (2)
-.IP P'
+.IP P'()
 denotes the value of a thread capability set after the
 .BR execve (2)
-.IP F
+.IP F()
 denotes a file capability set
-.IP cap_bset
-is the value of the capability bounding set (described below).
 .RE
 .PP
-A privileged file is one that has capabilities or
+Note the following details relating to the above capability
+transformation rules:
+.IP * 3
+The ambient capability set is present only since Linux 4.3.
+When determining the transformation of the ambient set during
+.BR execve (2),
+a privileged file is one that has capabilities or
 has the set-user-ID or set-group-ID bit set.
+.IP *
+Prior to Linux 2.6.25,
+the bounding set was a system-wide attribute shared by all threads.
+That system-wide value was employed to calculate the new permitted set during
+.BR execve (2)
+in the same manner as shown above for
+.IR P(bounding) .
 .PP
 .IR Note :
-the capability transitions described above may
-.I not
-be performed (i.e., file capabilities may be ignored) for the same reasons
+during the capability transitions described above,
+file capabilities may be ignored (treated as empty) for the same reasons
 that the set-user-ID and set-group-ID bits are ignored; see
 .BR execve (2).
+File capabilities are similarly ignored if the kernel was booted with the
+.I no_file_caps
+option.
 .PP
 .IR Note :
 according to the rules above,
@@ -1127,49 +1194,81 @@ since it does not employ the
 API.
 .\"
 .SS Capabilities and execution of programs by root
-In order to provide an all-powerful
-.I root
-using capability sets, during an
-.BR execve (2):
+.\" See cap_bprm_set_creds(), bprm_caps_from_vfs_cap() and
+.\" handle_privileged_root() in security/commoncap.c (Linux 5.0 source)
+In order to mirror traditional UNIX semantics,
+the kernel performs special treatment of file capabilities when
+a process with UID 0 (root) executes a program and
+when a set-user-ID-root program is executed.
+.PP
+After having performed any changes to the process effective ID that
+were triggered by the set-user-ID mode bit of the binary\(eme.g.,
+switching the effective user ID to 0 (root) because
+a set-user-ID-root program was executed\(emthe
+kernel calculates the file capability sets as follows:
 .IP 1. 3
-If a set-user-ID-root program is being executed,
-or the real or effective user ID of the process is 0 (root)
-then the file inheritable and permitted sets are defined to be all ones
+If the real or effective user ID of the process is 0 (root),
+then the file inheritable and permitted sets are ignored;
+instead they are notionally considered to be all ones
 (i.e., all capabilities enabled).
+(There is one exception to this behavior, described below in
+.IR "Set-user-ID-root programs that have file capabilities" .)
 .IP 2.
-If a set-user-ID-root program is being executed,
-or the effective user ID of the process is 0 (root)
-then the file effective bit is defined to be one (enabled).
+If the effective user ID of the process is 0 (root) or
+the file effective bit is in fact enabled,
+then the file effective bit is notionally defined to be one (enabled).
 .PP
-The upshot of the above rules,
-combined with the capabilities transformations described above,
-is as follows:
-.IP * 3
-When a process
-.BR execve (2)s
-a set-user-ID-root program, or when a process with an effective UID of 0
-.BR execve (2)s
-a program,
-it gains all capabilities in its permitted and effective capability sets,
-except those masked out by the capability bounding set.
-.IP *
-When a process with a real UID of 0
-.BR execve (2)s
-a program,
-it gains all capabilities in its permitted capability set,
-.\" but no effective capabilities
-except those masked out by the capability bounding set.
+These notional values for the file's capability sets are then used
+as described above to calculate the transformation of the process's
+capabilities during
+.BR execve (2).
 .PP
-The above steps yield semantics that are the same as those provided by
-traditional UNIX systems.
+Thus, when a process with nonzero UIDs
+.BR execve (2)s
+a set-user-ID-root program that does not have capabilities attached,
+or when a process whose real and effective UIDs are zero
+.BR execve (2)s
+a program, the calculation of the process's new
+permitted capabilities simplifies to:
+.PP
+.in +4n
+.EX
+P'(permitted)   = P(inheritable) | P(bounding)
+
+P'(effective)   = P'(permitted)
+.EE
+.in
+.PP
+Consequently, the process gains all capabilities in its permitted and
+effective capability sets,
+except those masked out by the capability bounding set.
+(In the calculation of P'(permitted),
+the P'(ambient) term can be simplified away because it is by
+definition a proper subset of P(inheritable).)
+.PP
+The special treatments of user ID 0 (root) described in this subsection
+can be disabled using the securebits mechanism described below.
+.\"
 .\"
 .SS Set-user-ID-root programs that have file capabilities
-Executing a program that is both set-user-ID root and has
-file capabilities will cause the process to gain just the
-capabilities granted by the program
+There is one exception to the behavior described under
+.IR "Capabilities and execution of programs by root" .
+If (a) the binary that is being executed has capabilities attached and
+(b) the real user ID of the process is
+.I not
+0 (root) and
+(c) the effective user ID of the process
+.I is
+0 (root), then the file capability bits are honored
+(i.e., they are not notionally considered to be all ones).
+The usual way in which this situation can arise is when executing
+a set-UID-root program that also has file capabilities.
+When such a program is executed,
+the process gains just the capabilities granted by the program
 (i.e., not all capabilities,
 as would occur when executing a set-user-ID-root program
 that does not have any associated file capabilities).
+.PP
 Note that one can assign empty capability sets to a program file,
 and thus it is possible to create a set-user-ID-root program that
 changes the effective and saved set-user-ID of the process
@@ -1212,42 +1311,12 @@ by executing a file that has the capability in its inheritable set.
 Depending on the kernel version, the capability bounding set is either
 a system-wide attribute, or a per-process attribute.
 .PP
-.B "Capability bounding set prior to Linux 2.6.25"
-.PP
-In kernels before 2.6.25, the capability bounding set is a system-wide
-attribute that affects all threads on the system.
-The bounding set is accessible via the file
-.IR /proc/sys/kernel/cap-bound .
-(Confusingly, this bit mask parameter is expressed as a
-signed decimal number in
-.IR /proc/sys/kernel/cap-bound .)
-.PP
-Only the
-.B init
-process may set capabilities in the capability bounding set;
-other than that, the superuser (more precisely: a process with the
-.B CAP_SYS_MODULE
-capability) may only clear capabilities from this set.
-.PP
-On a standard system the capability bounding set always masks out the
-.B CAP_SETPCAP
-capability.
-To remove this restriction (dangerous!), modify the definition of
-.B CAP_INIT_EFF_SET
-in
-.I include/linux/capability.h
-and rebuild the kernel.
-.PP
-The system-wide capability bounding set feature was added
-to Linux starting with kernel version 2.2.11.
-.\"
-.PP
 .B "Capability bounding set from Linux 2.6.25 onward"
 .PP
 From Linux 2.6.25, the
 .I "capability bounding set"
 is a per-thread attribute.
-(There is no longer a system-wide capability bounding set.)
+(The system-wide capability bounding set described below no longer exists.)
 .PP
 The bounding set is inherited at
 .BR fork (2)
@@ -1291,6 +1360,36 @@ Removing a capability from the bounding set does not remove it
 from the thread's inheritable set.
 However it does prevent the capability from being added
 back into the thread's inheritable set in the future.
+.PP
+.B "Capability bounding set prior to Linux 2.6.25"
+.PP
+In kernels before 2.6.25, the capability bounding set is a system-wide
+attribute that affects all threads on the system.
+The bounding set is accessible via the file
+.IR /proc/sys/kernel/cap-bound .
+(Confusingly, this bit mask parameter is expressed as a
+signed decimal number in
+.IR /proc/sys/kernel/cap-bound .)
+.PP
+Only the
+.B init
+process may set capabilities in the capability bounding set;
+other than that, the superuser (more precisely: a process with the
+.B CAP_SYS_MODULE
+capability) may only clear capabilities from this set.
+.PP
+On a standard system the capability bounding set always masks out the
+.B CAP_SETPCAP
+capability.
+To remove this restriction (dangerous!), modify the definition of
+.B CAP_INIT_EFF_SET
+in
+.I include/linux/capability.h
+and rebuild the kernel.
+.PP
+The system-wide capability bounding set feature was added
+to Linux starting with kernel version 2.2.11.
+.\"
 .\"
 .\"
 .SS Effect of user ID changes on capabilities
@@ -1340,7 +1439,8 @@ all of its user IDs to nonzero values, it can do so using the
 securebits flag described below.
 .\"
 .SS Programmatically adjusting capability sets
-A thread can retrieve and change its capability sets using the
+A thread can retrieve and change its permitted, effective, and inheritable
+capability sets using the
 .BR capget (2)
 and
 .BR capset (2)
@@ -1384,13 +1484,21 @@ These flags are as follows:
 .TP
 .B SECBIT_KEEP_CAPS
 Setting this flag allows a thread that has one or more 0 UIDs to retain
-capabilities in its permitted and effective sets
+capabilities in its permitted set
 when it switches all of its UIDs to nonzero values.
 If this flag is not set,
-then such a UID switch causes the thread to lose all capabilities
-in those sets.
+then such a UID switch causes the thread to lose all permitted capabilities.
 This flag is always cleared on an
 .BR execve (2).
+.IP
+Note that even with the
+.B SECBIT_KEEP_CAPS
+flag set, the effective capabilities of a thread are cleared when it
+switches its effective UID to a nonzero value.
+However,
+if the thread has set this flag and its effective UID is already nonzero,
+and the thread subsequently switches all other UIDs to nonzero values,
+then the effective capabilities will not be cleared.
 .IP
 The setting of the
 .B SECBIT_KEEP_CAPS
@@ -1448,6 +1556,11 @@ operations.
 The
 .B CAP_SETPCAP
 capability is required to modify the flags.
+Note that the
+.BR SECBIT_*
+constants are available only after including the
+.I <linux/securebits.h>
+header file.
 .PP
 The
 .I securebits
@@ -1466,7 +1579,7 @@ is by executing a program with associated file capabilities:
 .in +4n
 .EX
 prctl(PR_SET_SECUREBITS,
-	/* SECBIT_KEEP_CAPS off */
+        /* SECBIT_KEEP_CAPS off */
         SECBIT_KEEP_CAPS_LOCKED |
         SECBIT_NO_SETUID_FIXUP |
         SECBIT_NO_SETUID_FIXUP_LOCKED |
@@ -1476,9 +1589,24 @@ prctl(PR_SET_SECUREBITS,
            is not required */
 .EE
 .in
-.SS Interaction with user namespaces
-For a discussion of the interaction of capabilities and user namespaces, see
-.BR user_namespaces (7).
+.\"
+.\"
+.SS Per-user-namespace """set-user-ID-root""" programs
+A set-user-ID program whose UID matches the UID that
+created a user namespace will confer capabilities
+in the process's permitted and effective sets
+when executed by any process inside that namespace
+or any descendant user namespace.
+.PP
+The rules about the transformation of the process's capabilities during the
+.BR execve (2)
+are exactly as described in the subsections
+.IR "Transformation of capabilities during execve()"
+and
+.IR "Capabilities and execution of programs by root" ,
+with the difference that, in the latter subsection, "root"
+is the UID of the creator of the user namespace.
+.\"
 .\"
 .SS Namespaced file capabilities
 .\" commit 8db6c34f1dbc8e06aa016a9b829b06902c3e1340
@@ -1508,17 +1636,13 @@ Namespaced file capabilities are recorded as version 3 (i.e.,
 .BR VFS_CAP_REVISION_3 )
 .I security.capability
 extended attributes.
-Such an attribute is automatically created when a process that resides
-in a noninitial user namespace associates
-.RB ( setxattr (2))
-file capabilities with a file whose user ID matches
-the user ID of the creator of the namespace.
-In this case,
+Such an attribute is automatically created in the circumstances described
+above under "File capability extended attribute versioning".
+When a version 3
+.I security.capability
+extended attribute is created,
 the kernel records not just the capability masks in the extended attribute,
 but also the namespace root user ID.
-For further details, see
-.IR "File capability mask versioning" ,
-above.
 .PP
 As with a binary that has
 .BR VFS_CAP_REVISION_2
@@ -1529,12 +1653,18 @@ file capabilities confers capabilities to a process during
 However, capabilities are conferred only if the binary is executed by
 a process that resides in a user namespace whose
 UID 0 maps to the root user ID that is saved in the extended attribute,
-or when executed by a process that resides in descendant of such a namespace.
+or when executed by a process that resides in a descendant of such a namespace.
+.\"
+.\"
+.SS Interaction with user namespaces
+For further information on the interaction of
+capabilities and user namespaces, see
+.BR user_namespaces (7).
 .SH CONFORMING TO
 .PP
 No standards govern capabilities, but the Linux capability implementation
 is based on the withdrawn POSIX.1e draft standard; see
-.UR http://wt.tuxomania.net\:/publications\:/posix.1e/
+.UR https://archive.org\:/details\:/posix_1003.1e-990310
 .UE .
 .SH NOTES
 From kernel 2.5.27 to kernel 2.6.26,
@@ -1574,7 +1704,7 @@ and
 programs.
 It can be found at
 .br
-.UR http://www.kernel.org\:/pub\:/linux\:/libs\:/security\:/linux\-privs
+.UR https://git.kernel.org\:/pub\:/scm\:/libs\:/libcap\:/libcap.git\:/refs/
 .UE .
 .PP
 Before kernel 2.6.24, and from kernel 2.6.24 to kernel 2.6.32 if
@@ -1624,7 +1754,7 @@ created on the system.
 .I include/linux/capability.h
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

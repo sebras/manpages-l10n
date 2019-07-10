@@ -19,7 +19,7 @@
 .\" FIXME Do we need to add some text regarding Torvald Riegel's 2015-01-24 mail
 .\"       http://thread.gmane.org/gmane.linux.kernel/1703405/focus=1873242
 .\"
-.TH FUTEX 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH FUTEX 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 futex \- fast user-space locking
 .SH SYNOPSIS
@@ -635,10 +635,10 @@ Expressed in code, the encoding is:
 .IP
 .in +4n
 .EX
-#define FUTEX_OP(op, oparg, cmp, cmparg) \\
-                (((op & 0xf) << 28) | \\
-                ((cmp & 0xf) << 24) | \\
-                ((oparg & 0xfff) << 12) | \\
+#define FUTEX_OP(op, oparg, cmp, cmparg) \e
+                (((op & 0xf) << 28) | \e
+                ((cmp & 0xf) << 24) | \e
+                ((oparg & 0xfff) << 12) | \e
                 (cmparg & 0xfff))
 .EE
 .in
@@ -964,7 +964,7 @@ and are subject to some additional requirements:
 and
 .B FUTEX_TRYLOCK_PI
 pair with
-.BR FUTEX_UNLOCK_PI.
+.BR FUTEX_UNLOCK_PI .
 .B FUTEX_UNLOCK_PI
 must be called only on a futex owned by the calling thread,
 as defined by the value policy, otherwise the error
@@ -1756,6 +1756,7 @@ Child  (18535) 4
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <errno.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -1764,7 +1765,7 @@ Child  (18535) 4
 #include <linux/futex.h>
 #include <sys/time.h>
 
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \\
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
                         } while (0)
 
 static int *futex1, *futex2, *iaddr;
@@ -1785,22 +1786,19 @@ fwait(int *futexp)
 {
     int s;
 
-    /* __sync_bool_compare_and_swap(ptr, oldval, newval) is a gcc
-       built\-in function.  It atomically performs the equivalent of:
+    /* atomic_compare_exchange_strong(ptr, oldval, newval)
+       atomically performs the equivalent of:
 
-           if (*ptr == oldval)
+           if (*ptr == *oldval)
                *ptr = newval;
 
-       It returns true if the test yielded true and *ptr was updated.
-       The alternative here would be to employ the equivalent atomic
-       machine\-language instructions.  For further information, see
-       the GCC Manual. */
+       It returns true if the test yielded true and *ptr was updated. */
 
     while (1) {
 
         /* Is the futex available? */
-
-        if (__sync_bool_compare_and_swap(futexp, 1, 0))
+        const int zero = 0;
+        if (atomic_compare_exchange_strong(futexp, &zero, 1))
             break;      /* Yes */
 
         /* Futex is not available; wait */
@@ -1820,10 +1818,10 @@ fpost(int *futexp)
 {
     int s;
 
-    /* __sync_bool_compare_and_swap() was described in comments above */
+    /* atomic_compare_exchange_strong() was described in comments above */
 
-    if (__sync_bool_compare_and_swap(futexp, 0, 1)) {
-
+    const int one = 1;
+    if (atomic_compare_exchange_strong(futexp, &one, 0)) {
         s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);
         if (s  == \-1)
             errExit("futex\-FUTEX_WAKE");
@@ -1866,7 +1864,7 @@ main(int argc, char *argv[])
     if (childPid == 0) {        /* Child */
         for (j = 0; j < nloops; j++) {
             fwait(futex1);
-            printf("Child  (%ld) %d\\n", (long) getpid(), j);
+            printf("Child  (%ld) %d\en", (long) getpid(), j);
             fpost(futex2);
         }
 
@@ -1877,7 +1875,7 @@ main(int argc, char *argv[])
 
     for (j = 0; j < nloops; j++) {
         fwait(futex2);
-        printf("Parent (%ld) %d\\n", (long) getpid(), j);
+        printf("Parent (%ld) %d\en", (long) getpid(), j);
         fpost(futex1);
     }
 
@@ -1917,7 +1915,7 @@ Hart, D., 2009. \fIA futex overview and update\fP,
 .UR http://lwn.net/Articles/360699/
 .UE
 .PP
-Hart, D. and Guniguntala, D., 2009.
+Hart, D.\& and Guniguntala, D., 2009.
 \fIRequeue-PI: Making Glibc Condvars PI-Aware\fP
 (from proceedings of the 2009 Real-Time Linux Workshop),
 .UR http://lwn.net/images/conf/rtlws11/papers/proc/p10.pdf
@@ -1937,7 +1935,7 @@ Futex example library, futex-*.tar.bz2 at
 .\" WIP, and the generic pthread_mutex_t and perhaps condvar
 .\" implementations.
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

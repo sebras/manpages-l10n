@@ -90,7 +90,7 @@ The
 .BR getrlimit ()
 and
 .BR setrlimit ()
-system calls get and set resource limits respectively.
+system calls get and set resource limits.
 Each resource has an associated soft and hard limit, as defined by the
 .I rlimit
 structure:
@@ -599,6 +599,9 @@ inherits its parent's resource limits.
 Resource limits are preserved across
 .BR execve (2).
 .PP
+Resource limits are per-process attributes that are shared
+by all of the threads in a process.
+.PP
 Lowering the soft limit for a resource below the process's
 current consumption of that resource will succeed
 (but will prevent the process from further increasing
@@ -709,6 +712,11 @@ when
 .I rlim\->rlim_cur
 was greater than
 .IR rlim\->rlim_max .
+.\" d3561f78fd379a7110e46c87964ba7aa4120235c
+.PP
+Linux doesn't return an error when an attempt to set
+.B RLIMIT_CPU
+has failed, for compatibility reasons.
 .\"
 .SS Representation of """large""" resource limit values on 32-bit platforms
 The glibc
@@ -726,7 +734,11 @@ and
 .BR setrlimit ()
 system calls is a (32-bit)
 .IR "unsigned long" .
-Furthermore, in Linux versions before 2.6.36,
+.\" Linux still uses long for limits internally:
+.\" c022a0acad534fd5f5d5f17280f6d4d135e74e81
+.\" kernel/sys.c:do_prlimit() still uses struct rlimit which
+.\" uses kernel_ulong_t for its members, i.e. 32-bit  on 32-bit kernel.
+Furthermore, in Linux,
 the kernel represents resource limits on 32-bit platforms as
 .IR "unsigned long" .
 However, a 32-bit data type is not wide enough.
@@ -751,15 +763,6 @@ then the glibc
 wrapper function silently converted the limit value to
 .BR RLIM_INFINITY .
 In other words, the requested resource limit setting was silently ignored.
-.PP
-This problem was addressed in Linux 2.6.36 with two principal changes:
-.IP * 3
-the addition of a new kernel representation of resource limits that
-uses 64 bits, even on 32-bit platforms;
-.IP *
-the addition of the
-.BR prlimit ()
-system call, which employs 64-bit values for its resource limit arguments.
 .PP
 Since version 2.13,
 .\" https://www.sourceware.org/bugzilla/show_bug.cgi?id=12201
@@ -786,7 +789,7 @@ The program below demonstrates the use of
 #include <unistd.h>
 #include <sys/resource.h>
 
-#define errExit(msg) do { perror(msg); exit(EXIT_FAILURE); \\
+#define errExit(msg) do { perror(msg); exit(EXIT_FAILURE); \e
                         } while (0)
 
 int
@@ -798,7 +801,7 @@ main(int argc, char *argv[])
 
     if (!(argc == 2 || argc == 4)) {
         fprintf(stderr, "Usage: %s <pid> [<new\-soft\-limit> "
-                "<new\-hard\-limit>]\\n", argv[0]);
+                "<new\-hard\-limit>]\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -816,14 +819,14 @@ main(int argc, char *argv[])
 
     if (prlimit(pid, RLIMIT_CPU, newp, &old) == \-1)
         errExit("prlimit\-1");
-    printf("Previous limits: soft=%lld; hard=%lld\\n",
+    printf("Previous limits: soft=%lld; hard=%lld\en",
             (long long) old.rlim_cur, (long long) old.rlim_max);
 
     /* Retrieve and display new CPU time limit */
 
     if (prlimit(pid, RLIMIT_CPU, NULL, &old) == \-1)
         errExit("prlimit\-2");
-    printf("New limits: soft=%lld; hard=%lld\\n",
+    printf("New limits: soft=%lld; hard=%lld\en",
             (long long) old.rlim_cur, (long long) old.rlim_max);
 
     exit(EXIT_SUCCESS);
@@ -850,7 +853,7 @@ main(int argc, char *argv[])
 .BR credentials (7),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,

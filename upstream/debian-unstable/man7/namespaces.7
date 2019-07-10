@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH NAMESPACES 7 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH NAMESPACES 7 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 namespaces \- overview of Linux namespaces
 .SH DESCRIPTION
@@ -95,6 +95,13 @@ flags listed below, then new namespaces are created for each flag,
 and the calling process is made a member of those namespaces.
 (This system call also implements a number of features
 unrelated to namespaces.)
+.TP
+.BR ioctl (2)
+Various
+.BR ioctl (2)
+operations can be used to discover information about namespaces.
+These operations are described in
+.BR ioctl_ns (2).
 .PP
 Creation of new namespaces using
 .BR clone (2)
@@ -102,7 +109,10 @@ and
 .BR unshare (2)
 in most cases requires the
 .BR CAP_SYS_ADMIN
-capability.
+capability, since, in the new namespace,
+the creator will have the power to change global resources
+that are visible to other processes that are subsequently created in,
+or join the namespace.
 User namespaces are the exception: since Linux 3.8,
 no privilege is required to create a user namespace.
 .\"
@@ -261,7 +271,7 @@ user namespaces that may be created in the user namespace.
 .TP
 .IR max_uts_namespaces
 The value in this file defines a per-user limit on the number of
-user namespaces that may be created in the user namespace.
+uts namespaces that may be created in the user namespace.
 .PP
 Note the following details about these files:
 .IP * 3
@@ -310,7 +320,6 @@ The aforementioned point ensures that creating a new user namespace
 cannot be used as a means to escape the limits in force
 in the current user namespace.
 .RE
-.PP
 .\"
 .\" ==================== Cgroup namespaces ====================
 .\"
@@ -412,6 +421,38 @@ and
 Use of UTS namespaces requires a kernel that is configured with the
 .B CONFIG_UTS_NS
 option.
+.\"
+.SS Namespace lifetime
+Absent any other factors,
+a namespace is automatically torn down when the last process in
+the namespace terminates or leaves the namespace.
+However, there are a number of other factors that may pin
+a namespace into existence even though it has no member processes.
+These factors include the following:
+.IP * 3
+An open file descriptor or a bind mount exists for the corresponding
+.IR /proc/[pid]/ns/*
+file.
+.IP *
+The namespace is hierarchical (i.e., a PID or user namespace),
+and has a child namespace.
+.IP *
+It is a user namespace that owns one or more nonuser namespaces.
+.IP *
+It is a PID namespace,
+and there is a process that refers to the namespace via a
+.IR /proc/[pid]/ns/pid_for_children
+symbolic link.
+.IP *
+It is an IPC namespace, and a corresponding mount of an
+.I mqueue
+filesystem (see
+.BR mq_overview (7))
+refers to this namespace.
+.IP *
+It is a PID namespace, and a corresponding mount of a
+.BR proc (5)
+filesystem refers to this namespace.
 .SH EXAMPLE
 See
 .BR clone (2)
@@ -434,9 +475,10 @@ and
 .BR pid_namespaces (7),
 .BR user_namespaces (7),
 .BR lsns (8),
+.BR pam_namespace (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.01 of the Linux
 .I man-pages
 project.
 A description of the project,
