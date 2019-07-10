@@ -27,10 +27,20 @@ wget --quiet -O "$page" "https://ftp-stud.hs-esslingen.de/pub/Mirrors/Mageia/dis
 while read package; do
 	mkdir tmp
 
-  # Discover the correct link in HTML page
+  # Discover the correct link in HTML page.
+  # Sometimes, there are multiple versions of a package
+  # in the download page, e.g.
+  #   man-pages-4.16-2.mga7.noarch.rpm
+  #   man-pages-5.01-1.mga8.noarch.rpm
+  # Because those links are sorted alphabetically, the newest
+  # version should come last. Therefore, convert spaces
+  # the the grep'ed string to newlines and use only the
+  # last line.
 	echo "Downloading and updating package '$package'"
   url=$(grep "\"$package-[0-9][^\"]*\.rpm[^.]" "$page" |
-  sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
+        sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1," |
+        perl -pe "s/ /\n/g" |
+        tail -n1)
 
   url="https://ftp-stud.hs-esslingen.de/pub/Mirrors/Mageia/distrib/cauldron/x86_64/media/core/release/$url"
   wget --quiet --directory-prefix=tmp/downloads "$url"
