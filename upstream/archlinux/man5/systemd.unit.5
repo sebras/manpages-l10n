@@ -105,44 +105,63 @@ Unit files may contain additional options on top of those listed here\&. If syst
 Units can be aliased (have an alternative name), by creating a symlink from the new name to the existing name in one of the unit search paths\&. For example,
 systemd\-networkd\&.service
 has the alias
-dbus\-org\&.freedesktop\&.network1\&.service, created during installation as the symlink
-/usr/lib/systemd/system/dbus\-org\&.freedesktop\&.network1\&.service\&. In addition, unit files may specify aliases through the
-\fIAlias=\fR
-directive in the [Install] section; those aliases are only effective when the unit is enabled\&. When the unit is enabled, symlinks will be created for those names, and removed when the unit is disabled\&. For example,
-reboot\&.target
-specifies
-\fIAlias=ctrl\-alt\-del\&.target\fR, so when enabled it will be invoked whenever CTRL+ALT+DEL is pressed\&. Alias names may be used in commands like
+dbus\-org\&.freedesktop\&.network1\&.service, created during installation as a symlink, so when
+\fBsystemd\fR
+is asked through D\-Bus to load
+dbus\-org\&.freedesktop\&.network1\&.service, it\*(Aqll load
+systemd\-networkd\&.service\&. Alias names may be used in commands like
 \fBenable\fR,
 \fBdisable\fR,
 \fBstart\fR,
 \fBstop\fR,
-\fBstatus\fR, \&..., and in unit dependency directives
+\fBstatus\fR, and similar, and in all unit dependency directives, including
 \fIWants=\fR,
 \fIRequires=\fR,
 \fIBefore=\fR,
-\fIAfter=\fR, \&..., with the limitation that aliases specified through
-\fIAlias=\fR
-are only effective when the unit is enabled\&. Aliases cannot be used with the
+\fIAfter=\fR\&. Aliases cannot be used with the
 \fBpreset\fR
 command\&.
+.PP
+Unit files may specify aliases through the
+\fIAlias=\fR
+directive in the [Install] section\&. When the unit is enabled, symlinks will be created for those names, and removed when the unit is disabled\&. For example,
+reboot\&.target
+specifies
+\fIAlias=ctrl\-alt\-del\&.target\fR, so when enabled, the symlink
+/etc/systemd/systemd/ctrl\-alt\-del\&.service
+pointing to the
+reboot\&.target
+file will be created, and when
+Ctrl+Alt+Del
+is invoked,
+\fBsystemd\fR
+will look for the
+ctrl\-alt\-del\&.service
+and execute
+reboot\&.service\&.
+\fBsystemd\fR
+does not look at the [Install] section at all during normal operation, so any directives in that section only have an effect through the symlinks created during enablement\&.
 .PP
 Along with a unit file
 foo\&.service, the directory
 foo\&.service\&.wants/
 may exist\&. All unit files symlinked from such a directory are implicitly added as dependencies of type
 \fIWants=\fR
-to the unit\&. This is useful to hook units into the start\-up of other units, without having to modify their unit files\&. For details about the semantics of
-\fIWants=\fR, see below\&. The preferred way to create symlinks in the
-\&.wants/
-directory of a unit file is with the
-\fBenable\fR
-command of the
-\fBsystemctl\fR(1)
-tool which reads information from the [Install] section of unit files (see below)\&. A similar functionality exists for
+to the unit\&. Similar functionality exists for
 \fIRequires=\fR
 type dependencies as well, the directory suffix is
 \&.requires/
-in this case\&.
+in this case\&. This functionality is useful to hook units into the start\-up of other units, without having to modify their unit files\&. For details about the semantics of
+\fIWants=\fR, see below\&. The preferred way to create symlinks in the
+\&.wants/
+or
+\&.requires/
+directory of a unit file is by embedding the dependency in [Install] section of the target unit, and creating the symlink in the file system with the with the
+\fBenable\fR
+or
+\fBpreset\fR
+commands of
+\fBsystemctl\fR(1)\&.
 .PP
 Along with a unit file
 foo\&.service, a "drop\-in" directory

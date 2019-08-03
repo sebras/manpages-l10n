@@ -114,10 +114,10 @@ options to avoid ambivalent interpretation of the given argument.  For example:
 .RE
 
 The same filesystem may be mounted more than once, and in some cases (e.g.
-network filesystems) the same filesystem maybe be mounted on the same
+network filesystems) the same filesystem may be mounted on the same
 mountpoint more times. The mount command does not implement any policy to
-control this behavior. All behavior is controlled by kernel and it is usually
-specific to filesystem driver. The exception is \fB\-\-all\fR, in this case
+control this behavior. All behavior is controlled bythe  kernel and it is usually
+specific to the filesystem driver. The exception is \fB\-\-all\fR, in this case
 already mounted filesystems are ignored (see \fB\-\-all\fR below for more details).
 
 .SS Listing the mounts
@@ -362,7 +362,7 @@ It is important to understand that "bind" does not to create any second-class
 or special node in the kernel VFS. The "bind" is just another operation to
 attach a filesystem. There is nowhere stored information that the filesystem
 has been attached by "bind" operation. The \fIolddir\fR and \fInewdir\fR are
-independent and the \fIolddir\fR maybe be umounted.
+independent and the \fIolddir\fR may be umounted.
 
 One can also remount a single file (on a single file).  It's also
 possible to use the bind mount to create a mountpoint from a regular
@@ -579,6 +579,10 @@ The mount command compares filesystem source, target (and fs root for bind
 mount or btrfs) to detect already mounted filesystems. The kernel table with
 already mounted filesystems is cached during \fBmount \-\-all\fR. It means
 that all duplicated fstab entries will be mounted.
+.sp
+The option \fB\-\-all\fR is possible to use for remount operation too. In this
+case all filters (\fB\-t\fR and \fB\-O\fR) are applied to the table of already
+mounted filesystems.
 .sp
 Note that it is a bad practice to use \fBmount \-a\fR for
 .I fstab
@@ -933,7 +937,7 @@ output for extN filesystems).
 The following options apply to any filesystem that is being
 mounted (but not every filesystem actually honors them \(en e.g.\&, the
 .B sync
-option today has an effect only for ext2, ext3, ext4, fat, vfat and ufs):
+option today has an effect only for ext2, ext3, ext4, fat, vfat, ufs and xfs):
 
 .TP
 .B async
@@ -1160,12 +1164,12 @@ or
 Do not use the lazytime feature.
 .TP
 .B suid
-Allow set-user-ID or set-group-ID bits to take
-effect.
+Honor set-user-ID and set-group-ID bits or file capabilities when
+executing programs from this filesystem.
 .TP
 .B nosuid
-Do not allow set-user-ID or set-group-ID bits to take
-effect.
+Do not honor set-user-ID and set-group-ID bits or file capabilities when
+executing programs from this filesystem.
 .TP
 .B silent
 Turn on the silent flag.
@@ -1214,6 +1218,18 @@ After this call, mount reads fstab and merges these options with
 the options from the command line (\fB\-o\fR).
 If no mountpoint is found in fstab, then a remount with unspecified source is
 allowed.
+.sp
+mount(8) allows to use \fB\-\-all\fR to remount all already mounted filesystems
+which match a specified filter (\fB\-O\fR and \fB\-t\fR).  For example:
+.sp
+.in +4
+.B "mount \-\-all \-o remount,ro -t vfat"
+.in
+.sp
+remounts all already mounted vfat filesystems in read-only mode. The each of the
+filesystems is remounted by "mount \-o remount,ro /dir" semantic. It means the
+mount command reads fstab or mtab and merges these options with the options
+from the command line.
 .TP
 .B ro
 Mount the filesystem read-only.

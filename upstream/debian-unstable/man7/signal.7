@@ -43,7 +43,7 @@
 .\"     Added section on stop/cont signals interrupting syscalls.
 .\" 2008-10-05, mtk: various additions
 .\"
-.TH SIGNAL 7  2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH SIGNAL 7  2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 signal \- overview of signals
 .SH DESCRIPTION
@@ -84,12 +84,13 @@ or catch the signal with a
 .IR "signal handler" ,
 a programmer-defined function that is automatically invoked
 when the signal is delivered.
-(By default, the signal handler is invoked on the
+.PP
+By default, a signal handler is invoked on the
 normal process stack.
 It is possible to arrange that the signal handler
 uses an alternate stack; see
 .BR sigaltstack (2)
-for a discussion of how to do this and when it might be useful.)
+for a discussion of how to do this and when it might be useful.
 .PP
 The signal disposition is a per-process attribute:
 in a multithreaded application, the disposition of a
@@ -307,6 +308,24 @@ by default on those other UNIX systems where it appears.
 .B SIGIO
 (which is not specified in POSIX.1-2001) is ignored by default
 on several other UNIX systems.
+.\"
+.SS Queueing and delivery semantics for standard signals
+If multiple standard signals are pending for a process,
+the order in which the signals are delivered is unspecified.
+.PP
+Standard signals do not queue.
+If multiple instances of a standard signal are generated while
+that signal is blocked,
+then only one instance of the signal is marked as pending
+(and the signal will be delivered just once when it is unblocked).
+In the case where a standard signal is already pending, the
+.I siginfo_t
+structure (see
+.BR sigaction (2))
+associated with that signal is not overwritten
+on arrival of subsequent instances of the same signal.
+Thus, the process will receive the information
+associated with the first instance of the signal.
 .\"
 .SS Signal numbering for standard signals
 The numeric value for each signal is given in the table below.
@@ -779,6 +798,29 @@ POSIX.1, except as noted.
 .SH NOTES
 For a discussion of async-signal-safe functions, see
 .BR signal-safety (7).
+.PP
+The
+.I /proc/[pid]/task/[tid]/status
+file contains various fields that show the signals
+that a thread is blocking
+.RI ( SigBlk ),
+catching
+.RI ( SigCgt ),
+or ignoring
+.RI ( SigIgn ).
+(The set of signals that are caught or ignored will be the same
+across all threads in a process.)
+Other fields show the set of pending signals that are directed to the thread
+.RI ( SigPnd )
+as well as the set of pending signals that are directed
+to the process as a whole
+.RI ( ShdPnd ).
+The corresponding fields in
+.I /proc/[pid]/status
+show the information for the main thread.
+See
+.BR proc (5)
+for further details.
 .SH SEE ALSO
 .BR kill (1),
 .BR clone (2),
@@ -817,7 +859,7 @@ For a discussion of async-signal-safe functions, see
 .BR pthreads (7),
 .BR sigevent (7)
 .SH COLOPHON
-This page is part of release 5.01 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,
