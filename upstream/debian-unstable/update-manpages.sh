@@ -24,7 +24,7 @@ while read package; do
 
 	# Download HTML page and discover the correct link
 	echo "Downloading and updating package '$package'"
-	url=$(wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
+	url=$(wget --quiet -O - "https://packages.debian.org/sid/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
 	wget --quiet --directory-prefix=tmp/downloads "$url"
