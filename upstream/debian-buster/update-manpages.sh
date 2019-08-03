@@ -24,9 +24,22 @@ while read package; do
 
 	# Download HTML page and discover the correct link
 	echo "Downloading and updating package '$package'"
-	url=$(wget --quiet -O - "http://packages.debian.org/sid/amd64/$package/download" |
+	# Prefer manpages from buster-backports
+	url=$(wget --quiet -O - "https://packages.debian.org/buster-backports/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	# If there is no backport, try buster
+	if [ -z "$url" ]; then
+		url=$(wget --quiet -O - "https://packages.debian.org/buster/amd64/$package/download" |
+		grep "http://ftp.de.debian.org/debian/pool/" |
+		sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	fi
+	# If the URL is still not set, try security.d.o
+	if [ -z "$url" ]; then
+		url=$(wget --quiet -O - "https://packages.debian.org/buster/amd64/$package/download" |
+		grep "http://security.debian.org/debian-security/pool/" |
+		sed -e "s,.*\(http://security.debian.org/debian-security/pool/[^\"]*\).*,\1,")
+	fi
 	wget --quiet --directory-prefix=tmp/downloads "$url"
 
 
