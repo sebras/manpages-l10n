@@ -28,7 +28,7 @@
 .\" 2006-07-01, mtk, Added POLLRDHUP + various other wording and
 .\"	formatting changes.
 .\"
-.TH POLL 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH POLL 2 2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 poll, ppoll \- wait for some event on a file descriptor
 .SH SYNOPSIS
@@ -271,7 +271,7 @@ ready = ppoll(&fds, nfds, tmo_p, &sigmask);
 .EE
 .in
 .PP
-is equivalent to
+is nearly equivalent to
 .I atomically
 executing the following calls:
 .PP
@@ -287,6 +287,17 @@ ready = poll(&fds, nfds, timeout);
 pthread_sigmask(SIG_SETMASK, &origmask, NULL);
 .EE
 .in
+.PP
+The above code segment is described as
+.I nearly
+equivalent because whereas a negative
+.I timeout
+value for
+.BR poll ()
+is interpreted as an infinite timeout, a negative value expressed in
+.IR *tmo_p
+results in an error from
+.BR ppoll ().
 .PP
 See the description of
 .BR pselect (2)
@@ -354,6 +365,12 @@ value exceeds the
 .B RLIMIT_NOFILE
 value.
 .TP
+.B EINVAL
+.RB ( ppoll ())
+The timeout value expressed in
+.IR *ip
+is invalid (negative).
+.TP
 .B ENOMEM
 There was no space to allocate file descriptor tables.
 .SH VERSIONS
@@ -380,6 +397,14 @@ conforms to POSIX.1-2001 and POSIX.1-2008.
 is Linux-specific.
 .\" NetBSD 3.0 has a pollts() which is like Linux ppoll().
 .SH NOTES
+The operation of
+.BR poll ()
+and
+.BR ppoll ()
+is not affected by the
+.BR O_NONBLOCK
+flag.
+.PP
 On some other UNIX systems,
 .\" Darwin, according to a report by Jeremy Sequoia, relayed by Josh Triplett
 .BR poll ()
@@ -448,7 +473,7 @@ BUGS section of
 .BR epoll (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

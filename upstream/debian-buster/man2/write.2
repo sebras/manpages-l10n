@@ -36,7 +36,7 @@
 .\"	gave some examples of why this might occur.
 .\"	Noted what happens if write() is interrupted by a signal.
 .\"
-.TH WRITE 2 2018-02-02 "Linux" "Linux Programmer's Manual"
+.TH WRITE 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 write \- write to a file descriptor
 .SH SYNOPSIS
@@ -94,14 +94,27 @@ is greater than
 the result is implementation-defined;
 see NOTES for the upper limit on Linux.
 .SH RETURN VALUE
-On success, the number of bytes written is returned (zero indicates
-nothing was written).
-It is not an error if this number is smaller than the number of bytes
-requested; this may happen for example because the disk device was filled.
-See also NOTES.
-.PP
+On success, the number of bytes written is returned.
 On error, \-1 is returned, and \fIerrno\fP is set
-appropriately.
+to indicate the cause of the error.
+.PP
+Note that a successful
+.BR write ()
+may transfer fewer than
+.I count
+bytes.
+Such partial writes can occur for various reasons;
+for example, because there was insufficient space on the disk device
+to write all of the requested bytes, or because a blocked
+.BR write ()
+to a socket, pipe, or similar was interrupted by a signal handler
+after it had transferred some, but before it had transferred all
+of the requested bytes.
+In the event of a partial write, the caller can make another
+.BR write ()
+call to transfer the remaining bytes.
+The subsequent call will either transfer further bytes or
+may result in an error (e.g., if the disk is now full).
 .PP
 If \fIcount\fP is zero and
 .I fd
@@ -274,6 +287,14 @@ On Linux,
 returning the number of bytes actually transferred.
 .\" commit e28cc71572da38a5a12c1cfe4d7032017adccf69
 (This is true on both 32-bit and 64-bit systems.)
+.PP
+An error return value while performing
+.BR write ()
+using direct I/O does not mean the
+entire write has failed. Partial data may be written
+and the data at the file offset on which the
+.BR write ()
+was attempted should be considered inconsistent.
 .SH BUGS
 According to POSIX.1-2008/SUSv4 Section XSI 2.9.7
 ("Thread Interactions with Regular File Operations"):
@@ -326,7 +347,7 @@ This problem was fixed in Linux 3.14.
 .BR writev (2),
 .BR fwrite (3)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -37,7 +37,7 @@
 .\"     Enhanced the discussion of "raw" mode for cfmakeraw().
 .\"     Document CMSPAR.
 .\"
-.TH TERMIOS 3 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH TERMIOS 3 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 termios, tcgetattr, tcsetattr, tcsendbreak, tcdrain, tcflush, tcflow,
 cfmakeraw, cfgetospeed, cfgetispeed, cfsetispeed, cfsetospeed, cfsetspeed \-
@@ -128,8 +128,8 @@ queues to be flushed, and if the terminal is the controlling
 terminal of a foreground process group, it will cause a
 \fBSIGINT\fP to be sent to this foreground process group.
 When neither \fBIGNBRK\fP nor \fBBRKINT\fP are set, a BREAK
-reads as a null byte (\(aq\\0\(aq), except when \fBPARMRK\fP is set,
-in which case it reads as the sequence \\377 \\0 \\0.
+reads as a null byte (\(aq\e0\(aq), except when \fBPARMRK\fP is set,
+in which case it reads as the sequence \e377 \e0 \e0.
 .TP
 .B IGNPAR
 Ignore framing errors and parity errors.
@@ -140,19 +140,19 @@ marked when passed to the program.
 This bit is meaningful only when
 \fBINPCK\fP is set and \fBIGNPAR\fP is not set.
 The way erroneous bytes are marked is with two preceding bytes,
-\\377 and \\0.
+\e377 and \e0.
 Thus, the program actually reads three bytes for one
 erroneous byte received from the terminal.
-If a valid byte has the value \\377,
+If a valid byte has the value \e377,
 and \fBISTRIP\fP (see below) is not set,
 the program might confuse it with the prefix that marks a
 parity error.
-Therefore, a valid byte \\377 is passed to the program as two
-bytes, \\377 \\377, in this case.
+Therefore, a valid byte \e377 is passed to the program as two
+bytes, \e377 \e377, in this case.
 .IP
 If neither \fBIGNPAR\fP nor \fBPARMRK\fP
 is set, read a character with a parity error or framing error
-as \\0.
+as \e0.
 .TP
 .B INPCK
 Enable input parity checking.
@@ -216,7 +216,7 @@ Send fill characters for a delay, rather than using a timed delay.
 .TP
 .B OFDEL
 Fill character is ASCII DEL (0177).
-If unset, fill character is ASCII NUL (\(aq\\0\(aq).
+If unset, fill character is ASCII NUL (\(aq\e0\(aq).
 (Not implemented on Linux.)
 .TP
 .B NLDLY
@@ -241,7 +241,10 @@ or
 .TP
 .B TABDLY
 Horizontal tab delay mask.
-Values are \fBTAB0\fP, \fBTAB1\fP, \fBTAB2\fP, \fBTAB3\fP (or \fBXTABS\fP).
+Values are \fBTAB0\fP, \fBTAB1\fP, \fBTAB2\fP, \fBTAB3\fP (or \fBXTABS\fP,
+but see the
+.B BUGS
+section).
 A value of TAB3, that is, XTABS, expands tabs to spaces
 (with tab stops every eight columns).
 [requires
@@ -384,8 +387,8 @@ Enable canonical mode (described below).
 .B XCASE
 (not in POSIX; not supported under Linux)
 If \fBICANON\fP is also set, terminal is uppercase only.
-Input is converted to lowercase, except for characters preceded by \\.
-On output, uppercase characters are preceded by \\ and lowercase
+Input is converted to lowercase, except for characters preceded by \e.
+On output, uppercase characters are preceded by \e and lowercase
 characters are converted to uppercase.
 [requires
 .B _BSD_SOURCE
@@ -605,7 +608,7 @@ Status character (STATUS).
 Display status information at terminal,
 including state of foreground process and amount of CPU time it has consumed.
 Also sends a
-.BR SIGINFO
+.B SIGINFO
 signal (not supported on Linux) to the foreground process group.
 .TP
 .B VSTOP
@@ -1085,6 +1088,19 @@ behaves like
 .\" libc4.7.6, libc5, glibc for unix: duration in ms.
 .\" glibc for bsd: duration in us
 .\" glibc for sunos4: ignore duration
+.SH BUGS
+.\" kernel 77e5bff1640432f28794a00800955e646dcd7455
+.\" glibc 573963e32ffac46d9891970ddebde2ac3212c5c0
+On the Alpha architecture before Linux 4.16 (and glibc before 2.28), the
+.B XTABS
+value was different from
+.B TAB3
+and it was ignored by the
+.B N_TTY
+line discipline code of the terminal driver as a result
+(because as it wasn't part of the
+.B TABDLY
+mask).
 .SH SEE ALSO
 .BR reset (1),
 .BR setterm (1),
@@ -1096,7 +1112,7 @@ behaves like
 .BR ioctl_tty (2),
 .BR setserial (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

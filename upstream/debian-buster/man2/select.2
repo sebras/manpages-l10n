@@ -35,7 +35,7 @@
 .\" 2005-03-11, mtk, modified pselect() text (it is now a system
 .\"     call in 2.6.16.
 .\"
-.TH SELECT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH SELECT 2 2019-03-06 "Linux" "Linux Programmer's Manual"
 .SH NAME
 select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
 synchronous I/O multiplexing
@@ -80,9 +80,10 @@ waiting until one or more of the file descriptors become "ready"
 for some class of I/O operation (e.g., input possible).
 A file descriptor is considered ready if it is possible to
 perform a corresponding I/O operation (e.g.,
-.BR read (2)
-without blocking, or a sufficiently small
-.BR write (2)).
+.BR read (2),
+or a sufficiently small
+.BR write (2))
+without blocking.
 .PP
 .BR select ()
 can monitor only file descriptors numbers that are less than
@@ -158,7 +159,7 @@ clears a set.
 .BR FD_SET ()
 and
 .BR FD_CLR ()
-respectively add and remove a given file descriptor from a set.
+add and remove a given file descriptor from a set.
 .BR FD_ISSET ()
 tests to see if a file descriptor is part of the set;
 this is useful after
@@ -398,6 +399,14 @@ Moreover, POSIX requires
 .I fd
 to be a valid file descriptor.
 .PP
+The operation of
+.BR select ()
+and
+.BR pselect ()
+is not affected by the
+.BR O_NONBLOCK
+flag.
+.PP
 On some other UNIX systems,
 .\" Darwin, according to a report by Jeremy Sequoia, relayed by Josh Triplett
 .BR select ()
@@ -509,9 +518,9 @@ On some UNIX systems,
 .BR select ()
 unblocks and returns, with an indication that the file descriptor is ready
 (a subsequent I/O operation will likely fail with an error,
-unless another the file descriptor reopened between the time
+unless another process reopens file descriptor between the time
 .BR select ()
-returned and the I/O operations was performed).
+returned and the I/O operation is performed).
 On Linux (and some other systems),
 closing the file descriptor in another thread has no effect on
 .BR select ().
@@ -590,6 +599,15 @@ macros operating according to that limit.
 To monitor file descriptors greater than 1023, use
 .BR poll (2)
 instead.
+.PP
+The implementation of the
+.I fd_set
+arguments as value-result arguments means that they must be
+reinitialized on each call to
+.BR select ().
+This design error is avoided by
+.BR poll (2),
+which uses separate structure fields for the input and output of the call.
 .PP
 According to POSIX,
 .BR select ()
@@ -683,10 +701,10 @@ main(void)
     if (retval == \-1)
         perror("select()");
     else if (retval)
-        printf("Data is available now.\\n");
+        printf("Data is available now.\en");
         /* FD_ISSET(0, &rfds) will be true. */
     else
-        printf("No data within five seconds.\\n");
+        printf("No data within five seconds.\en");
 
     exit(EXIT_SUCCESS);
 }
@@ -707,7 +725,7 @@ main(void)
 For a tutorial with discussion and examples, see
 .BR select_tut (2).
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -19,7 +19,7 @@
 .\"
 .\" 2008-10-10, mtk: describe eventfd2(), and EFD_NONBLOCK and EFD_CLOEXEC
 .\"
-.TH EVENTFD 2 2017-09-15 Linux "Linux Programmer's Manual"
+.TH EVENTFD 2 2019-03-06 Linux "Linux Programmer's Manual"
 .SH NAME
 eventfd \- create a file descriptor for event notification
 .SH SYNOPSIS
@@ -36,6 +36,11 @@ The object contains an unsigned 64-bit integer
 counter that is maintained by the kernel.
 This counter is initialized with the value specified in the argument
 .IR initval .
+.PP
+As its return value,
+.BR eventfd ()
+returns a new file descriptor that can be used to refer to the
+eventfd object.
 .PP
 The following values may be bitwise ORed in
 .IR flags
@@ -55,7 +60,9 @@ for reasons why this may be useful.
 .BR EFD_NONBLOCK " (since Linux 2.6.27)"
 Set the
 .BR O_NONBLOCK
-file status flag on the new open file description.
+file status flag on the open file description (see
+.BR open (2))
+referred to by the new file descriptor.
 Using this flag saves extra calls to
 .BR fcntl (2)
 to achieve the same result.
@@ -68,11 +75,8 @@ In Linux up to version 2.6.26, the
 .I flags
 argument is unused, and must be specified as zero.
 .PP
-As its return value,
-.BR eventfd ()
-returns a new file descriptor that can be used to refer to the
-eventfd object.
-The following operations can be performed on the file descriptor:
+The following operations can be performed on the file descriptor returned by
+.BR eventfd ():
 .TP
 .BR read (2)
 Each successful
@@ -387,7 +391,7 @@ Parent read 28 (0x1c) from efd
 #include <stdio.h>
 #include <stdint.h>             /* Definition of uint64_t */
 
-#define handle_error(msg) \\
+#define handle_error(msg) \e
     do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 int
@@ -398,7 +402,7 @@ main(int argc, char *argv[])
     ssize_t s;
 
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <num>...\\n", argv[0]);
+        fprintf(stderr, "Usage: %s <num>...\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -409,25 +413,25 @@ main(int argc, char *argv[])
     switch (fork()) {
     case 0:
         for (j = 1; j < argc; j++) {
-            printf("Child writing %s to efd\\n", argv[j]);
+            printf("Child writing %s to efd\en", argv[j]);
             u = strtoull(argv[j], NULL, 0);
                     /* strtoull() allows various bases */
             s = write(efd, &u, sizeof(uint64_t));
             if (s != sizeof(uint64_t))
                 handle_error("write");
         }
-        printf("Child completed write loop\\n");
+        printf("Child completed write loop\en");
 
         exit(EXIT_SUCCESS);
 
     default:
         sleep(2);
 
-        printf("Parent about to read\\n");
+        printf("Parent about to read\en");
         s = read(efd, &u, sizeof(uint64_t));
         if (s != sizeof(uint64_t))
             handle_error("read");
-        printf("Parent read %llu (0x%llx) from efd\\n",
+        printf("Parent read %llu (0x%llx) from efd\en",
                 (unsigned long long) u, (unsigned long long) u);
         exit(EXIT_SUCCESS);
 
@@ -448,7 +452,7 @@ main(int argc, char *argv[])
 .BR epoll (7),
 .BR sem_overview (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

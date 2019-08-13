@@ -17,7 +17,7 @@
 .\"     address that can appear in the sockaddr_un structure: pathname,
 .\"     unnamed, and abstract.
 .\"
-.TH UNIX  7 2018-04-30 "Linux" "Linux Programmer's Manual"
+.TH UNIX  7 2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 unix \- sockets for local interprocess communication
 .SH SYNOPSIS
@@ -64,7 +64,7 @@ A UNIX domain socket address is represented in the following structure:
 .\"
 struct sockaddr_un {
     sa_family_t sun_family;               /* AF_UNIX */
-    char        sun_path[108];            /* pathname */
+    char        sun_path[108];            /* Pathname */
 };
 .EE
 .in
@@ -73,7 +73,7 @@ The
 .I sun_family
 field always contains
 .BR AF_UNIX .
-On Linux
+On Linux,
 .I sun_path
 is 108 bytes in size; see also NOTES, below.
 .PP
@@ -142,7 +142,7 @@ should not be inspected.
 an abstract socket address is distinguished (from a pathname socket)
 by the fact that
 .IR sun_path[0]
-is a null byte (\(aq\\0\(aq).
+is a null byte (\(aq\e0\(aq).
 The socket's address in this namespace is given by the additional
 bytes in
 .IR sun_path
@@ -280,11 +280,76 @@ by specifying
 as the socket family.
 .TP
 .B SO_PASSCRED
-Enables the receiving of the credentials of the sending process in an
-ancillary message.
-When this option is set and the socket is not yet connected
+Enabling this socket option causes receipt of the credentials of
+the sending process in an
+.B SCM_CREDENTIALS ancillary
+message in each subsequently received message.
+The returned credentials are those specified by the sender using
+.BR SCM_CREDENTIALS ,
+or a default that includes the sender's PID, real user ID, and real group ID,
+if the sender did not specify
+.B SCM_CREDENTIALS
+ancillary data.
+.IP
+When this option is set and the socket is not yet connected,
 a unique name in the abstract namespace will be generated automatically.
-Expects an integer boolean flag.
+.IP
+The value given as an argument to
+.BR setsockopt (2)
+and returned as the result of
+.BR getsockopt (2)
+is an integer boolean flag.
+.TP
+.B SO_PASSSEC
+Enables receiving of the SELinux security label of the peer socket
+in an ancillary message of type
+.BR SCM_SECURITY
+(see below).
+.IP
+The value given as an argument to
+.BR setsockopt (2)
+and returned as the result of
+.BR getsockopt (2)
+is an integer boolean flag.
+.IP
+The
+.B SO_PASSSEC
+option is supported for UNIX domain datagram sockets
+.\" commit 877ce7c1b3afd69a9b1caeb1b9964c992641f52a
+since Linux 2.6.18;
+support for UNIX domain stream sockets was added
+.\" commit 37a9a8df8ce9de6ea73349c9ac8bdf6ba4ec4f70
+in Linux 4.2.
+.TP
+.BR SO_PEEK_OFF
+See
+.BR socket (7).
+.TP
+.B SO_PEERCRED
+This read-only socket option returns the
+credentials of the peer process connected to this socket.
+The returned credentials are those that were in effect at the time
+of the call to
+.BR connect (2)
+or
+.BR socketpair (2).
+.IP
+The argument to
+.BR getsockopt (2)
+is a pointer to a
+.I ucred
+structure; define the
+.B _GNU_SOURCE
+feature test macro to obtain the definition of that structure from
+.IR <sys/socket.h> .
+.IP
+The use of this option is possible only for connected
+.B AF_UNIX
+stream sockets and for
+.B AF_UNIX
+stream and datagram socket pairs created using
+.BR socketpair (2).
+.\"
 .SS Autobind feature
 If a
 .BR bind (2)
@@ -348,13 +413,13 @@ Ancillary data is sent and received using
 .BR sendmsg (2)
 and
 .BR recvmsg (2).
-For historical reasons the ancillary message types listed below
+For historical reasons, the ancillary message types listed below
 are specified with a
 .B SOL_SOCKET
 type even though they are
 .B AF_UNIX
 specific.
-To send them set the
+To send them, set the
 .I cmsg_level
 field of the struct
 .I cmsghdr
@@ -363,14 +428,50 @@ to
 and the
 .I cmsg_type
 field to the type.
-For more information see
+For more information, see
 .BR cmsg (3).
 .TP
 .B SCM_RIGHTS
 Send or receive a set of open file descriptors from another process.
 The data portion contains an integer array of the file descriptors.
-The passed file descriptors behave as though they have been created with
-.BR dup (2).
+.IP
+Commonly, this operation is referred to as "passing a file descriptor"
+to another process.
+However, more accurately,
+what is being passed is a reference to an open file description (see
+.BR open (2)),
+and in the receiving process it is likely that a different
+file descriptor number will be used.
+Semantically, this operation is equivalent to duplicating
+.RB ( dup (2))
+a file descriptor into the file descriptor table of another process.
+.IP
+If the buffer used to receive the ancillary data containing
+file descriptors is too small (or is absent),
+then the ancillary data is truncated (or discarded)
+and the excess file descriptors are automatically closed
+in the receiving process.
+.IP
+If the number of file descriptors received in the ancillary data would
+cause the process to exceed its
+.B RLIMIT_NOFILE
+resource limit (see
+.BR getrlimit (2)),
+the excess file descriptors are automatically closed
+in the receiving process.
+.IP
+The kernel constant
+.BR SCM_MAX_FD
+defines a limit on the number of file descriptors in the array.
+Attempting to send an array larger than this limit causes
+.BR sendmsg (2)
+to fail with the error
+.BR EINVAL .
+.BR SCM_MAX_FD
+has the value 253
+(or 255 in kernels
+.\" commit bba14de98753cb6599a2dae0e520714b2153522d
+before 2.6.38).
 .TP
 .B SCM_CREDENTIALS
 Send or receive UNIX credentials.
@@ -385,9 +486,9 @@ as follows:
 .in +4n
 .EX
 struct ucred {
-    pid_t pid;    /* process ID of the sending process */
-    uid_t uid;    /* user ID of the sending process */
-    gid_t gid;    /* group ID of the sending process */
+    pid_t pid;    /* Process ID of the sending process */
+    uid_t uid;    /* User ID of the sending process */
+    gid_t gid;    /* Group ID of the sending process */
 };
 .EE
 .in
@@ -400,8 +501,7 @@ header files) in order to obtain the definition
 of this structure.
 .IP
 The credentials which the sender specifies are checked by the kernel.
-A process with effective user ID 0 is allowed to specify values that do
-not match its own.
+A privileged process is allowed to specify values that do not match its own.
 The sender must specify its own process ID (unless it has the capability
 .BR CAP_SYS_ADMIN ),
 its real user ID, effective user ID, or saved set-user-ID (unless it has
@@ -409,11 +509,85 @@ its real user ID, effective user ID, or saved set-user-ID (unless it has
 and its real group ID, effective group ID, or saved set-group-ID
 (unless it has
 .BR CAP_SETGID ).
+.IP
 To receive a
 .I struct ucred
-message the
+message, the
 .B SO_PASSCRED
 option must be enabled on the socket.
+.TP
+.B SCM_SECURITY
+Receive the SELinux security context (the security label)
+of the peer socket.
+The received ancillary data is a null-terminated string containing
+the security context.
+The receiver should allocate at least
+.BR NAME_MAX
+bytes in the data portion of the ancillary message for this data.
+.IP
+To receive the security context, the
+.B SO_PASSSEC
+option must be enabled on the socket (see above).
+.PP
+When sending ancillary data with
+.BR sendmsg (2),
+only one item of each of the above types may be included in the sent message.
+.PP
+At least one byte of real data should be sent when sending ancillary data.
+On Linux, this is required to successfully send ancillary data over
+a UNIX domain stream socket.
+When sending ancillary data over a UNIX domain datagram socket,
+it is not necessary on Linux to send any accompanying real data.
+However, portable applications should also include at least one byte
+of real data when sending ancillary data over a datagram socket.
+.PP
+When receiving from a stream socket,
+ancillary data forms a kind of barrier for the received data.
+For example, suppose that the sender transmits as follows:
+.PP
+.RS
+.PD 0
+.IP 1. 3
+.BR sendmsg (2)
+of four bytes, with no ancillary data.
+.IP 2.
+.BR sendmsg (2)
+of one byte, with ancillary data.
+.IP 3.
+.BR sendmsg (2)
+of four bytes, with no ancillary data.
+.PD
+.RE
+.PP
+Suppose that the receiver now performs
+.BR recvmsg (2)
+calls each with a buffer size of 20 bytes.
+The first call will receive five bytes of data,
+along with the ancillary data sent by the second
+.BR sendmsg (2)
+call.
+The next call will receive the remaining five bytes of data.
+.PP
+If the space allocated for receiving incoming ancillary data is too small
+then the ancillary data is truncated to the number of headers
+that will fit in the supplied buffer (or, in the case of an
+.BR SCM_RIGHTS
+file descriptor list, the list of file descriptors may be truncated).
+If no buffer is provided for incoming ancillary data (i.e., the
+.I msg_control
+field of the
+.I msghdr
+structure supplied to
+.BR recvmsg (2)
+is NULL),
+then the incoming ancillary data is discarded.
+In both of these cases, the
+.BR MSG_CTRUNC
+flag will be set in the
+.I msg.msg_flags
+value returned by
+.BR recvmsg (2).
+.\"
 .SS Ioctls
 The following
 .BR ioctl (2)
@@ -434,7 +608,7 @@ can be:
 .B SIOCINQ
 For
 .B SOCK_STREAM
-socket the function returns the amount of queued unread data in the receive buffer.
+sockets, this call returns the number of unread bytes in the receive buffer.
 The socket must not be in LISTEN state, otherwise an error
 .RB ( EINVAL )
 is returned.
@@ -456,9 +630,9 @@ defined in
 .\" and it may well change, probably best not to document this now.
 For
 .B SOCK_DGRAM
-socket,
+sockets,
 the returned value is the same as
-for Internet domain datagram socket;
+for Internet domain datagram sockets;
 see
 .BR udp (7).
 .SH ERRORS
@@ -681,7 +855,7 @@ memset(addrp, 0, addrlen + 1);
 if (getsockname(sfd, (struct sockaddr *) addrp, &addrlen)) == \-1)
     /* handle error */ ;
 
-printf("sun_path = %s\\n", ((struct sockaddr_un *) addrp)\->sun_path);
+printf("sun_path = %s\en", ((struct sockaddr_un *) addrp)\->sun_path);
 .EE
 .in
 .PP
@@ -814,7 +988,7 @@ main(int argc, char *argv[])
         }
 
         result = 0;
-        for(;;) {
+        for (;;) {
 
             /* Wait for next data packet. */
 
@@ -848,7 +1022,6 @@ main(int argc, char *argv[])
 
         sprintf(buffer, "%d", result);
         ret = write(data_socket, buffer, BUFFER_SIZE);
-
         if (ret == \-1) {
             perror("write");
             exit(EXIT_FAILURE);
@@ -920,7 +1093,7 @@ main(int argc, char *argv[])
     ret = connect (data_socket, (const struct sockaddr *) &addr,
                    sizeof(struct sockaddr_un));
     if (ret == \-1) {
-        fprintf(stderr, "The server is down.\\n");
+        fprintf(stderr, "The server is down.\en");
         exit(EXIT_FAILURE);
     }
 
@@ -955,7 +1128,7 @@ main(int argc, char *argv[])
 
     buffer[BUFFER_SIZE \- 1] = 0;
 
-    printf("Result = %s\\n", buffer);
+    printf("Result = %s\en", buffer);
 
     /* Close socket. */
 
@@ -980,7 +1153,7 @@ see
 .BR socket (7),
 .BR udp (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

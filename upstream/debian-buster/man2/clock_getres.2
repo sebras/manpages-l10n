@@ -27,7 +27,7 @@
 .\" 2003-08-24 aeb, large parts rewritten
 .\" 2004-08-06 Christoph Lameter <clameter@sgi.com>, SMP note
 .\"
-.TH CLOCK_GETRES 2 2017-09-15 "" "Linux Programmer's Manual"
+.TH CLOCK_GETRES 2 2019-03-06 "" "Linux Programmer's Manual"
 .SH NAME
 clock_getres, clock_gettime, clock_settime \- clock and time functions
 .SH SYNOPSIS
@@ -138,13 +138,19 @@ and probably also architecture support for this flag in the
 .BR vdso (7).
 .TP
 .B CLOCK_MONOTONIC
-Clock that cannot be set and represents monotonic time since
-some unspecified starting point.
-This clock is not affected by discontinuous jumps in the system time
+Clock that cannot be set and represents monotonic time since\(emas described
+by POSIX\(em"some unspecified point in the past".
+On Linux, that point corresponds to the number of seconds that the system
+has been running since it was booted.
+.IP
+The
+.B CLOCK_MONOTONIC
+clock is not affected by discontinuous jumps in the system time
 (e.g., if the system administrator manually changes the clock),
 but is affected by the incremental adjustments performed by
 .BR adjtime (3)
 and NTP.
+This clock does not count time that the system is suspended.
 .TP
 .BR CLOCK_MONOTONIC_COARSE " (since Linux 2.6.32; Linux-specific)"
 .\" Added in commit da15cfdae03351c689736f8d142618592e3cebc3
@@ -163,6 +169,7 @@ but provides access to a raw hardware-based time
 that is not subject to NTP adjustments or
 the incremental adjustments performed by
 .BR adjtime (3).
+This clock does not count time that the system is suspended.
 .TP
 .BR CLOCK_BOOTTIME " (since Linux 2.6.39; Linux-specific)"
 .\" commit 7fdd7f89006dd5a4c702fa0ce0c272345fa44ae0
@@ -204,6 +211,26 @@ specified is not supported on this system.
 .\" Linux also gives this error on attempts to set CLOCK_PROCESS_CPUTIME_ID
 .\" and CLOCK_THREAD_CPUTIME_ID, when probably the proper error should be
 .\" EPERM.
+.TP
+.B EINVAL
+.RB ( clock_settime ()):
+.I tp.tv_sec
+is negative or
+.I tp.tv_nsec
+is outside the range [0..999,999,999].
+.TP
+.BR EINVAL " (since Linux 4.3)"
+.\" commit e1d7ba8735551ed79c7a0463a042353574b96da3
+A call to
+.BR clock_settime ()
+with a
+.I clk_id
+of
+.B CLOCK_REALTIME
+attempted to set the time to a value less than
+the current value of the
+.B CLOCK_MONOTONIC
+clock.
 .TP
 .B EPERM
 .BR clock_settime ()
@@ -330,7 +357,7 @@ On Linux, these clocks are not settable
 .BR vdso (7),
 .BR hwclock (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

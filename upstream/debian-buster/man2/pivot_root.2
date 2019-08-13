@@ -7,7 +7,7 @@
 .\" Written 2000-02-23 by Werner Almesberger
 .\" Modified 2004-06-17 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.TH PIVOT_ROOT 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH PIVOT_ROOT 2 2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pivot_root \- change the root filesystem
 .SH SYNOPSIS
@@ -91,10 +91,20 @@ or
 see also below), not the old root directory, but the
 mount point of that filesystem is mounted on \fIput_old\fP.
 .PP
-\fInew_root\fP does not have to be a mount point.
-In this case,
-\fI/proc/mounts\fP will show the mount point of the filesystem containing
-\fInew_root\fP as root (\fI/\fP).
+.I new_root
+must be a mount point.
+(If it is not otherwise a mount point, it suffices to bind mount
+.I new_root
+on top of itself.)
+.PP
+The propagation type of
+.I new_root
+and its parent mount must not be
+.BR MS_SHARED ;
+similarly, if
+.I put_old
+is an existing mount point, its propagation type must not be
+.BR MS_SHARED .
 .SH RETURN VALUE
 On success, zero is returned.
 On error, \-1 is returned, and
@@ -110,7 +120,26 @@ Additionally, it may return:
 or a filesystem is already mounted on \fIput_old\fP.
 .TP
 .B EINVAL
+.I new_root
+is not a mount point.
+.TP
+.B EINVAL
 \fIput_old\fP is not underneath \fInew_root\fP.
+.TP
+.B EINVAL
+The current root is on the rootfs (initial ramfs) filesystem.
+.TP
+.B EINVAL
+Either the mount point at
+.IR new_root ,
+or the parent mount of that mount point,
+has propagation type
+.BR MS_SHARED .
+.TP
+.B EINVAL
+.I put_old
+is a mount point and has the propagation type
+.BR MS_SHARED .
 .TP
 .B ENOTDIR
 \fInew_root\fP or \fIput_old\fP is not a directory.
@@ -128,6 +157,18 @@ is Linux-specific and hence is not portable.
 .SH NOTES
 Glibc does not provide a wrapper for this system call; call it using
 .BR syscall (2).
+.PP
+The rootfs (initial ramfs) cannot be
+.BR pivot_root ()ed.
+The recommended method of changing the root filesystem in this case is
+to delete everything in rootfs, overmount rootfs with the new root, attach
+.IR stdin / stdout / stderr
+to the new
+.IR /dev/console ,
+and exec the new
+.BR init (1).
+Helper programs for this process exist; see
+.BR switch_root (8).
 .SH BUGS
 .BR pivot_root ()
 should not have to change root and current working directory of all other
@@ -140,12 +181,13 @@ insanity.
 .SH SEE ALSO
 .BR chdir (2),
 .BR chroot (2),
+.BR mount (2),
 .BR stat (2),
 .BR initrd (4),
 .BR pivot_root (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -560,8 +560,22 @@ below.
 When possible, the file is opened in nonblocking mode.
 Neither the
 .BR open ()
-nor any subsequent operations on the file descriptor which is
+nor any subsequent I/O operations on the file descriptor which is
 returned will cause the calling process to wait.
+.IP
+Note that ithe setting of this flag has no effect on the operation of
+.BR poll (2),
+.BR select (2),
+.BR epoll (7),
+and similar,
+since those interfaces merely inform the caller about whether
+a file descriptor is "ready",
+meaning that an I/O operation performed on
+the file descriptor with the
+.B O_NONBLOCK
+flag
+.I clear
+would not block.
 .IP
 Note that this flag has no effect for regular files and block devices;
 that is, I/O operations will (briefly) block when device activity
@@ -1063,7 +1077,9 @@ must be returned.)
 .B ENOENT
 .B O_CREAT
 is not set and the named file does not exist.
-Or, a directory component in
+.TP
+.B ENOENT
+A directory component in
 .I pathname
 does not exist or is a dangling symbolic link.
 .TP
@@ -1111,6 +1127,9 @@ no process has the FIFO open for reading.
 .TP
 .B ENXIO
 The file is a device special file and no corresponding device exists.
+.TP
+.B ENXIO
+The file is a UNIX domain socket.
 .TP
 .BR EOPNOTSUPP
 The filesystem containing
@@ -1240,9 +1259,10 @@ header files.
 .SH NOTES
 Under Linux, the
 .B O_NONBLOCK
-flag indicates that one wants to open
+flag is sometimes used in cases where one wants to open
 but does not necessarily have the intention to read or write.
-This is typically used to open devices in order to get a file descriptor
+For example,
+this may be used to open a device in order to get a file descriptor
 for use with
 .BR ioctl (2).
 .PP
@@ -1294,10 +1314,18 @@ directory show the open file descriptors of the process with the PID
 .IR pid .
 The files in the
 .I /proc/[pid]/fdinfo
-directory show even more information about these files descriptors.
+directory show even more information about these file descriptors.
 See
 .BR proc (5)
 for further details of both of these directories.
+.PP
+The Linux header file
+.B <asm/fcntl.h>
+doesn't define
+.BR O_ASYNC ;
+the (BSD-derived)
+.B FASYNC
+synonym is defined instead.
 .\"
 .\"
 .SS Open file descriptions
@@ -1358,10 +1386,14 @@ and
 .BR O_DSYNC ,
 but not
 .BR O_RSYNC .
-(Somewhat incorrectly, glibc defines
+Somewhat incorrectly, glibc defines
 .BR O_RSYNC
 to have the same value as
-.BR O_SYNC .)
+.BR O_SYNC .
+.RB ( O_RSYNC
+is defined in the Linux header file
+.I <asm/fcntl.h>
+on HP PA-RISC, but it is not used.)
 .PP
 .BR O_SYNC
 provides synchronized I/O
@@ -1702,12 +1734,6 @@ is a potentially powerful tool that should be used with caution.
 It is recommended that applications treat use of
 .B O_DIRECT
 as a performance option which is disabled by default.
-.PP
-.RS
-"The thing that has always disturbed me about O_DIRECT is that the whole
-interface is just stupid, and was probably designed by a deranged monkey
-on some serious mind-controlling substances."\(emLinus
-.RE
 .SH BUGS
 Currently, it is not possible to enable signal-driven
 I/O by specifying
@@ -1766,7 +1792,7 @@ is ignored).
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 4.16 of the Linux
+This page is part of release 5.02 of the Linux
 .I man-pages
 project.
 A description of the project,
