@@ -39,8 +39,7 @@ update-templates:
 	cd $(top_srcdir)/po ; \
 	./update-common.sh ; \
 	git add . ; \
-	git commit -m "Update common messages from templates" || true ; \
-	$(MAKE) update-po
+	git commit -m "Update common messages from templates" || true
 
 # Update all translations from templates.
 .PHONY: update-translations
