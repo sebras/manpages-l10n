@@ -1,5 +1,5 @@
 '\" t
-.TH "KERNEL\-INSTALL" "8" "" "systemd 241" "kernel-install"
+.TH "KERNEL\-INSTALL" "8" "" "systemd 242" "kernel-install"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,12 +23,16 @@
 kernel-install \- Add and remove kernel and initramfs images to and from /boot
 .SH "SYNOPSIS"
 .HP \w'\fBkernel\-install\fR\ 'u
-\fBkernel\-install\fR COMMAND \fIKERNEL\-VERSION\fR \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR...]
+\fBkernel\-install\fR COMMAND [OPTIONS...] \fIKERNEL\-VERSION\fR \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR...]
 .SH "DESCRIPTION"
 .PP
 \fBkernel\-install\fR
-is used to install and remove kernel and initramfs images to and from
-/boot\&.
+is used to install and remove kernel and initramfs images to and from the boot loader partition, referred to as
+\fI$BOOT\fR
+here\&. It will usually be one of
+/boot,
+/efi, or
+/boot/efi, see below\&.
 .PP
 \fBkernel\-install\fR
 will execute the files located in the directory
@@ -57,9 +61,7 @@ The following commands are understood:
 .RS 4
 This command expects a kernel version string and a path to a kernel image file as arguments\&.
 \fBkernel\-install\fR
-creates the directory
-/boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
-and calls the executables from
+calls the executables from
 /usr/lib/kernel/install\&.d/*\&.install
 and
 /etc/kernel/install\&.d/*\&.install
@@ -69,13 +71,29 @@ with the following arguments:
 .RS 4
 .\}
 .nf
-add \fIKERNEL\-VERSION\fR /boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/ \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR \&.\&.\&.]
+add \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/ \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR \&.\&.\&.]
 .fi
 .if n \{\
 .RE
 .\}
 .sp
-Two default plugins execute the following operations in this case:
+Three default plugins execute the following operations in this case:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+00\-entry\-directory\&.install
+creates the directory
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+if
+$BOOT/\fIMACHINE\-ID\fR/
+already exists\&.
+.RE
 .sp
 .RS 4
 .ie n \{\
@@ -104,15 +122,15 @@ for the
 copies
 \fIKERNEL\-IMAGE\fR
 to
-/boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/linux\&. If an
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/linux\&. If an
 \fIINITRD\-FILE\fR
 is provided, it also copies
 \fIINITRD\-FILE\fR
 to
-/boot/\fIMACHINE\-ID\fR/\fIKERNEL_VERSION\fR/\fIINITRD\-FILE\fR\&. It also creates a boot loader entry according to the
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL_VERSION\fR/\fIINITRD\-FILE\fR\&. It also creates a boot loader entry according to the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 in
-/boot/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&. The title of the entry is the
+$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&. The title of the entry is the
 \fIPRETTY_NAME\fR
 parameter specified in
 /etc/os\-release
@@ -120,6 +138,10 @@ or
 /usr/lib/os\-release
 (if the former is missing), or "Linux
 \fIKERNEL\-VERSION\fR", if unset\&.
+.sp
+If the entry directory
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+does not exist, this plugin does nothing\&.
 .RE
 .RE
 .PP
@@ -135,7 +157,7 @@ with the following arguments:
 .RS 4
 .\}
 .nf
-remove \fIKERNEL\-VERSION\fR /boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+remove \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
 .fi
 .if n \{\
 .RE
@@ -144,7 +166,7 @@ remove \fIKERNEL\-VERSION\fR /boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
 Afterwards,
 \fBkernel\-install\fR
 removes the directory
-/boot/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
 and its contents\&.
 .sp
 Two default plugins execute the following operations in this case:
@@ -173,9 +195,45 @@ for this kernel again\&.
 .\}
 90\-loaderentry\&.install
 removes the file
-/boot/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&.
+$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&.
 .RE
 .RE
+.SH "THE \FI$BOOT\FR PARTITION"
+.PP
+The partition where the kernels and
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
+snippets are located is called
+\fI$BOOT\fR\&.
+\fBkernel\-install\fR
+determines the location of this partition by checking
+/efi/,
+/boot/, and
+/boot/efi
+in turn\&. The first location where
+$BOOT/loader/entries/
+or
+$BOOT/$MACHINE_ID/
+exists is used\&.
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Output additional information about operations being performed\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.SH "ENVIRONMENT VARIABLES"
+.PP
+If
+\fB\-\-verbose\fR
+is used,
+\fI$KERNEL_INSTALL_VERBOSE=1\fR
+will be set for the plugins\&. They may output additional logs in this case\&.
 .SH "EXIT STATUS"
 .PP
 If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code otherwise\&.
@@ -200,7 +258,7 @@ is used\&.
 .RS 4
 Read by
 90\-loaderentry\&.install\&. If this file exists a numeric value is read from it and the naming of the generated entry file is slightly altered to include it as
-/boot/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR+\fITRIES\fR\&.conf\&. This is useful for boot loaders such as
+$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR+\fITRIES\fR\&.conf\&. This is useful for boot loaders such as
 \fBsystemd-boot\fR(7)
 which implement boot attempt counting with a counter embedded in the entry file name\&.
 .RE

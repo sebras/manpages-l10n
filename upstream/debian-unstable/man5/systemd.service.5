@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 241" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 242" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,6 +50,14 @@ If a service is requested under a certain name but no unit configuration file is
 suffix removed) and dynamically creates a service unit from that script\&. This is useful for compatibility with SysV\&. Note that this compatibility is quite comprehensive but not 100%\&. For details about the incompatibilities, see the
 \m[blue]\fBIncompatibilities with SysV\fR\m[]\&\s-2\u[1]\d\s+2
 document\&.
+.PP
+The
+\fBsystemd-run\fR(1)
+command allows creating
+\&.service
+and
+\&.scope
+units dynamically and transiently from the command line\&.
 .SH "SERVICE TEMPLATES"
 .PP
 It is possible for
@@ -441,6 +449,7 @@ l l
 l l
 l l
 l l
+l l
 l l.
 T{
 "@"
@@ -451,6 +460,11 @@ T{
 "\-"
 T}:T{
 If the executable path is prefixed with "\-", an exit code of the command normally considered a failure (i\&.e\&. non\-zero exit status or abnormal exit due to signal) is recorded, but has no further effect and is considered equivalent to success\&.
+T}
+T{
+":"
+T}:T{
+If the executable path is prefixed with ":", environment variable substitution (as described by the "Command Lines" section below) is not applied\&.
 T}
 T{
 "+"
@@ -470,7 +484,8 @@ T}
 .TE
 .sp 1
 "@",
-"\-", and one of
+"\-",
+":", and one of
 "+"/"!"/"!!"
 may be used together and they can appear in any order\&. However, only one of
 "+",
@@ -600,13 +615,17 @@ or
 failed (and weren\*(Aqt prefixed with
 "\-", see above) or timed out\&. Use
 \fIExecStopPost=\fR
-to invoke commands when a service failed to start up correctly and is shut down again\&. Also note that, service restart requests are implemented as stop operations followed by start operations\&. This means that
+to invoke commands when a service failed to start up correctly and is shut down again\&. Also note that the stop operation is always performed if the service started successfully, even if the processes in the service terminated on their own or were killed\&. The stop commands must be prepared to deal with that case\&.
+\fI$MAINPID\fR
+will be unset if systemd knows that the main process exited by the time the stop commands are called\&.
+.sp
+Service restart requests are implemented as stop operations followed by start operations\&. This means that
 \fIExecStop=\fR
 and
 \fIExecStopPost=\fR
 are executed during a service restart operation\&.
 .sp
-It is recommended to use this setting for commands that communicate with the service requesting clean termination\&. When the commands specified with this option are executed it should be assumed that the service is still fully up and is able to react correctly to all commands\&. For post\-mortem clean\-up steps use
+It is recommended to use this setting for commands that communicate with the service requesting clean termination\&. For post\-mortem clean\-up steps use
 \fIExecStopPost=\fR
 instead\&.
 .RE
@@ -978,6 +997,18 @@ RestartPreventExitStatus=1 6 SIGABRT
 ensures that exit codes 1 and 6 and the termination signal
 \fBSIGABRT\fR
 will not result in automatic service restarting\&. This option may appear more than once, in which case the list of restart\-preventing statuses is merged\&. If the empty string is assigned to this option, the list is reset and all prior assignments of this option will have no effect\&.
+.sp
+Note that this setting has no effect on processes configured via
+\fIExecStartPre=\fR,
+\fIExecStartPost=\fR,
+\fIExecStop=\fR,
+\fIExecStopPost=\fR
+or
+\fIExecReload=\fR, but only on the main service process, i\&.e\&. either the one invoked by
+\fIExecStart=\fR
+or (depending on
+\fIType=\fR,
+\fIPIDFile=\fR, \&...) the otherwise configured main process\&.
 .RE
 .PP
 \fIRestartForceExitStatus=\fR
@@ -1621,7 +1652,8 @@ for details on how you can influence the way systemd terminates the service\&.
 \fBsystemd.exec\fR(5),
 \fBsystemd.resource-control\fR(5),
 \fBsystemd.kill\fR(5),
-\fBsystemd.directives\fR(7)
+\fBsystemd.directives\fR(7),
+\fBsystemd-run\fR(1)
 .SH "NOTES"
 .IP " 1." 4
 Incompatibilities with SysV

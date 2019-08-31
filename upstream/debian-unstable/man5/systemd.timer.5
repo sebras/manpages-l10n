@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.TIMER" "5" "" "systemd 241" "systemd.timer"
+.TH "SYSTEMD\&.TIMER" "5" "" "systemd 242" "systemd.timer"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -117,21 +117,59 @@ Timer files must include a [Timer] section, which carries information about the 
 \fIOnActiveSec=\fR, \fIOnBootSec=\fR, \fIOnStartupSec=\fR, \fIOnUnitActiveSec=\fR, \fIOnUnitInactiveSec=\fR
 .RS 4
 Defines monotonic timers relative to different starting points:
-\fIOnActiveSec=\fR
-defines a timer relative to the moment the timer itself is activated\&.
-\fIOnBootSec=\fR
-defines a timer relative to when the machine was booted up\&.
-\fIOnStartupSec=\fR
-defines a timer relative to when systemd was first started\&.
-\fIOnUnitActiveSec=\fR
-defines a timer relative to when the unit the timer is activating was last activated\&.
-\fIOnUnitInactiveSec=\fR
-defines a timer relative to when the unit the timer is activating was last deactivated\&.
 .sp
-Multiple directives may be combined of the same and of different types\&. For example, by combining
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Settings and their starting points
+.TS
+allbox tab(:);
+lB lB.
+T{
+Setting
+T}:T{
+Meaning
+T}
+.T&
+l l
+l l
+l l
+l l
+l l.
+T{
+\fIOnActiveSec=\fR
+T}:T{
+Defines a timer relative to the moment the timer unit itself is activated\&.
+T}
+T{
+\fIOnBootSec=\fR
+T}:T{
+Defines a timer relative to when the machine was booted up\&. In containers, for the system manager instance, this is mapped to \fIOnStartupSec=\fR, making both equivalent\&.
+T}
+T{
+\fIOnStartupSec=\fR
+T}:T{
+Defines a timer relative to when the service manager was first started\&. For system timer units this is very similar to \fIOnBootSec=\fR as the system service manager is generally started very early at boot\&. It\*(Aqs primarily useful when configured in units running in the per\-user service manager, as the user service manager is generally started on first login only, not already during boot\&.
+T}
+T{
+\fIOnUnitActiveSec=\fR
+T}:T{
+Defines a timer relative to when the unit the timer unit is activating was last activated\&.
+T}
+T{
+\fIOnUnitInactiveSec=\fR
+T}:T{
+Defines a timer relative to when the unit the timer unit is activating was last deactivated\&.
+T}
+.TE
+.sp 1
+Multiple directives may be combined of the same and of different types, in which case the timer unit will trigger whenever any of the specified timer expressions elapse\&. For example, by combining
 \fIOnBootSec=\fR
 and
-\fIOnUnitActiveSec=\fR, it is possible to define a timer that elapses in regular intervals and activates a specific service each time\&.
+\fIOnUnitActiveSec=\fR, it is possible to define a timer that elapses in regular intervals and activates a specific service each time\&. Moreover, both monotonic time expressions and
+\fIOnCalendar=\fR
+calendar expressions may be combined in the same timer unit\&.
 .sp
 The arguments to the directives are time spans configured in seconds\&. Example: "OnBootSec=50" means 50s after boot\-up\&. The argument may also include time units\&. Example: "OnBootSec=5h 30min" means 5 hours and 30 minutes after boot\-up\&. For details about the syntax of time spans, see
 \fBsystemd.time\fR(7)\&.
@@ -142,9 +180,11 @@ or
 \fIOnStartupSec=\fR
 is already in the past when the timer unit is activated, it will immediately elapse and the configured unit is started\&. This is not the case for timers defined in the other directives\&.
 .sp
-These are monotonic timers, independent of wall\-clock time and timezones\&. If the computer is temporarily suspended, the monotonic clock stops too\&.
+These are monotonic timers, independent of wall\-clock time and timezones\&. If the computer is temporarily suspended, the monotonic clock pauses, too\&.
 .sp
-If the empty string is assigned to any of these options, the list of timers is reset, and all prior assignments will have no effect\&.
+If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and
+\fIOnCalendar=\fR
+timers, see below), and all prior assignments will have no effect\&.
 .sp
 Note that timers do not necessarily expire at the precise time configured with these settings, as they are subject to the
 \fIAccuracySec=\fR
@@ -163,7 +203,11 @@ Note that timers do not necessarily expire at the precise time configured with t
 \fIAccuracySec=\fR
 setting below\&.
 .sp
-May be specified more than once\&.
+May be specified more than once, in which case the timer unit will trigger whenever any of the specified expressions elapse\&. Moreover calendar timers and monotonic timers (see above) may be combined within the same timer unit\&.
+.sp
+If the empty string is assigned to any of these options, the list of timers is reset (both
+\fIOnCalendar=\fR
+timers and monotonic timers, see above), and all prior assignments will have no effect\&.
 .RE
 .PP
 \fIAccuracySec=\fR
@@ -202,6 +246,11 @@ to 0, thus encouraging coalescing of timer events\&. In order to optimally stret
 \fIRandomizedDelaySec=\fR
 to a higher value, and
 \fIAccuracySec=1us\fR\&.
+.RE
+.PP
+\fIOnClockChange=\fR, \fIOnTimezoneChange=\fR
+.RS 4
+These options take boolean arguments\&. When true, the service unit will be triggered when the system clock (\fBCLOCK_REALTIME\fR) jumps relative to the monotonic clock (\fBCLOCK_MONOTONIC\fR), or when the local system timezone is modified\&. These options can be used alone or in combination with other timer expressions (see above) within the same timer unit\&. These options default to false\&.
 .RE
 .PP
 \fIUnit=\fR
