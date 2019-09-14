@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 242" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 243" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -572,6 +572,33 @@ fail (and are not prefixed with
 are skipped\&.
 .RE
 .PP
+\fIExecCondition=\fR
+.RS 4
+Optional commands that are executed before the command(s) in
+\fIExecStartPre=\fR\&. Syntax is the same as for
+\fIExecStart=\fR, except that multiple command lines are allowed and the commands are executed one after the other, serially\&.
+.sp
+The behavior is like an
+\fIExecStartPre=\fR
+and condition check hybrid: when an
+\fIExecCondition=\fR
+command exits with exit code 1 through 254 (inclusive), the remaining commands are skipped and the unit is
+\fInot\fR
+marked as failed\&. However, if an
+\fIExecCondition=\fR
+command exits with 255 or abnormally (e\&.g\&. timeout, killed by a signal, etc\&.), the unit will be considered failed (and remaining commands will be skipped)\&. Exit code of 0 or those matching
+\fISuccessExitStatus=\fR
+will continue execution to the next command(s)\&.
+.sp
+The same recommendations about not running long\-running processes in
+\fIExecStartPre=\fR
+also applies to
+\fIExecCondition=\fR\&.
+\fIExecCondition=\fR
+will also run the commands in
+\fIExecStopPost=\fR, as part of stopping the service, in the case of any non\-zero or abnormal exits, like the ones described above\&.
+.RE
+.PP
 \fIExecReload=\fR
 .RS 4
 Commands to execute to trigger a configuration reload in the service\&. This argument takes multiple command lines, following the same scheme as described for
@@ -732,6 +759,44 @@ within the interval specified, or terminates itself (see
 \fBsd_notify\fR(3))\&.
 .RE
 .PP
+\fITimeoutAbortSec=\fR
+.RS 4
+This option configures the time to wait for the service to terminate when it was aborted due to a watchdog timeout (see
+\fIWatchdogSec=\fR)\&. If the service has a short
+\fITimeoutStopSec=\fR
+this option can be used to give the system more time to write a core dump of the service\&. Upon expiration the service will be forcibly terminated by
+\fBSIGKILL\fR
+(see
+\fIKillMode=\fR
+in
+\fBsystemd.kill\fR(5))\&. The core file will be truncated in this case\&. Use
+\fITimeoutAbortSec=\fR
+to set a sensible timeout for the core dumping per service that is large enough to write all expected data while also being short enough to handle the service failure in due time\&.
+.sp
+Takes a unit\-less value in seconds, or a time span value such as "5min 20s"\&. Pass an empty value to skip the dedicated watchdog abort timeout handling and fall back
+\fITimeoutStopSec=\fR\&. Pass
+"infinity"
+to disable the timeout logic\&. Defaults to
+\fIDefaultTimeoutAbortSec=\fR
+from the manager configuration file (see
+\fBsystemd-system.conf\fR(5))\&.
+.sp
+If a service of
+\fIType=notify\fR
+handles
+\fBSIGABRT\fR
+itself (instead of relying on the kernel to write a core dump) it can send
+"EXTEND_TIMEOUT_USEC=\&..."
+to extended the abort time beyond
+\fITimeoutAbortSec=\fR\&. The first receipt of this message must occur before
+\fITimeoutAbortSec=\fR
+is exceeded, and once the abort time has exended beyond
+\fITimeoutAbortSec=\fR, the service manager will allow the service to continue to abort, provided the service repeats
+"EXTEND_TIMEOUT_USEC=\&..."
+within the interval specified, or terminates itself (see
+\fBsd_notify\fR(3))\&.
+.RE
+.PP
 \fITimeoutSec=\fR
 .RS 4
 A shorthand for configuring both
@@ -739,6 +804,15 @@ A shorthand for configuring both
 and
 \fITimeoutStopSec=\fR
 to the specified value\&.
+.RE
+.PP
+\fITimeoutCleanSec=\fR
+.RS 4
+Configures a timeout on the clean\-up operation requested through
+\fBsystemctl clean \&...\fR, see
+\fBsystemctl\fR(1)
+for details\&. Takes the usual time values and defaults to
+\fBinfinity\fR, i\&.e\&. by default no time\-out is applied\&. If a time\-out is configured the clean operation will be aborted forcibly when the time\-out is reached, potentially leaving resources on disk\&.
 .RE
 .PP
 \fIRuntimeMaxSec=\fR
@@ -972,23 +1046,37 @@ Takes a list of exit status definitions that, when returned by the main service 
 \fBSIGHUP\fR,
 \fBSIGINT\fR,
 \fBSIGTERM\fR, and
-\fBSIGPIPE\fR\&. Exit status definitions can either be numeric exit codes or termination signal names, separated by spaces\&. For example:
+\fBSIGPIPE\fR\&. Exit status definitions can be numeric exit codes, termination code names, or termination signal names, separated by spaces\&. See the Process Exit Codes section in
+\fBsystemd.exec\fR(5)
+for a list of termination codes names (for this setting only the part without the
+"EXIT_"
+or
+"EX_"
+prefix should be used)\&. See
+\fBsignal\fR(7)
+for a list of signal names\&.
+.sp
+This option may appear more than once, in which case the list of successful exit statuses is merged\&. If the empty string is assigned to this option, the list is reset, all prior assignments of this option will have no effect\&.
+.PP
+\fBExample\ \&1.\ \&A service with with the the \fISuccessExitStatus=\fR setting\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-SuccessExitStatus=1 2 8 SIGKILL
+SuccessExitStatus=TEMPFAIL 250 SIGUSR1
 .fi
 .if n \{\
 .RE
 .\}
 .sp
-ensures that exit codes 1, 2, 8 and the termination signal
+Exit codes 75 (\fBTEMPFAIL\fR), 250, and the termination signal
 \fBSIGKILL\fR
 are considered clean service terminations\&.
-.sp
-This option may appear more than once, in which case the list of successful exit statuses is merged\&. If the empty string is assigned to this option, the list is reset, all prior assignments of this option will have no effect\&.
+
+Note:
+\fBsystemd\-analyze exit\-codes\fR
+may be used to list exit codes and translate between numerical code values and names\&.
 .RE
 .PP
 \fIRestartPreventExitStatus=\fR
@@ -1110,7 +1198,7 @@ setting of the
 \&.service
 it refers to\&.
 .sp
-This option may appear more than once, in which case the list of socket units is merged\&. If the empty string is assigned to this option, the list of sockets is reset, and all prior uses of this setting will have no effect\&.
+This option may appear more than once, in which case the list of socket units is merged\&. Note that once set, clearing the list of sockets again (for example, by assigning the empty string to this option) is not supported\&.
 .RE
 .PP
 \fIFileDescriptorStoreMax=\fR
@@ -1149,6 +1237,34 @@ file after it is opened\&.
 Configure the location of a file containing USB FunctionFS strings\&. Behavior is similar to
 \fIUSBFunctionDescriptors=\fR
 above\&.
+.RE
+.PP
+\fIOOMPolicy=\fR
+.RS 4
+Configure the Out\-Of\-Memory (OOM) killer policy\&. On Linux, when memory becomes scarce the kernel might decide to kill a running process in order to free up memory and reduce memory pressure\&. This setting takes one of
+\fBcontinue\fR,
+\fBstop\fR
+or
+\fBkill\fR\&. If set to
+\fBcontinue\fR
+and a process of the service is killed by the kernel\*(Aqs OOM killer this is logged but the service continues running\&. If set to
+\fBstop\fR
+the event is logged but the service is terminated cleanly by the service manager\&. If set to
+\fBkill\fR
+and one of the service\*(Aqs processes is killed by the OOM killer the kernel is instructed to kill all remaining processes of the service, too\&. Defaults to the setting
+\fIDefaultOOMPolicy=\fR
+in
+\fBsystem.conf\fR(5)
+is set to, except for services where
+\fIDelegate=\fR
+is turned on, where it defaults to
+\fBcontinue\fR\&.
+.sp
+Use the
+\fIOOMScoreAdjust=\fR
+setting to configure whether processes of the unit shall be considered preferred or less preferred candidates for process termination by the Linux OOM killer logic\&. See
+\fBsystemd.exec\fR(5)
+for details\&.
 .RE
 .PP
 Check
@@ -1417,7 +1533,7 @@ T}
 .sp 1
 .SH "EXAMPLES"
 .PP
-\fBExample\ \&1.\ \&Simple service\fR
+\fBExample\ \&2.\ \&Simple service\fR
 .PP
 The following unit file creates a service that will execute
 /usr/sbin/foo\-daemon\&. Since no
@@ -1461,7 +1577,7 @@ if the service can background itself or
 \fIType=\fR\fBdbus\fR
 if the unit acquires a DBus name once initialization is complete\&. See below\&.
 .PP
-\fBExample\ \&2.\ \&Oneshot service\fR
+\fBExample\ \&3.\ \&Oneshot service\fR
 .PP
 Sometimes, units should just execute an action without keeping active processes, such as a filesystem check or a cleanup action on boot\&. For this,
 \fIType=\fR\fBoneshot\fR
@@ -1492,7 +1608,7 @@ are the only service units that may have more than one
 \fIExecStart=\fR
 specified\&. They will be executed in order until either they are all successful or one of them fails\&.
 .PP
-\fBExample\ \&3.\ \&Stoppable oneshot service\fR
+\fBExample\ \&4.\ \&Stoppable oneshot service\fR
 .PP
 Similarly to the oneshot services, there are sometimes units that need to execute a program to set up something and then execute another to shut it down, but no process remains active while they are considered "started"\&. Network configuration can sometimes fall into this category\&. Another use case is if a oneshot service shall not be executed each time when they are pulled in as a dependency, but only the first time\&.
 .PP
@@ -1528,7 +1644,7 @@ Since the unit is considered to be running after the start action has exited, in
 \fBsystemctl start\fR
 on that unit again will cause no action to be taken\&.
 .PP
-\fBExample\ \&4.\ \&Traditional forking services\fR
+\fBExample\ \&5.\ \&Traditional forking services\fR
 .PP
 Many traditional daemons/services background (i\&.e\&. fork, daemonize) themselves when starting\&. Set
 \fIType=\fR\fBforking\fR
@@ -1571,7 +1687,7 @@ Please see
 \fBsystemd.kill\fR(5)
 for details on how you can influence the way systemd terminates the service\&.
 .PP
-\fBExample\ \&5.\ \&DBus services\fR
+\fBExample\ \&6.\ \&DBus services\fR
 .PP
 For services that acquire a name on the DBus system bus, use
 \fIType=\fR\fBdbus\fR
@@ -1624,7 +1740,7 @@ Please see
 \fBsystemd.kill\fR(5)
 for details on how you can influence the way systemd terminates the service\&.
 .PP
-\fBExample\ \&6.\ \&Services that notify systemd about their initialization\fR
+\fBExample\ \&7.\ \&Services that notify systemd about their initialization\fR
 .PP
 \fIType=\fR\fBsimple\fR
 services are really easy to write, but have the major disadvantage of systemd not being able to tell when initialization of the given service is complete\&. For this reason, systemd supports a simple notification protocol that allows daemons to make systemd aware that they are done initializing\&. Use

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 242" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 243" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -384,12 +384,21 @@ Note that setting this option to
 or
 \fBstate\fR
 will only work correctly with operating systems in the container that can boot up with only
-/usr
+/usr/
 mounted, and are able to automatically populate
-/var, and also
-/etc
+/var/
+(and
+/etc/
 in case of
-"\-\-volatile=yes"\&. The
+"\-\-volatile=yes")\&. Specifically, this means that operating systems that follow the historic split of
+/bin/
+and
+/lib/
+(and related directories) from
+/usr/
+(i\&.e\&. where the former are not symlinks into the latter) are not supported by
+"\-\-volatile=yes"
+as container payload\&. The
 \fBoverlay\fR
 option does not require any particular preparations in the OS, but do note that
 "overlayfs"
@@ -693,7 +702,7 @@ Note that when user namespacing is used file ownership on disk reflects this, an
 .PP
 \fB\-\-private\-users\-chown\fR
 .RS 4
-If specified, all files and directories in the container\*(Aqs directory tree will adjusted so that they are owned to the appropriate UIDs/GIDs selected for the container (see above)\&. This operation is potentially expensive, as it involves descending and iterating through the full directory tree of the container\&. Besides actual file ownership, file ACLs are adjusted as well\&.
+If specified, all files and directories in the container\*(Aqs directory tree will be adjusted so that they are owned by the appropriate UIDs/GIDs selected for the container (see above)\&. This operation is potentially expensive, as it involves iterating through the full directory tree of the container\&. Besides actual file ownership, file ACLs are adjusted as well\&.
 .sp
 This option is implied if
 \fB\-\-private\-users=pick\fR
@@ -1283,17 +1292,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR
@@ -1312,8 +1339,8 @@ Override the charset passed to
 .\}
 .nf
 # machinectl pull\-raw \-\-verify=no \e
-      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/28/Cloud/x86_64/images/Fedora\-Cloud\-Base\-28\-1\&.1\&.x86_64\&.raw\&.xz
-# systemd\-nspawn \-M Fedora\-Cloud\-Base\-28\-1\&.1\&.x86_64\&.raw
+      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/30/Cloud/x86_64/images/Fedora\-Cloud\-Base\-30\-1\&.2\&.x86_64\&.raw\&.xz
+# systemd\-nspawn \-M Fedora\-Cloud\-Base\-30\-1\&.2\&.x86_64
 .fi
 .if n \{\
 .RE
@@ -1329,21 +1356,21 @@ and opens a shell in it\&.
 .RS 4
 .\}
 .nf
-# dnf \-y \-\-releasever=28 \-\-installroot=/var/lib/machines/f28 \e
+# dnf \-y \-\-releasever=30 \-\-installroot=/var/lib/machines/f30 \e
       \-\-disablerepo=\*(Aq*\*(Aq \-\-enablerepo=fedora \-\-enablerepo=updates install \e
       systemd passwd dnf fedora\-release vim\-minimal
-# systemd\-nspawn \-bD /var/lib/machines/f28
+# systemd\-nspawn \-bD /var/lib/machines/f30
 .fi
 .if n \{\
 .RE
 .\}
 .PP
 This installs a minimal Fedora distribution into the directory
-/var/lib/machines/f28
+/var/lib/machines/f30
 and then boots an OS in a namespace container in it\&. Because the installation is located underneath the standard
 /var/lib/machines/
 directory, it is also possible to start the machine using
-\fBsystemd\-nspawn \-M f28\fR\&.
+\fBsystemd\-nspawn \-M f30\fR\&.
 .PP
 \fBExample\ \&3.\ \&Spawn a shell in a container of a minimal Debian unstable distribution\fR
 .sp
@@ -1376,7 +1403,7 @@ out of the box, so the same command can be used to install any of those\&. For o
 .RS 4
 .\}
 .nf
-# pacstrap \-c \-d ~/arch\-tree/ base
+# pacstrap \-c ~/arch\-tree/ base
 # systemd\-nspawn \-bD ~/arch\-tree/
 .fi
 .if n \{\

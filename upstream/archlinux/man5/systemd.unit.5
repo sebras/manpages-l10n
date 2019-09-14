@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 242" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 243" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,7 +91,25 @@ In addition to the generic [Unit] and [Install] sections described here, each un
 .PP
 Unit files are loaded from a set of paths determined during compilation, described in the next section\&.
 .PP
-Unit files can be parameterized by a single argument called the "instance name"\&. The unit is then constructed based on a "template file" which serves as the definition of multiple services or other units\&. A template unit must have a single
+Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type\&. The "unit prefix" must consist of one or more valid characters (ASCII letters, digits,
+":",
+"\-",
+"_",
+"\&.", and
+"\e")\&. The total length of the unit name including the suffix must not exceed 256 characters\&. The type suffix must be one of
+"\&.service",
+"\&.socket",
+"\&.device",
+"\&.mount",
+"\&.automount",
+"\&.swap",
+"\&.target",
+"\&.path",
+"\&.timer",
+"\&.slice", or
+"\&.scope"\&.
+.PP
+Units names can be parameterized by a single argument called the "instance name"\&. The unit is then constructed based on a "template file" which serves as the definition of multiple services or other units\&. A template unit must have a single
 "@"
 at the end of the name (right before the type suffix)\&. The name of the full unit is formed by inserting the instance name between
 "@"
@@ -912,9 +930,9 @@ command\&. Otherwise, this will be refused\&. It probably is a good idea to leav
 \fIDefaultDependencies=\fR
 .RS 4
 Takes a boolean argument\&. If
-\fBtrue\fR, (the default), a few default dependencies will implicitly be created for the unit\&. The actual dependencies created depend on the unit type\&. For example, for service units, these dependencies ensure that the service is started only after basic system initialization is completed and is properly terminated on system shutdown\&. See the respective man pages for details\&. Generally, only services involved with early boot or late shutdown should set this option to
-\fBfalse\fR\&. It is highly recommended to leave this option enabled for the majority of common units\&. If set to
-\fBfalse\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
+\fByes\fR, (the default), a few default dependencies will implicitly be created for the unit\&. The actual dependencies created depend on the unit type\&. For example, for service units, these dependencies ensure that the service is started only after basic system initialization is completed and is properly terminated on system shutdown\&. See the respective man pages for details\&. Generally, only services involved with early boot or late shutdown should set this option to
+\fBno\fR\&. It is highly recommended to leave this option enabled for the majority of common units\&. If set to
+\fBno\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
 .RE
 .PP
 \fICollectMode=\fR
@@ -1097,7 +1115,14 @@ Before starting a unit, verify that the specified condition is true\&. If it is 
 "failed"
 state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require their functionality\&. Use the various
 \fIAssertArchitecture=\fR,
-\fIAssertVirtualization=\fR, \&... options for a similar mechanism that causes the job to fail (instead of being skipped) and results in logging about the failed check (instead of being silently processed)\&. For details about assertion conditions see below\&.
+\fIAssertVirtualization=\fR, \&... options for a similar mechanism that causes the job to fail (instead of being skipped) and results in logging about the failed check (instead of being silently processed)\&. For details about assertion conditions see below\&. Units with failed conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means, that when queried, the condition failure may or may not show up in the state of the unit\&.
+.sp
+If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol ("|") in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
+\fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&. The
+\fBcondition\fR
+verb of
+\fBsystemd-analyze\fR(1)
+can be used to test condition and assert expressions\&.
 .sp
 \fIConditionArchitecture=\fR
 may be used to check whether the system is running on a specific architecture\&. Takes one of
@@ -1161,6 +1186,7 @@ to test against a generic type of virtualization solution, or one of
 "lxc\-libvirt",
 "systemd\-nspawn",
 "docker",
+"podman",
 "rkt",
 "wsl",
 "acrn"
@@ -1181,7 +1207,7 @@ may be used to check whether a specific kernel command line option is set (or if
 .sp
 \fIConditionKernelVersion=\fR
 may be used to check whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a single string\&. If the string starts with one of
+\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a list of (potentially quoted) expressions\&. For each of the expressions, if it starts with one of
 "<",
 "<=",
 "=",
@@ -1330,9 +1356,6 @@ verifies if the specified number of CPUs is available to the current system\&. T
 "!=",
 ">=",
 ">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparison operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
-.sp
-If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol (|) in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
-\fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
 .RE
 .PP
 \fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR
@@ -1344,6 +1367,12 @@ Similar to the
 state (or in fact result in any state change of the unit), it affects only the job queued for it\&. Use assertion expressions for units that cannot operate when specific requirements are not met, and when this is something the administrator or user should look into\&.
 .sp
 Note that neither assertion nor condition expressions result in unit state changes\&. Also note that both are checked at the time the job is to be executed, i\&.e\&. long after depending jobs and it itself were queued\&. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies\&.
+.sp
+The
+\fBcondition\fR
+verb of
+\fBsystemd-analyze\fR(1)
+can be used to test condition and assert expressions\&.
 .RE
 .PP
 \fISourcePath=\fR
@@ -1363,7 +1392,7 @@ output\&. In some cases the name of the property is the same as the name of the 
 .B Table\ \&3.\ \& "Forward" and "reverse" unit properties
 .TS
 allbox tab(:);
-lB lB lB.
+lB lB lB s.
 T{
 "Forward" property
 T}:T{
@@ -1372,64 +1401,74 @@ T}:T{
 Where used
 T}
 .T&
-l l l
-l l ^
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l ^
-l l l.
+l l l s
+l l ^ ^
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l s
+l l l l
+l l l s
+l l ^ ^
+l l l l.
 T{
 \fIBefore=\fR
 T}:T{
 \fIAfter=\fR
 T}:T{
-Both are unit file options
+[Unit] section
 T}
 T{
 \fIAfter=\fR
 T}:T{
 \fIBefore=\fR
-T}:
+T}::
 T{
 \fIRequires=\fR
 T}:T{
 \fIRequiredBy=\fR
 T}:T{
-A unit file option; an option in the [Install] section
+[Unit] section
+T}:T{
+[Install] section
 T}
 T{
 \fIWants=\fR
 T}:T{
 \fIWantedBy=\fR
 T}:T{
-A unit file option; an option in the [Install] section
+[Unit] section
+T}:T{
+[Install] section
 T}
 T{
 \fIPartOf=\fR
 T}:T{
 \fIConsistsOf=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIBindsTo=\fR
 T}:T{
 \fIBoundBy=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIRequisite=\fR
 T}:T{
 \fIRequisiteOf=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fITriggers=\fR
@@ -1443,26 +1482,30 @@ T{
 T}:T{
 \fIConflictedBy=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIPropagatesReloadTo=\fR
 T}:T{
 \fIReloadPropagatedFrom=\fR
 T}:T{
-Both are unit file options
+[Unit] section
 T}
 T{
 \fIReloadPropagatedFrom=\fR
 T}:T{
 \fIPropagatesReloadTo=\fR
-T}:
+T}::
 T{
 \fIFollowing=\fR
 T}:T{
 n/a
 T}:T{
 An automatic property
+T}:T{
+\ \&
 T}
 .TE
 .sp 1
@@ -1660,7 +1703,9 @@ T{
 T}:T{
 User home directory
 T}:T{
-This is the home directory of the user running the service manager instance\&. In case of the system manager this resolves to "/root"\&.
+This is the home directory of the \fIuser running the service manager instance\fR\&. In case of the system manager this resolves to "/root"\&.
+
+Note that this setting is \fInot\fR influenced by the \fIUser=\fR setting configurable in the [Service] section of the service unit\&.
 T}
 T{
 "%H"
@@ -1786,14 +1831,18 @@ T{
 T}:T{
 User name
 T}:T{
-This is the name of the user running the service manager instance\&. In case of the system manager this resolves to "root"\&.
+This is the name of the \fIuser running the service manager instance\fR\&. In case of the system manager this resolves to "root"\&.
+
+Note that this setting is \fInot\fR influenced by the \fIUser=\fR setting configurable in the [Service] section of the service unit\&.
 T}
 T{
 "%U"
 T}:T{
 User UID
 T}:T{
-This is the numeric UID of the user running the service manager instance\&. In case of the system manager this resolves to "0"\&.
+This is the numeric UID of the \fIuser running the service manager instance\fR\&. In case of the system manager this resolves to "0"\&.
+
+Note that this setting is \fInot\fR influenced by the \fIUser=\fR setting configurable in the [Service] section of the service unit\&.
 T}
 T{
 "%v"
