@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 242" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 243" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -368,6 +368,24 @@ When used with
 or
 \fBSIGSTOP\fR\&. If omitted, defaults to
 \fBSIGTERM\fR\&.
+.RE
+.PP
+\fB\-\-what=\fR
+.RS 4
+Select what type of per\-unit resources to remove when the
+\fBclean\fR
+command is invoked, see below\&. Takes one of
+\fBconfiguration\fR,
+\fBstate\fR,
+\fBcache\fR,
+\fBlogs\fR,
+\fBruntime\fR
+to select the type of resource\&. This option may be specified more than once, in which case all specified resource types are removed\&. Also accepts the special value
+\fBall\fR
+as a shortcut for specifiying all five resource types\&. If this option is not specified defaults to the combination of
+\fBcache\fR
+and
+\fBruntime\fR, i\&.e\&. the two kinds of resources that are generally considered to be redundant and can be reconstructed on next invocation\&.
 .RE
 .PP
 \fB\-f\fR, \fB\-\-force\fR
@@ -770,6 +788,28 @@ Send a signal to one or more processes of the unit\&. Use
 to select which process to kill\&. Use
 \fB\-\-signal=\fR
 to select the signal to send\&.
+.RE
+.PP
+\fBclean \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Remove the configuration, state, cache, logs or runtime data of the specified units\&. Use
+\fB\-\-what=\fR
+to select which kind of resource to remove\&. For service units this may be used to remove the directories configured with
+\fIConfigurationDirectory=\fR,
+\fIStateDirectory=\fR,
+\fICacheDirectory=\fR,
+\fILogsDirectory=\fR
+and
+\fIRuntimeDirectory=\fR, see
+\fBsystemd.exec\fR(5)
+for details\&. For timer units this may be used to clear out the persistent timestamp data if
+\fIPersistent=\fR
+is used and
+\fB\-\-what=state\fR
+is selected, see
+\fBsystemd.timer\fR(5)\&. This command only applies to units that use either of these settings\&. If
+\fB\-\-what=\fR
+is not specified, both the cache and runtime data are removed (as these two types of data are generally redundant and reproducible on the next invocation of the unit)\&.
 .RE
 .PP
 \fBis\-active \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -1189,7 +1229,7 @@ T}
 T{
 "indirect"
 T}:T{
-The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in Also=\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
+The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in \fIAlso=\fR\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
 T}:T{
 0
 T}
@@ -1908,17 +1948,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR
