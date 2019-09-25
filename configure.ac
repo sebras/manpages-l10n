@@ -1,4 +1,4 @@
-# Configuration for manpages-de
+# Configuration for manpages-l10n
 #
 # Copyright © 2012 Dr. Tobias Quathamer <toddy@debian.org>
 #
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(manpages-de, [2.15])
+AC_INIT(manpages-l10n, [2.15])
 
 AM_INIT_AUTOMAKE([foreign dist-xz no-dist-gzip])
 

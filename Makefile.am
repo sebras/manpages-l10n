@@ -1,4 +1,4 @@
-# Makefile for manpages-de
+# Makefile for manpages-l10n
 #
 # Copyright © 2012-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
