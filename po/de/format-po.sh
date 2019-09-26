@@ -25,7 +25,7 @@ for translation in $translations; do
 	# and filter out all comment lines without year information
 	sed -n "1,/^msgid/p" "$translation" |
 	grep -v "^# German translation of manpages" |
-	grep -v "^# This file is distributed under the same license as the manpages-de package." |
+	grep -v "^# This file is distributed under the same license as the manpages-l10n package." |
 	grep -v "^# Copyright © of this file:" |
 	grep -v "^#\s*$" > "$header"
 	sed -e "1,/^msgid/d" "$translation" > "$tail"
