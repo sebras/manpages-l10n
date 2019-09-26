@@ -26,7 +26,7 @@ distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C so
 distribution_count=$(echo "$distributions" | wc --words)
 
 # Determine manpage section names
-manpage_sections=$(find ../po/man* -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
+manpage_sections=$(find ../po/de/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
 
 # Use a tempfile for stats generation
 tmppo=$(mktemp)
@@ -95,14 +95,14 @@ for distribution in $distributions; do
           <a class="btn btn-primary" href="index.html">Übersicht</a>
         </p>
         <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-de-team/manpages-de">Git-Repository ansehen</a>
+          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Repository ansehen</a>
         </p>
 END_OF_HEADER
 
   for manpage_section in $manpage_sections; do
   	section_count=0
     table_rows=""
-    translations=$(find "../po/$manpage_section" -name "*.po" | LC_ALL=C sort)
+    translations=$(find "../po/de/$manpage_section" -name "*.po" | LC_ALL=C sort)
     for translation in $translations; do
       # Create a po file for the specific distribution
       LC_ALL=C msggrep --location="$distribution" "$translation" > "$tmppo"
