@@ -24,13 +24,13 @@ for translation in $translations; do
 	# Get the head of the file until first msgid line
 	# and filter out all comment lines without year information
 	sed -n "1,/^msgid/p" "$translation" |
-	grep -v "^# German translation of manpages" |
-	grep -v "^# This file is distributed under the same license as the manpages-de package." |
+	grep -v "^# French translation of manpages" |
+	grep -v "^# This file is distributed under the same license as the manpages-l10n package." |
 	grep -v "^# Copyright © of this file:" |
 	grep -v "^#\s*$" > "$header"
 	sed -e "1,/^msgid/d" "$translation" > "$tail"
-	echo "# German translation of manpages" > "$result"
-	echo "# This file is distributed under the same license as the manpages-de package." >> "$result"
+	echo "# French translation of manpages" > "$result"
+	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$result"
 	echo "# Copyright © of this file:" >> "$result"
 	cat "$result" "$header" "$tail" > "$translation"
 	# Reformat manpage to wrap lines
