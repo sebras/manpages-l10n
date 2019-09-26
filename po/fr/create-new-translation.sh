@@ -48,7 +48,7 @@ if [ ! -f $mandir/$manpage.po ]; then
 	tmppo2=$(mktemp)
 	sed -e "1,/^msgid/d" "$pofile" > "$tmppo1"
 	echo "# French translation of manpages" > "$pofile"
-	echo "# This file is distributed under the same license as the manpages-i18n-fr package." >> "$pofile"
+	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$pofile"
 	echo "# Copyright © of this file:" >> "$pofile"
 	echo "msgid \"\"" >> "$pofile"
 	cat "$pofile" "$tmppo1" > "$tmppo2"
@@ -57,7 +57,7 @@ if [ ! -f $mandir/$manpage.po ]; then
 
 	# Adjust two header lines
 	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: French <debian-l10n-french@lists.debian.org>\\\n\"/" "$pofile"
-	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-l10n-fr\\\n\"/" "$pofile"
+	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-l10n\\\n\"/" "$pofile"
 fi
 
 # Finally, populate the translation from the compendium.
