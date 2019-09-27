@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Find all translation mandirs
-mandirs=$(find ../po -maxdepth 1 -type d -name "man*"  | cut -d/ -f3- | LC_ALL=C sort)
+mandirs=$(find ../po/fr -maxdepth 1 -type d -name "man*"  | cut -d/ -f3- | LC_ALL=C sort)
 
 for mandir in $mandirs; do
   echo Section $mandir
