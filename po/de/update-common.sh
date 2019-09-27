@@ -20,7 +20,7 @@ compendium=$(mktemp)
 msgcat --use-first common/*po > "$compendium"
 rm -f common/*po
 tmppo=$(mktemp)
-for potfile in ../templates/common/*pot; do
+for potfile in ../../templates/common/*pot; do
 	pofile=$(basename "$potfile")
 	# Remove the letter "t" at the end
 	pofile=${pofile%t}
