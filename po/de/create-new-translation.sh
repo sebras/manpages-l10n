@@ -32,7 +32,7 @@ cd ../../templates
 ./generate-one-template.sh $manpage
 # Update common templates
 ./create-common-templates.sh
-cd ../po/fr
+cd ../po/de
 
 # Update common translations
 ./update-common.sh
