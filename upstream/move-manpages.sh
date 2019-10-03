@@ -87,7 +87,7 @@ for mandir in tmp/usr/share/man/man*; do
         if [ ! -f $translation ]; then
           echo "$package: $section/"$(basename "$manpage") >> untranslated.txt
           # Remove untranslated manpages to save space
-          rm $manpage
+          # rm $manpage
         fi
       done
       # Copy remaining manpages, if there are any in the current directory
