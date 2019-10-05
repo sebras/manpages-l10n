@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de\n"
 "POT-Creation-Date: 2019-10-03 11:52+02:00\n"
-"PO-Revision-Date: 2019-10-04 21:28+0200\n"
+"PO-Revision-Date: 2019-10-05 12:09+0200\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -939,6 +939,7 @@ msgstr ""
 "mehrere Befehlszeilen erlaubt sind und die Befehle seriell einer nach dem "
 "anderen ausgeführt werden\\&."
 
+#. FIXME: Verb missing: "condition check hybrid"
 #. type: Plain text
 #: archlinux
 msgid ""
@@ -951,7 +952,17 @@ msgid ""
 "matching I<SuccessExitStatus=> will continue execution to the next "
 "command(s)\\&."
 msgstr ""
+"Das Verhalten ist wie ein I<ExecStartPre=> und die Bedingungsprüfung erfolgt "
+"hybrid: wenn sich ein I<ExecCondition=>-Befehl mit Exit-Code 1 bis 254 "
+"(einschließlich) beendet, werden die verbleibenden Befehle übersprungen und "
+"die Unit wird I<nicht> als fehlgeschlagen markiert\\&. Falls sich allerdings "
+"ein I<ExecCondition=>-Befehl mit 255 oder unnormal (z\\&.B\\&. wegen einer "
+"Zeitüberschreitung, durch ein Signal getötet) beendet, wird die Unit als "
+"fehlgeschlagen betrachtet (und die verbliebenen Befehle übersprungen)\\&. "
+"Exit-Code 0 oder solche, die auf I<SuccessExitStatus=> passen, führen zur "
+"Ausführung des oder der nächsten Befehle\\&."
 
+#. FIXME: »like the ones described above« - worauf referenziert das (exits oder commands)
 #. type: Plain text
 #: archlinux
 msgid ""
@@ -961,6 +972,11 @@ msgid ""
 "service, in the case of any non-zero or abnormal exits, like the ones "
 "described above\\&."
 msgstr ""
+"Die gleiche Empfehlung, keine langlaufenden Prozesse in I<ExecStartPre=> "
+"auszuführen, gilt auch für I<ExecCondition=>\\&. I<ExecCondition=> wird, "
+"falls eine Beendigung nicht Null oder unnormal erfolgt, beim Stoppen des "
+"Dienstes auch die in I<ExecStopPost=> aufgeführten Befehle ausführen, wie "
+"die oben beschriebenen\\&."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable mageia-cauldron
@@ -1323,6 +1339,17 @@ msgid ""
 "service that is large enough to write all expected data while also being "
 "short enough to handle the service failure in due time\\&."
 msgstr ""
+"Diese Option konfiguriert die Zeit, die auf die Beendigung des Dienstes "
+"gewartet werden soll, wenn dieser aufgrund einer Watchdog-Zeitüberschreitung "
+"abgebrochen wird (siehe I<WatchdogSec=>))\\&. Falls der Dienst eine kleine "
+"I<TimeoutStopSec=> hat, kann diese Option dem System mehr Zeit zum Schreiben "
+"eines Speicherauszuges des Dienstes geben\\&. Nach Ablauf wird der Dienst "
+"zwangsweise mit B<SIGKILL> (siehe I<KillMode=> in B<systemd.kill>(5)) beendet"
+"\\&. In diesem Fall wird die Speicherauszugsdatei abgeschnitten\\&. "
+"Verwenden Sie I<TimeoutAbortSec=>, um eine vernünftige Zeitüberschreitung "
+"für das Erstellen von Speicherauszügen pro Dienst zu setzen, die groß genug "
+"ist, um alle erwarteten Daten zu schreiben aber gleichzeitg kurz genug ist, "
+"um den Fehlschlag des Dienstes in angemessener Zeit zu handhaben\\&."
 
 #. type: Plain text
 #: archlinux
@@ -1333,18 +1360,16 @@ msgid ""
 "the timeout logic\\&. Defaults to I<DefaultTimeoutAbortSec=> from the "
 "manager configuration file (see B<systemd-system.conf>(5))\\&."
 msgstr ""
+"Akzeptiert einen Wert ohne Einheit in Sekunden oder einen Zeitdauerwert wie "
+"»5min 20s«\\&. Übergeben Sie einen leeren Wert, um die Handhabung der "
+"zugeordneten Watchdog-Zeitüberschreitung zu überspringen und auf "
+"I<TimeoutStopSec=> zurückzufallen\\&. Übergeben Sie »infinity«, um die "
+"Zeitüberschreitungslogik zu überspringen\\&. Standardmäßig "
+"I<DefaultTimeoutAbortSec=> aus der Verwalterkonfigurationsdatei (siehe "
+"B<systemd-system.conf>(5))\\&."
 
 #. type: Plain text
 #: archlinux
-#, fuzzy
-#| msgid ""
-#| "If a service of I<Type=notify> sends \"EXTEND_TIMEOUT_USEC=\\&...\", this "
-#| "may cause the stop time to be extended beyond I<TimeoutStopSec=>\\&. The "
-#| "first receipt of this message must occur before I<TimeoutStopSec=> is "
-#| "exceeded, and once the stop time has exended beyond I<TimeoutStopSec=>, "
-#| "the service manager will allow the service to continue to stop, provided "
-#| "the service repeats \"EXTEND_TIMEOUT_USEC=\\&...\" within the interval "
-#| "specified, or terminates itself (see B<sd_notify>(3))\\&."
 msgid ""
 "If a service of I<Type=notify> handles B<SIGABRT> itself (instead of relying "
 "on the kernel to write a core dump) it can send \"EXTEND_TIMEOUT_USEC=\\&..."
@@ -1355,12 +1380,13 @@ msgid ""
 "repeats \"EXTEND_TIMEOUT_USEC=\\&...\" within the interval specified, or "
 "terminates itself (see B<sd_notify>(3))\\&."
 msgstr ""
-"Falls ein Dienst vom I<Type=notify> »EXTEND_TIMEOUT_USEC=…« sendet, kann "
-"dies dazu führen, dass die Stoppzeit sich über I<TimeoutStopSec=> hinauszieht"
-"\\&. Der erste Empfang dieser Nachricht muss auftreten, bevor "
-"I<TimeoutStopSec=> überschritten wird und sobald die Stoppzeit sich über "
-"I<TimeoutStopSec=> hinausgezogen hat, wird der Diensteverwalter dem Dienst "
-"die Weiterführung des Stoppens erlauben, vorausgesetzt, der Dienst "
+"Falls ein Dienst vom I<Type=notify> B<SIGABRT> selber handhabt (statt sich "
+"auf den Kernel zum Schreiben eines Speicherauszuges zu verlassen), kann er "
+"»EXTEND_TIMEOUT_USEC=…« senden, um die Abbruchzeit über I<TimeoutAbortSec=> "
+"hinaus zu verlängern\\&. Der erste Empfang dieser Nachricht muss auftreten, bevor "
+"I<TimeoutAbortSec=> überschritten wird und sobald die Abbruchzeit sich über "
+"I<TimeoutAbortSec=> hinausgezogen hat, wird der Diensteverwalter dem Dienst "
+"die Weiterführung des Abbrechens erlauben, vorausgesetzt, der Dienst "
 "wiederholt »EXTEND_TIMEOUT_USEC=…« innerhalb des festgelegten Intervalls "
 "oder beendet sich (siehe B<sd_notify>(3))\\&."
 
@@ -1714,14 +1740,6 @@ msgstr "I<SuccessExitStatus=>"
 
 #. type: Plain text
 #: archlinux
-#, fuzzy
-#| msgid ""
-#| "Takes a list of exit status definitions that, when returned by the main "
-#| "service process, will be considered successful termination, in addition "
-#| "to the normal successful exit code 0 and the signals B<SIGHUP>, "
-#| "B<SIGINT>, B<SIGTERM>, and B<SIGPIPE>\\&. Exit status definitions can "
-#| "either be numeric exit codes or termination signal names, separated by "
-#| "spaces\\&. For example:"
 msgid ""
 "Takes a list of exit status definitions that, when returned by the main "
 "service process, will be considered successful termination, in addition to "
@@ -1737,8 +1755,12 @@ msgstr ""
 "Beendigung betrachtet werden, wenn sie vom Hauptdiensteprozess "
 "zurückgeliefert werden, zusätzlich zu dem normalen Exit-Code 0 und den "
 "Signalen B<SIGHUP>, B<SIGINT>, B<SIGTERM> und B<SIGPIPE>\\&. Exit-"
-"Statusdefinitionen können entweder numerische Exit-Codes oder "
-"Beendigungssignalnamen, getrennt durch Leerzeichen, sein\\&. Beispiel:"
+"Statusdefinitionen können numerische Exit-Codes, Beendigungs-Code-Namen oder "
+"Beendigungssignalnamen, getrennt durch Leerzeichen, sein\\&. Siehe den "
+"Abschnitt »PROZESS-EXIT-CODES« in B<systemd.exec>(5) für eine Liste von "
+"Beendigungs-Code-Namen (für diese Einstellung sollte nur der Teil ohne den "
+"»EXIT_« oder »EX_«-Anfang verwandt werden)\\&. Siehe B<signal>(7) für eine "
+"Liste der Signalnamen\\&."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable mageia-cauldron
@@ -1770,16 +1792,12 @@ msgstr "SuccessExitStatus=TEMPFAIL 250 SIGUSR1\n"
 
 #. type: Plain text
 #: archlinux
-#, fuzzy
-#| msgid ""
-#| "ensures that exit codes 1, 2, 8 and the termination signal B<SIGKILL> are "
-#| "considered clean service terminations\\&."
 msgid ""
 "Exit codes 75 (B<TEMPFAIL>), 250, and the termination signal B<SIGKILL> are "
 "considered clean service terminations\\&."
 msgstr ""
-"Dies stellt sicher, dass die Exit-Codes 1, 2, 8 und das Beendigungssignal "
-"B<SIGKILL> als saubere Dienstebeendigung betrachtet werden\\&."
+"Exit-Codes 75 (B<TEMPFAIL>), 250 und das Beendigungssignal wird "
+"B<SIGKILL> als saubere Dienstebeendigung betrachtet\\&."
 
 #. type: Plain text
 #: archlinux
@@ -1787,6 +1805,9 @@ msgid ""
 "Note: B<systemd-analyze exit-codes> may be used to list exit codes and "
 "translate between numerical code values and names\\&."
 msgstr ""
+"Beachten Sie: B<systemd-analyze exit-codes> kann zur Auflistung der Exit-"
+"Codes und zur Übersetzung zwischen numerischen Code-Werten und Namen "
+"verwandt werden\\&."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable mageia-cauldron
@@ -2023,12 +2044,6 @@ msgstr ""
 
 #. type: Plain text
 #: archlinux
-#, fuzzy
-#| msgid ""
-#| "This option may appear more than once, in which case the list of socket "
-#| "units is merged\\&. If the empty string is assigned to this option, the "
-#| "list of sockets is reset, and all prior uses of this setting will have no "
-#| "effect\\&."
 msgid ""
 "This option may appear more than once, in which case the list of socket "
 "units is merged\\&. Note that once set, clearing the list of sockets again "
@@ -2036,9 +2051,9 @@ msgid ""
 "\\&."
 msgstr ""
 "Falls diese Option mehr als einmal auftaucht, wird die Liste der Socket-"
-"Units zusammengeführt\\&. Falls dieser Option die leere Zeichenkette "
-"zugewiesen wird, wird diese Liste zurückgesetzt und alle vorherigen "
-"Zuweisungen zu dieser Option haben keinen Effekt\\&."
+"Units zusammengeführt\\&. Beachten Sie, dass das Bereinigen der Liste "
+"(beispielsweise durch Zuweisung der leeren Zeichenkette zu dieser Option) "
+"nicht unterstützt wird, sobald die Option einmal gesetzt wurde\\&."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable mageia-cauldron
@@ -2150,6 +2165,10 @@ msgid ""
 "termination by the Linux OOM killer logic\\&. See B<systemd.exec>(5)  for "
 "details\\&."
 msgstr ""
+"Verwenden Sie die Einstellung I<OOMScoreAdjust=>, um zu konfigurieren, ob "
+"Prozesse der Unit als bevorzugte oder weniger bevorzugte Kandidaten für die "
+"Beendigung durch die Linux-OOM-Tötungslogik betrachtet werden sollen\\&. "
+"Siehe B<systemd.exec>(5) für Details\\&."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable mageia-cauldron
