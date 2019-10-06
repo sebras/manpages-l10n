@@ -63,7 +63,7 @@ cat > untranslated.html <<-END_OF_HEADER
   <body>
     <div class="container-fluid">
       <h1>Liste des fichiers non traduits</h1>
-      <p>Temps: $timestamp</p>
+      <p>Heure : $timestamp</p>
       <p>
         <a class="btn btn-primary" href="index.html">Enquête</a>
       </p>
@@ -90,7 +90,7 @@ for distribution in $distributions; do
   	  <div class="container-fluid">
         <h1>Liste des fichiers dont la traduction n'est pas complète</h1>
         <h2>$distribution</h2>
-        <p>Temps: $timestamp</p>
+        <p>Heure : $timestamp</p>
         <p>
           <a class="btn btn-primary" href="index.html">Aperçu</a>
         </p>
