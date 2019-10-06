@@ -19,6 +19,13 @@ header=$(mktemp)
 tail=$(mktemp)
 result=$(mktemp)
 
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0`"
+  echo This script reformats any *.po files. It wraps the lines at 80 characters
+  echo and removes outdated messages at the end of the file. 
+  exit 0
+fi
+
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
 	# Get the head of the file until first msgid line
