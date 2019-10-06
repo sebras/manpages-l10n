@@ -44,7 +44,7 @@ cat > index.html <<-END_OF_HEADER
   <body>
     <div class="container-fluid">
       <h1>Liste des fichiers dont la traduction n'est pas complète</h1>
-      <p>Temps: $timestamp</p>
+      <p>Heure : $timestamp</p>
       <p>
         <a class="btn btn-primary" href="untranslated.html">Fichiers non traduits</a>
       </p>
@@ -92,10 +92,10 @@ for distribution in $distributions; do
         <h2>$distribution</h2>
         <p>Temps: $timestamp</p>
         <p>
-          <a class="btn btn-primary" href="index.html">Übersicht</a>
+          <a class="btn btn-primary" href="index.html">Aperçu</a>
         </p>
         <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Regarder le Git Repository</a>
+          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Voir le dépôt Git</a>
         </p>
 END_OF_HEADER
 
@@ -181,7 +181,7 @@ EOF_TABLE
     <thead class="thead-dark">
       <tr>
         <th scope="col" width="25%">Paquet</th>
-        <th scope="col" width="75%">Pages de man</th>
+        <th scope="col" width="75%">Pages de manuel</th>
       </tr>
     </thead>
     <tbody>
