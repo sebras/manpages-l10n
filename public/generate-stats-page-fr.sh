@@ -19,7 +19,7 @@
 rm -f *html
 
 # Create header, using MET/MEST
-timestamp=$(TZ='Europe/Berlin' date "+%d.%m.%Y, %H:%M Uhr")
+timestamp=$(TZ='Europe/Paris' date "+%d %m %Y, %H:%M")
 
 # Determine distribution names from upstream directory.
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
@@ -39,14 +39,14 @@ cat > index.html <<-END_OF_HEADER
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
+    <title>Traduction française des pages de man</title>
   </head>
   <body>
     <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
+      <h1>Liste des fichiers dont la traduction n'est pas complète</h1>
+      <p>Temps: $timestamp</p>
       <p>
-        <a class="btn btn-primary" href="untranslated.html">Unübersetzte Handbuchseiten</a>
+        <a class="btn btn-primary" href="untranslated.html">Fichiers non traduits</a>
       </p>
 END_OF_HEADER
 
@@ -58,14 +58,14 @@ cat > untranslated.html <<-END_OF_HEADER
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
+    <title>Traduction française des pages de man</title>
   </head>
   <body>
     <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
+      <h1>Liste des fichiers non traduits</h1>
+      <p>Temps: $timestamp</p>
       <p>
-        <a class="btn btn-primary" href="index.html">Übersicht</a>
+        <a class="btn btn-primary" href="index.html">Enquête</a>
       </p>
 END_OF_HEADER
 
@@ -84,18 +84,18 @@ for distribution in $distributions; do
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
       <link rel="stylesheet" href="bootstrap.min.css">
-      <title>Deutsche Übersetzung der Handbuchseiten</title>
+      <title>Traduction française des pages de man</title>
     </head>
     <body>
   	  <div class="container-fluid">
-        <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
+        <h1>Liste des fichiers dont la traduction n'est pas complète</h1>
         <h2>$distribution</h2>
-        <p>Stand: $timestamp</p>
+        <p>Temps: $timestamp</p>
         <p>
           <a class="btn btn-primary" href="index.html">Übersicht</a>
         </p>
         <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Repository ansehen</a>
+          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Regarder le Git Repository</a>
         </p>
 END_OF_HEADER
 
@@ -148,10 +148,10 @@ EOF_ROW
 			<table class="table table-striped table-bordered table-sm">
 			  <thead class="thead-dark">
 			    <tr>
-			      <th scope="col" width="25%">Name</th>
-			      <th scope="col" width="10%">Prozent</th>
-			      <th scope="col" width="15%">Übersetzungen bis 80%</th>
-			      <th scope="col" width="50%">Statistik</th>
+			      <th scope="col" width="25%">Nom</th>
+			      <th scope="col" width="10%">Pourcentage</th>
+			      <th scope="col" width="15%">Traductions jusqu'à 80%</th>
+			      <th scope="col" width="50%">Statistiques</th>
 			    </tr>
 			  </thead>
 			  <tbody>
@@ -161,9 +161,9 @@ EOF_TABLE
 			echo "</table>" >> $distribution.html
       echo '<div class="alert alert-primary" role="alert">' >> $distribution.html
 			if [ $section_count -eq 1 ]; then
-				echo "1 Datei ist nicht vollständig übersetzt." >> $distribution.html
+				echo "1 fichier n'est pas complètement traduit." >> $distribution.html
 			else
-				echo "$section_count Dateien sind nicht vollständig übersetzt." >> $distribution.html
+				echo "$section_count fichiers ne sont pas complètement traduits." >> $distribution.html
 			fi
       echo "</div>" >> $distribution.html
     fi
@@ -180,8 +180,8 @@ EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
-        <th scope="col" width="25%">Paket</th>
-        <th scope="col" width="75%">Handbuchseiten</th>
+        <th scope="col" width="25%">Paquet</th>
+        <th scope="col" width="75%">Pages de man</th>
       </tr>
     </thead>
     <tbody>
@@ -211,9 +211,9 @@ EOF_TABLE
   echo "</table>" >> untranslated.html
 
   echo '<div class="alert alert-primary" role="alert">' >> untranslated.html
-  echo "Insgesamt sind " >> untranslated.html
+  echo "Au total, " >> untranslated.html
   (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated.html
-  echo " Dateien nicht übersetzt." >> untranslated.html
+  echo " ne sont pas complètement traduits." >> untranslated.html
   echo "</div>" >> untranslated.html
 done
 
