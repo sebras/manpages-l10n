@@ -83,7 +83,7 @@ for mandir in tmp/usr/share/man/man*; do
       done
       # The remaining manpages should be scanned for untranslated files
       for manpage in tmp/$section/*; do
-        translation="../../po/$section/"$(basename "$manpage")".po"
+        translation="../../po/de/$section/"$(basename "$manpage")".po"
         if [ ! -f $translation ]; then
           echo "$package: $section/"$(basename "$manpage") >> untranslated.txt
           # Remove untranslated manpages to save space
