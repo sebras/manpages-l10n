@@ -1,11 +1,17 @@
 # manpages-l10n
 
 This project provides an infrastructure for translating manpages to different
-languages. Currently, German and French are included, but the project is open
-for adding more languages.
+languages. Currently we support the following languages:
 
-For inclusion of a new language, please contact:
-Mario Blättermann <mario.blaettermann@gmail.com> 
+*  de - German
+*  fr - French
+*  nl - Dutch *
+
+(the languages marked with * are currently unmaintained, feel free to pick up
+the maintenance)
+
+The project is open for adding more languages. For inclusion of a new one,
+please contact Mario Blättermann <mario.blaettermann@gmail.com> 
 
 The current status is available here:
 
