@@ -180,8 +180,8 @@ EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
-        <th scope="col" width="25%">Paquet</th>
-        <th scope="col" width="75%">Pages de manuel</th>
+        <th scope="col" width="25%">Pakket</th>
+        <th scope="col" width="75%">Man Pagina's</th>
       </tr>
     </thead>
     <tbody>
