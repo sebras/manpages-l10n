@@ -83,7 +83,6 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## French:
 
-* Alain Portal <aportal AT univ-montp2 DOT fr>
 * Alain Portal <aportal@univ-montp2.fr>
 * Alexandre Kuoch <alex.kuoch@gmail.com>
 * Alexandre Normand <aj.normand@free.fr>
@@ -94,7 +93,6 @@ of Linux manpages. The list is sorted alphabetically.
 * carmie
 * Cédric Boutillier <cedric.boutillier@gmail.com>
 * Cédric Lucantis <omer@no-log.org>
-* Christophe Blaess
 * Christophe Blaess <ccb@club-internet.fr>
 * Christophe Blaess <http://www.blaess.fr/christophe/>
 * Christophe Sauthier <christophe@sauthier.com>
@@ -102,26 +100,20 @@ of Linux manpages. The list is sorted alphabetically.
 * Danny <dannybrain@noos.fr>
 * David Prévot <david@tilapin.org>
 * Denis Barbier <barbier@debian.org>
-* Denis Barbier <bouzim@gmail.com>
 * Denis Mugnier <myou72@orange.fr>
-* Dominique SIMEN <dominiquesimen@hotmail.com>
+* Dominique Simen <dominiquesimen@hotmail.com>
 * Emmanuel Araman <Emmanuel@araman.org>
 * Éric Piel <eric.piel@tremplin-utc.net>
-* Éric Piel <eric POINT piel AT tremplin-utc POINT net>
-* Florentin Duneau <f.baced@wanadoo.fr>
 * Florentin Duneau <fduneau@gmail.com>
 * Franck Bassi <fblinux@wanadoo.fr>
 * François Micaux
 * François Wendling <frwendling@free.fr>
 * Frederic Daniel Luc Lehobey <Frederic@Lehobey.net>
-* Frédéric Delanoy <delanoy_f AT yahoo DOT com>
 * Frédéric Delanoy <delanoy_f@yahoo.com>
 * Frédéric Hantrais <fhantrais@gmail.com>
 * Frédéric Zulian <zulian@free.fr>
-* Gérard Delafond
-* Gérard Delafond.
+* Gérard Delafond <gerard@delafond.org>
 * Grégoire Scano <gregoire.scano@malloc.fr>
-* Gregory Colpart <reg@evolix.fr>
 * Grégory Colpart <reg@evolix.fr>
 * Guilhelm Panaget <guilhelm.panaget@free.fr>
 * Guillaume Bour
@@ -130,26 +122,21 @@ of Linux manpages. The list is sorted alphabetically.
 * Jean-Baka Domelevo-Entfellner <domelevo@gmail.com>
 * Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>
 * Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
-* Jean-Luc Coulon <jean-luc.coulon@wanadoo.fr>
 * Jean-Marc Chaton <chaton@debian.org>
 * Jean-Philippe Guérard <fevrier@tigreraye.org>
 * Jérôme Perzyna <jperzyna@yahoo.fr>
 * José JORGE
 * Julien Cristau <jcristau@debian.org>
-* Julien Cristau <julien.cristau@ens-lyon.org>
 * Julien Rosal <albator.deb@gmail.com>
 * Luc Froidefond <luc.froidefond@free.fr>
 * Lyes Zemmouche <iliaas@hotmail.fr>
 * Michel Quercia <quercia AT cal DOT enst DOT fr>
-* Nicolas François
-* Nicolas François <nicolas.francois@centraleins.net>
 * Nicolas François <nicolas.francois@centraliens.net>
 * Nicolas Haller <nicolas@boiteameuh.org>
 * Nicolas Sauzède <nsauzede@free.fr>
 * Philippe Batailler
 * Philippe Piette <foudre-blanche@skynet.be>
 * Romain Doumenc <rd6137@gmail.com>
-* Romain DOUMENC <rd6137@gmail.com>
 * Sébastien Blanchet
 * Simon Depiets
 * Simon Paillard <simon.paillard@resel.enst-bretagne.fr>
@@ -158,16 +145,10 @@ of Linux manpages. The list is sorted alphabetically.
 * Steve Petruzzello <dlist@bluewin.ch>
 * Sylvain Archenault <sylvain.archenault@laposte.net>
 * Sylvain Cherrier <sylvain.cherrier@free.fr>
-* Thierry Vignaud
-* Thierry Vignaud <tvignaud AT mandrakesoft.com>
-* Thierry Vignaud <tvignaud AT mandriva DOT com>
-* Thierry Vignaud <tvignaud@mandrakesoft.com>
 * Thierry Vignaud <tvignaud@mandriva.com>
 * Thomas Blein <tblein@tblein.eu>
 * Thomas Huriaux <thomas.huriaux@gmail.com>
-* Thomas Vicent <thomas@vinc-net.fr>
 * Thomas Vincent <thomas@vinc-net.fr>
-* Valery Perrin <valery.perrin.debian@free.fr>
 * Valéry Perrin <valery.perrin.debian@free.fr>
 * Yves Rütschlé <l10n@rutschle.net>
 
