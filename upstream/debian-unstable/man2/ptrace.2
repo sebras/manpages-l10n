@@ -102,7 +102,7 @@
 .\"
 .\" and others that can be found in the arch/*/include/uapi/asm/ptrace files
 .\"
-.TH PTRACE 2 2018-04-30 "Linux" "Linux Programmer's Manual"
+.TH PTRACE 2 2019-10-10 "Linux" "Linux Programmer's Manual"
 .SH NAME
 ptrace \- process trace
 .SH SYNOPSIS
@@ -1005,6 +1005,105 @@ of the
 .IR "struct user_desc"
 is ignored; in other words,
 this ptrace operation can't be used to allocate a free TLS entry.)
+.TP
+.BR PTRACE_GET_SYSCALL_INFO " (since Linux 5.3)"
+.\" commit 201766a20e30f982ccfe36bebfad9602c3ff574a
+Retrieve information about the system call that caused the stop.
+The information is placed into the buffer pointed by the
+.I data
+argument, which should be a pointer to a buffer of type
+.IR "struct ptrace_syscall_info" .
+The
+.I addr
+argument contains the size of the buffer pointed to
+by the
+.I data
+argument (i.e.,
+.IR "sizeof(struct ptrace_syscall_info)" ).
+The return value contains the number of bytes available
+to be written by the kernel.
+If the size of the data to be written by the kernel exceeds the size
+specified by the
+.I addr
+argument, the output data is truncated.
+.IP
+The
+.I ptrace_syscall_info
+structure contains the following fields:
+.IP
+.in +2n
+.EX
+struct ptrace_syscall_info {
+    __u8 op;         /* Type of system call stop */
+    __u32 arch;      /* AUDIT_ARCH_* value; see seccomp(2) */
+    __u64 instruction_pointer; /* CPU instruction pointer */
+    __u64 stack_pointer;       /* CPU stack pointer */
+    union {
+        struct {     /* op == PTRACE_SYSCALL_INFO_ENTRY */
+            __u64 nr;          /* System call number */
+            __u64 args[6];     /* System call arguments */
+        } entry;
+        struct {     /* op == PTRACE_SYSCALL_INFO_EXIT */
+            __s64 rval;        /* System call return value */
+            __u8 is_error;     /* System call error flag;
+                                  Boolean: does rval contain
+                                  an error value (\-ERRCODE) or
+                                  a nonerror return value? */
+        } exit;
+        struct {     /* op == PTRACE_SYSCALL_INFO_SECCOMP */
+            __u64 nr;          /* System call number */
+            __u64 args[6];     /* System call arguments */
+            __u32 ret_data;    /* SECCOMP_RET_DATA portion
+                                  of SECCOMP_RET_TRACE
+                                  return value */
+        } seccomp;
+    };
+};
+.EE
+.in
+.IP
+The
+.IR op ,
+.IR arch ,
+.IR instruction_pointer ,
+and
+.I stack_pointer
+fields are defined for all kinds of ptrace system call stops.
+The rest of the structure is a union; one should read only those fields
+that are meaningful for the kind of system call stop specified by the
+.IR op
+field.
+.IP
+The
+.I op
+field has one of the following values (defined in
+.IR <linux/ptrace.h>)
+indicating what type of stop occurred and
+which part of the union is filled:
+.RS
+.TP
+.BR PTRACE_SYSCALL_INFO_ENTRY
+The
+.I entry
+component of the union contains information relating to a
+system call entry stop.
+.TP
+.BR PTRACE_SYSCALL_INFO_EXIT
+The
+.I exit
+component of the union contains information relating to a
+system call exit stop.
+.TP
+.BR PTRACE_SYSCALL_INFO_SECCOMP
+The
+.I exit
+component of the union contains information relating to a
+.B PTRACE_EVENT_SECCOMP
+stop.
+.TP
+.BR PTRACE_SYSCALL_INFO_NONE
+No component of the union contains relevant information.
+.RE
 .\"
 .SS Death under ptrace
 When a (possibly multithreaded) process receives a killing signal
@@ -2799,7 +2898,7 @@ to zero.
 .BR capabilities (7),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 5.02 of the Linux
+This page is part of release 5.03 of the Linux
 .I man-pages
 project.
 A description of the project,

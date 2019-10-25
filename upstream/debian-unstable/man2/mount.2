@@ -305,7 +305,7 @@ The following flags are per-superblock:
 .BR MS_DIRSYNC ,
 .BR MS_LAZYTIME ,
 .BR MS_MANDLOCK ,
-.BR MS_MS_SILENT ,
+.BR MS_SILENT ,
 and
 .BR MS_SYNCHRONOUS .
 .\" And MS_I_VERSION?
@@ -849,12 +849,11 @@ Since Linux 2.4 the set-user-ID and set-group-ID bits are
 just silently ignored in this case.
 .\" The change is in patch-2.4.0-prerelease.
 .\"
-.SS Per-process namespaces
-Starting with kernel 2.4.19, Linux provides
-per-process mount namespaces.
+.SS Mount namespaces
+Starting with kernel 2.4.19, Linux provides mount namespaces.
 A mount namespace is the set of filesystem mounts that
 are visible to a process.
-Mount-point namespaces can be (and usually are)
+Mount namespaces can be (and usually are)
 shared between multiple processes,
 and changes to the namespace (i.e., mounts and unmounts) by one process
 are visible to all other processes sharing the same namespace.
@@ -887,6 +886,27 @@ so that future mounts and unmounts by the caller are invisible
 to other processes (except child processes that the caller
 subsequently creates) and vice versa.
 .PP
+For further details on mount namespaces, see
+.BR mount_namespaces (7).
+.\"
+.SS Parental relationship between mount points
+Each mount point has a parent mount point.
+The overall parental relationship of all mount points defines
+the single directory hierarchy seen by the processes within a mount namespace.
+.PP
+The parent of a new mount point is defined when the mount point is created.
+In the usual case,
+the parent of a new mount is the mount point of the filesystem
+containing the directory or file at which the new mount is attached.
+In the case where a new mount is stacked on top of an existing mount,
+the parent of the new mount is the previous mount that was stacked
+at that location.
+.PP
+The parental relationship between mount points can be discovered via the
+.I /proc/[pid]/mountinfo
+file (see below).
+.\"
+.SS /proc/[pid]/mounts and /proc/[pid]/mountinfo
 The Linux-specific
 .I /proc/[pid]/mounts
 file exposes the list of mount points in the mount
@@ -900,7 +920,7 @@ See
 .BR proc (5)
 and
 .BR mount_namespaces (7)
-for details of these files.
+for details of this file.
 .SH SEE ALSO
 .BR mountpoint (1),
 .BR chroot (2),
@@ -914,7 +934,7 @@ for details of these files.
 .BR mount (8),
 .BR umount (8)
 .SH COLOPHON
-This page is part of release 5.02 of the Linux
+This page is part of release 5.03 of the Linux
 .I man-pages
 project.
 A description of the project,
