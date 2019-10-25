@@ -55,7 +55,7 @@ echo >> AUTHORS.md
 echo "## French:" >> AUTHORS.md
 echo >> AUTHORS.md
 
-# Extract all German translators from the copyright headers
+# Extract all French translators from the copyright headers
 files=$(find po/fr/man? -name "*po" | sort)
 # files="$files $(find po/secondary-*/man? -name "*po" | sort)"
 for translation in $files; do
