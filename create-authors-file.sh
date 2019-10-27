@@ -39,6 +39,7 @@ for translation in $files; do
 	grep -v "This file is distributed under the same license as the manpages-l10n package." |
     grep -v "This file is distributed under the same license as the manpages-de package." |
 	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
 	grep -v "msgid" |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
@@ -66,6 +67,7 @@ for translation in $files; do
 	grep -v "French translation of manpages" |
 	grep -v "This file is distributed under the same license as the manpages-l10n package." |
 	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
 	grep -v "msgid" |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
@@ -93,6 +95,7 @@ for translation in $files; do
 	grep -v "Dutch translation of manpages" |
 	grep -v "This file is distributed under the same license as the manpages-l10n package." |
 	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
 	grep -v "msgid" |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
