@@ -10,7 +10,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Alexander Bachmer <alex.bachmer@t-online.de>
 * Andreas Braukmann <andy@abra.de>
 * Andreas D. Preissig <andreas@sanix.ruhr.de>
-* Check translation of »flag«; would option be better? (Erik Pfannenstein
 * Chris Leick <c.leick@vollbio.de>
 * Christian Schmidt <c.schmidt@ius.gun.de>
 * Daniel Kobras <kobras@linux.de>
@@ -20,20 +19,13 @@ of Linux manpages. The list is sorted alphabetically.
 * Eduard Bloch <blade@debian.org>
 * Elmar Jansen <ej@pumuckel.gun.de>
 * Erik Pfannenstein <debianignatz@gmx.de>
-* FIXME: Einheitliche Übersetzung von Transformation
-* FIXME: Mit errno -l syncen (mit Übersetzer abstimmen)
-* FIXME: Once mapping is properly translated
-* FIXME: Review translation of "allocate"
-* FIXME: Übersetzung von overcommit prüfen und vereinheitlichen
 * Florian Jenn <jennf@tu-cottbus.de>
 * Florian Rehnisch <fm-r@gmx.de>
 * Florian Rehnisch <fr@fm-r.eu>
 * Frank Stähr <der-storch-85@gmx.net>
 * Gerd Koenig <koenig.bodensee@googlemail.com>
 * Hanno Wagner <wagner@bidnix.bid.fh-hannover.de>
-* Helge Kreutzmann <debian@helgefjelld.de>
 * Helge Kreutzmann <debian@helgefjell.de>
-* Helge Kreutzmannn <debian@helgefjell.de>
 * Holger Wansing <linux@wansing-online.de>
 * Jens Püschel <jepu0000@stud.uni-sb.de>
 * Jens Rohler <jkcr@rohler.de>
@@ -63,7 +55,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Mike Fengler <mike@krt3.krt-soft.de>
 * Norbert Kümin <norbert.kuemin@lugs.ch>
 * Norbert Weuster <weuster@etecs0.uni-duisburg.de>
-* Note: File description → Dateideskription
 * Patrick Rother <krd@gulu.net>
 * Peter Gerbrandt <pgerbrandt@bfs.de>
 * Ralf Baechle <ralf@waldorf-gmbh.de>
