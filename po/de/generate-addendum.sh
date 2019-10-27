@@ -25,6 +25,7 @@ translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
 grep -a -v "German translation of manpages" |
 grep -a -v "This file is distributed under the same license as the manpages-l10n package." |
 grep -a -v "Copyright © of this file:" |
+grep -a -v "FIXME:" |
 grep -a -v "msgid" |
 # Split lines to extract the name (and e-mail address)
 cut -f1 -d",")
