@@ -93,7 +93,7 @@ AS_IF(
   [
     AC_MSG_RESULT([yes])
     AC_SUBST([compressor], [none])
-    AC_SUBST([comp_extension], [])
+    AC_SUBST([comp_extension], ["''"])
   ],
   [
     AC_MSG_RESULT([no])
