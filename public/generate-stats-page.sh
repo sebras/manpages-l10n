@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
@@ -31,7 +31,7 @@ manpage_sections=$(find ../po/de/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL
 # Use a tempfile for stats generation
 tmppo=$(mktemp)
 
-# Create the index file
+# Create a global index file
 cat > index.html <<-END_OF_HEADER
 <!doctype html>
 <html lang="en">
@@ -39,19 +39,25 @@ cat > index.html <<-END_OF_HEADER
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
+    <title>Translation of manual pages</title>
   </head>
   <body>
-    <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
       <p>
-        <a class="btn btn-primary" href="untranslated.html">Unübersetzte Handbuchseiten</a>
+        Some Text explaining the project …
       </p>
+
+      <ul>
+	<li><a href="index-fr.html">The French translation</a></li>
+	<li><a href="index-de.html">The German translation</a></li>
+	<li><a href="index-nl.html">The Netherlands translation</a></li>
+      </ul>
+   </body>
+  </html>
 END_OF_HEADER
 
-# Create an overview of untranslated manpages
-cat > untranslated.html <<-END_OF_HEADER
+
+# Create the index file
+cat > index-de.html <<-END_OF_HEADER
 <!doctype html>
 <html lang="en">
   <head>
@@ -62,22 +68,41 @@ cat > untranslated.html <<-END_OF_HEADER
   </head>
   <body>
     <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht übersetzt sind</h1>
+      <h1>Liste der Dateien, die nicht vollständig ins Deutsche übersetzt sind</h1>
       <p>Stand: $timestamp</p>
       <p>
-        <a class="btn btn-primary" href="index.html">Übersicht</a>
+        <a class="btn btn-primary" href="untranslated-de.html">Unübersetzte Handbuchseiten</a>
+      </p>
+END_OF_HEADER
+
+# Create an overview of untranslated manpages
+cat > untranslated-de.html <<-END_OF_HEADER
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Deutsche Übersetzung der Handbuchseiten</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h1>Liste der Dateien, die nicht ins Deutsche übersetzt sind</h1>
+      <p>Stand: $timestamp</p>
+      <p>
+        <a class="btn btn-primary" href="index-de.html">Deutsche Übersicht</a>
       </p>
 END_OF_HEADER
 
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated.html
+  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-de.html
 done
 
 # Set up files for each distribution
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"$distribution.html\">$distribution</a></p>" >> index.html
+  echo "<p><a class=\"btn btn-primary\" href=\"$distribution-de.html\">$distribution</a></p>" >> index-de.html
 
-  cat > $distribution.html <<-END_OF_HEADER
+  cat > $distribution-de.html <<-END_OF_HEADER
   <!doctype html>
   <html lang="en">
     <head>
@@ -88,11 +113,11 @@ for distribution in $distributions; do
     </head>
     <body>
   	  <div class="container-fluid">
-        <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
+        <h1>Liste der Dateien, die nicht vollständig ins Deutsche übersetzt sind</h1>
         <h2>$distribution</h2>
         <p>Stand: $timestamp</p>
         <p>
-          <a class="btn btn-primary" href="index.html">Übersicht</a>
+          <a class="btn btn-primary" href="index-de.html">Deutsche Übersicht</a>
         </p>
         <p>
           <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Repository ansehen</a>
@@ -126,7 +151,7 @@ END_OF_HEADER
         	# Calculate needed translations for 80%
         	needed=""
           highlight=""
-        	if [ $percentage -lt 80 ]; then
+        	if [[ $percentage -lt 80 ]]; then
         		needed=$(echo "(800 * $all / 100 + 9) / 10 - $translated" | bc)
             highlight="class=\"table-danger\""
         	fi
@@ -144,7 +169,7 @@ EOF_ROW
       fi
     done
     if [ $section_count -gt 0 ]; then
-			cat >> $distribution.html <<-EOF_TABLE
+			cat >> $distribution-de.html <<-EOF_TABLE
 			<table class="table table-striped table-bordered table-sm">
 			  <thead class="thead-dark">
 			    <tr>
@@ -156,27 +181,27 @@ EOF_ROW
 			  </thead>
 			  <tbody>
 EOF_TABLE
-      echo $table_rows >> $distribution.html
-      echo "</tbody>" >> $distribution.html
-			echo "</table>" >> $distribution.html
-      echo '<div class="alert alert-primary" role="alert">' >> $distribution.html
+      echo $table_rows >> $distribution-de.html
+      echo "</tbody>" >> $distribution-de.html
+			echo "</table>" >> $distribution-de.html
+      echo '<div class="alert alert-primary" role="alert">' >> $distribution-de.html
 			if [ $section_count -eq 1 ]; then
-				echo "1 Datei ist nicht vollständig übersetzt." >> $distribution.html
+				echo "1 Datei ist nicht vollständig übersetzt." >> $distribution-de.html
 			else
-				echo "$section_count Dateien sind nicht vollständig übersetzt." >> $distribution.html
+				echo "$section_count Dateien sind nicht vollständig übersetzt." >> $distribution-de.html
 			fi
-      echo "</div>" >> $distribution.html
+      echo "</div>" >> $distribution-de.html
     fi
   done
 
-  echo "</div>" >> $distribution.html
-  echo "</body>" >> $distribution.html
-  echo "</html>" >> $distribution.html
+  echo "</div>" >> $distribution-de.html
+  echo "</body>" >> $distribution-de.html
+  echo "</html>" >> $distribution-de.html
 
   # Create an overview of untranslated manpages
-  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated.html
+  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated-de.html
 
-  cat >> untranslated.html <<-EOF_TABLE
+  cat >> untranslated-de.html <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
@@ -196,10 +221,10 @@ EOF_TABLE
       previous_package="$package"
     fi
     if [ "$previous_package" != "$package" ]; then
-      echo "<tr>" >> untranslated.html
-      echo "<td>$previous_package</td>" >> untranslated.html
-      echo "<td>$manpages</td>" >> untranslated.html
-      echo "</tr>" >> untranslated.html
+      echo "<tr>" >> untranslated-de.html
+      echo "<td>$previous_package</td>" >> untranslated-de.html
+      echo "<td>$manpages</td>" >> untranslated-de.html
+      echo "</tr>" >> untranslated-de.html
       previous_package="$package"
       manpages="$manpage"
     else
@@ -207,22 +232,22 @@ EOF_TABLE
     fi
   done < ../upstream/$distribution/untranslated.txt
 
-  echo "</tbody>" >> untranslated.html
-  echo "</table>" >> untranslated.html
+  echo "</tbody>" >> untranslated-de.html
+  echo "</table>" >> untranslated-de.html
 
-  echo '<div class="alert alert-primary" role="alert">' >> untranslated.html
-  echo "Insgesamt sind " >> untranslated.html
-  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated.html
-  echo " Dateien nicht übersetzt." >> untranslated.html
-  echo "</div>" >> untranslated.html
+  echo '<div class="alert alert-primary" role="alert">' >> untranslated-de.html
+  echo "Insgesamt sind " >> untranslated-de.html
+  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-de.html
+  echo " Dateien nicht übersetzt." >> untranslated-de.html
+  echo "</div>" >> untranslated-de.html
 done
 
-echo "</div>" >> untranslated.html
-echo "</body>" >> untranslated.html
-echo "</html>" >> untranslated.html
+echo "</div>" >> untranslated-de.html
+echo "</body>" >> untranslated-de.html
+echo "</html>" >> untranslated-de.html
 
-echo "</div>" >> index.html
-echo "</body>" >> index.html
-echo "</html>" >> index.html
+echo "</div>" >> index-de.html
+echo "</body>" >> index-de.html
+echo "</html>" >> index-de.html
 
 rm $tmppo
