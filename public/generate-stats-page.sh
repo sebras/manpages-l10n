@@ -22,9 +22,6 @@ rm -f *html
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
 distribution_count=$(echo "$distributions" | wc --words)
 
-# Determine manpage section names
-manpage_sections=$(find ../po/de/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
-
 # Use a tempfile for stats generation
 tmppo=$(mktemp)
 
@@ -52,29 +49,37 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-. ./setup-de.inc
+for tlang in de fr nl; do
+    echo -n "$tlang "
+
+# Determine manpage section names
+manpage_sections=$(find ../po/$tlang/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
+
+. ./setup-$tlang.inc
 
 # Create the index file
-cat index-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-de.html
+cat index-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-$tlang.html
 
 # Create an overview of untranslated manpages
-cat untranslated-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-de.html
+cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
 
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-de.html
+  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-$tlang.html
 done
 
 # Set up files for each distribution
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"$distribution-de.html\">$distribution</a></p>" >> index-de.html
+  echo "<p><a class=\"btn btn-primary\" href=\"$distribution-$tlang.html\">$distribution</a></p>" >> index-$tlang.html
 
-cat distribution-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}'| awk -vDB="$distribution" '{sub("DISTRIBUTION",DB); print $0}' > $distribution-de.html
+cat distribution-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}'| awk -vDB="$distribution" '{sub("DISTRIBUTION",DB); print $0}' > $distribution-$tlang.html
 
+  echo -n "$distribution "
 
   for manpage_section in $manpage_sections; do
   	section_count=0
     table_rows=""
-    translations=$(find "../po/de/$manpage_section" -name "*.po" | LC_ALL=C sort)
+    echo -n "$manpage_section "
+    translations=$(find "../po/$tlang/$manpage_section" -name "*.po" | LC_ALL=C sort)
     for translation in $translations; do
       # Create a po file for the specific distribution
       LC_ALL=C msggrep --location="$distribution" "$translation" > "$tmppo"
@@ -116,7 +121,7 @@ EOF_ROW
       fi
     done
     if [ $section_count -gt 0 ]; then
-			cat >> $distribution-de.html <<-EOF_TABLE
+			cat >> $distribution-$tlang.html <<-EOF_TABLE
 			<table class="table table-striped table-bordered table-sm">
 			  <thead class="thead-dark">
 			    <tr>
@@ -128,27 +133,27 @@ EOF_ROW
 			  </thead>
 			  <tbody>
 EOF_TABLE
-      echo $table_rows >> $distribution-de.html
-      echo "</tbody>" >> $distribution-de.html
-			echo "</table>" >> $distribution-de.html
-      echo '<div class="alert alert-primary" role="alert">' >> $distribution-de.html
+      echo $table_rows >> $distribution-$tlang.html
+      echo "</tbody>" >> $distribution-$tlang.html
+			echo "</table>" >> $distribution-$tlang.html
+      echo '<div class="alert alert-primary" role="alert">' >> $distribution-$tlang.html
 			if [ $section_count -eq 1 ]; then
-				echo "$cname_onepageuntranslated" >> $distribution-de.html
+				echo "$cname_onepageuntranslated" >> $distribution-$tlang.html
 			else
-				echo "$section_count $cname_severalpagesuntranslated" >> $distribution-de.html
+				echo "$section_count $cname_severalpagesuntranslated" >> $distribution-$tlang.html
 			fi
-      echo "</div>" >> $distribution-de.html
+      echo "</div>" >> $distribution-$tlang.html
     fi
   done
 
-  echo "</div>" >> $distribution-de.html
-  echo "</body>" >> $distribution-de.html
-  echo "</html>" >> $distribution-de.html
+  echo "</div>" >> $distribution-$tlang.html
+  echo "</body>" >> $distribution-$tlang.html
+  echo "</html>" >> $distribution-$tlang.html
 
   # Create an overview of untranslated manpages
-  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated-de.html
+  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated-$tlang.html
 
-  cat >> untranslated-de.html <<-EOF_TABLE
+  cat >> untranslated-$tlang.html <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
@@ -168,10 +173,10 @@ EOF_TABLE
       previous_package="$package"
     fi
     if [ "$previous_package" != "$package" ]; then
-      echo "<tr>" >> untranslated-de.html
-      echo "<td>$previous_package</td>" >> untranslated-de.html
-      echo "<td>$manpages</td>" >> untranslated-de.html
-      echo "</tr>" >> untranslated-de.html
+      echo "<tr>" >> untranslated-$tlang.html
+      echo "<td>$previous_package</td>" >> untranslated-$tlang.html
+      echo "<td>$manpages</td>" >> untranslated-$tlang.html
+      echo "</tr>" >> untranslated-$tlang.html
       previous_package="$package"
       manpages="$manpage"
     else
@@ -179,22 +184,24 @@ EOF_TABLE
     fi
   done < ../upstream/$distribution/untranslated.txt
 
-  echo "</tbody>" >> untranslated-de.html
-  echo "</table>" >> untranslated-de.html
+  echo "</tbody>" >> untranslated-$tlang.html
+  echo "</table>" >> untranslated-$tlang.html
 
-  echo '<div class="alert alert-primary" role="alert">' >> untranslated-de.html
-  echo "$cname_intotal1" >> untranslated-de.html
-  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-de.html
-  echo "$cname_intotal2" >> untranslated-de.html
-  echo "</div>" >> untranslated-de.html
+  echo '<div class="alert alert-primary" role="alert">' >> untranslated-$tlang.html
+  echo "$cname_intotal1" >> untranslated-$tlang.html
+  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-$tlang.html
+  echo "$cname_intotal2" >> untranslated-$tlang.html
+  echo "</div>" >> untranslated-$tlang.html
 done
 
-echo "</div>" >> untranslated-de.html
-echo "</body>" >> untranslated-de.html
-echo "</html>" >> untranslated-de.html
+echo "</div>" >> untranslated-$tlang.html
+echo "</body>" >> untranslated-$tlang.html
+echo "</html>" >> untranslated-$tlang.html
 
-echo "</div>" >> index-de.html
-echo "</body>" >> index-de.html
-echo "</html>" >> index-de.html
+echo "</div>" >> index-$tlang.html
+echo "</body>" >> index-$tlang.html
+echo "</html>" >> index-$tlang.html
+echo ""
+done
 
 rm $tmppo
