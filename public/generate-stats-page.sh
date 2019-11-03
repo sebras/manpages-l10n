@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2019 Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
