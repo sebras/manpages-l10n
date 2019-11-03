@@ -120,7 +120,7 @@ for distribution in $distributions; do
           <a class="btn btn-primary" href="index-de.html">Deutsche Übersicht</a>
         </p>
         <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Repository ansehen</a>
+          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Depot ansehen</a>
         </p>
 END_OF_HEADER
 
