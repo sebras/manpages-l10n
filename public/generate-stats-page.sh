@@ -18,9 +18,6 @@
 # Clean all generated files
 rm -f *html
 
-# Create header, using MET/MEST
-timestamp=$(TZ='Europe/Berlin' date "+%d.%m.%Y, %H:%M Uhr")
-
 # Determine distribution names from upstream directory.
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
 distribution_count=$(echo "$distributions" | wc --words)
@@ -55,6 +52,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
+. ./setup-de.inc
 
 # Create the index file
 cat index-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-de.html
@@ -83,9 +81,9 @@ cat distribution-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0
       # Check if the file has a size > 0
       if [ -s "$tmppo" ]; then
         # Get the stats for that po file
-        stats=$(LC_ALL=C msgfmt -cv -o /dev/null "$tmppo" 2>&1)
+        stats=$(LC_ALL=$HOMELOCALE msgfmt -cv -o /dev/null "$tmppo" 2>&1)
         # Get the translated messages
-        translated=$(echo $stats | sed -e "s/\([0-9]\+\) translated message.*/\1/")
+        translated=$(echo $stats | sed -e "s/\([0-9]\+\) $cname_msgftstring.*/\1/")
         # Check if there are at least two numbers
         fuzzy_or_untranslated=$(echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+")
         if [ -n "$fuzzy_or_untranslated" ]; then
@@ -122,10 +120,10 @@ EOF_ROW
 			<table class="table table-striped table-bordered table-sm">
 			  <thead class="thead-dark">
 			    <tr>
-			      <th scope="col" width="25%">Name</th>
-			      <th scope="col" width="10%">Prozent</th>
-			      <th scope="col" width="15%">Übersetzungen bis 80%</th>
-			      <th scope="col" width="50%">Statistik</th>
+			      <th scope="col" width="25%">$cname_name</th>
+			      <th scope="col" width="10%">$cname_percent</th>
+			      <th scope="col" width="15%">$cname_missing_strings</th>
+			      <th scope="col" width="50%">$cname_statistics</th>
 			    </tr>
 			  </thead>
 			  <tbody>
@@ -135,9 +133,9 @@ EOF_TABLE
 			echo "</table>" >> $distribution-de.html
       echo '<div class="alert alert-primary" role="alert">' >> $distribution-de.html
 			if [ $section_count -eq 1 ]; then
-				echo "1 Datei ist nicht vollständig übersetzt." >> $distribution-de.html
+				echo "$cname_onepageuntranslated" >> $distribution-de.html
 			else
-				echo "$section_count Dateien sind nicht vollständig übersetzt." >> $distribution-de.html
+				echo "$section_count $cname_severalpagesuntranslated" >> $distribution-de.html
 			fi
       echo "</div>" >> $distribution-de.html
     fi
@@ -154,8 +152,8 @@ EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
-        <th scope="col" width="25%">Paket</th>
-        <th scope="col" width="75%">Handbuchseiten</th>
+        <th scope="col" width="25%">$cname_packet</th>
+        <th scope="col" width="75%">$Handbuchseiten</th>
       </tr>
     </thead>
     <tbody>
@@ -185,9 +183,9 @@ EOF_TABLE
   echo "</table>" >> untranslated-de.html
 
   echo '<div class="alert alert-primary" role="alert">' >> untranslated-de.html
-  echo "Insgesamt sind " >> untranslated-de.html
+  echo "$cname_intotal1" >> untranslated-de.html
   (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-de.html
-  echo " Dateien nicht übersetzt." >> untranslated-de.html
+  echo "$cname_intotal2" >> untranslated-de.html
   echo "</div>" >> untranslated-de.html
 done
 
