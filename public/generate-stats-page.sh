@@ -57,42 +57,10 @@ END_OF_HEADER
 
 
 # Create the index file
-cat > index-de.html <<-END_OF_HEADER
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht vollständig ins Deutsche übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
-      <p>
-        <a class="btn btn-primary" href="untranslated-de.html">Unübersetzte Handbuchseiten</a>
-      </p>
-END_OF_HEADER
+cat index-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-de.html
 
 # Create an overview of untranslated manpages
-cat > untranslated-de.html <<-END_OF_HEADER
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht ins Deutsche übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
-      <p>
-        <a class="btn btn-primary" href="index-de.html">Deutsche Übersicht</a>
-      </p>
-END_OF_HEADER
+cat untranslated-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-de.html
 
 for distribution in $distributions; do
   echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-de.html
@@ -102,27 +70,8 @@ done
 for distribution in $distributions; do
   echo "<p><a class=\"btn btn-primary\" href=\"$distribution-de.html\">$distribution</a></p>" >> index-de.html
 
-  cat > $distribution-de.html <<-END_OF_HEADER
-  <!doctype html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <link rel="stylesheet" href="bootstrap.min.css">
-      <title>Deutsche Übersetzung der Handbuchseiten</title>
-    </head>
-    <body>
-  	  <div class="container-fluid">
-        <h1>Liste der Dateien, die nicht vollständig ins Deutsche übersetzt sind</h1>
-        <h2>$distribution</h2>
-        <p>Stand: $timestamp</p>
-        <p>
-          <a class="btn btn-primary" href="index-de.html">Deutsche Übersicht</a>
-        </p>
-        <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Depot ansehen</a>
-        </p>
-END_OF_HEADER
+cat distribution-de.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}'| awk -vDB="$distribution" '{sub("DISTRIBUTION",DB); print $0}' > $distribution-de.html
+
 
   for manpage_section in $manpage_sections; do
   	section_count=0
