@@ -23,7 +23,7 @@ fi
 distribution=$1
 
 echo "Processing distribution '$distribution'"
-manpages=$(find "../../upstream/$distribution"/man* -type f | cut -d/ -f4- | LC_ALL=C sort)
+manpages=$(find "../../upstream/$distribution"/man* -type f | cut -d/ -f5- | LC_ALL=C sort)
 for manpage in $manpages; do
 	if [ -f "$manpage.po" ]; then
 		./generate-manpage.sh $distribution "$manpage"
