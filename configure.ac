@@ -110,6 +110,7 @@ AS_IF([test "x$po4a" = "xno"],
 AC_CONFIG_FILES([
     Makefile
     po/Makefile
+    po/de/Makefile
 ])
 
 AC_OUTPUT
