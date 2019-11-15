@@ -111,6 +111,7 @@ AC_CONFIG_FILES([
     Makefile
     po/Makefile
     po/de/Makefile
+    po/fr/Makefile
 ])
 
 AC_OUTPUT
