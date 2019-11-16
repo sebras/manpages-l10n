@@ -1,5 +1,5 @@
 '\" t
-.TH "TIMEDATECTL" "1" "" "systemd 242" "timedatectl"
+.TH "TIMEDATECTL" "1" "" "systemd 243" "timedatectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -22,19 +22,19 @@
 .SH "NAME"
 timedatectl \- Control the system time and date
 .SH "SYNOPSIS"
-.HP \w'\fBtimedatectl\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB{COMMAND}\fR\ 'u
-\fBtimedatectl \fR\fB[OPTIONS...]\fR\fB \fR\fB{COMMAND}\fR
+.HP \w'\fBtimedatectl\fR\ 'u
+\fBtimedatectl\fR [OPTIONS...] {COMMAND}
 .SH "DESCRIPTION"
 .PP
 \fBtimedatectl\fR
-may be used to query and change the system clock and its settings\&.
+may be used to query and change the system clock and its settings, and enable or disable time synchronization services\&.
 .PP
 Use
 \fBsystemd-firstboot\fR(1)
 to initialize the system time zone for mounted (but not booted) system images\&.
 .PP
 \fBtimedatectl\fR
-may be used to show the current status of
+may be used to show the current status of time synchronization services, for example
 \fBsystemd-timesyncd.service\fR(8)\&.
 .SH "OPTIONS"
 .PP
@@ -88,7 +88,7 @@ When printing properties with
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
 ":", and then a container name, separated by
 "/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
 \fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
@@ -119,9 +119,7 @@ The following commands are understood:
 .PP
 \fBstatus\fR
 .RS 4
-Show current settings of the system clock and RTC, including whether network time synchronization through
-systemd\-timesyncd\&.service
-is active\&. Even if it is inactive, a different service might still synchronize the clock\&. If no command is specified, this is the implied default\&.
+Show current settings of the system clock and RTC, including whether network time synchronization is active\&. If no command is specified, this is the implied default\&.
 .RE
 .PP
 \fBshow\fR
@@ -171,11 +169,7 @@ is passed (see above)\&. This command will change the 3rd line of
 .PP
 \fBset\-ntp [BOOL]\fR
 .RS 4
-Takes a boolean argument\&. Controls whether network time synchronization is active and enabled (if available)\&. If the argument is true, this enables and starts the first existed service listed in the environment variable
-\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR
-of
-systemd\-timedated\&.service\&. If the argument is false, then this disables and stops the all services listed in
-\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR\&.
+Takes a boolean argument\&. Controls whether network time synchronization is active and enabled (if available)\&. If the argument is true, this enables and starts the first existing network synchronization service\&. If the argument is false, then this disables and stops the known network synchronization services\&. The way that the list of services is built is described below\&.
 .RE
 .SS "systemd\-timesyncd Commands"
 .PP
@@ -201,6 +195,18 @@ By default, empty properties are suppressed\&. Use
 \fB\-\-all\fR
 to show those too\&. To select specific properties to show, use
 \fB\-\-property=\fR\&.
+.RE
+.PP
+\fBntp\-servers \fR\fB\fIINTERFACE\fR\fR\fB \fR\fB\fISERVER\fR\fR\fB\&...\fR
+.RS 4
+Set the interface specific NTP servers\&. This command can be used only when the interface is managed by
+\fBsystemd\-networkd\fR\&.
+.RE
+.PP
+\fBrevert \fR\fB\fIINTERFACE\fR\fR
+.RS 4
+Revert the interface specific NTP servers\&. This command can be used only when the interface is managed by
+\fBsystemd\-networkd\fR\&.
 .RE
 .SH "EXIT STATUS"
 .PP
@@ -232,17 +238,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR

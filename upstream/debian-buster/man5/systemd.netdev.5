@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 241" "systemd.network"
+.TH "SYSTEMD\&.NETDEV" "5" "" "systemd 242" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -118,6 +118,7 @@ l l
 l l
 l l
 l l
+l l
 l l.
 T{
 \fIbond\fR
@@ -147,9 +148,7 @@ T}
 T{
 \fIerspan\fR
 T}:T{
-ERSPAN mirrors traffic on one or more source ports and delivers the mirrored traffic to one or more destination ports on another switch\&.
-          The traffic is encapsulated in generic routing encapsulation (GRE) and is therefore routable across a layer 3 network between the source switch
-          and the destination switch\&.
+ERSPAN mirrors traffic on one or more source ports and delivers the mirrored traffic to one or more destination ports on another switch\&. The traffic is encapsulated in generic routing encapsulation (GRE) and is therefore routable across a layer 3 network between the source switch and the destination switch\&.
 T}
 T{
 \fIip6gre\fR
@@ -232,6 +231,11 @@ T}:T{
 A GEneric NEtwork Virtualization Encapsulation (GENEVE) netdev driver\&.
 T}
 T{
+\fIl2tp\fR
+T}:T{
+A Layer 2 Tunneling Protocol (L2TP) is a tunneling protocol used to support virtual private networks (VPNs) or as part of the delivery of services by ISPs\&. It does not provide any encryption or confidentiality by itself
+T}
+T{
 \fIvrf\fR
 T}:T{
 A Virtual Routing and Forwarding (\m[blue]\fBVRF\fR\m[]\&\s-2\u[4]\d\s+2) interface to create separate routing and forwarding domains\&.
@@ -275,7 +279,7 @@ Matches against the hostname or machine ID of the host\&. See
 "ConditionHost="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIVirtualization=\fR
@@ -284,26 +288,26 @@ Checks whether the system is executed in a virtualized environment and optionall
 "ConditionVirtualization="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelCommandLine=\fR
 .RS 4
-Checks whether a specific kernel command line option is set (or if prefixed with the exclamation mark unset)\&. See
+Checks whether a specific kernel command line option is set\&. See
 "ConditionKernelCommandLine="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIKernelVersion=\fR
 .RS 4
 Checks whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. See
+\fBuname \-r\fR) matches a certain expression\&. See
 "ConditionKernelVersion="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .PP
 \fIArchitecture=\fR
@@ -312,7 +316,7 @@ Checks whether the system is running on a specific architecture\&. See
 "ConditionArchitecture="
 in
 \fBsystemd.unit\fR(5)
-for details\&.
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
 .RE
 .SH "[NETDEV] SECTION OPTIONS"
 .PP
@@ -678,6 +682,112 @@ Specifies destination port\&. Defaults to 6081\&. If not set or assigned the emp
 .RS 4
 Specifies the flow label to use in outgoing packets\&.
 .RE
+.SH "[L2TP] SECTION OPTIONS"
+.PP
+The
+"[L2TP]"
+section only applies for netdevs of kind
+"l2tp", and accepts the following keys:
+.PP
+\fITunnelId=\fR
+.RS 4
+Specifies the tunnel id\&. The value used must match the
+"PeerTunnelId="
+value being used at the peer\&. Ranges a number between 1 and 4294967295)\&. This option is compulsory\&.
+.RE
+.PP
+\fIPeerTunnelId=\fR
+.RS 4
+Specifies the peer tunnel id\&. The value used must match the
+"PeerTunnelId="
+value being used at the peer\&. Ranges a number between 1 and 4294967295)\&. This option is compulsory\&.
+.RE
+.PP
+\fIRemote=\fR
+.RS 4
+Specifies the IP address of the remote peer\&. This option is compulsory\&.
+.RE
+.PP
+\fILocal=\fR
+.RS 4
+Specifies the IP address of the local interface\&. Takes an IP address, or the special values
+"auto",
+"static", or
+"dynamic"\&. When an address is set, then the local interface must have the address\&. If
+"auto", then one of the addresses on the local interface is used\&. Similarly, if
+"static"
+or
+"dynamic"
+is set, then one of the static or dynamic addresses on the local interface is used\&. Defaults to
+"auto"\&.
+.RE
+.PP
+\fIEncapsulationType=\fR
+.RS 4
+Specifies the encapsulation type of the tunnel\&. Takes one of
+"udp"
+or
+"ip"\&.
+.RE
+.PP
+\fIUDPSourcePort=\fR
+.RS 4
+Specifies the UDP source port to be used for the tunnel\&. When UDP encapsulation is selected it\*(Aqs mandotory\&. Ignored when ip encapsulation is selected\&.
+.RE
+.PP
+\fIDestinationPort=\fR
+.RS 4
+Specifies destination port\&. When UDP encapsulation is selected it\*(Aqs mandotory\&. Ignored when ip encapsulation is selected\&.
+.RE
+.PP
+\fIUDPChecksum=\fR
+.RS 4
+Takes a boolean\&. When true, specifies if UDP checksum is calculated for transmitted packets over IPv4\&.
+.RE
+.PP
+\fIUDP6ZeroChecksumTx=\fR
+.RS 4
+Takes a boolean\&. When true, skip UDP checksum calculation for transmitted packets over IPv6\&.
+.RE
+.PP
+\fIUDP6ZeroChecksumRx=\fR
+.RS 4
+Takes a boolean\&. When true, allows incoming UDP packets over IPv6 with zero checksum field\&.
+.RE
+.SH "[L2TPSESSION] SECTION OPTIONS"
+.PP
+The
+"[L2TPSession]"
+section only applies for netdevs of kind
+"l2tp", and accepts the following keys:
+.PP
+\fIName=\fR
+.RS 4
+Specifies the name of the sesssion\&. This option is compulsory\&.
+.RE
+.PP
+\fISessionId=\fR
+.RS 4
+Specifies the sesssion id\&. The value used must match the
+"SessionId="
+value being used at the peer\&. Ranges a number between 1 and 4294967295)\&. This option is compulsory\&.
+.RE
+.PP
+\fIPeerSessionId=\fR
+.RS 4
+Specifies the peer session id\&. The value used must match the
+"PeerSessionId="
+value being used at the peer\&. Ranges a number between 1 and 4294967295)\&. This option is compulsory\&.
+.RE
+.PP
+\fILayer2SpecificHeader=\fR
+.RS 4
+Specifies layer2specific header type of the session\&. One of
+"none"
+or
+"default"\&. Defaults to
+"default"\&.
+.RE
 .SH "[TUNNEL] SECTION OPTIONS"
 .PP
 The
@@ -690,18 +800,21 @@ section only applies for netdevs of kind
 "ip6gre",
 "ip6gretap",
 "vti",
-"vti6", and
-"ip6tnl"
+"vti6",
+"ip6tnl", and
+"erspan"
 and accepts the following keys:
 .PP
 \fILocal=\fR
 .RS 4
-A static local address for tunneled packets\&. It must be an address on another interface of this host\&.
+A static local address for tunneled packets\&. It must be an address on another interface of this host, or the special value
+"any"\&.
 .RE
 .PP
 \fIRemote=\fR
 .RS 4
-The remote endpoint of the tunnel\&.
+The remote endpoint of the tunnel\&. Takes an IP address or the special value
+"any"\&.
 .RE
 .PP
 \fITOS=\fR
@@ -752,7 +865,7 @@ and
 \fIKey=\fR
 is either a number or an IPv4 address\-like dotted quad\&. It is used as mark\-configured SAD/SPD entry as part of the lookup key (both in data and control path) in ip xfrm (framework used to implement IPsec protocol)\&. See
 \m[blue]\fBip\-xfrm \(em transform configuration\fR\m[]\&\s-2\u[11]\d\s+2
-for details\&. It is only used for VTI/VTI6 tunnels\&.
+for details\&. It is only used for VTI/VTI6, GRE, GRETAP, and ERSPAN tunnels\&.
 .RE
 .PP
 \fIInputKey=\fR
@@ -760,7 +873,7 @@ for details\&. It is only used for VTI/VTI6 tunnels\&.
 The
 \fIInputKey=\fR
 parameter specifies the key to use for input\&. The format is same as
-\fIKey=\fR\&. It is only used for VTI/VTI6 tunnels\&.
+\fIKey=\fR\&. It is only used for VTI/VTI6, GRE, GRETAP, and ERSPAN tunnels\&.
 .RE
 .PP
 \fIOutputKey=\fR
@@ -768,7 +881,7 @@ parameter specifies the key to use for input\&. The format is same as
 The
 \fIOutputKey=\fR
 parameter specifies the key to use for output\&. The format is same as
-\fIKey=\fR\&. It is only used for VTI/VTI6 tunnels\&.
+\fIKey=\fR\&. It is only used for VTI/VTI6, GRE, GRETAP, and ERSPAN tunnels\&.
 .RE
 .PP
 \fIMode=\fR
@@ -801,13 +914,14 @@ devices where the remote endpoint is a local host address\&. When unset, the ker
 .RS 4
 Takes a boolean\&. Specifies whether
 \fIFooOverUDP=\fR
-tunnel is to be configured\&. Defaults to false\&. For more detail information see
+tunnel is to be configured\&. Defaults to false\&. This takes effects only for IPIP, SIT, GRE, and GRETAP tunnels\&. For more detail information see
 \m[blue]\fBFoo over UDP\fR\m[]\&\s-2\u[12]\d\s+2
 .RE
 .PP
 \fIFOUDestinationPort=\fR
 .RS 4
-This setting specifies the UDP destination port for encapsulation\&. This field is mandatory and is not set by default\&.
+This setting specifies the UDP destination port for encapsulation\&. This field is mandatory when
+\fIFooOverUDP=yes\fR, and is not set by default\&.
 .RE
 .PP
 \fIFOUSourcePort=\fR
@@ -819,8 +933,9 @@ This setting specifies the UDP source port for encapsulation\&. Defaults to
 .PP
 \fIEncapsulation=\fR
 .RS 4
-Accepts the same key as
+Accepts the same key as in the
 "[FooOverUDP]"
+section\&.
 .RE
 .PP
 \fIIPv6RapidDeploymentPrefix=\fR
@@ -836,7 +951,7 @@ Takes a boolean\&. If set, configures the tunnel as Intra\-Site Automatic Tunnel
 .PP
 \fISerializeTunneledPackets=\fR
 .RS 4
-Takes a boolean\&. If set to yes, then packets are serialized\&. Only applies for ERSPAN tunnel\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to yes, then packets are serialized\&. Only applies for GRE, GRETAP, and ERSPAN tunnels\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIERSPANIndex=\fR
@@ -850,13 +965,6 @@ The
 section only applies for netdevs of kind
 "fou"
 and accepts the following keys:
-.PP
-\fIProtocol=\fR
-.RS 4
-The
-\fIProtocol=\fR
-specifies the protocol number of the packets arriving at the UDP port\&. This field is mandatory and is not set by default\&. Valid range is 1\-255\&.
-.RE
 .PP
 \fIEncapsulation=\fR
 .RS 4
@@ -872,6 +980,18 @@ is a generic and extensible encapsulation, it allows encapsulation of packets fo
 \fIPort=\fR
 .RS 4
 Specifies the port number, where the IP encapsulation packets will arrive\&. Please take note that the packets will arrive with the encapsulation will be removed\&. Then they will be manually fed back into the network stack, and sent ahead for delivery to the real destination\&. This option is mandatory\&.
+.RE
+.PP
+\fIProtocol=\fR
+.RS 4
+The
+\fIProtocol=\fR
+specifies the protocol number of the packets arriving at the UDP port\&. When
+\fIEncapsulation=FooOverUDP\fR, this field is mandatory and is not set by default\&. Takes an IP protocol name such as
+"gre"
+or
+"ipip", or an integer within the range 1\-255\&. When
+\fIEncapsulation=GenericUDPEncapsulation\fR, this must not be specified\&.
 .RE
 .SH "[PEER] SECTION OPTIONS"
 .PP
@@ -966,7 +1086,21 @@ section accepts the following keys:
 The Base64 encoded private key for the interface\&. It can be generated using the
 \fBwg genkey\fR
 command (see
-\fBwg\fR(8))\&. This option is mandatory to use WireGuard\&. Note that because this information is secret, you may want to set the permissions of the \&.netdev file to be owned by
+\fBwg\fR(8))\&. This option or
+\fIPrivateKeyFile=\fR
+is mandatory to use WireGuard\&. Note that because this information is secret, you may want to set the permissions of the \&.netdev file to be owned by
+"root:systemd\-network"
+with a
+"0640"
+file mode\&.
+.RE
+.PP
+\fIPrivateKeyFile=\fR
+.RS 4
+Takes an absolute path to a file which contains the Base64 encoded private key for the interface\&. When this option is specified, then
+\fIPrivateKey=\fR
+is ignored\&. Note that the file must be readable by the user
+"systemd\-network", so it should be, e\&.g\&., owned by
 "root:systemd\-network"
 with a
 "0640"
@@ -1006,6 +1140,18 @@ Optional preshared key for the interface\&. It can be generated by the
 \fBwg genpsk\fR
 command\&. This option adds an additional layer of symmetric\-key cryptography to be mixed into the already existing public\-key cryptography, for post\-quantum resistance\&. Note that because this information is secret, you may want to set the permissions of the \&.netdev file to be owned by
 "root:systemd\-networkd"
+with a
+"0640"
+file mode\&.
+.RE
+.PP
+\fIPresharedKeyFile=\fR
+.RS 4
+Takes an absolute path to a file which contains the Base64 encoded preshared key for the peer\&. When this option is specified, then
+\fIPresharedKey=\fR
+is ignored\&. Note that the file must be readable by the user
+"systemd\-network", so it should be, e\&.g\&., owned by
+"root:systemd\-network"
 with a
 "0640"
 file mode\&.

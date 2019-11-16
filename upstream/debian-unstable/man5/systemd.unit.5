@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 242" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 243" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,7 +91,25 @@ In addition to the generic [Unit] and [Install] sections described here, each un
 .PP
 Unit files are loaded from a set of paths determined during compilation, described in the next section\&.
 .PP
-Unit files can be parameterized by a single argument called the "instance name"\&. The unit is then constructed based on a "template file" which serves as the definition of multiple services or other units\&. A template unit must have a single
+Valid unit names consist of a "name prefix" and a dot and a suffix specifying the unit type\&. The "unit prefix" must consist of one or more valid characters (ASCII letters, digits,
+":",
+"\-",
+"_",
+"\&.", and
+"\e")\&. The total length of the unit name including the suffix must not exceed 256 characters\&. The type suffix must be one of
+"\&.service",
+"\&.socket",
+"\&.device",
+"\&.mount",
+"\&.automount",
+"\&.swap",
+"\&.target",
+"\&.path",
+"\&.timer",
+"\&.slice", or
+"\&.scope"\&.
+.PP
+Units names can be parameterized by a single argument called the "instance name"\&. The unit is then constructed based on a "template file" which serves as the definition of multiple services or other units\&. A template unit must have a single
 "@"
 at the end of the name (right before the type suffix)\&. The name of the full unit is formed by inserting the instance name between
 "@"
@@ -105,44 +123,63 @@ Unit files may contain additional options on top of those listed here\&. If syst
 Units can be aliased (have an alternative name), by creating a symlink from the new name to the existing name in one of the unit search paths\&. For example,
 systemd\-networkd\&.service
 has the alias
-dbus\-org\&.freedesktop\&.network1\&.service, created during installation as the symlink
-/lib/systemd/system/dbus\-org\&.freedesktop\&.network1\&.service\&. In addition, unit files may specify aliases through the
-\fIAlias=\fR
-directive in the [Install] section; those aliases are only effective when the unit is enabled\&. When the unit is enabled, symlinks will be created for those names, and removed when the unit is disabled\&. For example,
-reboot\&.target
-specifies
-\fIAlias=ctrl\-alt\-del\&.target\fR, so when enabled it will be invoked whenever CTRL+ALT+DEL is pressed\&. Alias names may be used in commands like
+dbus\-org\&.freedesktop\&.network1\&.service, created during installation as a symlink, so when
+\fBsystemd\fR
+is asked through D\-Bus to load
+dbus\-org\&.freedesktop\&.network1\&.service, it\*(Aqll load
+systemd\-networkd\&.service\&. Alias names may be used in commands like
 \fBenable\fR,
 \fBdisable\fR,
 \fBstart\fR,
 \fBstop\fR,
-\fBstatus\fR, \&..., and in unit dependency directives
+\fBstatus\fR, and similar, and in all unit dependency directives, including
 \fIWants=\fR,
 \fIRequires=\fR,
 \fIBefore=\fR,
-\fIAfter=\fR, \&..., with the limitation that aliases specified through
-\fIAlias=\fR
-are only effective when the unit is enabled\&. Aliases cannot be used with the
+\fIAfter=\fR\&. Aliases cannot be used with the
 \fBpreset\fR
 command\&.
+.PP
+Unit files may specify aliases through the
+\fIAlias=\fR
+directive in the [Install] section\&. When the unit is enabled, symlinks will be created for those names, and removed when the unit is disabled\&. For example,
+reboot\&.target
+specifies
+\fIAlias=ctrl\-alt\-del\&.target\fR, so when enabled, the symlink
+/etc/systemd/systemd/ctrl\-alt\-del\&.service
+pointing to the
+reboot\&.target
+file will be created, and when
+Ctrl+Alt+Del
+is invoked,
+\fBsystemd\fR
+will look for the
+ctrl\-alt\-del\&.service
+and execute
+reboot\&.service\&.
+\fBsystemd\fR
+does not look at the [Install] section at all during normal operation, so any directives in that section only have an effect through the symlinks created during enablement\&.
 .PP
 Along with a unit file
 foo\&.service, the directory
 foo\&.service\&.wants/
 may exist\&. All unit files symlinked from such a directory are implicitly added as dependencies of type
 \fIWants=\fR
-to the unit\&. This is useful to hook units into the start\-up of other units, without having to modify their unit files\&. For details about the semantics of
-\fIWants=\fR, see below\&. The preferred way to create symlinks in the
-\&.wants/
-directory of a unit file is with the
-\fBenable\fR
-command of the
-\fBsystemctl\fR(1)
-tool which reads information from the [Install] section of unit files (see below)\&. A similar functionality exists for
+to the unit\&. Similar functionality exists for
 \fIRequires=\fR
 type dependencies as well, the directory suffix is
 \&.requires/
-in this case\&.
+in this case\&. This functionality is useful to hook units into the start\-up of other units, without having to modify their unit files\&. For details about the semantics of
+\fIWants=\fR, see below\&. The preferred way to create symlinks in the
+\&.wants/
+or
+\&.requires/
+directory of a unit file is by embedding the dependency in [Install] section of the target unit, and creating the symlink in the file system with the
+\fBenable\fR
+or
+\fBpreset\fR
+commands of
+\fBsystemctl\fR(1)\&.
 .PP
 Along with a unit file
 foo\&.service, a "drop\-in" directory
@@ -608,7 +645,7 @@ is a good example\&. Bad examples are
 will use this string as a noun in status messages ("Starting \fIdescription\fR\&.\&.\&.",
 "Started \fIdescription\fR\&.",
 "Reached target \fIdescription\fR\&.",
-"Failed to start \fIdescription\fR\&."), so it should be capitalized, and should not be a full sentence or a phrase with a continous verb\&. Bad examples include
+"Failed to start \fIdescription\fR\&."), so it should be capitalized, and should not be a full sentence or a phrase with a continuous verb\&. Bad examples include
 "exiting the container"
 or
 "updating the database once per day\&."\&.
@@ -893,9 +930,9 @@ command\&. Otherwise, this will be refused\&. It probably is a good idea to leav
 \fIDefaultDependencies=\fR
 .RS 4
 Takes a boolean argument\&. If
-\fBtrue\fR, (the default), a few default dependencies will implicitly be created for the unit\&. The actual dependencies created depend on the unit type\&. For example, for service units, these dependencies ensure that the service is started only after basic system initialization is completed and is properly terminated on system shutdown\&. See the respective man pages for details\&. Generally, only services involved with early boot or late shutdown should set this option to
-\fBfalse\fR\&. It is highly recommended to leave this option enabled for the majority of common units\&. If set to
-\fBfalse\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
+\fByes\fR, (the default), a few default dependencies will implicitly be created for the unit\&. The actual dependencies created depend on the unit type\&. For example, for service units, these dependencies ensure that the service is started only after basic system initialization is completed and is properly terminated on system shutdown\&. See the respective man pages for details\&. Generally, only services involved with early boot or late shutdown should set this option to
+\fBno\fR\&. It is highly recommended to leave this option enabled for the majority of common units\&. If set to
+\fBno\fR, this option does not disable all implicit dependencies, just non\-essential ones\&.
 .RE
 .PP
 \fICollectMode=\fR
@@ -967,7 +1004,7 @@ causes it terminate without shutting down services\&. When
 \fBexit\fR
 or
 \fBexit\-force\fR
-is used by default the exit status of the main process of the unit (if this applies) is returned from the service manager\&. However, this may be overriden with
+is used by default the exit status of the main process of the unit (if this applies) is returned from the service manager\&. However, this may be overridden with
 \fIFailureActionExitStatus=\fR/\fISuccessActionExitStatus=\fR, see below\&.
 .RE
 .PP
@@ -1078,7 +1115,14 @@ Before starting a unit, verify that the specified condition is true\&. If it is 
 "failed"
 state\&. The condition is checked at the time the queued start job is to be executed\&. Use condition expressions in order to silently skip units that do not apply to the local running system, for example because the kernel or runtime environment doesn\*(Aqt require their functionality\&. Use the various
 \fIAssertArchitecture=\fR,
-\fIAssertVirtualization=\fR, \&... options for a similar mechanism that causes the job to fail (instead of being skipped) and results in logging about the failed check (instead of being silently processed)\&. For details about assertion conditions see below\&.
+\fIAssertVirtualization=\fR, \&... options for a similar mechanism that causes the job to fail (instead of being skipped) and results in logging about the failed check (instead of being silently processed)\&. For details about assertion conditions see below\&. Units with failed conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means, that when queried, the condition failure may or may not show up in the state of the unit\&.
+.sp
+If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol ("|") in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
+\fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&. The
+\fBcondition\fR
+verb of
+\fBsystemd-analyze\fR(1)
+can be used to test condition and assert expressions\&.
 .sp
 \fIConditionArchitecture=\fR
 may be used to check whether the system is running on a specific architecture\&. Takes one of
@@ -1142,6 +1186,7 @@ to test against a generic type of virtualization solution, or one of
 "lxc\-libvirt",
 "systemd\-nspawn",
 "docker",
+"podman",
 "rkt",
 "wsl",
 "acrn"
@@ -1162,7 +1207,7 @@ may be used to check whether a specific kernel command line option is set (or if
 .sp
 \fIConditionKernelVersion=\fR
 may be used to check whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a single string\&. If the string starts with one of
+\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a list of (potentially quoted) expressions\&. For each of the expressions, if it starts with one of
 "<",
 "<=",
 "=",
@@ -1310,10 +1355,7 @@ verifies if the specified number of CPUs is available to the current system\&. T
 "=",
 "!=",
 ">=",
-">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparision operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
-.sp
-If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can be prefixed with a pipe symbol (|) in which case a condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. Except for
-\fIConditionPathIsSymbolicLink=\fR, all path checks follow symlinks\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
+">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparison operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
 .RE
 .PP
 \fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR
@@ -1325,6 +1367,12 @@ Similar to the
 state (or in fact result in any state change of the unit), it affects only the job queued for it\&. Use assertion expressions for units that cannot operate when specific requirements are not met, and when this is something the administrator or user should look into\&.
 .sp
 Note that neither assertion nor condition expressions result in unit state changes\&. Also note that both are checked at the time the job is to be executed, i\&.e\&. long after depending jobs and it itself were queued\&. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies\&.
+.sp
+The
+\fBcondition\fR
+verb of
+\fBsystemd-analyze\fR(1)
+can be used to test condition and assert expressions\&.
 .RE
 .PP
 \fISourcePath=\fR
@@ -1344,7 +1392,7 @@ output\&. In some cases the name of the property is the same as the name of the 
 .B Table\ \&3.\ \& "Forward" and "reverse" unit properties
 .TS
 allbox tab(:);
-lB lB lB.
+lB lB lB s.
 T{
 "Forward" property
 T}:T{
@@ -1353,64 +1401,74 @@ T}:T{
 Where used
 T}
 .T&
-l l l
-l l ^
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l ^
-l l l.
+l l l s
+l l ^ ^
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l s
+l l l l
+l l l s
+l l ^ ^
+l l l l.
 T{
 \fIBefore=\fR
 T}:T{
 \fIAfter=\fR
 T}:T{
-Both are unit file options
+[Unit] section
 T}
 T{
 \fIAfter=\fR
 T}:T{
 \fIBefore=\fR
-T}:
+T}::
 T{
 \fIRequires=\fR
 T}:T{
 \fIRequiredBy=\fR
 T}:T{
-A unit file option; an option in the [Install] section
+[Unit] section
+T}:T{
+[Install] section
 T}
 T{
 \fIWants=\fR
 T}:T{
 \fIWantedBy=\fR
 T}:T{
-A unit file option; an option in the [Install] section
+[Unit] section
+T}:T{
+[Install] section
 T}
 T{
 \fIPartOf=\fR
 T}:T{
 \fIConsistsOf=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIBindsTo=\fR
 T}:T{
 \fIBoundBy=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIRequisite=\fR
 T}:T{
 \fIRequisiteOf=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fITriggers=\fR
@@ -1424,26 +1482,30 @@ T{
 T}:T{
 \fIConflictedBy=\fR
 T}:T{
-A unit file option; an automatic property
+[Unit] section
+T}:T{
+an automatic property
 T}
 T{
 \fIPropagatesReloadTo=\fR
 T}:T{
 \fIReloadPropagatedFrom=\fR
 T}:T{
-Both are unit file options
+[Unit] section
 T}
 T{
 \fIReloadPropagatedFrom=\fR
 T}:T{
 \fIPropagatesReloadTo=\fR
-T}:
+T}::
 T{
 \fIFollowing=\fR
 T}:T{
 n/a
 T}:T{
 An automatic property
+T}:T{
+\ \&
 T}
 .TE
 .sp 1

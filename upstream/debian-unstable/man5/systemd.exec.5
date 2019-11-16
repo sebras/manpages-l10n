@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 242" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 243" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -225,6 +225,19 @@ This option is particularly useful when
 \fIRootDirectory=\fR/\fIRootImage=\fR
 is used\&. In this case the source path refers to a path on the host file system, while the destination path refers to a path below the root directory of the unit\&.
 .sp
+Note that the destination directory must exist or systemd must be able to create it\&. Thus, it is not possible to use those options for mount points nested underneath paths specified in
+\fIInaccessiblePaths=\fR, or under
+/home/
+and other protected directories if
+\fIProtectHome=yes\fR
+is specified\&.
+\fITemporaryFileSystem=\fR
+with
+":ro"
+or
+\fIProtectHome=tmpfs\fR
+should be used instead\&.
+.sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .SH "CREDENTIALS"
@@ -256,6 +269,12 @@ the user/group name specified is dynamically allocated at the time the service i
 is not used the specified user and group must have been created statically in the user database no later than the moment the service is started, for example using the
 \fBsysusers.d\fR(5)
 facility, which is applied at boot or package install time\&.
+.sp
+If the
+\fIUser=\fR
+setting is used the supplementary group list is initialized from the specified user\*(Aqs default group list, as defined in the system\*(Aqs user and group database\&. Additional groups may be configured through the
+\fISupplementaryGroups=\fR
+setting (see below)\&.
 .RE
 .PP
 \fIDynamicUser=\fR
@@ -276,17 +295,18 @@ is specified and the static group with the name exists, then it is required that
 is specified and the static user with the name exists, then it is required that the static group with the name already exists\&. Dynamic users/groups are allocated from the UID/GID range 61184\&...65519\&. It is recommended to avoid this range for regular system or login users\&. At any point in time each UID/GID from this range is only assigned to zero or one dynamically allocated users/groups in use\&. However, UID/GIDs are recycled after a unit is terminated\&. Care should be taken that any processes running as part of a unit for which dynamic users/groups are enabled do not leave files or directories owned by these users/groups around, as a different unit might get the same UID/GID assigned later on, and thus gain access to these files or directories\&. If
 \fIDynamicUser=\fR
 is enabled,
-\fIRemoveIPC=\fR,
-\fIPrivateTmp=\fR
-are implied\&. This ensures that the lifetime of IPC objects and temporary files created by the executed processes is bound to the runtime of the service, and hence the lifetime of the dynamic user/group\&. Since
-/tmp
+\fIRemoveIPC=\fR
 and
-/var/tmp
+\fIPrivateTmp=\fR
+are implied (and cannot be turned off)\&. This ensures that the lifetime of IPC objects and temporary files created by the executed processes is bound to the runtime of the service, and hence the lifetime of the dynamic user/group\&. Since
+/tmp/
+and
+/var/tmp/
 are usually the only world\-writable directories on a system this ensures that a unit making use of dynamic user/group allocation cannot leave files around after unit termination\&. Furthermore
 \fINoNewPrivileges=\fR
 and
 \fIRestrictSUIDSGID=\fR
-are implicitly enabled to ensure that processes invoked cannot take benefit or create SUID/SGID files or directories\&. Moreover
+are implicitly enabled (and cannot be disabled), to ensure that processes invoked cannot take benefit or create SUID/SGID files or directories\&. Moreover
 \fIProtectSystem=strict\fR
 and
 \fIProtectHome=read\-only\fR
@@ -707,8 +727,14 @@ for non\-service units and for services of the user service manager\&.
 .PP
 \fIOOMScoreAdjust=\fR
 .RS 4
-Sets the adjustment level for the Out\-Of\-Memory killer for executed processes\&. Takes an integer between \-1000 (to disable OOM killing for this process) and 1000 (to make killing of this process under memory pressure very likely)\&. See
+Sets the adjustment value for the Linux kernel\*(Aqs Out\-Of\-Memory (OOM) killer score for executed processes\&. Takes an integer between \-1000 (to disable OOM killing of processes of this unit) and 1000 (to make killing of processes of this unit under memory pressure very likely)\&. See
 \m[blue]\fBproc\&.txt\fR\m[]\&\s-2\u[3]\d\s+2
+for details\&. If not specified defaults to the OOM score adjustment level of the service manager itself, which is normally at 0\&.
+.sp
+Use the
+\fIOOMPolicy=\fR
+setting of service units to configure how the service manager shall react to the kernel OOM killer terminating a process of the service\&. See
+\fBsystemd.service\fR(5)
 for details\&.
 .RE
 .PP
@@ -792,6 +818,33 @@ Controls the CPU affinity of the executed processes\&. Takes a list of CPU indic
 for details\&.
 .RE
 .PP
+\fINUMAPolicy=\fR
+.RS 4
+Controls the NUMA memory policy of the executed processes\&. Takes a policy type, one of:
+\fBdefault\fR,
+\fBpreferred\fR,
+\fBbind\fR,
+\fBinterleave\fR
+and
+\fBlocal\fR\&. A list of NUMA nodes that should be associated with the policy must be specified in
+\fINUMAMask=\fR\&. For more details on each policy please see,
+\fBset_mempolicy\fR(2)\&. For overall overview of NUMA support in Linux see,
+\fBnuma\fR(7)
+.RE
+.PP
+\fINUMAMask=\fR
+.RS 4
+Controls the NUMA node list which will be applied alongside with selected NUMA policy\&. Takes a list of NUMA nodes and has the same syntax as a list of CPUs for
+\fICPUAffinity=\fR
+option\&. Note that the list of NUMA nodes is not required for
+\fBdefault\fR
+and
+\fBlocal\fR
+policies and for
+\fBpreferred\fR
+policy we expect a single NUMA node\&.
+.RE
+.PP
 \fIIOSchedulingClass=\fR
 .RS 4
 Sets the I/O scheduling class for executed processes\&. Takes an integer between 0 and 3 or one of the strings
@@ -866,14 +919,13 @@ Takes a boolean argument or the special values
 or
 "tmpfs"\&. If true, the directories
 /home,
-/root
-and
+/root, and
 /run/user
 are made inaccessible and empty for processes invoked by this unit\&. If set to
 "read\-only", the three directories are made read\-only instead\&. If set to
 "tmpfs", temporary file systems are mounted on the three directories in read\-only mode\&. The value
 "tmpfs"
-is useful to hide home directories not relevant to the processes invoked by the unit, while necessary directories are still visible by combining with
+is useful to hide home directories not relevant to the processes invoked by the unit, while still allowing necessary directories to be made visible when listed in
 \fIBindPaths=\fR
 or
 \fIBindReadOnlyPaths=\fR\&.
@@ -887,7 +939,9 @@ is mostly equivalent to
 \fIReadOnlyPaths=\fR, and
 "tmpfs"
 is mostly equivalent to
-\fITemporaryFileSystem=\fR\&.
+\fITemporaryFileSystem=\fR
+with
+":ro"\&.
 .sp
 It is recommended to enable this setting for all long\-running services (in particular network\-facing ones), to ensure they cannot get access to private user data, unless the services actually require access to the user\*(Aqs private data\&. This setting is implied if
 \fIDynamicUser=\fR
@@ -1031,6 +1085,21 @@ to manage one or more runtime directories for the unit and bind their lifetime t
 due to lack of privileges, and to make sure the runtime directory is cleaned up automatically after use\&. For runtime directories that require more complex or different configuration or lifetime guarantees, please consider using
 \fBtmpfiles.d\fR(5)\&.
 .sp
+The directories defined by these options are always created under the standard paths used by systemd (/var,
+/run,
+/etc, \&...)\&. If the service needs directories in a different location, a different mechanism has to be used to create them\&.
+.sp
+\fBtmpfiles.d\fR(5)
+provides functionality that overlaps with these options\&. Using these options is recommended, because the lifetime of the directories is tied directly to the lifetime of the unit, and it is not necessary to ensure that the
+tmpfiles\&.d
+configuration is executed before the unit is started\&.
+.sp
+To remove any of the directories created by these settings, use the
+\fBsystemctl clean \&...\fR
+command on the relevant units, see
+\fBsystemctl\fR(1)
+for details\&.
+.sp
 Example: if a system service unit has the following,
 .sp
 .if n \{\
@@ -1113,6 +1182,15 @@ is a mount point of
 are removed when the system is rebooted\&.
 .RE
 .PP
+\fITimeoutCleanSec=\fR
+.RS 4
+Configures a timeout on the clean\-up operation requested through
+\fBsystemctl clean \&...\fR, see
+\fBsystemctl\fR(1)
+for details\&. Takes the usual time values and defaults to
+\fBinfinity\fR, i\&.e\&. by default no time\-out is applied\&. If a time\-out is configured the clean operation will be aborted forcibly when the time\-out is reached, potentially leaving resources on disk\&.
+.RE
+.PP
 \fIReadWritePaths=\fR, \fIReadOnlyPaths=\fR, \fIInaccessiblePaths=\fR
 .RS 4
 Sets up a new file system namespace for executed processes\&. These options may be used to limit access a process might have to the file system hierarchy\&. Each setting takes a space\-separated list of paths relative to the host\*(Aqs root directory (i\&.e\&. the system running the service manager)\&. Note that if paths contain symlinks, they are resolved relative to the root directory set with
@@ -1192,7 +1270,7 @@ or
 This is useful to hide files or directories not relevant to the processes invoked by the unit, while necessary files or directories can be still accessed by combining with
 \fIBindPaths=\fR
 or
-\fIBindReadOnlyPaths=\fR\&. See the example below\&.
+\fIBindReadOnlyPaths=\fR:
 .sp
 Example: if a unit has the following,
 .sp
@@ -1478,7 +1556,7 @@ or similar\&. If running in user mode, or in system mode, but without the
 capability (e\&.g\&. setting
 \fIUser=nobody\fR),
 \fINoNewPrivileges=yes\fR
-is implied\&. By default, no restrictions apply, all address families are accessible to processes\&. If assigned the empty string, any previous address familiy restriction changes are undone\&. This setting does not affect commands prefixed with
+is implied\&. By default, no restrictions apply, all address families are accessible to processes\&. If assigned the empty string, any previous address family restriction changes are undone\&. This setting does not affect commands prefixed with
 "+"\&.
 .sp
 Use this option to limit exposure of processes to remote access, in particular via exotic and sensitive network protocols, such as
@@ -1726,15 +1804,20 @@ This option is only available for system services and is not supported for servi
 .RS 4
 Takes a space\-separated list of system call names\&. If this setting is used, all system calls executed by the unit processes except for the listed ones will result in immediate process termination with the
 \fBSIGSYS\fR
-signal (whitelisting)\&. If the first character of the list is
+signal (whitelisting)\&. (See
+\fISystemCallErrorNumber=\fR
+below for changing the default action)\&. If the first character of the list is
 "~", the effect is inverted: only the listed system calls will result in immediate process termination (blacklisting)\&. Blacklisted system calls and system call groups may optionally be suffixed with a colon (":") and
 "errno"
 error number (between 0 and 4095) or errno name such as
 \fBEPERM\fR,
 \fBEACCES\fR
 or
-\fBEUCLEAN\fR\&. This value will be returned when a blacklisted system call is triggered, instead of terminating the processes immediately\&. This value takes precedence over the one given in
-\fISystemCallErrorNumber=\fR\&. If running in user mode, or in system mode, but without the
+\fBEUCLEAN\fR
+(see
+\fBerrno\fR(3)
+for a full list)\&. This value will be returned when a blacklisted system call is triggered, instead of terminating the processes immediately\&. This value takes precedence over the one given in
+\fISystemCallErrorNumber=\fR, see below\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
 \fIUser=nobody\fR),
@@ -1959,6 +2042,18 @@ SystemCallErrorNumber=EPERM
 .RE
 .\}
 .sp
+Note that various kernel system calls are defined redundantly: there are multiple system calls for executing the same operation\&. For example, the
+\fBpidfd_send_signal()\fR
+system call may be used to execute operations similar to what can be done with the older
+\fBkill()\fR
+system call, hence blocking the latter without the former only provides weak protection\&. Since new system calls are added regularly to the kernel as development progresses, keeping system call blacklists comprehensive requires constant work\&. It is thus recommended to use whitelisting instead, which offers the benefit that new system calls are by default implicitly blocked until the whitelist is updated\&.
+.sp
+Also note that a number of system calls are required to be accessible for the dynamic linker to work\&. The dynamic linker is required for running most regular programs (specifically: all dynamic ELF binaries, which is how most distributions build packaged programs)\&. This means that blocking these system calls (which include
+\fBopen()\fR,
+\fBopenat()\fR
+or
+\fBmmap()\fR) will make most programs typically shipped with generic distributions unusable\&.
+.sp
 It is recommended to combine the file system namespacing related options with
 \fISystemCallFilter=~@mount\fR, in order to prohibit the unit\*(Aqs processes to undo the mappings\&. Specifically these are the options
 \fIPrivateTmp=\fR,
@@ -1983,7 +2078,9 @@ error number (between 1 and 4095) or errno name such as
 or
 \fBEUCLEAN\fR, to return when the system call filter configured with
 \fISystemCallFilter=\fR
-is triggered, instead of terminating the process immediately\&. When this setting is not used, or when the empty string is assigned, the process will be terminated immediately when the filter is triggered\&.
+is triggered, instead of terminating the process immediately\&. See
+\fBerrno\fR(3)
+for a full list of error codes\&. When this setting is not used, or when the empty string is assigned, the process will be terminated immediately when the filter is triggered\&.
 .RE
 .PP
 \fISystemCallArchitectures=\fR
@@ -2206,7 +2303,7 @@ or
 \fIStandardOutput=\fR
 with
 \fBtty\fR/\fBtty\-force\fR/\fBtty\-fail\fR, should specify
-\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty intialization is finished before they start\&.
+\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty initialization is finished before they start\&.
 .RE
 .PP
 \fIStandardOutput=\fR
@@ -2216,10 +2313,8 @@ Controls where file descriptor 1 (STDOUT) of the executed processes is connected
 \fBnull\fR,
 \fBtty\fR,
 \fBjournal\fR,
-\fBsyslog\fR,
 \fBkmsg\fR,
 \fBjournal+console\fR,
-\fBsyslog+console\fR,
 \fBkmsg+console\fR,
 \fBfile:\fR\fB\fIpath\fR\fR,
 \fBappend:\fR\fB\fIpath\fR\fR,
@@ -2239,25 +2334,18 @@ connects standard output to a tty (as configured via
 \fITTYPath=\fR, see below)\&. If the TTY is used for output only, the executed process will not become the controlling process of the terminal, and will not fail or wait for other processes to release the terminal\&.
 .sp
 \fBjournal\fR
-connects standard output with the journal which is accessible via
-\fBjournalctl\fR(1)\&. Note that everything that is written to syslog or kmsg (see below) is implicitly stored in the journal as well, the specific two options listed below are hence supersets of this one\&.
-.sp
-\fBsyslog\fR
-connects standard output to the
-\fBsyslog\fR(3)
-system syslog service, in addition to the journal\&. Note that the journal daemon is usually configured to forward everything it receives to syslog anyway, in which case this option is no different from
-\fBjournal\fR\&.
+connects standard output with the journal, which is accessible via
+\fBjournalctl\fR(1)\&. Note that everything that is written to kmsg (see below) is implicitly stored in the journal as well, the specific option listed below is hence a superset of this one\&. (Also note that any external, additional syslog daemons receive their log data from the journal, too, hence this is the option to use when logging shall be processed with such a daemon\&.)
 .sp
 \fBkmsg\fR
 connects standard output with the kernel log buffer which is accessible via
 \fBdmesg\fR(1), in addition to the journal\&. The journal daemon might be configured to send all logs to kmsg anyway, in which case this option is no different from
 \fBjournal\fR\&.
 .sp
-\fBjournal+console\fR,
-\fBsyslog+console\fR
+\fBjournal+console\fR
 and
 \fBkmsg+console\fR
-work in a similar way as the three options above but copy the output to the system console as well\&.
+work in a similar way as the two options above but copy the output to the system console as well\&.
 .sp
 The
 \fBfile:\fR\fB\fIpath\fR\fR
@@ -2295,7 +2383,7 @@ in
 \fBsystemd.socket\fR(5)
 for more details about named descriptors and their ordering\&.
 .sp
-If the standard output (or error output, see below) of a unit is connected to the journal, syslog or the kernel log buffer, the unit will implicitly gain a dependency of type
+If the standard output (or error output, see below) of a unit is connected to the journal or the kernel log buffer, the unit will implicitly gain a dependency of type
 \fIAfter=\fR
 on
 systemd\-journald\&.socket
@@ -2412,7 +2500,8 @@ Configures additional log metadata fields to include in all log records generate
 "FIELD=VALUE"
 separated by whitespace\&. See
 \fBsystemd.journal-fields\fR(7)
-for details on the journal field concept\&. Even though the underlying journal implementation permits binary field values, this setting accepts only valid UTF\-8 values\&. To include space characters in a journal field value, enclose the assignment in double quotes (")\&. The usual specifiers are expanded in all assignments (see below)\&. Note that this setting is not only useful for attaching additional metadata to log records of a unit, but given that all fields and values are indexed may also be used to implement cross\-unit log record matching\&. Assign an empty string to reset the list\&.
+for details on the journal field concept\&. Even though the underlying journal implementation permits binary field values, this setting accepts only valid UTF\-8 values\&. To include space characters in a journal field value, enclose the assignment in double quotes (")\&.
+The usual specifiers are expanded in all assignments (see below)\&. Note that this setting is not only useful for attaching additional metadata to log records of a unit, but given that all fields and values are indexed may also be used to implement cross\-unit log record matching\&. Assign an empty string to reset the list\&.
 .RE
 .PP
 \fILogRateLimitIntervalSec=\fR, \fILogRateLimitBurst=\fR
@@ -2440,8 +2529,7 @@ tag") to prefix log lines sent to the logging system or the kernel log buffer wi
 or
 \fIStandardError=\fR
 are set to
-\fBjournal\fR,
-\fBsyslog\fR
+\fBjournal\fR
 or
 \fBkmsg\fR
 (or to the same settings in combination with
@@ -2480,8 +2568,7 @@ for details\&. This option is only useful when
 or
 \fIStandardError=\fR
 are set to
-\fBjournal\fR,
-\fBsyslog\fR
+\fBjournal\fR
 or
 \fBkmsg\fR
 (or to the same settings in combination with
@@ -2508,8 +2595,7 @@ for details\&. This option is only useful when
 or
 \fIStandardError=\fR
 are set to
-\fBjournal\fR,
-\fBsyslog\fR
+\fBjournal\fR
 or
 \fBkmsg\fR
 (or to the same settings in combination with
@@ -2526,8 +2612,7 @@ Takes a boolean argument\&. If true and
 or
 \fIStandardError=\fR
 are set to
-\fBjournal\fR,
-\fBsyslog\fR
+\fBjournal\fR
 or
 \fBkmsg\fR
 (or to the same settings in combination with
@@ -2710,8 +2795,23 @@ The following select environment variables are set or propagated by the service 
 .PP
 \fI$PATH\fR
 .RS 4
-Colon\-separated list of directories to use when launching executables\&. systemd uses a fixed value of
-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\&.
+Colon\-separated list of directories to use when launching executables\&.
+\fBsystemd\fR
+uses a fixed value of
+"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+in the system manager\&. When compiled for systems with "unmerged /usr" (/bin
+is not a symlink to
+/usr/bin),
+":/sbin:/bin"
+is appended\&. In case of the the user manager, each
+bin/
+and
+sbin/
+pair is switched, so that programs from
+/usr/bin
+have higher priority than programs from
+/usr/sbin, etc\&. It is recommended to not rely on this in any way, and have only one program with a given name in
+\fI$PATH\fR\&.
 .RE
 .PP
 \fI$LANG\fR
@@ -3221,6 +3321,7 @@ l l l
 l l l
 l l l
 l l l
+l l l
 l l l.
 T{
 200
@@ -3501,6 +3602,13 @@ T}:T{
 \fBEXIT_CONFIGURATION_DIRECTORY\fR
 T}:T{
 Failed to set up unit\*(Aqs configuration directory\&. See \fIConfigurationDirectory=\fR above\&.
+T}
+T{
+242
+T}:T{
+\fBEXIT_NUMA_POLICY\fR
+T}:T{
+Failed to set up unit\*(Aqs NUMA memory policy\&. See \fINUMAPolicy=\fR and \fINUMAMask=\fRabove\&.
 T}
 .TE
 .sp 1
