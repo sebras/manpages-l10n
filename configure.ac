@@ -93,7 +93,7 @@ AS_IF(
   [
     AC_MSG_RESULT([yes])
     AC_SUBST([compressor], [none])
-    AC_SUBST([comp_extension], [])
+    AC_SUBST([comp_extension], ["''"])
   ],
   [
     AC_MSG_RESULT([no])
@@ -110,6 +110,9 @@ AS_IF([test "x$po4a" = "xno"],
 AC_CONFIG_FILES([
     Makefile
     po/Makefile
+    po/de/Makefile
+    po/fr/Makefile
+    po/nl/Makefile
 ])
 
 AC_OUTPUT

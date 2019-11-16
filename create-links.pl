@@ -21,8 +21,7 @@ use warnings;
 # Get the installation path and compression extension from Makefile
 my $install_path = $ARGV[0]
   or die "Please specify the installation path.";
-my $comp_extension = $ARGV[1]
-  or die "Please specify the compression extension.";
+my $comp_extension = $ARGV[1];
 my $filename = $ARGV[2]
   or die "Please specify the filename with links.";
 
