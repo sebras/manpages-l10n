@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_INIT(manpages-de, [2.16])
+AC_INIT(manpages-l10n, [2.16])
 
 AM_INIT_AUTOMAKE([foreign dist-xz no-dist-gzip])
 
@@ -111,6 +111,8 @@ AC_CONFIG_FILES([
     Makefile
     po/Makefile
     po/de/Makefile
+    po/fr/Makefile
+    po/nl/Makefile
 ])
 
 AC_OUTPUT
