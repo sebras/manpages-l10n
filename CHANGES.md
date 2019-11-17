@@ -1,5 +1,16 @@
 # Changelog for manpages-de
 
+## Version 2.16
+
+*Sun Nov 17 14:02:06 CET 2019*
+
+* Prepare inclusion of French and Dutch manpages. Both languages
+  are not generated yet, only the infrastructure is ready. The next
+  release will include translated manpages for both languages.
+  This release is mainly to update the German manpages before
+  the distribution packages need to adapt to the new languages.
+* Updated many translations
+
 ## Version 2.15
 
 *Sat Aug 31 16:20:19 CEST 2019*
