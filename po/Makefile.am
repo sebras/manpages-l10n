@@ -15,4 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = de fr nl
+
+# Temporarily disable fr and nl for this release
+# SUBDIRS = de fr nl
+SUBDIRS = de
