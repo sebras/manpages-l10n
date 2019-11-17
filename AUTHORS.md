@@ -1,10 +1,8 @@
 # Authors
 
-The following people have contributed to the translation
+The following people have contributed to the German translation
 of Linux manpages. The list is sorted alphabetically.
 
-
-## German:
 
 * Aldo Valente <aldo@dagobar.rhein.de>
 * Alexander Bachmer <alex.bachmer@t-online.de>
@@ -70,82 +68,3 @@ of Linux manpages. The list is sorted alphabetically.
 * Thomas Koenig <ig25@rz.uni-karlsruhe.de>
 * Walter Harms <walter.harms@informatik.uni-oldenburg.de>
 * Wolfgang Jung <woju@keep.in-berlin.de>
-
-
-## French:
-
-* Alain Portal <aportal@univ-montp2.fr>
-* Alexandre Kuoch <alex.kuoch@gmail.com>
-* Alexandre Normand <aj.normand@free.fr>
-* Amand Tihon <amand@alrj.org>
-* Aymeric Nys <aymeric AT nnx POINT com>
-* Bastien Scher <bastien0705@gmail.com>
-* Bernard Siaud
-* carmie
-* Cédric Boutillier <cedric.boutillier@gmail.com>
-* Cédric Lucantis <omer@no-log.org>
-* Christophe Blaess <ccb@club-internet.fr>
-* Christophe Blaess <http://www.blaess.fr/christophe/>
-* Christophe Sauthier <christophe@sauthier.com>
-* Cyril Guilloud <guilloud@lautre.net>
-* Danny <dannybrain@noos.fr>
-* David Prévot <david@tilapin.org>
-* Denis Barbier <barbier@debian.org>
-* Denis Mugnier <myou72@orange.fr>
-* Dominique Simen <dominiquesimen@hotmail.com>
-* Emmanuel Araman <Emmanuel@araman.org>
-* Éric Piel <eric.piel@tremplin-utc.net>
-* Florentin Duneau <fduneau@gmail.com>
-* Franck Bassi <fblinux@wanadoo.fr>
-* François Micaux
-* François Wendling <frwendling@free.fr>
-* Frederic Daniel Luc Lehobey <Frederic@Lehobey.net>
-* Frédéric Delanoy <delanoy_f@yahoo.com>
-* Frédéric Hantrais <fhantrais@gmail.com>
-* Frédéric Zulian <zulian@free.fr>
-* Gérard Delafond <gerard@delafond.org>
-* Grégoire Scano <gregoire.scano@malloc.fr>
-* Grégory Colpart <reg@evolix.fr>
-* Guilhelm Panaget <guilhelm.panaget@free.fr>
-* Guillaume Bour
-* Guillaume Delacour <guillaume.delacour@gmail.com>
-* Jade Alglave <jade.alglave@ens-lyon.org>
-* Jean-Baka Domelevo-Entfellner <domelevo@gmail.com>
-* Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>
-* Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
-* Jean-Marc Chaton <chaton@debian.org>
-* Jean-Philippe Guérard <fevrier@tigreraye.org>
-* Jérôme Perzyna <jperzyna@yahoo.fr>
-* José JORGE
-* Julien Cristau <jcristau@debian.org>
-* Julien Rosal <albator.deb@gmail.com>
-* Luc Froidefond <luc.froidefond@free.fr>
-* Lyes Zemmouche <iliaas@hotmail.fr>
-* Michel Quercia <quercia AT cal DOT enst DOT fr>
-* Nicolas François <nicolas.francois@centraliens.net>
-* Nicolas Haller <nicolas@boiteameuh.org>
-* Nicolas Sauzède <nsauzede@free.fr>
-* Philippe Batailler
-* Philippe Piette <foudre-blanche@skynet.be>
-* Romain Doumenc <rd6137@gmail.com>
-* Sébastien Blanchet
-* Simon Depiets
-* Simon Paillard <simon.paillard@resel.enst-bretagne.fr>
-* Stephane Blondon <stephane.blondon@gmail.com>
-* Stéphan Rafin <stephan.rafin@laposte.net>
-* Steve Petruzzello <dlist@bluewin.ch>
-* Sylvain Archenault <sylvain.archenault@laposte.net>
-* Sylvain Cherrier <sylvain.cherrier@free.fr>
-* Thierry Vignaud <tvignaud@mandriva.com>
-* Thomas Blein <tblein@tblein.eu>
-* Thomas Huriaux <thomas.huriaux@gmail.com>
-* Thomas Vincent <thomas@vinc-net.fr>
-* Valéry Perrin <valery.perrin.debian@free.fr>
-* Yves Rütschlé <l10n@rutschle.net>
-
-
-## Dutch:
-
-* Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>
-* Jos Boersema <joshb@xs4all.nl>
-* Mario Blättermann <mario.blaettermann@gmail.com>
