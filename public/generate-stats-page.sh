@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2019 Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,20 +19,14 @@
 # Clean all generated files
 rm -f *html
 
-# Create header, using MET/MEST
-timestamp=$(TZ='Europe/Berlin' date "+%d.%m.%Y, %H:%M Uhr")
-
 # Determine distribution names from upstream directory.
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
 distribution_count=$(echo "$distributions" | wc --words)
 
-# Determine manpage section names
-manpage_sections=$(find ../po/de/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
-
 # Use a tempfile for stats generation
 tmppo=$(mktemp)
 
-# Create the index file
+# Create a global index file
 cat > index.html <<-END_OF_HEADER
 <!doctype html>
 <html lang="en">
@@ -39,70 +34,54 @@ cat > index.html <<-END_OF_HEADER
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
+    <title>Translation of manual pages</title>
   </head>
   <body>
-    <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
       <p>
-        <a class="btn btn-primary" href="untranslated.html">Unübersetzte Handbuchseiten</a>
+        Some Text explaining the project …
       </p>
+
+      <ul>
+        <li><a href="index-fr.html">The French translation</a></li>
+        <li><a href="index-de.html">The German translation</a></li>
+        <li><a href="index-nl.html">The Netherlands translation</a></li>
+      </ul>
+   </body>
+  </html>
 END_OF_HEADER
+
+for tlang in de fr nl; do
+    echo $tlang
+
+# Determine manpage section names
+manpage_sections=$(find ../po/$tlang/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
+
+. ./setup-$tlang.inc
+
+# Create the index file
+cat index-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-$tlang.html
 
 # Create an overview of untranslated manpages
-cat > untranslated.html <<-END_OF_HEADER
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <title>Deutsche Übersetzung der Handbuchseiten</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <h1>Liste der Dateien, die nicht übersetzt sind</h1>
-      <p>Stand: $timestamp</p>
-      <p>
-        <a class="btn btn-primary" href="index.html">Übersicht</a>
-      </p>
-END_OF_HEADER
+cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
 
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated.html
+  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-$tlang.html
 done
 
 # Set up files for each distribution
 for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"$distribution.html\">$distribution</a></p>" >> index.html
+  echo "<p><a class=\"btn btn-primary\" href=\"$distribution-$tlang.html\">$distribution</a></p>" >> index-$tlang.html
 
-  cat > $distribution.html <<-END_OF_HEADER
-  <!doctype html>
-  <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <link rel="stylesheet" href="bootstrap.min.css">
-      <title>Deutsche Übersetzung der Handbuchseiten</title>
-    </head>
-    <body>
-  	  <div class="container-fluid">
-        <h1>Liste der Dateien, die nicht vollständig übersetzt sind</h1>
-        <h2>$distribution</h2>
-        <p>Stand: $timestamp</p>
-        <p>
-          <a class="btn btn-primary" href="index.html">Übersicht</a>
-        </p>
-        <p>
-          <a class="btn btn-primary" href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">Git-Repository ansehen</a>
-        </p>
-END_OF_HEADER
+cat distribution-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}'| awk -vDB="$distribution" '{sub("DISTRIBUTION",DB); print $0}' > $distribution-$tlang.html
+
+  echo "  $distribution"
+  echo -n "   "
 
   for manpage_section in $manpage_sections; do
   	section_count=0
     table_rows=""
-    translations=$(find "../po/de/$manpage_section" -name "*.po" | LC_ALL=C sort)
+    echo -n " $manpage_section"
+    translations=$(find "../po/$tlang/$manpage_section" -name "*.po" | LC_ALL=C sort)
     for translation in $translations; do
       # Create a po file for the specific distribution
       LC_ALL=C msggrep --location="$distribution" "$translation" > "$tmppo"
@@ -126,7 +105,7 @@ END_OF_HEADER
         	# Calculate needed translations for 80%
         	needed=""
           highlight=""
-        	if [ $percentage -lt 80 ]; then
+        	if [[ $percentage -lt 80 ]]; then
         		needed=$(echo "(800 * $all / 100 + 9) / 10 - $translated" | bc)
             highlight="class=\"table-danger\""
         	fi
@@ -144,44 +123,46 @@ EOF_ROW
       fi
     done
     if [ $section_count -gt 0 ]; then
-			cat >> $distribution.html <<-EOF_TABLE
+			cat >> $distribution-$tlang.html <<-EOF_TABLE
 			<table class="table table-striped table-bordered table-sm">
 			  <thead class="thead-dark">
 			    <tr>
-			      <th scope="col" width="25%">Name</th>
-			      <th scope="col" width="10%">Prozent</th>
-			      <th scope="col" width="15%">Übersetzungen bis 80%</th>
-			      <th scope="col" width="50%">Statistik</th>
+			      <th scope="col" width="25%">$cname_name</th>
+			      <th scope="col" width="10%">$cname_percent</th>
+			      <th scope="col" width="15%">$cname_missing_strings</th>
+			      <th scope="col" width="50%">$cname_statistics</th>
 			    </tr>
 			  </thead>
 			  <tbody>
 EOF_TABLE
-      echo $table_rows >> $distribution.html
-      echo "</tbody>" >> $distribution.html
-			echo "</table>" >> $distribution.html
-      echo '<div class="alert alert-primary" role="alert">' >> $distribution.html
+      echo $table_rows >> $distribution-$tlang.html
+      echo "</tbody>" >> $distribution-$tlang.html
+			echo "</table>" >> $distribution-$tlang.html
+      echo '<div class="alert alert-primary" role="alert">' >> $distribution-$tlang.html
 			if [ $section_count -eq 1 ]; then
-				echo "1 Datei ist nicht vollständig übersetzt." >> $distribution.html
+				echo "$cname_onepageuntranslated" >> $distribution-$tlang.html
 			else
-				echo "$section_count Dateien sind nicht vollständig übersetzt." >> $distribution.html
+				echo "$section_count $cname_severalpagesuntranslated" >> $distribution-$tlang.html
 			fi
-      echo "</div>" >> $distribution.html
+      echo "</div>" >> $distribution-$tlang.html
     fi
   done
+  # This is for the line break of the status messages
+  echo
 
-  echo "</div>" >> $distribution.html
-  echo "</body>" >> $distribution.html
-  echo "</html>" >> $distribution.html
+  echo "</div>" >> $distribution-$tlang.html
+  echo "</body>" >> $distribution-$tlang.html
+  echo "</html>" >> $distribution-$tlang.html
 
   # Create an overview of untranslated manpages
-  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated.html
+  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated-$tlang.html
 
-  cat >> untranslated.html <<-EOF_TABLE
+  cat >> untranslated-$tlang.html <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
-        <th scope="col" width="25%">Paket</th>
-        <th scope="col" width="75%">Handbuchseiten</th>
+        <th scope="col" width="25%">$cname_packet</th>
+        <th scope="col" width="75%">$Handbuchseiten</th>
       </tr>
     </thead>
     <tbody>
@@ -196,10 +177,10 @@ EOF_TABLE
       previous_package="$package"
     fi
     if [ "$previous_package" != "$package" ]; then
-      echo "<tr>" >> untranslated.html
-      echo "<td>$previous_package</td>" >> untranslated.html
-      echo "<td>$manpages</td>" >> untranslated.html
-      echo "</tr>" >> untranslated.html
+      echo "<tr>" >> untranslated-$tlang.html
+      echo "<td>$previous_package</td>" >> untranslated-$tlang.html
+      echo "<td>$manpages</td>" >> untranslated-$tlang.html
+      echo "</tr>" >> untranslated-$tlang.html
       previous_package="$package"
       manpages="$manpage"
     else
@@ -207,22 +188,24 @@ EOF_TABLE
     fi
   done < ../upstream/$distribution/untranslated.txt
 
-  echo "</tbody>" >> untranslated.html
-  echo "</table>" >> untranslated.html
+  echo "</tbody>" >> untranslated-$tlang.html
+  echo "</table>" >> untranslated-$tlang.html
 
-  echo '<div class="alert alert-primary" role="alert">' >> untranslated.html
-  echo "Insgesamt sind " >> untranslated.html
-  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated.html
-  echo " Dateien nicht übersetzt." >> untranslated.html
-  echo "</div>" >> untranslated.html
+  echo '<div class="alert alert-primary" role="alert">' >> untranslated-$tlang.html
+  echo "$cname_intotal1" >> untranslated-$tlang.html
+  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-$tlang.html
+  echo "$cname_intotal2" >> untranslated-$tlang.html
+  echo "</div>" >> untranslated-$tlang.html
 done
 
-echo "</div>" >> untranslated.html
-echo "</body>" >> untranslated.html
-echo "</html>" >> untranslated.html
+echo "</div>" >> untranslated-$tlang.html
+echo "</body>" >> untranslated-$tlang.html
+echo "</html>" >> untranslated-$tlang.html
 
-echo "</div>" >> index.html
-echo "</body>" >> index.html
-echo "</html>" >> index.html
+echo "</div>" >> index-$tlang.html
+echo "</body>" >> index-$tlang.html
+echo "</html>" >> index-$tlang.html
+echo ""
+done
 
 rm $tmppo
