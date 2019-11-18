@@ -44,7 +44,7 @@ cat > index.html <<-END_OF_HEADER
       <ul>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
-        <li><a href="index-nl.html">The Netherlands translation</a></li>
+        <li><a href="index-nl.html">The Dutch translation</a></li>
       </ul>
    </body>
   </html>
