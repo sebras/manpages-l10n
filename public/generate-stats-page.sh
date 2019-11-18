@@ -42,16 +42,16 @@ cat > index.html <<-END_OF_HEADER
       </p>
 
       <ul>
-	<li><a href="index-fr.html">The French translation</a></li>
-	<li><a href="index-de.html">The German translation</a></li>
-	<li><a href="index-nl.html">The Netherlands translation</a></li>
+        <li><a href="index-fr.html">The French translation</a></li>
+        <li><a href="index-de.html">The German translation</a></li>
+        <li><a href="index-nl.html">The Netherlands translation</a></li>
       </ul>
    </body>
   </html>
 END_OF_HEADER
 
 for tlang in de fr nl; do
-    echo -n "$tlang "
+    echo $tlang
 
 # Determine manpage section names
 manpage_sections=$(find ../po/$tlang/man* -maxdepth 1 -type d | cut -d/ -f4 | LC_ALL=C sort)
@@ -74,12 +74,13 @@ for distribution in $distributions; do
 
 cat distribution-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}'| awk -vDB="$distribution" '{sub("DISTRIBUTION",DB); print $0}' > $distribution-$tlang.html
 
-  echo -n "$distribution "
+  echo "  $distribution"
+  echo -n "   "
 
   for manpage_section in $manpage_sections; do
   	section_count=0
     table_rows=""
-    echo -n "$manpage_section "
+    echo -n " $manpage_section"
     translations=$(find "../po/$tlang/$manpage_section" -name "*.po" | LC_ALL=C sort)
     for translation in $translations; do
       # Create a po file for the specific distribution
@@ -146,6 +147,8 @@ EOF_TABLE
       echo "</div>" >> $distribution-$tlang.html
     fi
   done
+  # This is for the line break of the status messages
+  echo
 
   echo "</div>" >> $distribution-$tlang.html
   echo "</body>" >> $distribution-$tlang.html
