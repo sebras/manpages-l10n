@@ -88,9 +88,9 @@ cat distribution-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); prin
       # Check if the file has a size > 0
       if [ -s "$tmppo" ]; then
         # Get the stats for that po file
-        stats=$(LC_ALL=$HOMELOCALE msgfmt -cv -o /dev/null "$tmppo" 2>&1)
+        stats=$(LC_ALL=C msgfmt -cv -o /dev/null "$tmppo" 2>&1)
         # Get the translated messages
-        translated=$(echo $stats | sed -e "s/\([0-9]\+\) $cname_msgftstring.*/\1/")
+        translated=$(echo $stats | sed -e "s/\([0-9]\+\) translated message.*/\1/")
         # Check if there are at least two numbers
         fuzzy_or_untranslated=$(echo $stats | grep "[0-9]\+[^0-9]\+[0-9]\+")
         if [ -n "$fuzzy_or_untranslated" ]; then
