@@ -40,14 +40,14 @@ cd ../po/de
 # Ensure that there is a .po file
 if [ ! -f $mandir/$manpage.po ]; then
 	# Create a new .po file
-	msginit --no-translator --locale="de" -i "$potfile" -o "$pofile"
+	msginit --no-translator --locale="ro" -i "$potfile" -o "$pofile"
 
 	# Get the head of the file until first msgid line
 	# and generate the standard header
 	tmppo1=$(mktemp)
 	tmppo2=$(mktemp)
 	sed -e "1,/^msgid/d" "$pofile" > "$tmppo1"
-	echo "# German translation of manpages" > "$pofile"
+	echo "# Romanian translation of manpages" > "$pofile"
 	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$pofile"
 	echo "# Copyright © of this file:" >> "$pofile"
 	echo "msgid \"\"" >> "$pofile"
@@ -56,7 +56,7 @@ if [ ! -f $mandir/$manpage.po ]; then
 	rm -f "$tmppo1" "$tmppo2"
 
 	# Adjust two header lines
-	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: German <debian-l10n-german@lists.debian.org>\\\n\"/" "$pofile"
+	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\\\n\"/" "$pofile"
 	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-l10n\\\n\"/" "$pofile"
 fi
 
