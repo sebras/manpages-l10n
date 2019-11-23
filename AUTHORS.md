@@ -148,3 +148,8 @@ of Linux manpages. The list is sorted alphabetically.
 * Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>
 * Jos Boersema <joshb@xs4all.nl>
 * Mario Blättermann <mario.blaettermann@gmail.com>
+
+
+## Romanian:
+
+* Mihai Cristescu <mihai.cristescu@gmail.com>
