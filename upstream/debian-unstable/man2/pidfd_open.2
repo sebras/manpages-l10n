@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PIDFD_OPEN 2 2019-09-19 "Linux" "Linux Programmer's Manual"
+.TH PIDFD_OPEN 2 2019-11-19 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pidfd_open \- obtain a file descriptor that refers to a process
 .SH SYNOPSIS
@@ -120,7 +120,7 @@ has not been explicitly set to
 .BR sigaction (2));
 .IP *
 the
-.BR SA_NOCLDSTOP
+.BR SA_NOCLDWAIT
 flag was not specified while establishing a handler for
 .BR SIGCHLD
 or while setting the disposition of that signal to
@@ -135,17 +135,28 @@ the zombie process was not reaped elsewhere in the program
 or similar in another thread).
 .PP
 If any of these conditions does not hold,
-then the child process should instead be created using
+then the child process (along with a PID file descriptor that refers to it)
+should instead be created using
 .BR clone (2)
 with the
 .BR CLONE_PIDFD
 flag.
+.\"
+.SS Use cases for PID file descriptors
 .PP
+A PID file descriptor returned by
+.BR pidfd_open ()
+(of by
+.BR clone (2)
+with the
+.BR CLONE_PID
+flag) can be used for the following purposes:
+.IP * 3
 The
 .BR pidfd_send_signal (2)
 system call can be used to send a signal to the process referred to by
 a PID file descriptor.
-.PP
+.IP *
 A PID file descriptor can be monitored using
 .BR poll (2),
 .BR select (2),
@@ -158,24 +169,25 @@ nothing can be read from the file descriptor
 .RB ( read (2)
 on the file descriptor fails with the error
 .BR EINVAL ).
+.IP *
+If the PID file descriptor refers to a child of the calling process,
+then it can be waited on using
+.BR waitid (2).
 .PP
 The
 .BR pidfd_open ()
-system call is the preferred way of obtaining a PID file descriptor.
+system call is the preferred way of obtaining a PID file descriptor
+for an already existing process.
 The alternative is to obtain a file descriptor by opening a
 .I /proc/[pid]
 directory.
 However, the latter technique is possible only if the
 .BR proc (5)
-file system is mounted;
+filesystem is mounted;
 furthermore, the file descriptor obtained in this way is
 .I not
-pollable.
-.PP
-See also the discussion of the
-.BR CLONE_PIDFD
-flag in
-.BR clone (2).
+pollable and can't be waited on with
+.BR waitid (2).
 .SH EXAMPLE
 The program below opens a PID file descriptor for the
 process whose PID is specified as its command-line argument.
@@ -244,9 +256,10 @@ main(int argc, char *argv[])
 .BR pidfd_send_signal (2),
 .BR poll (2),
 .BR select (2),
+.BR waitid (2),
 .BR epoll (7)
 .SH COLOPHON
-This page is part of release 5.03 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,

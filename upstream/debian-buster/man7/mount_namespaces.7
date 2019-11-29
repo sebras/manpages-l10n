@@ -48,15 +48,26 @@ resides.
 (All of the processes that reside in the same mount namespace
 will see the same view in these files.)
 .PP
-When a process creates a new mount namespace using
+A new mount namespace is created using either
 .BR clone (2)
 or
 .BR unshare (2)
 with the
 .BR CLONE_NEWNS
-flag, the mount point list for the new namespace is a
-.I copy
-of the caller's mount point list.
+flag.
+When a new mount namespace is created,
+its mount point list is initialized as follows:
+.IP * 3
+If the namespace is created using
+.BR clone (2),
+the mount point list of the child's namespace is a copy
+of the mount point list in the parent's namespace.
+.IP *
+If the namespace is created using
+.BR unshare (2),
+the mount point list of the new namespace is a copy of
+the mount point list in the caller's previous mount namespace.
+.PP
 Subsequent modifications to the mount point list
 .RB ( mount (2)
 and
@@ -70,10 +81,14 @@ mount point list seen in the other namespace
 .SS Restrictions on mount namespaces
 Note the following points with respect to mount namespaces:
 .IP * 3
-A mount namespace has an owner user namespace.
-A mount namespace whose owner user namespace is different from
-the owner user namespace of its parent mount namespace is
-considered a less privileged mount namespace.
+Each mount namespace has an owner user namespace.
+As explained above, when a new mount namespace is created,
+its mount point list is initialized as a copy of the mount point list
+of another mount namespace.
+If the new namespace and the namespace from which the mount point list
+was copied are owned by different user namespaces,
+then the new mount namespace is considered
+.IR "less privileged" .
 .IP *
 When creating a less privileged mount namespace,
 shared mounts are reduced to slave mounts.
@@ -1077,12 +1092,35 @@ To prevent this, one can use the
 option to
 .BR unshare (1).
 .PP
+An application that creates a new mount namespace directly using
+.BR clone (2)
+or
+.BR unshare (2)
+may desire to prevent propagation of mount events to other mount namespaces
+(as is done by
+.BR unshare (1)).
+This can be done by changing the propagation type of
+mount points in the new namespace to either
+.BR MS_SLAVE
+or
+.BR MS_PRIVATE .
+using a call such as the following:
+.IP
+.in +4n
+.EX
+mount(NULL, "/", MS_SLAVE | MS_REC, NULL);
+.EE
+.in
+.PP
 For a discussion of propagation types when moving mounts
 .RB ( MS_MOVE )
 and creating bind mounts
 .RB ( MS_BIND ),
 see
 .IR Documentation/filesystems/sharedsubtree.txt .
+.SH EXAMPLE
+See
+.BR pivot_root (2).
 .SH SEE ALSO
 .BR unshare (1),
 .BR clone (2),
@@ -1100,7 +1138,7 @@ see
 .IR Documentation/filesystems/sharedsubtree.txt
 in the kernel source tree.
 .SH COLOPHON
-This page is part of release 5.02 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,

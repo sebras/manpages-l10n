@@ -24,7 +24,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH QUOTACTL 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH QUOTACTL 2 2019-11-19 "Linux" "Linux Programmer's Manual"
 .SH NAME
 quotactl \- manipulate disk quotas
 .SH SYNOPSIS
@@ -85,11 +85,11 @@ argument is the address of an optional, command-specific, data structure
 that is copied in or out of the system.
 The interpretation of
 .I addr
-is given with each command below.
+is given with each operation below.
 .PP
 The
 .I subcmd
-value is one of the following:
+value is one of the following operations:
 .TP 8
 .B Q_QUOTAON
 Turn on quotas for a filesystem.
@@ -117,7 +117,25 @@ argument points to the pathname of a file containing the quotas for
 the filesystem.
 The quota file must exist; it is normally created with the
 .BR quotacheck (8)
-program.
+program
+.IP
+Quota information can be also stored in hidden system inodes
+for ext4, XFS, and other filesystems if the filesystem is configured so.
+In this case, there are no visible quota files and there is no need to
+use
+.BR quotacheck (8).
+Quota information is always kept consistent by the filesystem and the
+.B Q_QUOTAON
+operation serves only to enable enforcement of quota limits.
+The presence of hidden
+system inodes with quota information is indicated by the
+.B DQF_SYS_FILE
+flag in the
+.I dqi_flags
+field returned by the
+.B Q_GETINFO
+operation.
+.IP
 This operation requires privilege
 .RB ( CAP_SYS_ADMIN ).
 .TP 8
@@ -380,7 +398,7 @@ Files in
 carry the information instead.
 .PP
 For XFS filesystems making use of the XFS Quota Manager (XQM),
-the above commands are bypassed and the following commands are used:
+the above operations are bypassed and the following operations are used:
 .TP 8
 .B Q_XQUOTAON
 Turn on quotas for an XFS filesystem.
@@ -425,7 +443,7 @@ XFS filesystems expect a pointer to an
 that specifies whether quota accounting and/or limit enforcement need
 to be turned off (using the same flags as for
 .B Q_XQUOTAON
-subcommand).
+operation).
 This operation requires privilege
 .RB ( CAP_SYS_ADMIN ).
 The
@@ -517,7 +535,7 @@ field, no separate structure type is needed (in contrast with
 .B Q_GETQUOTA
 and
 .B Q_GETNEXTQUOTA
-commands)
+operations)
 .TP
 .B Q_XSETQLIM
 Set disk quota limits for user
@@ -582,7 +600,7 @@ Returns XFS filesystem-specific quota information in the
 .I fs_quota_statv
 pointed to by
 .IR addr .
-This version of the command uses a structure with proper versioning support,
+This version of the operation uses a structure with proper versioning support,
 along with appropriate layout (all fields are naturally aligned) and
 padding to avoiding special compat handling;
 it also provides the ability to get statistics regarding
@@ -638,7 +656,8 @@ The
 .I id
 argument is ignored.
 .TP
-.B Q_XQUOTARM
+.B Q_XQUOTARM() " (since Linux 3.16)"
+.\" 9da93f9b7cdf8ab28da6b364cdc1fafc8670b4dc
 Free the disk space taken by disk quotas. The
 .I addr
 argument should be a pointer to an
@@ -660,8 +679,8 @@ argument is ignored.
 .TP
 .BR Q_XQUOTASYNC " (since Linux 2.6.15; no-op since Linux 3.4)"
 .\" Added in commit ee34807a65aa0c5911dc27682863afca780a003e
-This command was an XFS quota equivalent to
-.IR Q_SYNC ,
+This operation was an XFS quota equivalent to
+.BR Q_SYNC ,
 but it is no-op since Linux 3.4,
 .\" 4b217ed9e30f94b6e8e5e262020ef0ceab6113af
 as
@@ -797,7 +816,7 @@ prefix.
 .BR quotacheck (8),
 .BR quotaon (8)
 .SH COLOPHON
-This page is part of release 5.03 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,

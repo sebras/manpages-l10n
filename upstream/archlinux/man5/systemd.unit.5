@@ -128,7 +128,6 @@ dbus\-org\&.freedesktop\&.network1\&.service, created during installation as a s
 is asked through D\-Bus to load
 dbus\-org\&.freedesktop\&.network1\&.service, it\*(Aqll load
 systemd\-networkd\&.service\&. Alias names may be used in commands like
-\fBenable\fR,
 \fBdisable\fR,
 \fBstart\fR,
 \fBstop\fR,
@@ -662,27 +661,45 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 \fBuri\fR(7)\&. The URIs should be listed in order of relevance, starting with the most relevant\&. It is a good idea to first reference documentation that explains what the unit\*(Aqs purpose is, followed by how it is configured, followed by any other related documentation\&. This option may be specified more than once, in which case the specified list of URIs is merged\&. If the empty string is assigned to this option, the list is reset and all prior assignments will have no effect\&.
 .RE
 .PP
-\fIRequires=\fR
+\fIWants=\fR
 .RS 4
-Configures requirement dependencies on other units\&. If this unit gets activated, the units listed here will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
-\fIAfter=\fR
-on the failing unit is set, this unit will not be started\&. Besides, with or without specifying
-\fIAfter=\fR, this unit will be stopped if one of the other units is explicitly stopped\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case requirement dependencies for all listed names will be created\&. Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
+Configures requirement dependencies on other units\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case dependencies for all listed names will be created\&. Dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
+\&.wants/
+directory accompanying the unit file\&. For details, see above\&.
+.sp
+Units listed in this option will be started if the configuring unit is\&. However, if the listed units fail to start or cannot be added to the transaction, this has no impact on the validity of the transaction as a whole, and this unit will still be started\&. This is the recommended way to hook start\-up of one unit to the start\-up of another unit\&.
+.sp
+Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
 \fIAfter=\fR
 or
 \fIBefore=\fR
-options\&. If a unit
+options\&. If unit
 foo\&.service
-requires a unit
+pulls in unit
 bar\&.service
 as configured with
-\fIRequires=\fR
+\fIWants=\fR
 and no ordering is configured with
 \fIAfter=\fR
 or
 \fIBefore=\fR, then both units will be started simultaneously and without any delay between them if
 foo\&.service
-is activated\&. Often, it is a better choice to use
+is activated\&.
+.RE
+.PP
+\fIRequires=\fR
+.RS 4
+Similar to
+\fIWants=\fR, but declares a stronger dependency\&. Dependencies of this type may also be configured by adding a symlink to a
+\&.requires/
+directory accompanying the unit file\&.
+.sp
+If this unit gets activated, the units listed will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
+\fIAfter=\fR
+on the failing unit is set, this unit will not be started\&. Besides, with or without specifying
+\fIAfter=\fR, this unit will be stopped if one of the other units is explicitly stopped\&.
+.sp
+Often, it is a better choice to use
 \fIWants=\fR
 instead of
 \fIRequires=\fR
@@ -699,10 +716,6 @@ dependency\&. Use the
 dependency type together with
 \fIAfter=\fR
 to ensure that a unit may never be in active state without a specific other unit also in active state (see below)\&.
-.sp
-Note that dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
-\&.requires/
-directory accompanying the unit file\&. For details, see above\&.
 .RE
 .PP
 \fIRequisite=\fR
@@ -722,16 +735,6 @@ in property listing of
 b\&.service\&.
 \fIRequisiteOf=\fR
 dependency cannot be specified directly\&.
-.RE
-.PP
-\fIWants=\fR
-.RS 4
-A weaker version of
-\fIRequires=\fR\&. Units listed in this option will be started if the configuring unit is\&. However, if the listed units fail to start or cannot be added to the transaction, this has no impact on the validity of the transaction as a whole\&. This is the recommended way to hook start\-up of one unit to the start\-up of another unit\&.
-.sp
-Note that dependencies of this type may also be configured outside of the unit configuration file by adding symlinks to a
-\&.wants/
-directory accompanying the unit file\&. For details, see above\&.
 .RE
 .PP
 \fIBindsTo=\fR
@@ -783,47 +786,61 @@ dependency cannot be specified directly\&.
 .RS 4
 A space\-separated list of unit names\&. Configures negative requirement dependencies\&. If a unit has a
 \fIConflicts=\fR
-setting on another unit, starting the former will stop the latter and vice versa\&. Note that this setting is independent of and orthogonal to the
-\fIAfter=\fR
-and
-\fIBefore=\fR
-ordering dependencies\&.
+setting on another unit, starting the former will stop the latter and vice versa\&.
 .sp
-If a unit A that conflicts with a unit B is scheduled to be started at the same time as B, the transaction will either fail (in case both are required parts of the transaction) or be modified to be fixed (in case one or both jobs are not a required part of the transaction)\&. In the latter case, the job that is not required will be removed, or in case both are not required, the unit that conflicts will be started and the unit that is conflicted is stopped\&.
+Note that this setting does not imply an ordering dependency, similarly to the
+\fIWants=\fR
+and
+\fIRequires=\fR
+dependencies described above\&. This means that to ensure that the conflicting unit is stopped before the other unit is started, an
+\fIAfter=\fR
+or
+\fIBefore=\fR
+dependency must be declared\&. It doesn\*(Aqt matter which of the two ordering dependencies is used, because stop jobs are always ordered before start jobs, see the discussion in
+\fIBefore=\fR/\fIAfter=\fR
+below\&.
+.sp
+If unit A that conflicts with unit B is scheduled to be started at the same time as B, the transaction will either fail (in case both are required parts of the transaction) or be modified to be fixed (in case one or both jobs are not a required part of the transaction)\&. In the latter case, the job that is not required will be removed, or in case both are not required, the unit that conflicts will be started and the unit that is conflicted is stopped\&.
 .RE
 .PP
 \fIBefore=\fR, \fIAfter=\fR
 .RS 4
-These two settings expect a space\-separated list of unit names\&. They configure ordering dependencies between units\&. If a unit
+These two settings expect a space\-separated list of unit names\&. They may be specified more than once, in which case dependencies for all listed names are created\&.
+.sp
+Those two setttings configure ordering dependencies between units\&. If unit
 foo\&.service
-contains a setting
+contains the setting
 \fBBefore=bar\&.service\fR
 and both units are being started,
 bar\&.service\*(Aqs start\-up is delayed until
 foo\&.service
-has finished starting up\&. Note that this setting is independent of and orthogonal to the requirement dependencies as configured by
-\fIRequires=\fR,
-\fIWants=\fR
-or
-\fIBindsTo=\fR\&. It is a common pattern to include a unit name in both the
-\fIAfter=\fR
-and
-\fIRequires=\fR
-options, in which case the unit listed will be started before the unit that is configured with these options\&. This option may be specified more than once, in which case ordering dependencies for all listed names are created\&.
+has finished starting up\&.
 \fIAfter=\fR
 is the inverse of
 \fIBefore=\fR, i\&.e\&. while
-\fIAfter=\fR
-ensures that the configured unit is started after the listed unit finished starting up,
 \fIBefore=\fR
-ensures the opposite, that the configured unit is fully started up before the listed unit is started\&. Note that when two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. i\&.e\&. if a unit is configured with
+ensures that the configured unit is started before the listed unit begins starting up,
+\fIAfter=\fR
+ensures the opposite, that the listed unit is fully started up before the configured unit is started\&.
+.sp
+When two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. i\&.e\&. if a unit is configured with
 \fIAfter=\fR
 on another unit, the former is stopped before the latter if both are shut down\&. Given two units with any ordering dependency between them, if one unit is shut down and the other is started up, the shutdown is ordered before the start\-up\&. It doesn\*(Aqt matter if the ordering dependency is
 \fIAfter=\fR
 or
-\fIBefore=\fR, in this case\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up\&. The shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&. It depends on the unit type when precisely a unit has finished starting up\&. Most importantly, for service units start\-up is considered completed for the purpose of
+\fIBefore=\fR, in this case\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up; the shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&. It depends on the unit type when precisely a unit has finished starting up\&. Most importantly, for service units start\-up is considered completed for the purpose of
 \fIBefore=\fR/\fIAfter=\fR
 when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&.
+.sp
+Note that those settings are independent of and orthogonal to the requirement dependencies as configured by
+\fIRequires=\fR,
+\fIWants=\fR,
+\fIRequisite=\fR, or
+\fIBindsTo=\fR\&. It is a common pattern to include a unit name in both the
+\fIAfter=\fR
+and
+\fIWants=\fR
+options, in which case the unit listed will be started before the unit that is configured with these options\&.
 .RE
 .PP
 \fIOnFailure=\fR
