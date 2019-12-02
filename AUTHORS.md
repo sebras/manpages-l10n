@@ -19,7 +19,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Eduard Bloch <blade@debian.org>
 * Elmar Jansen <ej@pumuckel.gun.de>
 * Erik Pfannenstein <debianignatz@gmx.de>
-* FIXME specified einheitlich übersetzen
 * Florian Jenn <jennf@tu-cottbus.de>
 * Florian Rehnisch <fr@fm-r.eu>
 * Frank Stähr <der-storch-85@gmx.net>
