@@ -37,16 +37,32 @@ cat > index.html <<-END_OF_HEADER
     <title>Translation of manual pages</title>
   </head>
   <body>
-      <p>
-        Some Text explaining the project …
-      </p>
-
+<h1> Welcome to the l10n project</h1>
+<p>
+  In the past, several projects independently maintained man page translation. Some tried to manually keep
+  the translation and the upstream text in sync, while others used tools like 
+  <a href="https://po4a.org/">po4a</a>. Some where tied into certain distributions, while others were generic. 
+</p>
+<p>
+  This project aims to ease the burden for translation teams by providing a common infrastructure
+  for obtaining the upstream sources (for various distributions), automaticly maintaining the 
+  translated text with automatisms where possible (e.g. by maintaining lists of identical strings,
+  automatic translation of dates) and finally the regular distribution of tarballs, ready for
+  integration into several major distributions (and usuable by others as well, of course).
+</p>
+<p>
+  Currently, the following languages are integrated:
+  </p>
       <ul>
+        <li><a href="index-nl.html">The Dutch translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
-        <li><a href="index-nl.html">The Dutch translation</a></li>
+	<! -- <li><a href="index-pl.html">The Polish translation</a></li> -->
         <li><a href="index-ro.html">The Romanian translation</a></li>
       </ul>
+      <p>
+      You also  might want to <a href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">view the git repository</a> directly.
+      </p>
    </body>
   </html>
 END_OF_HEADER
