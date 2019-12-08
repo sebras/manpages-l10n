@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 243" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 244" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -743,7 +743,9 @@ systemd\-nspawn \&... \-\-private\-users=0 \-\-private\-users\-chown
 Disconnect networking of the container from the host\&. This makes all network interfaces unavailable in the container, with the exception of the loopback device and those specified with
 \fB\-\-network\-interface=\fR
 and configured with
-\fB\-\-network\-veth\fR\&. If this option is specified, the CAP_NET_ADMIN capability will be added to the set of capabilities the container retains\&. The latter may be disabled by using
+\fB\-\-network\-veth\fR\&. If this option is specified, the
+\fBCAP_NET_ADMIN\fR
+capability will be added to the set of capabilities the container retains\&. The latter may be disabled by using
 \fB\-\-drop\-capability=\fR\&. If this option is not specified (or implied by one of the options listed below), the container will have full access to the host network\&.
 .RE
 .PP
@@ -889,16 +891,52 @@ is assumed\&. The container port number and its colon may be omitted, in which c
 .RS 4
 List one or more additional capabilities to grant the container\&. Takes a comma\-separated list of capability names, see
 \fBcapabilities\fR(7)
-for more information\&. Note that the following capabilities will be granted in any way: CAP_AUDIT_CONTROL, CAP_AUDIT_WRITE, CAP_CHOWN, CAP_DAC_OVERRIDE, CAP_DAC_READ_SEARCH, CAP_FOWNER, CAP_FSETID, CAP_IPC_OWNER, CAP_KILL, CAP_LEASE, CAP_LINUX_IMMUTABLE, CAP_MKNOD, CAP_NET_BIND_SERVICE, CAP_NET_BROADCAST, CAP_NET_RAW, CAP_SETFCAP, CAP_SETGID, CAP_SETPCAP, CAP_SETUID, CAP_SYS_ADMIN, CAP_SYS_BOOT, CAP_SYS_CHROOT, CAP_SYS_NICE, CAP_SYS_PTRACE, CAP_SYS_RESOURCE, CAP_SYS_TTY_CONFIG\&. Also CAP_NET_ADMIN is retained if
+for more information\&. Note that the following capabilities will be granted in any way:
+\fBCAP_AUDIT_CONTROL\fR,
+\fBCAP_AUDIT_WRITE\fR,
+\fBCAP_CHOWN\fR,
+\fBCAP_DAC_OVERRIDE\fR,
+\fBCAP_DAC_READ_SEARCH\fR,
+\fBCAP_FOWNER\fR,
+\fBCAP_FSETID\fR,
+\fBCAP_IPC_OWNER\fR,
+\fBCAP_KILL\fR,
+\fBCAP_LEASE\fR,
+\fBCAP_LINUX_IMMUTABLE\fR,
+\fBCAP_MKNOD\fR,
+\fBCAP_NET_BIND_SERVICE\fR,
+\fBCAP_NET_BROADCAST\fR,
+\fBCAP_NET_RAW\fR,
+\fBCAP_SETFCAP\fR,
+\fBCAP_SETGID\fR,
+\fBCAP_SETPCAP\fR,
+\fBCAP_SETUID\fR,
+\fBCAP_SYS_ADMIN\fR,
+\fBCAP_SYS_BOOT\fR,
+\fBCAP_SYS_CHROOT\fR,
+\fBCAP_SYS_NICE\fR,
+\fBCAP_SYS_PTRACE\fR,
+\fBCAP_SYS_RESOURCE\fR,
+\fBCAP_SYS_TTY_CONFIG\fR\&. Also
+\fBCAP_NET_ADMIN\fR
+is retained if
 \fB\-\-private\-network\fR
 is specified\&. If the special value
 "all"
 is passed, all capabilities are retained\&.
+.sp
+If the special value of
+"help"
+is passed, the program will print known capability names and exit\&.
 .RE
 .PP
 \fB\-\-drop\-capability=\fR
 .RS 4
 Specify one or more additional capabilities to drop for the container\&. This allows running the container with fewer capabilities than the default (see above)\&.
+.sp
+If the special value of
+"help"
+is passed, the program will print known capability names and exit\&.
 .RE
 .PP
 \fB\-\-no\-new\-privileges=\fR
@@ -1211,38 +1249,38 @@ Configures how to set up standard input, output and error output for the contain
 device for the container\&. Takes one of
 \fBinteractive\fR,
 \fBread\-only\fR,
-\fBpassive\fR
-or
+\fBpassive\fR, or
 \fBpipe\fR\&. If
-\fBinteractive\fR
-a pseudo\-TTY is allocated and made available as
+\fBinteractive\fR, a pseudo\-TTY is allocated and made available as
 /dev/console
 in the container\&. It is then bi\-directionally connected to the standard input and output passed to
 \fBsystemd\-nspawn\fR\&.
 \fBread\-only\fR
-is similar but only the output of the container is propagated and no input from the caller is read\&. In
-\fBpassive\fR
-mode a pseudo TTY is allocated, but it is not connected anywhere\&. Finally, in
+is similar but only the output of the container is propagated and no input from the caller is read\&. If
+\fBpassive\fR, a pseudo TTY is allocated, but it is not connected anywhere\&. Finally, in
 \fBpipe\fR
-mode no pseudo TTY is allocated, but the passed standard input, output and error output file descriptors are passed on \(em as they are \(em to the container payload\&. In this mode
-/dev/console
-will not exist in the container\&. Note that in this mode the container payload generally cannot be a full init system as init systems tend to require
-/dev/console
-to be available\&. On the other hand, in this mode container invocations can be used within shell pipelines\&. This is because intermediary pseudo TTYs do not permit independent bidirectional propagation of the end\-of\-file (EOF) condition, which is necessary for shell pipelines to work correctly\&.
-.sp
-Note that the
-\fBpipe\fR
-mode should be used carefully, as passing arbitrary file descriptors to less trusted container payloads might open up unwanted interfaces for access by the container payload\&. For example, if a passed file descriptor refers to a TTY of some form, APIs such as
-\fBTIOCSTI\fR
-may be used to synthesize input that might be used for escaping the container\&. Hence
-\fBpipe\fR
-mode should only be used if the payload is sufficiently trusted or when the standard input/output/error output file descriptors are known safe, for example pipes\&. Defaults to
+mode no pseudo TTY is allocated, but the standard input, output and error output file descriptors passed to
+\fBsystemd\-nspawn\fR
+are passed on \(em as they are \(em to the container payload, see the following paragraph\&. Defaults to
 \fBinteractive\fR
 if
 \fBsystemd\-nspawn\fR
 is invoked from a terminal, and
 \fBread\-only\fR
 otherwise\&.
+.sp
+In
+\fBpipe\fR
+mode,
+/dev/console
+will not exist in the container\&. This means that the container payload generally cannot be a full init system as init systems tend to require
+/dev/console
+to be available\&. On the other hand, in this mode container invocations can be used within shell pipelines\&. This is because intermediary pseudo TTYs do not permit independent bidirectional propagation of the end\-of\-file (EOF) condition, which is necessary for shell pipelines to work correctly\&.
+\fINote that the \fR\fI\fBpipe\fR\fR\fI mode should be used carefully\fR, as passing arbitrary file descriptors to less trusted container payloads might open up unwanted interfaces for access by the container payload\&. For example, if a passed file descriptor refers to a TTY of some form, APIs such as
+\fBTIOCSTI\fR
+may be used to synthesize input that might be used for escaping the container\&. Hence
+\fBpipe\fR
+mode should only be used if the payload is sufficiently trusted or when the standard input/output/error output file descriptors are known safe, for example pipes\&.
 .RE
 .PP
 \fB\-\-pipe\fR, \fB\-P\fR

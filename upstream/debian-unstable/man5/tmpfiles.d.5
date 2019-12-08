@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 243" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 244" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,8 +43,9 @@ $XDG_RUNTIME_DIR/user\-tmpfiles\&.d/*\&.conf
 .nf
 #Type Path                                     Mode User Group Age         Argument
 f     /file/to/create                          mode user group \-           content
-F     /file/to/create\-or\-truncate              mode user group \-           content
+f+    /file/to/create\-or\-truncate              mode user group \-           content
 w     /file/to/write\-to                        \-    \-    \-     \-           content
+w+    /file/to/append\-to                       \-    \-    \-     \-           content
 d     /directory/to/create\-and\-cleanup         mode user group cleanup\-age \-
 D     /directory/to/create\-and\-remove          mode user group cleanup\-age \-
 e     /directory/to/cleanup                    mode user group cleanup\-age \-
@@ -52,10 +53,13 @@ v     /subvolume/to/create                     mode user group \-           \-
 v     /subvolume\-or\-directory/to/create        mode user group \-           \-
 Q     /subvolume/to/create                     mode user group \-           \-
 p     /fifo/to/create                          mode user group \-           \-
+p+    /fifo/to/[re]create                      mode user group \-           \-
 L     /symlink/to/create                       \-    \-    \-     \-           symlink/target/path
+L+    /symlink/to/[re]create                   \-    \-    \-     \-           symlink/target/path
 c     /dev/char\-device\-to\-create               mode user group \-           \-
+c+    /dev/char\-device\-to\-[re]create           mode user group \-           \-
 b     /dev/block\-device\-to\-create              mode user group \-           \-
-# p+, L+, c+, b+ create target unconditionally
+b+    /dev/block\-device\-to\-[re]create          mode user group \-           \-
 C     /target/to/create                        \-    \-    \-     \-           /source/to/copy
 x     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
 X     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
@@ -68,8 +72,10 @@ T     /path\-or\-glob/to/set/xattrs/recursively  \-    \-    \-     \-          
 h     /path\-or\-glob/to/set/attrs               \-    \-    \-     \-           file attrs
 H     /path\-or\-glob/to/set/attrs/recursively   \-    \-    \-     \-           file attrs
 a     /path\-or\-glob/to/set/acls                \-    \-    \-     \-           POSIX ACLs
+a+    /path\-or\-glob/to/append/acls             \-    \-    \-     \-           POSIX ACLs
 A     /path\-or\-glob/to/set/acls/recursively    \-    \-    \-     \-           POSIX ACLs
-# a+, A+ append ACLs
+A+    /path\-or\-glob/to/append/acls/recursively \-    \-    \-     \-           POSIX ACLs
+
 .fi
 .SH "DESCRIPTION"
 .PP
@@ -162,19 +168,19 @@ The type consists of a single letter and optionally an exclamation mark and/or m
 .PP
 The following line types are understood:
 .PP
+\fIf\fR, \fIf+\fR
+.RS 4
 \fIf\fR
-.RS 4
-Create a file if it does not exist yet\&. If the argument parameter is given and the file did not exist yet, it will be written to the file\&. Does not follow symlinks\&.
+will create a file if it does not exist yet\&. If the argument parameter is given and the file did not exist yet, it will be written to the file\&.
+\fIf+\fR
+will create or truncate the file\&. If the argument parameter is given, it will be written to the file\&. Does not follow symlinks\&.
 .RE
 .PP
-\fIF\fR
+\fIw\fR, \fIw+\fR
 .RS 4
-Create or truncate a file\&. If the argument parameter is given, it will be written to the file\&. Does not follow symlinks\&.
-.RE
-.PP
-\fIw\fR
-.RS 4
-Write the argument parameter to a file, if the file exists\&. Lines of this type accept shell\-style globs in place of normal path names\&. The argument parameter will be written without a trailing newline\&. C\-style backslash escapes are interpreted\&. Follows symlinks\&.
+Write the argument parameter to a file, if the file exists\&. If suffixed with
+\fI+\fR, the line will be appended to the file\&. If your configuration writes multiple lines to the same file, use
+\fIw+\fR\&. Lines of this type accept shell\-style globs in place of normal path names\&. The argument parameter will be written without a trailing newline\&. C\-style backslash escapes are interpreted\&. Follows symlinks\&.
 .RE
 .PP
 \fId\fR

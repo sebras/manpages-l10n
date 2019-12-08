@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 243" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 244" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -635,13 +635,17 @@ above\&. Use of this setting is optional\&. After the commands configured in thi
 setting (see
 \fBsystemd.kill\fR(5))\&. If this option is not specified, the process is terminated by sending the signal specified in
 \fIKillSignal=\fR
+or
+\fIRestartKillSignal=\fR
 when service stop is requested\&. Specifier and environment variable substitution is supported (including
 \fI$MAINPID\fR, see above)\&.
 .sp
-Note that it is usually not sufficient to specify a command for this setting that only asks the service to terminate (for example, by queuing some form of termination signal for it), but does not wait for it to do so\&. Since the remaining processes of the services are killed according to
+Note that it is usually not sufficient to specify a command for this setting that only asks the service to terminate (for example, by sending some form of termination signal to it), but does not wait for it to do so\&. Since the remaining processes of the services are killed according to
 \fIKillMode=\fR
 and
 \fIKillSignal=\fR
+or
+\fIRestartKillSignal=\fR
 as described above immediately after the command exited, this may not result in a clean stop\&. The specified command should hence be a synchronous operation, not an asynchronous one\&.
 .sp
 Note that the commands specified in
@@ -726,12 +730,12 @@ within the interval specified until the service startup status is finished by
 \fITimeoutStopSec=\fR
 .RS 4
 This option serves two purposes\&. First, it configures the time to wait for each
-\fBExecStop=\fR
+\fIExecStop=\fR
 command\&. If any of them times out, subsequent
-\fBExecStop=\fR
+\fIExecStop=\fR
 commands are skipped and the service will be terminated by
 \fBSIGTERM\fR\&. If no
-\fBExecStop=\fR
+\fIExecStop=\fR
 commands are specified, the service gets the
 \fBSIGTERM\fR
 immediately\&. Second, it configures the time to wait for the service itself to stop\&. If it doesn\*(Aqt terminate in the specified time, it will be forcibly terminated by
@@ -1597,7 +1601,16 @@ Note that systemd will consider the unit to be in the state "starting" until the
 \fIType=\fR\fBoneshot\fR
 are the only service units that may have more than one
 \fIExecStart=\fR
-specified\&. They will be executed in order until either they are all successful or one of them fails\&.
+specified\&. For units with multiple commands (\fIType=oneshot\fR), all commands will be run again\&.
+.PP
+For
+\fIType=oneshot\fR,
+\fIRestart=\fR\fBalways\fR
+and
+\fIRestart=\fR\fBon\-success\fR
+are
+\fInot\fR
+allowed\&.
 .PP
 \fBExample\ \&4.\ \&Stoppable oneshot service\fR
 .PP

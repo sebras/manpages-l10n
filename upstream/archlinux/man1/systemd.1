@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD" "1" "" "systemd 243" "systemd"
+.TH "SYSTEMD" "1" "" "systemd 244" "systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,11 +28,18 @@ systemd, init \- systemd system and service manager
 \fBinit\fR [OPTIONS...] {COMMAND}
 .SH "DESCRIPTION"
 .PP
-systemd is a system and service manager for Linux operating systems\&. When run as first process on boot (as PID 1), it acts as init system that brings up and maintains userspace services\&.
+systemd is a system and service manager for Linux operating systems\&. When run as first process on boot (as PID 1), it acts as init system that brings up and maintains userspace services\&. Seperate instances are started for logged\-in users to start their services\&.
 .PP
-For compatibility with SysV, if systemd is called as
+\fBsystemd\fR
+is usually not invoked directly by the user, but is installed as the
+/sbin/init
+symlink and started during early boot\&. The user manager instances are started automatically through the
+\fBuser@.service\fR(5)
+service\&.
+.PP
+For compatibility with SysV, if the binary is called as
 \fBinit\fR
-and a PID that is not 1, it will execute
+and is not the first process on the machine (PID is not 1), it will execute
 \fBtelinit\fR
 and pass all command line arguments unmodified\&. That means
 \fBinit\fR
@@ -53,175 +60,6 @@ user\&.conf\&.d
 directories\&. See
 \fBsystemd-system.conf\fR(5)
 for more information\&.
-.SH "OPTIONS"
-.PP
-The following options are understood:
-.PP
-\fB\-\-test\fR
-.RS 4
-Determine the initial start\-up transaction (i\&.e\&. the list of jobs enqueued at start\-up), dump it and exit \(em without actually executing any of the determined jobs\&. This option is useful for debugging only\&. Note that during regular service manager start\-up additional units not shown by this operation may be started, because hardware, socket, bus or other kinds of activation might add additional jobs as the transaction is executed\&. Use
-\fB\-\-system\fR
-to request the initial transaction of the system service manager (this is also the implied default), combine with
-\fB\-\-user\fR
-to request the initial transaction of the per\-user service manager instead\&.
-.RE
-.PP
-\fB\-\-dump\-configuration\-items\fR
-.RS 4
-Dump understood unit configuration items\&. This outputs a terse but complete list of configuration items understood in unit definition files\&.
-.RE
-.PP
-\fB\-\-dump\-bus\-properties\fR
-.RS 4
-Dump exposed bus properties\&. This outputs a terse but complete list of properties exposed on D\-Bus\&.
-.RE
-.PP
-\fB\-\-unit=\fR
-.RS 4
-Set default unit to activate on startup\&. If not specified, defaults to
-default\&.target\&.
-.RE
-.PP
-\fB\-\-system\fR, \fB\-\-user\fR
-.RS 4
-When used in conjunction with
-\fB\-\-test\fR, selects whether to calculate the initial transaction for the system instance or for a per\-user instance\&. These options have no effect when invoked without
-\fB\-\-test\fR, as during regular (i\&.e\&. non\-\fB\-\-test\fR) invocations the service manager will automatically detect whether it shall operate in system or per\-user mode, by checking whether the PID it is run as is 1 or not\&. Note that it is not supported booting and maintaining a system with the service manager running in
-\fB\-\-system\fR
-mode but with a PID other than 1\&.
-.RE
-.PP
-\fB\-\-dump\-core\fR
-.RS 4
-Enable core dumping on crash\&. This switch has no effect when running as user instance\&. This setting may also be enabled during boot on the kernel command line via the
-\fIsystemd\&.dump_core=\fR
-option, see below\&.
-.RE
-.PP
-\fB\-\-crash\-vt=\fR\fIVT\fR
-.RS 4
-Switch to a specific virtual console (VT) on crash\&. Takes a positive integer in the range 1\(en63, or a boolean argument\&. If an integer is passed, selects which VT to switch to\&. If
-\fByes\fR, the VT kernel messages are written to is selected\&. If
-\fBno\fR, no VT switch is attempted\&. This switch has no effect when running as user instance\&. This setting may also be enabled during boot, on the kernel command line via the
-\fIsystemd\&.crash_vt=\fR
-option, see
-below\&.
-.RE
-.PP
-\fB\-\-crash\-shell\fR
-.RS 4
-Run a shell on crash\&. This switch has no effect when running as user instance\&. This setting may also be enabled during boot, on the kernel command line via the
-\fIsystemd\&.crash_shell=\fR
-option, see below\&.
-.RE
-.PP
-\fB\-\-crash\-reboot\fR
-.RS 4
-Automatically reboot the system on crash\&. This switch has no effect when running as user instance\&. This setting may also be enabled during boot, on the kernel command line via the
-\fIsystemd\&.crash_reboot=\fR
-option, see below\&.
-.RE
-.PP
-\fB\-\-confirm\-spawn\fR
-.RS 4
-Ask for confirmation when spawning processes\&. This switch has no effect when run as user instance\&.
-.RE
-.PP
-\fB\-\-show\-status=\fR
-.RS 4
-Takes a boolean argument or the special value
-\fBauto\fR\&. If on, terse unit status information is shown on the console during boot\-up and shutdown\&. If off, no such status information is shown\&. If set to
-\fBauto\fR
-behavior is similar to off, except that it is automatically switched to on, as soon as the first unit failure or significant boot delay is encountered\&. This switch has no effect when invoked as user instance\&. If specified, overrides both the kernel command line setting
-\fIsystemd\&.show_status=\fR
-(see below) and the configuration file option
-\fBShowStatus=\fR, see
-\fBsystemd-system.conf\fR(5)\&.
-.RE
-.PP
-\fB\-\-log\-target=\fR
-.RS 4
-Set log target\&. Argument must be one of
-\fBconsole\fR,
-\fBjournal\fR,
-\fBkmsg\fR,
-\fBjournal\-or\-kmsg\fR,
-\fBnull\fR\&.
-.RE
-.PP
-\fB\-\-log\-level=\fR
-.RS 4
-Set log level\&. As argument this accepts a numerical log level or the well\-known
-\fBsyslog\fR(3)
-symbolic names (lowercase):
-\fBemerg\fR,
-\fBalert\fR,
-\fBcrit\fR,
-\fBerr\fR,
-\fBwarning\fR,
-\fBnotice\fR,
-\fBinfo\fR,
-\fBdebug\fR\&.
-.RE
-.PP
-\fB\-\-log\-color=\fR
-.RS 4
-Highlight important log messages\&. Argument is a boolean value\&. If the argument is omitted, it defaults to
-\fBtrue\fR\&.
-.RE
-.PP
-\fB\-\-log\-location=\fR
-.RS 4
-Include code location in log messages\&. This is mostly relevant for debugging purposes\&. Argument is a boolean value\&. If the argument is omitted it defaults to
-\fBtrue\fR\&.
-.RE
-.PP
-\fB\-\-default\-standard\-output=\fR, \fB\-\-default\-standard\-error=\fR
-.RS 4
-Sets the default output or error output for all services and sockets, respectively\&. That is, controls the default for
-\fBStandardOutput=\fR
-and
-\fBStandardError=\fR
-(see
-\fBsystemd.exec\fR(5)
-for details)\&. Takes one of
-\fBinherit\fR,
-\fBnull\fR,
-\fBtty\fR,
-\fBjournal\fR,
-\fBjournal+console\fR,
-\fBkmsg\fR,
-\fBkmsg+console\fR\&. If the argument is omitted
-\fB\-\-default\-standard\-output=\fR
-defaults to
-\fBjournal\fR
-and
-\fB\-\-default\-standard\-error=\fR
-to
-\fBinherit\fR\&.
-.RE
-.PP
-\fB\-\-machine\-id=\fR
-.RS 4
-Override the machine\-id set on the hard drive, useful for network booting or for containers\&. May not be set to all zeros\&.
-.RE
-.PP
-\fB\-\-service\-watchdogs=\fR
-.RS 4
-Globally enable/disable all service watchdog timeouts and emergency actions\&. This setting may also be specified during boot, on the kernel command line via the
-\fIsystemd\&.service_watchdogs=\fR
-option, see below\&. Defaults to enabled\&.
-.RE
-.PP
-\fB\-h\fR, \fB\-\-help\fR
-.RS 4
-Print a short help text and exit\&.
-.RE
-.PP
-\fB\-\-version\fR
-.RS 4
-Print a short version string and exit\&.
-.RE
 .SH "CONCEPTS"
 .PP
 systemd provides a dependency system between various entities called "units" of 11 different types\&. Units encapsulate various objects that are relevant for system boot\-up and maintenance\&. The majority of units are configured in unit configuration files, whose syntax and basic set of options is described in
@@ -789,6 +627,70 @@ Controls where systemd looks for SysV init scripts\&.
 Controls where systemd looks for SysV init script runlevel link farms\&.
 .RE
 .PP
+\fI$SYSTEMD_PAGER\fR
+.RS 4
+Pager to use when
+\fB\-\-no\-pager\fR
+is not given; overrides
+\fI$PAGER\fR\&. If neither
+\fI$SYSTEMD_PAGER\fR
+nor
+\fI$PAGER\fR
+are set, a set of well\-known pager implementations are tried in turn, including
+\fBless\fR(1)
+and
+\fBmore\fR(1), until one is found\&. If no pager implementation is discovered no pager is invoked\&. Setting this environment variable to an empty string or the value
+"cat"
+is equivalent to passing
+\fB\-\-no\-pager\fR\&.
+.RE
+.PP
+\fI$SYSTEMD_LESS\fR
+.RS 4
+Override the options passed to
+\fBless\fR
+(by default
+"FRSXMK")\&.
+.sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
+If the value of
+\fI$SYSTEMD_LESS\fR
+does not include
+"K", and the pager that is invoked is
+\fBless\fR,
+Ctrl+C
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
+.RE
+.PP
+\fI$SYSTEMD_LESSCHARSET\fR
+.RS 4
+Override the charset passed to
+\fBless\fR
+(by default
+"utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
 The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
@@ -825,7 +727,9 @@ For further environment variables understood by systemd and its various componen
 \m[blue]\fBKnown Environment Variables\fR\m[]\&\s-2\u[7]\d\s+2\&.
 .SH "KERNEL COMMAND LINE"
 .PP
-When run as system instance systemd parses a number of kernel command line arguments\&\s-2\u[8]\d\s+2:
+When run as the system instance systemd parses a number of options listed below\&. They can be specified as kernel command line arguments\&\s-2\u[8]\d\s+2, or through the
+"SystemdOptions"
+EFI variable (on EFI systems)\&. The kernel command line has higher priority\&. Following variables are understood:
 .PP
 \fIsystemd\&.unit=\fR, \fIrd\&.systemd\&.unit=\fR
 .RS 4
@@ -889,9 +793,7 @@ until a unit fails or there is a significant delay in boot\&. Defaults to enable
 is passed as kernel command line option, in which case it defaults to
 \fBauto\fR\&. If specified overrides the system manager configuration file option
 \fBShowStatus=\fR, see
-\fBsystemd-system.conf\fR(5)\&. However, the process command line option
-\fB\-\-show\-status=\fR
-takes precedence over both this kernel command line option and the configuration file option\&.
+\fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
 \fIsystemd\&.status_unit_format=\fR
@@ -920,11 +822,27 @@ can be specified without an argument, with the same effect as a positive boolean
 .PP
 \fIsystemd\&.default_standard_output=\fR, \fIsystemd\&.default_standard_error=\fR
 .RS 4
-Controls default standard output and error output for services, with the same effect as the
-\fB\-\-default\-standard\-output=\fR
+Controls default standard output and error output for services and sockets\&. That is, controls the default for
+\fBStandardOutput=\fR
 and
-\fB\-\-default\-standard\-error=\fR
-command line arguments described above, respectively\&.
+\fBStandardError=\fR
+(see
+\fBsystemd.exec\fR(5)
+for details)\&. Takes one of
+\fBinherit\fR,
+\fBnull\fR,
+\fBtty\fR,
+\fBjournal\fR,
+\fBjournal+console\fR,
+\fBkmsg\fR,
+\fBkmsg+console\fR\&. If the argument is omitted
+\fIsystemd\&.default\-standard\-output=\fR
+defaults to
+\fBjournal\fR
+and
+\fIsystemd\&.default\-standard\-error=\fR
+to
+\fBinherit\fR\&.
 .RE
 .PP
 \fIsystemd\&.setenv=\fR
@@ -1007,6 +925,171 @@ and
 .PP
 For other kernel command line parameters understood by components of the core OS, please refer to
 \fBkernel-command-line\fR(7)\&.
+.SH "OPTIONS"
+.PP
+\fBsystemd\fR
+is only very rarely invoked directly, since it is started early and is already running by the time users may interact with it\&. Normally, tools like
+\fBsystemctl\fR(1)
+are used to give commands to the manager\&. Since
+\fBsystemd\fR
+is usually not invoked directly, the options listed below are mostly useful for debugging and special purposes\&.
+.SS "Introspection and debugging options"
+.PP
+Those options are used for testing and introspection, and
+\fBsystemd\fR
+may be invoked with them at any time:
+.PP
+\fB\-\-dump\-configuration\-items\fR
+.RS 4
+Dump understood unit configuration items\&. This outputs a terse but complete list of configuration items understood in unit definition files\&.
+.RE
+.PP
+\fB\-\-dump\-bus\-properties\fR
+.RS 4
+Dump exposed bus properties\&. This outputs a terse but complete list of properties exposed on D\-Bus\&.
+.RE
+.PP
+\fB\-\-test\fR
+.RS 4
+Determine the initial start\-up transaction (i\&.e\&. the list of jobs enqueued at start\-up), dump it and exit \(em without actually executing any of the determined jobs\&. This option is useful for debugging only\&. Note that during regular service manager start\-up additional units not shown by this operation may be started, because hardware, socket, bus or other kinds of activation might add additional jobs as the transaction is executed\&. Use
+\fB\-\-system\fR
+to request the initial transaction of the system service manager (this is also the implied default), combine with
+\fB\-\-user\fR
+to request the initial transaction of the per\-user service manager instead\&.
+.RE
+.PP
+\fB\-\-system\fR, \fB\-\-user\fR
+.RS 4
+When used in conjunction with
+\fB\-\-test\fR, selects whether to calculate the initial transaction for the system instance or for a per\-user instance\&. These options have no effect when invoked without
+\fB\-\-test\fR, as during regular (i\&.e\&. non\-\fB\-\-test\fR) invocations the service manager will automatically detect whether it shall operate in system or per\-user mode, by checking whether the PID it is run as is 1 or not\&. Note that it is not supported booting and maintaining a system with the service manager running in
+\fB\-\-system\fR
+mode but with a PID other than 1\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
+.SS "Options that duplicate kernel command line settings"
+.PP
+Those options correspond directly to options listed above in "Kernel Command Line"\&. Both forms may be used equivalently for the system manager, but it is recommended to use the forms listed above in this context, because they are properly namespaced\&. When an option is specified both on the kernel command line, and as a normal command line argument, the latter has higher precedence\&.
+.PP
+When
+\fBsystemd\fR
+is used a user manager, the kernel command line is ignored and the options described are understood\&. Nevertheless,
+\fBsystemd\fR
+is usually started in this mode through the
+\fBuser@.service\fR(5)
+service, which is shared between all users, and it may be more convenient to use configuration files to modify settings, see
+\fBsystemd-user.conf\fR(5), or a drop\-in that specifies one of the environment variables listed above in "Environment, see
+\fBsystemd.unit\fR(5)\&.
+.PP
+\fB\-\-unit=\fR
+.RS 4
+Set default unit to activate on startup\&. If not specified, defaults to
+default\&.target\&. See
+\fIsystemd\&.unit=\fR
+above\&.
+.RE
+.PP
+\fB\-\-dump\-core\fR
+.RS 4
+Enable core dumping on crash\&. This switch has no effect when running as user instance\&. Same as
+\fIsystemd\&.dump_core=\fR
+above\&.
+.RE
+.PP
+\fB\-\-crash\-vt=\fR\fIVT\fR
+.RS 4
+Switch to a specific virtual console (VT) on crash\&. This switch has no effect when running as user instance\&. Same as
+\fIsystemd\&.crash_chvt=\fR
+above (but not the different spelling!)\&.
+.RE
+.PP
+\fB\-\-crash\-shell\fR
+.RS 4
+Run a shell on crash\&. This switch has no effect when running as user instance\&. See
+\fIsystemd\&.crash_shell=\fR
+above\&.
+.RE
+.PP
+\fB\-\-crash\-reboot\fR
+.RS 4
+Automatically reboot the system on crash\&. This switch has no effect when running as user instance\&. See
+\fIsystemd\&.crash_reboot\fR
+above\&.
+.RE
+.PP
+\fB\-\-confirm\-spawn\fR
+.RS 4
+Ask for confirmation when spawning processes\&. This switch has no effect when run as user instance\&. See
+\fIsystemd\&.confirm_spawn\fR
+above\&.
+.RE
+.PP
+\fB\-\-show\-status\fR
+.RS 4
+Show terse unit status information is shown on the console during boot\-up and shutdown\&. See
+\fIsystemd\&.show_status\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-target=\fR
+.RS 4
+Set log target\&. See
+\fIsystemd\&.log_target\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-level=\fR
+.RS 4
+Set log level\&. See
+\fIsystemd\&.log_level\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-color\fR
+.RS 4
+Highlight important log messages\&. See
+\fIsystemd\&.log_color\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-location\fR
+.RS 4
+Include code location in log messages\&. See
+\fIsystemd\&.log_location\fR
+above\&.
+.RE
+.PP
+\fB\-\-machine\-id=\fR
+.RS 4
+Override the machine\-id set on the hard drive\&. See
+\fIsystemd\&.machine_id=\fR
+above\&.
+.RE
+.PP
+\fB\-\-service\-watchdogs\fR
+.RS 4
+Globally enable/disable all service watchdog timeouts and emergency actions\&. See
+\fIsystemd\&.service_watchdogs\fR
+above\&.
+.RE
+.PP
+\fB\-\-default\-standard\-output=\fR, \fB\-\-default\-standard\-error=\fR
+.RS 4
+Sets the default output or error output for all services and sockets, respectively\&. See
+\fIsystemd\&.default_standard_output=\fR
+and
+\fIsystemd\&.default_standard_error=\fR
+above\&.
+.RE
 .SH "SOCKETS AND FIFOS"
 .PP
 /run/systemd/notify

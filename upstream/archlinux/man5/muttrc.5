@@ -1058,7 +1058,7 @@ attachment number
 \(lqQ\(rq, if MIME part qualifies for attachment counting
 .TP
 %s  
-size
+size (see formatstrings-size)
 .TP
 %t  
 tagged flag
@@ -1169,6 +1169,77 @@ by default) to make the next function apply to all tagged messages.
 
 
 .TP
+.B autocrypt
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, enables autocrypt, which provides
+passive encryption protection with keys exchanged via headers.
+See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_acct_format
+.nf
+Type: string
+Default: \(lq%4n %\-30a %20p %10s\(rq
+.fi
+.IP
+This variable describes the format of the \(lqautocrypt account\(rq menu.
+The following \fCprintf(3)\fP\-style sequences are understood
+.RS
+.PD 0
+.TP
+%a  
+email address
+.TP
+%k  
+gpg keyid
+.TP
+%n  
+current entry number
+.TP
+%p  
+prefer\-encrypt flag
+.TP
+%s  
+status flag (active/inactive)
+.RE
+.PD 1
+.IP
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_dir
+.nf
+Type: path
+Default: \(lq~/.mutt/autocrypt\(rq
+.fi
+.IP
+This variable sets where autocrypt files are stored, including the GPG
+keyring and sqlite database.  See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_reply
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When \fIset\fP, replying to an autocrypt email automatically
+enables autocrypt in the reply.  You may want to unset this if you're using
+the same key for autocrypt as normal web\-of\-trust, so that autocrypt
+isn't forced on for all encrypted replies.
+(Autocrypt only)
+
+
+.TP
 .B autoedit
 .nf
 Type: boolean
@@ -1264,6 +1335,20 @@ locale\-based sorting (using \fCstrcoll(3)\fP), which ignores some
 punctuation.  This can lead to some situations where the order
 doesn't make intuitive sense.  In those cases, it may be
 desirable to \fIunset\fP this variable.
+
+
+.TP
+.B browser_sticky_cursor
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When this variable is \fIset\fP, the browser will attempt to keep
+the cursor on the same mailbox when performing various functions.
+These include moving up a directory, toggling between mailboxes
+and directory listing, creating/renaming a mailbox, toggling
+subscribed mailboxes, and entering a new mask.
 
 
 .TP
@@ -1390,7 +1475,7 @@ total number of attachments
 local hostname
 .TP
 %l 
-approximate size (in bytes) of the current message
+approximate size (in bytes) of the current message (see formatstrings-size)
 .TP
 %v 
 Mutt version string
@@ -1474,6 +1559,24 @@ Default: yes
 This variable controls whether or not copies of your outgoing messages
 will be saved for later references.  Also see $record,
 $save_name, $force_name and \(lqfcc-hook\(rq.
+
+
+.TP
+.B count_alternatives
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt will recurse inside multipart/alternatives while
+performing attachment searching and counting (see attachments).
+.IP
+Traditionally, multipart/alternative parts have simply represented
+different encodings of the main content of the email.  Unfortunately,
+some mail clients have started to place email attachments inside
+one of alternatives.  Setting this will allow Mutt to find
+and count matching attachments hidden there, and include them
+in the index via %X or through ~X pattern matching.
 
 
 .TP
@@ -2158,7 +2261,7 @@ number of unread messages in the mailbox *
 N if mailbox has new mail, blank otherwise
 .TP
 %s  
-size in bytes
+size in bytes (see formatstrings-size)
 .TP
 %t  
 \(lq*\(rq if the file is tagged, blank otherwise
@@ -2422,8 +2525,8 @@ much faster than opening non header cached folders.
 .TP
 .B header_cache_pagesize
 .nf
-Type: string
-Default: \(lq16384\(rq
+Type: number (long)
+Default: 16384
 .fi
 .IP
 When mutt is compiled with either gdbm or bdb4 as the header cache backend,
@@ -3061,7 +3164,7 @@ filename of the original message folder (think mailbox)
 the list to which the letter was sent, or else the folder name (%b).
 .TP
 %c 
-number of characters (bytes) in the message
+number of characters (bytes) in the message (see formatstrings-size)
 .TP
 %C 
 current message number
@@ -3093,8 +3196,8 @@ spam attribute(s) of this message
 message\-id of the current message
 .TP
 %l 
-number of lines in the message (does not work with maildir,
-mh, and possibly IMAP folders)
+number of lines in the unprocessed message (may not work with
+maildir, mh, and IMAP folders)
 .TP
 %L 
 If an address in the \(lqTo:\(rq or \(lqCc:\(rq header field matches an address
@@ -3197,6 +3300,12 @@ pad to the end of the line with character \(lqX\(rq
 soft\-fill with character \(lqX\(rq as pad
 .RE
 .PD 1
+.IP
+Note that for mbox/mmdf, \(lq%l\(rq applies to the unprocessed message, and
+for maildir/mh, the value comes from the \(lqLines:\(rq header field when
+present (the meaning is normally the same). Thus the value depends on
+the encodings used in the different parts of the message and has little
+meaning in practice.
 .IP
 \(lqSoft\-fill\(rq deserves some explanation: Normal right\-justification
 will print everything to the left of the \(lq%>\(rq, displaying padding and
@@ -4972,7 +5081,8 @@ your messages, but another way to do this is using the \(lqmy_hdr\(rq
 command to create a \(lqBcc:\(rq field with your email address in it.)
 .IP
 The value of \fI$record\fP is overridden by the $force_name and
-$save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy.
+$save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy
+and $write_bcc.
 
 
 .TP
@@ -5345,6 +5455,37 @@ mutt uses $charset as a fallback.
 
 
 .TP
+.B send_multipart_alternative
+.nf
+Type: quadoption
+Default: no
+.fi
+.IP
+If \fIset\fP, Mutt will generate a multipart/alternative
+container and an alternative part using the filter script specified in
+$send_multipart_alternative_filter.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+.IP
+Note that enabling multipart/alternative is not compatible with inline
+PGP encryption.  Mutt will prompt to use PGP/MIME in that case.
+
+
+.TP
+.B send_multipart_alternative_filter
+.nf
+Type: path
+Default: \(lq\(rq
+.fi
+.IP
+This specifies a filter script, which will convert the main
+(composed) message of the email to an alternative format.  The
+message will be piped to the filter's stdin.  The expected output
+of the filter is the generated mime type, e.g. text/html,
+followed by a blank line, and then the converted content.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+
+
+.TP
 .B sendmail
 .nf
 Type: path
@@ -5357,6 +5498,8 @@ arguments as recipient addresses.  Mutt appends all recipients after
 adding a \fC\-\-\fP delimiter (if not already present).  Additional
 flags, such as for $use_8bitmime, $use_envelope_from,
 $dsn_notify, or $dsn_return will be added before the delimiter.
+.IP
+\fBSee also:\fP $write_bcc.
 
 
 .TP
@@ -5707,6 +5850,51 @@ For example, if you simply type \(lqjoe\(rq at a search or limit prompt, Mutt
 will automatically expand it to the value specified by this variable by
 replacing \(lq%s\(rq with the supplied string.
 For the default value, \(lqjoe\(rq would be expanded to: \(lq~f joe | ~s joe\(rq.
+
+
+.TP
+.B size_show_bytes
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes will display bytes for values less than
+1 kilobyte.  See formatstrings-size.
+
+
+.TP
+.B size_show_fractions
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will be displayed with a single decimal value
+for sizes from 0 to 10 kilobytes and 1 to 10 megabytes.
+See formatstrings-size.
+
+
+.TP
+.B size_show_mb
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will display megabytes for values greater than
+or equal to 1 megabyte.  See formatstrings-size.
+
+
+.TP
+.B size_units_on_left
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes units will be displayed to the left of the number.
+See formatstrings-size.
 
 
 .TP
@@ -6186,6 +6374,8 @@ smtp[s]://[user[:pass]@]host[:port]
 where \(lq[...]\(rq denotes an optional part.
 Setting this variable overrides the value of the $sendmail
 variable.
+.IP
+Also see $write_bcc.
 
 
 .TP
@@ -6389,7 +6579,7 @@ key.
 .B ssl_force_tls
 .nf
 Type: boolean
-Default: no
+Default: yes
 .fi
 .IP
 If this variable is \fIset\fP, Mutt will require that all connections
@@ -6480,6 +6670,17 @@ Default: yes
 .fi
 .IP
 If \fIset\fP , Mutt will use TLSv1.2 when communicating with servers that
+request it.
+
+
+.TP
+.B ssl_use_tlsv1_3
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP , Mutt will use TLSv1.3 when communicating with servers that
 request it.
 
 
@@ -6604,11 +6805,11 @@ number of flagged messages *
 local hostname
 .TP
 %l  
-size (in bytes) of the current mailbox *
+size (in bytes) of the current mailbox (see formatstrings-size) *
 .TP
 %L  
 size (in bytes) of the messages shown
-(i.e., which match the current limit) *
+(i.e., which match the current limit) (see formatstrings-size) *
 .TP
 %m  
 the number of messages in the mailbox *
@@ -6757,6 +6958,10 @@ of \(lq\fCtext/plain; format=flowed\fP\(rq.
 This format is easier to handle for some mailing software, and generally
 just looks like ordinary text.  To actually make use of this format's
 features, you'll need support in your editor.
+.IP
+The option only controls newly composed messages.  Postponed messages,
+resent messages, and draft messages (via \-H on the command line) will
+use the content\-type of the source message.
 .IP
 Note that $indent_string is ignored when this option is \fIset\fP.
 
@@ -7043,7 +7248,7 @@ Normally, the default should work.
 .B user_agent
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
 When \fIset\fP, mutt will add a \(lqUser\-Agent:\(rq header to outgoing
@@ -7151,14 +7356,22 @@ Default: 0
 .B write_bcc
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-Controls whether mutt writes out the \(lqBcc:\(rq header when preparing
-messages to be sent.  Exim users may wish to unset this. If mutt
-is set to deliver directly via SMTP (see $smtp_url), this
-option does nothing: mutt will never write out the \(lqBcc:\(rq header
-in this case.
+Controls whether mutt writes out the \(lqBcc:\(rq header when
+preparing messages to be sent.  Some MTAs, such as Exim and
+Courier, do not strip the \(lqBcc:\(rq header; so it is advisable to
+leave this unset unless you have a particular need for the header
+to be in the sent message.
+.IP
+If mutt is set to deliver directly via SMTP (see $smtp_url),
+this option does nothing: mutt will never write out the \(lqBcc:\(rq
+header in this case.
+.IP
+Note this option only affects the sending of messages.  Fcc'ed
+copies of a message will always contain the \(lqBcc:\(rq header if
+one exists.
 
 
 .TP
