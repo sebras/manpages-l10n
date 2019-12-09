@@ -57,7 +57,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-nl.html">The Dutch translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
-	<!-- <li><a href="index-pl.html">The Polish translation</a></li> -->
+        <li><a href="index-pl.html">The Polish translation</a></li>
         <li><a href="index-ro.html">The Romanian translation</a></li>
       </ul>
       <p>
@@ -67,7 +67,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in de fr nl ro; do
+for tlang in de fr nl pl ro; do
     echo $tlang
 
 # Determine manpage section names
