@@ -40,7 +40,7 @@ case $(basename "$translation") in
 	tar.1.po ) echo ".Sh TŁUMACZENIE" >> "$addendum" ;;
 	* ) echo ".SH TŁUMACZENIE" >> "$addendum" ;;
 esac
-echo "Polskie tłumaczenie tej strony podręcznika zostało napisane przez" >> "$addendum"
+echo "Autorami polskiego tłumaczenia niniejszej strony podręcznika są:" >> "$addendum"
 
 # Warn if the translators string is empty
 if [ -z "$translators" ]; then
