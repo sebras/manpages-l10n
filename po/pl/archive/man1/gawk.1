@@ -1,0 +1,3160 @@
+.\" {PTM/PB/0.1/12-06-1999/"język wyszukiwania i przetwarzania wzorców"}
+.\" aktualizacja WK/2000-VII
+.\" podręcznik aktualny dla GAWK wersji 3.0.5, czerwiec 2000
+.\" aktualizacja WK/2001-VI
+.\" podręcznik aktualny dla GAWK wersji 3.1.0, maj 2001
+.ds PX \s-1POSIX\s+1
+.ds UX \s-1UNIX\s+1
+.ds AN \s-1ANSI\s+1
+.ds GN \s-1GNU\s+1
+.ds AK \s-1AWK\s+1
+.ds EP \fIGAWK: Efektywne programowanie w AWK\fP
+.if !\n(.g \{\
+.     if !\w|\*(lq| \{\
+.             ds lq ``
+.             if \w'\(lq' .ds lq "\(lq
+.     \}
+.     if !\w|\*(rq| \{\
+.             ds rq ''
+.             if \w'\(rq' .ds rq "\(rq
+.     \}
+.\}
+.TH GAWK 1 "29 maja 2001" "Free Software Foundation" "Narzędzia"
+.SH NAZWA
+gawk \- język wyszukiwania i przetwarzania wzorców.
+.SH SKŁADNIA
+.TP 6
+.B gawk
+.RI [ "opcje w stylu \*(PX lub \*(GN" ]
+.B \-f
+.I plik-programu
+.RB [ \-\^\- ]
+.IR plik .\^.\^.
+.TP
+.B gawk
+.RI [ "opcje w stylu \*(PX lub \*(GN" ]
+.RB [ \-\^\- ]
+.I tekst-programu
+.IR plik .\^.\^.
+.TP
+.B pgawk
+.RI [ "opcje w stylu \*(PX lub \*(GN" ]
+.B \-f
+.I plik-programu
+.RB [ \-\^\- ]
+.IR plik .\|.\|.
+.TP
+.B pgawk
+.RI [ "opcje w stylu \*(PX lub \*(GN" ]
+.RB [ \-\^\- ]
+.I tekst-programu
+.IR plik .\|.\|.
+.SH OPIS
+.I Gawk
+jest implementacją GNU języka programowania \*(AK. Odpowiada on definicji tego
+języka z \*(PX 1003.2 Command Language And Utilities Standard.
+Wersja ta jest z kolei oparta na opisie z
+.IR "The AWK Programming Language" ,
+napisanym przez Aho, Kernighana i Weinbergera,
+z dodatkowymi właściwościami, zdefiniowanymi w wersji awk z SysVR4.
+.I Gawk
+udostępnia również najświeższe rozszerzenia
+.I awk
+z Bell Laboratories oraz parę rozszerzeń specyficznych dla \*(GN.
+.PP
+.I Pgawk
+jest profilującą wersją
+.IR gawk .
+W każdym aspekcie jest identyczny z
+.IR gawk ,
+z wyjątkiem tego, że programy działają wolniej, a na zakończenie
+automatycznie tworzony jest profil wykonania w pliku
+.BR awkprof.out .
+Zobacz opcja
+.BR \-\^\-profile ,
+poniżej.
+.PP
+Wiersz poleceń składa się z opcji dla
+.IR gawk ,
+tekstu programu (jeśli nie podano go poprzez opcję
+.B \-f
+lub
+.BR \-\^\-file )
+i wartości, które mają być udostępnione w predefiniowanych zmiennych
+.B ARGC
+i
+.BR ARGV .
+.SH OPCJE
+.PP
+Opcje
+.I gawk
+mogą być zarówno tradycyjnymi \*(PX-owymi jednoliterowymi opcjami,
+jak i długimi opcjami w stylu \*(GN. Opcje \*(PX-owe zaczynają się pojedynczym
+\*(lq\-\*(rq, a opcje \*(GN \*(lq\-\^\-\*(rq.
+Opcje w stylu \*(GN są udostępniane zarówno dla właściwości specyficznych dla
+GNU,
+jak i dla właściwości \*(PX-owych. Inne implementacje \*(AK prawdopodobnie
+jednak będą przyjmować tylko tradycyjne, jednoliterowe opcje.
+.PP
+Zgodnie ze standardem \*(PX, specyficzne dla
+.IR gawk
+opcje są przekazywane przez argumenty opcji
+.BR \-W .
+Można podać wiele opcji
+.BR \-W ,
+lub wiele jej argumentów (oddzielonych przecinkami, lub ujętych w cudzysłowy
+i oddzielonych białymi spacjami).
+Wielkość liter w argumentach przekazanych opcji
+.B \-W
+jest ignorowana.
+Każda opcja
+.B \-W
+ma odpowiadająca sobie długą opcję w stylu \*(GN, jak opisano niżej.
+Argumenty przekazywane długim opcjom w stylu \*(GN są łączone z opcją przy
+użyciu znaku
+.BR = ,
+bez dodatkowych spacji lub przekazywane w następnym argumencie wiersza poleceń
+(tj. bez znaku równości i po spacji).
+.PP
+.I Gawk
+przyjmuje następujące, wymienione alfabetycznie, opcje.
+.TP
+.PD 0
+.BI \-F " fs"
+.TP
+.PD
+.BI \-\^\-field-separator= fs
+Używa
+.I fs
+jako wejściowego separatora pola (wartość predefiniowanej zmiennej
+.BR FS ).
+.TP
+.PD 0
+\fB\-v\fI var\fB\^=\^\fIval\fR
+.TP
+.PD
+\fB\-\^\-assign=\fIvar\fB\^=\^\fIval\fR
+Przyznaje zmiennej
+.IR var
+wartość
+.IR val .
+Robi to przed uruchomieniem programu.
+Takie wartości zmiennych są dostępne dla bloku
+.B BEGIN
+programu \*(AK.
+.TP
+.PD 0
+.BI \-f " plik-programu"
+.TP
+.PD
+.BI \-\^\-file= plik-programu
+Odczytaj źródło programu \*(AK z pliku
+.IR plik-programu ,
+zamiast odczytywać go z pierwszego argumentu wiersza poleceń.
+Można użyć wielu opcji
+.B \-f
+(lub
+.BR \-\^\-file ).
+.TP
+.PD 0
+.BI \-mf= NNN
+.TP
+.BI \-mr= NNN
+Ustaw limity pamięci na wartość
+.IR NNN .
+Flaga
+.B f
+ustawia maksymalną liczbę pól, a flaga
+.B r
+ustawia maksymalny rozmiar rekordu. Te dwie flagi i opcja
+.B \-m
+pochodzą z wersji AT&T Bell Laboratories research  \*(UX
+.IR awk .
+Są one ignorowane w
+.IR gawk ,
+gdyż nie posiada on predefiniowanych limitów.
+.TP
+.PD 0
+.B "\-W compat"
+.TP
+.PD 0
+.B "\-W traditional"
+.TP
+.PD 0
+.B \-\^\-compat
+.TP
+.PD
+.B \-\^\-traditional
+Pracuje w trybie
+.IR zgodności .
+W trybie tym,
+.I gawk
+zachowuje się identycznie z \*(UX
+.IR awk ;
+nie jest rozpoznawane żadne ze specyficznych dla \*(GN rozszerzeń.
+Postać
+.B \-\^\-traditional
+jest preferowana.
+Zobacz
+.BR "ROZSZERZENIA GNU" ,
+dla dalszych informacji.
+.TP
+.PD 0
+.B "\-W copyleft"
+.TP
+.PD 0
+.B "\-W copyright"
+.TP
+.PD 0
+.B \-\^\-copyleft
+.TP
+.PD
+.B \-\^\-copyright
+Wypisuje krótką wersję informacji o kopiowaniu (na standardowe wyjście).
+.TP
+.PD 0
+\fB\-W dump-variables\fR[\fB=\fIplik\fR]
+.TP
+.PD
+\fB\-\^\-dump-variables\fR[\fB=\fIplik\fR]
+Wypisuje do
+.I pliku
+posortowaną listę zmiennych globalnych, ich typoów i końcowych wartości.
+Jeśli nie podano
+.IR pliku ,
+to
+.I gawk
+używa pliku o nazwie
+.I awkvars.out
+w katalogu bieżącym.
+.sp .5
+Lista wszystkich zmiennych globalnych to dobry sposób na wyszukanie błędów
+typograficznych w programach.
+Może się też przydać, gdy masz wielki program z mnóstwem funkcji a chcesz się
+upewnić, że nie używają one przypadkiem ze zmiennych globalnych, które uważasz
+za lokalne.
+(Szczególnie łatwo pomylić się przy prostych nazwach zmiennych, jak
+.BR i ,
+.BR j ,
+i tak dalej.)
+.TP
+.PD 0
+.B "\-W help"
+.TP
+.PD 0
+.B "\-W usage"
+.TP
+.PD 0
+.B \-\^\-help
+.TP
+.PD
+.B \-\^\-usage
+Wypisuje na standardowe wyjście krótkie podsumowanie dostępnych opcji.
+(Zgodnie z
+.IR "GNU Coding Standards" ,
+te opcje powodują natychmiastowe, pomyślne zakończenie pracy).
+.TP
+.PD 0
+.BR "\-W lint" [ =fatal ]
+.TP
+.PD 0
+.BR \-\^\-lint [ =fatal ]
+Daje ostrzeżenia o konstrukcjach, które są pokraczne lub nieprzenośne dla
+innych implementacji \*(AK.
+Z opcjonalnym argumentem
+.BR fatal ,
+ostrzeżenia lint stają się błędami krytycznymi.
+Może to drastyczne, ale korzystanie z tej opcji na pewno zachęci do pisania
+czystszych programów \*(AK.
+.TP
+.PD 0
+.B "\-W lint\-old"
+.TP
+.PD 0
+.B \-\^\-lint\-old
+Daje ostrzeżenia o konstrukcjach, które nieprzenośne na pierwotną wersję
+Uniksowego
+.IR awk.
+.TP
+.PD 0
+.B "\-W gen\-po"
+.TP
+.PD
+.B \-\^\-gen\-po
+Przegląda i analizuje program \*(AK program, i tworzy na standardowym wyjściu
+plik formatu \*(GN
+.BR \&.po ,
+zawierający wpisy dla wszystkich podlegających lokalizacji łańcuchów
+w programie. Sam program nie jest wykonywany.
+Więcej szczegółów o plikach
+.B \&.po
+można znaleźć w pakiecie dystrybucyjnym \*(GN
+.IR gettext .
+.TP
+.PD 0
+.B "\-W non\-decimal\-data"
+.TP
+.PD
+.B "\-\^\-non\-decimal\-data"
+Rozpoznaje wartości ósemkowe i szesnastkowe w danych wejściowych.
+.I "Używaj tej opcji ze szczególną ostrożnością!"
+.ig
+.\" This option is left undocumented, on purpose.
+.TP
+.PD 0
+.B "\-W nostalgia"
+.TP
+.PD
+.B \-\^\-nostalgia
+Daje chwilkę nostalgii starym użytkownikom
+.IR awk .
+..
+.TP
+.PD 0
+.B "\-W posix"
+.TP
+.PD
+.B \-\^\-posix
+Włącza tryb
+.IR zgodności ,
+w którym obowiązują następujące dodatkowe ograniczenia:
+.RS
+.TP "\w'\(bu'u+1n"
+\(bu
+sekwencje specjalne
+.B \ex
+nie są rozpoznawane.
+.TP
+\(bu
+Przy
+.B FS
+ustawionym na pojedynczą spację jako separatory pól działają tylko spacje
+i tabulatory, znaki nowej linii nie są separatorami pól.
+.TP
+\(bu
+Nie można kontynuować linii po
+.B ?
+i
+.BR : .
+.TP
+\(bu
+Synonim
+.B `func'
+dla słowa kluczowego
+.B `function'
+nie jest rozpoznawany.
+.TP
+\(bu
+Operatory
+.B **
+i
+.B **=
+nie mogą być używane zamiast
+.B ^
+i
+.BR ^= .
+.TP
+\(bu
+Nie jest dostępna funkcja
+.BR fflush() .
+.RE
+.TP
+.PD 0
+\fB\-W profile\fR[\fB=\fIplik_prof\fR]
+.TP
+.PD
+\fB\-\^\-profile\fR[\fB=\fIplik_prof\fR]
+Wysyła dane profilowania do
+.IR pliku_prof .
+Domyślnie jest to
+.BR awkprof.out .
+Uruchomiony z
+.IR gawk ,
+profil jest tylko \*(lqładnie wypisaną\*(rq wersją programu.
+Uruchomiony z
+.IR pgawk ,
+profil zawiera liczbę wykonań każdej instrukcji programu (na lewym marginesie)
+oraz liczbę wywołań funkcji dla każdej funkcji użytkownika.
+.TP
+.PD 0
+.B "\-W re\-interval"
+.TP
+.PD 0
+.B "\-\-re\-interval"
+Włącz użycie wyrażeń powtarzanych (interval expressions) w dopasowywaniu
+wyrażeń regularnych (patrz poniżej
+.BR Wyrażenia regularne ).
+Wyrażenia powtarzane nie były tradycyjnie dostępne w języku \*(AK. Standard
+\*(PX dodał je dla uzyskania wzajemnej zgodności
+.B awk
+i
+.BR egrep .
+Jednak ich użycie najprawdopodobniej da błędy w starych programach \*(AK,
+zatem
+.B gawk
+udostępnia je tylko wtedy, gdy zażądano tego niniejszą opcją lub podano
+opcję
+.BR \-\-posix .
+.TP
+.PD 0
+.BI "\-W source=" tekst-programu
+.TP
+.PD
+.BI \-\^\-source= tekst-programu
+Używa
+.I tekst-programu
+jako kodu źródłowego programu \*(AK.
+Opcja ta pozwala na łatwe łączenie funkcji bibliotecznych (używanych poprzez
+opcje
+.B \-f
+i
+.BR \-\^\-file )
+z kodem źródłowym wprowadzanym w wierszu poleceń.
+Jest to przeznaczone przede wszystkim dla średnio dużych programów \*(AK,
+używanych w skryptach powłokowych.
+.sp .5
+Forma
+.B "\-W source="
+tej opcji używa reszty argumentu wiersza poleceń jako tekstu programu;
+dalsze opcje
+.B \-W
+nie będą rozpoznawane w tym samym argumencie.
+.TP
+.PD 0
+.B "\-W version"
+.TP
+.PD
+.B \-\^\-version
+Wypisuje informację o wersji tej konkretnej kopii
+.I gawk
+(na standardowe wyjście).
+Jest to przydatne przede wszystkim do zdobywania informacji, czy bieżąca
+kopia
+.IR gawk ,
+którą posiadasz na systemie jest aktualna. Przydaje się także przy
+zgłaszaniu błędów. (Według
+.B GNU Coding Standards
+(Standardów Kodowania \*(GN), opcje te powodują natychmiastowe, zakończone
+powodzeniem zakończenie pracy.)
+.TP
+.PD 0
+.B \-\^\-
+Sygnalizuje koniec opcji. Dzięki temu następne argumenty programu \*(AK mogą
+rozpoczynać się myślnikiem \*(lq\-\*(rq. [Na przykład rozpoczynające się
+myślnikiem nazwy plików]. Istnieje głównie dla utrzymania spójności
+z konwencją przetwarzania argumentów używaną w większości programów
+\*(PX-owych.
+.PP
+W trybie zgodności wszelkie inne opcje są zaznaczane jako niepoprawne,
+lecz poza tym są ignorowane. W normalnym trybie działania, jeśli
+dostarczono tekst programu \*(AK, nieznane opcje są mu przekazywane
+w tablicy
+.BR ARGV ,
+aby mógł je sobie sam przetworzyć. Przydaje się to w praktyce do
+uruchamiania programów \*(AK przez mechanizm \*(lq#!\*(rq interpretera.
+.SH WYWOŁANIE PROGRAMU AWK
+.PP
+Program \*(AK składa się z sekwencji instrukcji wzorzec-akcja oraz
+opcjonalnych definicji funkcji.
+.RS
+.PP
+\fIwzorzec\fB	{ \fIinstrukcje akcji\fB }\fR
+.br
+\fBfunction \fInazwa\fB(\fIlista parametrów\fB) { \fIinstrukcje\fB }\fR
+.RE
+.PP
+.I Gawk
+najpierw odczytuje źródło programu z podanych
+.IR plików-programu .
+.I Gawk
+czyta tekst programu tak, jakby wszystkie
+.IR pliki-programu
+zostały połączone ze sobą w całość. Przydaje się do budowania
+bibliotek funkcji \*(AK, bez konieczności włączania ich do każdego nowego
+programu \*(AK, który z nich korzysta. Umożliwia to również łączenie funkcji
+bibliotecznych z programami z wiersza poleceń.
+.PP
+Zmienna środowiskowa
+.B AWKPATH
+określa ścieżkę przeszukiwania, używaną do znajdowania plików
+źródłowych podanych w opcji
+.BR \-f .
+Jeśli zmienna ta nie istnieje, domyślną ścieżką staje się
+\fB".:/usr/local/share/awk"\fR. (Faktyczny katalog może być różny, zależnie
+od tego jak skompilowano i zainstalowano \fBawk\fR.)
+Jeśli nazwa pliku, podana opcji
+.B \-f
+zawiera znak \*(lq/\*(rq, nie jest dokonywane żadne przeszukiwanie ścieżki.
+.PP
+.I Gawk
+wywołuje programy \*(AK w następującej kolejności.
+Najpierw dokonuje wszelkich inicjalizacji zmiennych, zadanych w opcjach
+.BR \-v .
+Następnie kompiluje program do postaci wewnętrznej.
+Potem wywołuje kod, zawarty w blokach
+.B BEGIN
+(jeśli istnieją), a następnie zaczyna odczytywać każdy z plików, podanych
+w tablicy
+.BR ARGV .
+Jeśli nie podano takich nazw plików,
+.I gawk
+odczytuje standardowe wejście.
+.PP
+Jeśli nazwa pliku w wierszu poleceń ma postać
+.IB var = val
+\fR, to jest traktowana jako inicjalizacja zmiennej. Zmienna
+.I var
+uzyska wartość
+.IR val .
+(Dzieje się to po uruchomieniu każdego bloku
+.BR BEGIN .)
+Ten sposób inicjalizowania zmiennych najbardziej przydaje się do dynamicznego
+nadawania wartości zmiennym, których \*(AK używa do określania sposobu,
+w jaki wejście rozbijane jest na pola i rekordy. Jest też użyteczny do
+kontroli stanu, jeśli zachodzi potrzeba wielokrotnego czytania danego pliku
+danych.
+.PP
+Jeśli wartość konkretnego elementu
+.B ARGV
+jest pusta (\fB""\fR), to
+.I gawk
+ją pomija.
+.PP
+Dla każdego rekordu wejścia
+.I gawk
+dokonuje porównania, sprawdzając czy odpowiada on jakiemuś
+.I wzorcowi
+z programu \*(AK.
+Jeśli wzorzec będzie odpowiadał rekordowi, zostanie wykonana związana z nim
+.IR akcja .
+Wzorce są sprawdzane w kolejności ich pojawienia się w programie.
+.PP
+Na koniec, gdy wyczerpane zostanie całe wejście,
+.I gawk
+wywołuje kod zawarty w bloku
+.BR END .
+.SH ZMIENNE, REKORDY I POLA
+Zmienne \*(AK są dynamiczne; zaczynają istnieć gdy są po raz pierwszy użyte.
+Ich wartości są zmiennoprzecinkowe, znakowe (ciągi znaków) lub jedne i
+drugie naraz, zależnie od sposobu użycia. \*(AK posiada również tablice
+jednowymiarowe; symulowane mogą być również tablice wielowymiarowe. Podczas
+działania programu ustawianych jest kilka predefiniowanych zmiennych; będą
+one opisane niżej.
+.SS Rekordy
+Zwykle rekordy rozdzielane są znakami nowej linii [czyli rekordem jest
+pojedyncza linia]. Możesz kontrolować sposób, w jaki będą separowane rekordy
+przypisując wartość wbudowanej zmiennej
+.B RS
+Jeżeli zawiera ona pojedynczy znak, to jest on ogranicznikiem rekordów.
+W przeciwnym przypadku, \fBRS\fR jest wyrażeniem regularnym. Tekst wejściowy
+pasujący do tego wyrażenia rozdziela rekord. Jednakże, w trybie
+zgodności do rozdzielania rekordów zostanie użyty tylko jego pierwszy znak.
+jeżeli \fBRS\fR jest ustawiony na łańcuch pusty, to rekordy rozdzielane są
+pustymi liniami. W tym przypadku znak nowej linii zawsze działa jako
+ogranicznik pola, oprócz wartości ogranicznika ustawionej przez \fBFS\fR.
+.SS Pola
+.PP
+Po przeczytaniu każdego rekordu wejściowego,
+.I gawk
+rozbija go na
+.IR pola ,
+używając do tego celu wartości separatora pól,
+.BR FS .
+Jeśli
+.B FS
+jest pojedynczym znakiem, to pola są rozdzielane tym właśnie znakiem.
+W przeciwnym wypadku
+.B FS
+powinien być wyrażeniem regularnym. W szczególnym wypadku, kiedy
+.B FS
+jest pojedynczą spacją, pola są oddzielane dowolną ilością białych spacji
+(spacji, tabulatorów, nowych linii). (Ale patrz omówienie \fB--posix\fR).
+.B UWAGA:
+Wartość zmiennej
+.B IGNORECASE
+(patrz niżej) również wpływa na sposób rozdzielania pól i rekordów (w wypadku
+gdy odpowiednio
+.B FS
+bądź
+.B RS
+jest wyrażeniem regularnym).
+.PP
+Jeśli zmienną
+.B FIELDWIDTHS
+ustawiono na listę oddzielonych spacjami liczb, to każde pole powinno mieć
+stałą szerokość, zaś
+.I gawk
+dokonuje podziału przy użyciu podanych szerokości. Wartość
+.B FS
+jest wtedy ignorowana.
+Przyznanie zmiennej
+.B FS
+nowej wartości unieważnia użycie
+.BR FIELDWIDTHS ,
+i przywraca domyślne zachowanie.
+.PP
+Do każdego pola w rekordzie wejściowym można odwołać się przez jego pozycję,
+.BR $1 ,
+.BR $2 ,
+itd.
+.B $0
+jest całym rekordem (zwykle linią).
+.\" Polu można również przypisać wartość.
+Do pól nie musisz się odwoływać przez stałe:
+.RS
+.PP
+.ft B
+n = 5
+.br
+print $n
+.ft R
+.RE
+.PP
+wypisze piąte pole rekordu wejściowego.
+.PP
+Zmienna
+.B NF
+jest ustawiana na całkowitą liczbę pól w rekordzie wejściowym.
+.PP
+Odniesienia do pól nieistniejących (np. pól znajdujących się za
+.BR $NF )
+dają łańcuch zerowy. Jednak nadanie nieistniejącemu polu wartości
+(np.
+.BR "$(NF+2) = 5" )
+zwiększa wartość licznika
+.BR NF ,
+a pola znajdujące się `pomiędzy', inicjuje łańcuchem zerowym. Przypisanie
+to poowoduje również ponowne przetworzenie wartości zmiennej
+.BR $0 ,
+w której pola zostaną rozdzielone wartością
+.BR OFS .
+.PP
+Przypisanie wartości istniejącemu polu powoduje ponowne utworzenie całego
+rekordu podczas odwołania się do
+.BR $0 .
+Podobnie, przypisanie wartości do
+.B $0
+powoduje, że rekord jest ponownie dzielony, tworząc nowe wartości pól.
+.SS Wbudowane zmienne
+.PP
+Wbudowanymi zmiennymi
+.I Gawk
+są:
+.PP
+.TP "\w'\fBFIELDWIDTHS\fR'u+1n"
+.B ARGC
+Liczba argumentów wiersza poleceń (nie liczy opcji przekazanych
+.IR gawk ,
+ani źródła programu).
+.TP
+.B ARGIND
+Indeks w tablicy
+.B ARGV
+bieżąco przetwarzanego pliku.
+.TP
+.B ARGV
+Tablica argumentów wiersza poleceń. Tablica ta jest indeksowana od zera do
+.B ARGC
+\- 1.
+Dynamiczna zmiana zawartości
+.B ARGV
+może sterować plikami używanymi jako dane.
+.B BINMODE
+Na systemach nie-POSIX-owych, określa użycie trybu \*(lqbinarnego\*(rq do
+wszystkich operacji wejścia/wyjścia plików.  Numeryczne wartości 1, 2 lub 3
+oznaczają, że binarne wejście/wyjście powinno zostać użyte dla, odpowiednio,
+plików wejściowych, wyjściowych, lub wszystkich plików.
+Wartości łańcuchowe: \fB"r"\fR lub \fB"w"\fR oznaczają używanie binarnego
+wejścia/wyjścia dla, że plików, odpowiednio, wejściowych lub wyjściowych.
+Wartości łańcuchowe: \fB"rw"\fR lub \fB"wr"\fR oznaczają, że binarne
+wejście/wyjście powinno być użyte dla wszystkich plików.
+Wszystkie inne wartości łańcuchowe są traktowane jak \fB"rw"\fR, ale powodują
+komunikat ostrzegawczy.
+.TP
+.TP
+.B CONVFMT
+Format konwersji dla liczb, domyślnie \fB"%.6g"\fR.
+.TP
+.B ENVIRON
+Tablica zawierająca wartości bieżącego środowiska. Tablica ta jest
+indeksowana zmiennymi środowiskowowymi, każdy element tablicy jest
+wartością danej zmiennej (np. \fBENVIRON["HOME"]\fP może mieć wartość
+.BR /u/arnold ).
+Zmiana tej tablicy nie wpłynie na środowisko widziane przez programy,
+które
+.I gawk
+wywołuje przez przekierowania lub przy użyciu funkcji
+.BR system() .
+.TP
+.B ERRNO
+Jeśli pojawi się błąd systemowy podczas przekierowywania dla
+.BR getline ,
+podczas odczytu dla
+.BR getline
+lub podczas
+.BR close() ,
+to
+.B ERRNO
+będzie zawierać łańcuch opisujący błąd.
+Podlega on tłumaczeniu przy ustawieniach locale innych niż angielskie.
+.TP
+.B FIELDWIDTHS
+Jest rozdzieloną białymi spacjami listą szerokości pól. Jeśli zmienna ta jest
+ustawiona, to
+.I gawk
+rozbija wejście na pola o stałych szerokościach (domyślnie rozbija je według
+wartości separatora
+.BR FS ).
+.TP
+.B FILENAME
+Nazwa pliku bieżącego pliku wejściowego.
+Jeśli nie podano plików w wierszu poleceń,
+.B FILENAME
+przechowuje wartość \*(lq\-\*(rq.
+Wartość zmiennej
+.B FILENAME
+jest niezdefiniowana wewnątrz bloku
+.B BEGIN
+(chyba że zostanie nadana przez
+.BR getline ).
+.TP
+.B FNR
+Liczba rekordów wejściowych w bieżącym pliku wejściowym.
+.TP
+.B FS
+Separator pól wejściowych, domyślnie spacja.
+.TP
+.B IGNORECASE
+Określa wrażliwość na wielkości znaków w operacjach na wyrażeniach
+regularnych. Jeśli zmienna
+.B IGNORECASE
+ma wartość niezerową, to porównywanie wzorców w regułach, rozdzielanie pól
+przez
+.BR FS ,
+rozdzielanie rekordów przez
+.BR RS ,
+dopasowywanie wyrażeń regularnych przez
+.B ~
+i
+.BR !~ ,
+oraz wbudowane funkcje
+.BR gsub() ,
+.BR index() ,
+.BR match() ,
+.BR split()
+i
+.BR sub() ,
+będą ignorować wielkość liter podczas operacji na wyrażeniach regularnych.
+.B UWAGA:
+Ustawienie to
+.I nie
+wpływa na indeksowanie tablic, ani na funkcję
+.BR asort() .
+.sp .5
+Tak więc jeśli
+.B IGNORECASE
+nie jest równe zero,
+.B /aB/
+odpowiada wszystkim następującym łańcuchom --
+\fB"ab"\fP, \fB"aB"\fP, \fB"Ab"\fP, i \fB"AB"\fP.
+Jak ze wszystkimi zmiennymi \*(AK, początkowa wartość
+.B IGNORECASE
+jest zerem, więc operacje na wyrażeniach regularnych są wrażliwe na wielkość
+znaków. W Unixie przy ignorowaniu wielkości znaków używany jest pełny zestaw
+znaków ISO-8859-1 Latin-1.
+.TP
+.B LINT
+Zapewnia dynamiczne sterowanie opcją
+.B \-\^\-lint
+z wnętrza programu \*(AK.
+Gdy jest prawdziwe,
+.I gawk
+wypisuje ostrzeżenia lint. Gdy fałszywe --  nie wypisuje.
+Kiedy ma przypisaną wartość łańcuchową \fB"fatal"\fP, ostrzeżenia lint
+stają się błędami krytycznymi, dokłądnie tak samo, jak przy
+.BR \-\^\-lint=fatal .
+Każda inna wartość prawdziwa wypisuje tylko ostrzeżenia.
+.TP
+.B NF
+Liczba pól w bieżącym rekordzie wejściowym.
+.TP
+.B NR
+Całkowita liczba odczytanych do tej pory rekordów wejściowych.
+.TP
+.B OFMT
+Format wyjściowy liczb, domyślnie \fB"%.6g"\fR.
+.TP
+.B OFS
+Separator pól wyjściowych, domyślnie spacja.
+.TP
+.B ORS
+Separator rekordów wyjściowych, domyślnie nowa linia.
+.B PROCINFO
+Elementy tej tablicy umożliwiają dostęp do informacji o działającym
+programie \*(AK. W niektórych systemach w tablicy mogą istnieć elementy
+od \fB"group1"\fP aż do \fB"group\fIn\fB"\fR dla pewnego
+.IR n ,
+będącego liczbą grup dodatkowych, do których należy program.
+Do sprawdzenia tych elementów użyj operatora
+.BR in .
+Na pewno są dostępne następujące elementy:
+.RS
+.TP \w'\fBPROCINFO["pgrpid"]\fR'u+1n
+\fBPROCINFO["egid"]\fP
+wartość funkcji systemowej
+.IR getegid (2).
+.TP
+\fBPROCINFO["euid"]\fP
+wartość funkcji systemowej
+.IR geteuid (2).
+.TP
+\fBPROCINFO["FS"]\fP
+\fB"FS"\fP, jeśli działa podział na pola za pomocą
+.BR FS ,
+lub \fB"FIELDWIDTHS"\fP, jeśli działa podział na pola za pomocą
+.BR FIELDWIDTHS .
+.TP
+\fBPROCINFO["gid"]\fP
+wartość funkcji systemowej
+.IR getgid (2).
+.TP
+\fBPROCINFO["pgrpid"]\fP
+ID grupy procesów bieżącego procesu.
+.TP
+\fBPROCINFO["pid"]\fP
+ID bieżącego procesu.
+.TP
+\fBPROCINFO["ppid"]\fP
+ID procesu macierzystego dla bieżącego procesu.
+.TP
+\fBPROCINFO["uid"]\fP
+wartość funkcji systemowej
+.IR getuid (2).
+.RE
+.TP
+.TP
+.B RS
+Separator rekordów wejściowych, domyślnie nowa linia.
+.ig
+.B RS
+jest wyjątkowy przez to, że tylko pierwszy znak z jego wartości jest
+używany do rozdzielania rekordów. (Przypuszczalnie zmieni się to w
+przyszłych wersjach
+.IR gawk .)
+..
+Jeśli
+.B RS
+ma wartość łańcucha zerowego, to rekordy są oddzielane pustymi liniami.
+Gdy
+.B RS
+jest ustawiony na łańcuch zerowy, to znak nowej linii zawsze działa jak
+separator pola, oprócz działania jakiejkolwiek wartości zmiennej
+.BR FS .
+.TP
+.B RT
+Zakończenie rekordu.
+.B Gawk
+ustawia
+.B RT
+na tekst wejściowy, który pasował do znaku lub wyrażenia regularnego
+określonego przez
+.BR RS .
+.TP
+.B RSTART
+Indeks pierwszego znaku, dopasowanego funkcją
+.BR match() ;
+0 w przypadku braku dopasowania.
+.TP
+.B RLENGTH
+Długość łańcucha dopasowanego funkcją
+.BR match() ;
+\-1 w przypadku braku dopasowania.
+.TP
+.B SUBSEP
+Znak, używany do separacji wielokrotnych indeksów w elementach tablicowych,
+domyślnie jest to \fB"\e034"\fR.
+.TP
+.B TEXTDOMAIN
+Dziedzina tekstowa programu \*(AK.  Stosowane od odszukania zlokalizowanych
+tłumaczeń łańcuchów znakowych programu.
+.SS Tablice
+.PP
+Tablice są indeksowane wyrażeniem, ujętym w nawiasy kwadratowe
+.RB ( [ " i " ] ).
+Jeśli wyrażenie jest listą wyrażeń
+.RI ( wyraż ", " wyraż " ...)"
+to indeks tablicy jest sklejany z wartości (łańcuchowych) każdego wyrażenia,
+oddzielonych wartością zmiennej
+.BR SUBSEP .
+[Uwaga: jest tak dlatego, że \*(AK używa tablic asocjacyjnych - tak jakby
+słownikowych - nie ma tu normalnych liczbowych indeksów - indeksem może być
+cokolwiek, najczęściej łańcuch. Symulowanie tablic wielowymiarowych polega
+właśnie na sklejaniu poszczególnych indeksów w unikalny łańcuch -- przyp.
+tłum.]
+Właściwość ta jest używana do symulacji wielowymiarowych tablic. Na
+przykład:
+.PP
+.RS
+.ft B
+i = "A" ;\^ j = "B" ;\^ k = "C"
+.br
+x[i, j, k] = "hello, world\en"
+.ft R
+.RE
+.PP
+przypisuje łańcuch \fB"hello, world\en"\fR elementowi tablicy
+.BR x ,
+o indeksie będącym łańcuchem \fB"A\e034B\e034C"\fR. Wszystkie tablice w
+\*(AK są asocjacyjne, tj. indeksowane wartościami łańcuchowymi.
+.PP
+Do sprawdzenia czy dana tablica posiada oczekiwany indeks [łańcuchowy], można
+użyć operatora
+.BR in ,
+który ma zastosowanie przede wszystkim w instrukcjach
+.B if
+lub
+.BR while .
+.PP
+.RS
+.ft B
+.nf
+if (val in array)
+	print array[val]
+.fi
+.ft
+.RE
+.PP
+Jeśli tablica posiada wielokrotne indeksy, można użyć konstrukcji
+.BR "(i, j) in array" .
+.PP
+Konstrukcja
+.B in
+może być również użyta w pętli
+.B for
+do iterowania poprzez wszystkie elementy tablicy [ponieważ jest ona
+asocjacyjna, nie można jej iterować przez przelecenie indeksu od zera do
+najwyższej wartości - indeks może być tu przecież dowolnym łańcuchem - przyp.
+tłum.]
+.PP
+Element można skasować z tablicy przy użyciu polecenia
+.BR delete .
+Poleceniem
+.B delete
+można się też posłużyć do skasowania całej zawartości tablicy, przez podanie
+jej nazwy bez indeksu.
+.SS Typy zmiennych i konwersje
+.PP
+Zmienne oraz pola mogą być liczbami (zmiennoprzecinkowymi), łańcuchami lub
+jednym i drugim naraz. Interpretacja wartości zmiennej zależy od kontekstu.
+Jeśli jest użyta w wyrażeniu numerycznym, jest interpretowana jako liczba;
+jeśli jest użyta w wyrażeniu łańcuchowym, to jest traktowana jak łańcuch.
+.PP
+Aby wymusić traktowanie zmiennej jako liczby, dodaj do niej 0; aby wymusić
+traktowanie jej jako łańcucha, doklej do niej łańcuch zerowy.
+.PP
+Podczas konwersji łańcucha na liczbę, obróbka jest dokonywana przy użyciu
+funkcji
+.IR strtod (3).
+Liczba jest przekształcana na łańcuch przy użyciu wartości
+.B CONVFMT
+jako parametru formatującego dla
+.IR sprintf (3),
+oraz wartości numerycznej jako argumentu. Jednak, nawet mimo że wszystkie
+liczby w \*(AK są zmiennoprzecinkowe, wartości całkowite są zawsze
+konwertowane jak całkowite (integer). Tak więc, przy
+.PP
+.RS
+.ft B
+.nf
+CONVFMT = "%2.2f"
+a = 12
+b = a ""
+.fi
+.ft R
+.RE
+.PP
+zmienna
+.B b
+uzyskuje wartość łańcuchową \fB"12"\fR, a nie \fB"12.00"\fR.
+.PP
+.I Gawk
+dokonuje porównań w następujący sposób:
+Jeśli dwie wartości są numeryczne, to są porównywane numerycznie. Jeśli jedna
+z wartości jest numeryczna, a druga łańcuchowa, która jest \*(lqłańcuchem
+numerycznym\*(rq, to porównania są również dokonywane numerycznie.
+W przeciwnym wypadku wartość numeryczna jest konwertowana do łańcucha i
+dokonywane jest porównanie łańcuchowe.
+Dwa łańcuchy są, oczywiście, porównywane jako łańcuchy.
+Zwróć uwagę, że standard \*(PX stosuje pojęcie \*(lqłańcucha
+numerycznego\*(rq wszędzie, nawet do stałych łańcuchowych.
+Jednak jest to oczywiście nieprawidłowe i
+.I gawk
+tego nie robi.
+(Na szczęście, poprawiono to w następnej wersji standardu.)
+.PP
+Zauważ, że stałe znakowe, takie jak \fB"57"\fR \fInie\fR są łańcuchami
+numerycznymi - są one stałymi łańcuchowymi. Pojęcie \*(lqłańcuchów
+numerycznych\*(rq odnosi się wyłącznie do pól, wejścia \fBgetinput\fR,
+\fBFILENAME\fR, elementów \fBARGV\fR, \fBENVIRON\fR i elementów tablicy
+utworzonej funkcją \fBsplit()\fR będących łańcuchami numerycznymi.
+Podstawową koncepcją jest to, że wyglądające na numeryczne dane z \fIwejścia
+użytkownika\fR, i tylko one, są traktowane w opisany sposób.
+.PP
+Niezainicjalizowane zmienne mają wartość numeryczną zero i łańcuchową ""
+(zero lub pusty łańcuch).
+.SS Stałe ósemkowe i szesnastkowe
+Poczynając od wersji 3.1
+.I gawk ,
+w kodzie źródłowym programów \*(AK można korzystać ze stałych ósemkowych
+i szesnastkowych w stylu języka C.
+Na przykład, ósemkowa wartość
+.B 011
+jest równa dziesiętnej
+.BR 9 ,
+a szesnastkowa
+.B 0x11
+jest równa dziesiętnej
+.BR 17 .
+.SS Stałe łańcuchowe
+.PP
+Stałe łańcuchowe w \*(AK są sekwencjami znaków ujętymi w cudzysłowy (\fB"\fR).
+Wewnątrz łańcuchów rozpoznawane są pewne
+.IR "sekwencje specjalne" ,
+jak w C.  Są to:
+.PP
+.TP "\w'\fB\e\^\fIddd\fR'u+1n"
+.B \e\e
+dosłowny odwrotny ukośnik (backslash)
+.TP
+.B \ea
+znak dzwonka, \*(lqalert\*(rq; zazwyczaj znak \s-1ASCII\s+1 \s-1BEL\s+1
+.TP
+.B \eb
+backspace
+.TP
+.B \ef
+wysuw strony (form-feed)
+.TP
+.B \en
+znak nowej linii (newline).
+.TP
+.B \er
+powrót karetki (carriage return).
+.TP
+.B \et
+tabulacja pozioma (horizontal tab).
+.TP
+.B \ev
+tabulacja pionowa (vertical tab).
+.TP
+.BI \ex "\^cyfry hex"
+Znak reprezentowany przez łańcuch cyfr szesnastkowych występujących po
+.BR \ex .
+Tak jak w \*(AN C, wszystkie kolejne cyfry szesnastkowe uważane są za część
+sekwencji specjalnej.
+(Ta cecha powinna nam coś mówić o projektowaniu języków przez komitety.)
+Np., \fB"\ex1B"\fR jest znakiem \s-1ASCII\s+1 \s-1ESC\s+1 (escape).
+.TP
+.BI \e ddd
+Znak reprezentowany przez 1-, 2- lub 3-cyfrową sekwencję cyfr ósemkowych.
+Np., \fB"\e033"\fR jest znakiem \s-1ASCII\s+1 \s-1ESC\s+1 (escape).
+.TP
+.BI \e c
+Dosłowny znak
+.IR c\^ .
+.PP
+Sekwencji specjalnych można też używać wewnątrz stałych wyrażeń regularnych
+(np.,
+.B "/[\ \et\ef\en\er\ev]/"
+dopasowuje białe znaki).
+.PP
+W trybie zgodności, znaki reprezentowane przez ósemkowe lub szesnastkowe
+sekwencje specjalne są traktowane dosłownie, jeśli użyto ich w stałych
+wyrażeniach regularnych.  Zatem,
+.B /a\e52b/
+jest równoważnikiem
+.BR /a\e*b/ .
+.SH WZORCE I AKCJE
+\*(AK jest językiem zorientowanym liniowo. Najpierw przychodzi wzorzec, a
+potem akcja. Instrukcje akcji są zawarte w nawiasach
+.B {
+i
+.BR } .
+Pominąć można zarówno wzorzec, jak i akcję, lecz oczywiście nie obydwa te
+pola naraz. Jeśli pominięto wzorzec, to akcja jest wykonywana dla każdego
+z rekordów wejścia. Brakująca akcja jest z kolei równoważna akcji
+.RS
+.PP
+.B "{ print }"
+.RE
+.PP
+która wypisuje cały rekord.
+.PP
+Komentarze rozpoczynają się znakiem \*(lq#\*(rq i trwają aż do końca linii.
+Do oddzielania instrukcji można używać pustych linii. Zwykle instrukcja
+kończy się wraz z nową linią, jednak nie jest to regułą w przypadku linii
+kończących się na
+\*(lq,\*(rq, \*(lq{\*(rq, \*(lq?\*(rq, \*(lq:\*(rq, \*(lq&&\*(rq lub \*(lq||\*(rq.
+Dla liniach kończących się na
+.B do
+lub
+.B else
+również wystąpi automatyczna kontynuacja instrukcji w następnej linii.
+W innych wypadkach, linia może być kontynuowana przez zakończenie jej
+znakiem \*(lq\e\*(rq; w takim wypadku znak nowej linii jest ignorowany.
+.PP
+Wiele instrukcji można też zgrupować w jednej linii, oddzielając je znakiem
+\*(lq;\*(rq. Tyczy się to zarówno instrukcji w części akcji z pary wzorzec-akcja
+(zwykły przypadek), jak i do samych instrukcji wzorzec-akcja.
+.SS Wzorce
+Wzorce w \*(AK mogą być jedną z następujących rzeczy:
+.PP
+.RS
+.nf
+.B BEGIN
+.B END
+.BI / "wyrażenie regularne" /
+.I "wyrażenie relacyjne"
+.IB wzorzec " && " wzorzec
+.IB wzorzec " || " wzorzec
+.IB wzorzec " ? " wzorzec " : " wzorzec
+.BI ( wzorzec )
+.BI ! " wzorzec"
+.IB wzorzec1 ", " wzorzec2
+.fi
+.RE
+.PP
+.B BEGIN
+i
+.B END
+są dwoma specjalnymi rodzajami wzorców, które nie są porównywane z danymi
+wejściowymi. Części akcji wszelkich wzorców
+.B BEGIN
+są łączone, tak jakby wszystkie one zostały napisane w pojedynczym bloku
+.BR BEGIN .
+Są one wykonywane przed rozpoczęciem odczytywania danych wejściowych.
+Podobnie, wszelkie bloki
+.B END
+są również łączone i wykonywane po wyczerpaniu danych wejściowych.
+(lub po dojściu do instrukcji
+.BR exit .)
+Wzorce
+.B BEGIN
+i
+.B END
+nie mogą być łączone z innymi wzorcami w wyrażeniach wzorcowych.
+Wzorcom
+.B BEGIN
+i
+.B END
+nie może brakować części definiującej akcję.
+.PP
+Dla wzorców
+.BI / "wyrażeń regularnych" /
+powiązana instrukcja wykonywana jest dla każdego rekordu wejściowego, który
+odpowiada zadanemu wyrażeniu regularnemu. Wyrażenia regularne są tymi
+samymi wyrażeniami, które można spotkać w
+.IR egrep (1),
+i są podsumowane niżej.
+.PP
+.I "wyrażenie relacyjne"
+może używać dowolnego operatora ze zdefiniowanych w sekcji o akcjach
+operatorów.
+Ogólnie, testują one, czy określone pola odpowiadają określonym wyrażeniom
+regularnym.
+.PP
+Operatory
+.BR && ,
+.BR || ,
+i
+.B !
+są logicznymi AND, OR i NOT, podobnie jak w języku C. Są one obliczane
+w sposób skrócony, podobnie jak w C, i służą głównie do łączenia bardziej
+podstawowych wyrażeń wzorcowych. Podobnie jak w większości języków,
+dla wymuszenia kolejności porównywania można użyć nawiasów.
+.PP
+Operator
+.B ?\^:
+działa podobnie jak ten sam operator w C. Jeśli pierwszy wzorzec jest
+prawdziwy, to do testowania używany jest następny wzorzec; w przeciwnym
+wypadku używany jest trzeci wzorzec. Obliczany jest tylko albo drugi albo
+trzeci wzorzec.
+.PP
+Forma
+.IB wzorzec1 ", " wzorzec2
+wyrażenia jest nazywana
+.IR "wzorcem zakresu" .
+Dopasowuje ona wszystkie rekordy wejście, poczynając od rekordu, który
+odpowiada
+.IR wzorcowi1 ,
+aż do rekordu pasującego do
+.IR wzorzec2 ,
+włącznie. Nie łączy się to z innymi rodzajami wyrażeń wzorcowych.
+.SS Wyrażenia regularne
+Wyrażenia regularne są rozszerzoną formą tego, co można znaleźć w
+.IR egrep .
+Składają się one z następujących znaków:
+.TP "\w'\fB[^\fIabc.\|.\|.\fB]\fR'u+2n"
+.I c
+dopasowuje nie-specjalny znak
+.IR c .
+.TP
+.I \ec
+dopasowuje dosłowny znak
+.IR c .
+.TP
+.B .
+dopasowuje dowolny znak \fIwłącznie\fR ze znakiem nowej linii.
+.TP
+.B ^
+dopasowuje początek łańcucha.
+.TP
+.B $
+dopasowuje koniec łańcucha.
+.TP
+.BI [ abc... ]
+lista znaków, dopasowuje dowolny ze znaków
+.IR abc... .
+.TP
+.BI [^ abc... ]
+zanegowana lista znaków, dopasowuje wszystkie znaki poza
+.IR abc... .
+.TP
+.IB r1 | r2
+alternatywa: dopasowuje albo
+.I r1
+albo
+.IR r2 .
+.TP
+.I r1r2
+konkatenacja: dopasowuje
+.IR r1 ,
+a następnie
+.IR r2 .
+.TP
+.IB r\^ +
+dopasowuje jeden lub więcej
+.IR r\^ -ów.
+.TP
+.IB r *
+dopasowuje zero lub więcej
+.IR r\^ -ów.
+.TP
+.IB r\^ ?
+dopasowuje zero lub jeden
+.IR r .
+.TP
+.BI ( r )
+grupowanie: dopasowuje
+.IR r .
+.TP
+.PD 0
+.IB r { n }
+.TP
+.PD 0
+.IB r { n ,}
+.TP
+.PD
+.IB r { n , m }
+Jedna lub dwie liczby w nawiasach klamrowych opisują
+.IR "wyrażenie powtarzane" .
+Jeżeli w nawiasach jest jedna liczba, to poprzedzające wyrażenie regularne
+.I r
+powtarzane jest
+.I n
+razy. Jeżeli użyto dwu rozdzielonych przecinkiem liczb, to
+.I r
+powtarzane jest od
+.I n
+do
+.I m
+razy. Jeżeli w nawiasach jest jedna liczba, z następującym po niej
+przecinkiem to
+.I r
+powtarzane jest co najmniej
+.I n
+razy.
+.sp .5
+Wyrażenia powtarzane dostępne są tylko wtedy, gdy w wierszu poleceń użyto
+albo opcji
+.B \-\^\-posix
+albo
+.BR \-\^\-re\-interval .
+.TP
+.B \ey
+dopasowuje pusty łańcuch na początku bądź na końcu słowa.
+.TP
+.B \eB
+dopasowuje pusty łańcuch wewnątrz słowa.
+.TP
+.B \e<
+dopasowuje pusty łańcuch na początku słowa.
+.TP
+.B \e>
+dopasowuje pusty łańcuch na końcu słowa.
+.TP
+.B \ew
+dopasowuje dowolny znak wchodzący w skład słów (literę, cyfrę lub
+podkreślenie). [Nie obejmuje to, niestety polskich znaków diakrytycznych.
+Sekwencje dotyczące dopasowywania słów oczywiście również nie uwzględniają
+specyficznych polskich znaków].
+.TP
+.B \eW
+dopasowuje dowolny znak nie wchodzący w skład słów.
+.TP
+.B \e`
+dopasowuje pusty łańcuch na początku bufora (łańcucha).
+.TP
+.B \e'
+dopasowuje pusty łańcuch na końcu bufora.
+.PP
+Sekwencje specjalne (escape sequences), które są prawidłowe w stałych
+łańcuchowych (patrz niżej) są również poprawne w wyrażeniach regularnych.
+.PP
+.I "Klasy znaków"
+są nową własnością wprowadzoną w standardzie \*(PX. Klasa znaków jest
+specjalną notacją służącą do opisu listy znaków posiadających szczególną
+cechę. Dla danej klasy rzeczywiście występujące w niej znaki mogą być różne
+w zależności od kraju i/lub używanego zestawu znaków. Na przykład, pojęcie o
+tym, co jest znakiem alfabetu jest odmienne w USA niż we Francji.
+.PP
+Klasa znaków dozwolona jest wyłącznie w wyrażeniu regularnym
+.I wewnątrz
+nawiasów klamrowych listy znaków. Klasy znaków składają się z
+.BR [: ,
+słowa kluczowego opisującego klasą, i kończącego
+.BR :] .
+\*(PX definiuje następujące klasy znaków:
+.TP "\w'\fB[:alnum:]\fR'u+2n"
+.B [:alnum:]
+Znaki alfanumeryczne.
+.TP
+.B [:alpha:]
+Znaki alfabetu.
+.TP
+.B [:blank:]
+Znaki spacji lub tabulatorów.
+.TP
+.B [:cntrl:]
+Znaki sterujące.
+.TP
+.B [:digit:]
+Znaki numeryczne (cyfry).
+.TP
+.B [:graph:]
+Znaki, które są zarówno widoczne (przy wyświetlaniu) jak i drukowalne.
+(Spacja jest drukowalna, ale nie jest widoczna, podczas gdy
+.B a
+jest i takie, i takie.)
+.TP
+.B [:lower:]
+Znaki małych liter alfabetu.
+.TP
+.B [:print:]
+Znaki drukowalne (znaki, które nie są znakami sterującymi.)
+.TP
+.B [:punct:]
+Znaki interpunkcyjne (nie będące literami, cyframi, znakami sterującymi ani
+znakami spacji).
+.TP
+.B [:space:]
+Znaki spacji (takie jak zwykła spacja, tabulator, wysuw strony, by wymienić
+tylko kilka).
+.TP
+.B [:upper:]
+Znaki dużych liter alfabetu.
+.TP
+.B [:xdigit:]
+Znaki będące cyframi szesnastkowymi.
+.PP
+Na przykład, przed standardem \*(PX, by dopasować znaki alfanumeryczne
+musiałbyś napisać
+.BR /[A\-Za\-z0\-9]/ .
+Jeśli twój zestaw znaków zawiera inne znaki alfabetyczne, powyższe ich nie
+dopasuje, a jeśli kolejność znaków w zestawie jest inna niż w \s-1ASCII\s+1,
+to wyrażenie to może nawet nie dopasowywać znaków alfanumerycznych
+\s-1ASCII\s+1.
+Za pomocą \*(PX-owych klas znaków, możesz napisać
+.BR /[[:alnum:]]/ ,
+i dopasowuje to
+.I wszystkie
+alfabetyczne i numeryczne znaki z twojego zestawu znaków.
+.PP
+W listach znaków mogą pojawić się dodatkowe sekwencje specjalne. Dotyczy to
+zestawów znaków różnych od \s-1ASCII\s+1, które mogą posiadać pojedyncze symbole
+(zwane
+.IR "elementami porównywania"
+- collating elements) reprezentowane przez więcej niż jeden znak, jak i kilka
+znaków równoważnych w operacjach
+.IR porównywania ,
+czy sortowania. (np. we francuskim, zwykłe \*(lqe\*(rq i akcentowane (grave) e\`
+są równoważne.)
+.TP
+Symbole porównywania (Collating Symbols)
+Symbolem porównywania jest wieloznakowy element porównywania zawarty
+pomiędzy
+.B [.
+a
+.BR .] .
+Na przykład, jeśli
+.B ch
+jest elementem porównywania, to
+.B [[.ch.]]
+jest wyrażeniem regularnym dopasowującym ten element porównywania, podczas
+gdy
+.B [ch]
+jest wyrażeniem regularnym dopasowującym
+.B c
+albo
+.BR h .
+.TP
+Klasy równoważności (Equivalence Classes)
+Klasa równoważności jest specyficzną dla ustawień lokalnych nazwą dla listy
+równoważnych sobie znaków . Nazwa zawarta jest pomiędzy
+.B [=
+a
+.BR =] .
+Na przykład, do reprezentacji wszystkich
+\*(lqe,\*(rq \*(lqe\h'-\w:e:u'\`,\*(rq and \*(lqe\h'-\w:e:u'\`.\*(rq
+możne zostać użyta nazwa
+.BR e .
+W tym przypadku,
+.B [[=e=]]
+jest wyrażeniem regularnym dopasowującym dowolne z
+.BR e ,
+.BR "e\'" ,
+.BR "e\h'-\w:e:u'\'"
+lub
+.BR "e\`" .
+.BR "e\h'-\w:e:u'\`" .
+.PP
+Cechy te są bardzo wartościowe w ustawieniach lokalnych innych niż dla
+języka angielskiego. Funkcje biblioteczne, których
+.I gawk
+używa do dopasowywania wyrażeń regularnych rozpoznają obecnie wyłącznie
+\*(PX-owych klas znaków; nie rozpoznają one symboli porównywania ani klas
+równoważności.
+.PP
+Operatory
+.BR \ey ,
+.BR \eB ,
+.BR \e< ,
+.BR \e> ,
+.BR \ew ,
+.BR \eW ,
+.BR \e`
+oraz
+.B \e'
+są specyficzne dla
+.IR gawk ;
+są one rozszerzeniami opartymi na możliwościach bibliotek wyrażeń regularnych \*(GN.
+.PP
+Różne opcje wiersza poleceń kontrolują sposób, w jaki
+.I gawk
+interpretuje znaki w wyrażeniach regularnych.
+.TP
+Brak opcji
+W przypadku domyślnym
+.I gawk
+udostępnia wszystkie możliwości wyrażeń regularnych \*(PX oraz powyżej
+opisane operatory wyrażeń regularnych \*(GN. Nie są jednak obsługiwane
+wyrażenia powtarzane.
+.TP
+.B \-\^\-posix
+Obsługiwane są tylko \*(PX-owe wyrażenia regularne, operatory \*(GN nie mają
+swego specjalnego znaczenia.
+(tj.,
+.B \ew
+dopasowuje literał
+.BR w ).
+Dozwolone są wyrażenia powtarzane.
+.TP
+.B \-\^\-traditional
+Dopasowywane są wyrażenia regularne tradycyjnego uniksowego
+.IR awk .
+Operatory \*(GN nie mają swego specjalnego znaczenia, nie są dostępne ani
+wyrażenia powtarzane ani \*(PX-owe klasy znaków
+.RB ( [[:alnum:]]
+i tak dalej).
+Znaki opisywane przez ósemkowe lub szesnastkowe sekwencje specjalne są
+traktowane dosłownie, nawet jeśli reprezentują one metaznaki wyrażeń
+regularnych.
+.TP
+.B \-\^\-re\-interval
+Pozwala na wyrażenia powtarzane, nawet przy użyciu
+.BR \-\^\-traditional .
+.SS Akcje
+Instrukcje akcji są zawarte w nawiasach
+.B {
+i
+.BR } .
+Instrukcje akcji składają się ze zwyczajnych instrukcji przypisania,
+warunków i instrukcji pętli, które można znaleźć w większości innych języków
+programowania. Operatory, instrukcje sterującymi, a także instrukcje
+wejścia/wyjścia są opracowane na podstawie tych, spotykanych w języku C.
+.SS Operatory
+.PP
+Operatory w \*(AK, w kolejności malejącego priorytetu, to
+.PP
+.TP "\w'\fB*= /= %= ^=\fR'u+1n"
+.BR ( \&... )
+Grupowanie
+.TP
+.B $
+Odniesienie się do pola.
+.TP
+.B "++ \-\^\-"
+Inkrementuj i dekrementuj. Zarówno przedrostkowe i przyrostkowe.
+.TP
+.B ^
+Potęgowanie (można użyć również \fB**\fR, oraz \fB**=\fR dla operatora
+przypisania).
+.TP
+.B "+ \- !"
+Jednoargumentowy plus, minus i logiczna negacja.
+.TP
+.B "* / %"
+Mnożenie, dzielenie i modulo (reszta dzielenia).
+.TP
+.B "+ \-"
+Dodawanie i odejmowanie.
+.TP
+.I odstęp
+Konkatenacja (złączenie) łańcuchów.
+.TP
+.PD 0
+.B "< >"
+.TP
+.PD 0
+.B "<= >="
+.TP
+.PD
+.B "!= =="
+Regularne operatory relacyjne.
+.TP
+.B "~ !~"
+Dopasowanie wyrażenia regularnego, dopasowanie zanegowane.
+.B UWAGA:
+Nie używaj stałego wyrażenia regularnego
+.RB ( /foo/ )
+po lewej stronie
+.B ~
+lub
+.BR !~ .
+Używaj go tylko po prawej stronie. Wyrażenie
+.BI "/foo/ ~ " exp
+ma takie samo znaczenie jak \fB(($0 ~ /foo/) ~ \fIexp\fB)\fR.
+.I Nie
+jest to zazwyczaj rzecz, której oczekujesz.
+.TP
+.B in
+Przynależność do tablicy.
+.TP
+.B &&
+Koniunkcja logiczna AND.
+.TP
+.B ||
+Alternatywa logiczna OR.
+.TP
+.B ?:
+Wyrażenie warunkowe z C. Ma ono postać
+.IB wyraż1 " ? " wyraż2 " : " wyraż3\c
+\&. Jeśli
+.I wyraż1
+jest prawdziwe, to wartością wyrażenia jest
+.IR wyraż2 ,
+w przeciwnym wypadku jest nią
+.IR wyraż3 .
+Obliczane jest wyłącznie jedno z
+.I wyraż2
+i
+.IR wyraż3 .
+.TP
+.PD 0
+.B "= += \-="
+.TP
+.PD
+.B "*= /= %= ^="
+Przypisanie. Obsługiwane jest zarówno przypisanie absolutne
+.BI ( zmienna " = " wartość )
+jak i przypisanie operatorowe (inne formy).
+.SS Instrukcje sterujące
+.PP
+Instrukcje sterujące są następujące:
+.PP
+.RS
+.nf
+\fBif (\fIwarunek\fB) \fIinstrukcja\fR [ \fBelse\fI instrukcja \fR]
+\fBwhile (\fIwarunek\fB) \fIinstrukcja \fR
+\fBdo \fIinstrukcja \fBwhile (\fIwarunek\fB)\fR
+\fBfor (\fIwyraż1\fB; \fIwyraż2\fB; \fIwyraż3\fB) \fIinstrukcja\fR
+\fBfor (\fIvar \fBin\fI tablica\fB) \fIinstrukcja\fR
+\fBbreak\fR
+\fBcontinue\fR
+\fBdelete \fItablica\^\fB[\^\fIindeks\^\fB]\fR
+\fBdelete \fItablica\^\fR
+\fBexit\fR [ \fIwyrażenie\fR ]
+\fB{ \fIinstrukcje \fB}
+.fi
+.RE
+.SS "Instrukcje I/O"
+.PP
+Instrukcje I/O są następujące:
+.PP
+.TP "\w'\fBprintf \fIfmt, expr-list\fR'u+1n"
+\fBclose(\fIplik \fR[\fB, \fIjak\fR]\fB)\fR
+Zamyka plik, potok lub proces współbieżny (co-process).
+Opcjonalnego
+.I jak
+powinno się używać wyłącznie do zamykania jednego końca dwukierunkowego
+potoku do procesu współbieżnego. Musi to być wartość łańcuchowa, albo
+\fB"to"\fR albo \fB"from"\fR.
+.TP
+.B getline
+Ustawia
+.B $0
+z następnego rekordu wejściowego; ustawia
+.BR NF ,
+.BR NR ,
+.BR FNR .
+.TP
+.BI "getline <" plik
+Ustawia
+.B $0
+z następnego rekordu
+.IR pliku ;
+ustawia
+.BR NF .
+.TP
+.BI getline " var"
+Ustawia
+.I var
+z następnego rekordu wejściowego; ustawia
+.BR NF ,
+.BR FNR .
+.TP
+.BI getline " var" " <" plik
+Ustawia
+.I var
+z następnego rekordu
+.IR pliku .
+.TP
+\fIpolecenie\fB | getline \fR[\fIvar\fR]
+Uruchamia przesyłanie potokiem wyjścia
+.I polecenia
+albo do
+.BR $0 ,
+albo do
+.IR var ,
+jak wyżej.
+.TP
+\fIpolecenie\fB |& getline \fR[\fIvar\fR]
+Uruchamia
+.I polecenia
+jako proces współbieżny, wysyłając potokiem jego wyjście albo do
+.B $0
+albo do
+.IR var ,
+jak wyżej.
+Procesy współbieżne są rozszerzeniem
+.IR gawk .
+.TP
+.B next
+Kończy przetwarzanie bieżącego rekordu wejściowego. Następnie odczytywany
+jest kolejny rekord wejściowy i przetwarzanie rozpoczyna się od pierwszego
+wzorca programu \*(AK. Jeśli osiągnięto koniec danych wejściowych,
+wykonywany jest blok
+.BR END .
+.TP
+.B nextfile
+Kończy przetwarzanie bieżącego pliku wejściowego. Następny rekord wejściowy
+zostanie odczytany z kolejnego pliku wejściowego.
+Aktualizowane są wartości
+.B FILENAME
+i
+.BR ARGIND ,
+zaś
+.B FNR
+jest ustawiane na 1 i przetwarzanie rozpoczyna się od pierwszego wzorca
+programu \*(AK. Jeśli osiągnięty zostanie koniec danych wejściowych,
+wykonywany jest blok
+.BR END .
+.TP
+.B print
+Wypisuje bieżący rekord. Rekord wyjściowy zakończony jest wartością zmiennej
+.BR ORS .
+.TP
+.BI print " lista-wyrażeń"
+Wypisuje wyrażenia. Każde wyrażenie jest oddzielone wartością zmiennej
+.BR OFS .
+Wyjściowy rekord jest kończony wartością zmiennej
+.BR ORS .
+.TP
+.BI print " lista-wyrażeń" " >" plik
+Wypisuje wyrażenia do
+.IR pliku .
+Każde wyrażenie jest rozdzielone wartością zmiennej
+.BR OFS .
+Rekord wyjściowy jest zakończony wartością zmiennej
+.BR ORS .
+.TP
+.BI printf " fmt, lista-wyrażeń"
+Formatuje i wypisuje.
+.TP
+.BI printf " fmt, lista-wyrażeń" " >" plik
+Formatuje i wypisuje do
+.IR pliku .
+.TP
+.BI system( cmd-line )
+Wywołuje polecenie systemowe
+.IR cmd-line ,
+i zwraca jego status wyjścia.
+(funkcja może nie być dostępna na systemach nie \*(PX-owych.)
+.TP
+\&\fBfflush(\fR[\fIplik\^\fR]\fB)\fR
+Opróżnia bufory związane z otwartym plikiem wynikowym lub potokiem
+.IR plik .
+Jeśli pominięto
+.IR plik ,
+to opróżniane jest standardowe wyjście.
+Jeżeli
+.I plik
+jest łańcuchem pustym, to opróżniane są bufory wszystkich otwartych plików
+i potoków.
+.PP
+Dozwolone są też dodatkowe przekierowania wejścia i wyjścia dla
+.B print
+i
+.BR printf .
+.TP
+.BI "print .\|.\|. >>" " plik"
+dokleja wyjście do
+.IR pliku .
+a przekierowanie
+.TP
+.BI "print .\|.\|. |"  " polecenie"
+zapisuje do potoku.
+.TP
+.BI "print .\|.\|. |&" " polecenie"
+wysyła dane do procesu współbieżnego.
+.PP
+Polecenie
+.BR getline
+zwraca zero na końcu pliku, a \-1 przy błędzie.
+W przypadku błędu,
+.B ERRNO
+zawiera łańcuch opisujący problem.
+.PP
+UWAGA: używając potoku lub procesu współbieżnego do
+.B getline
+albo z
+.B print
+czy
+.B printf
+wewnątrz pętli,
+.I musisz
+użyć
+.B close()
+do utworzenia nowych instancji tego polecenia.
+\*(AK nie zamyka automatycznie potoków ani procesów współbieżnych
+gdy zwrócą one EOF.
+.SS Instrukcja \fIprintf\fP\^
+.PP
+Wersje \*(AK instrukcji
+.B printf
+oraz funkcji
+.B sprintf()
+(patrz niżej)
+przyjmują następujące formaty konwersji:
+.TP "\w'\fB%g\fR, \fB%G\fR'u+2n"
+.B %c
+Znak \s-1ASCII\s+1.
+Jeśli argument użyty z
+.B %c
+był numeryczny, to zostanie potraktowany jak znak do wypisania.
+W przeciwnym wypadku, argument będzie zrozumiany jako łańcuch i zostanie
+wypisany tylko pierwszy znak tego łańcucha.
+.TP
+.BR "%d" "," " %i"
+liczba dziesiętna (część całkowita).
+.TP
+.B %e , " %E"
+Liczba zmiennoprzecinkowa w postaci
+.BR [\-]d.ddddddE[+\^\-]dd .
+Format
+.B %E
+używa po prostu
+.B E
+zamiast
+.BR e .
+.TP
+.B %f
+Liczba zmiennoprzecinkowa w postaci
+.BR [\-]ddd.dddddd .
+.TP
+.B %g , " %G"
+Używa konwersji
+.B e
+lub
+.BR f
+w zależności od tego, która jest krótsza i pomijając nieznaczące zera.
+Format
+.B %G
+używa
+.B E
+zamiast
+.BR e.
+.TP
+.B %o
+Liczba ósemkowa bez znaku (także całkowita).
+.TP
+.PD
+.B %u
+Liczba dziesiętna bez znaku (znów, całkowita).
+.TP
+.B %s
+Ciąg znaków (łańcuch).
+.TP
+.B %x , " %X"
+Liczba szesnastkowa bez znaku (całkowita). Format
+.B %X
+używa liter
+.B ABCDEF
+zamiast
+.BR abcdef .
+.TP
+.B %%
+Pojedynczy znak
+.BR % ;
+żaden argument nie jest konwertowany.
+.PP
+Między 
+.B %
+a literą sterującą mogą znaleźć się opcjonalne parametry dodatkowe:
+.TP
+.IB n $
+Oznacza użycie
+.IR n "-tego"
+argumentu w tym miejscu formatowania.
+Nosi nazwę 
+.I "specyfikatora pozycyjnego"
+i jest przeznaczone głównie do użytku w przetłumaczonych wersjach łańcuchów
+formatu, nie w oryginalnym tekście programu \*(AK.
+Jest to rozszerzenie
+.IR gawk .
+.TP
+.B \-
+Wyrażenie w swoim polu powinno być wyrównane do lewej.
+.TP
+.I spacja
+W przypadku konwersji numerycznych, poprzedź wartości dodatnie odstępem, zaś
+ujemne znakiem minus.
+.TP
+.B +
+Znak plus, użyty przed modyfikatorem szerokości (patrz niżej), nakazuje
+zawsze umieszczać znak liczby przy konwersjach numerycznych, nawet jeżeli
+formatowane dane są dodatnie. Modyfikator
+.B +
+powoduje unieważnienie modyfikatora spacji.
+.TP
+.B #
+Używa \*(lqalternatywnej postaci\*(rq pewnych liter sterujących.
+Dla
+.BR %o ,
+dodaje początkowe zero.
+Dla
+.BR %x
+oraz
+.BR %X
+dodaje początkowe
+.BR 0x
+lub
+.BR 0X
+przy niezerowych wynikach.
+Dla
+.BR %e ,
+.BR %E
+oraz
+.BR %f
+wynik zawsze zawiera kropkę dziesiętną.
+Dla
+.BR %g
+i
+.BR %G
+z wyniku nie są usuwane końcowe zera.
+.TP
+.B 0
+Początkowe
+.B 0
+(zero) działa jako flaga, wskazująca, że wynik powinien być uzupełniony
+zerami zamiast spacji. Odnosi się to nawet do formatów nie-numerycznych.
+Flaga ta działa tylko wtedy, gdy pole jest szersze niż wartość do
+wypisania.
+.TP
+.IR width " (szerokość)"
+Pole powinno być wypełnione do tej szerokości. Zwykle pole uzupełniane jest
+spacjami. Jeśli użyto flagi
+.BR 0 ,
+to wypełnienie zostanie dokonane przy użyciu zer.
+.TP
+.BI \&. prec " \fR(dokładność)\fP"
+Liczba określająca dokładność, jaka ma zostać użyta przy wypisywaniu.
+Dla formatów
+.BR %e ,
+.BR %E
+i
+.BR %f ,
+jest to liczba cyfr, jakie zostaną wypisane po kropce dziesiętnej.
+Dla formatów
+.BR %g
+i
+.B %G
+określa maksymalną liczbą cyfr znaczących. Dla formatów
+.BR %d ,
+.BR %o ,
+.BR %i ,
+.BR %u ,
+.BR %x
+oraz
+.B %X
+określa minimalną liczbę cyfr do wypisania. Dla
+.B %s
+jest to maksymalna liczba znaków łańcucha, jakie mają zostać wypisane.
+.PP
+Dynamiczne właściwości
+.I width
+i
+.I prec
+z
+.B printf()
+używanego w języku C są również wspierane. Znak gwiazdki
+.B *
+w miejscu specyfikacji zarówno
+.B width
+jak i
+.B prec
+powoduje, że ich wartości są pobierane z listy argumentów, przekazywanej
+.B printf
+lub
+.BR sprintf() .
+Chcąc użyć specyfikatora pozycyjnego z dynamiczną szerokością lub
+dokładnością należy podać
+.IB n $
+po
+.B *
+w łańcuchu formatu.
+Na przykład, \fB"%3$*2$.*1$s"\fP.
+.SS Specjalne nazwy plików
+.PP
+Podczas przekierowań I/O przy użyciu
+.B print
+czy też
+.B printf
+do pliku,
+albo przy użyciu
+.B getline
+z pliku,
+.I gawk
+rozpoznaje wewnętrznie pewne specjalne nazwy plików. Te nazwy plików
+umożliwiają dostęp do otwartych deskryptorów plików, dziedziczonych po
+procesie rodzicielskim
+.IR gawk 'a
+(zazwyczaj powłoce).
+Inne pliki specjalne zapewniają dostęp do informacji o uruchomionym procesie
+.BR gawk .
+Z tych specjalnych nazw plików można również korzystać w wierszu poleceń
+do określania plików danych.
+Te nazwy to:
+.TP "\w'\fB/dev/stdout\fR'u+1n"
+.B /dev/stdin
+Standardowe wejście.
+.TP
+.B /dev/stdout
+Standardowe wyjście.
+.TP
+.B /dev/stderr
+Standardowe wyjście diagnostyczne.
+.TP
+.BI /dev/fd/\^ n
+Plik związany z otwartym deskryptorem pliku
+.IR n .
+.PP
+Są one szczególnie przydatne do komunikatów o błędach. Na przykład:
+.PP
+.RS
+.ft B
+print "Spieprzyłeś to!" > "/dev/stderr"
+.ft R
+.RE
+.PP
+podczas gdy w przeciwnym wypadku musiałbyś użyć
+.PP
+.RS
+.ft B
+print "Spieprzyłeś to!" | "cat 1>&2"
+.ft R
+.RE
+.PP
+Poniższych specjalnych nazw plików można używać z operatorem procesu
+współbieżnego
+.B |&
+do tworzenia witrualnych połączeń sieciowych TCP/IP.
+.TP "\w'\fB/inet/tcp/\fIlport\fB/\fIrhost\fB/\fIrport\fR'u+2n"
+.BI /inet/tcp/ lport / rhost / rport
+Plik dla połączenia TCP/IP na lokalnym porcie
+.I lport
+do zdalnej maszyny
+.I rhost
+na zdalnym porcie
+.IR rport .
+Użyj portu
+.BR 0 ,
+jeśli chcesz, by to system znalazł port.
+.TP
+.BI /inet/udp/ lport / rhost / rport
+Podobne, lecz używa UDP/IP zamiast TCP/IP.
+.TP
+.BI /inet/raw/ lport / rhost / rport
+.\" Podobne, ale używa surowych gniazd IP.
+Zarezerwowane do przyszłego użytku.
+.PP
+Inne specjalne nazwy plików zapewniające informacje o działającym procesie
+.IR gawk .
+.B "Te nazwy plików są obecnie przestarzałe."
+Do uzyskania informacji, jakie podają, należy skorzystać z tablicy
+.B PROCINFO .
+Nazwy tych plików to:
+.TP "\w'\fB/dev/stdout\fR'u+1n"
+Odczytanie tego pliku zwraca PID bieżącego procesu. Liczba jest w postaci
+dziesiętnej i zakończona jest nową linią.
+.TP
+.B /dev/ppid
+Odczytanie tego pliku zwróci PID procesu rodzicielskiego. Podobnie jak
+wyżej, liczba jest dziesiętna i zakończona nową linią.
+.TP
+.B /dev/pgrpid
+Odczytanie tego pliku zwróci identyfikator grupy procesów bieżącego procesu,
+zapisany w postaci dziesiętnej i zakończony nową linią.
+.TP
+.B /dev/user
+Odczytanie tego pliku zwróci pojedynczy rekord, zakończony nową linią. Pola
+są oddzielone spacjami.
+.B $1
+jest wartością wywołania systemowego
+.IR getuid (2),
+.B $2
+jest wartością wywołania systemowego
+.IR geteuid (2),
+.B $3
+jest wartością wywołania systemowego
+.IR getgid (2),
+a
+.B $4
+jest wartością wywołania systemowego
+.IR getegid (2).
+Jeśli są jeszcze jakieś dodatkowe pola, to są to identyfikatory grup,
+zwrócone przez
+.IR getgroups (2).
+W niektórych systemach może nie być obsługiwana przynależność do wielu grup.
+.SS Funkcje numeryczne
+.PP
+\*(AK ma następujące wbudowane funkcje arytmetyczne:
+.PP
+.TP "\w'\fBsrand(\fR[\fIexpr\^\fR]\fB)\fR'u+1n"
+.BI atan2( y , " x" )
+zwraca arcus tangens
+.I y/x
+w radianach.
+.TP
+.BI cos( wyraż )
+zwraca cosinus z
+.I wyraż
+w radianach.
+.TP
+.BI exp( wyraż )
+funkcja wykładnicza.
+.TP
+.BI int( wyraż )
+skraca do liczby całkowitej.
+.TP
+.BI log( wyraż )
+funkcja logarytmu naturalnego.
+.TP
+.B rand()
+zwraca liczbę losową z przedziału 0 i 1.
+.TP
+.BI sin( wyraż )
+zwraca sinus z
+.I wyraż
+w radianach.
+.TP
+.BI sqrt( wyraż )
+pierwiastek kwadratowy.
+.TP
+\&\fBsrand(\fR[\fIwyraż\^\fR]\fB)\fR
+Używa
+.I wyraż
+jako nowego nasionka dla generatora liczb losowych. Bez podanego
+.IR wyraż ,
+używany jest czas dnia. Wartość zwracana to poprzednie nasionko
+generatora liczb losowych.
+.SS Funkcje łańcuchowe
+.PP
+\*(AK ma następujące wbudowane funkcje łańcuchowe:
+.PP
+.TP "\w'\fBsprintf(\^\fIfmt\fB\^, \fIexpr-list\^\fB)\fR'u+1n"
+\fBasort(\fIs \fR[\fB, \fId\fR]\fB)\fR
+Zwraca liczbę elementów w źródłowej tablicy
+.IR s .
+Zawartość
+.I s
+jest sortowana z zastosowaniem zwykłych reguł
+.IR gawk
+do porównywania wartości, zaś indeksy posortowanych wartości
+.I s
+azstępowane są kolejnymi liczbami całkowitymi, począwszy od 1.
+Jeśli podano opcjonalną tablicę docelową
+.IR d ,
+to najpierw 
+.I s
+jest powielana do
+.IR d ,
+a następnie sortowana jest
+.IR d ,
+a indeksy tablicy źródłowej
+.I s
+pozostają niezmienione.
+.TP
+\fBgensub(\fIr\fB, \fIs\fB, \fIh \fR[\fB, \fIt\fR]\fB)\fR
+w łańcuchu docelowym
+.I t
+wyszukuje podłańcuchy odpowiadające wyrażeniu regularnemu
+.IR r .
+Jeżeli
+.I h
+jest łańcuchem zaczynającym się od
+.B g
+lub
+.BR G ,
+to zastępuje wszystkie znalezione dopasowania
+.I r
+przez
+.IR s .
+W przeciwnym wypadku,
+.I h
+jest liczbą wskazującą, które z kolejnych dopasowań
+.I r
+ma zostać zastąpione.
+Jeżeli nie podano
+.IR t ,
+to zamiast niego używane jest
+.BR $0 .
+Wewnątrz tekstu zastępującego
+.IR s ,
+można posłużyć się sekwencją
+.BI \e n\fR,
+gdzie
+.I n
+jest cyfrą od 1 do 9, wskazującą na tekst dopasowany przez
+.IR n -te
+podwyrażenie w nawiasach. Sekwencja
+.B \e0
+oznacza cały dopasowany tekst, tak samo jak znak
+.BR & .
+W przeciwieństwie do
+.B sub()
+i
+.BR gsub() ,
+jako wynik funkcji zwracany jest zmieniony łańcuch, zaś pierwotny łańcuch
+docelowy pozostaje
+.I nie
+zmieniony.
+.TP "\w'\fBsprintf(\^\fIfmt\fB\^, \fIexpr-list\^\fB)\fR'u+1n"
+\fBgsub(\fIr\fB, \fIs\fB, \fIt\fB)\fR
+każdy podłańcuch, odpowiadający wyrażeniu regularnemu
+.I r
+w łańcuchu
+.IR t ,
+wymienia na łańcuch
+.IR s ,
+i zwraca liczbę podmian.
+Jeśli nie podano
+.IR t ,
+używa
+.BR $0 .
+Znak
+.B &
+w tekście zastępującym zostanie zastąpiony faktycznie dopasowanym tekstem.
+Użyj
+.B \e&
+by otrzymać literał
+.BR & .
+(Musi to być wpisane jako \fB"\e\e&"\fP.
+Pełniejsze omówienie reguł
+.BR &
+oraz odwrotnych ukośników w tekście zastępującym dla funkcji
+.BR sub() ,
+.B gsub()
+i
+.B gensub()
+znajdziesz w pozycji \*(EP.)
+.TP
+.BI index( s , " t" )
+zwraca indeks łańcucha
+.I t
+w łańcuchu
+.IR s ,
+lub zero, jeśli
+.I t
+nie zostało znalezione.
+.TP
+.BI length( s )
+zwraca długość łańcucha
+.I s
+lub długość
+.BR $0 ,
+jeśli nie podano
+.IR s .
+.TP
+\fBmatch(\fIs\fB, \fIr \fR[\fB, \fIa\fR]\fB)\fR
+zwraca pozycję w
+.IR s ,
+gdzie pojawia się wyrażenie regularne
+.IR r .
+Jeśli nie podano
+.IR r ,
+zwracane jest zero. Jeśli jest jednak obecne, to dodatkowo
+ustawiane są zmienne
+.B RSTART
+i
+.BR RLENGTH .
+Zauważ, że kolejność argumentów jest taka sama jak dla operatora
+.BR ~ :
+.IB str " ~"
+.IR re .
+.ft R
+Jeśli podano tablicę
+.IR a ,
+to jest ona czyszczona a następnie elementy od 1 do
+.I n
+wypełniane są fragmentami
+.I s
+pasującymi do odpowiednich ujętych w nawiasy podwyrażeń z
+.IR r .
+Zerowy element
+.I a
+zawiera fragment
+.I s
+dopasowany przez całe wyrażenie regularne
+.IR r .
+.TP
+\fBsplit(\fIs\fB, \fIa\fB, \fIr\fB)\fR
+dzieli łańcuch
+.I s
+na tablicę
+.I a
+w miejscach rozdzielonych wyrażeniem regularnym
+.IR r ,
+i zwraca liczbę pól. Jeśli pominięto
+.IR r ,
+zamiast niego używane jest
+.BR FS .
+Na początku, tablica
+.I a
+jest czyszczona. Podział odbywa się identycznie jak opisany powyżej podział
+rekordu na pola.
+.TP
+.BI sprintf( fmt , " lista-wyraż" )
+wypisuje
+.I listę-wyraż
+według
+.IR fmt ,
+i zwraca łańcuch wyjściowy.
+.TP
+.BI strtonum( str )
+Bada
+.IR str ,
+i zwraca jego numeryczną wartość.
+Jeśli
+.I str
+zaczyna się od początkowego
+.BR 0 ,
+to
+.B strtonum()
+przyjmuje, że
+.I str
+jest liczbą ósemkową.
+Jeśli
+.I str
+zaczyna się od początkowego
+.B 0x
+lub
+.BR 0X ,
+to
+.B strtonum()
+przyjmuje, że
+.I str
+jest liczbą szesnastkową.
+.TP
+\fBsub(\fIr\fB, \fIs\fB, \fIt\fB)\fR
+Podobne do
+.BR gsub() ,
+lecz podmieniany jest tylko pierwszy odpowiadający podłańcuch.
+.TP
+\fBsubstr(\fIs\fB, \fIi\fB, \fIn\fB)\fR
+zwraca maksymalnie
+.IR n -znakowy
+podłańcuch łańcucha
+.IR s ,
+zaczynający się od pozycji
+.IR i .
+Jeśli pominięto parametr
+.IR n ,
+użyta zostaje reszta
+.IR s .
+.TP
+.BI tolower( str )
+zwraca kopię łańcucha
+.IR str ,
+w której wszystkie wielkie litery zostały zastąpione małymi.
+Nie alfabetyczne znaki pozostają bez zmian.
+.TP
+.BI toupper( str )
+zwraca kopię łańcucha
+.IR str ,
+w której wszystkie małe litery zostały zastąpione wielkimi.
+Nie alfabetyczne znaki pozostają bez zmian.
+.SS Funkcje czasu
+.PP
+Ponieważ jednym z podstawowych zadań programów \*(AK jest przetwarzanie plików
+z logami, które zawierają informacje czasowe,
+.I gawk
+udostępnia następujące funkcje, umożliwiające uzyskiwanie znaczników czasu
+(timestamps) i ich formatowanie.
+.PP
+.TP "\w'\fBsystime()\fR'u+1n"
+\fBmktime(\fIdanedaty\fB)\fR
+Zamienia
+.I danedaty
+w znacznik czasu o tej postaci, co zwracana przez
+.BR systime() .
+.I danedaty
+jest łańcuchem postaci
+.IR "YYYY MM DD HH MM SS[ DST]" .
+Zawartością łańcucha jest sześć lub siedem liczb oznaczających odpowiednio:
+pełny rok łącznie ze stuleciem,
+miesiąc od 1 do 12,
+dzień miesiąca od 1 do 31,
+godzina od 0 do 23,
+minuta od 0 do 59,
+i sekunda od 0 do 60,
+oraz opcjonalna flaga zmiany czasu na letni.
+Wartości tych liczb nie muszą leżeć w podanych zakresach. Na przykład,
+godzina \-1 oznacza 1 godziną przed północą.
+Przyjęto kalendarz gregoriański zaczynający się od zera, w którym rok 0
+występuje przed rokiem 1, a rok \-1 przed rokiem 0.
+Zakłąda się, że czas jest podany według lokalnej strefy czasowej.
+Jeśli flaga czasu letniego jest dodatnia, to czas jest czasem letnim.
+Jeśli jest zerowa, to standardowym. Jeśli jest ujemna (domyślne), to
+.B mktime()
+próbuje ustalić czy dla zadanego czasu funkcjonuje czas letni.
+Jeśli
+.I danedaty
+nie zawierają wystarczającej liczby elementów lub wyknikowy czas jest
+poza zakresem, to funkcja zwraca \-1.
+.TP
+\fBstrftime(\fIformat\fR, \fItimestamp\fB)\fR
+formatuje
+.I timestamp
+według wskazówek zawartych w zmiennej
+.IR format.
+.I timestamp
+powinien być taki sam, jak ten, zwracany przez
+.BR systime() .
+Jeśli brakuje parametru
+.IR timestamp ,
+używany jest bieżący czas dnia. Jeżeli pominięto
+.IR format ,
+to używany jest domyślny format równoważny formatowi wyników z
+.IR date (1).
+Zobacz specyfikację funkcji
+.B strftime ()
+w ANSI C, aby zobaczyć jakie konwersje formatów są na pewno dostępne.
+Razem z
+.I gawk
+dostarczana jest wersja public domain
+.IR strftime (3)
+oraz odpowiednia strona podręcznika man; jeśli ta wersja została użyta
+do zbudowania
+.IR gawk ,
+to wszystkie konwersje opisane na tej stronie będą dostępne dla
+.IR gawk.
+.TP
+.B systime()
+zwraca bieżący czas dnia w liczbach sekund od początku Epoki (czyli od
+północy UTC, 1 stycznia 1970 na systemach \*(PX-owych).
+.SS Funkcje operujące na bitach
+Począwszy od wersji 3.1
+.IR gawk ,
+dostępne są poniższe funkcje operujące na bitach.
+Działają przez konwersję wartości zmiennoprzecinkowych podwójnej precyzji
+na całkowite
+.BR "unsigned long" ,
+wykonanie operacji, a następnie konwersję wyniku z powrotem na
+zmiennoprzecinkowy.
+Te funkcje to:
+.TP "\w'\fBrshift(\fIval\fB, \fIcount\fB)\fR'u+2n"
+\fBand(\fIv1\fB, \fIv2\fB)\fR
+Zwraca bitową koniunkcję AND wartości podanych przez
+.I v1
+i
+.IR v2 .
+.TP
+\fBcompl(\fIval\fB)\fR
+Zwraca bitowe uzupełnienie
+.IR val .
+.TP
+\fBlshift(\fIval\fB, \fIile\fB)\fR
+Zwraca wartość
+.IR val ,
+przesuniętą w lewo o
+.I ile
+bitów.
+.TP
+\fBor(\fIv1\fB, \fIv2\fB)\fR
+Zwraca bitową alternatywę OR wartości podanych przez
+.I v1
+i
+.IR v2 .
+.TP
+\fBrshift(\fIval\fB, \fIile\fB)\fR
+Zwraca wartość
+.IR val ,
+przesuniętą w prawo o
+.I ile
+bitów.
+.TP
+\fBxor(\fIv1\fB, \fIv2\fB)\fR
+Zwraca bitową alternatywę wykluczającą XOR wartości podanych przez
+.I v1
+i
+.IR v2 .
+.PP
+.SS Funkcje internacjonalizacji
+Począwszy od wersji 3.1
+.IR gawk ,
+można używać wewnątrz programów \*(AK funkcji do tłumaczenia łańcuchów
+podczas wykonania programu.
+Szczegóły opisano w \*(EP.
+.TP
+\fBbindtextdomain(\fIkatalog \fR[\fB, \fIdomena\fR]\fB)\fR
+Określa katalog, w którym
+.I gawk
+szuka plików
+.BR \&.mo ,
+w przypadku gdy nie będą lub nie mogą być umieszczone w ,,standardowych''
+miejscach (np., podczas testów).
+Zwraca katalog, z którym jest ,,związana''
+.IR domena .
+.sp .5
+Domyślną
+.I domeną
+jest wartość
+.BR TEXTDOMAIN .
+Jeśli
+.I katalog
+jest łańcuchem pustym (\fB""\fR), to
+.B bindtextdomain()
+zwraca bieżące wiązanie dla zadanej
+.IR domeny .
+.TP
+\fBdcgettext(\fIłańcuch \fR[\fB, \fIdomena \fR[\fB, \fIkategoria\fR]]\fB)\fR
+Zwraca tłumaczenie
+.I łańcucha
+w domenie tekstowej
+.I domena
+dla kategorii locale
+.IR kategoria .
+Domyślną
+.I domeną
+jest bieżąca wartość
+.BR TEXTDOMAIN .
+Domyślną wartością
+.I kategorii
+jest \fB"LC_MESSAGES"\fR.
+.sp .5
+Jeśli podaje się wartość
+.IR kategorii ,
+to musi to być łańcuch równy jednej ze znanych kategorii locale opisanych
+w \*(EP.  Trzeba również podać domenę tekstową. Użyj
+.BR TEXTDOMAIN ,
+jeśli chcesz korzystać z bieżącej domeny.
+.SH FUNKCJE UŻYTKOWNIKA
+Funkcje w \*(AK są definiowane następująco:
+.PP
+.RS
+\fBfunction \fInazwa\fB(\fIlista parametrów\fB) { \fIinstrukcje \fB}\fR
+.RE
+.PP
+Funkcje są wykonywane po wywołaniu ich z wyrażeń występujących we wzorcach lub
+akcjach. Do tworzenia instancji parametrów formalnych, zadeklarowanych
+w funkcji używane są parametry faktyczne użyte w wywołaniu funkcji.
+Tablice są przekazywane przez wskazanie, inne zmienne przez wartość.
+.PP
+Ponieważ funkcje pierwotnie nie były częścią języka \*(AK, obsługa
+zmiennych lokalnych jest trochę niezdarna: Są one deklarowana jako dodatkowe
+parametry w liście parametrów. Konwencja polega na separowaniu zmiennych
+lokalnych od parametrów dodatkowymi spacjami w liście parametrów. Na przykład:
+.PP
+.RS
+.ft B
+.nf
+function  f(p, q,     a, b) {	# a i b są lokalne
+			..... }
+
+/abc/	{ ... ; f(1, 2) ; ... }
+.fi
+.ft R
+.RE
+.PP
+Lewy nawias w wywołaniu funkcji musi występować bezpośrednio za nazwą funkcji,
+bez wtrąconej białej spacji. Ma to na celu zapobieżenie niejednoznaczności
+składni z operatorem konkatenacji (łączenia). Ograniczenie to nie
+odnosi się do funkcji wbudowanych, które są opisane powyżej.
+.PP
+Funkcje mogą wołać siebie nawzajem i mogą być rekurencyjne.
+Parametry funkcji używane jako zmienne lokalne są podczas wywołania funkcji
+inicjalizowane na łańcuch pusty i liczbę zero.
+Chcąc, by funkcja zwracała wartość należy posłużyć się składnią:
+.BI return " wyraż"\fR.
+Wartość zwracana przez funkcję jest niezdefiniowana jeśli nie podano
+wartości zwracanej lub funkcja kończy pracę bez jawnej instrukcji powrotu.
+.\"  or if the function returns by \*(lqfalling off\*(rq the end.
+.PP
+Jeżeli użyto
+.BR \-\^\-lint ,
+to
+.I gawk
+ostrzega o wywołaniach niezdefiniowanych funkcji podczas analizy
+składni, a nie w czasie wykonania.
+Wywołanie niezdefiniowanej funkcji w czasie wykonania powoduje błąd krytyczny.
+.PP
+Zamiast słowa
+.B function
+można używać słowa
+.BR funct .
+.SH DYNAMICZNE ŁADOWANIE NOWYCH FUNKCJI
+Począwszy od wersji 3.1
+.IR gawk ,
+można dynamicznie dodawać nowe funkcje wbudowane do pracującego interpretera
+.IR gawk .
+Dokładne szczegóły wykraczają poza zakres tej strony podręcznika.
+Można je znaleźć w \*(EP.
+.PP
+.TP 8
+\fBextension(\fIobjekt\fB, \fIfunkcja\fB)\fR
+Dynamicznie dołącza plik obiektów współużytkowanych o nazwie
+.IR objekt ,
+i wywołuje
+.I funkcję
+z tego obiektu, do wykonania inicjowania.
+Obydwa te argumenty powinny być podane jako łańcuchy.
+Zwraca wartość zwracaną przez
+.IR funkcję .
+.PP
+.ft B
+Ta funkcja jest dostarczana i dokumentowana w \*(EP,
+ale wszystko dotyczące tej cechy może się zmienić w kolejnym wydaniu.
+SILNIE zalecamy, byś nie używał tej funkcji do czegoś, czego nie masz zamiaru
+robić ponownie.
+.ft R
+.SH SYGNAŁY
+.I pgawk
+przyjmuje dwa sygnały.
+.B SIGUSR1
+powoduje, że zrzuca on profil i stos wywołąń funkcji do pliku profilu, którym
+jest albo
+.BR awkprof.out ,
+albo plik podany z opcją
+.BR \-\^\-profile .
+Następnie kontynuuje działanie.
+.B SIGHUP
+powoduje, że zrzuca on profil i stos wywołąń funkcji a następnie kończy pracę.
+.SH PRZYKŁADY
+.nf
+Wypisz i posortuj nazwy zgłoszeniowe (login) wszystkich użytkowników:
+
+.ft B
+	BEGIN	{ FS = ":" }
+		{ print $1 | "sort" }
+
+.ft R
+Zlicz linie w pliku:
+
+.ft B
+		{ nlines++ }
+	END	{ print nlines }
+
+.ft R
+Poprzedź każdą linię jej numerem w pliku:
+
+.ft B
+	{ print FNR, $0 }
+
+.ft R
+Konkatenatuj i numeruj linie (wariacja tematu):
+
+.ft B
+	{ print NR, $0 }
+.ft R
+.fi
+.SH INTERNACJONALIZACJA
+.PP
+Stałe łańcuchowe są ciągami znaków ujętymi w cudzysłowy. W środowiskach
+innych niż angielskojęzyczne, możliwe jest oznakowanie łańcuchów w programie
+\*(AK jako wymagających tłumaczenia na włąsny język narodowy. Łańcuchy takie
+są oznaczone w programie \*(AK przez początkowy znak podkreślenia
+(\*(lq_\*(rq).  Na przykład,
+.sp
+.RS
+.ft B
+gawk 'BEGIN { print "hello, world" }'
+.RE
+.sp
+.ft R
+zawsze wypisuje
+.BR "hello, world" .
+Ale,
+.sp
+.RS
+.ft B
+gawk 'BEGIN { print _"hello, world" }'
+.RE
+.sp
+.ft R
+we Francji może wypisać
+.BR "bonjour, monde" .
+.PP
+W tworzeniu i uruchamianiu zlokalizowanego programu \*(AK wyróżnia się kilka
+etapów.
+.TP "\w'4.'u+2n"
+1.
+Dodanie akcji
+.B BEGIN
+przypisującej wartość zmiennej
+.B TEXTDOMAIN
+do ustawienia domeny tekstowej na nazwę skojarzoną z naszym programem.
+.sp
+.ti +5n
+.ft B
+BEGIN { TEXTDOMAIN = "myprog" }
+.ft R
+.sp
+Umożliwia to
+.IR gawk owi
+znalezienie pliku
+.B \&.mo
+związanego z programem.
+Be ztego kroku,
+.I gawk
+używa domeny tekstowej
+.BR messages ,
+która prawdopodobnie nie zawiera tłumaczeń dla naszego programu.
+.TP
+2.
+Oznakowanie początkowymi znakami podkreślenia wszystkich łańcuchów, które
+powinny zostać przetłumaczone.
+.TP
+3.
+Jeśli to potrzebne, użycie w programie odpowiednich funkcji
+.B dcgettext()
+i/lub
+.BR bindtextdomain() .
+.TP
+4.
+Uruchomienie
+.B "gawk \-\^\-gen\-po \-f myprog.awk > myprog.po"
+w celu utworzenia pliku
+.B \&.po
+dla naszego programu.
+.TP
+5.
+Zapewnienie właściwego tłumaczenia, zbudowanie i zainstalowanie
+odpowiedniego pliku
+.BR \&.mo .
+.PP
+Funkcje internacjonalizacji opisano szczegółowo w \*(EP.
+.SH ZGODNOŚĆ Z POSIX
+Podstawowym celem
+.I gawk
+była zgodność ze standardem \*(PX, a także zgodność z najnowszymi
+wersjami \*(UX
+.IR awk .
+W tym celu
+.I gawk
+zawiera następujące widzialne dla użytkownika właściwości, które nie są
+opisane w książce o \*(AK, lecz są częścią
+.I awk
+z Bell Laboratories (Systemu Vr4), a także są częścią standardu \*(PX.
+.PP
+Książka wskazuje, że przypisanie w wierszu poleceń zachodzi gdy
+.I awk
+w innym wypadku otworzył by argument jako plik, co następuje po wykonaniu bloku
+.BR BEGIN .
+Jednak we wcześniejszych implementacjach, gdy takie przypisanie pojawiło się
+przed jakimikolwiek nazwami plików, następowało ono
+.I przed
+uruchomieniem bloku
+.BR BEGIN .
+Aplikacje z czasem zaczęły polegać na tej \*(lqwłaściwości\*(rq.
+Gdy
+.I awk
+został zmieniony tak, by odpowiadał dokumentacji, dodano opcję
+.B \-v
+do przypisywania wartości zmiennym przed wykonaniem programu,
+aby usatysfakcjonować aplikacje, które zależały od starego zachowania.
+(Właściwość ta została uzgodniona między programistami Bell Laboratories i \*(GN).
+.PP
+Opcja
+.BR \-W ,
+przeznaczona dla właściwości zależnych od implementacji należy do standardu
+\*(PX.
+.PP
+Podczas przetwarzania argumentów,
+.I gawk
+używa specjalnej opcji \*(lq\fB\-\^\-\fP\*(rq, sygnalizującej koniec argumentów.
+W trybie zgodności będzie ostrzegał, lecz poza tym ignorował
+opcje niezdefiniowane. W normalnym trybie działania, argumenty takie są
+przekazywane do programu \*(AK, aby je przetworzył.
+.PP
+Książka o \*(AK nie definiuje wartości zwracanej przez
+.BR srand() .
+Wersja SVr4 \*(UX
+.I awk
+(oraz standard \*(PX)
+zwracają wartość poprzedniego używanego nasionka, umożliwiając śledzenie
+kolejnych sekwencji liczb losowych. Dlatego
+.B srand()
+w
+.I gawk
+również zwraca poprzednio używane nasionko.
+.PP
+Innymi nowymi właściwościami są:
+używanie wielu opcji
+.B \-f
+(z MKS
+.IR awk ),
+tablica
+.BR ENVIRON ,
+sekwencje specjalne
+.BR \ea
+oraz
+.BR \ev
+(opracowane oryginalnie w
+.I gawk
+i przeniesione z powrotem do wersji Bell Laboratories); funkcje wbudowane
+.B tolower()
+i
+.B toupper()
+(z Bell Laboratories) oraz specyfikacje konwersji \*(AN C w
+.B printf
+(zrobione pierwotnie w wersji Bell Laboratories).
+.SH WŁAŚCIWOŚCI HISTORYCZNE
+Istnieją dwie historyczne właściwości \*(AK, obsługiwane przez
+.IR gawk .
+Po pierwsze, możliwe jest wywołanie funkcji wbudowanej
+.B length()
+nie tylko bez argumentów, ale również bez nawiasów! Tak więc
+.RS
+.PP
+.ft B
+a = length # Święty Algol 60, Batman!
+.ft R
+.RE
+.PP
+oznacza to samo co jedno z poniższych
+.RS
+.PP
+.ft B
+a = length()
+.br
+a = length($0)
+.ft R
+.RE
+.PP
+Właściwość ta jest oznaczona jako \*(lqnieaprobowana\*(rq w standardzie \*(PX i
+.I gawk
+wypisuje ostrzeżenie o jej użyciu, o ile podano w wierszu poleceń opcję
+.BR "\-W lint" .
+.PP
+Inną właściwością jest używanie instrukcji
+.B continue
+lub
+.B break
+poza ciałami pętli
+.BR while ,
+.BR for
+lub
+.BR do .
+Tradycyjne implementacje \*(AK traktowały takie użycie jako równoważnik
+instrukcji
+.BR next .
+.I Gawk
+realizuje ten sposób użycia, jeśli podano opcję
+.BR \-\^\-traditional .
+.SH ROZSZERZENIA GNU
+.I Gawk
+ma kilka rozszerzeń w stosunku do \*(PX
+.IR awk .
+Są one opisane w tej sekcji. Wszystkie rozszerzenia, które są tu opisane
+można wyłączyć, wywołując
+.I gawk
+z opcją
+.BR \-\^\-traditional .
+.PP
+Następujące właściwości
+.I gawk
+nie są dostępne w wersjach
+\*(PX
+.IR awk .
+.\" Environment vars and startup stuff
+.TP "\w'\(bu'u+1n"
+\(bu
+Dla plików podanych opcją
+.B \-f
+nie jest wykonywane przeszukiwanie ścieżki.
+option.  Dlatego też, zmienna środowiskowa
+.B AWKPATH
+nie jest zmienną specjalną.
+.\" POSIX and language recognition issues
+.TP
+\(bu
+Sekwencja specjalna
+.B \ex
+(Wyłączana przez
+.BR \-\^\-posix .)
+.TP
+\(bu
+Funkcja
+.B fflush()
+(Wyłączana przez
+.BR \-\^\-posix .)
+.TP
+\(bu
+Możliwość  kontynuowania linii po
+.B ?
+i
+.BR : .
+(Wyłączana przez
+.BR \-\^\-posix .)
+.TP
+\(bu
+Stałe ósemkowe i szesnastkowe w programach \*(AK.
+.\" Special variables
+.TP
+\(bu
+Zmienne
+.BR ARGIND ,
+.BR BINMODE ,
+.BR ERRNO ,
+.BR LINT ,
+.B  RT
+i
+.B  TEXTDOMAIN
+nie są specjalne.
+.TP
+\(bu
+Zmienna
+.B IGNORECASE
+oraz jej efekty uboczne nie są dostępne.
+.TP
+\(bu
+Zmienna
+.B FIELDWIDTHS
+oraz rozdzielanie o ustalonej szerokości pola.
+.TP
+\(bu
+Nie jest dostępna tablica
+.B PROCINFO
+.\" I/O stuff
+.TP
+\(bu
+Posługiwanie się
+.B RS
+jako wyrażeniem regularnym.
+.TP
+\(bu
+Nie są rozpoznawane specjalne nazwy plików dostępne do przeadresowań I/O.
+.TP
+\(bu
+Operator
+.B |&
+do tworzenia procesów współbieżnych.
+.\" Changes to standard awk functions
+.TP
+\(bu
+Możliwość wydzielania pojedynczych znaków przy użyciu łańcucha pustego jako
+wartości
+.BR FS
+oraz jako trzeciego argumentu funkcji
+.BR split() .
+.TP
+\(bu
+Użycie
+.BI delete " array"
+do kasowania całej zawartości tablicy.
+.TP
+\(bu
+Użycie
+.B nextfile
+do porzucenia przetwarzania bieżącego pliku wejściowego.
+.TP
+\(bu
+Opcjonalny drugi argument funkcji
+.BR close() .
+.TP
+\(bu
+Opcjonalny trzeci argument funkcji
+.BR match() .
+.TP
+\(bu
+Możliwość użycia specyfikatorów pozycyjnych w
+.B printf
+i
+.BR sprintf() .
+.\" New keywords or changes to keywords
+.\" New functions
+.TP
+Funkcje
+.BR and() ,
+.BR asort() ,
+.BR bindtextdomain() ,
+.BR compl() ,
+.BR dcgettext() ,
+.BR gensub() ,
+.BR lshift() ,
+.BR mktime() ,
+.BR or() ,
+.BR rshift() ,
+.BR strftime() ,
+.BR strtonum() ,
+.B systime()
+i
+.BR xor() .
+! .\" I18N stuff
+.TP
+\(bu
+Lokalizowalne łańcuchy.
+.\" Extending gawk
+.TP
+\(bu
+Dynamiczne dodawanie nowych funkcji wbudowanych, funkcją
+.BR extension() .
+.PP
+Książka o \*(AK nie definiuje wartości zwracanej przez funkcję
+.BR close() .
+Zaimplementowana w
+.I Gawk
+funkcja
+.B close()
+zwraca wartość z
+.IR fclose (3)
+lub
+.IR pclose (3),
+zależnie czy zamykano plik czy potok.
+Zwraca kod zakończenia procesu przy zamykaniu potoku wejściowego.
+Wartością zwracaną jest \-1 jeśli dany plik, potok czy proces współbieżny
+nie były otwarte za pomocą przekierowania.
+.PP
+Gdy
+.I gawk
+jest wywołany z opcją
+.BR \-\^\-traditional ,
+jeśli argumentem
+.I fs
+opcji
+.B \-F
+jest \*(lqt\*(rq, to
+.B FS
+jest ustawiane na znak tabulacji.
+Zauważ, że wpisanie
+.B "gawk \-F\et \&..."
+powoduje po prostu zacytowanie przez powłokę znaku \*(lqt\*(rq i nie przesyła
+\*(lq\et\*(rq do opcji
+.BR \-F .
+Ponieważ jest to raczej brzydki przypadek specjalny, nie jest to zachowanie
+domyślne. Zachowanie to nie pojawia się również po podaniu opcji
+.BR "\-W posix" .
+Aby faktycznie uzyskać znak tabulacji jako separator pól, najlepiej posłużyć
+się apostrofami jako znakami cytowania:
+.BR "gawk \-F'\et' \&..." .
+.ig
+.PP
+Jeśli
+.I gawk
+został skompilowany do debuggowania, to akceptuje dodatkowe opcje:
+.TP
+.PD 0
+.B \-Wparsedebug
+.TP
+.PD
+.B \-\^\-parsedebug
+Włącz wyjście debuggowe
+.IR yacc (1)
+lub
+.IR bison (1)
+podczas przetwarzania programu.
+Opcja ta powinna interesować tylko maintainerów
+.IR gawk ,
+i nie powinna być kompilowana w
+.IR gawk .
+..
+.SH ZMIENNE ŚRODOWISKOWE
+Do podania listy katalogów przeglądanych przez
+.I gawk
+podczas poszukiwania plików zadanych opcjami
+.B \-f
+i
+.B \-\^\-file
+można posłużyć się zmienną środowiskową
+.BR AWKPATH .
+.PP
+Jeśli w środowisku istnieje zmienna
+.B POSIXLY_CORRECT
+to
+.I gawk
+zachowuje się tak, jakby podano mu w wierszu poleceń opcję
+.BR \-\-posix .
+Jeśli podano opcję
+.BR \-\-lint ,
+.I gawk
+wyda ostrzeżenie o tym efekcie.
+.SH ZOBACZ TAKŻE
+.IR egrep (1),
+.IR getpid (2),
+.IR getppid (2),
+.IR getpgrp (2),
+.IR getuid (2),
+.IR geteuid (2),
+.IR getgid (2),
+.IR getegid (2),
+.IR getgroups (2)
+.PP
+.IR "The AWK Programming Language" ,
+Alfred V. Aho, Brian W. Kernighan, Peter J. Weinberger,
+Addison-Wesley, 1988. ISBN 0-201-07981-X.
+.PP
+.PP
+\*(EP,
+Edition 3.0, opublikowana przez Free Software Foundation, 2001.
+.br
+[od tłum.: powyższa publikacja dostarczana jest razem z opisywaną wersją
+programu]
+.SH BŁĘDY
+Opcja
+.B \-F
+niekoniecznie ma właściwość przypisywania zmiennych; pozostaje tylko dla
+zgodności wstecznej.
+.PP
+Niepoprawne składniowo programy z pojedynczego znaku mogą powodować
+przepełnienie stosu analizatora, dając niezbyt pomocny komunikat. Programy
+takie są zaskakująco trudne do do analizy w całkiem ogólnym przypadku,
+a wysiłek, by to jednak robić nie jest tego wart.
+.ig
+.PP
+.I Gawk
+cierpi na ,,feeping creaturism''.
+To fatalnie, że
+.I perl
+jest tak nieelegancki.
+..
+.SH AUTORZY
+Oryginalna wersja \*(UX
+.I awk
+była opracowana i zaimplementowana przez Alfreda Aho,
+Petera Weinbergera i Briana Kernighana z Bell Laboratories.  Brian Kernighan
+wciąż pracuje nad nią i rozszerza ją.
+.PP
+Paul Rubin i Jay Fenlason,
+z Free Software Foundation, napisali wersję
+.IR gawk ,
+zgodną z oryginalną wersją
+.IR awk ,
+rozprowadzaną w Seventh Edition \*(UX.
+John Woods wprowadził wiele poprawek.
+David Trueman, z pomocą
+Arnolda Robbinsa, uczynił
+.I gawk
+zgodnym z nową wersją \*(UX
+.IR awk .
+Arnold Robbins jest bieżącym opiekunem projektu.
+.PP
+Pierwotny port pod DOS został dokonany przez Conrada Kwoka i Scotta
+Garfinkle. Scott Deifik jest obecnym opiekunem wersji DOS. Pat Rankin zrobił
+port na VMS, a Michal Jaegermann zrobił port na Atari ST.
+Port na OS/2 został zrobiony przez Kai Uwe Rommela, przy udziale i pomocy
+Darrela Hankersona. Fred Fish zapewnił obsługę dla Amigi, Stephen Davies
+przeniesienie na Tandem, a Martin Brown na BeOS.
+.SH INFORMACJA O WERSJI
+Ta strona podręcznika man opisuje
+.IR gawk ,
+w wersji numer 3.1.0.
+.SH RAPORTY O BŁĘDACH
+Jeśli znajdziesz w
+.I gawk
+błąd, proszę o przesłanie listu pocztą elektroniczną na adres
+.BR bug-gnu-utils@gnu.org ,
+.I z
+kopią (carbon copy) na
+.BR arnold@gnu.org .
+Proszę o załączenie wersji systemu operacyjnego, wersji
+.I gawk
+(otrzymanej z
+.BR "gawk \-\^\-version" ),
+wersji kompilatora C, którym została skompilowana, oraz możliwie małego
+programu testowego i danych, które umożliwiają powtórzenie problemu.
+.PP
+Przed wysłaniem raportu o błędzie, zrób dwie rzeczy. Najpierw sprawdź, czy
+masz najnowszą wersję
+.IR gawk .
+Wiele błędów (zwykle subtelnych) jest poprawianych w każdej nowej wersji i
+jeśli twoja wersja jest przedawniona, to być może problem jest już
+rozwiązany. Po drugie, proszę, przeczytaj uważnie tę stronę podręcznika man
+oraz podręczniki, aby się upewnić, że to, co uważasz za błąd, jest nim
+naprawdę, a nie tylko dziwactwem w konstrukcji języka.
+.PP
+Cokolwiek zrobisz,
+.B NIE
+wysyłaj zgłoszenia błędu na grupę dyskusyjną
+.BR comp.lang.awk .
+Mimo, że opiekunowie projektu
+.I gawk
+czasami czytają tę grupę, wysyłanie na nią zgłoszeń jest drogą niepewną.
+Proszę, użyj zamiast tego podanych wyżej adresów poczty elektronicznej.
+.SH PODZIĘKOWANIA
+Brian Kernighan z Bell Laboratories
+dał wartościowe wsparcie podczas testowania i debuggowania. Dziękujemy.
+.SH KOPIOWANIE NINIEJSZEJ DOKUMENTACJI
+[Sekcja nietłumaczona z uwagi na ograniczenie zawarte w ostatnim akapicie]
+.PP
+Copyright \(co 1989, 1991\-2001 Free Software Foundation, Inc.
+.PP
+Permission is granted to make and distribute verbatim copies of
+this manual page provided the copyright notice and this permission
+notice are preserved on all copies.
+.ig
+Permission is granted to process this file through troff and print the
+results, provided the printed document carries copying permission
+notice identical to this one except for the removal of this paragraph
+(this paragraph not being relevant to the printed manual page).
+..
+.PP
+Permission is granted to copy and distribute modified versions of this
+manual page under the conditions for verbatim copying, provided that
+the entire resulting derived work is distributed under the terms of a
+permission notice identical to this one.
+.PP
+Permission is granted to copy and distribute translations of this
+manual page into another language, under the above conditions for
+modified versions, except that this permission notice may be stated in
+a translation approved by the Foundation.
