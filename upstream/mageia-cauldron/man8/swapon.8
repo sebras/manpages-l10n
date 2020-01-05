@@ -188,44 +188,38 @@ Be verbose.
 .BR \-V , " \-\-version"
 Display version information and exit.
 .SH NOTES
-You should not use \fBswapon\fR on a file with holes.
-This can be seen in the system log as
-.RS
-.sp
-.B "swapon: swapfile has holes."
-.sp
-.RE
+.SS Files with holes
 The swap file implementation in the kernel expects to be able to write to the
 file directly, without the assistance of the filesystem.  This is a problem on
-preallocated files (e.g.
-.BR fallocate (1))
-on filesystems like \fBXFS\fR or \fBext4\fR, and on copy-on-write
-filesystems like \fBbtrfs\fR.
-.PP
-It is recommended to use
+files with holes or on copy-on-write files on filesystems like Btrfs.
+.sp
+Commands like
+.BR cp (1)
+or
+.BR truncate (1)
+create files with holes.  These files will be rejected by swapon.
+.sp
+Preallocated files created by
+.BR fallocate (1)
+may be interpreted as files with holes too depending of the filesystem.
+Preallocated swap files are supported on XFS since Linux 4.18.
+.sp
+The most portable solution to create a swap file is to use
 .BR dd (1)
-and
-.I /dev/zero
-to avoid holes on XFS and ext4.
-.PP
-.B swapon
-may not work correctly when using a swap file with some versions of
-\fBbtrfs\fR.  This is due to btrfs being a copy-on-write filesystem: the
-file location may not be static and corruption can result.  Btrfs actively
-disallows the use of swap files on its filesystems by refusing to map the file.
-.PP
-One possible workaround is to map the swap
-file to a loopback device.  This will allow the filesystem to determine the
-mapping properly but may come with a performance impact.
-.PP
+and /dev/zero.
+.SS Btrfs
+Swap files on Btrfs are supported since Linux 5.0 on files with nocow attribute.
+See the
+.BR btrfs (5)
+manual page for more details.
+.SS NFS
 Swap over \fBNFS\fR may not work.
-.PP
+.SS Suspend
 .B swapon
 automatically detects and rewrites a swap space signature with old software
 suspend data (e.g. S1SUSPEND, S2SUSPEND, ...). The problem is that if we don't
 do it, then we get data corruption the next time an attempt at unsuspending is
 made.
-
 .SH ENVIRONMENT
 .IP LIBMOUNT_DEBUG=all
 enables libmount debug output.
@@ -237,6 +231,7 @@ enables libblkid debug output.
 .BR swapon (2),
 .BR fstab (5),
 .BR init (8),
+.BR fallocate (1),
 .BR mkswap (8),
 .BR mount (8),
 .BR rc (8)

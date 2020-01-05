@@ -1,5 +1,5 @@
 '\" t
-.TH "JOURNALCTL" "1" "" "systemd 242" "journalctl"
+.TH "JOURNALCTL" "1" "" "systemd 244" "journalctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -389,7 +389,12 @@ This parameter can be specified multiple times\&.
 Show messages for the specified systemd unit
 \fIUNIT\fR
 (such as a service unit), or for any of the units matched by
-\fIPATTERN\fR\&. If a pattern is specified, a list of unit names found in the journal is compared with the specified pattern and all that match are used\&. For each unit name, a match is added for messages from the unit ("_SYSTEMD_UNIT=\fIUNIT\fR"), along with additional matches for messages from systemd and messages about coredumps for the specified unit\&.
+\fIPATTERN\fR\&. If a pattern is specified, a list of unit names found in the journal is compared with the specified pattern and all that match are used\&. For each unit name, a match is added for messages from the unit ("_SYSTEMD_UNIT=\fIUNIT\fR"), along with additional matches for messages from systemd and messages about coredumps for the specified unit\&. A match is also added for
+"_SYSTEMD_SLICE=\fIUNIT\fR", such that if the provided
+\fIUNIT\fR
+is a
+\fBsystemd.slice\fR(5)
+unit, all logs of the children of the slice will be logged\&.
 .sp
 This parameter can be specified multiple times\&.
 .RE
@@ -398,7 +403,12 @@ This parameter can be specified multiple times\&.
 .RS 4
 Show messages for the specified user session unit\&. This will add a match for messages from the unit ("_SYSTEMD_USER_UNIT="
 and
-"_UID=") and additional matches for messages from session systemd and messages about coredumps for the specified unit\&.
+"_UID=") and additional matches for messages from session systemd and messages about coredumps for the specified unit\&. A match is also added for
+"_SYSTEMD_USER_SLICE=\fIUNIT\fR", such that if the provided
+\fIUNIT\fR
+is a
+\fBsystemd.slice\fR(5)
+unit, all logs of the children of the unit will be logged\&.
 .sp
 This parameter can be specified multiple times\&.
 .RE
@@ -661,15 +671,40 @@ Asks the journal daemon to write all yet unwritten journal data to the backing f
 \fB\-\-flush\fR
 .RS 4
 Asks the journal daemon to flush any log data stored in
-/run/log/journal
+/run/log/journal/
 into
-/var/log/journal, if persistent storage is enabled\&. This call does not return until the operation is complete\&. Note that this call is idempotent: the data is only flushed from
-/run/log/journal
+/var/log/journal/, if persistent storage is enabled\&. This call does not return until the operation is complete\&. Note that this call is idempotent: the data is only flushed from
+/run/log/journal/
 into
 /var/log/journal
-once during system runtime, and this command exits cleanly without executing any operation if this has already happened\&. This command effectively guarantees that all data is flushed to
+once during system runtime (but see
+\fB\-\-relinquish\-var\fR
+below), and this command exits cleanly without executing any operation if this has already happened\&. This command effectively guarantees that all data is flushed to
 /var/log/journal
 at the time it returns\&.
+.RE
+.PP
+\fB\-\-relinquish\-var\fR
+.RS 4
+Asks the journal daemon for the reverse operation to
+\fB\-\-flush\fR: if requested the daemon will write further log data to
+/run/log/journal/
+and stops writing to
+/var/log/journal/\&. A subsequent call to
+\fB\-\-flush\fR
+causes the log output to switch back to
+/var/log/journal/, see above\&.
+.RE
+.PP
+\fB\-\-smart\-relinquish\-var\fR
+.RS 4
+Similar to
+\fB\-\-relinquish\-var\fR
+but executes no operation if the root file system and
+/var/lib/journal/
+reside on the same mount point\&. This operation is used during system shutdown in order to make the journal daemon stop writing data to
+/var/log/journal/
+in case that directory is located on a mount point that needs to be unmounted\&.
 .RE
 .PP
 \fB\-\-rotate\fR
@@ -726,17 +761,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR
@@ -745,6 +798,24 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_COLORS\fR
+.RS 4
+The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and what the console is connected to\&.
+.RE
+.PP
+\fI$SYSTEMD_URLIFY\fR
+.RS 4
+The value must be a boolean\&. Controls whether clickable links should be generated in the output for terminal emulators supporting this\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and other conditions\&.
 .RE
 .SH "EXAMPLES"
 .PP

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 242" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 244" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -78,7 +78,7 @@ The unified control group hierarchy is the new version of kernel control group i
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&. Depending on the resource type, there are differences in resource control capabilities\&. Also, because of interface changes, some resource types have separate set of options on the unified hierarchy\&.
 .PP
 .PP
-\fBCPU\fR
+CPU
 .RS 4
 \fICPUWeight=\fR
 and
@@ -93,7 +93,7 @@ The
 controller does not exist separately on the unified hierarchy\&.
 .RE
 .PP
-\fBMemory\fR
+Memory
 .RS 4
 \fIMemoryMax=\fR
 replaces
@@ -104,12 +104,10 @@ and
 are effective only on unified hierarchy\&.
 .RE
 .PP
-\fBIO\fR
+IO
 .RS 4
-\fIIO\fR
-prefixed settings are a superset of and replace
-\fIBlockIO\fR
-prefixed ones\&. On unified hierarchy, IO resource control also applies to buffered writes\&.
+"IO"\-prefixed settings are a superset of and replace
+"BlockIO"\-prefixed ones\&. On unified hierarchy, IO resource control also applies to buffered writes\&.
 .RE
 .PP
 To ease the transition, there is best\-effort translation between the two versions of settings\&. For each controller, if any of the settings for the unified hierarchy are present, all settings for the legacy hierarchy are ignored\&. If the resulting settings are for the other type of hierarchy, the configurations are translated before application\&.
@@ -190,6 +188,30 @@ Example:
 to request that the CPU quota is measured in periods of 10ms\&.
 .RE
 .PP
+\fIAllowedCPUs=\fR
+.RS 4
+Restrict processes to be executed on specific CPUs\&. Takes a list of CPU indices or ranges separated by either whitespace or commas\&. CPU ranges are specified by the lower and upper CPU indices separated by a dash\&.
+.sp
+Setting
+\fIAllowedCPUs=\fR
+doesn\*(Aqt guarantee that all of the CPUs will be used by the processes as it may be limited by parent units\&. The effective configuration is reported as
+\fIEffectiveCPUs=\fR\&.
+.sp
+This setting is supported only with the unified control group hierarchy\&.
+.RE
+.PP
+\fIAllowedMemoryNodes=\fR
+.RS 4
+Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper CPU indices separated by a dash\&.
+.sp
+Setting
+\fIAllowedMemoryNodes=\fR
+doesn\*(Aqt guarantee that all of the memory NUMA nodes will be used by the processes as it may be limited by parent units\&. The effective configuration is reported as
+\fIEffectiveMemoryNodes=\fR\&.
+.sp
+This setting is supported only with the unified control group hierarchy\&.
+.RE
+.PP
 \fIMemoryAccounting=\fR
 .RS 4
 Turn on process and kernel memory accounting for this unit\&. Takes a boolean argument\&. Note that turning on memory accounting for one unit will also implicitly turn it on for all units contained in the same slice and for all its parent slices and the units contained therein\&. The system default for this setting may be controlled with
@@ -202,34 +224,52 @@ in
 .RS 4
 Specify the memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their minimum boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed\&.
 .sp
-Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. This controls the
+Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
+"infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
 "memory\&.min"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .sp
 This setting is supported only if the unified control group hierarchy is used and disables
 \fIMemoryLimit=\fR\&.
+.sp
+Units may have their children use a default
+"memory\&.min"
+value by specifying
+\fIDefaultMemoryMin=\fR, which has the same semantics as
+\fIMemoryMin=\fR\&. This setting does not affect
+"memory\&.min"
+in the unit itself\&.
 .RE
 .PP
 \fIMemoryLow=\fR\fI\fIbytes\fR\fR
 .RS 4
 Specify the best\-effort memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their low boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed as long as memory can be reclaimed from unprotected units\&.
 .sp
-Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. This controls the
+Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
+"infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
 "memory\&.low"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .sp
 This setting is supported only if the unified control group hierarchy is used and disables
 \fIMemoryLimit=\fR\&.
+.sp
+Units may have their children use a default
+"memory\&.low"
+value by specifying
+\fIDefaultMemoryLow=\fR, which has the same semantics as
+\fIMemoryLow=\fR\&. This setting does not affect
+"memory\&.low"
+in the unit itself\&.
 .RE
 .PP
 \fIMemoryHigh=\fR\fI\fIbytes\fR\fR
 .RS 4
-Specify the high limit on memory usage of the executed processes in this unit\&. Memory usage may go above the limit if unavoidable, but the processes are heavily slowed down and memory is taken away aggressively in such cases\&. This is the main mechanism to control memory usage of a unit\&.
+Specify the throttling limit on memory usage of the executed processes in this unit\&. Memory usage may go above the limit if unavoidable, but the processes are heavily slowed down and memory is taken away aggressively in such cases\&. This is the main mechanism to control memory usage of a unit\&.
 .sp
 Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
-"infinity", no memory limit is applied\&. This controls the
+"infinity", no memory throttling is applied\&. This controls the
 "memory\&.high"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBcgroup\-v2\&.txt\fR\m[]\&\s-2\u[2]\d\s+2\&.
@@ -521,6 +561,28 @@ T}
 Note that these settings might not be supported on some systems (for example if eBPF control group support is not enabled in the underlying kernel or container manager)\&. These settings will have no effect in that case\&. If compatibility with such systems is desired it is hence recommended to not exclusively rely on them for IP security\&.
 .RE
 .PP
+\fIIPIngressFilterPath=\fR\fI\fIBPF_FS_PROGRAMM_PATH\fR\fR, \fIIPEgressFilterPath=\fR\fI\fIBPF_FS_PROGRAMM_PATH\fR\fR
+.RS 4
+Add custom network traffic filters implemented as BPF programs, applying to all IP packets sent and received over
+\fBAF_INET\fR
+and
+\fBAF_INET6\fR
+sockets\&. Takes an absolute path to a pinned BPF program in the BPF virtual filesystem (/sys/fs/bpf/)\&.
+.sp
+The filters configured with this option are applied to all sockets created by processes of this unit (or in the case of socket units, associated with it)\&. The filters are loaded in addition to filters any of the parent slice units this unit might be a member of as well as any
+\fIIPAddressAllow=\fR
+and
+\fIIPAddressDeny=\fR
+filters in any of these units\&. By default there are no filters specified\&.
+.sp
+If these settings are used multiple times in the same unit all the specified programs are attached\&. If an empty string is assigned to these settings the program list is reset and all previous specified programs ignored\&.
+.sp
+Note that for socket\-activated services, the IP filter programs configured on the socket unit apply to all sockets associated with it directly, but not to any sockets created by the ultimately activated services for it\&. Conversely, the IP filter programs configured for the service are not applied to any sockets passed into the service via socket activation\&. Thus, it is usually a good idea, to replicate the IP filter programs on both the socket and the service unit, however it often makes sense to maintain one configuration more open and the other one more restricted, depending on the usecase\&.
+.sp
+Note that these settings might not be supported on some systems (for example if eBPF control group support is not enabled in the underlying kernel or container manager)\&. These settings will fail the service in that case\&. If compatibility with such systems is desired it is hence recommended to attach your filter manually (requires
+\fIDelegate=\fR\fByes\fR) instead of using this setting\&.
+.RE
+.PP
 \fIDeviceAllow=\fR
 .RS 4
 Control access to specific device nodes by the executed processes\&. Takes two space\-separated strings: a device node specifier followed by a combination of
@@ -529,12 +591,10 @@ Control access to specific device nodes by the executed processes\&. Takes two s
 \fBm\fR
 to control
 \fIr\fReading,
-\fIw\fRriting, or creation of the specific device node(s) by the unit (\fIm\fRknod), respectively\&. This controls the
+\fIw\fRriting, or creation of the specific device node(s) by the unit (\fIm\fRknod), respectively\&. On cgroup\-v1 this controls the
 "devices\&.allow"
-and
-"devices\&.deny"
-control group attributes\&. For details about these control group attributes, see
-\m[blue]\fBdevices\&.txt\fR\m[]\&\s-2\u[7]\d\s+2\&.
+control group attribute\&. For details about this control group attribute, see
+\m[blue]\fBdevices\&.txt\fR\m[]\&\s-2\u[7]\d\s+2\&. On cgroup\-v2 this functionality is implemented using eBPF filtering\&.
 .sp
 The device node specifier is either a path to a device node in the file system, starting with
 /dev/, or a string starting with either
@@ -546,7 +606,13 @@ followed by a device group name, as listed in
 "*"
 and
 "?"
-wildcards\&. Examples:
+wildcards\&. (Note that such globbing wildcards are not available for device node path specifications!) In order to match device nodes by numeric major/minor, use device node paths in the
+/dev/char/
+and
+/dev/block/
+directories\&. However, matching devices by major/minor is generally not recommended as assignments are neither stable nor portable between systems or different kernel versions\&.
+.sp
+Examples:
 /dev/sda5
 is a path to a device node, referring to an ATA or SCSI block device\&.
 "char\-pts"
@@ -555,6 +621,25 @@ and
 are specifiers for all pseudo TTYs and all ALSA sound devices, respectively\&.
 "char\-cpu/*"
 is a specifier matching all CPU related device groups\&.
+.sp
+Note that whitelists defined this way should only reference device groups which are resolvable at the time the unit is started\&. Any device groups not resolvable then are not added to the device whitelist\&. In order to work around this limitation, consider extending service units with an
+\fBExecStartPre=/sbin/modprobe\&...\fR
+line that loads the necessary kernel module implementing the device group if missing\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&...
+[Service]
+ExecStartPre=\-/sbin/modprobe \-abq loop
+DeviceAllow=block\-loop
+DeviceAllow=/dev/loop\-control
+\&...
+.fi
+.if n \{\
+.RE
+.\}
 .RE
 .PP
 \fIDevicePolicy=auto|closed|strict\fR

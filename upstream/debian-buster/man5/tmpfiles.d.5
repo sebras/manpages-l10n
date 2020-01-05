@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 242" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 244" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,6 +37,45 @@ $XDG_RUNTIME_DIR/user\-tmpfiles\&.d/*\&.conf
 \&...
 /usr/share/user\-tmpfiles\&.d/*\&.conf
     
+.fi
+
+.sp
+.nf
+#Type Path                                     Mode User Group Age         Argument
+f     /file/to/create                          mode user group \-           content
+f+    /file/to/create\-or\-truncate              mode user group \-           content
+w     /file/to/write\-to                        \-    \-    \-     \-           content
+w+    /file/to/append\-to                       \-    \-    \-     \-           content
+d     /directory/to/create\-and\-cleanup         mode user group cleanup\-age \-
+D     /directory/to/create\-and\-remove          mode user group cleanup\-age \-
+e     /directory/to/cleanup                    mode user group cleanup\-age \-
+v     /subvolume/to/create                     mode user group \-           \-
+v     /subvolume\-or\-directory/to/create        mode user group \-           \-
+Q     /subvolume/to/create                     mode user group \-           \-
+p     /fifo/to/create                          mode user group \-           \-
+p+    /fifo/to/[re]create                      mode user group \-           \-
+L     /symlink/to/create                       \-    \-    \-     \-           symlink/target/path
+L+    /symlink/to/[re]create                   \-    \-    \-     \-           symlink/target/path
+c     /dev/char\-device\-to\-create               mode user group \-           \-
+c+    /dev/char\-device\-to\-[re]create           mode user group \-           \-
+b     /dev/block\-device\-to\-create              mode user group \-           \-
+b+    /dev/block\-device\-to\-[re]create          mode user group \-           \-
+C     /target/to/create                        \-    \-    \-     \-           /source/to/copy
+x     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
+X     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
+r     /empty/dir/to/remove                     \-    \-    \-     \-           \-
+R     /dir/to/remove/recursively               \-    \-    \-     \-           \-
+z     /path\-or\-glob/to/adjust/mode             mode user group \-           MAC context
+Z     /path\-or\-glob/to/adjust/mode/recursively mode user group \-           MAC context
+t     /path\-or\-glob/to/set/xattrs              \-    \-    \-     \-           xattrs
+T     /path\-or\-glob/to/set/xattrs/recursively  \-    \-    \-     \-           xattrs
+h     /path\-or\-glob/to/set/attrs               \-    \-    \-     \-           file attrs
+H     /path\-or\-glob/to/set/attrs/recursively   \-    \-    \-     \-           file attrs
+a     /path\-or\-glob/to/set/acls                \-    \-    \-     \-           POSIX ACLs
+a+    /path\-or\-glob/to/append/acls             \-    \-    \-     \-           POSIX ACLs
+A     /path\-or\-glob/to/set/acls/recursively    \-    \-    \-     \-           POSIX ACLs
+A+    /path\-or\-glob/to/append/acls/recursively \-    \-    \-     \-           POSIX ACLs
+
 .fi
 .SH "DESCRIPTION"
 .PP
@@ -129,19 +168,19 @@ The type consists of a single letter and optionally an exclamation mark and/or m
 .PP
 The following line types are understood:
 .PP
+\fIf\fR, \fIf+\fR
+.RS 4
 \fIf\fR
-.RS 4
-Create a file if it does not exist yet\&. If the argument parameter is given and the file did not exist yet, it will be written to the file\&. Does not follow symlinks\&.
+will create a file if it does not exist yet\&. If the argument parameter is given and the file did not exist yet, it will be written to the file\&.
+\fIf+\fR
+will create or truncate the file\&. If the argument parameter is given, it will be written to the file\&. Does not follow symlinks\&.
 .RE
 .PP
-\fIF\fR
+\fIw\fR, \fIw+\fR
 .RS 4
-Create or truncate a file\&. If the argument parameter is given, it will be written to the file\&. Does not follow symlinks\&.
-.RE
-.PP
-\fIw\fR
-.RS 4
-Write the argument parameter to a file, if the file exists\&. Lines of this type accept shell\-style globs in place of normal path names\&. The argument parameter will be written without a trailing newline\&. C\-style backslash escapes are interpreted\&. Follows symlinks\&.
+Write the argument parameter to a file, if the file exists\&. If suffixed with
+\fI+\fR, the line will be appended to the file\&. If your configuration writes multiple lines to the same file, use
+\fIw+\fR\&. Lines of this type accept shell\-style globs in place of normal path names\&. The argument parameter will be written without a trailing newline\&. C\-style backslash escapes are interpreted\&. Follows symlinks\&.
 .RE
 .PP
 \fId\fR
@@ -312,20 +351,27 @@ Recursively set the access mode, user and group ownership, and restore the SELin
 .PP
 \fIt\fR
 .RS 4
-Set extended attributes\&. Lines of this type accept shell\-style globs in place of normal path names\&. This can be useful for setting SMACK labels\&. Does not follow symlinks\&.
+Set extended attributes, see
+\fBattr\fR(5)
+for details\&. The argument field should take one or more assignment expressions in the form
+\fInamespace\fR\&.\fIattribute\fR=\fIvalue\fR, for examples see below\&. Lines of this type accept shell\-style globs in place of normal path names\&. This can be useful for setting SMACK labels\&. Does not follow symlinks\&.
+.sp
+Please note that extended attributes settable with this line type are a different concept from the Linux file attributes settable with
+\fIh\fR/\fIH\fR, see below\&.
 .RE
 .PP
 \fIT\fR
 .RS 4
-Recursively set extended attributes\&. Lines of this type accept shell\-style globs in place of normal path names\&. This can be useful for setting SMACK labels\&. Does not follow symlinks\&.
+Same as
+\fIt\fR, but operates recursively\&.
 .RE
 .PP
 \fIh\fR
 .RS 4
-Set file/directory attributes\&. Lines of this type accept shell\-style globs in place of normal path names\&.
+Set Linux file/directory attributes\&. Lines of this type accept shell\-style globs in place of normal path names\&.
 .sp
 The format of the argument field is
-\fI[+\-=][aAcCdDeijPsStTu] \fR\&. The prefix
+\fI[+\-=][aAcCdDeijPsStTu]\fR\&. The prefix
 \fI+\fR
 (the default one) causes the attribute(s) to be added;
 \fI\-\fR
@@ -342,16 +388,21 @@ Passing only
 as argument resets all the file attributes listed above\&. It has to be pointed out that the
 \fI=\fR
 prefix limits itself to the attributes corresponding to the letters listed here\&. All other attributes will be left untouched\&. Does not follow symlinks\&.
+.sp
+Please note that the Linux file attributes settable with this line type are a different concept from the extended attributes settable with
+\fIt\fR/\fIT\fR, see above\&.
 .RE
 .PP
 \fIH\fR
 .RS 4
-Recursively set file/directory attributes\&. Lines of this type accept shell\-style globs in place of normal path names\&. Does not follow symlinks\&.
+Sames as
+\fIh\fR, but operates recursively\&.
 .RE
 .PP
 \fIa\fR, \fIa+\fR
 .RS 4
-Set POSIX ACLs (access control lists)\&. If suffixed with
+Set POSIX ACLs (access control lists), see
+\fBacl\fR(5)\&. If suffixed with
 \fI+\fR, the specified entries will be added to the existing set\&.
 \fBsystemd\-tmpfiles\fR
 will automatically add the required base entries for user and group based on the access mode of the file, unless base entries already exist or are explicitly specified\&. The mask will be added if not specified explicitly or already present\&. Lines of this type accept shell\-style globs in place of normal path names\&. This can be useful for allowing additional access to certain files\&. Does not follow symlinks\&.
@@ -457,6 +508,10 @@ lines, when omitted or when set to
 \fIt\fR, and
 \fIa\fR
 lines\&.
+.PP
+This field should generally only reference system users/groups, i\&.e\&. users/groups that are guaranteed to be resolvable during early boot\&. If this field references users/groups that only become resolveable during later boot (i\&.e\&. after NIS, LDAP or a similar networked directory service become available), execution of the operations declared by the line will likely fail\&. Also see
+\m[blue]\fBNotes on Resolvability of User and Group Names\fR\m[]\&\s-2\u[1]\d\s+2
+for more information on requirements on system user/group definitions\&.
 .SS "Age"
 .PP
 The date field, when set, is used to decide what files to delete when cleaning\&. If a file or directory is older than the current time minus the age field, it is deleted\&. The field format is a series of integers each followed by one of the following suffixes for the respective time units:
@@ -797,3 +852,9 @@ is used\&.
 \fBchattr\fR(1),
 \fBbtrfs-subvolume\fR(8),
 \fBbtrfs-qgroup\fR(8)
+.SH "NOTES"
+.IP " 1." 4
+Notes on Resolvability of User and Group Names
+.RS 4
+\%https://systemd.io/UIDS-GIDS.html#notes-on-resolvability-of-user-and-group-names
+.RE

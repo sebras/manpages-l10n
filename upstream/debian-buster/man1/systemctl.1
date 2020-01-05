@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 242" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 244" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,504 +32,6 @@ may be used to introspect and control the state of the
 system and service manager\&. Please refer to
 \fBsystemd\fR(1)
 for an introduction into the basic concepts and functionality this tool manages\&.
-.SH "OPTIONS"
-.PP
-The following options are understood:
-.PP
-\fB\-t\fR, \fB\-\-type=\fR
-.RS 4
-The argument should be a comma\-separated list of unit types such as
-\fBservice\fR
-and
-\fBsocket\fR\&.
-.sp
-If one of the arguments is a unit type, when listing units, limit display to certain unit types\&. Otherwise, units of all types will be shown\&.
-.sp
-As a special case, if one of the arguments is
-\fBhelp\fR, a list of allowed values will be printed and the program will exit\&.
-.RE
-.PP
-\fB\-\-state=\fR
-.RS 4
-The argument should be a comma\-separated list of unit LOAD, SUB, or ACTIVE states\&. When listing units, show only those in the specified states\&. Use
-\fB\-\-state=failed\fR
-to show only failed units\&.
-.sp
-As a special case, if one of the arguments is
-\fBhelp\fR, a list of allowed values will be printed and the program will exit\&.
-.RE
-.PP
-\fB\-p\fR, \fB\-\-property=\fR
-.RS 4
-When showing unit/job/manager properties with the
-\fBshow\fR
-command, limit display to properties specified in the argument\&. The argument should be a comma\-separated list of property names, such as
-"MainPID"\&. Unless specified, all known properties are shown\&. If specified more than once, all properties with the specified names are shown\&. Shell completion is implemented for property names\&.
-.sp
-For the manager itself,
-\fBsystemctl\ \&show\fR
-will show all available properties\&. Those properties are documented in
-\fBsystemd-system.conf\fR(5)\&.
-.sp
-Properties for units vary by unit type, so showing any unit (even a non\-existent one) is a way to list properties pertaining to this type\&. Similarly, showing any job will list properties pertaining to all jobs\&. Properties for units are documented in
-\fBsystemd.unit\fR(5), and the pages for individual unit types
-\fBsystemd.service\fR(5),
-\fBsystemd.socket\fR(5), etc\&.
-.RE
-.PP
-\fB\-a\fR, \fB\-\-all\fR
-.RS 4
-When listing units with
-\fBlist\-units\fR, also show inactive units and units which are following other units\&. When showing unit/job/manager properties, show all properties regardless whether they are set or not\&.
-.sp
-To list all units installed in the file system, use the
-\fBlist\-unit\-files\fR
-command instead\&.
-.sp
-When listing units with
-\fBlist\-dependencies\fR, recursively show dependencies of all dependent units (by default only dependencies of target units are shown)\&.
-.sp
-When used with
-\fBstatus\fR, show journal messages in full, even if they include unprintable characters or are very long\&. By default, fields with unprintable characters are abbreviated as "blob data"\&. (Note that the pager may escape unprintable characters again\&.)
-.RE
-.PP
-\fB\-r\fR, \fB\-\-recursive\fR
-.RS 4
-When listing units, also show units of local containers\&. Units of local containers will be prefixed with the container name, separated by a single colon character (":")\&.
-.RE
-.PP
-\fB\-\-reverse\fR
-.RS 4
-Show reverse dependencies between units with
-\fBlist\-dependencies\fR, i\&.e\&. follow dependencies of type
-\fIWantedBy=\fR,
-\fIRequiredBy=\fR,
-\fIPartOf=\fR,
-\fIBoundBy=\fR, instead of
-\fIWants=\fR
-and similar\&.
-.RE
-.PP
-\fB\-\-after\fR
-.RS 4
-With
-\fBlist\-dependencies\fR, show the units that are ordered before the specified unit\&. In other words, recursively list units following the
-\fIAfter=\fR
-dependency\&.
-.sp
-Note that any
-\fIAfter=\fR
-dependency is automatically mirrored to create a
-\fIBefore=\fR
-dependency\&. Temporal dependencies may be specified explicitly, but are also created implicitly for units which are
-\fIWantedBy=\fR
-targets (see
-\fBsystemd.target\fR(5)), and as a result of other directives (for example
-\fIRequiresMountsFor=\fR)\&. Both explicitly and implicitly introduced dependencies are shown with
-\fBlist\-dependencies\fR\&.
-.sp
-When passed to the
-\fBlist\-jobs\fR
-command, for each printed job show which other jobs are waiting for it\&. May be combined with
-\fB\-\-before\fR
-to show both the jobs waiting for each job as well as all jobs each job is waiting for\&.
-.RE
-.PP
-\fB\-\-before\fR
-.RS 4
-With
-\fBlist\-dependencies\fR, show the units that are ordered after the specified unit\&. In other words, recursively list units following the
-\fIBefore=\fR
-dependency\&.
-.sp
-When passed to the
-\fBlist\-jobs\fR
-command, for each printed job show which other jobs it is waiting for\&. May be combined with
-\fB\-\-after\fR
-to show both the jobs waiting for each job as well as all jobs each job is waiting for\&.
-.RE
-.PP
-\fB\-l\fR, \fB\-\-full\fR
-.RS 4
-Do not ellipsize unit names, process tree entries, journal output, or truncate unit descriptions in the output of
-\fBstatus\fR,
-\fBlist\-units\fR,
-\fBlist\-jobs\fR, and
-\fBlist\-timers\fR\&.
-.sp
-Also, show installation targets in the output of
-\fBis\-enabled\fR\&.
-.RE
-.PP
-\fB\-\-value\fR
-.RS 4
-When printing properties with
-\fBshow\fR, only print the value, and skip the property name and
-"="\&.
-.RE
-.PP
-\fB\-\-show\-types\fR
-.RS 4
-When showing sockets, show the type of the socket\&.
-.RE
-.PP
-\fB\-\-job\-mode=\fR
-.RS 4
-When queuing a new job, this option controls how to deal with already queued jobs\&. It takes one of
-"fail",
-"replace",
-"replace\-irreversibly",
-"isolate",
-"ignore\-dependencies",
-"ignore\-requirements"
-or
-"flush"\&. Defaults to
-"replace", except when the
-\fBisolate\fR
-command is used which implies the
-"isolate"
-job mode\&.
-.sp
-If
-"fail"
-is specified and a requested operation conflicts with a pending job (more specifically: causes an already pending start job to be reversed into a stop job or vice versa), cause the operation to fail\&.
-.sp
-If
-"replace"
-(the default) is specified, any conflicting pending job will be replaced, as necessary\&.
-.sp
-If
-"replace\-irreversibly"
-is specified, operate like
-"replace", but also mark the new jobs as irreversible\&. This prevents future conflicting transactions from replacing these jobs (or even being enqueued while the irreversible jobs are still pending)\&. Irreversible jobs can still be cancelled using the
-\fBcancel\fR
-command\&. This job mode should be used on any transaction which pulls in
-shutdown\&.target\&.
-.sp
-"isolate"
-is only valid for start operations and causes all other units to be stopped when the specified unit is started\&. This mode is always used when the
-\fBisolate\fR
-command is used\&.
-.sp
-"flush"
-will cause all queued jobs to be canceled when the new job is enqueued\&.
-.sp
-If
-"ignore\-dependencies"
-is specified, then all unit dependencies are ignored for this new job and the operation is executed immediately\&. If passed, no required units of the unit passed will be pulled in, and no ordering dependencies will be honored\&. This is mostly a debugging and rescue tool for the administrator and should not be used by applications\&.
-.sp
-"ignore\-requirements"
-is similar to
-"ignore\-dependencies", but only causes the requirement dependencies to be ignored, the ordering dependencies will still be honored\&.
-.RE
-.PP
-\fB\-T\fR, \fB\-\-show\-transaction\fR
-.RS 4
-When enqueuing a unit job (for example as effect of a
-\fBsystemctl start\fR
-invocation or similar), show brief information about all jobs enqueued, covering both the requested job and any added because of unit dependencies\&. Note that the output will only include jobs immediately part of the transaction requested\&. It is possible that service start\-up program code run as effect of the enqueued jobs might request further jobs to be pulled in\&. This means that completion of the listed jobs might ultimately entail more jobs than the listed ones\&.
-.RE
-.PP
-\fB\-\-fail\fR
-.RS 4
-Shorthand for
-\fB\-\-job\-mode=\fRfail\&.
-.sp
-When used with the
-\fBkill\fR
-command, if no units were killed, the operation results in an error\&.
-.RE
-.PP
-\fB\-i\fR, \fB\-\-ignore\-inhibitors\fR
-.RS 4
-When system shutdown or a sleep state is requested, ignore inhibitor locks\&. Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (unless privileged) and a list of active locks is printed\&. However, if
-\fB\-\-ignore\-inhibitors\fR
-is specified, the established locks are ignored and not shown, and the operation attempted anyway, possibly requiring additional privileges\&.
-.RE
-.PP
-\fB\-\-dry\-run\fR
-.RS 4
-Just print what would be done\&. Currently supported by verbs
-\fBhalt\fR,
-\fBpoweroff\fR,
-\fBreboot\fR,
-\fBkexec\fR,
-\fBsuspend\fR,
-\fBhibernate\fR,
-\fBhybrid\-sleep\fR,
-\fBsuspend\-then\-hibernate\fR,
-\fBdefault\fR,
-\fBrescue\fR,
-\fBemergency\fR, and
-\fBexit\fR\&.
-.RE
-.PP
-\fB\-q\fR, \fB\-\-quiet\fR
-.RS 4
-Suppress printing of the results of various commands and also the hints about truncated log lines\&. This does not suppress output of commands for which the printed output is the only result (like
-\fBshow\fR)\&. Errors are always printed\&.
-.RE
-.PP
-\fB\-\-no\-block\fR
-.RS 4
-Do not synchronously wait for the requested operation to finish\&. If this is not specified, the job will be verified, enqueued and
-\fBsystemctl\fR
-will wait until the unit\*(Aqs start\-up is completed\&. By passing this argument, it is only verified and enqueued\&. This option may not be combined with
-\fB\-\-wait\fR\&.
-.RE
-.PP
-\fB\-\-wait\fR
-.RS 4
-Synchronously wait for started units to terminate again\&. This option may not be combined with
-\fB\-\-no\-block\fR\&. Note that this will wait forever if any given unit never terminates (by itself or by getting stopped explicitly); particularly services which use
-"RemainAfterExit=yes"\&.
-.sp
-When used with
-\fBis\-system\-running\fR, wait until the boot process is completed before returning\&.
-.RE
-.PP
-\fB\-\-user\fR
-.RS 4
-Talk to the service manager of the calling user, rather than the service manager of the system\&.
-.RE
-.PP
-\fB\-\-system\fR
-.RS 4
-Talk to the service manager of the system\&. This is the implied default\&.
-.RE
-.PP
-\fB\-\-failed\fR
-.RS 4
-List units in failed state\&. This is equivalent to
-\fB\-\-state=failed\fR\&.
-.RE
-.PP
-\fB\-\-no\-wall\fR
-.RS 4
-Do not send wall message before halt, power\-off and reboot\&.
-.RE
-.PP
-\fB\-\-global\fR
-.RS 4
-When used with
-\fBenable\fR
-and
-\fBdisable\fR, operate on the global user configuration directory, thus enabling or disabling a unit file globally for all future logins of all users\&.
-.RE
-.PP
-\fB\-\-no\-reload\fR
-.RS 4
-When used with
-\fBenable\fR
-and
-\fBdisable\fR, do not implicitly reload daemon configuration after executing the changes\&.
-.RE
-.PP
-\fB\-\-no\-ask\-password\fR
-.RS 4
-When used with
-\fBstart\fR
-and related commands, disables asking for passwords\&. Background services may require input of a password or passphrase string, for example to unlock system hard disks or cryptographic certificates\&. Unless this option is specified and the command is invoked from a terminal,
-\fBsystemctl\fR
-will query the user on the terminal for the necessary secrets\&. Use this option to switch this behavior off\&. In this case, the password must be supplied by some other means (for example graphical password agents) or the service might fail\&. This also disables querying the user for authentication for privileged operations\&.
-.RE
-.PP
-\fB\-\-kill\-who=\fR
-.RS 4
-When used with
-\fBkill\fR, choose which processes to send a signal to\&. Must be one of
-\fBmain\fR,
-\fBcontrol\fR
-or
-\fBall\fR
-to select whether to kill only the main process, the control process or all processes of the unit\&. The main process of the unit is the one that defines the life\-time of it\&. A control process of a unit is one that is invoked by the manager to induce state changes of it\&. For example, all processes started due to the
-\fIExecStartPre=\fR,
-\fIExecStop=\fR
-or
-\fIExecReload=\fR
-settings of service units are control processes\&. Note that there is only one control process per unit at a time, as only one state change is executed at a time\&. For services of type
-\fIType=forking\fR, the initial process started by the manager for
-\fIExecStart=\fR
-is a control process, while the process ultimately forked off by that one is then considered the main process of the unit (if it can be determined)\&. This is different for service units of other types, where the process forked off by the manager for
-\fIExecStart=\fR
-is always the main process itself\&. A service unit consists of zero or one main process, zero or one control process plus any number of additional processes\&. Not all unit types manage processes of these types however\&. For example, for mount units, control processes are defined (which are the invocations of
-/bin/mount
-and
-/bin/umount), but no main process is defined\&. If omitted, defaults to
-\fBall\fR\&.
-.RE
-.PP
-\fB\-s\fR, \fB\-\-signal=\fR
-.RS 4
-When used with
-\fBkill\fR, choose which signal to send to selected processes\&. Must be one of the well\-known signal specifiers such as
-\fBSIGTERM\fR,
-\fBSIGINT\fR
-or
-\fBSIGSTOP\fR\&. If omitted, defaults to
-\fBSIGTERM\fR\&.
-.RE
-.PP
-\fB\-f\fR, \fB\-\-force\fR
-.RS 4
-When used with
-\fBenable\fR, overwrite any existing conflicting symlinks\&.
-.sp
-When used with
-\fBedit\fR, create all of the specified units which do not already exist\&.
-.sp
-When used with
-\fBhalt\fR,
-\fBpoweroff\fR,
-\fBreboot\fR
-or
-\fBkexec\fR, execute the selected operation without shutting down all units\&. However, all processes will be killed forcibly and all file systems are unmounted or remounted read\-only\&. This is hence a drastic but relatively safe option to request an immediate reboot\&. If
-\fB\-\-force\fR
-is specified twice for these operations (with the exception of
-\fBkexec\fR), they will be executed immediately, without terminating any processes or unmounting any file systems\&. Warning: specifying
-\fB\-\-force\fR
-twice with any of these operations might result in data loss\&. Note that when
-\fB\-\-force\fR
-is specified twice the selected operation is executed by
-\fBsystemctl\fR
-itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
-.RE
-.PP
-\fB\-\-message=\fR
-.RS 4
-When used with
-\fBhalt\fR,
-\fBpoweroff\fR
-or
-\fBreboot\fR, set a short message explaining the reason for the operation\&. The message will be logged together with the default shutdown message\&.
-.RE
-.PP
-\fB\-\-now\fR
-.RS 4
-When used with
-\fBenable\fR, the units will also be started\&. When used with
-\fBdisable\fR
-or
-\fBmask\fR, the units will also be stopped\&. The start or stop operation is only carried out when the respective enable or disable operation has been successful\&.
-.RE
-.PP
-\fB\-\-root=\fR
-.RS 4
-When used with
-\fBenable\fR/\fBdisable\fR/\fBis\-enabled\fR
-(and related commands), use the specified root path when looking for unit files\&. If this option is present,
-\fBsystemctl\fR
-will operate on the file system directly, instead of communicating with the
-\fBsystemd\fR
-daemon to carry out changes\&.
-.RE
-.PP
-\fB\-\-runtime\fR
-.RS 4
-When used with
-\fBenable\fR,
-\fBdisable\fR,
-\fBedit\fR, (and related commands), make changes only temporarily, so that they are lost on the next reboot\&. This will have the effect that changes are not made in subdirectories of
-/etc
-but in
-/run, with identical immediate effects, however, since the latter is lost on reboot, the changes are lost too\&.
-.sp
-Similarly, when used with
-\fBset\-property\fR, make changes only temporarily, so that they are lost on the next reboot\&.
-.RE
-.PP
-\fB\-\-preset\-mode=\fR
-.RS 4
-Takes one of
-"full"
-(the default),
-"enable\-only",
-"disable\-only"\&. When used with the
-\fBpreset\fR
-or
-\fBpreset\-all\fR
-commands, controls whether units shall be disabled and enabled according to the preset rules, or only enabled, or only disabled\&.
-.RE
-.PP
-\fB\-n\fR, \fB\-\-lines=\fR
-.RS 4
-When used with
-\fBstatus\fR, controls the number of journal lines to show, counting from the most recent ones\&. Takes a positive integer argument, or 0 to disable journal output\&. Defaults to 10\&.
-.RE
-.PP
-\fB\-o\fR, \fB\-\-output=\fR
-.RS 4
-When used with
-\fBstatus\fR, controls the formatting of the journal entries that are shown\&. For the available choices, see
-\fBjournalctl\fR(1)\&. Defaults to
-"short"\&.
-.RE
-.PP
-\fB\-\-firmware\-setup\fR
-.RS 4
-When used with the
-\fBreboot\fR
-command, indicate to the system\*(Aqs firmware to reboot into the firmware setup interface\&. Note that this functionality is not available on all systems\&.
-.RE
-.PP
-\fB\-\-boot\-loader\-menu=\fR
-.RS 4
-When used with the
-\fBreboot\fR
-command, indicate to the system\*(Aqs boot loader to show the boot loader menu on the following boot\&. Takes a time value as parameter \(em indicating the menu time\-out\&. Pass zero in order to disable the menu time\-out\&. Note that not all boot loaders support this functionality\&.
-.RE
-.PP
-\fB\-\-boot\-loader\-entry=\fR
-.RS 4
-When used with the
-\fBreboot\fR
-command, indicate to the system\*(Aqs boot loader to boot into a specific boot loader entry on the following boot\&. Takes a boot loader entry identifier as argument, or
-"help"
-in order to list available entries\&. Note that not all boot loaders support this functionality\&.
-.RE
-.PP
-\fB\-\-plain\fR
-.RS 4
-When used with
-\fBlist\-dependencies\fR,
-\fBlist\-units\fR
-or
-\fBlist\-machines\fR, the output is printed as a list instead of a tree, and the bullet circles are omitted\&.
-.RE
-.PP
-\fB\-H\fR, \fB\-\-host=\fR
-.RS 4
-Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
-":", and then a container name, separated by
-"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
-\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
-.RE
-.PP
-\fB\-M\fR, \fB\-\-machine=\fR
-.RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
-.RE
-.PP
-\fB\-\-no\-pager\fR
-.RS 4
-Do not pipe output into a pager\&.
-.RE
-.PP
-\fB\-\-no\-legend\fR
-.RS 4
-Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
-.RE
-.PP
-\fB\-h\fR, \fB\-\-help\fR
-.RS 4
-Print a short help text and exit\&.
-.RE
-.PP
-\fB\-\-version\fR
-.RS 4
-Print a short version string and exit\&.
-.RE
 .SH "COMMANDS"
 .PP
 The following commands are understood:
@@ -682,14 +184,27 @@ and
 .RS 4
 Start (activate) one or more units specified on the command line\&.
 .sp
-Note that glob patterns operate on the set of primary names of units currently in memory\&. Units which are not active and are not in a failed state usually are not in memory, and will not be matched by any pattern\&. In addition, in case of instantiated units, systemd is often unaware of the instance name until the instance has been started\&. Therefore, using glob patterns with
+Note that unit glob patterns expand to names of units currently in memory\&. Units which are not active and are not in a failed state usually are not in memory, and will not be matched by any pattern\&. In addition, in case of instantiated units, systemd is often unaware of the instance name until the instance has been started\&. Therefore, using glob patterns with
 \fBstart\fR
 has limited usefulness\&. Also, secondary alias names of units are not considered\&.
+.sp
+Option
+\fB\-\-all\fR
+may be used to also operate on inactive units which are referenced by other loaded units\&. Note that this is not the same as operating on "all" possible units, because as the previous paragraph describes, such a list is ill\-defined\&. Nevertheless,
+\fBsystemctl start \-\-all \fR\fB\fIGLOB\fR\fR
+may be useful if all the units that should match the pattern are pulled in by some target which is known to be loaded\&.
 .RE
 .PP
 \fBstop \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
 Stop (deactivate) one or more units specified on the command line\&.
+.sp
+This command will fail if the unit does not exist or if stopping of the unit is prohibited (see
+\fIRefuseManualStop=\fR
+in
+\fBsystemd.unit\fR(5))\&. It will
+\fInot\fR
+fail if any of the commands configured to stop the unit (\fIExecStop=\fR, etc\&.) fail, because the manager will still forcibly terminate the unit\&.
 .RE
 .PP
 \fBreload \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -763,6 +278,28 @@ Send a signal to one or more processes of the unit\&. Use
 to select which process to kill\&. Use
 \fB\-\-signal=\fR
 to select the signal to send\&.
+.RE
+.PP
+\fBclean \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Remove the configuration, state, cache, logs or runtime data of the specified units\&. Use
+\fB\-\-what=\fR
+to select which kind of resource to remove\&. For service units this may be used to remove the directories configured with
+\fIConfigurationDirectory=\fR,
+\fIStateDirectory=\fR,
+\fICacheDirectory=\fR,
+\fILogsDirectory=\fR
+and
+\fIRuntimeDirectory=\fR, see
+\fBsystemd.exec\fR(5)
+for details\&. For timer units this may be used to clear out the persistent timestamp data if
+\fIPersistent=\fR
+is used and
+\fB\-\-what=state\fR
+is selected, see
+\fBsystemd.timer\fR(5)\&. This command only applies to units that use either of these settings\&. If
+\fB\-\-what=\fR
+is not specified, both the cache and runtime data are removed (as these two types of data are generally redundant and reproducible on the next invocation of the unit)\&.
 .RE
 .PP
 \fBis\-active \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -907,11 +444,19 @@ Set the specified unit properties at runtime where this is supported\&. This all
 is passed, in which case the settings only apply until the next reboot\&. The syntax of the property assignment follows closely the syntax of assignments in unit files\&.
 .sp
 Example:
-\fBsystemctl set\-property foobar\&.service CPUShares=777\fR
+\fBsystemctl set\-property foobar\&.service CPUWeight=200\fR
 .sp
 If the specified unit appears to be inactive, the changes will be only stored on disk as described previously hence they will be effective when the unit will be started\&.
 .sp
-Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&. Like with unit file configuration settings, assigning an empty list will reset the property\&.
+Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&.
+.sp
+Example:
+\fBsystemctl set\-property foobar\&.service CPUWeight=200 MemoryMax=2G IPAccounting=yes\fR
+.sp
+Like with unit file configuration settings, assigning an empty setting usually resets a property to its defaults\&.
+.sp
+Example:
+\fBsystemctl set\-property avahi\-daemon\&.service IPAddressDeny=\fR
 .RE
 .PP
 \fBhelp \fR\fB\fIPATTERN\fR\fR\fB\&...|\fR\fB\fIPID\fR\fR\fB\&...\fR
@@ -1174,7 +719,7 @@ T}
 T{
 "indirect"
 T}:T{
-The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in Also=\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
+The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in \fIAlso=\fR\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
 T}:T{
 0
 T}
@@ -1388,7 +933,7 @@ Unset one or more systemd manager environment variables\&. If only a variable na
 .RS 4
 Import all, one or more environment variables set on the client into the systemd manager environment block\&. If no arguments are passed, the entire environment block is imported\&. Otherwise, a list of one or more environment variable names should be passed, whose client\-side values are then imported into the manager\*(Aqs environment block\&.
 .RE
-.SS "Manager Lifecycle Commands"
+.SS "Manager State Commands"
 .PP
 \fBdaemon\-reload\fR
 .RS 4
@@ -1404,6 +949,38 @@ command\&.
 .RS 4
 Reexecute the systemd manager\&. This will serialize the manager state, reexecute the process and deserialize the state again\&. This command is of little use except for debugging and package upgrades\&. Sometimes, it might be helpful as a heavy\-weight
 \fBdaemon\-reload\fR\&. While the daemon is being reexecuted, all sockets systemd listening on behalf of user configuration will stay accessible\&.
+.RE
+.PP
+\fBlog\-level\fR [\fILEVEL\fR]
+.RS 4
+If no argument is given, print the current log level of the manager\&. If an optional argument
+\fILEVEL\fR
+is provided, then the command changes the current log level of the manager to
+\fILEVEL\fR
+(accepts the same values as
+\fB\-\-log\-level=\fR
+described in
+\fBsystemd\fR(1))\&.
+.RE
+.PP
+\fBlog\-target\fR [\fITARGET\fR]
+.RS 4
+If no argument is given, print the current log target of the manager\&. If an optional argument
+\fITARGET\fR
+is provided, then the command changes the current log target of the manager to
+\fITARGET\fR
+(accepts the same values as
+\fB\-\-log\-target=\fR, described in
+\fBsystemd\fR(1))\&.
+.RE
+.PP
+\fBservice\-watchdogs\fR [yes|no]
+.RS 4
+If no argument is given, print the current state of service runtime watchdogs of the manager\&. If an optional boolean argument is provided, then globally enables or disables the service runtime watchdogs (\fBWatchdogSec=\fR) and emergency actions (e\&.g\&.
+\fBOnFailure=\fR
+or
+\fBStartLimitAction=\fR); see
+\fBsystemd.service\fR(5)\&. The hardware watchdog is not affected by this setting\&.
 .RE
 .SS "System Commands"
 .PP
@@ -1780,6 +1357,530 @@ or
 .RE
 .\}
 .sp
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-t\fR, \fB\-\-type=\fR
+.RS 4
+The argument should be a comma\-separated list of unit types such as
+\fBservice\fR
+and
+\fBsocket\fR\&.
+.sp
+If one of the arguments is a unit type, when listing units, limit display to certain unit types\&. Otherwise, units of all types will be shown\&.
+.sp
+As a special case, if one of the arguments is
+\fBhelp\fR, a list of allowed values will be printed and the program will exit\&.
+.RE
+.PP
+\fB\-\-state=\fR
+.RS 4
+The argument should be a comma\-separated list of unit LOAD, SUB, or ACTIVE states\&. When listing units, show only those in the specified states\&. Use
+\fB\-\-state=failed\fR
+to show only failed units\&.
+.sp
+As a special case, if one of the arguments is
+\fBhelp\fR, a list of allowed values will be printed and the program will exit\&.
+.RE
+.PP
+\fB\-p\fR, \fB\-\-property=\fR
+.RS 4
+When showing unit/job/manager properties with the
+\fBshow\fR
+command, limit display to properties specified in the argument\&. The argument should be a comma\-separated list of property names, such as
+"MainPID"\&. Unless specified, all known properties are shown\&. If specified more than once, all properties with the specified names are shown\&. Shell completion is implemented for property names\&.
+.sp
+For the manager itself,
+\fBsystemctl\ \&show\fR
+will show all available properties\&. Those properties are documented in
+\fBsystemd-system.conf\fR(5)\&.
+.sp
+Properties for units vary by unit type, so showing any unit (even a non\-existent one) is a way to list properties pertaining to this type\&. Similarly, showing any job will list properties pertaining to all jobs\&. Properties for units are documented in
+\fBsystemd.unit\fR(5), and the pages for individual unit types
+\fBsystemd.service\fR(5),
+\fBsystemd.socket\fR(5), etc\&.
+.RE
+.PP
+\fB\-a\fR, \fB\-\-all\fR
+.RS 4
+When listing units with
+\fBlist\-units\fR, also show inactive units and units which are following other units\&. When showing unit/job/manager properties, show all properties regardless whether they are set or not\&.
+.sp
+To list all units installed in the file system, use the
+\fBlist\-unit\-files\fR
+command instead\&.
+.sp
+When listing units with
+\fBlist\-dependencies\fR, recursively show dependencies of all dependent units (by default only dependencies of target units are shown)\&.
+.sp
+When used with
+\fBstatus\fR, show journal messages in full, even if they include unprintable characters or are very long\&. By default, fields with unprintable characters are abbreviated as "blob data"\&. (Note that the pager may escape unprintable characters again\&.)
+.RE
+.PP
+\fB\-r\fR, \fB\-\-recursive\fR
+.RS 4
+When listing units, also show units of local containers\&. Units of local containers will be prefixed with the container name, separated by a single colon character (":")\&.
+.RE
+.PP
+\fB\-\-reverse\fR
+.RS 4
+Show reverse dependencies between units with
+\fBlist\-dependencies\fR, i\&.e\&. follow dependencies of type
+\fIWantedBy=\fR,
+\fIRequiredBy=\fR,
+\fIPartOf=\fR,
+\fIBoundBy=\fR, instead of
+\fIWants=\fR
+and similar\&.
+.RE
+.PP
+\fB\-\-after\fR
+.RS 4
+With
+\fBlist\-dependencies\fR, show the units that are ordered before the specified unit\&. In other words, recursively list units following the
+\fIAfter=\fR
+dependency\&.
+.sp
+Note that any
+\fIAfter=\fR
+dependency is automatically mirrored to create a
+\fIBefore=\fR
+dependency\&. Temporal dependencies may be specified explicitly, but are also created implicitly for units which are
+\fIWantedBy=\fR
+targets (see
+\fBsystemd.target\fR(5)), and as a result of other directives (for example
+\fIRequiresMountsFor=\fR)\&. Both explicitly and implicitly introduced dependencies are shown with
+\fBlist\-dependencies\fR\&.
+.sp
+When passed to the
+\fBlist\-jobs\fR
+command, for each printed job show which other jobs are waiting for it\&. May be combined with
+\fB\-\-before\fR
+to show both the jobs waiting for each job as well as all jobs each job is waiting for\&.
+.RE
+.PP
+\fB\-\-before\fR
+.RS 4
+With
+\fBlist\-dependencies\fR, show the units that are ordered after the specified unit\&. In other words, recursively list units following the
+\fIBefore=\fR
+dependency\&.
+.sp
+When passed to the
+\fBlist\-jobs\fR
+command, for each printed job show which other jobs it is waiting for\&. May be combined with
+\fB\-\-after\fR
+to show both the jobs waiting for each job as well as all jobs each job is waiting for\&.
+.RE
+.PP
+\fB\-l\fR, \fB\-\-full\fR
+.RS 4
+Do not ellipsize unit names, process tree entries, journal output, or truncate unit descriptions in the output of
+\fBstatus\fR,
+\fBlist\-units\fR,
+\fBlist\-jobs\fR, and
+\fBlist\-timers\fR\&.
+.sp
+Also, show installation targets in the output of
+\fBis\-enabled\fR\&.
+.RE
+.PP
+\fB\-\-value\fR
+.RS 4
+When printing properties with
+\fBshow\fR, only print the value, and skip the property name and
+"="\&.
+.RE
+.PP
+\fB\-\-show\-types\fR
+.RS 4
+When showing sockets, show the type of the socket\&.
+.RE
+.PP
+\fB\-\-job\-mode=\fR
+.RS 4
+When queuing a new job, this option controls how to deal with already queued jobs\&. It takes one of
+"fail",
+"replace",
+"replace\-irreversibly",
+"isolate",
+"ignore\-dependencies",
+"ignore\-requirements",
+"flush", or
+"triggering"\&. Defaults to
+"replace", except when the
+\fBisolate\fR
+command is used which implies the
+"isolate"
+job mode\&.
+.sp
+If
+"fail"
+is specified and a requested operation conflicts with a pending job (more specifically: causes an already pending start job to be reversed into a stop job or vice versa), cause the operation to fail\&.
+.sp
+If
+"replace"
+(the default) is specified, any conflicting pending job will be replaced, as necessary\&.
+.sp
+If
+"replace\-irreversibly"
+is specified, operate like
+"replace", but also mark the new jobs as irreversible\&. This prevents future conflicting transactions from replacing these jobs (or even being enqueued while the irreversible jobs are still pending)\&. Irreversible jobs can still be cancelled using the
+\fBcancel\fR
+command\&. This job mode should be used on any transaction which pulls in
+shutdown\&.target\&.
+.sp
+"isolate"
+is only valid for start operations and causes all other units to be stopped when the specified unit is started\&. This mode is always used when the
+\fBisolate\fR
+command is used\&.
+.sp
+"flush"
+will cause all queued jobs to be canceled when the new job is enqueued\&.
+.sp
+If
+"ignore\-dependencies"
+is specified, then all unit dependencies are ignored for this new job and the operation is executed immediately\&. If passed, no required units of the unit passed will be pulled in, and no ordering dependencies will be honored\&. This is mostly a debugging and rescue tool for the administrator and should not be used by applications\&.
+.sp
+"ignore\-requirements"
+is similar to
+"ignore\-dependencies", but only causes the requirement dependencies to be ignored, the ordering dependencies will still be honored\&.
+.PP
+"triggering"
+may only be used with
+\fBsystemctl stop\fR\&. In this mode, the specified unit and any active units that trigger it are stopped\&. See the discussion of
+\fITriggers=\fR
+in
+\fBsystemd.unit\fR(5)
+for more information about triggering units\&.
+.RE
+.PP
+\fB\-T\fR, \fB\-\-show\-transaction\fR
+.RS 4
+When enqueuing a unit job (for example as effect of a
+\fBsystemctl start\fR
+invocation or similar), show brief information about all jobs enqueued, covering both the requested job and any added because of unit dependencies\&. Note that the output will only include jobs immediately part of the transaction requested\&. It is possible that service start\-up program code run as effect of the enqueued jobs might request further jobs to be pulled in\&. This means that completion of the listed jobs might ultimately entail more jobs than the listed ones\&.
+.RE
+.PP
+\fB\-\-fail\fR
+.RS 4
+Shorthand for
+\fB\-\-job\-mode=\fRfail\&.
+.sp
+When used with the
+\fBkill\fR
+command, if no units were killed, the operation results in an error\&.
+.RE
+.PP
+\fB\-i\fR, \fB\-\-ignore\-inhibitors\fR
+.RS 4
+When system shutdown or a sleep state is requested, ignore inhibitor locks\&. Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (unless privileged) and a list of active locks is printed\&. However, if
+\fB\-\-ignore\-inhibitors\fR
+is specified, the established locks are ignored and not shown, and the operation attempted anyway, possibly requiring additional privileges\&.
+.RE
+.PP
+\fB\-\-dry\-run\fR
+.RS 4
+Just print what would be done\&. Currently supported by verbs
+\fBhalt\fR,
+\fBpoweroff\fR,
+\fBreboot\fR,
+\fBkexec\fR,
+\fBsuspend\fR,
+\fBhibernate\fR,
+\fBhybrid\-sleep\fR,
+\fBsuspend\-then\-hibernate\fR,
+\fBdefault\fR,
+\fBrescue\fR,
+\fBemergency\fR, and
+\fBexit\fR\&.
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Suppress printing of the results of various commands and also the hints about truncated log lines\&. This does not suppress output of commands for which the printed output is the only result (like
+\fBshow\fR)\&. Errors are always printed\&.
+.RE
+.PP
+\fB\-\-no\-block\fR
+.RS 4
+Do not synchronously wait for the requested operation to finish\&. If this is not specified, the job will be verified, enqueued and
+\fBsystemctl\fR
+will wait until the unit\*(Aqs start\-up is completed\&. By passing this argument, it is only verified and enqueued\&. This option may not be combined with
+\fB\-\-wait\fR\&.
+.RE
+.PP
+\fB\-\-wait\fR
+.RS 4
+Synchronously wait for started units to terminate again\&. This option may not be combined with
+\fB\-\-no\-block\fR\&. Note that this will wait forever if any given unit never terminates (by itself or by getting stopped explicitly); particularly services which use
+"RemainAfterExit=yes"\&.
+.sp
+When used with
+\fBis\-system\-running\fR, wait until the boot process is completed before returning\&.
+.RE
+.PP
+\fB\-\-user\fR
+.RS 4
+Talk to the service manager of the calling user, rather than the service manager of the system\&.
+.RE
+.PP
+\fB\-\-system\fR
+.RS 4
+Talk to the service manager of the system\&. This is the implied default\&.
+.RE
+.PP
+\fB\-\-failed\fR
+.RS 4
+List units in failed state\&. This is equivalent to
+\fB\-\-state=failed\fR\&.
+.RE
+.PP
+\fB\-\-no\-wall\fR
+.RS 4
+Do not send wall message before halt, power\-off and reboot\&.
+.RE
+.PP
+\fB\-\-global\fR
+.RS 4
+When used with
+\fBenable\fR
+and
+\fBdisable\fR, operate on the global user configuration directory, thus enabling or disabling a unit file globally for all future logins of all users\&.
+.RE
+.PP
+\fB\-\-no\-reload\fR
+.RS 4
+When used with
+\fBenable\fR
+and
+\fBdisable\fR, do not implicitly reload daemon configuration after executing the changes\&.
+.RE
+.PP
+\fB\-\-no\-ask\-password\fR
+.RS 4
+When used with
+\fBstart\fR
+and related commands, disables asking for passwords\&. Background services may require input of a password or passphrase string, for example to unlock system hard disks or cryptographic certificates\&. Unless this option is specified and the command is invoked from a terminal,
+\fBsystemctl\fR
+will query the user on the terminal for the necessary secrets\&. Use this option to switch this behavior off\&. In this case, the password must be supplied by some other means (for example graphical password agents) or the service might fail\&. This also disables querying the user for authentication for privileged operations\&.
+.RE
+.PP
+\fB\-\-kill\-who=\fR
+.RS 4
+When used with
+\fBkill\fR, choose which processes to send a signal to\&. Must be one of
+\fBmain\fR,
+\fBcontrol\fR
+or
+\fBall\fR
+to select whether to kill only the main process, the control process or all processes of the unit\&. The main process of the unit is the one that defines the life\-time of it\&. A control process of a unit is one that is invoked by the manager to induce state changes of it\&. For example, all processes started due to the
+\fIExecStartPre=\fR,
+\fIExecStop=\fR
+or
+\fIExecReload=\fR
+settings of service units are control processes\&. Note that there is only one control process per unit at a time, as only one state change is executed at a time\&. For services of type
+\fIType=forking\fR, the initial process started by the manager for
+\fIExecStart=\fR
+is a control process, while the process ultimately forked off by that one is then considered the main process of the unit (if it can be determined)\&. This is different for service units of other types, where the process forked off by the manager for
+\fIExecStart=\fR
+is always the main process itself\&. A service unit consists of zero or one main process, zero or one control process plus any number of additional processes\&. Not all unit types manage processes of these types however\&. For example, for mount units, control processes are defined (which are the invocations of
+/bin/mount
+and
+/bin/umount), but no main process is defined\&. If omitted, defaults to
+\fBall\fR\&.
+.RE
+.PP
+\fB\-s\fR, \fB\-\-signal=\fR
+.RS 4
+When used with
+\fBkill\fR, choose which signal to send to selected processes\&. Must be one of the well\-known signal specifiers such as
+\fBSIGTERM\fR,
+\fBSIGINT\fR
+or
+\fBSIGSTOP\fR\&. If omitted, defaults to
+\fBSIGTERM\fR\&.
+.RE
+.PP
+\fB\-\-what=\fR
+.RS 4
+Select what type of per\-unit resources to remove when the
+\fBclean\fR
+command is invoked, see below\&. Takes one of
+\fBconfiguration\fR,
+\fBstate\fR,
+\fBcache\fR,
+\fBlogs\fR,
+\fBruntime\fR
+to select the type of resource\&. This option may be specified more than once, in which case all specified resource types are removed\&. Also accepts the special value
+\fBall\fR
+as a shortcut for specifiying all five resource types\&. If this option is not specified defaults to the combination of
+\fBcache\fR
+and
+\fBruntime\fR, i\&.e\&. the two kinds of resources that are generally considered to be redundant and can be reconstructed on next invocation\&.
+.RE
+.PP
+\fB\-f\fR, \fB\-\-force\fR
+.RS 4
+When used with
+\fBenable\fR, overwrite any existing conflicting symlinks\&.
+.sp
+When used with
+\fBedit\fR, create all of the specified units which do not already exist\&.
+.sp
+When used with
+\fBhalt\fR,
+\fBpoweroff\fR,
+\fBreboot\fR
+or
+\fBkexec\fR, execute the selected operation without shutting down all units\&. However, all processes will be killed forcibly and all file systems are unmounted or remounted read\-only\&. This is hence a drastic but relatively safe option to request an immediate reboot\&. If
+\fB\-\-force\fR
+is specified twice for these operations (with the exception of
+\fBkexec\fR), they will be executed immediately, without terminating any processes or unmounting any file systems\&. Warning: specifying
+\fB\-\-force\fR
+twice with any of these operations might result in data loss\&. Note that when
+\fB\-\-force\fR
+is specified twice the selected operation is executed by
+\fBsystemctl\fR
+itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
+.RE
+.PP
+\fB\-\-message=\fR
+.RS 4
+When used with
+\fBhalt\fR,
+\fBpoweroff\fR
+or
+\fBreboot\fR, set a short message explaining the reason for the operation\&. The message will be logged together with the default shutdown message\&.
+.RE
+.PP
+\fB\-\-now\fR
+.RS 4
+When used with
+\fBenable\fR, the units will also be started\&. When used with
+\fBdisable\fR
+or
+\fBmask\fR, the units will also be stopped\&. The start or stop operation is only carried out when the respective enable or disable operation has been successful\&.
+.RE
+.PP
+\fB\-\-root=\fR
+.RS 4
+When used with
+\fBenable\fR/\fBdisable\fR/\fBis\-enabled\fR
+(and related commands), use the specified root path when looking for unit files\&. If this option is present,
+\fBsystemctl\fR
+will operate on the file system directly, instead of communicating with the
+\fBsystemd\fR
+daemon to carry out changes\&.
+.RE
+.PP
+\fB\-\-runtime\fR
+.RS 4
+When used with
+\fBenable\fR,
+\fBdisable\fR,
+\fBedit\fR, (and related commands), make changes only temporarily, so that they are lost on the next reboot\&. This will have the effect that changes are not made in subdirectories of
+/etc
+but in
+/run, with identical immediate effects, however, since the latter is lost on reboot, the changes are lost too\&.
+.sp
+Similarly, when used with
+\fBset\-property\fR, make changes only temporarily, so that they are lost on the next reboot\&.
+.RE
+.PP
+\fB\-\-preset\-mode=\fR
+.RS 4
+Takes one of
+"full"
+(the default),
+"enable\-only",
+"disable\-only"\&. When used with the
+\fBpreset\fR
+or
+\fBpreset\-all\fR
+commands, controls whether units shall be disabled and enabled according to the preset rules, or only enabled, or only disabled\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-lines=\fR
+.RS 4
+When used with
+\fBstatus\fR, controls the number of journal lines to show, counting from the most recent ones\&. Takes a positive integer argument, or 0 to disable journal output\&. Defaults to 10\&.
+.RE
+.PP
+\fB\-o\fR, \fB\-\-output=\fR
+.RS 4
+When used with
+\fBstatus\fR, controls the formatting of the journal entries that are shown\&. For the available choices, see
+\fBjournalctl\fR(1)\&. Defaults to
+"short"\&.
+.RE
+.PP
+\fB\-\-firmware\-setup\fR
+.RS 4
+When used with the
+\fBreboot\fR
+command, indicate to the system\*(Aqs firmware to reboot into the firmware setup interface\&. Note that this functionality is not available on all systems\&.
+.RE
+.PP
+\fB\-\-boot\-loader\-menu=\fR
+.RS 4
+When used with the
+\fBreboot\fR
+command, indicate to the system\*(Aqs boot loader to show the boot loader menu on the following boot\&. Takes a time value as parameter \(em indicating the menu time\-out\&. Pass zero in order to disable the menu time\-out\&. Note that not all boot loaders support this functionality\&.
+.RE
+.PP
+\fB\-\-boot\-loader\-entry=\fR
+.RS 4
+When used with the
+\fBreboot\fR
+command, indicate to the system\*(Aqs boot loader to boot into a specific boot loader entry on the following boot\&. Takes a boot loader entry identifier as argument, or
+"help"
+in order to list available entries\&. Note that not all boot loaders support this functionality\&.
+.RE
+.PP
+\fB\-\-plain\fR
+.RS 4
+When used with
+\fBlist\-dependencies\fR,
+\fBlist\-units\fR
+or
+\fBlist\-machines\fR, the output is printed as a list instead of a tree, and the bullet circles are omitted\&.
+.RE
+.PP
+\fB\-H\fR, \fB\-\-host=\fR
+.RS 4
+Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
+.RE
+.PP
+\fB\-M\fR, \fB\-\-machine=\fR
+.RS 4
+Execute operation on a local container\&. Specify a container name to connect to\&.
+.RE
+.PP
+\fB\-\-no\-pager\fR
+.RS 4
+Do not pipe output into a pager\&.
+.RE
+.PP
+\fB\-\-no\-legend\fR
+.RS 4
+Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
 .SH "EXIT STATUS"
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.
@@ -1893,17 +1994,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR
@@ -1912,6 +2031,24 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_COLORS\fR
+.RS 4
+The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and what the console is connected to\&.
+.RE
+.PP
+\fI$SYSTEMD_URLIFY\fR
+.RS 4
+The value must be a boolean\&. Controls whether clickable links should be generated in the output for terminal emulators supporting this\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and other conditions\&.
 .RE
 .SH "SEE ALSO"
 .PP
