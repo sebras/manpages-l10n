@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# This script finds all FIXMEs in manpages and prepeares as much as possible an output suitable for bug reporting
+
+# An example of only upstream is man2/wait.2.po
+# An example of both upstream and ours is man4/vcs.4.po
+
+# CONFIG
+DCSBASE=/scr/build/src/DCS/manpages-l10n/
+CONFIGBASE=$DCSBASE/upstreambug/CONFIG
+
+cd $DCSBASE/po
+
+# Find all PO files with FIXME in them
+for pofile in $(find . -name "*.po"  -exec grep FIXME "{}" -ls ";"  | cut -d/ -f4 | LC_ALL=C sort -u); do 
+    # Now look at them for each language
+    for lang in de fr nl pl ro; do
+	for checkfile in $(find $lang -name $pofile); do
+#    echo $checkfile $lang $pofile
+	    grep FIXME $checkfile > /tmp/ssF.FIX.$lang.$pofile
+	    md5sum /tmp/ssF.FIX.$lang.$pofile | cut -d " " -f1 > /tmp/ssF.md5.$lang.$pofile
+	done
+    done
+    mdnumtotal=$(cat /tmp/ssF.md5.*.$pofile| wc -l)
+    mdunique=$(cat /tmp/ssF.md5.*.$pofile| sort -u | wc -l)
+#   echo "Md5total: $mdnumtotal Md5unique: $mdunique"
+#   if [ $mdnumtotal -ge 2 ] ; then 
+#if [ $mdunique -eq 1 ] ; then
+    if [ $mdnumtotal -ge 2 -a $mdunique -eq 1 ] ; then
+#    echo "Blacklist-Kandidat $pofile"
+	echo $pofile >> /tmp/ssF.BLACKLIST
+    else
+	echo $pofile >> /tmp/ssF.WHITELIST
+    fi
+    let cfcounter=0
+    cfilename=""
+    for cfile in $CONFIGBASE/CONFIG.*; do
+	#echo "grep -x $pofile $cfile"
+	if [ $(grep -x $pofile $cfile) ] ; then
+	   let cfcounter=$cfcounter+1
+	   finalfilename=$(basename $cfile)
+	fi
+    done
+    if [ $cfcounter -eq 0 ] ; then 
+	echo "ERROR: $pofile not in any CONFIG file, please add and rerun the script"
+    fi
+    if [ $cfcounter -gt 1 ] ; then
+	echo "ERROR: $pofile is in serveral CONFIG ($cfcounter) files, please fix them and rerun the script"
+    fi
+    if [ $cfcounter -eq 1 ] ; then
+	echo $pofile >> /tmp/ssF.REPORT.$finalfilename
+    fi
+done
+
+ls -lhS /tmp/ssF.REPORT.*
+
