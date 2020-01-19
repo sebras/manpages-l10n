@@ -23,6 +23,8 @@
 # CONFIG
 DCSBASE=/scr/build/src/DCS/manpages-l10n/
 CONFIGBASE=$DCSBASE/upstreambug/CONFIG
+DIALOG=/usr/bin/dialog
+sk_temp=$((tempfile) 2>/dev/null)
 
 cd $DCSBASE/po
 
@@ -69,6 +71,35 @@ done
 
 # The following line does not work, the first (largest) item is ignored??
 #ls -lhS /tmp/ssF.REPORT.*| awk '{print $9}'|awk 'FS="." {print $4}'
+
+# This is not very elegant, but works around the issue of skipping the first entry
+echo "Dummy" > /tmp/ssF.list.Dummy
+ls -lhS /tmp/ssF.REPORT.*| awk '{print $9}' >> /tmp/ssF.list.Dummy
+ssf_ANZAHL=$(ls -l /tmp/ssF.REPORT.* |wc -l)
+
+ssf_STOP=0
+while [ $ssf_STOP -eq 0 ]; do
+    echo -n "$DIALOG --clear --title \"Reporting upstream\" --menu \"Choose which package to report for\" 20 51 $ssf_ANZAHL " > /tmp/ssf.menu
+    for i in $(cat /tmp/ssF.list.Dummy|awk 'FS="." {print $4}'|grep -v -E "^$"); do
+	ssF_date="not reported yet"
+	if [ -f $CONFIGBASE/LAST.$i ]; then
+	    ssF_date=$(tail -n1 $CONFIGBASE/LAST.$i)
+	fi
+	echo "Entry: $i (Last reported: $ssF_date)"
+	echo -n "\"$i\" \"$i (Last reported: $ssF_date)\" " >> /tmp/ssf.menu
+    done
+    chmod +x /tmp/ssf.menu
+    bash /tmp/ssf.menu 2> $sk_temp
+    retval=$?
+
+    if [ $retval == 0 ]; then
+	ssf_SELCTION=$(cat $sk_temp)
+
+	echo $ssf_SELCTION
+    else
+	ssf_STOP=1
+    fi
+done
 
 # A10 is not enough :-((
 #for i in $(cat /tmp/ssF.REPORT.CONFIG.linuxmanpages); do find . -name $i -exec grep -A10 FIXME "{}" ";" -print ; done
