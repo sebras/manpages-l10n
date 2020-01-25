@@ -29,11 +29,15 @@ while read line; do
 	echo "Downloading and updating package '$package' from '$repo'"
 	url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
 	grep "\"$package-[0-9][^\"]*\.pkg\.tar\.xz[^.]" |
-	sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
+	sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1," |
+        perl -pe "s/ /\n/g" |
+	tail -n1)
 	if [ a"$url" = a ]; then
 	    url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
 	    grep "\"$package-[0-9][^\"]*\.pkg\.tar\.zst[^.]" |
-	    sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
+	    sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1," |
+	    perl -pe "s/ /\n/g" |
+	    tail -n1)
 	    ext=zst
 	else
 	    ext=xz
