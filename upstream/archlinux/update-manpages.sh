@@ -30,13 +30,22 @@ while read line; do
 	url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
 	grep "\"$package-[0-9][^\"]*\.pkg\.tar\.xz[^.]" |
 	sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
+	if [ a$url = a ]; then
+	    url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
+	    grep "\"$package-[0-9][^\"]*\.pkg\.tar\.zst[^.]" |
+	    sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
+	    ext=zst
+	else
+	    ext=xz
+	fi
+
 	url="https://mirror.netcologne.de/archlinux/$repo/os/x86_64/$url"
 	wget --quiet --directory-prefix=tmp/downloads "$url"
 
 	# Update the manpages from the package
-	latest_pkg=$(ls tmp/downloads/$package-*.pkg.tar.xz)
+	latest_pkg=$(ls tmp/downloads/$package-*.pkg.tar.$ext)
 	if [ -z $latest_pkg ]; then
-		echo "Warning: Could not find .pkg.tar.xz for package '$package'"
+		echo "Warning: Could not find .pkg.tar.$ext for package '$package'"
 	else
 		tar xaf $latest_pkg --directory=tmp 2>/dev/null
 		../move-manpages.sh "$package"
