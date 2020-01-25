@@ -30,7 +30,7 @@ while read line; do
 	url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
 	grep "\"$package-[0-9][^\"]*\.pkg\.tar\.xz[^.]" |
 	sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
-	if [ a$url = a ]; then
+	if [ a"$url" = a ]; then
 	    url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
 	    grep "\"$package-[0-9][^\"]*\.pkg\.tar\.zst[^.]" |
 	    sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
