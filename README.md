@@ -7,6 +7,7 @@ languages. Currently we support the following languages:
 *  fr - French
 *  nl - Dutch *
 *  pl - Polish
+*  pt_BR - Brazilian Portuguese
 *  ro - Romanian
 
 (the languages marked with * are currently unmaintained, feel free to pick up
