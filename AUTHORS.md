@@ -152,11 +152,14 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Polish:
 
+* Adam Byrtek <abyrtek@priv.onet.pl>
+* Adam Byrtek <alpha@irc.pl>
 * Adam Byrtek (PTM) <abyrtek@priv.onet.pl>
 * Adam Byrtek (PTM) <alpha@irc.pl>
 * Andrzej Krzysztofowicz <ankry@mif.pg.gda.pl>
 * Andrzej Krzysztofowicz (PTM) <ankry@green.mf.pg.gda.pl>
 * Andrzej Krzysztofowicz (PTM) <ankry@mif.pg.gda.pl>
+* Andrzej M. Krzysztofowicz <ankry@green.mf.pg.gda.pl>
 * Andrzej M. Krzysztofowicz (PTM) <ankry@green.mf.pg.gda.pl>
 * Andrzej M. Krzysztofowicz (PTM) <ankry@mif.pg.gda.pl>
 * Artur Kruszewski <mazdac@gmail.com>
@@ -172,6 +175,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jakub Klimczak <zuomarket@tuta.io>
 * Jarek Woloszyn (PTM) <yossa@dione.ids.pl>
 * Jarek Wołoszyn (PTM) <yossa@dione.ids.pl>
+* Jarosław Beczek <bexx@poczta.onet.pl>
 * Jarosław Beczek (PTM) <bexx@poczta.onet.pl>
 * Kuba Basiura <kuba.basiura@gmail.com> 2017.
 * Leszek Krupiński (PTM) <d@z.pl>
@@ -192,6 +196,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Paweł Wilk (PTM) <siewca@pld.org.pl>
 * Piotr Pogorzelski (PTM) <piotr.pogorzelski@ippt.gov.pl>
 * Piotr Roszatycki (PTM) <dexter@debian.org>
+* Polish translations of manpages
 * Przemek Borys <pborys@dione.ids.pl>
 * Przemek Borys (PTM) <pborys@dione.ids.pl>
 * Przemek Borys (PTM) <pborys@pdione.ids.pl>
@@ -208,6 +213,15 @@ of Linux manpages. The list is sorted alphabetically.
 * Wiktor J. Łukasik (PTM) <wiktorlu@technologist.com>
 * Wojciech Kotwica (PTM) <wkotwica@post.pl>
 * Wojtek Kotwica (PTM) <wkotwica@post.pl>
+
+
+## Brazilian Portuguese:
+
+* André L. Fassone Canova <lonelywolf@blv.com.br>
+* Carlos Augusto Horylka <horylka@conectiva.com.br>
+* Leslie Harlley Watter <leslie@netpar.com.br>
+* Roberto Selbach Teixeira <robteix@zaz.com.br>
+* Rubens de Jesus Nogueira <darkseid99@usa.net>
 
 
 ## Romanian:
