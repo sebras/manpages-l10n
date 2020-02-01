@@ -25,6 +25,8 @@ DCSBASE=/scr/build/src/DCS/manpages-l10n/
 CONFIGBASE=$DCSBASE/upstreambug/CONFIG
 DIALOG=$(which dialog)
 sk_temp=$((tempfile) 2>/dev/null)
+SSF_MAILER=/usr/bin/mutt
+SSF_BROWSER=/usr/bin/firefox
 
 # Allow to customize these variables if necessary
 if [ -f $HOME/.config/reportupstreamrc ] ; then
@@ -106,15 +108,35 @@ while [ $ssf_STOP -eq 0 ]; do
 	bfound=$?
 
 	if [ $bfound == 0 ]; then
-	    echo "Reporting bugs as $bugtype"
+	    bnote=$(grep Note: $CONFIGBASE/CONFIG.$ssf_SELCTION|sed 's/Note: //')
+	    echo "Reporting bugs for $ssf_SELCTION as $bugtype"
+	    echo ""
+	    echo "Please consider the following when reporting:"
+	    echo "$bnote"
+	    echo ""
+	    echo "Now the template is prepared with all FIXMEs. Please turn the template into"
+	    echo "proper text suitable for reporting. Remove duplications and FIXMEs coming"
+	    echo "from upstream."
+	    echo ""
+	    echo "Press Enter to generate the template"
+	    read
+	    rm -rf /tmp/ssF.BUGTEMPLATE
+	    echo "Please wait …"
+	    for rf in $(cat /tmp/ssF.REPORT.CONFIG.$ssf_SELCTION|sort -u); do
+		echo $rf >> /tmp/ssF.BUGTEMPLATE
+		find $DCSBASE -name $rf -exec grep -A10 FIXME "{}" ";" >> /tmp/ssF.BUGTEMPLATE
+		echo "============== End of file ================" >> /tmp/ssF.BUGTEMPLATE
+	    done
 	else
 	    echo "Reporting bugs unkown, check $CONFIGBASE/CONFIG.$ssf_SELCTION for the field \"bugtype\""
+	    read
 	fi
-	read
     else
 	ssf_STOP=1
     fi
 done
+
+clear
 
 # A10 is not enough :-((
 #for i in $(cat /tmp/ssF.REPORT.CONFIG.linuxmanpages); do find . -name $i -exec grep -A10 FIXME "{}" ";" -print ; done
