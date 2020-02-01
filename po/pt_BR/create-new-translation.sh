@@ -56,7 +56,7 @@ if [ ! -f $mandir/$manpage.po ]; then
 	rm -f "$tmppo1" "$tmppo2"
 
 	# Adjust two header lines
-	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge.net>\\\n\"/" "$pofile"
+	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: Brazilian Portuguese <debian-l10n-portuguese@lists.debian.org>\\\n\"/" "$pofile"
 	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-l10n\\\n\"/" "$pofile"
 fi
 
