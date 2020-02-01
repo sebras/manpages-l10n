@@ -37,10 +37,10 @@ echo "PO4A-HEADER:mode=after;position=^\.(TH|Dt);beginboundary=FakePo4aBoundary"
 echo >> "$addendum"
 # Special case for manpages which use mdoc syntax (currently only tar.1)
 case $(basename "$translation") in
-	tar.1.po ) echo ".Sh ÜBERSETZUNG" >> "$addendum" ;;
-	* ) echo ".SH ÜBERSETZUNG" >> "$addendum" ;;
+	tar.1.po ) echo ".Sh TRADUÇÃO" >> "$addendum" ;;
+	* ) echo ".SH TRADUÇÃO" >> "$addendum" ;;
 esac
-echo "A tradução alemã desta página de manual foi criada por" >> "$addendum"
+echo "A tradução para português brasileiro desta página de manual foi criada por" >> "$addendum"
 
 # Warn if the translators string is empty
 if [ -z "$translators" ]; then
