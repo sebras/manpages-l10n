@@ -59,7 +59,7 @@ if [ $number_translators -ge 3 ]; then
 	echo "$translators" | head -n$(($number_translators - 2)) | perl -pe "s/$/,/" >> "$addendum"
 	echo "$translators" | tail -n2 | head -n1 >> "$addendum"
 	echo "e" >> "$addendum"
-	echo "$translators" | tail -n1 >> "$addendum"
+	echo "$translators." | tail -n1 >> "$addendum"
 fi
 
 # Output of common ending
