@@ -141,7 +141,10 @@ while [ $ssf_STOP -eq 0 ]; do
 	bfound=$?
 
 	if [ $bfound == 0 ]; then
+	    bugmethod=$(echo $bugtype|cut -d" " -f2)
+	    bugaddres=$(echo $bugtype|cut -d" " -f3)
 	    bnote=$(grep Note: $CONFIGBASE/CONFIG.$ssf_SELCTION|sed 's/Note: //')
+
 	    echo "Reporting bugs for $ssf_SELCTION as $bugtype"
 	    echo ""
 	    echo "Please consider the following when reporting:"
@@ -160,6 +163,13 @@ while [ $ssf_STOP -eq 0 ]; do
 		find $DCSBASE -name $rf -exec grep -A10 FIXME "{}" ";" >> $SSF_TMP/ssF.BUGTEMPLATE
 		echo "============== End of file ================" >> $SSF_TMP/ssF.BUGTEMPLATE
 	    done
+
+	    if [ $bugmethod == "email" ]; then
+		$SSF_MAILER -s "Errors in man pages" -i $SSF_TMP/ssF.BUGTEMPLATE $bugaddres
+	    elif [ $bugmethod == "web" ]; then
+		$SSF_BROWSER $bugaddres
+		less $SSF_TMP/ssF.BUGTEMPLATE
+	    fi
 	else
 	    echo "Reporting bugs unkown, check $CONFIGBASE/CONFIG.$ssf_SELCTION for the field \"bugtype\""
 	    read
