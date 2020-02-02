@@ -75,20 +75,20 @@ for pofile in $(find . -name "*.po"  -exec grep FIXME "{}" -ls ";"  | cut -d/ -f
     for lang in de fr nl pl ro; do
 	for checkfile in $(find $lang -name $pofile); do
 #    echo $checkfile $lang $pofile
-	    grep FIXME $checkfile > /tmp/ssF.FIX.$lang.$pofile
-	    md5sum /tmp/ssF.FIX.$lang.$pofile | cut -d " " -f1 > /tmp/ssF.md5.$lang.$pofile
+	    grep FIXME $checkfile > $SSF_TMP/ssF.FIX.$lang.$pofile
+	    md5sum $SSF_TMP/ssF.FIX.$lang.$pofile | cut -d " " -f1 > $SSF_TMP/ssF.md5.$lang.$pofile
 	done
     done
-    mdnumtotal=$(cat /tmp/ssF.md5.*.$pofile| wc -l)
-    mdunique=$(cat /tmp/ssF.md5.*.$pofile| sort -u | wc -l)
+    mdnumtotal=$(cat $SSF_TMP/ssF.md5.*.$pofile| wc -l)
+    mdunique=$(cat $SSF_TMP/ssF.md5.*.$pofile| sort -u | wc -l)
 #   echo "Md5total: $mdnumtotal Md5unique: $mdunique"
 #   if [ $mdnumtotal -ge 2 ] ; then 
 #if [ $mdunique -eq 1 ] ; then
     if [ $mdnumtotal -ge 2 -a $mdunique -eq 1 ] ; then
 #    echo "Blacklist-Kandidat $pofile"
-	echo $pofile >> /tmp/ssF.BLACKLIST
+	echo $pofile >> $SSF_TMP/ssF.BLACKLIST
     else
-	echo $pofile >> /tmp/ssF.WHITELIST
+	echo $pofile >> $SSF_TMP/ssF.WHITELIST
 	let cfcounter=0
         cfilename=""
         for cfile in $CONFIGBASE/CONFIG.*; do
@@ -105,32 +105,32 @@ for pofile in $(find . -name "*.po"  -exec grep FIXME "{}" -ls ";"  | cut -d/ -f
 	    echo "ERROR: $pofile is in serveral ($cfcounter) CONFIG files, please fix them and rerun the script"
 	fi
 	if [ $cfcounter -eq 1 ] ; then
-	    echo $pofile >> /tmp/ssF.REPORT.$finalfilename
+	    echo $pofile >> $SSF_TMP/ssF.REPORT.$finalfilename
 	fi
     fi
 done
 
 # The following line does not work, the first (largest) item is ignored??
-#ls -lhS /tmp/ssF.REPORT.*| awk '{print $9}'|awk 'FS="." {print $4}'
+#ls -lhS $SSF_TMP/ssF.REPORT.*| awk '{print $9}'|awk 'FS="." {print $4}'
 
 # This is not very elegant, but works around the issue of skipping the first entry
-echo "Dummy" > /tmp/ssF.list.Dummy
-ls -lhS /tmp/ssF.REPORT.*| awk '{print $9}' >> /tmp/ssF.list.Dummy
-ssf_ANZAHL=$(ls -l /tmp/ssF.REPORT.* |wc -l)
+echo "Dummy" > $SSF_TMP/ssF.list.Dummy
+ls -lhS $SSF_TMP/ssF.REPORT.*| awk '{print $9}' >> $SSF_TMP/ssF.list.Dummy
+ssf_ANZAHL=$(ls -l $SSF_TMP/ssF.REPORT.* |wc -l)
 
 ssf_STOP=0
 while [ $ssf_STOP -eq 0 ]; do
-    echo -n "$DIALOG --clear --title \"Reporting upstream\" --menu \"Choose which package to report for\" 20 71 $ssf_ANZAHL " > /tmp/ssf.menu
-    for i in $(cat /tmp/ssF.list.Dummy|awk 'FS="." {print $4}'|grep -v -E "^$"); do
+    echo -n "$DIALOG --clear --title \"Reporting upstream\" --menu \"Choose which package to report for\" 20 71 $ssf_ANZAHL " > $SSF_TMP/ssf.menu
+    for i in $(cat $SSF_TMP/ssF.list.Dummy|awk 'FS="." {print $4}'|grep -v -E "^$"); do
 	ssF_date="not reported yet"
 	if [ -f $CONFIGBASE/LAST.$i ]; then
 	    ssF_date=$(tail -n1 $CONFIGBASE/LAST.$i)
 	fi
 	echo "Entry: $i (Last reported: $ssF_date)"
-	echo -n "\"$i\" \"$i (Last reported: $ssF_date)\" " >> /tmp/ssf.menu
+	echo -n "\"$i\" \"$i (Last reported: $ssF_date)\" " >> $SSF_TMP/ssf.menu
     done
-    chmod +x /tmp/ssf.menu
-    bash /tmp/ssf.menu 2> $sk_temp
+    chmod +x $SSF_TMP/ssf.menu
+    bash $SSF_TMP/ssf.menu 2> $sk_temp
     retval=$?
 
     if [ $retval == 0 ]; then
@@ -153,12 +153,12 @@ while [ $ssf_STOP -eq 0 ]; do
 	    echo ""
 	    echo "Press Enter to generate the template"
 	    read
-	    rm -rf /tmp/ssF.BUGTEMPLATE
+	    rm -rf $SSF_TMP/ssF.BUGTEMPLATE
 	    echo "Please wait …"
-	    for rf in $(cat /tmp/ssF.REPORT.CONFIG.$ssf_SELCTION|sort -u); do
-		echo $rf >> /tmp/ssF.BUGTEMPLATE
-		find $DCSBASE -name $rf -exec grep -A10 FIXME "{}" ";" >> /tmp/ssF.BUGTEMPLATE
-		echo "============== End of file ================" >> /tmp/ssF.BUGTEMPLATE
+	    for rf in $(cat $SSF_TMP/ssF.REPORT.CONFIG.$ssf_SELCTION|sort -u); do
+		echo $rf >> $SSF_TMP/ssF.BUGTEMPLATE
+		find $DCSBASE -name $rf -exec grep -A10 FIXME "{}" ";" >> $SSF_TMP/ssF.BUGTEMPLATE
+		echo "============== End of file ================" >> $SSF_TMP/ssF.BUGTEMPLATE
 	    done
 	else
 	    echo "Reporting bugs unkown, check $CONFIGBASE/CONFIG.$ssf_SELCTION for the field \"bugtype\""
@@ -172,4 +172,4 @@ done
 clear
 
 # A10 is not enough :-((
-#for i in $(cat /tmp/ssF.REPORT.CONFIG.linuxmanpages); do find . -name $i -exec grep -A10 FIXME "{}" ";" -print ; done
+#for i in $(cat $SSF_TMP/ssF.REPORT.CONFIG.linuxmanpages); do find . -name $i -exec grep -A10 FIXME "{}" ";" -print ; done
