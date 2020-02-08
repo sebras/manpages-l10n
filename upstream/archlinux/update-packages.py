@@ -62,6 +62,7 @@ with open("packages.txt") as input_file:
         # Store information about downloaded package
         package_data[package] = {
             'filename': package_filename,
+            'needs_templates': True,
             'needs_update': True,
         }
 
