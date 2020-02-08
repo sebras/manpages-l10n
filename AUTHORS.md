@@ -196,7 +196,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Paweł Wilk (PTM) <siewca@pld.org.pl>
 * Piotr Pogorzelski (PTM) <piotr.pogorzelski@ippt.gov.pl>
 * Piotr Roszatycki (PTM) <dexter@debian.org>
-* Polish translations of manpages
 * Przemek Borys <pborys@dione.ids.pl>
 * Przemek Borys (PTM) <pborys@dione.ids.pl>
 * Przemek Borys (PTM) <pborys@pdione.ids.pl>
@@ -207,6 +206,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Rafał Witowski (PTM)
 * Robert Luberda (PTM) <robert@debian.org>
 * Robert Luberda <robert@debian.org>
+* Szymon Lamkiewicz <s.lam@o2.pl>
 * Tomasz Kłoczko (PTM) <kloczek@rudy.mif.pg.gda.pl>
 * Tomasz Wendlandt (PTM) <juggler@box.cp.com.pl>
 * Tomasz Wendlandt (PTM) <juggler@cp.pl>
@@ -220,6 +220,7 @@ of Linux manpages. The list is sorted alphabetically.
 * André L. Fassone Canova <lonelywolf@blv.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
 * Leslie Harlley Watter <leslie@netpar.com.br>
+* Rafael Fontenelle <rafaelff@gnome.org>
 * Roberto Selbach Teixeira <robteix@zaz.com.br>
 * Rubens de Jesus Nogueira <darkseid99@usa.net>
 
