@@ -22,11 +22,40 @@ directories=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3- | LC_ALL=C sor
 
 for directory in $directories; do
 	echo "Processing directory '$directory'"
-	cd $directory
 
 	# Call the script inside the directory for handling
 	# the needed instructions for the given distribution.
-	./update-manpages.sh
-
+	cd $directory
+	./update-packages.py
 	cd ..
+
+	# Copy all manpages and handle the links
+	./copy-manpages.py "$directory"
+
+	# Finally, collect all links files and merge them together
+	links=$(mktemp)
+	for i in "$directory/downloads/*/links.txt"; do
+		cat $i >> links
+	done
+	LC_ALL=C sort links > "$directory/links.txt"
+	rm links
+
+	# Special case for init.8, because the manpage contains
+	# a syntax error, so that the manpage cannot be translated
+	# with po4a. The bug has been reported upstream.
+	# https://savannah.nongnu.org/bugs/?55678
+	if [ -f $directory/man8/init.8 ]; then
+	  sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" $directory/man8/init.8
+	fi
+
+	# Another special case for man.7, which uses \c and
+	# is therefore not translatable by po4a.
+	# Reformat the part to display equally in the man browser.
+	# Line 272 and 273:
+	# .B \&.UE \c
+	# .RI [ trailer ]
+	# Reformat to: \fB\&.UE\fP [ \fItrailer\fP ]
+	if [ -f $directory/man7/man.7 ]; then
+	  sed -i -e "/^\.B \\\&\.UE \\\c/{N; s/.*/\\\fB\\\\\&.UE\\\fP [ \\\fItrailer\\\fP ]/}" $directory/man7/man.7
+	fi
 done
