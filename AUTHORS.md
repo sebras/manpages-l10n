@@ -162,67 +162,45 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Polish:
 
-* Adam Byrtek <abyrtek@priv.onet.pl>
 * Adam Byrtek <alpha@irc.pl>
-* Adam Byrtek (PTM) <abyrtek@priv.onet.pl>
-* Adam Byrtek (PTM) <alpha@irc.pl>
-* Andrzej Krzysztofowicz <ankry@mif.pg.gda.pl>
-* Andrzej Krzysztofowicz (PTM) <ankry@green.mf.pg.gda.pl>
-* Andrzej Krzysztofowicz (PTM) <ankry@mif.pg.gda.pl>
-* Andrzej M. Krzysztofowicz <ankry@green.mf.pg.gda.pl>
-* Andrzej M. Krzysztofowicz (PTM) <ankry@green.mf.pg.gda.pl>
-* Andrzej M. Krzysztofowicz (PTM) <ankry@mif.pg.gda.pl>
+* Andrzej Krzysztofowicz <ankry@green.mf.pg.gda.pl>
 * Artur Kruszewski <mazdac@gmail.com>
-* Bartek Głośnicki (PTM) <bartek@miramex.com.pl>
-* Bartłomiej Sowa (PTM) <bartowl@kki.net.pl>
-* Bartosz Jakubski (PTM) <B.Jakubski@supernet.com.pl>
-* Damian Szeluga (PTM) <damjanek@gentoo.pl>
-* Daniel Koć (PTM) <kocio@linuxnews.pl>
-* Grzegorz Goławski (PTM) <grzegol@pld.org.pl>
+* Bartek Głośnicki <bartek@miramex.com.pl>
+* Bartłomiej Sowa <bartowl@kki.net.pl>
+* Bartosz Jakubski <B.Jakubski@supernet.com.pl>
+* Damian Szeluga <damjanek@gentoo.pl>
+* Daniel Koć <kocio@linuxnews.pl>
+* Grzegorz Goławski <grzegol@pld.org.pl>
 * Gwidon S. Naskrent <naskrent@hoth.amu.edu.pl>
-* Gwidon S. Naskrent (PTM) <naskrent@hoth.amu.edu.pl>
 * Jakub Bogusz (eglibc) <qboosh@pld-linux.org>
 * Jakub Klimczak <zuomarket@tuta.io>
-* Jarek Woloszyn (PTM) <yossa@dione.ids.pl>
-* Jarek Wołoszyn (PTM) <yossa@dione.ids.pl>
+* Jarek Wołoszyn <yossa@dione.ids.pl>
 * Jarosław Beczek <bexx@poczta.onet.pl>
-* Jarosław Beczek (PTM) <bexx@poczta.onet.pl>
-* Kuba Basiura <kuba.basiura@gmail.com> 2017.
-* Leszek Krupiński (PTM) <d@z.pl>
+* Kuba Basiura <kuba.basiura@gmail.com>
+* Leszek Krupiński <d@z.pl>
 * Łukasz Kowalczyk <lukow@tempac.okwf.fuw.edu.pl>
-* Łukasz Kowalczyk (PTM) <lukow@tempac.okwf.fuw.edu.pl>
-* Łukasz Kowalczyk (PTM> <lukow@tempac.okwf.fuw.edu.pl>
-* Maciej Wojciechowski (PTM) <wojciech@staszic.waw.pl>
+* Maciej Wojciechowski <wojciech@staszic.waw.pl>
 * Marcin Garski <mgarski@post.pl>
-* Marcin Mazurek (PTM) <mazek@capella.ae.poznan.pl>
+* Marcin Mazurek <mazek@capella.ae.poznan.pl>
 * Michał Górny <zrchos+manpagespl@gmail.com>
 * Michał Kułach <michal.kulach@gmail.com>
 * Paweł Krawczyk (eglibc) <kravietz@ceti.pl>
-* Paweł Olszewski (PTM) <alder@amg.net.pl>
-* Paweł Olszewski (PTM) <alder@civic.amg.net.pl>
+* Paweł Olszewski <alder@amg.net.pl>
 * Paweł Sędrowski (ptm.berlios.de) <sedros@gmail.com>
-* Paweł Wilk (PTM) <siefca@pl.qmail.org>
-* Paweł Wilk (PTM) <siewca@dione.ids.pl>
-* Paweł Wilk (PTM) <siewca@pld.org.pl>
-* Piotr Pogorzelski (PTM) <piotr.pogorzelski@ippt.gov.pl>
-* Piotr Roszatycki (PTM) <dexter@debian.org>
+* Paweł Wilk <siefca@pl.qmail.org>
+* Piotr Pogorzelski <piotr.pogorzelski@ippt.gov.pl>
+* Piotr Roszatycki <dexter@debian.org>
 * Przemek Borys <pborys@dione.ids.pl>
-* Przemek Borys (PTM) <pborys@dione.ids.pl>
-* Przemek Borys (PTM) <pborys@pdione.ids.pl>
-* Przemek Borys (PTM) <pborys@p-soft.silesia.linux.org.pl>
-* Radek Marcinkowski (PTM) <radek@cbk.waw.pl>
-* Rafał Lewczuk (PTM) <R.Lewczuk@elka.pw.edu.p>
-* Rafał Maszkowski (PTM) <rzm@icm.edu.pl>
-* Rafał Witowski (PTM)
-* Robert Luberda (PTM) <robert@debian.org>
+* Radek Marcinkowski <radek@cbk.waw.pl>
+* Rafał Lewczuk <R.Lewczuk@elka.pw.edu.p>
+* Rafał Maszkowski <rzm@icm.edu.pl>
+* Rafał Witowski
 * Robert Luberda <robert@debian.org>
 * Szymon Lamkiewicz <s.lam@o2.pl>
-* Tomasz Kłoczko (PTM) <kloczek@rudy.mif.pg.gda.pl>
-* Tomasz Wendlandt (PTM) <juggler@box.cp.com.pl>
-* Tomasz Wendlandt (PTM) <juggler@cp.pl>
-* Wiktor J. Łukasik (PTM) <wiktorlu@technologist.com>
-* Wojciech Kotwica (PTM) <wkotwica@post.pl>
-* Wojtek Kotwica (PTM) <wkotwica@post.pl>
+* Tomasz Kłoczko <kloczek@rudy.mif.pg.gda.pl>
+* Tomasz Wendlandt <juggler@box.cp.com.pl>
+* Wiktor J. Łukasik <wiktorlu@technologist.com>
+* Wojtek Kotwica <wkotwica@post.pl>
 
 
 ## Romanian:
