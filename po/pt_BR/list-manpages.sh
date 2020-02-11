@@ -38,7 +38,7 @@ while getopts 'hd:f:u' arg; do
       echo "Example of uses:"
       echo " $prog                  (to list all man pages available)"
       echo " $prog -d debian-buster (to list debian-buster's man pages)"
-      echo " $prog -d ext4          (to list man pages with 'ext4' in filename)"
+      echo " $prog -f ext4          (to list man pages with 'ext4' in filename)"
       echo " $prog -uf intro        (to list untranslated 'intro' man pages)"
       echo ""
       exit
