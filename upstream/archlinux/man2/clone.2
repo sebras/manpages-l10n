@@ -81,8 +81,10 @@ in separate
 .PP
 Note that in this manual
 page, "calling process" normally corresponds to "parent process".
-But see the description of
+But see the descriptions of
 .B CLONE_PARENT
+and
+.B CLONE_THREAD
 below.
 .PP
 This page describes the following interfaces:
@@ -193,6 +195,8 @@ struct clone_args {
     u64 stack;        /* Pointer to lowest byte of stack */
     u64 stack_size;   /* Size of stack */
     u64 tls;          /* Location of new TLS */
+    u64 set_tid;      /* Pointer to a \fIpid_t\fP array */
+    u64 set_tid_size; /* Number of elements in \fIset_tid\fP */
 };
 .EE
 .in
@@ -250,7 +254,7 @@ argument supplied to
 lb lb lb
 l l l
 li li l.
-clone()	clone(3)	Notes
+clone()	clone3()	Notes
 	\fIcl_args\fP field
 flags & ~0xff	flags	For most flags; details below
 parent_tid	pidfd	See CLONE_PIDFD
@@ -260,6 +264,8 @@ flags & 0xff	exit_signal
 stack	stack
 \fP---\fP	stack_size
 tls	tls	See CLONE_SETTLS
+\fP---\fP	set_tid	See below for details
+\fP---\fP	set_tid_size
 .TE
 .RE
 .\"
@@ -282,6 +288,91 @@ options when waiting for the child with
 .BR wait (2).
 If no signal (i.e., zero) is specified, then the parent process is not signaled
 when the child terminates.
+.\"
+.SS The set_tid array
+.PP
+By default, the kernel chooses the next sequential PID for the new
+process in each of the PID namespaces where it is present.
+When creating a process with
+.BR clone3 (),
+the
+.I set_tid
+array (available since Linux 5.5)
+can be used to select specific PIDs for the process in some
+or all of the PID namespaces where it is present.
+If the PID of the newly created process should be set only for the current
+PID namespace or in the newly created PID namespace (if
+.I flags
+contains
+.BR CLONE_NEWPID )
+then the first element in the
+.I set_tid
+array has to be the desired PID and
+.I set_tid_size
+needs to be 1.
+.PP
+If the PID of the newly created process should have a certain value in
+multiple PID namespaces, then the
+.I set_tid
+array can have multiple entries.
+The first entry defines the PID in the most
+deeply nested PID namespace and each of the following entries contains
+the PID in the
+corresponding ancestor PID namespace.
+The number of PID namespaces in which a PID
+should be set is defined by
+.I set_tid_size
+which cannot be larger than the number of currently nested PID namespaces.
+.PP
+To create a process with the following PIDs in a PID namespace hierarchy:
+.RS
+.TS
+lb lb lb
+l l l.
+PID NS level	Requested PID	Notes
+0	31496	Outermost PID namespace
+1	42
+2	7	Innermost PID namespace
+.TE
+.RE
+.PP
+Set the array to:
+.PP
+.in +4n
+.EX
+set_tid[0] = 7;
+set_tid[1] = 42;
+set_tid[2] = 31496;
+set_tid_size = 3;
+.EE
+.in
+.PP
+If only the PIDs in the two innermost PID namespaces
+need to be specified, set the array to:
+.PP
+.in +4n
+.EX
+set_tid[0] = 7;
+set_tid[1] = 42;
+set_tid_size = 2;
+.EE
+.in
+.PP
+The PID in the PID namespaces outside the two innermost PID namespaces
+will be selected the same way as any other PID is selected.
+.PP
+The
+.I set_tid
+feature requires
+.BR CAP_SYS_ADMIN
+in all owning user namespaces of the target PID namespaces.
+.PP
+Callers may only choose a PID greater than 1 in a given PID namespace
+if an
+.BR init
+process (i.e., a process with PID 1) already exists in that namespace.
+Otherwise the PID
+entry for this PID namespace must be 1.
 .\"
 .SS The flags mask
 .PP
@@ -342,6 +433,20 @@ returns control to user space in the child process.
 returns in the parent process, which will be relevant if the
 .BR CLONE_VM
 flag is also employed.)
+.TP
+.BR CLONE_CLEAR_SIGHAND " (since Linux 5.5)"
+.\" commit b612e5df4587c934bd056bf05f4a1deca4de4f75
+By default, signal dispositions in the child thread are the same as
+in the parent.
+If this flag is specified,
+then all signals that are handled in the parent
+are reset to their default dispositions
+.RB ( SIG_DFL )
+in the child.
+.IP
+Specifying this flag together with
+.B CLONE_SIGHAND
+is nonsensical and disallowed.
 .TP
 .BR CLONE_DETACHED " (historical)"
 For a while (during the Linux 2.5 development series)
@@ -646,6 +751,14 @@ if
 .B CLONE_PARENT
 is set, then the parent of the calling process, rather than the
 calling process itself, will be signaled.
+.IP
+The
+.B CLONE_PARENT
+flag can't be used in clone calls by the
+global init process (PID 1 in the initial PID namespace)
+and init processes in other PID namespaces.
+This restriction prevents the creation of multi-rooted process trees
+as well as the creation of unreapable zombies in the initial PID namespace.
 .TP
 .BR CLONE_PARENT_SETTID " (since Linux 2.5.49)"
 Store the child thread ID at the location pointed to by
@@ -1191,6 +1304,20 @@ will be set appropriately.
 Too many processes are already running; see
 .BR fork (2).
 .TP
+.BR EEXIST " (" clone3 "() only)"
+One (or more) of the PIDs specified in
+.I set_tid
+already exists in the corresponding PID namespace.
+.TP
+.B EINVAL
+Both
+.B CLONE_SIGHAND
+and
+.B CLONE_CLEAR_SIGHAND
+were specified in the
+.I flags
+mask.
+.TP
 .B EINVAL
 .B CLONE_SIGHAND
 was specified in the
@@ -1271,6 +1398,11 @@ were specified in the
 .IR flags
 mask.
 .TP
+.BR EINVAL " (since Linux 2.6.32)"
+.\" commit 123be07b0b399670a7cc3d82fef0cb4f93ef885c
+.BR CLONE_PARENT
+was specified, and the caller is an init process.
+.TP
 .B EINVAL
 Returned by the glibc
 .BR clone ()
@@ -1334,13 +1466,13 @@ For example, on aarch64,
 .I stack
 must be a multiple of 16.
 .TP
-.BR EINVAL " (" clone3 "() only"
+.BR EINVAL " (" clone3 "() only)"
 .B  CLONE_DETACHED
 was specified in the
 .I flags
 mask.
 .TP
-.BR EINVAL " (" clone "() only"
+.BR EINVAL " (" clone "() only)"
 .B CLONE_PIDFD
 was specified together with
 .B CLONE_DETACHED
@@ -1363,6 +1495,19 @@ was specified together with
 in the
 .I flags
 mask.
+.TP
+.BR EINVAL " (" clone3 "() only)"
+.I set_tid_size
+is greater than the number of nested PID namespaces.
+.TP
+.BR EINVAL " (" clone3 "() only)"
+If one of the PIDs specified in
+.I set_tid
+was an invalid PID.
+.TP
+.BR EINVAL " (AArch64 only, Linux 4.6 and earlier)"
+.I stack
+was not aligned to a 126-bit boundary.
 .TP
 .B ENOMEM
 Cannot allocate sufficient memory to allocate a task structure for the
@@ -1434,6 +1579,13 @@ mask and the caller is in a chroot environment
 .\" FIXME What is the rationale for this restriction?
 (i.e., the caller's root directory does not match the root directory
 of the mount namespace in which it resides).
+.TP
+.BR EPERM " (" clone3 "() only)"
+.I set_tid_size
+was greater than zero, and the caller lacks the
+.B CAP_SYS_ADMIN
+capability in one or more of the user namespaces that own the
+corresponding PID namespaces.
 .TP
 .BR ERESTARTNOINTR " (since Linux 2.6.17)"
 .\" commit 4a2c7a7837da1b91468e50426066d988050e4d56
@@ -1677,7 +1829,7 @@ main(int argc, char *argv[])
 .BR namespaces (7),
 .BR pthreads (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.05 of the Linux
 .I man-pages
 project.
 A description of the project,
