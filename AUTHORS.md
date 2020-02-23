@@ -64,6 +64,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
 * Jean-Marc Chaton <chaton@debian.org>
 * Jean-Philippe Guérard <fevrier@tigreraye.org>
+* Jean-Philippe MENGUAL <jpmengual@debian.org>
 * Jean-Pierre Giraud <jean-pierregiraud@neuf.fr>
 * Jérôme Perzyna <jperzyna@yahoo.fr>
 * José JORGE
