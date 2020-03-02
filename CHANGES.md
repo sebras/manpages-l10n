@@ -1,5 +1,16 @@
 # Changelog for manpages-de
 
+## Version 4.0.0
+*Mon Mar  2 22:09:38 CET 2020*
+
+* Rename project to manpages-l10n
+* Switch to semantic versioning
+* Include new languages: French, Dutch, Polish, Brazilian Portuguese,
+  and Romanian. Thanks to all translators involved in this project!
+* Increase version to 4.0.0, so that distributions should be able
+  to prepare packages for all languages with the same version number
+* Updated many translations
+
 ## Version 2.16
 
 *Sun Nov 17 14:02:06 CET 2019*
