@@ -54,8 +54,10 @@ with open("packages.txt") as input_file:
                 # If the URL is still not set, try security.d.o
                 package_url = re.findall(r"https?://security\.debian\.org/debian-security/pool/[^\"]*", contents)
                 if len(package_url) != 1:
-                    print("Error: Could not find URL.", file=sys.stderr)
-                    sys.exit(1)
+                    print()
+                    print("Error: Could not find URL for '{}'.".format(package), file=sys.stderr)
+                    print("If this is a permanent error, please remove the package from the file packages.txt.", file=sys.stderr)
+                    continue
                 else:
                     package_url = package_url[0]
             else:
