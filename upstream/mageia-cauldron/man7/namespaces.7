@@ -1,4 +1,4 @@
-.\" Copyright (c) 2013 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Copyright (c) 2013, 2016, 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\" and Copyright (c) 2012 by Eric W. Biederman <ebiederm@xmission.com>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH NAMESPACES 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH NAMESPACES 7 2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 namespaces \- overview of Linux namespaces
 .SH DESCRIPTION
@@ -35,23 +35,44 @@ Changes to the global resource are visible to other processes
 that are members of the namespace, but are invisible to other processes.
 One use of namespaces is to implement containers.
 .PP
-Linux provides the following namespaces:
-.TS
-lB lB lB
-l lB l.
-Namespace	Constant	Isolates
-Cgroup	CLONE_NEWCGROUP	Cgroup root directory
-IPC	CLONE_NEWIPC	System V IPC, POSIX message queues
-Network	CLONE_NEWNET	Network devices, stacks, ports, etc.
-Mount	CLONE_NEWNS	Mount points
-PID	CLONE_NEWPID	Process IDs
-User	CLONE_NEWUSER	User and group IDs
-UTS	CLONE_NEWUTS	Hostname and NIS domain name
-.TE
-.PP
-This page describes the various namespaces and the associated
+This page provides pointers to information on the various namespace types,
+describes the associated
 .I /proc
 files, and summarizes the APIs for working with namespaces.
+.\"
+.SS Namespace types
+.PP
+The following table shows the namespace types available on Linux.
+The second column of the table shows the flag value that is used to specify
+the namespace type in various APIs.
+The third column identifies the manual page that provides details
+on the namespace type.
+The last column is a summary of the resources that are isolated by
+the namespace type.
+.TS
+lB lB lB lB
+l1 lB1 l1 l.
+Namespace	Flag	Page	Isolates
+Cgroup	CLONE_NEWCGROUP	\fBcgroup_namespaces\fP(7)	Cgroup root directory
+IPC	CLONE_NEWIPC	\fBipc_namespaces\fP(7)	T{
+System V IPC,
+.br
+POSIX message queues
+T}
+Network	CLONE_NEWNET	\fBnetwork_namespaces\fP(7)	T{
+Network devices,
+.br
+stacks, ports, etc.
+T}
+Mount	CLONE_NEWNS	\fBmount_namespaces\fP(7)	Mount points
+PID	CLONE_NEWPID	\fBpid_namespaces\fP(7)	Process IDs
+User	CLONE_NEWUSER	\fBuser_namespaces\fP(7)	User and group IDs
+UTS	CLONE_NEWUTS	\fButs_namespaces\fP(7)	T{
+Hostname and NIS
+.br
+domain name
+T}
+.TE
 .\"
 .\" ==================== The namespaces API ====================
 .\"
@@ -319,108 +340,6 @@ for the creator UID in the ancestor namespace is not exceeded.
 The aforementioned point ensures that creating a new user namespace
 cannot be used as a means to escape the limits in force
 in the current user namespace.
-.RE
-.\"
-.\" ==================== Cgroup namespaces ====================
-.\"
-.SS Cgroup namespaces (CLONE_NEWCGROUP)
-See
-.BR cgroup_namespaces (7).
-.\"
-.\" ==================== IPC namespaces ====================
-.\"
-.SS IPC namespaces (CLONE_NEWIPC)
-IPC namespaces isolate certain IPC resources,
-namely, System V IPC objects (see
-.BR svipc (7))
-and (since Linux 2.6.30)
-.\" commit 7eafd7c74c3f2e67c27621b987b28397110d643f
-.\" https://lwn.net/Articles/312232/
-POSIX message queues (see
-.BR mq_overview (7)).
-The common characteristic of these IPC mechanisms is that IPC
-objects are identified by mechanisms other than filesystem
-pathnames.
-.PP
-Each IPC namespace has its own set of System V IPC identifiers and
-its own POSIX message queue filesystem.
-Objects created in an IPC namespace are visible to all other processes
-that are members of that namespace,
-but are not visible to processes in other IPC namespaces.
-.PP
-The following
-.I /proc
-interfaces are distinct in each IPC namespace:
-.IP * 3
-The POSIX message queue interfaces in
-.IR /proc/sys/fs/mqueue .
-.IP *
-The System V IPC interfaces in
-.IR /proc/sys/kernel ,
-namely:
-.IR msgmax ,
-.IR msgmnb  ,
-.IR msgmni ,
-.IR sem ,
-.IR shmall ,
-.IR shmmax ,
-.IR shmmni ,
-and
-.IR shm_rmid_forced .
-.IP *
-The System V IPC interfaces in
-.IR /proc/sysvipc .
-.PP
-When an IPC namespace is destroyed
-(i.e., when the last process that is a member of the namespace terminates),
-all IPC objects in the namespace are automatically destroyed.
-.PP
-Use of IPC namespaces requires a kernel that is configured with the
-.B CONFIG_IPC_NS
-option.
-.\"
-.\" ==================== Network namespaces ====================
-.\"
-.SS Network namespaces (CLONE_NEWNET)
-See
-.BR network_namespaces (7).
-.\"
-.\" ==================== Mount namespaces ====================
-.\"
-.SS Mount namespaces (CLONE_NEWNS)
-See
-.BR mount_namespaces (7).
-.\"
-.\" ==================== PID namespaces ====================
-.\"
-.SS PID namespaces (CLONE_NEWPID)
-See
-.BR pid_namespaces (7).
-.\"
-.\" ==================== User namespaces ====================
-.\"
-.SS User namespaces (CLONE_NEWUSER)
-See
-.BR user_namespaces (7).
-.\"
-.\" ==================== UTS namespaces ====================
-.\"
-.SS UTS namespaces (CLONE_NEWUTS)
-UTS namespaces provide isolation of two system identifiers:
-the hostname and the NIS domain name.
-These identifiers are set using
-.BR sethostname (2)
-and
-.BR setdomainname (2),
-and can be retrieved using
-.BR uname (2),
-.BR gethostname (2),
-and
-.BR getdomainname (2).
-.PP
-Use of UTS namespaces requires a kernel that is configured with the
-.B CONFIG_UTS_NS
-option.
 .\"
 .SS Namespace lifetime
 Absent any other factors,
@@ -471,14 +390,16 @@ and
 .BR cgroup_namespaces (7),
 .BR cgroups (7),
 .BR credentials (7),
+.BR ipc_namespaces (7),
 .BR network_namespaces (7),
 .BR pid_namespaces (7),
 .BR user_namespaces (7),
+.BR uts_namespaces (7),
 .BR lsns (8),
 .BR pam_namespace (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 5.01 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -34,7 +34,7 @@
 .\" 2007-09-14 Ollie Wild <aaw@google.com>, mtk
 .\"     Add text describing limits on command-line arguments + environment
 .\"
-.TH EXECVE 2 2019-05-09 "Linux" "Linux Programmer's Manual"
+.TH EXECVE 2 2019-10-10 "Linux" "Linux Programmer's Manual"
 .SH NAME
 execve \- execute program
 .SH SYNOPSIS
@@ -55,7 +55,7 @@ starting with a line of the form:
 .PP
 .in +4n
 .EX
-\fB#!\fP \fIinterpreter \fP[optional-arg]
+\fB#!\fP\fIinterpreter \fP[optional-arg]
 .EE
 .in
 .PP
@@ -301,13 +301,14 @@ permission enabled and whose first line is of the form:
 .PP
 .in +4n
 .EX
-\fB#!\fP \fIinterpreter \fP[optional-arg]
+\fB#!\fP\fIinterpreter \fP[optional-arg]
 .EE
 .in
 .PP
 The
 .I interpreter
 must be a valid pathname for an executable file.
+.PP
 If the
 .I pathname
 argument of
@@ -323,6 +324,10 @@ will be invoked with the following arguments:
 .in
 .PP
 where
+.I pathname
+is the absolute pathname of the file specified as the first argument of
+.BR execve (),
+and
 .I arg...
 is the series of words pointed to by the
 .I argv
@@ -330,6 +335,14 @@ argument of
 .BR execve (),
 starting at
 .IR argv [1].
+Note that there is no way to get the
+.IR argv[0]
+that was passed to the
+.BR execve ()
+call.
+.\" See the P - preserve-argv[0] option.
+.\" Documentation/admin-guide/binfmt-misc.rst
+.\" https://www.kernel.org/doc/html/latest/admin-guide/binfmt-misc.html
 .PP
 For portable use,
 .I optional-arg
@@ -547,7 +560,7 @@ there is no new process;
 many attributes of the calling process remain unchanged
 (in particular, its PID).
 All that
-.BR execve (2)
+.BR execve ()
 does is arrange for an existing process (the calling process)
 to execute a new program.
 .PP
@@ -613,8 +626,13 @@ In such cases, the kernel kills the process with a
 signal.
 .\"
 .SS Interpreter scripts
-A maximum line length of 127 characters is allowed for the first line in
-an interpreter script.
+The kernel imposes a maximum length on the text that follows the
+"#!" characters at the start of a script;
+characters beyond the limit are ignored.
+Before Linux 5.1, the limit is 127 characters.
+Since Linux 5.1,
+.\" commit 6eb3c3d0a52dca337e327ae8868ca1f44a712e02
+the limit is 255 characters.
 .PP
 The semantics of the
 .I optional-arg
@@ -635,7 +653,8 @@ and white spaces in
 .I optional-arg
 are used to delimit the arguments.
 .PP
-Linux ignores the set-user-ID and set-group-ID bits on scripts.
+Linux (like most other modern UNIX systems)
+ignores the set-user-ID and set-group-ID bits on scripts.
 .\"
 .\" .SH BUGS
 .\" Some Linux versions have failed to check permissions on ELF
@@ -850,7 +869,7 @@ argv[4]: world
 .BR path_resolution (7),
 .BR ld.so (8)
 .SH COLOPHON
-This page is part of release 5.01 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,

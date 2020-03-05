@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH USER_NAMESPACES 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH USER_NAMESPACES 7 2019-08-02 "Linux" "Linux Programmer's Manual"
 .SH NAME
 user_namespaces \- overview of Linux user namespaces
 .SH DESCRIPTION
@@ -310,8 +310,9 @@ capability in the caller's user namespace.
 When a nonuser namespace is created,
 it is owned by the user namespace in which the creating process
 was a member at the time of the creation of the namespace.
-Actions on the nonuser namespace
-require capabilities in the corresponding user namespace.
+Privileged operations on resources governed by the nonuser namespace
+require that the process has the necessary capabilities
+in the user namespace that owns the nonuser namespace.
 .PP
 If
 .BR CLONE_NEWUSER
@@ -717,7 +718,7 @@ paragraph is that it is permitted to write to
 only so long as calling
 .BR setgroups (2)
 is disallowed because
-.I /proc/[pid]gid_map
+.I /proc/[pid]/gid_map
 has not been set.
 This ensures that a process cannot transition from a state where
 .BR setgroups (2)
@@ -867,6 +868,54 @@ that field is displayed as 4294967295 (\-1 as an unsigned integer).
 .\"
 .\" ============================================================
 .\"
+.SS Accessing files
+.PP
+In order to determine permissions when an unprivileged process accesses a file,
+the process credentials (UID, GID) and the file credentials
+are in effect mapped back to what they would be in
+the initial user namespace and then compared to determine
+the permissions that the process has on the file.
+The same is also of other objects that employ the credentials plus
+permissions mask accessibility model, such as System V IPC objects
+.\"
+.\" ============================================================
+.\"
+.SS Operation of file-related capabilities
+.PP
+Certain capabilities allow a process to bypass various
+kernel-enforced restrictions when performing operations on
+files owned by other users or groups.
+These capabilities are:
+.BR CAP_CHOWN ,
+.BR CAP_DAC_OVERRIDE ,
+.BR CAP_DAC_READ_SEARCH ,
+.BR CAP_FOWNER ,
+and
+.BR CAP_FSETID .
+.PP
+Within a user namespace,
+these capabilities allow a process to bypass the rules
+if the process has the relevant capability over the file,
+meaning that:
+.IP * 3
+the process has the relevant effective capability in its user namespace; and
+.IP *
+the file's user ID and group ID both have valid mappings
+in the user namespace.
+.PP
+The
+.BR CAP_FOWNER
+capability is treated somewhat exceptionally:
+.\" These are the checks performed by the kernel function
+.\" inode_owner_or_capable(). There is one exception to the exception:
+.\" overriding the directory sticky permission bit requires that
+.\" the file has a valid mapping for both its UID and GID.
+it allows a process to bypass the corresponding rules so long as
+at least the file's user ID has a mapping in the user namespace
+(i.e., the file's group ID does not need to have a valid mapping).
+.\"
+.\" ============================================================
+.\"
 .SS Set-user-ID and set-group-ID programs
 .PP
 When a process inside a user namespace executes
@@ -925,7 +974,7 @@ to map user and group IDs between user namespaces.
 Linux 3.9 added the required infrastructure support for many of
 the remaining unsupported filesystems
 (Plan 9 (9P), Andrew File System (AFS), Ceph, CIFS, CODA, NFS, and OCFS2).
-Linux 3.12 added support the last of the unsupported major filesystems,
+Linux 3.12 added support for the last of the unsupported major filesystems,
 .\" commit d6970d4b726cea6d7a9bc4120814f95c09571fc3
 XFS.
 .\"
@@ -1331,7 +1380,7 @@ main(int argc, char *argv[])
 The kernel source file
 .IR Documentation/namespaces/resource-control.txt .
 .SH COLOPHON
-This page is part of release 5.01 of the Linux
+This page is part of release 5.04 of the Linux
 .I man-pages
 project.
 A description of the project,
