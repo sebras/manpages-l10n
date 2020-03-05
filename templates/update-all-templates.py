@@ -76,7 +76,8 @@ for mandir in mandirs:
         if translation in manpages:
             info = manpages[translation]
             for distribution, package in info.items():
-                generatetemplate = package_data[distribution][package]['needs_templates']
+                if package in package_data[distribution]:
+                    generatetemplate = package_data[distribution][package]['needs_templates']
         if generatetemplate:
             subprocess.run(['./generate-one-template.sh', Path(translation).stem])
             needed_pofile_updates.append(translation)
@@ -86,7 +87,8 @@ for mandir in mandirs:
         if translation in manpages:
             info = manpages[translation]
             for distribution, package in info.items():
-                package_data[distribution][package]['needs_templates'] = False
+                if package in package_data[distribution]:
+                    package_data[distribution][package]['needs_templates'] = False
 
 # Save updated package information in a JSON file
 for distribution in package_data:
