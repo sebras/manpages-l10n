@@ -30,29 +30,41 @@ if os.path.exists("downloads/packages.json"):
     with open("downloads/packages.json") as input_file:
         package_data = json.loads(input_file.read())
 
-# Get current package information
-download_page = urllib.request.urlopen("https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/")
-contents = download_page.read().decode()
-download_page.close()
-
 # Read all packages names
+page_buffer = {}
 with open("packages.txt") as input_file:
     for line in input_file:
         package = line.strip()
+        first_letter = package[0].lower()
 
         # Download HTML page and discover the correct link
         print("Checking package '{}' ... ".format(package), end="")
 
+        if not first_letter in page_buffer:
+            download_page = urllib.request.urlopen("https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/{}".format(first_letter))
+            page_buffer[first_letter] = download_page.read().decode()
+            download_page.close()
+        contents = page_buffer[first_letter]
+
         package_url = re.findall(r"\"({}-[0-9].*?\.rpm)\"".format(package), contents)
         if len(package_url) != 1:
-            print()
-            print("Error: Could not find URL for '{}'.".format(package), file=sys.stderr)
-            print("If this is a permanent error, please remove the package from the file packages.txt.", file=sys.stderr)
-            continue
+            # There are multiple matches, usually this should be
+            # i686 and x86_64. We care only for the second one.
+            found_64 = False
+            for item in package_url:
+                if "x86_64" in item:
+                    package_url = item
+                    found_64 = True
+                    break
+            if not found_64:
+                print()
+                print("Error: Could not find URL for '{}'.".format(package), file=sys.stderr)
+                print("If this is a permanent error, please remove the package from the file packages.txt.", file=sys.stderr)
+                continue
         else:
             package_url = package_url[0]
 
-        package_url = "https://ftp-stud.hs-esslingen.de/pub/Mirrors/Mageia/distrib/cauldron/x86_64/media/core/release/{}".format(package_url)
+        package_url = "https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/{}/{}".format(first_letter, package_url)
         package_filename = re.split(r"/", package_url)[-1]
 
         # If the latest download is already available, skip this package
