@@ -69,7 +69,7 @@ msgcat -o "$mandir/$manpage.pot" $potfiles
 # Remove random characters from multiple file information
 # and reformat the comment into something more readable, e.g.:
 # "#. #-#-#-#-#  archlinux.fclose.3.0bX.pot (PACKAGE VERSION)  #-#-#-#-#"
-sed -i -e "s/^#\. #-#-#-#-# \([^.]*\)\.\(.\+\)\.[A-Za-z0-9]\{3\}\.pot/#. #-#-#-#-# \1: \2.pot/" "$mandir/$manpage.pot"
+sed -i -e "s/^#\(\.\?\) #-#-#-#-# \([^.]*\)\.\(.\+\)\.[A-Za-z0-9]\{3\}\.pot/#\1 #-#-#-#-# \2: \3.pot/" "$mandir/$manpage.pot"
 
 # Determine if the only change is the "POT-Creation-Date:" header
 # If so, copy back the backup to revert that change

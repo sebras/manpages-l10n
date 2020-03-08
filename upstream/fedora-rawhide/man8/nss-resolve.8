@@ -1,0 +1,108 @@
+'\" t
+.TH "NSS\-RESOLVE" "8" "" "systemd 245" "nss-resolve"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+nss-resolve, libnss_resolve.so.2 \- Provide hostname resolution via systemd\-resolved\&.service
+.SH "SYNOPSIS"
+.PP
+libnss_resolve\&.so\&.2
+.SH "DESCRIPTION"
+.PP
+\fBnss\-resolve\fR
+is a plug\-in module for the GNU Name Service Switch (NSS) functionality of the GNU C Library (\fBglibc\fR) enabling it to resolve host names via the
+\fBsystemd-resolved\fR(8)
+local network name resolution service\&. It replaces the
+\fBnss\-dns\fR
+plug\-in module that traditionally resolves hostnames via DNS\&.
+.PP
+To activate the NSS module, add
+"resolve"
+to the line starting with
+"hosts:"
+in
+/etc/nsswitch\&.conf\&. Specifically, it is recommended to place
+"resolve"
+early in
+/etc/nsswitch\&.conf\*(Aqs
+"hosts:"
+line (but after the
+"files"
+or
+"mymachines"
+entries), right before the
+"dns"
+entry if it exists, followed by
+"[!UNAVAIL=return]", to ensure DNS queries are always routed via
+\fBsystemd-resolved\fR(8)
+if it is running, but are routed to
+\fBnss\-dns\fR
+if this service is not available\&.
+.PP
+Note that
+\fBsystemd\-resolved\fR
+will synthesize DNS resource records in a few cases, for example for
+"localhost"
+and the current hostname, see
+\fBsystemd-resolved\fR(8)
+for the full list\&. This duplicates the functionality of
+\fBnss-myhostname\fR(8), but it is still recommended (see examples below) to keep
+\fBnss\-myhostname\fR
+configured in
+/etc/nsswitch\&.conf, to keep those names resolveable if
+\fBsystemd\-resolved\fR
+is not running\&.
+.SH "EXAMPLE"
+.PP
+Here is an example
+/etc/nsswitch\&.conf
+file that enables
+\fBnss\-resolve\fR
+correctly:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+passwd:         compat mymachines systemd
+group:          compat mymachines systemd
+shadow:         compat
+
+hosts:          files mymachines \fBresolve [!UNAVAIL=return]\fR dns myhostname
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.PP
+\fBsystemd\fR(1),
+\fBsystemd-resolved\fR(8),
+\fBnss-systemd\fR(8),
+\fBnss-myhostname\fR(8),
+\fBnss-mymachines\fR(8),
+\fBnsswitch.conf\fR(5)

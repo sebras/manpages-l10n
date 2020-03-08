@@ -43,8 +43,10 @@ with open("packages.txt") as input_file:
 
         package_url = re.findall(r"https?://ftp\.de\.debian\.org/debian/pool/[^\"]*", contents)
         if len(package_url) != 1:
-            print("Error: Could not find URL.", file=sys.stderr)
-            sys.exit(1)
+            print()
+            print("Error: Could not find URL for '{}'.".format(package), file=sys.stderr)
+            print("If this is a permanent error, please remove the package from the file packages.txt.", file=sys.stderr)
+            continue
         else:
             package_url = package_url[0]
 

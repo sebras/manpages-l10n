@@ -959,28 +959,6 @@ editing the body of an outgoing message.
 
 
 .TP
-.B ask_follow_up
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-If set, Mutt will prompt you for follow\-up groups before editing
-the body of an outgoing message.
-
-
-.TP
-.B ask_x_comment_to
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-If set, Mutt will prompt you for x\-comment\-to field before editing
-the body of an outgoing message.
-
-
-.TP
 .B assumed_charset
 .nf
 Type: string
@@ -1080,7 +1058,7 @@ attachment number
 \(lqQ\(rq, if MIME part qualifies for attachment counting
 .TP
 %s  
-size
+size (see formatstrings-size)
 .TP
 %t  
 tagged flag
@@ -1191,6 +1169,77 @@ by default) to make the next function apply to all tagged messages.
 
 
 .TP
+.B autocrypt
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, enables autocrypt, which provides
+passive encryption protection with keys exchanged via headers.
+See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_acct_format
+.nf
+Type: string
+Default: \(lq%4n %\-30a %20p %10s\(rq
+.fi
+.IP
+This variable describes the format of the \(lqautocrypt account\(rq menu.
+The following \fCprintf(3)\fP\-style sequences are understood
+.RS
+.PD 0
+.TP
+%a  
+email address
+.TP
+%k  
+gpg keyid
+.TP
+%n  
+current entry number
+.TP
+%p  
+prefer\-encrypt flag
+.TP
+%s  
+status flag (active/inactive)
+.RE
+.PD 1
+.IP
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_dir
+.nf
+Type: path
+Default: \(lq~/.mutt/autocrypt\(rq
+.fi
+.IP
+This variable sets where autocrypt files are stored, including the GPG
+keyring and sqlite database.  See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_reply
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When \fIset\fP, replying to an autocrypt email automatically
+enables autocrypt in the reply.  You may want to unset this if you're using
+the same key for autocrypt as normal web\-of\-trust, so that autocrypt
+isn't forced on for all encrypted replies.
+(Autocrypt only)
+
+
+.TP
 .B autoedit
 .nf
 Type: boolean
@@ -1289,14 +1338,17 @@ desirable to \fIunset\fP this variable.
 
 
 .TP
-.B catchup_newsgroup
+.B browser_sticky_cursor
 .nf
-Type: quadoption
-Default: ask\-yes
+Type: boolean
+Default: yes
 .fi
 .IP
-If this variable is \fIset\fP, Mutt will mark all articles in newsgroup
-as read when you quit the newsgroup (catchup newsgroup).
+When this variable is \fIset\fP, the browser will attempt to keep
+the cursor on the same mailbox when performing various functions.
+These include moving up a directory, toggling between mailboxes
+and directory listing, creating/renaming a mailbox, toggling
+subscribed mailboxes, and entering a new mask.
 
 
 .TP
@@ -1423,7 +1475,7 @@ total number of attachments
 local hostname
 .TP
 %l 
-approximate size (in bytes) of the current message
+approximate size (in bytes) of the current message (see formatstrings-size)
 .TP
 %v 
 Mutt version string
@@ -1507,6 +1559,24 @@ Default: yes
 This variable controls whether or not copies of your outgoing messages
 will be saved for later references.  Also see $record,
 $save_name, $force_name and \(lqfcc-hook\(rq.
+
+
+.TP
+.B count_alternatives
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt will recurse inside multipart/alternatives while
+performing attachment searching and counting (see attachments).
+.IP
+Traditionally, multipart/alternative parts have simply represented
+different encodings of the main content of the email.  Unfortunately,
+some mail clients have started to place email attachments inside
+one of alternatives.  Setting this will allow Mutt to find
+and count matching attachments hidden there, and include them
+in the index via %X or through ~X pattern matching.
 
 
 .TP
@@ -2191,7 +2261,7 @@ number of unread messages in the mailbox *
 N if mailbox has new mail, blank otherwise
 .TP
 %s  
-size in bytes
+size in bytes (see formatstrings-size)
 .TP
 %t  
 \(lq*\(rq if the file is tagged, blank otherwise
@@ -2243,19 +2313,6 @@ email address for unsubscribed lists.  Without this header, a
 group reply to your message sent to a subscribed list will be
 sent to both the list and your address, resulting in two copies
 of the same email for you.
-
-
-.TP
-.B followup_to_poster
-.nf
-Type: quadoption
-Default: ask\-yes
-.fi
-.IP
-If this variable is \fIset\fP and the keyword \(rqposter\(rq is present in
-\fIFollowup\-To\fP header, follow\-up to newsgroup function is not
-permitted.  The message will be mailed to the submitter of the
-message via mail.
 
 
 .TP
@@ -2409,48 +2466,6 @@ a regular expression that will match the whole name so mutt will expand
 
 
 .TP
-.B group_index_format
-.nf
-Type: string
-Default: \(lq%4C %M%N %5s  %\-45.45f %d\(rq
-.fi
-.IP
-This variable allows you to customize the newsgroup browser display to
-your personal taste.  This string is similar to \(lqindex_format\(rq, but
-has its own set of printf()\-like sequences:
-.RS
-.PD 0
-.TP
-%C  
-current newsgroup number
-.TP
-%d  
-description of newsgroup (becomes from server)
-.TP
-%f  
-newsgroup name
-.TP
-%M  
-\- if newsgroup not allowed for direct post (moderated for example)
-.TP
-%N  
-N if newsgroup is new, u if unsubscribed, blank otherwise
-.TP
-%n  
-number of new articles in newsgroup
-.TP
-%s  
-number of unread articles in newsgroup
-.TP
-%>X 
-right justify the rest of the string and pad with character \(rqX\(rq
-.TP
-%|X 
-pad to the end of the line with character \(rqX\(rq
-.RE
-.PD 1
-
-.TP
 .B hdrs
 .nf
 Type: boolean
@@ -2510,8 +2525,8 @@ much faster than opening non header cached folders.
 .TP
 .B header_cache_pagesize
 .nf
-Type: string
-Default: \(lq16384\(rq
+Type: number (long)
+Default: 16384
 .fi
 .IP
 When mutt is compiled with either gdbm or bdb4 as the header cache backend,
@@ -3149,7 +3164,7 @@ filename of the original message folder (think mailbox)
 the list to which the letter was sent, or else the folder name (%b).
 .TP
 %c 
-number of characters (bytes) in the message
+number of characters (bytes) in the message (see formatstrings-size)
 .TP
 %C 
 current message number
@@ -3174,9 +3189,6 @@ sender (address + real name), either From: or Return\-Path:
 %F 
 author name, or recipient name if the message is from you
 .TP
-%g 
-newsgroup name (if compiled with NNTP support)
-.TP
 %H 
 spam attribute(s) of this message
 .TP
@@ -3184,8 +3196,8 @@ spam attribute(s) of this message
 message\-id of the current message
 .TP
 %l 
-number of lines in the message (does not work with maildir,
-mh, and possibly IMAP folders)
+number of lines in the unprocessed message (may not work with
+maildir, mh, and IMAP folders)
 .TP
 %L 
 If an address in the \(lqTo:\(rq or \(lqCc:\(rq header field matches an address
@@ -3235,12 +3247,6 @@ user (login) name of the author
 .TP
 %v 
 first name of the author, or the recipient if the message is from you
-.TP
-%W 
-name of organization of author (\(lqOrganization:\(rq field)
-.TP
-%x 
-\(lqX\-Comment\-To:\(rq field (if present and compiled with NNTP support)
 .TP
 %X 
 number of attachments
@@ -3295,6 +3301,12 @@ soft\-fill with character \(lqX\(rq as pad
 .RE
 .PD 1
 .IP
+Note that for mbox/mmdf, \(lq%l\(rq applies to the unprocessed message, and
+for maildir/mh, the value comes from the \(lqLines:\(rq header field when
+present (the meaning is normally the same). Thus the value depends on
+the encodings used in the different parts of the message and has little
+meaning in practice.
+.IP
 \(lqSoft\-fill\(rq deserves some explanation: Normal right\-justification
 will print everything to the left of the \(lq%>\(rq, displaying padding and
 whatever lies to the right only if there's room. By contrast,
@@ -3314,46 +3326,10 @@ and $post_indent_string.
 
 
 .TP
-.B inews
-.nf
-Type: path
-Default: \(lq\(rq
-.fi
-.IP
-If set, specifies the program and arguments used to deliver news posted
-by Mutt.  Otherwise, mutt posts article using current connection to
-news server.  The following printf\-style sequence is understood:
-.RS
-.PD 0
-.TP
-%a 
-account url
-.TP
-%p 
-port
-.TP
-%P 
-port if specified
-.TP
-%s 
-news server name
-.TP
-%S 
-url schema
-.TP
-%u 
-username
-.RE
-.PD 1
-.IP
-Example: set inews=\(rq/usr/bin/inews \-hS\(rq
-
-
-.TP
 .B ispell
 .nf
 Type: path
-Default: \(lq/usr/bin/aspell \-c\(rq
+Default: \(lqaspell \-\-mode=email\(rq
 .fi
 .IP
 How to invoke ispell (GNU's spell\-checking software).
@@ -3802,18 +3778,6 @@ mime.types lookup.
 
 
 .TP
-.B mime_subject
-.nf
-Type: boolean
-Default: yes
-.fi
-.IP
-If \fIunset\fP, 8\-bit \(lqsubject:\(rq line in article header will not be
-encoded according to RFC2047 to base64.  This is useful when message
-is Usenet article, because MIME for news is nonstandard feature.
-
-
-.TP
 .B mix_entry_format
 .nf
 Type: string
@@ -3900,175 +3864,6 @@ Default: \(lq\(rq
 If \fIset\fP, Mutt will call this command after a new message is received.
 See the $status_format documentation for the values that can be formatted
 into this command.
-
-
-.TP
-.B news_cache_dir
-.nf
-Type: path
-Default: \(lq~/.mutt\(rq
-.fi
-.IP
-This variable pointing to directory where Mutt will save cached news
-articles and headers in. If \fIunset\fP, articles and headers will not be
-saved at all and will be reloaded from the server each time.
-
-
-.TP
-.B news_server
-.nf
-Type: string
-Default: \(lq\(rq
-.fi
-.IP
-This variable specifies domain name or address of NNTP server. It
-defaults to the news server specified in the environment variable
-$NNTPSERVER or contained in the file /etc/nntpserver.  You can also
-specify username and an alternative port for each news server, ie:
-.IP
-[[s]news://][username[:password]@]server[:port]
-
-
-.TP
-.B newsgroups_charset
-.nf
-Type: string
-Default: \(lqutf\-8\(rq
-.fi
-.IP
-Character set of newsgroups descriptions.
-
-
-.TP
-.B newsrc
-.nf
-Type: path
-Default: \(lq~/.newsrc\(rq
-.fi
-.IP
-The file, containing info about subscribed newsgroups \- names and
-indexes of read articles.  The following printf\-style sequence
-is understood:
-.RS
-.PD 0
-.TP
-%a 
-account url
-.TP
-%p 
-port
-.TP
-%P 
-port if specified
-.TP
-%s 
-news server name
-.TP
-%S 
-url schema
-.TP
-%u 
-username
-.RE
-.PD 1
-
-.TP
-.B nntp_authenticators
-.nf
-Type: string
-Default: \(lq\(rq
-.fi
-.IP
-This is a colon\-delimited list of authentication methods mutt may
-attempt to use to log in to a news server, in the order mutt should
-try them.  Authentication methods are either \(lquser\(rq or any
-SASL mechanism, e.g. \(lqdigest\-md5\(rq, \(lqgssapi\(rq or \(lqcram\-md5\(rq.
-This option is case\-insensitive.  If it's \fIunset\fP (the default)
-mutt will try all available methods, in order from most\-secure to
-least\-secure.
-.IP
-Example:
-
-.IP
-.EX
-set nntp_authenticators=\(rqdigest\-md5:user\(rq
-
-.EE
-.IP
-\fBNote:\fP Mutt will only fall back to other authentication methods if
-the previous methods are unavailable. If a method is available but
-authentication fails, mutt will not connect to the IMAP server.
-
-
-.TP
-.B nntp_context
-.nf
-Type: number
-Default: 1000
-.fi
-.IP
-This variable defines number of articles which will be in index when
-newsgroup entered.  If active newsgroup have more articles than this
-number, oldest articles will be ignored.  Also controls how many
-articles headers will be saved in cache when you quit newsgroup.
-
-
-.TP
-.B nntp_listgroup
-.nf
-Type: boolean
-Default: yes
-.fi
-.IP
-This variable controls whether or not existence of each article is
-checked when newsgroup is entered.
-
-
-.TP
-.B nntp_load_description
-.nf
-Type: boolean
-Default: yes
-.fi
-.IP
-This variable controls whether or not descriptions for each newsgroup
-must be loaded when newsgroup is added to list (first time list
-loading or new newsgroup adding).
-
-
-.TP
-.B nntp_user
-.nf
-Type: string
-Default: \(lq\(rq
-.fi
-.IP
-Your login name on the NNTP server.  If \fIunset\fP and NNTP server requires
-authentification, Mutt will prompt you for your account name when you
-connect to news server.
-
-
-.TP
-.B nntp_pass
-.nf
-Type: string
-Default: \(lq\(rq
-.fi
-.IP
-Your password for NNTP account.
-
-
-.TP
-.B nntp_poll
-.nf
-Type: number
-Default: 60
-.fi
-.IP
-The time in seconds until any operations on newsgroup except post new
-article will cause recheck for new news.  If set to 0, Mutt will
-recheck newsgroup on each operation in index (stepping, read article,
-etc.).
 
 
 .TP
@@ -4230,7 +4025,7 @@ against $pgp_decryption_okay.
 .B pgp_clearsign_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg \-\-no\-verbose \-\-batch \-\-quiet \-\-output \- %?p?\-\-passphrase\-fd 0? \-\-armor \-\-textmode \-\-clearsign %?a?\-u %a ? %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This format is used to create an old\-style \(lqclearsigned\(rq PGP
@@ -4246,7 +4041,7 @@ possible \fCprintf(3)\fP\-like sequences.
 .B pgp_decode_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg %?p?\-\-passphrase\-fd 0? \-\-no\-verbose \-\-quiet \-\-batch \-\-output \- %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This format strings specifies a command which is used to decode
@@ -4287,7 +4082,7 @@ alongside the documentation.
 .B pgp_decrypt_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   %?p?\-\-passphrase\-fd 0? \-\-no\-verbose \-\-quiet  \-\-batch  \-\-output \- %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to decrypt a PGP encrypted message.
@@ -4337,7 +4132,7 @@ variable, and should no longer be used.
 .B pgp_encrypt_only_command
 .nf
 Type: string
-Default: \(lqpgpewrap /usr/bin/gpg \-\-batch \-\-quiet \-\-no\-verbose \-\-output \- \-\-encrypt \-\-textmode \-\-armor \-\-always\-trust \-\- \-r %r \-\- %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to encrypt a body part without signing it.
@@ -4351,7 +4146,7 @@ possible \fCprintf(3)\fP\-like sequences.
 .B pgp_encrypt_sign_command
 .nf
 Type: string
-Default: \(lqpgpewrap /usr/bin/gpg %?p?\-\-passphrase\-fd 0? \-\-batch \-\-quiet \-\-no\-verbose \-\-textmode \-\-output \- \-\-encrypt \-\-sign %?a?\-u %a? \-\-armor \-\-always\-trust \-\- \-r %r \-\- %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to both sign and encrypt a body part.
@@ -4410,7 +4205,7 @@ date of the key where <s> is an \fCstrftime(3)\fP expression
 .B pgp_export_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   \-\-no\-verbose \-\-export \-\-armor %r\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to export a public key from the user's
@@ -4467,7 +4262,7 @@ if you want to play interesting key selection games.
 .B pgp_import_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg  \-\-no\-verbose \-\-import %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to import a key from a message into
@@ -4482,7 +4277,7 @@ possible \fCprintf(3)\fP\-like sequences.
 .B pgp_list_pubring_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   \-\-no\-verbose \-\-batch \-\-quiet   \-\-with\-colons \-\-list\-keys %r\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to list the public key ring's contents.  The
@@ -4512,7 +4307,7 @@ one or more quoted values such as email address, name, or keyid.
 .B pgp_list_secring_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   \-\-no\-verbose \-\-batch \-\-quiet   \-\-with\-colons \-\-list\-secret\-keys %r\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to list the secret key ring's contents.  The
@@ -4654,7 +4449,7 @@ to specify your key (e.g. \fC0x00112233\fP).
 .B pgp_sign_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg    \-\-no\-verbose \-\-batch \-\-quiet   \-\-output \- %?p?\-\-passphrase\-fd 0? \-\-armor \-\-detach\-sign \-\-textmode %?a?\-u %a? %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to create the detached PGP signature for a
@@ -4751,7 +4546,7 @@ or another encryption program without an agent, you will need to
 .B pgp_verify_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   \-\-no\-verbose \-\-quiet  \-\-batch  \-\-output \- \-\-verify %s %f\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to verify PGP signatures.
@@ -4765,7 +4560,7 @@ possible \fCprintf(3)\fP\-like sequences.
 .B pgp_verify_key_command
 .nf
 Type: string
-Default: \(lq/usr/bin/gpg   \-\-verbose \-\-batch  \-\-fingerprint \-\-check\-sigs %r\(rq
+Default: \(lq\(rq
 .fi
 .IP
 This command is used to verify key information from the key selection
@@ -4968,19 +4763,6 @@ Similar to the $attribution variable, Mutt will append this
 string after the inclusion of a message which is being replied to.
 For a full listing of defined \fCprintf(3)\fP\-like sequences see
 the section on $index_format.
-
-
-.TP
-.B post_moderated
-.nf
-Type: quadoption
-Default: ask\-yes
-.fi
-.IP
-If set to \fIyes\fP, Mutt will post article to newsgroup that have
-not permissions to posting (e.g. moderated).  \fBNote:\fP if news server
-does not support posting to that newsgroup or totally read\-only, that
-posting will not have an effect.
 
 
 .TP
@@ -5299,7 +5081,8 @@ your messages, but another way to do this is using the \(lqmy_hdr\(rq
 command to create a \(lqBcc:\(rq field with your email address in it.)
 .IP
 The value of \fI$record\fP is overridden by the $force_name and
-$save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy.
+$save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy
+and $write_bcc.
 
 
 .TP
@@ -5672,6 +5455,37 @@ mutt uses $charset as a fallback.
 
 
 .TP
+.B send_multipart_alternative
+.nf
+Type: quadoption
+Default: no
+.fi
+.IP
+If \fIset\fP, Mutt will generate a multipart/alternative
+container and an alternative part using the filter script specified in
+$send_multipart_alternative_filter.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+.IP
+Note that enabling multipart/alternative is not compatible with inline
+PGP encryption.  Mutt will prompt to use PGP/MIME in that case.
+
+
+.TP
+.B send_multipart_alternative_filter
+.nf
+Type: path
+Default: \(lq\(rq
+.fi
+.IP
+This specifies a filter script, which will convert the main
+(composed) message of the email to an alternative format.  The
+message will be piped to the filter's stdin.  The expected output
+of the filter is the generated mime type, e.g. text/html,
+followed by a blank line, and then the converted content.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+
+
+.TP
 .B sendmail
 .nf
 Type: path
@@ -5684,6 +5498,8 @@ arguments as recipient addresses.  Mutt appends all recipients after
 adding a \fC\-\-\fP delimiter (if not already present).  Additional
 flags, such as for $use_8bitmime, $use_envelope_from,
 $dsn_notify, or $dsn_return will be added before the delimiter.
+.IP
+\fBSee also:\fP $write_bcc.
 
 
 .TP
@@ -5725,76 +5541,6 @@ Default: \(lq\(rq
 .IP
 Command to use when spawning a subshell.  By default, the user's login
 shell from \fC/etc/passwd\fP is used.
-
-
-.TP
-.B xterm_icon
-.nf
-Type: string
-Default: \(lqM%?n?AIL&ail?\(rq
-.fi
-.IP
-Controls the format of the icon title, as long as xterm_set_titles
-is enabled. This string is identical in formatting to the one used by
-\(lq$status_format\(rq.
-
-
-.TP
-.B xterm_set_titles
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-Controls whether mutt sets the xterm title bar and icon name
-(as long as you are in an appropriate terminal).
-
-
-.TP
-.B xterm_title
-.nf
-Type: string
-Default: \(lqMutt with %?m?%m messages&no messages?%?n? [%n NEW]?\(rq
-.fi
-.IP
-Controls the format of the title bar of the xterm provided that
-xterm_set_titles has been set. This string is identical in formatting
-to the one used by \(lq$status_format\(rq.
-
-
-.TP
-.B save_unsubscribed
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-When \fIset\fP, info about unsubscribed newsgroups will be saved into
-\(lqnewsrc\(rq file and into cache.
-
-
-.TP
-.B show_new_news
-.nf
-Type: boolean
-Default: yes
-.fi
-.IP
-If \fIset\fP, news server will be asked for new newsgroups on entering
-the browser.  Otherwise, it will be done only once for a news server.
-Also controls whether or not number of new articles of subscribed
-newsgroups will be then checked.
-
-
-.TP
-.B show_only_unread
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-If \fIset\fP, only subscribed newsgroups that contain unread articles
-will be displayed in browser.
 
 
 .TP
@@ -5952,6 +5698,53 @@ the end of the list.
 
 
 .TP
+.B sidebar_relative_shortpath_indent
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, this option changes how $sidebar_short_path and
+$sidebar_folder_indent perform shortening and indentation: both
+will look at the previous sidebar entries and shorten/indent
+relative to the most recent parent.
+.IP
+An example of this option set/unset for mailboxes listed in this
+order, with $sidebar_short_path=yes,
+$sidebar_folder_indent=yes, and $sidebar_indent_string=\(rq→\(rq:
+.RS
+.PD 0
+.TP
+\fBmailbox\fP  
+\fBset\fP   
+\fBunset\fP
+.TP
+\fC=a.b\fP     
+\fC=a.b\fP  
+\fC→b\fP
+.TP
+\fC=a.b.c.d\fP 
+\fC→c.d\fP  
+\fC→→→d\fP
+.TP
+\fC=a.b.e\fP   
+\fC→e\fP    
+\fC→→e\fP
+.RE
+.PD 1
+.IP
+The second line illustrates most clearly.  With this option set,
+\fC=a.b.c.d\fP is shortened relative to \fC=a.b\fP, becoming
+\fCc.d\fP; it is also indented one place relative to \fC=a.b\fP.
+With this option unset \fC=a.b.c.d\fP is always shortened to the
+last part of the mailbox, \fCd\fP and is indented three places,
+with respect to $folder (represented by '=').
+.IP
+When set, the third line will also be indented and shortened
+relative to the first line.
+
+
+.TP
 .B sidebar_short_path
 .nf
 Type: boolean
@@ -6021,6 +5814,20 @@ entries are sorted alphabetically.  Valid values:
 .IP
 You may optionally use the \(lqreverse\-\(rq prefix to specify reverse sorting
 order (example: \(lq\fCset sort_browser=reverse\-date\fP\(rq).
+
+
+.TP
+.B sidebar_use_mailbox_shortcuts
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, sidebar mailboxes will be displayed with mailbox shortcut prefixes
+\(rq=\(rq or \(rq~\(rq.
+.IP
+When unset, the sidebar will trim off a matching $folder prefix
+but otherwise not use mailbox shortcuts.
 
 
 .TP
@@ -6104,6 +5911,51 @@ For example, if you simply type \(lqjoe\(rq at a search or limit prompt, Mutt
 will automatically expand it to the value specified by this variable by
 replacing \(lq%s\(rq with the supplied string.
 For the default value, \(lqjoe\(rq would be expanded to: \(lq~f joe | ~s joe\(rq.
+
+
+.TP
+.B size_show_bytes
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes will display bytes for values less than
+1 kilobyte.  See formatstrings-size.
+
+
+.TP
+.B size_show_fractions
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will be displayed with a single decimal value
+for sizes from 0 to 10 kilobytes and 1 to 10 megabytes.
+See formatstrings-size.
+
+
+.TP
+.B size_show_mb
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will display megabytes for values greater than
+or equal to 1 megabyte.  See formatstrings-size.
+
+
+.TP
+.B size_units_on_left
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes units will be displayed to the left of the number.
+See formatstrings-size.
 
 
 .TP
@@ -6583,6 +6435,8 @@ smtp[s]://[user[:pass]@]host[:port]
 where \(lq[...]\(rq denotes an optional part.
 Setting this variable overrides the value of the $sendmail
 variable.
+.IP
+Also see $write_bcc.
 
 
 .TP
@@ -6881,6 +6735,17 @@ request it.
 
 
 .TP
+.B ssl_use_tlsv1_3
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP , Mutt will use TLSv1.3 when communicating with servers that
+request it.
+
+
+.TP
 .B ssl_usesystemcerts
 .nf
 Type: boolean
@@ -7001,11 +6866,11 @@ number of flagged messages *
 local hostname
 .TP
 %l  
-size (in bytes) of the current mailbox *
+size (in bytes) of the current mailbox (see formatstrings-size) *
 .TP
 %L  
 size (in bytes) of the messages shown
-(i.e., which match the current limit) *
+(i.e., which match the current limit) (see formatstrings-size) *
 .TP
 %m  
 the number of messages in the mailbox *
@@ -7154,6 +7019,10 @@ of \(lq\fCtext/plain; format=flowed\fP\(rq.
 This format is easier to handle for some mailing software, and generally
 just looks like ordinary text.  To actually make use of this format's
 features, you'll need support in your editor.
+.IP
+The option only controls newly composed messages.  Postponed messages,
+resent messages, and draft messages (via \-H on the command line) will
+use the content\-type of the source message.
 .IP
 Note that $indent_string is ignored when this option is \fIset\fP.
 
@@ -7440,7 +7309,7 @@ Normally, the default should work.
 .B user_agent
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
 When \fIset\fP, mutt will add a \(lqUser\-Agent:\(rq header to outgoing
@@ -7548,14 +7417,22 @@ Default: 0
 .B write_bcc
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-Controls whether mutt writes out the \(lqBcc:\(rq header when preparing
-messages to be sent.  Exim users may wish to unset this. If mutt
-is set to deliver directly via SMTP (see $smtp_url), this
-option does nothing: mutt will never write out the \(lqBcc:\(rq header
-in this case.
+Controls whether mutt writes out the \(lqBcc:\(rq header when
+preparing messages to be sent.  Some MTAs, such as Exim and
+Courier, do not strip the \(lqBcc:\(rq header; so it is advisable to
+leave this unset unless you have a particular need for the header
+to be in the sent message.
+.IP
+If mutt is set to deliver directly via SMTP (see $smtp_url),
+this option does nothing: mutt will never write out the \(lqBcc:\(rq
+header in this case.
+.IP
+Note this option only affects the sending of messages.  Fcc'ed
+copies of a message will always contain the \(lqBcc:\(rq header if
+one exists.
 
 
 .TP
@@ -7571,17 +7448,6 @@ single message will be displayed before writing a mailbox.
 .IP
 Also see the $read_inc, $net_inc and $time_inc variables and the
 \(lqtuning\(rq section of the manual for performance considerations.
-
-
-.TP
-.B x_comment_to
-.nf
-Type: boolean
-Default: no
-.fi
-.IP
-If \fIset\fP, Mutt will add \(lqX\-Comment\-To:\(rq field (that contains full
-name of original article author) to article that followuped to newsgroup.
 
 
 .\" -*-nroff-*-
