@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.TIMER" "5" "" "systemd 244" "systemd.timer"
+.TH "SYSTEMD\&.TIMER" "5" "" "systemd 245" "systemd.timer"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -186,7 +186,9 @@ or
 \fIOnStartupSec=\fR
 is already in the past when the timer unit is activated, it will immediately elapse and the configured unit is started\&. This is not the case for timers defined in the other directives\&.
 .sp
-These are monotonic timers, independent of wall\-clock time and timezones\&. If the computer is temporarily suspended, the monotonic clock pauses, too\&.
+These are monotonic timers, independent of wall\-clock time and timezones\&. If the computer is temporarily suspended, the monotonic clock generally pauses, too\&. Note that if
+\fIWakeSystem=\fR
+is used, a different monotonic clock is selected that continues to advance while the system is suspended and thus can be used as the trigger to resume the system\&.
 .sp
 If the empty string is assigned to any of these options, the list of timers is reset (both monotonic timers and
 \fIOnCalendar=\fR
@@ -234,6 +236,10 @@ later\&. Within this time window, the expiry time will be placed at a host\-spec
 setting\&. See
 \fBprctl\fR(2)
 for details\&. To optimize power consumption, make sure to set this value as high as possible and as low as necessary\&.
+.sp
+Note that this setting is primarily a power saving option that allows coalescing CPU wake\-ups\&. It should not be confused with
+\fIRandomizedDelaySec=\fR
+(see below) which adds a random value to the time the timer shall elapse next and whose purpose is the opposite: to stretch elapsing of timer events over a longer period to reduce workload spikes\&. For further details and explanations and how both settings play together, see below\&.
 .RE
 .PP
 \fIRandomizedDelaySec=\fR
@@ -284,6 +290,15 @@ Takes a boolean argument\&. If true, an elapsing timer will cause the system to 
 \fIfalse\fR\&.
 .sp
 Note that this functionality requires privileges and is thus generally only available in the system service manager\&.
+.sp
+Note that behaviour of monotonic clock timers (as configured with
+\fIOnActiveSec=\fR,
+\fIOnBootSec=\fR,
+\fIOnStartupSec=\fR,
+\fIOnUnitActiveSec=\fR,
+\fIOnUnitInactiveSec=\fR, see above) is altered depending on this option\&. If false, a monotonic clock is used that is paused during system suspend (\fBCLOCK_MONOTONIC\fR), if true a different monotonic clock is used that continues advancing during system suspend (\fBCLOCK_BOOTTIME\fR), see
+\fBclock_getres\fR(2)
+for details\&.
 .RE
 .PP
 \fIRemainAfterElapse=\fR

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.LINK" "5" "" "systemd 244" "systemd.link"
+.TH "SYSTEMD\&.LINK" "5" "" "systemd 245" "systemd.link"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -26,9 +26,13 @@ systemd.link \- Network device configuration
 \fIlink\fR\&.link
 .SH "DESCRIPTION"
 .PP
-Network link configuration is performed by the
+A plain ini\-style text file that encodes configuration for matching network devices, used by
+\fBsystemd-udev\fR(8)
+and in particular its
 \fBnet_setup_link\fR
-udev builtin\&.
+builtin\&. See
+\fBsystemd.syntax\fR(5)
+for a general description of the syntax\&.
 .PP
 The link files are read from the files located in the system network directory
 /usr/lib/systemd/network, the volatile runtime network directory
@@ -93,9 +97,11 @@ MACAddress=01:23:45:67:89:ab 00\-11\-22\-33\-44\-55 AABB\&.CCDD\&.EEFF
 .\}
 .RE
 .PP
-\fIOriginalName=\fR
+\fIPermanentMACAddress=\fR
 .RS 4
-A whitespace\-separated list of shell\-style globs matching the device name, as exposed by the udev property "INTERFACE"\&. This cannot be used to match on names that have already been changed from userspace\&. Caution is advised when matching on kernel\-assigned names, as they are known to be unstable between reboots\&.
+A whitespace\-separated list of hardware\*(Aqs permanent addresses\&. While
+\fIMACAddress=\fR
+matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
 .RE
 .PP
 \fIPath=\fR
@@ -110,13 +116,13 @@ A whitespace\-separated list of shell\-style globs matching the driver currently
 \fIID_NET_DRIVER\fR
 of its parent device, or if that is not set, the driver as exposed by
 \fBethtool \-i\fR
-of the device itself\&.
+of the device itself\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIType=\fR
 .RS 4
-A whitespace\-separated list of shell\-style globs matching the device type, as exposed by the udev property
-\fIDEVTYPE\fR\&.
+A whitespace\-separated list of shell\-style globs matching the device type, as exposed by
+\fBnetworkctl status\fR\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIProperty=\fR
@@ -137,6 +143,11 @@ Property=ID_MODEL_ID=9999 "ID_VENDOR_FROM_DATABASE=vendor name" "KEY=with \e"quo
 .\}
 .sp
 then, the \&.link file matches only when an interface has all the above three properties\&.
+.RE
+.PP
+\fIOriginalName=\fR
+.RS 4
+A whitespace\-separated list of shell\-style globs matching the device name, as exposed by the udev property "INTERFACE"\&. This cannot be used to match on names that have already been changed from userspace\&. Caution is advised when matching on kernel\-assigned names, as they are known to be unstable between reboots\&.
 .RE
 .PP
 \fIHost=\fR
@@ -302,6 +313,21 @@ or
 "lan0"/"lan1"/"lan3"\&.
 .RE
 .PP
+\fIAlternativeNamesPolicy=\fR
+.RS 4
+A space\-separated list of policies by which the interface\*(Aqs alternative names should be set\&. Each of the policies may fail, and all successful policies are used\&. The available policies are
+"database",
+"onboard",
+"slot",
+"path", and
+"mac"\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
+.RE
+.PP
+\fIAlternativeName=\fR
+.RS 4
+The alternative interface name to use\&. This option can be specified multiple times\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
+.RE
+.PP
 \fIMTUBytes=\fR
 .RS 4
 The maximum transmission unit in bytes to set for the device\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&.
@@ -324,7 +350,7 @@ and
 .RS 4
 Takes a boolean\&. If set to yes, automatic negotiation of transmission parameters is enabled\&. Autonegotiation is a procedure by which two connected ethernet devices choose common transmission parameters, such as speed, duplex mode, and flow control\&. When unset, the kernel\*(Aqs default will be used\&.
 .sp
-Note that if autonegotiation is enabled, speed and duplex settings are read\-only\&. If autonegotation is disabled, speed and duplex settings are writable if the driver supports multiple link modes\&.
+Note that if autonegotiation is enabled, speed and duplex settings are read\-only\&. If autonegotiation is disabled, speed and duplex settings are writable if the driver supports multiple link modes\&.
 .RE
 .PP
 \fIWakeOnLan=\fR
@@ -541,6 +567,16 @@ T}
 .TE
 .sp 1
 By default this is unset, i\&.e\&. all possible modes will be advertised\&. This option may be specified more than once, in which case all specified speeds and modes are advertised\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&.
+.RE
+.PP
+\fIReceiveChecksumOffload=\fR
+.RS 4
+Takes a boolean\&. If set to true, the hardware offload for checksumming of ingress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITransmitChecksumOffload=\fR
+.RS 4
+Takes a boolean\&. If set to true, the hardware offload for checksumming of egress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITCPSegmentationOffload=\fR

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RUN" "1" "" "systemd 241" "systemd-run"
+.TH "SYSTEMD\-RUN" "1" "" "systemd 245" "systemd-run"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -116,7 +116,7 @@ unit instead of the default transient
 unit (see above)\&.
 .RE
 .PP
-\fB\-\-unit=\fR
+\fB\-\-unit=\fR, \fB\-u\fR
 .RS 4
 Use this unit name instead of an automatically generated one\&.
 .RE
@@ -302,6 +302,22 @@ or
 \fB\-\-pty\fR\&.
 .RE
 .PP
+\fB\-\-on\-clock\-change\fR, \fB\-\-on\-timezone\-change\fR
+.RS 4
+Defines a trigger based on system clock jumps or timezone changes for starting the specified command\&. See
+\fIOnClockChange=\fR
+and
+\fIOnTimezoneChange=\fR
+in
+\fBsystemd.timer\fR(5)\&. These options are shortcuts for
+\fB\-\-timer\-property=OnClockChange=yes\fR
+and
+\fB\-\-timer\-property=OnTimezoneChange=yes\fR\&. These options may not be combined with
+\fB\-\-scope\fR
+or
+\fB\-\-pty\fR\&.
+.RE
+.PP
 \fB\-\-path\-property=\fR, \fB\-\-socket\-property=\fR, \fB\-\-timer\-property=\fR
 .RS 4
 Sets a property on the path, socket, or timer unit that is created\&. This option is similar to
@@ -359,7 +375,7 @@ Talk to the service manager of the system\&. This is the implied default\&.
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
 ":", and then a container name, separated by
 "/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
 \fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
@@ -383,7 +399,14 @@ Print a short version string and exit\&.
 All command line arguments after the first non\-option argument become part of the command line of the launched process\&. If a command is run as service unit, the first argument needs to be an absolute program path\&.
 .SH "EXIT STATUS"
 .PP
-On success, 0 is returned, a non\-zero failure code otherwise\&.
+On success, 0 is returned\&. If
+\fBsystemd\-run\fR
+failed to start the service, a non\-zero return value will be returned\&. If
+\fBsystemd\-run\fR
+waits for the service to terminate, the return value will be propagated from the service\&. 0 will be returned on success, including all the cases where systemd considers a service to have exited cleanly, see the discussion of
+\fISuccessExitStatus=\fR
+in
+\fBsystemd.service\fR(5)\&.
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Logging environment variables provided by systemd to services\fR
@@ -523,6 +546,22 @@ $ loginctl enable\-linger
 .if n \{\
 .RE
 .\}
+.PP
+\fBExample\ \&6.\ \&Return value\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-run \-\-user \-\-wait true
+$ systemd\-run \-\-user \-\-wait \-p SuccessExitStatus=11 bash \-c \*(Aqexit 11\*(Aq
+$ systemd\-run \-\-user \-\-wait \-p SuccessExitStatus=SIGUSR1 bash \-c \*(Aqkill \-SIGUSR1 $$$$\*(Aq
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Those three invocations will succeed, i\&.e\&. terminate with an exit code of 0\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

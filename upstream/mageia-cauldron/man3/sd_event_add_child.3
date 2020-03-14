@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_EVENT_ADD_CHILD" "3" "" "systemd 241" "sd_event_add_child"
+.TH "SD_EVENT_ADD_CHILD" "3" "" "systemd 245" "sd_event_add_child"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_event_add_child, sd_event_source_get_child_pid, sd_event_child_handler_t \- Add a child process state change event source to an event loop
+sd_event_add_child, sd_event_add_child_pidfd, sd_event_source_get_child_pid, sd_event_source_get_child_pidfd, sd_event_source_get_child_pidfd_own, sd_event_source_set_child_pidfd_own, sd_event_source_get_child_process_own, sd_event_source_set_child_process_own, sd_event_source_send_child_signal, sd_event_child_handler_t \- Add a child process state change event source to an event loop
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -38,8 +38,22 @@ typedef struct sd_event_source sd_event_source;
 .BI "typedef int (*sd_event_child_handler_t)(sd_event_source\ *" "s" ", const\ siginfo_t\ *" "si" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_add_child('u
 .BI "int sd_event_add_child(sd_event\ *" "event" ", sd_event_source\ **" "source" ", pid_t\ " "pid" ", int\ " "options" ", sd_event_child_handler_t\ " "handler" ", void\ *" "userdata" ");"
+.HP \w'int\ sd_event_add_child_pidfd('u
+.BI "int sd_event_add_child_pidfd(sd_event\ *" "event" ", sd_event_source\ **" "source" ", int\ " "pidfd" ", int\ " "options" ", sd_event_child_handler_t\ " "handler" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_source_get_child_pid('u
 .BI "int sd_event_source_get_child_pid(sd_event_source\ *" "source" ", pid_t\ *" "pid" ");"
+.HP \w'int\ sd_event_source_get_child_pidfd('u
+.BI "int sd_event_source_get_child_pidfd(sd_event_source\ *" "source" ");"
+.HP \w'int\ sd_event_source_get_child_pidfd_own('u
+.BI "int sd_event_source_get_child_pidfd_own(sd_event_source\ *" "source" ");"
+.HP \w'int\ sd_event_source_set_child_pidfd_own('u
+.BI "int sd_event_source_set_child_pidfd_own(sd_event_source\ *" "source" ", int\ " "own" ");"
+.HP \w'int\ sd_event_source_get_child_process_own('u
+.BI "int sd_event_source_get_child_process_own(sd_event_source\ *" "source" ");"
+.HP \w'int\ sd_event_source_set_child_process_own('u
+.BI "int sd_event_source_set_child_process_own(sd_event_source\ *" "source" ", int\ " "own" ");"
+.HP \w'int\ sd_event_source_send_child_signal('u
+.BI "int sd_event_source_send_child_signal(sd_event_source\ *" "source" ", int\ " "sig" ", const\ siginfo_t\ *" "info" ", unsigned\ " "flags" ");"
 .SH "DESCRIPTION"
 .PP
 \fBsd_event_add_child()\fR
@@ -49,7 +63,7 @@ parameter, the event source object is returned in the
 \fIsource\fR
 parameter\&. The
 \fIpid\fR
-parameter specifies the PID of the process to watch\&. The
+parameter specifies the PID of the process to watch, which must be a direct child process of the invoking process\&. The
 \fIhandler\fR
 must reference a function to call when the process changes state\&. The handler function will be passed the
 \fIuserdata\fR
@@ -78,6 +92,13 @@ To destroy an event source object use
 with
 \fBsd_event_source_set_enabled\fR(3)\&.
 .PP
+The
+\fBSIGCHLD\fR
+signal must be blocked in all threads before this function is called (using
+\fBsigprocmask\fR(2)
+or
+\fBpthread_sigmask\fR(3))\&.
+.PP
 If the second parameter of
 \fBsd_event_add_child()\fR
 is passed as NULL no reference to the event source object is returned\&. In this case the event source is considered "floating", and will be destroyed implicitly when the event loop itself is destroyed\&.
@@ -90,6 +111,21 @@ If both a child process state change event source and a
 \fBSIGCHLD\fR
 signal event source is installed in the same event loop, the configured event source priorities decide which event source is dispatched first\&. If the signal handler is processed first, it should leave the child processes for which child process state change event sources are installed unreaped\&.
 .PP
+\fBsd_event_add_child_pidfd()\fR
+is similar to
+\fBsd_event_add_child()\fR
+but takes a file descriptor referencing the process ("pidfd") instead of the numeric PID\&. A suitable file descriptor may be acquired via
+\fBpidfd_open\fR(2)
+and related calls\&. The passed file descriptor is not closed when the event source is freed again, unless
+\fBsd_event_source_set_child_pidfd_own()\fR
+is used to turn this behaviour on\&. Note that regardless which of
+\fBsd_event_add_child()\fR
+and
+\fBsd_event_add_child_pidfd()\fR
+is used for allocating an event source, the watched process has to be a direct child process of the invoking process\&. Also in both cases
+\fBSIGCHLD\fR
+has to be blocked in the invoking process\&.
+.PP
 \fBsd_event_source_get_child_pid()\fR
 retrieves the configured PID of a child process state change event source created previously with
 \fBsd_event_add_child()\fR\&. It takes the event source object as the
@@ -97,10 +133,49 @@ retrieves the configured PID of a child process state change event source create
 parameter and a pointer to a
 \fBpid_t\fR
 variable to return the process ID in\&.
+.PP
+\fBsd_event_source_get_child_pidfd()\fR
+retrieves the file descriptor referencing the watched process ("pidfd") if this functionality is available\&. On kernels that support the concept the event loop will make use of pidfds to watch child processes, regardless if the individual event sources are allocated via
+\fBsd_event_add_child()\fR
+or
+\fBsd_event_add_child_pidfd()\fR\&. If the latter call was used to allocate the event source, this function returns the file descriptor used for allocation\&. On kernels that do not support the pidfd concept this function will fail with
+\fBEOPNOTSUPP\fR\&. This call takes the event source object as the
+\fIsource\fR
+parameter and returns the numeric file descriptor\&.
+.PP
+\fBsd_event_source_get_child_pidfd_own()\fR
+may be used to query whether the pidfd the event source encapsulates shall be closed when the event source is freed\&. This function returns zero if the pidfd shall be left open, and positive if it shall be closed automatically\&. By default this setting defaults to on if the event source was allocated via
+\fBsd_event_add_child()\fR
+and off if it was allocated via
+\fBsd_event_add_child_pidfd()\fR\&. The
+\fBsd_event_source_set_child_pidfd_own()\fR
+function may be used to change the setting and takes a boolean parameter with the new setting\&.
+.PP
+\fBsd_event_source_get_child_process_own()\fR
+may be used to query whether the process the event source watches shall be killed (with
+\fBSIGKILL\fR) and reaped when the event source is freed\&. This function returns zero if the process shell be left running, and positive if it shall be killed and reaped automatically\&. By default this setting defaults to off\&. The
+\fBsd_event_source_set_child_process_own()\fR
+function may be used to change the setting and takes a boolean parameter with the new setting\&. Note that currently if the calling process is terminated abnormally the watched process might survive even thought the event source ceases to exist\&. This behaviour might change eventually\&.
+.PP
+\fBsd_event_source_send_child_signal()\fR
+may be used to send a UNIX signal to the watched process\&. If the pidfd concept is supported in the kernel, this is implemented via
+\fBpidfd_send_signal\fR(2)
+and otherwise via
+\fBrt_sigqueueinfo\fR(2)
+(or via
+\fBkill\fR(2)
+in case
+\fIinfo\fR
+is
+\fBNULL\fR)\&. The specified parameters match those of these underlying system calls, except that the
+\fIinfo\fR
+is never modified (and is thus declared constant)\&. Like for the underlying system calls, the
+\fIflags\fR
+parameter currently must be zero\&.
 .SH "RETURN VALUE"
 .PP
 On success, these functions return 0 or a positive integer\&. On failure, they return a negative errno\-style error code\&.
-.SH "ERRORS"
+.SS "Errors"
 .PP
 Returned errors may indicate the following problems:
 .PP
@@ -121,7 +196,9 @@ or a mask which contains values different than a combination of
 .PP
 \fB\-EBUSY\fR
 .RS 4
-A handler is already installed for this child process\&.
+A handler is already installed for this child process, or
+\fBSIGCHLD\fR
+is not blocked\&.
 .RE
 .PP
 \fB\-ESTALE\fR
@@ -137,6 +214,11 @@ The event loop has been created in a different process\&.
 \fB\-EDOM\fR
 .RS 4
 The passed event source is not a child process event source\&.
+.RE
+.PP
+\fB\-EOPNOTSUPP\fR
+.RS 4
+A pidfd was requested but the kernel does not support this concept\&.
 .RE
 .SH "NOTES"
 .PP
@@ -158,4 +240,11 @@ file\&.
 \fBsd_event_source_set_priority\fR(3),
 \fBsd_event_source_set_userdata\fR(3),
 \fBsd_event_source_set_description\fR(3),
-\fBwaitid\fR(2)
+\fBsd_event_source_set_floating\fR(3),
+\fBwaitid\fR(2),
+\fBsigprocmask\fR(2),
+\fBpthread_sigmask\fR(3),
+\fBpidfd_open\fR(2),
+\fBpidfd_send_signal\fR(2),
+\fBrt_sigqueueinfo\fR(2),
+\fBkill\fR(2)

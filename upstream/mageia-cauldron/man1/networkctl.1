@@ -1,5 +1,5 @@
 '\" t
-.TH "NETWORKCTL" "1" "" "systemd 241" "networkctl"
+.TH "NETWORKCTL" "1" "" "systemd 245" "networkctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,42 +31,14 @@ may be used to introspect the state of the network links as seen by
 \fBsystemd\-networkd\fR\&. Please refer to
 \fBsystemd-networkd.service\fR(8)
 for an introduction to the basic concepts, functionality, and configuration syntax\&.
-.SH "OPTIONS"
-.PP
-The following options are understood:
-.PP
-\fB\-a\fR \fB\-\-all\fR
-.RS 4
-Show all links with
-\fBstatus\fR\&.
-.RE
-.PP
-\fB\-h\fR, \fB\-\-help\fR
-.RS 4
-Print a short help text and exit\&.
-.RE
-.PP
-\fB\-\-version\fR
-.RS 4
-Print a short version string and exit\&.
-.RE
-.PP
-\fB\-\-no\-legend\fR
-.RS 4
-Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
-.RE
-.PP
-\fB\-\-no\-pager\fR
-.RS 4
-Do not pipe output into a pager\&.
-.RE
 .SH "COMMANDS"
 .PP
 The following commands are understood:
 .PP
-\fBlist\fR [\fILINK\&...\fR]
+\fBlist\fR [\fIPATTERN\&...\fR]
 .RS 4
-Show a list of existing links and their status\&. If no further arguments are specified shows all links, otherwise just the specified links\&. Produces output similar to:
+Show a list of existing links and their status\&. If one ore more
+\fIPATTERN\fRs are specified, only links matching one of them are shown\&. If no further arguments are specified shows all links, otherwise just the specified links\&. Produces output similar to:
 .sp
 .if n \{\
 .RS 4
@@ -86,6 +58,11 @@ IDX LINK         TYPE     OPERATIONAL SETUP
 .sp
 The operational status is one of the following:
 .PP
+missing
+.RS 4
+the device is missing
+.RE
+.PP
 off
 .RS 4
 the device is powered down
@@ -101,14 +78,24 @@ dormant
 the device has a carrier, but is not yet ready for normal traffic
 .RE
 .PP
+degraded\-carrier
+.RS 4
+for bond or bridge master, one of the bonding or bridge slave network interfaces is in off, no\-carrier, or dormant state
+.RE
+.PP
 carrier
 .RS 4
-the link has a carrier
+the link has a carrier, or for bond or bridge master, all bonding or bridge slave network interfaces are enslaved to the master\&.
 .RE
 .PP
 degraded
 .RS 4
 the link has carrier and addresses valid on the local link configured
+.RE
+.PP
+enslaved
+.RS 4
+the link has carrier and is enslaved to bond or bridge master network interface
 .RE
 .PP
 routable
@@ -150,9 +137,10 @@ the link is gone, but has not yet been dropped by networkd
 .sp
 .RE
 .PP
-\fBstatus\fR [\fILINK\&...\fR]
+\fBstatus\fR [\fIPATTERN\&...\fR]
 .RS 4
-Show information about the specified links: type, state, kernel module driver, hardware and IP address, configured DNS servers, etc\&.
+Show information about the specified links: type, state, kernel module driver, hardware and IP address, configured DNS servers, etc\&. If one ore more
+\fIPATTERN\fRs are specified, only links matching one of them are shown\&.
 .sp
 When no links are specified, an overall network status is shown\&. Also see the option
 \fB\-\-all\fR\&.
@@ -177,9 +165,10 @@ Produces output similar to:
 .\}
 .RE
 .PP
-\fBlldp\fR [\fILINK\&...\fR]
+\fBlldp\fR [\fIPATTERN\&...\fR]
 .RS 4
-Show discovered LLDP (Link Layer Discovery Protocol) neighbors\&. If one or more link names are specified only neighbors on those interfaces are shown\&. Otherwise shows discovered neighbors on all interfaces\&. Note that for this feature to work,
+Show discovered LLDP (Link Layer Discovery Protocol) neighbors\&. If one or more
+\fIPATTERN\fRs are specified only neighbors on those interfaces are shown\&. Otherwise shows discovered neighbors on all interfaces\&. Note that for this feature to work,
 \fILLDP=\fR
 must be turned on for the specific interface, see
 \fBsystemd.network\fR(5)
@@ -235,6 +224,84 @@ Prefix/Prefixlen                          Label
 .if n \{\
 .RE
 .\}
+.RE
+.PP
+\fBdelete\fR
+.RS 4
+Deletes virtual netdevs\&. Takes interface name or index number\&.
+.RE
+.PP
+\fBrenew\fR
+.RS 4
+Renew dynamic configurations e\&.g\&. addresses received from DHCP server\&. Takes interface name or index number\&.
+.RE
+.PP
+\fBreconfigure\fR
+.RS 4
+Reconfigure network interfaces\&. Takes interface name or index number\&.
+.RE
+.PP
+\fBreload\fR
+.RS 4
+Reload
+\&.netdev
+and
+\&.network
+files\&. If a new
+\&.netdev
+file is found, then the corresponding netdev is created\&. Note that even if an existing
+\&.netdev
+is modified or removed,
+\fBsystemd\-networkd\fR
+does not update or remove the netdev\&. If a new, modified or removed
+\&.network
+file is found, then all interfaces which match the file are reconfigured\&.
+.RE
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-a\fR \fB\-\-all\fR
+.RS 4
+Show all links with
+\fBstatus\fR\&.
+.RE
+.PP
+\fB\-s\fR \fB\-\-stats\fR
+.RS 4
+Show link statistics with
+\fBstatus\fR\&.
+.RE
+.PP
+\fB\-l\fR, \fB\-\-full\fR
+.RS 4
+Do not ellipsize the output\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-lines=\fR
+.RS 4
+When used with
+\fBstatus\fR, controls the number of journal lines to show, counting from the most recent ones\&. Takes a positive integer argument\&. Defaults to 10\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
+.PP
+\fB\-\-no\-legend\fR
+.RS 4
+Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+.RE
+.PP
+\fB\-\-no\-pager\fR
+.RS 4
+Do not pipe output into a pager\&.
 .RE
 .SH "EXIT STATUS"
 .PP

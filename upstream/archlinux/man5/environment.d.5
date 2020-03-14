@@ -1,5 +1,5 @@
 '\" t
-.TH "ENVIRONMENT\&.D" "5" "" "systemd 244" "environment.d"
+.TH "ENVIRONMENT\&.D" "5" "" "systemd 245" "environment.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -36,9 +36,9 @@ environment.d \- Definition of user session environment
 .PP
 The
 environment\&.d
-directories contain a list of "global" environment variable assignments for the user environment\&.
+directories contain a list of environment variable assignments for services started by the systemd user instance\&.
 \fBsystemd-environment-d-generator\fR(8)
-parses them and updates the environment exported by the systemd user instance to the services it starts\&.
+parses them and updates the environment exported by the systemd user instance\&. See below for an discussion of which processes inherit those variables\&.
 .PP
 It is recommended to use numerical prefixes for file names to simplify ordering\&.
 .PP
@@ -51,8 +51,9 @@ Configuration files are read from directories in
 /etc/,
 /run/,
 /usr/local/lib/, and
-/usr/lib/, in order of precedence\&. Each configuration file in these configuration directories shall be named in the style of
-\fIfilename\fR\&.conf\&. Files in
+/usr/lib/, in order of precedence, as listed in the SYNOPSIS section above\&. Files must have the the
+"\&.conf"
+extension\&. Files in
 /etc/
 override files with the same name in
 /run/,
@@ -62,13 +63,15 @@ override files with the same name in
 override files with the same name under
 /usr/\&.
 .PP
+All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same option, the entry in the file with the lexicographically latest name will take precedence\&. Thus, the configuration in a certain file may either be replaced completely (by placing a file with the same name in a directory with higher priority), or individual settings might be changed (by specifying additional settings in a file with a different name that is ordered later)\&.
+.PP
 Packages should install their configuration files in
 /usr/lib/
 (distribution packages) or
 /usr/local/lib/
 (local installs)\&. Files in
 /etc/
-are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same option, the entry in the file with the lexicographically latest name will take precedence\&. It is recommended to prefix all filenames with a two\-digit number and a dash, to simplify the ordering of the files\&.
+are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. It is recommended to prefix all filenames with a two\-digit number and a dash, to simplify the ordering of the files\&.
 .PP
 If the administrator wants to disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
 /dev/null
@@ -119,6 +122,26 @@ are ignored\&.
 .if n \{\
 .RE
 .\}
+.SH "APPLICABILITY"
+.PP
+Environment variables exported by the user manager (\fBsystemd \-\-user\fR
+instance started in the
+user@\fIuid\fR\&.service
+system service) apply to any services started by that manager\&. In particular, this may include services which run user shells\&. For example in the Gnome environment, the graphical terminal emulator runs as the
+gnome\-terminal\-server\&.service
+user unit, which in turn runs the user shell, so that shell will inherit environment variables exported by the user manager\&. For other instances of the shell, not launched by the user manager, the environment they inherit is defined by the program that starts them\&. Hint: in general,
+\fBsystemd.service\fR(5)
+units contain programs launched by systemd, and
+\fBsystemd.scope\fR(5)
+units contain programs launched by something else\&.
+.PP
+Specifically, for ssh logins, the
+\fBsshd\fR(8)
+service builds an environment that is a combination of variables forwarded from the remote system and defined by
+\fBsshd\fR, see the discussion in
+\fBssh\fR(1)\&. A graphical display session will have an analogous mechanism to define the environment\&. Note that some managers query the systemd user instance for the exported environment and inject this configuration into programs they start, using
+\fBsystemctl show\-environment\fR
+or the underlying D\-Bus call\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

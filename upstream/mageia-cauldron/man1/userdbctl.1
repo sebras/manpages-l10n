@@ -1,0 +1,338 @@
+'\" t
+.TH "USERDBCTL" "1" "" "systemd 245" "userdbctl"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+userdbctl \- Inspect users, groups and group memberships
+.SH "SYNOPSIS"
+.HP \w'\fBuserdbctl\fR\ 'u
+\fBuserdbctl\fR [OPTIONS...] {COMMAND} [NAME...]
+.SH "DESCRIPTION"
+.PP
+\fBuserdbctl\fR
+may be used to inspect user and groups (as well as group memberships) of the system\&. This client utility inquires user/group information provided by various system services, both operating on JSON user/group records (as defined by the
+\m[blue]\fBJSON User Record\fR\m[]\&\s-2\u[1]\d\s+2
+and
+\m[blue]\fBJSON Group Record\fR\m[]\&\s-2\u[2]\d\s+2
+definitions), and classic UNIX NSS/glibc user and group records\&. This tool is primarily a client to the
+\m[blue]\fBUser/Group Record Lookup API via Varlink\fR\m[]\&\s-2\u[3]\d\s+2\&.
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-\-output=\fR\fIMODE\fR
+.RS 4
+Choose the output mode, takes one of
+"classic",
+"friendly",
+"table",
+"json"\&. If
+"classic", an output very close to the format of
+/etc/passwd
+or
+/etc/group
+is generated\&. If
+"friendly"
+a more comprehensive and user friendly, human readable output is generated; if
+"table"
+a minimal, tabular output is generated; if
+"json"
+a JSON formatted output is generated\&. Defaults to
+"friendly"
+if a user/group is specified on the command line,
+"table"
+otherwise\&.
+.RE
+.PP
+\fB\-\-service=\fR\fISERVICE\fR[:\fISERVICE\&...\fR], \fB\-s\fR \fISERVICE\fR:\fISERVICE\&...\fR
+.RS 4
+Controls which services to query for users/groups\&. Takes a list of one or more service names, separated by
+":"\&. See below for a list of well\-known service names\&. If not specified all available services are queried at once\&.
+.RE
+.PP
+\fB\-\-with\-nss=\fR\fIBOOL\fR
+.RS 4
+Controls whether to include classic glibc/NSS user/group lookups in the output\&. If
+\fB\-\-with\-nss=no\fR
+is used any attempts to resolve or enumerate users/groups provided only via glibc NSS is suppressed\&. If
+\fB\-\-with\-nss=yes\fR
+is specified such users/groups are included in the output (which is the default)\&.
+.RE
+.PP
+\fB\-\-synthesize=\fR\fIBOOL\fR
+.RS 4
+Controls whether to synthesize records for the root and nobody users/groups if they aren\*(Aqt defined otherwise\&. By default (or
+"yes") such records are implicitly synthesized if otherwise missing since they have special significance to the OS\&. When
+"no"
+this synthesizing is turned off\&.
+.RE
+.PP
+\fB\-N\fR
+.RS 4
+This option is short for
+\fB\-\-with\-nss=no\fR
+\fB\-\-synthesize=no\fR\&. Use this option to show only records that are natively defined as JSON user or group records, with all NSS/glibc compatibility and all implicit synthesis turned off\&.
+.RE
+.PP
+\fB\-\-no\-pager\fR
+.RS 4
+Do not pipe output into a pager\&.
+.RE
+.PP
+\fB\-\-no\-legend\fR
+.RS 4
+Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
+.SH "COMMANDS"
+.PP
+The following commands are understood:
+.PP
+\fBuser\fR [\fIUSER\fR\&...]
+.RS 4
+List all known users records or show details of one or more specified user records\&. Use
+\fB\-\-output=\fR
+to tweak output mode\&.
+.RE
+.PP
+\fBgroup\fR [\fIGROUP\fR\&...]
+.RS 4
+List all known group records or show details of one or more specified group records\&. Use
+\fB\-\-output=\fR
+to tweak output mode\&.
+.RE
+.PP
+\fBusers\-in\-group\fR [\fIGROUP\fR\&...]
+.RS 4
+List users that are members of the specified groups\&. If no groups are specified list all user/group memberships defined\&. Use
+\fB\-\-output=\fR
+to tweak output mode\&.
+.RE
+.PP
+\fBgroups\-of\-user\fR [\fIUSER\fR\&...]
+.RS 4
+List groups that the specified users are members of\&. If no users are specified list all user/group memberships defined (in this case
+\fBgroups\-of\-user\fR
+and
+\fBusers\-in\-group\fR
+are equivalent)\&. Use
+\fB\-\-output=\fR
+to tweak output mode\&.
+.RE
+.PP
+\fBservices\fR
+.RS 4
+List all services currently providing user/group definitions to the system\&. See below for a list of well\-known services providing user information\&.
+.RE
+.PP
+\fBssh\-authorized\-keys\fR
+.RS 4
+This operation is not a public, user\-facing interface\&. It is used to allow the SSH daemon to pick up authorized keys from user records, see below\&.
+.RE
+.SH "WELL\-KNOWN SERVICES"
+.PP
+The
+\fBuserdbctl services\fR
+command will list all currently running services that provide user or group definitions to the system\&. The following are well\-known services are shown among this list\&.
+.PP
+\fBio\&.systemd\&.DynamicUser\fR
+.RS 4
+This service is provided by the system service manager itself (i\&.e\&. PID 1) and makes all users (and their groups) synthesized through the
+\fIDynamicUser=\fR
+setting in service unit files available to the system (see
+\fBsystemd.exec\fR(5)
+for details about this setting)\&.
+.RE
+.PP
+\fBio\&.systemd\&.Home\fR
+.RS 4
+This service is provided by
+\fBsystemd-homed.service\fR(8)
+and makes all users (and their groups) belonging to home directories managed by that service available to the system\&.
+.RE
+.PP
+\fBio\&.systemd\&.Multiplexer\fR
+.RS 4
+This service is provided by
+\fBsystemd-userdbd.service\fR(8)
+and multiplexes user/group look\-ups to all other running lookup services\&. This is the primary entry point for user/group record clients, as it simplifies client side implementation substantially since they can ask a single service for lookups instead of asking all running services in parallel\&.
+\fBuserdbctl\fR
+uses this service preferably, too, unless
+\fB\-\-with\-nss=\fR
+or
+\fB\-\-service=\fR
+are used, in which case finer control over the services to talk to is required\&.
+.RE
+.PP
+\fBio\&.systemd\&.NameSeviceSwitch\fR
+.RS 4
+This service is (also) provided by
+\fBsystemd-userdbd.service\fR(8)
+and converts classic NSS/glibc user and group records to JSON user/group records, providing full backwards compatibility\&. Use
+\fB\-\-with\-nss=no\fR
+to disable this compatibility, see above\&. Note that compatibility is actually provided in both directions:
+\fBnss-systemd\fR(8)
+will automatically synthesize classic NSS/glibc user/group records from all JSON user/group records provided to the system, thus using both APIs is mostly equivalent and provides access to the same data, however the NSS/glibc APIs necessarily expose a more reduced set of fields only\&.
+.RE
+.PP
+Note that
+\fBuserdbctl\fR
+has internal support for NSS\-based lookups too\&. This means that if neither
+\fBio\&.systemd\&.Multiplexer\fR
+nor
+\fBio\&.systemd\&.NameSeviceSwitch\fR
+are running look\-ups into the the basic user/group databases will still work\&.
+.SH "INTEGRATION WITH SSH"
+.PP
+The
+\fBuserdbctl\fR
+tool may be used to make the list of SSH authorized keys possibly contained in a user record available to the SSH daemon for authentication\&. For that configure the following in
+\fBsshd_config\fR(5):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&...
+AuthorizedKeysCommand /usr/bin/userdbctl ssh\-authorized\-keys %u
+AuthorizedKeysCommandUser root
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.SH "EXIT STATUS"
+.PP
+On success, 0 is returned, a non\-zero failure code otherwise\&.
+.SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_PAGER\fR
+.RS 4
+Pager to use when
+\fB\-\-no\-pager\fR
+is not given; overrides
+\fI$PAGER\fR\&. If neither
+\fI$SYSTEMD_PAGER\fR
+nor
+\fI$PAGER\fR
+are set, a set of well\-known pager implementations are tried in turn, including
+\fBless\fR(1)
+and
+\fBmore\fR(1), until one is found\&. If no pager implementation is discovered no pager is invoked\&. Setting this environment variable to an empty string or the value
+"cat"
+is equivalent to passing
+\fB\-\-no\-pager\fR\&.
+.RE
+.PP
+\fI$SYSTEMD_LESS\fR
+.RS 4
+Override the options passed to
+\fBless\fR
+(by default
+"FRSXMK")\&.
+.sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
+If the value of
+\fI$SYSTEMD_LESS\fR
+does not include
+"K", and the pager that is invoked is
+\fBless\fR,
+Ctrl+C
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
+.RE
+.PP
+\fI$SYSTEMD_LESSCHARSET\fR
+.RS 4
+Override the charset passed to
+\fBless\fR
+(by default
+"utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_COLORS\fR
+.RS 4
+The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and what the console is connected to\&.
+.RE
+.PP
+\fI$SYSTEMD_URLIFY\fR
+.RS 4
+The value must be a boolean\&. Controls whether clickable links should be generated in the output for terminal emulators supporting this\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and other conditions\&.
+.RE
+.SH "SEE ALSO"
+.PP
+\fBsystemd\fR(1),
+\fBsystemd-userdbd.service\fR(8),
+\fBsystemd-homed.service\fR(8),
+\fBnss-systemd\fR(8),
+\fBgetent\fR(1)
+.SH "NOTES"
+.IP " 1." 4
+JSON User Record
+.RS 4
+\%https://systemd.io/USER_RECORD
+.RE
+.IP " 2." 4
+JSON Group Record
+.RS 4
+\%https://systemd.io/GROUP_RECORD
+.RE
+.IP " 3." 4
+User/Group Record Lookup API via Varlink
+.RS 4
+\%https://systemd.io/USER_GROUP_API
+.RE

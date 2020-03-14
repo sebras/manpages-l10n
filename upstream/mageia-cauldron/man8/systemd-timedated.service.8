@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-TIMEDATED\&.SERVICE" "8" "" "systemd 241" "systemd-timedated.service"
+.TH "SYSTEMD\-TIMEDATED\&.SERVICE" "8" "" "systemd 245" "systemd-timedated.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -29,7 +29,7 @@ systemd\-timedated\&.service
 .SH "DESCRIPTION"
 .PP
 systemd\-timedated
-is a system service that may be used as a mechanism to change the system clock and timezone, as well as to enable/disable NTP time synchronization\&.
+is a system service that may be used as a mechanism to change the system clock and timezone, as well as to enable/disable network time synchronization\&.
 systemd\-timedated
 is automatically activated on request and terminates itself when it is unused\&.
 .PP
@@ -42,29 +42,62 @@ See the
 for information about the APIs
 systemd\-timedated
 provides\&.
-.SH "ENVIRONMENT"
+.SH "LIST OF NETWORK TIME SYNCHRONIZATION SERVICES"
 .PP
-\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR
-.RS 4
-Colon\-separated list of unit names of NTP client services\&. If not set, then
-\fBsystemd-timesyncd.service\fR(8)
-is used\&. See the entries of NTP related commands of
-\fBtimedatectl\fR(1)
-for details about this\&.
-.sp
-Example:
+\fBsystemd\-timesyncd\fR
+will look for files with a
+"\&.list"
+extension in
+ntp\-units\&.d/
+directories\&. Each file is parsed as a list of unit names, one per line\&. Empty lines and lines with comments ("#") are ignored\&. Files are read from
+/usr/lib/systemd/ntp\-units\&.d/
+and the corresponding directories under
+/etc/,
+/run/,
+/usr/local/lib/\&. Files in
+/etc/
+override files with the same name in
+/run/,
+/usr/local/lib/, and
+/usr/lib/\&. Files in
+/run/
+override files with the same name under
+/usr/\&. Packages should install their configuration files in
+/usr/lib/
+(distribution packages) or
+/usr/local/lib/
+(local installs)\&.
+.PP
+\fBExample\ \&1.\ \&ntp\-units\&.d/ entry for systemd\-timesyncd\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-SYSTEMD_TIMEDATED_NTP_SERVICES=ntpd\&.service:chronyd\&.service:systemd\-timesyncd\&.service
+# /usr/lib/systemd/ntp\-units\&.d/80\-systemd\-timesync\&.list
+systemd\-timesyncd\&.service
 .fi
 .if n \{\
 .RE
 .\}
+.PP
+If the environment variable
+\fI$SYSTEMD_TIMEDATED_NTP_SERVICES\fR
+is set,
+\fBsystemd\-timesyncd\fR
+will parse the contents of that variable as a colon\-separated list of unit names\&. When set, this variable overrides the file\-based list described above\&.
+.PP
+\fBExample\ \&2.\ \&An override that specifies that chronyd should be used if available\fR
 .sp
+.if n \{\
+.RS 4
+.\}
+.nf
+SYSTEMD_TIMEDATED_NTP_SERVICES=chronyd\&.service:systemd\-timesyncd\&.service
+.fi
+.if n \{\
 .RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

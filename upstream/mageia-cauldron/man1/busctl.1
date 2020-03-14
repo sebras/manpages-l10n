@@ -1,5 +1,5 @@
 '\" t
-.TH "BUSCTL" "1" "" "systemd 241" "busctl"
+.TH "BUSCTL" "1" "" "systemd 245" "busctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,6 +28,86 @@ busctl \- Introspect the bus
 .PP
 \fBbusctl\fR
 may be used to introspect and monitor the D\-Bus bus\&.
+.SH "COMMANDS"
+.PP
+The following commands are understood:
+.PP
+\fBlist\fR
+.RS 4
+Show all peers on the bus, by their service names\&. By default, shows both unique and well\-known names, but this may be changed with the
+\fB\-\-unique\fR
+and
+\fB\-\-acquired\fR
+switches\&. This is the default operation if no command is specified\&.
+.RE
+.PP
+\fBstatus\fR [\fISERVICE\fR]
+.RS 4
+Show process information and credentials of a bus service (if one is specified by its unique or well\-known name), a process (if one is specified by its numeric PID), or the owner of the bus (if no parameter is specified)\&.
+.RE
+.PP
+\fBmonitor\fR [\fISERVICE\fR...]
+.RS 4
+Dump messages being exchanged\&. If
+\fISERVICE\fR
+is specified, show messages to or from this peer, identified by its well\-known or unique name\&. Otherwise, show all messages on the bus\&. Use
+Ctrl+C
+to terminate the dump\&.
+.RE
+.PP
+\fBcapture\fR [\fISERVICE\fR...]
+.RS 4
+Similar to
+\fBmonitor\fR
+but writes the output in pcap format (for details, see the
+\m[blue]\fBLibpcap File Format\fR\m[]\&\s-2\u[1]\d\s+2
+description)\&. Make sure to redirect standard output to a file\&. Tools like
+\fBwireshark\fR(1)
+may be used to dissect and view the resulting files\&.
+.RE
+.PP
+\fBtree\fR [\fISERVICE\fR...]
+.RS 4
+Shows an object tree of one or more services\&. If
+\fISERVICE\fR
+is specified, show object tree of the specified services only\&. Otherwise, show all object trees of all services on the bus that acquired at least one well\-known name\&.
+.RE
+.PP
+\fBintrospect\fR \fISERVICE\fR \fIOBJECT\fR [\fIINTERFACE\fR]
+.RS 4
+Show interfaces, methods, properties and signals of the specified object (identified by its path) on the specified service\&. If the interface argument is passed, the output is limited to members of the specified interface\&.
+.RE
+.PP
+\fBcall\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIMETHOD\fR [\fISIGNATURE\fR\ [\fIARGUMENT\fR...]]
+.RS 4
+Invoke a method and show the response\&. Takes a service name, object path, interface name and method name\&. If parameters shall be passed to the method call, a signature string is required, followed by the arguments, individually formatted as strings\&. For details on the formatting used, see below\&. To suppress output of the returned data, use the
+\fB\-\-quiet\fR
+option\&.
+.RE
+.PP
+\fBemit\fR \fIOBJECT\fR \fIINTERFACE\fR \fISIGNAL\fR [\fISIGNATURE\fR\ [\fIARGUMENT\fR...]]
+.RS 4
+Emit a signal\&. Takes a object path, interface name and method name\&. If parameters shall be passed, a signature string is required, followed by the arguments, individually formatted as strings\&. For details on the formatting used, see below\&. To specify the destination of the signal, use the
+\fB\-\-destination=\fR
+option\&.
+.RE
+.PP
+\fBget\-property\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIPROPERTY\fR...
+.RS 4
+Retrieve the current value of one or more object properties\&. Takes a service name, object path, interface name and property name\&. Multiple properties may be specified at once, in which case their values will be shown one after the other, separated by newlines\&. The output is, by default, in terse format\&. Use
+\fB\-\-verbose\fR
+for a more elaborate output format\&.
+.RE
+.PP
+\fBset\-property\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIPROPERTY\fR \fISIGNATURE\fR \fIARGUMENT\fR...
+.RS 4
+Set the current value of an object property\&. Takes a service name, object path, interface name, property name, property signature, followed by a list of parameters formatted as strings\&.
+.RE
+.PP
+\fBhelp\fR
+.RS 4
+Show command syntax help\&.
+.RE
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -104,6 +184,15 @@ or
 command, shows output in a more verbose format\&.
 .RE
 .PP
+\fB\-\-xml\-interface\fR
+.RS 4
+When used with the
+\fBintrospect\fR
+call, dump the XML description received from the D\-Bus
+\fBorg\&.freedesktop\&.DBus\&.Introspectable\&.Introspect\fR
+call instead of the normal output\&.
+.RE
+.PP
 \fB\-\-json=\fR\fIMODE\fR
 .RS 4
 When used with the
@@ -142,6 +231,8 @@ above\&. Defaults to
 .RS 4
 When used with the
 \fBcall\fR
+or
+\fBemit\fR
 command, specifies whether the method call should implicitly activate the called service, should it not be running yet but is configured to be auto\-started\&. Defaults to
 "yes"\&.
 .RE
@@ -185,6 +276,13 @@ Controls whether to wait for the specified
 bus socket to appear in the file system before connecting to it\&. Defaults to off\&. When enabled, the tool will watch the file system until the socket is created and then connect to it\&.
 .RE
 .PP
+\fB\-\-destination=\fR\fISERVICE\fR
+.RS 4
+Takes a service name\&. When used with the
+\fBemit\fR
+command, a signal is emitted to the specified service\&.
+.RE
+.PP
 \fB\-\-user\fR
 .RS 4
 Talk to the service manager of the calling user, rather than the service manager of the system\&.
@@ -198,7 +296,7 @@ Talk to the service manager of the system\&. This is the implied default\&.
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
 Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
 ":", and then a container name, separated by
 "/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
 \fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
@@ -207,6 +305,13 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
 Execute operation on a local container\&. Specify a container name to connect to\&.
+.RE
+.PP
+\fB\-l\fR, \fB\-\-full\fR
+.RS 4
+Do not ellipsize the output in
+\fBlist\fR
+command\&.
 .RE
 .PP
 \fB\-\-no\-pager\fR
@@ -227,79 +332,6 @@ Print a short help text and exit\&.
 \fB\-\-version\fR
 .RS 4
 Print a short version string and exit\&.
-.RE
-.SH "COMMANDS"
-.PP
-The following commands are understood:
-.PP
-\fBlist\fR
-.RS 4
-Show all peers on the bus, by their service names\&. By default, shows both unique and well\-known names, but this may be changed with the
-\fB\-\-unique\fR
-and
-\fB\-\-acquired\fR
-switches\&. This is the default operation if no command is specified\&.
-.RE
-.PP
-\fBstatus\fR [\fISERVICE\fR]
-.RS 4
-Show process information and credentials of a bus service (if one is specified by its unique or well\-known name), a process (if one is specified by its numeric PID), or the owner of the bus (if no parameter is specified)\&.
-.RE
-.PP
-\fBmonitor\fR [\fISERVICE\fR...]
-.RS 4
-Dump messages being exchanged\&. If
-\fISERVICE\fR
-is specified, show messages to or from this peer, identified by its well\-known or unique name\&. Otherwise, show all messages on the bus\&. Use
-Ctrl+C
-to terminate the dump\&.
-.RE
-.PP
-\fBcapture\fR [\fISERVICE\fR...]
-.RS 4
-Similar to
-\fBmonitor\fR
-but writes the output in pcap format (for details, see the
-\m[blue]\fBLibpcap File Format\fR\m[]\&\s-2\u[1]\d\s+2
-description)\&. Make sure to redirect standard output to a file\&. Tools like
-\fBwireshark\fR(1)
-may be used to dissect and view the resulting files\&.
-.RE
-.PP
-\fBtree\fR [\fISERVICE\fR...]
-.RS 4
-Shows an object tree of one or more services\&. If
-\fISERVICE\fR
-is specified, show object tree of the specified services only\&. Otherwise, show all object trees of all services on the bus that acquired at least one well\-known name\&.
-.RE
-.PP
-\fBintrospect\fR \fISERVICE\fR \fIOBJECT\fR [\fIINTERFACE\fR]
-.RS 4
-Show interfaces, methods, properties and signals of the specified object (identified by its path) on the specified service\&. If the interface argument is passed, the output is limited to members of the specified interface\&.
-.RE
-.PP
-\fBcall\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIMETHOD\fR [\fISIGNATURE\fR\ [\fIARGUMENT\fR...]]
-.RS 4
-Invoke a method and show the response\&. Takes a service name, object path, interface name and method name\&. If parameters shall be passed to the method call, a signature string is required, followed by the arguments, individually formatted as strings\&. For details on the formatting used, see below\&. To suppress output of the returned data, use the
-\fB\-\-quiet\fR
-option\&.
-.RE
-.PP
-\fBget\-property\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIPROPERTY\fR...
-.RS 4
-Retrieve the current value of one or more object properties\&. Takes a service name, object path, interface name and property name\&. Multiple properties may be specified at once, in which case their values will be shown one after the other, separated by newlines\&. The output is, by default, in terse format\&. Use
-\fB\-\-verbose\fR
-for a more elaborate output format\&.
-.RE
-.PP
-\fBset\-property\fR \fISERVICE\fR \fIOBJECT\fR \fIINTERFACE\fR \fIPROPERTY\fR \fISIGNATURE\fR \fIARGUMENT\fR...
-.RS 4
-Set the current value of an object property\&. Takes a service name, object path, interface name, property name, property signature, followed by a list of parameters formatted as strings\&.
-.RE
-.PP
-\fBhelp\fR
-.RS 4
-Show command syntax help\&.
 .RE
 .SH "PARAMETER FORMATTING"
 .PP

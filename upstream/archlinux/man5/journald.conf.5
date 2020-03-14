@@ -1,5 +1,5 @@
 '\" t
-.TH "JOURNALD\&.CONF" "5" "" "systemd 244" "journald.conf"
+.TH "JOURNALD\&.CONF" "5" "" "systemd 245" "journald.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-journald.conf, journald.conf.d \- Journal service configuration files
+journald.conf, journald.conf.d, journald@.conf \- Journal service configuration files
 .SH "SYNOPSIS"
 .PP
 /etc/systemd/journald\&.conf
@@ -30,12 +30,24 @@ journald.conf, journald.conf.d \- Journal service configuration files
 /run/systemd/journald\&.conf\&.d/*\&.conf
 .PP
 /usr/lib/systemd/journald\&.conf\&.d/*\&.conf
+.PP
+/etc/systemd/journald@\fINAMESPACE\fR\&.conf
 .SH "DESCRIPTION"
 .PP
 These files configure various parameters of the systemd journal service,
 \fBsystemd-journald.service\fR(8)\&. See
 \fBsystemd.syntax\fR(5)
 for a general description of the syntax\&.
+.PP
+The
+\fBsystemd\-journald\fR
+instance managing the default namespace is configured by
+/etc/systemd/journald\&.conf
+and associated drop\-ins\&. Instances managing other namespaces read
+/etc/systemd/journald@\fINAMESPACE\fR\&.conf
+with the namespace identifier filled in\&. This allows each namespace to carry a distinct configuration\&. See
+\fBsystemd-journald.service\fR(8)
+for details about journal namespaces\&.
 .SH "CONFIGURATION DIRECTORIES AND PRECEDENCE"
 .PP
 The default configuration is defined during compilation, so a configuration file is only needed when it is necessary to deviate from those defaults\&. By default, the configuration file in
@@ -45,11 +57,13 @@ contains commented out entries showing the defaults as a guide to the administra
 When packages need to customize the configuration, they can install configuration snippets in
 /usr/lib/systemd/*\&.conf\&.d/
 or
-/usr/local/lib/systemd/*\&.conf\&.d/\&. Files in
-/etc/
-are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. The main configuration file is read before any of the configuration directories, and has the lowest precedence; entries in a file in any configuration directory override entries in the single configuration file\&. Files in the
+/usr/local/lib/systemd/*\&.conf\&.d/\&. The main configuration file is read before any of the configuration directories, and has the lowest precedence; entries in a file in any configuration directory override entries in the single configuration file\&. Files in the
 *\&.conf\&.d/
-configuration subdirectories are sorted by their filename in lexicographic order, regardless of which of the subdirectories they reside in\&. When multiple files specify the same option, for options which accept just a single value, the entry in the file with the lexicographically latest name takes precedence\&. For options which accept a list of values, entries are collected as they occur in files sorted lexicographically\&. It is recommended to prefix all filenames in those subdirectories with a two\-digit number and a dash, to simplify the ordering of the files\&.
+configuration subdirectories are sorted by their filename in lexicographic order, regardless of in which of the subdirectories they reside\&. When multiple files specify the same option, for options which accept just a single value, the entry in the file with the lexicographically latest name takes precedence\&. For options which accept a list of values, entries are collected as they occur in files sorted lexicographically\&.
+.PP
+Files in
+/etc/
+are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. It is recommended to prefix all filenames in those subdirectories with a two\-digit number and a dash, to simplify the ordering of the files\&.
 .PP
 To disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
 /dev/null
@@ -85,7 +99,10 @@ but the directory
 is not created if needed, so that its existence controls where log data goes\&.
 "none"
 turns off all storage, all log data received will be dropped\&. Forwarding to other targets, such as the console, the kernel log buffer, or a syslog socket will still work however\&. Defaults to
-"auto"\&.
+"auto"
+in the default journal namespace, and
+"persistent"
+in all others\&.
 .RE
 .PP
 \fICompress=\fR
@@ -132,6 +149,60 @@ may be specified in the following units:
 "ms",
 "us"\&. To turn off any kind of rate limiting, set either value to 0\&.
 .sp
+Note that the effective rate limit is multiplied with a factor derived from the available free disk space for the journal\&. Currently, this factor is calculated using the base 2 logarithm\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Example \fIRateLimitBurst=\fR rate modifications by the available disk space
+.TS
+allbox tab(:);
+lB lB.
+T{
+Available Disk Space
+T}:T{
+Burst Multiplier
+T}
+.T&
+l l
+l l
+l l
+l l
+l l
+l l.
+T{
+<= 1MB
+T}:T{
+1
+T}
+T{
+<= 16MB
+T}:T{
+2
+T}
+T{
+<= 256MB
+T}:T{
+3
+T}
+T{
+<= 4GB
+T}:T{
+4
+T}
+T{
+<= 64GB
+T}:T{
+5
+T}
+T{
+<= 1TB
+T}:T{
+6
+T}
+.TE
+.sp 1
 If a service provides rate limits for itself through
 \fILogRateLimitIntervalSec=\fR
 and/or
@@ -246,11 +317,12 @@ and the following argument, true is assumed\&. Otherwise, the argument is parsed
 When forwarding to the console, the TTY to log to can be changed with
 \fITTYPath=\fR, described below\&.
 .sp
-When forwarding to the kernel log buffer (kmsg), make sure to select a suitably large size for the log buffer, and ensure the kernel\*(Aqs rate\-limiting applied to userspace processes is turned off\&. Specifically, add
+When forwarding to the kernel log buffer (kmsg), make sure to select a suitably large size for the log buffer, for example by adding
 "log_buf_len=8M"
-and
-"printk\&.devkmsg=on"
-(or similar) to the kernel command line\&.
+to the kernel command line\&.
+\fBsystemd\fR
+will automatically disable kernel\*(Aqs rate\-limiting applied to userspace processes (equivalent to setting
+"printk\&.devkmsg=on")\&.
 .RE
 .PP
 \fIMaxLevelStore=\fR, \fIMaxLevelSyslog=\fR, \fIMaxLevelKMsg=\fR, \fIMaxLevelConsole=\fR, \fIMaxLevelWall=\fR
@@ -287,9 +359,11 @@ for
 .PP
 \fIReadKMsg=\fR
 .RS 4
-Takes a boolean value\&. If enabled (the default), journal reads
+Takes a boolean value\&. If enabled
+\fBsystemd\-journal\fR
+processes
 /dev/kmsg
-messages generated by the kernel\&.
+messages generated by the kernel\&. In the default journal namespace this option is enabled by default, it is disabled in all others\&.
 .RE
 .PP
 \fITTYPath=\fR

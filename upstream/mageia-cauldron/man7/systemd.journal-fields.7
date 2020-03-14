@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.JOURNAL\-FIELDS" "7" "" "systemd 241" "systemd.journal-fields"
+.TH "SYSTEMD\&.JOURNAL\-FIELDS" "7" "" "systemd 245" "systemd.journal-fields"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -23,7 +23,8 @@
 systemd.journal-fields \- Special journal fields
 .SH "DESCRIPTION"
 .PP
-Entries in the journal resemble an environment block in their syntax but with fields that can include binary data\&. Primarily, fields are formatted UTF\-8 text strings, and binary formatting is used only where formatting as UTF\-8 text strings makes little sense\&. New fields may freely be defined by applications, but a few fields have special meaning\&. All fields with special meanings are optional\&. In some cases, fields may appear more than once per entry\&.
+Entries in the journal (as written by
+\fBsystemd-journald.service\fR(8)) resemble a UNIX process environment block in syntax but with fields that may include binary data\&. Primarily, fields are formatted UTF\-8 text strings, and binary encoding is used only where formatting as UTF\-8 text strings makes little sense\&. New fields may freely be defined by applications, but a few fields have special meanings\&. All fields with special meanings are optional\&. In some cases, fields may appear more than once per entry\&.
 .SH "USER JOURNAL FIELDS"
 .PP
 User fields are fields that are directly passed from clients and stored in the journal\&.
@@ -56,12 +57,21 @@ The low\-level Unix error number causing this entry, if any\&. Contains the nume
 formatted as a decimal string\&.
 .RE
 .PP
+\fIINVOCATION_ID=\fR, \fIUSER_INVOCATION_ID=\fR
+.RS 4
+A randomized, unique 128\-bit ID identifying each runtime cycle of the unit\&. This is different from
+\fI_SYSTEMD_INVOCATION_ID\fR
+in that it is only used for messages coming from systemd code (e\&.g\&. logs from the system/user manager or from forked processes performing systemd\-related setup)\&.
+.RE
+.PP
 \fISYSLOG_FACILITY=\fR, \fISYSLOG_IDENTIFIER=\fR, \fISYSLOG_PID=\fR, \fISYSLOG_TIMESTAMP=\fR
 .RS 4
 Syslog compatibility fields containing the facility (formatted as decimal string), the identifier string (i\&.e\&. "tag"), the client PID, and the timestamp as specified in the original datagram\&. (Note that the tag is usually derived from glibc\*(Aqs
 \fIprogram_invocation_short_name\fR
 variable, see
 \fBprogram_invocation_short_name\fR(3)\&.)
+.sp
+Note that the journal service does not validate the values of any structured journal fields whose name is not prefixed with an underscore, and this includes any syslog related fields such as these\&. Hence, applications that supply a facility, PID, or log level are expected to do so properly formatted, i\&.e\&. as numeric integers formatted as decimal strings\&.
 .RE
 .PP
 \fISYSLOG_RAW=\fR
@@ -109,7 +119,7 @@ of the process the journal entry originates from\&.
 The session and login UID of the process the journal entry originates from, as maintained by the kernel audit subsystem\&.
 .RE
 .PP
-\fI_SYSTEMD_CGROUP=\fR, \fI_SYSTEMD_SLICE=\fR, \fI_SYSTEMD_UNIT=\fR, \fI_SYSTEMD_USER_UNIT=\fR, \fI_SYSTEMD_SESSION=\fR, \fI_SYSTEMD_OWNER_UID=\fR
+\fI_SYSTEMD_CGROUP=\fR, \fI_SYSTEMD_SLICE=\fR, \fI_SYSTEMD_UNIT=\fR, \fI_SYSTEMD_USER_UNIT=\fR, \fI_SYSTEMD_USER_SLICE=\fR, \fI_SYSTEMD_SESSION=\fR, \fI_SYSTEMD_OWNER_UID=\fR
 .RS 4
 The control group path in the systemd hierarchy, the the systemd slice unit name, the systemd unit name, the unit name in the systemd user manager (if any), the systemd session ID (if any), and the owner UID of the systemd user unit or systemd session (if any) of the process the journal entry originates from\&.
 .RE
@@ -204,6 +214,15 @@ in
 \fBjournald.conf\fR(5)) or
 \fBeof\fR
 (if this was the last log record of a stream and the stream ended without a final newline character)\&. Note that this record is not generated when a normal newline character was used for marking the log line end\&.
+.RE
+.PP
+\fI_NAMESPACE=\fR
+.RS 4
+If this file was written by a
+\fBsystemd\-journald\fR
+instance managing a journal namespace that is not the default, this field contains the namespace identifier\&. See
+\fBsystemd-journald.service\fR(8)
+for details about journal namespaces\&.
 .RE
 .SH "KERNEL JOURNAL FIELDS"
 .PP
@@ -316,6 +335,7 @@ The monotonic time (\fBCLOCK_MONOTONIC\fR) at the point in time the entry was re
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
+\fBsystemd-journald.service\fR(8),
 \fBjournalctl\fR(1),
 \fBjournald.conf\fR(5),
 \fBsd-journal\fR(3),
