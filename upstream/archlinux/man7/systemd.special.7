@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 244" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 245" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,6 +28,7 @@ bluetooth\&.target,
 cryptsetup\-pre\&.target,
 cryptsetup\&.target,
 ctrl\-alt\-del\&.target,
+blockdev@\&.target,
 boot\-complete\&.target,
 default\&.target,
 emergency\&.target,
@@ -40,6 +41,7 @@ halt\&.target,
 hibernate\&.target,
 hybrid\-sleep\&.target,
 suspend\-then\-hibernate\&.target,
+initrd\&.target,
 initrd\-fs\&.target,
 initrd\-root\-device\&.target,
 initrd\-root\-fs\&.target,
@@ -174,11 +176,19 @@ default\&.target
 The default unit systemd starts at bootup\&. Usually, this should be aliased (symlinked) to
 multi\-user\&.target
 or
-graphical\&.target\&.
+graphical\&.target\&. See
+\fBbootup\fR(7)
+for more discussion\&.
 .sp
 The default unit systemd starts at bootup can be overridden with the
 \fIsystemd\&.unit=\fR
-kernel command line option\&.
+kernel command line option, or more conveniently, with the short names like
+\fIsingle\fR,
+\fIrescue\fR,
+\fI1\fR,
+\fI3\fR,
+\fI5\fR, \&...; see
+\fBsystemd\fR(1)\&.
 .RE
 .PP
 display\-manager\&.service
@@ -286,6 +296,15 @@ D\-Bus method directly\&.
 init\&.scope
 .RS 4
 This scope unit is where the system and service manager (PID 1) itself resides\&. It is active as long as the system is running\&.
+.RE
+.PP
+initrd\&.target
+.RS 4
+This is the default target in the initramfs, similar to
+default\&.target
+in the main system\&. It is used to mount the real root and transition to it\&. See
+\fBbootup\fR(7)
+for more discussion\&.
 .RE
 .PP
 initrd\-fs\&.target
@@ -696,6 +715,20 @@ type dependency)\&.
 Note that these passive units cannot be started manually, i\&.e\&.
 "systemctl start time\-sync\&.target"
 will fail with an error\&. They can only be pulled in by dependency\&. This is enforced since they exist for ordering purposes only and thus are not useful as only unit within a transaction\&.
+.PP
+blockdev@\&.target
+.RS 4
+This template unit is used to order mount units and other consumers of block devices after services that synthesize these block devices\&. In particular, this is intended to be used with storage services (such as
+\fBsystemd-cryptsetup@.service\fR(5)) that allocate and manage a virtual block device\&. Storage services are ordered before an instance of
+blockdev@\&.target, and the consumer units after it\&. The ordering is particularly relevant during shutdown, as it ensures that the mount is deactivated first and the service backing the mount later\&. The
+blockdev@\&.target
+instance should be pulled in via a
+\fBWants=\fR
+dependency of the storage daemon and thus generally not be part of any transaction unless a storage daemon is used\&. The instance name for instances of this template unit must be a properly escaped block device node path, e\&.g\&.
+blockdev@dev\-mapper\-foobar\&.target
+for the storage device
+/dev/mapper/foobar\&.
+.RE
 .PP
 cryptsetup\-pre\&.target
 .RS 4

@@ -1,5 +1,5 @@
 '\" t
-.TH "PORTABLECTL" "1" "" "systemd 241" "portablectl"
+.TH "PORTABLECTL" "1" "" "systemd 245" "portablectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -77,91 +77,6 @@ btrfs subvolumes containing OS trees, similar to normal directory trees\&.
 Binary "raw" disk images containing MBR or GPT partition tables and Linux file system partitions\&. (These must be regular files, with the
 \&.raw
 suffix\&.)
-.RE
-.SH "OPTIONS"
-.PP
-The following options are understood:
-.PP
-\fB\-q\fR, \fB\-\-quiet\fR
-.RS 4
-Suppresses additional informational output while running\&.
-.RE
-.PP
-\fB\-p\fR \fIPROFILE\fR, \fB\-\-profile=\fR\fIPROFILE\fR
-.RS 4
-When attaching an image, select the profile to use\&. By default the
-"default"
-profile is used\&. For details about profiles, see below\&.
-.RE
-.PP
-\fB\-\-copy=\fR
-.RS 4
-When attaching an image, select whether to prefer copying or symlinking of files installed into the host system\&. Takes one of
-"copy"
-(to prefer copying of files),
-"symlink"
-(to prefer creation of symbolic links) or
-"auto"
-for an intermediary mode where security profile drop\-ins are symlinked while unit files are copied\&. Note that this option expresses a preference only, in cases where symbolic links cannot be created \(em for example when the image operated on is a raw disk image, and hence not directly referentiable from the host file system \(em copying of files is used unconditionally\&.
-.RE
-.PP
-\fB\-\-runtime\fR
-.RS 4
-When specified the unit and drop\-in files are placed in
-/run/systemd/system\&.attached/
-instead of
-/etc/systemd/system\&.attached/\&. Images attached with this option set hence remain attached only until the next reboot, while they are normally attached persistently\&.
-.RE
-.PP
-\fB\-\-no\-reload\fR
-.RS 4
-Don\*(Aqt reload the service manager after attaching or detaching a portable service image\&. Normally the service manager is reloaded to ensure it is aware of added or removed unit files\&.
-.RE
-.PP
-\fB\-\-cat\fR
-.RS 4
-When inspecting portable service images, show the (unprocessed) contents of the metadata files pulled from the image, instead of brief summaries\&. Specifically, this will show the
-\fBos-release\fR(5)
-and unit file contents of the image\&.
-.RE
-.PP
-\fB\-H\fR, \fB\-\-host=\fR
-.RS 4
-Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
-"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, seperated by
-":", and then a container name, separated by
-"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
-\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
-.RE
-.PP
-\fB\-M\fR, \fB\-\-machine=\fR
-.RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
-.RE
-.PP
-\fB\-\-no\-pager\fR
-.RS 4
-Do not pipe output into a pager\&.
-.RE
-.PP
-\fB\-\-no\-legend\fR
-.RS 4
-Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
-.RE
-.PP
-\fB\-\-no\-ask\-password\fR
-.RS 4
-Do not query the user for authentication for privileged operations\&.
-.RE
-.PP
-\fB\-h\fR, \fB\-\-help\fR
-.RS 4
-Print a short help text and exit\&.
-.RE
-.PP
-\fB\-\-version\fR
-.RS 4
-Print a short version string and exit\&.
 .RE
 .SH "COMMANDS"
 .PP
@@ -270,9 +185,17 @@ will be considered\&. It\*(Aqs possible to override the matching prefix: all str
 By default, after the unit files are attached the service manager\*(Aqs configuration is reloaded, except when
 \fB\-\-no\-reload\fR
 is specified (see above)\&. This ensures that the new units made available to the service manager are seen by it\&.
+.sp
+If
+\fB\-\-now\fR
+and/or
+\fB\-\-enable\fR
+are passed, the portable service(s) are immediately started (blocking operation unless
+\fB\-\-no\-block\fR
+is passed) and/or enabled after attaching the image\&.
 .RE
 .PP
-\fBdetach\fR \fIIMAGE\fR
+\fBdetach\fR \fIIMAGE\fR [\fIPREFIX\&...\fR]
 .RS 4
 Detaches a portable service image from the host\&. This undoes the operations executed by the
 \fBattach\fR
@@ -280,6 +203,13 @@ command above, and removes the unit file copies, drop\-ins and image symlink aga
 \fBattach\fR
 also to
 \fBdetach\fR\&.
+.PP
+If
+\fB\-\-now\fR
+and/or
+\fB\-\-enable\fR
+are passed, the portable service(s) are immediately stopped (blocking operation) and/or disabled before detaching the image\&. Prefix(es) are also accepted, to be used in case the unit names do not match the image name as described in the
+\fBattach\fR\&.
 .RE
 .PP
 \fBinspect\fR \fIIMAGE\fR [\fIPREFIX\&...\fR]
@@ -347,7 +277,7 @@ T}
 T{
 \fBenabled\-runtime\fR
 T}:T{
-Like \fBenabled\fR, but the the unit files have been made available transiently only, i\&.e\&. the \fBattach\fR command has been invoked with the \fB\-\-runtime\fR option\&.
+Like \fBenabled\fR, but the unit files have been made available transiently only, i\&.e\&. the \fBattach\fR command has been invoked with the \fB\-\-runtime\fR option\&.
 T}
 T{
 \fBrunning\fR
@@ -382,6 +312,106 @@ as size\&.
 Note that per\-image size limits are only supported on btrfs file systems\&. Also, depending on
 \fIBindPaths=\fR
 settings in the portable service\*(Aqs unit files directories from the host might be visible in the image environment during runtime which are not affected by this setting, as only the image itself is counted against this limit\&.
+.RE
+.SH "OPTIONS"
+.PP
+The following options are understood:
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Suppresses additional informational output while running\&.
+.RE
+.PP
+\fB\-p\fR \fIPROFILE\fR, \fB\-\-profile=\fR\fIPROFILE\fR
+.RS 4
+When attaching an image, select the profile to use\&. By default the
+"default"
+profile is used\&. For details about profiles, see below\&.
+.RE
+.PP
+\fB\-\-copy=\fR
+.RS 4
+When attaching an image, select whether to prefer copying or symlinking of files installed into the host system\&. Takes one of
+"copy"
+(to prefer copying of files),
+"symlink"
+(to prefer creation of symbolic links) or
+"auto"
+for an intermediary mode where security profile drop\-ins are symlinked while unit files are copied\&. Note that this option expresses a preference only, in cases where symbolic links cannot be created \(em for example when the image operated on is a raw disk image, and hence not directly referentiable from the host file system \(em copying of files is used unconditionally\&.
+.RE
+.PP
+\fB\-\-runtime\fR
+.RS 4
+When specified the unit and drop\-in files are placed in
+/run/systemd/system\&.attached/
+instead of
+/etc/systemd/system\&.attached/\&. Images attached with this option set hence remain attached only until the next reboot, while they are normally attached persistently\&.
+.RE
+.PP
+\fB\-\-no\-reload\fR
+.RS 4
+Don\*(Aqt reload the service manager after attaching or detaching a portable service image\&. Normally the service manager is reloaded to ensure it is aware of added or removed unit files\&.
+.RE
+.PP
+\fB\-\-cat\fR
+.RS 4
+When inspecting portable service images, show the (unprocessed) contents of the metadata files pulled from the image, instead of brief summaries\&. Specifically, this will show the
+\fBos-release\fR(5)
+and unit file contents of the image\&.
+.RE
+.PP
+\fB\-\-enable\fR
+.RS 4
+Immediately enable/disable the portable service after attaching/detaching\&.
+.RE
+.PP
+\fB\-\-now\fR
+.RS 4
+Immediately start/stop the portable service after attaching/before detaching\&.
+.RE
+.PP
+\fB\-\-no\-block\fR
+.RS 4
+Don\*(Aqt block waiting for attach \-\-now to complete\&.
+.RE
+.PP
+\fB\-H\fR, \fB\-\-host=\fR
+.RS 4
+Execute the operation remotely\&. Specify a hostname, or a username and hostname separated by
+"@", to connect to\&. The hostname may optionally be suffixed by a port ssh is listening on, separated by
+":", and then a container name, separated by
+"/", which connects directly to a specific container on the specified host\&. This will use SSH to talk to the remote machine manager instance\&. Container names may be enumerated with
+\fBmachinectl \-H \fR\fB\fIHOST\fR\fR\&. Put IPv6 addresses in brackets\&.
+.RE
+.PP
+\fB\-M\fR, \fB\-\-machine=\fR
+.RS 4
+Execute operation on a local container\&. Specify a container name to connect to\&.
+.RE
+.PP
+\fB\-\-no\-pager\fR
+.RS 4
+Do not pipe output into a pager\&.
+.RE
+.PP
+\fB\-\-no\-legend\fR
+.RS 4
+Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+.RE
+.PP
+\fB\-\-no\-ask\-password\fR
+.RS 4
+Do not query the user for authentication for privileged operations\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
 .RE
 .SH "FILES AND DIRECTORIES"
 .PP
@@ -482,17 +512,35 @@ Override the options passed to
 (by default
 "FRSXMK")\&.
 .sp
+Users might want to change two options in particular:
+.PP
+\fBK\fR
+.RS 4
+This option instructs the pager to exit immediately when
+Ctrl+C
+is pressed\&. To allow
+\fBless\fR
+to handle
+Ctrl+C
+itself to switch back to the pager command prompt, unset this option\&.
+.sp
 If the value of
 \fI$SYSTEMD_LESS\fR
 does not include
 "K", and the pager that is invoked is
 \fBless\fR,
 Ctrl+C
-will be ignored by the executable\&. This allows
-\fBless\fR
-to handle
-Ctrl+C
-itself\&.
+will be ignored by the executable, and needs to be handled by the pager\&.
+.RE
+.PP
+\fBX\fR
+.RS 4
+This option instructs the pager to not send termcap initialization and deinitialization strings to the terminal\&. It is set by default to allow command output to remain visible in the terminal even after the pager exits\&. Nevertheless, this prevents some pager functionality from working, in particular paged output cannot be scrolled with the mouse\&.
+.RE
+.sp
+See
+\fBless\fR(1)
+for more discussion\&.
 .RE
 .PP
 \fI$SYSTEMD_LESSCHARSET\fR
@@ -501,6 +549,24 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_COLORS\fR
+.RS 4
+The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and what the console is connected to\&.
+.RE
+.PP
+\fI$SYSTEMD_URLIFY\fR
+.RS 4
+The value must be a boolean\&. Controls whether clickable links should be generated in the output for terminal emulators supporting this\&. This can be specified to override the decision that
+\fBsystemd\fR
+makes based on
+\fI$TERM\fR
+and other conditions\&.
 .RE
 .SH "SEE ALSO"
 .PP

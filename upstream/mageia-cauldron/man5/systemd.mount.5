@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 241" "systemd.mount"
+.TH "SYSTEMD\&.MOUNT" "5" "" "systemd 245" "systemd.mount"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,13 @@ encodes information about a file system mount point controlled and supervised by
 .PP
 This man page lists the configuration options specific to this unit type\&. See
 \fBsystemd.unit\fR(5)
-for the common options of all unit configuration files\&. The common configuration items are configured in the generic [Unit] and [Install] sections\&. The mount specific configuration options are configured in the [Mount] section\&.
+for the common options of all unit configuration files\&. The common configuration items are configured in the generic
+"[Unit]"
+and
+"[Install]"
+sections\&. The mount specific configuration options are configured in the
+"[Mount]"
+section\&.
 .PP
 Additional options are listed in
 \fBsystemd.exec\fR(5), which define the execution environment the
@@ -71,6 +77,14 @@ description in
 .PP
 Some file systems have special semantics as API file systems for kernel\-to\-userspace and userspace\-to\-userspace interfaces\&. Some of them may not be changed via mount units, and cannot be disabled\&. For a longer discussion see
 \m[blue]\fBAPI File Systems\fR\m[]\&\s-2\u[1]\d\s+2\&.
+.PP
+The
+\fBsystemd-mount\fR(1)
+command allows creating
+\&.mount
+and
+\&.automount
+units dynamically and transiently from the command line\&.
 .SH "AUTOMATIC DEPENDENCIES"
 .SS "Implicit Dependencies"
 .PP
@@ -241,7 +255,7 @@ When reading
 a few special mount options are understood by systemd which influence how dependencies are created for mount points\&. systemd will create a dependency of type
 \fIWants=\fR
 or
-\fBRequires\fR
+\fBRequires=\fR
 (see option
 \fBnofail\fR
 below), from either
@@ -266,11 +280,11 @@ for details\&.
 .PP
 \fBx\-systemd\&.before=\fR, \fBx\-systemd\&.after=\fR
 .RS 4
-Configures a
+In the created mount unit, configures a
 \fIBefore=\fR
-dependency or
+or
 \fIAfter=\fR
-between the created mount unit and another systemd unit, such as a mount unit\&. The argument should be a unit name or an absolute path to a mount point\&. This option may be specified more than once\&. This option is particularly useful for mount point declarations with
+dependency on another systemd unit, such as a mount unit\&. The argument should be a unit name or an absolute path to a mount point\&. This option may be specified more than once\&. This option is particularly useful for mount point declarations with
 \fBnofail\fR
 option that are mounted asynchronously but need to be mounted before or after some unit start, for example, before
 local\-fs\&.target
@@ -278,6 +292,22 @@ unit\&. See
 \fIBefore=\fR
 and
 \fIAfter=\fR
+in
+\fBsystemd.unit\fR(5)
+for details\&.
+.RE
+.PP
+\fBx\-systemd\&.wanted\-by=\fR, \fBx\-systemd\&.required\-by=\fR
+.RS 4
+In the created mount unit, configures a
+\fIWantedBy=\fR
+or
+\fIRequiredBy=\fR
+dependency on another unit\&. This option may be specified more than once\&. If this is specified, the normal automatic dependencies on the created mount unit, e\&.g\&.,
+local\-fs\&.target, are not automatically created\&. See
+\fIWantedBy=\fR
+and
+\fIRequiredBy=\fR
 in
 \fBsystemd.unit\fR(5)
 for details\&.
@@ -358,7 +388,7 @@ below for details\&.
 .PP
 \fBx\-systemd\&.makefs\fR
 .RS 4
-The file system will be initialized on the device\&. If the device is not "empty", i\&.e\&. it contains any signature, the operation will be skipped\&. It is hence expected that this option remains set even after the device has been initalized\&.
+The file system will be initialized on the device\&. If the device is not "empty", i\&.e\&. it contains any signature, the operation will be skipped\&. It is hence expected that this option remains set even after the device has been initialized\&.
 .sp
 Note that this option can only be used in
 /etc/fstab, and will be ignored when part of the
@@ -456,12 +486,12 @@ Takes an absolute path of a device node, file or other resource to mount\&. See
 for details\&. If this refers to a device node, a dependency on the respective device unit is automatically created\&. (See
 \fBsystemd.device\fR(5)
 for more information\&.) This option is mandatory\&. Note that the usual specifier expansion is applied to this setting, literal percent characters should hence be written as
-"%%"\&.
+"%%"\&. If this mount is a bind mount and the specified path does not exist yet it is created as directory\&.
 .RE
 .PP
 \fIWhere=\fR
 .RS 4
-Takes an absolute path of a directory for the mount point; in particular, the destination cannot be a symbolic link\&. If the mount point does not exist at the time of mounting, it is created\&. This string must be reflected in the unit filename\&. (See above\&.) This option is mandatory\&.
+Takes an absolute path of a file or directory for the mount point; in particular, the destination cannot be a symbolic link\&. If the mount point does not exist at the time of mounting, it is created as directory\&. This string must be reflected in the unit filename\&. (See above\&.) This option is mandatory\&.
 .RE
 .PP
 \fIType=\fR
@@ -540,7 +570,8 @@ for more settings\&.
 \fBproc\fR(5),
 \fBmount\fR(8),
 \fBsystemd-fstab-generator\fR(8),
-\fBsystemd.directives\fR(7)
+\fBsystemd.directives\fR(7),
+\fBsystemd-mount\fR(1)
 .SH "NOTES"
 .IP " 1." 4
 API File Systems

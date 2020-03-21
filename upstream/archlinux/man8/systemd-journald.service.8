@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-JOURNALD\&.SERVICE" "8" "" "systemd 244" "systemd-journald.service"
+.TH "SYSTEMD\-JOURNALD\&.SERVICE" "8" "" "systemd 245" "systemd-journald.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-systemd-journald.service, systemd-journald.socket, systemd-journald-dev-log.socket, systemd-journald-audit.socket, systemd-journald \- Journal service
+systemd-journald.service, systemd-journald.socket, systemd-journald-dev-log.socket, systemd-journald-audit.socket, systemd-journald@.service, systemd-journald@.socket, systemd-journald-varlink@.socket, systemd-journald \- Journal service
 .SH "SYNOPSIS"
 .PP
 systemd\-journald\&.service
@@ -30,6 +30,12 @@ systemd\-journald\&.socket
 systemd\-journald\-dev\-log\&.socket
 .PP
 systemd\-journald\-audit\&.socket
+.PP
+systemd\-journald@\&.service
+.PP
+systemd\-journald@\&.socket
+.PP
+systemd\-journald\-varlink@\&.socket
 .PP
 /usr/lib/systemd/systemd\-journald
 .SH "DESCRIPTION"
@@ -183,6 +189,36 @@ systemd\-journald
 will accept is limited to 4096\&. When this limit is reached further log streams may be established but will receive
 \fBEPIPE\fR
 right from the beginning\&.
+.SH "JOURNAL NAMESPACES"
+.PP
+Journal \*(Aqnamespaces\*(Aq are both a mechanism for logically isolating the log stream of projects consisting of one or more services from the rest of the system and a mechanism for improving performance\&. Multiple journal namespaces may exist simultaneously, each defining its own, independent log stream managed by its own instance of
+\fBsystemd\-journald\fR\&. Namespaces are independent of each other, both in the data store and in the IPC interface\&. By default only a single \*(Aqdefault\*(Aq namespace exists, managed by
+systemd\-journald\&.service
+(and its associated socket units)\&. Additional namespaces are created by starting an instance of the
+systemd\-journald@\&.service
+service template\&. The instance name is the namespace identifier, which is a short string used for referencing the journal namespace\&. Service units may be assigned to a specific journal namespace through the
+\fILogNamespace=\fR
+unit file setting, see
+\fBsystemd.exec\fR(5)
+for details\&. The
+\fB\-\-namespace=\fR
+switch of
+\fBjournalctl\fR(1)
+may be used to view the log stream of a specific namespace\&. If the switch is not used the log stream of the default namespace is shown, i\&.e\&. log data from other namespaces is not visible\&.
+.PP
+Services associated with a specific log namespace may log via syslog, the native logging protocol of the journal and via stdout/stderr; the logging from all three transports is associated with the namespace\&.
+.PP
+By default only the default namespace will collect kernel and audit log messages\&.
+.PP
+The
+\fBsystemd\-journald\fR
+instance of the default namespace is configured through
+/etc/systemd/journald\&.conf
+(see below), while the other instances are configured through
+/etc/systemd/journald@\fINAMESPACE\fR\&.conf\&. The journal log data for the default namespace is placed in
+/var/log/journal/\fIMACHINE_ID\fR
+(see below) while the data for the other namespaces is located in
+/var/log/journal/\fIMACHINE_ID\fR\&.\fINAMESPACE\fR\&.
 .SH "SIGNALS"
 .PP
 SIGUSR1
@@ -231,6 +267,8 @@ See
 \fBjournald.conf\fR(5)
 for information about these settings\&.
 .RE
+.PP
+Note that these kernel command line options are only honoured by the default namespace, see above\&.
 .SH "ACCESS CONTROL"
 .PP
 Journal files are, by default, owned and readable by the
@@ -316,10 +354,15 @@ and related settings in
 .PP
 /dev/kmsg, /dev/log, /run/systemd/journal/dev\-log, /run/systemd/journal/socket, /run/systemd/journal/stdout
 .RS 4
-Sockets and other paths that
+Sockets and other file node paths that
 \fBsystemd\-journald\fR
-will listen on that are visible in the file system\&. In addition to these, journald can listen for audit events using netlink\&.
+will listen on and are visible in the file system\&. In addition to these,
+\fBsystemd\-journald\fR
+can listen for audit events using
+\fBnetlink\fR(7)\&.
 .RE
+.PP
+If journal namespacing is used these paths are slightly altered to include a namespace identifier, see above\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

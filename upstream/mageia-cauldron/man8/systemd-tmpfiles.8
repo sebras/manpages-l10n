@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 241" "systemd-tmpfiles"
+.TH "SYSTEMD\-TMPFILES" "8" "" "systemd 245" "systemd-tmpfiles"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -54,6 +54,22 @@ If invoked with no arguments, it applies all directives from all configuration f
 is specified instead of a filename, directives are read from standard input\&. If only the basename of a configuration file is specified, all configuration directories as specified in
 \fBtmpfiles.d\fR(5)
 are searched for a matching file and the file found that has the highest priority is executed\&.
+.PP
+System services (systemd\-tmpfiles\-setup\&.service,
+systemd\-tmpfiles\-setup\-dev\&.service,
+systemd\-tmpfiles\-clean\&.service) invoke
+\fBsystemd\-tmpfiles\fR
+to create system files and to perform system wide cleanup\&. Those services read administrator\-controlled configuration files in
+tmpfiles\&.d/
+directories\&. User services (systemd\-tmpfiles\-setup\&.service,
+systemd\-tmpfiles\-clean\&.service) also invoke
+\fBsystemd\-tmpfiles\fR, but it reads a separate set of files, which includes user\-controlled files under
+~/\&.config/user\-tmpfiles\&.d/
+and
+~/\&.local/share/user\-tmpfiles\&.d/, and administrator\-controller files under
+/usr/share/user\-tmpfiles\&.d/\&. Users may use this to create and clean up files under their control, but the system instance performs global cleanup and is not influenced by user configuration\&. Note that this means a time\-based cleanup configured in the system instance, such as the one typically configured for
+/tmp, will thus also affect files created by the user instance if they are placed in
+/tmp, even if the user instance\*(Aqs time\-based cleanup is turned off\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -164,7 +180,7 @@ It is possible to combine
 \fB\-\-create\fR,
 \fB\-\-clean\fR, and
 \fB\-\-remove\fR
-in one invocation (in which case removal and clean\-up are executed before creation of new files)\&. For example, during boot the following command line is executed to ensure that all temporary and volatile directories are removed and created according to the configuration file:
+in one invocation (in which case removal and cleanup are executed before creation of new files)\&. For example, during boot the following command line is executed to ensure that all temporary and volatile directories are removed and created according to the configuration file:
 .sp
 .if n \{\
 .RS 4

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.PATH" "5" "" "systemd 244" "systemd.path"
+.TH "SYSTEMD\&.PATH" "5" "" "systemd 245" "systemd.path"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,6 +50,13 @@ foo\&.service\&. The unit to activate may be controlled by
 Internally, path units use the
 \fBinotify\fR(7)
 API to monitor file systems\&. Due to that, it suffers by the same limitations as inotify, and for example cannot be used to monitor files or directories changed by other machines on remote NFS file systems\&.
+.PP
+When a service unit triggered by a path unit terminates (regardless whether it exited successfully or failed), monitored paths are checked immediately again, and the service accordingly restarted instantly\&. As protection against busy looping in this trigger/start cycle, a start rate limit is enforced on the service unit, see
+\fIStartLimitIntervalSec=\fR
+and
+\fIStartLimitBurst=\fR
+in
+\fBsystemd.unit\fR(5)\&. Unlike other service failures, the error condition that the start rate limit is hit is propagated from the service unit to the path unit and causes the path unit to fail as well, thus ending the loop\&.
 .SH "AUTOMATIC DEPENDENCIES"
 .SS "Implicit Dependencies"
 .PP

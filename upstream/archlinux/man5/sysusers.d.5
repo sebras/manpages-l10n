@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSUSERS\&.D" "5" "" "systemd 244" "sysusers.d"
+.TH "SYSUSERS\&.D" "5" "" "systemd 245" "sysusers.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,6 +28,17 @@ sysusers.d \- Declarative allocation of system users and groups
 /run/sysusers\&.d/*\&.conf
 .PP
 /usr/lib/sysusers\&.d/*\&.conf
+.sp
+.nf
+#Type Name       ID                   GECOS                 Home directory Shell
+u     user_name  uid                  "User Description"    /path/to/shell
+u     user_name  uid:gid              \-                     \-
+u     user_name  /file/owned/by/user  \-                     \-
+g     group_name gid                  "Group Description"
+g     group_name /file/owned/by/group \-
+m     user_name  group_name
+r     \-          lowest\-highest
+.fi
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-sysusers\fR
@@ -73,11 +84,12 @@ The file format is one line per user or group containing name, ID, GECOS field d
 .nf
 #Type Name     ID             GECOS                 Home directory Shell
 u     httpd    404            "HTTP User"
-u     authd    /usr/bin/authd "Authorization user"
+u     _authd   /usr/bin/authd "Authorization user"
 u     postgres \-              "Postgresql Database" /var/lib/pgsql /usr/libexec/postgresdb
 g     input    \-              \-
-m     authd    input
+m     _authd   input
 u     root     0              "Superuser"           /root          /bin/zsh
+r     \-        500\-900
 .fi
 .if n \{\
 .RE
@@ -92,14 +104,14 @@ The type consists of a single letter\&. The following line types are understood:
 .PP
 \fIu\fR
 .RS 4
-Create a system user and group of the specified name should they not exist yet\&. The user\*(Aqs primary group will be set to the group bearing the same name\&. The account will be created disabled, so that logins are not allowed\&.
+Create a system user and group of the specified name should they not exist yet\&. The user\*(Aqs primary group will be set to the group bearing the same name unless the ID field specifies it\&. The account will be created disabled, so that logins are not allowed\&.
 .RE
 .PP
 \fIg\fR
 .RS 4
 Create a system group of the specified name should it not exist yet\&. Note that
 \fIu\fR
-implicitly create a matching group\&. The group will be created with no password set\&.
+implicitly creates a matching group\&. The group will be created with no password set\&.
 .RE
 .PP
 \fIm\fR
@@ -138,11 +150,13 @@ For
 and
 \fIg\fR, the numeric 32\-bit UID or GID of the user/group\&. Do not use IDs 65535 or 4294967295, as they have special placeholder meanings\&. Specify
 "\-"
-for automatic UID/GID allocation for the user or group (this is strongly recommended unless it is strictly necessary to use a specific UID or GID)\&. Alternatively, specify an absolute path in the file system\&. In this case, the UID/GID is read from the path\*(Aqs owner/group\&. This is useful to create users whose UID/GID match the owners of pre\-existing files (such as SUID or SGID binaries)\&. The syntax
+for automatic UID/GID allocation for the user or group (this is strongly recommended unless it is strictly necessary to use a specific UID or GID)\&. Alternatively, specify an absolute path in the file system\&. In this case, the UID/GID is read from the path\*(Aqs owner/group\&. This is useful to create users whose UID/GID match the owners of pre\-existing files (such as SUID or SGID binaries)\&. The syntaxes
 "\fIuid\fR:\fIgid\fR"
-is also supported to allow creating user and group pairs with different numeric UID and GID values\&. The group with the indicated GID must get created explicitly before or it must already exist\&. Specifying
+and
+"\fIuid\fR:\fIgroupname\fR"
+are supported to allow creating users with specific primary groups\&. The given group must be created explicitly, or it must already exist\&. Specifying
 "\-"
-for the UID in this syntax is also supported\&.
+for the UID in these syntaxes is also supported\&.
 .PP
 For
 \fIm\fR

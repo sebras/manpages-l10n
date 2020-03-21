@@ -8,10 +8,10 @@ languages. Currently we support the following languages:
 *  nl - Dutch *
 *  pl - Polish
 *  pt_BR - Brazilian Portuguese
-*  ro - Romanian
+*  ro - Romanian *
 
-(the languages marked with * are currently unmaintained, feel free to pick up
-the maintenance)
+(the languages marked with * are currently - at least partially - unmaintained,
+feel free to pick up the maintenance)
 
 The project is open for adding more languages. For inclusion of a new one,
 please contact Mario Blättermann <mario.blaettermann@gmail.com> 

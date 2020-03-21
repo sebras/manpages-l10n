@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 241" "systemd-system.conf"
+.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 245" "systemd-system.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,11 +52,15 @@ The default configuration is defined during compilation, so a configuration file
 contains commented out entries showing the defaults as a guide to the administrator\&. This file can be edited to create local overrides\&.
 .PP
 When packages need to customize the configuration, they can install configuration snippets in
-/usr/lib/systemd/*\&.conf\&.d/\&. Files in
-/etc/
-are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. The main configuration file is read before any of the configuration directories, and has the lowest precedence; entries in a file in any configuration directory override entries in the single configuration file\&. Files in the
+/usr/lib/systemd/*\&.conf\&.d/
+or
+/usr/local/lib/systemd/*\&.conf\&.d/\&. The main configuration file is read before any of the configuration directories, and has the lowest precedence; entries in a file in any configuration directory override entries in the single configuration file\&. Files in the
 *\&.conf\&.d/
-configuration subdirectories are sorted by their filename in lexicographic order, regardless of which of the subdirectories they reside in\&. When multiple files specify the same option, for options which accept just a single value, the entry in the file with the lexicographically latest name takes precedence\&. For options which accept a list of values, entries are collected as they occur in files sorted lexicographically\&. It is recommended to prefix all filenames in those subdirectories with a two\-digit number and a dash, to simplify the ordering of the files\&.
+configuration subdirectories are sorted by their filename in lexicographic order, regardless of in which of the subdirectories they reside\&. When multiple files specify the same option, for options which accept just a single value, the entry in the file with the lexicographically latest name takes precedence\&. For options which accept a list of values, entries are collected as they occur in files sorted lexicographically\&.
+.PP
+Files in
+/etc/
+are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. It is recommended to prefix all filenames in those subdirectories with a two\-digit number and a dash, to simplify the ordering of the files\&.
 .PP
 To disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
 /dev/null
@@ -89,13 +93,32 @@ or disabled with
 .PP
 \fICPUAffinity=\fR
 .RS 4
-Configures the CPU affinity for the service manager as well as the default CPU affinity for all forked off processes\&. Takes a list of CPU indices or ranges separated by either whitespace or commas\&. CPU ranges are specified by the lower and upper CPU indices separated by a dash\&. Individual services may override the CPU affinity for their processes with the
+Configures the CPU affinity for the service manager as well as the default CPU affinity for all forked off processes\&. Takes a list of CPU indices or ranges separated by either whitespace or commas\&. CPU ranges are specified by the lower and upper CPU indices separated by a dash\&. This option may be specified more than once, in which case the specified CPU affinity masks are merged\&. If the empty string is assigned, the mask is reset, all assignments prior to this will have no effect\&. Individual services may override the CPU affinity for their processes with the
 \fICPUAffinity=\fR
 setting in unit files, see
 \fBsystemd.exec\fR(5)\&.
 .RE
 .PP
-\fIRuntimeWatchdogSec=\fR, \fIShutdownWatchdogSec=\fR
+\fINUMAPolicy=\fR
+.RS 4
+Configures the NUMA memory policy for the service manager and the default NUMA memory policy for all forked off processes\&. Individual services may override the default policy with the
+\fINUMAPolicy=\fR
+setting in unit files, see
+\fBsystemd.exec\fR(5)\&.
+.RE
+.PP
+\fINUMAMask=\fR
+.RS 4
+Configures the NUMA node mask that will be associated with the selected NUMA policy\&. Note that
+\fBdefault\fR
+and
+\fBlocal\fR
+NUMA policies don\*(Aqt require explicit NUMA node mask and value of the option can be empty\&. Similarly to
+\fINUMAPolicy=\fR, value can be overridden by individual services in unit files, see
+\fBsystemd.exec\fR(5)\&.
+.RE
+.PP
+\fIRuntimeWatchdogSec=\fR, \fIRebootWatchdogSec=\fR, \fIKExecWatchdogSec=\fR
 .RS 4
 Configure the hardware watchdog at runtime and at reboot\&. Takes a timeout value in seconds (or in other time units if suffixed with
 "ms",
@@ -109,9 +132,9 @@ or the path specified with
 \fIWatchdogDevice=\fR
 or the kernel option
 \fIsystemd\&.watchdog\-device=\fR) will be programmed to automatically reboot the system if it is not contacted within the specified timeout interval\&. The system manager will ensure to contact it at least once in half the specified timeout interval\&. This feature requires a hardware watchdog device to be present, as it is commonly the case in embedded and server systems\&. Not all hardware watchdogs allow configuration of all possible reboot timeout values, in which case the closest available timeout is picked\&.
-\fIShutdownWatchdogSec=\fR
+\fIRebootWatchdogSec=\fR
 may be used to configure the hardware watchdog when the system is asked to reboot\&. It works as a safety net to ensure that the reboot takes place even if a clean reboot attempt times out\&. Note that the
-\fIShutdownWatchdogSec=\fR
+\fIRebootWatchdogSec=\fR
 timeout applies only to the second phase of the reboot, i\&.e\&. after all regular services are already terminated, and after the system and service manager process (PID 1) got replaced by the
 systemd\-shutdown
 binary, see system
@@ -129,8 +152,16 @@ shutdown\&.target
 unit\&. By default
 \fIRuntimeWatchdogSec=\fR
 defaults to 0 (off), and
-\fIShutdownWatchdogSec=\fR
-to 10min\&. These settings have no effect if a hardware watchdog is not available\&.
+\fIRebootWatchdogSec=\fR
+to 10min\&.
+\fIKExecWatchdogSec=\fR
+may be used to additionally enable the watchdog when kexec is being executed rather than when rebooting\&. Note that if the kernel does not reset the watchdog on kexec (depending on the specific hardware and/or driver), in this case the watchdog might not get disabled after kexec succeeds and thus the system might get rebooted, unless
+\fIRuntimeWatchdogSec=\fR
+is also enabled at the same time\&. For this reason it is recommended to enable
+\fIKExecWatchdogSec=\fR
+only if
+\fIRuntimeWatchdogSec=\fR
+is also enabled\&. These settings have no effect if a hardware watchdog is not available\&.
 .RE
 .PP
 \fIWatchdogDevice=\fR
@@ -184,6 +215,18 @@ setting in service units (for details see
 for more information\&. Note that in contrast to most other time span definitions this parameter takes an integer value in nano\-seconds if no unit is specified\&. The usual time units are understood too\&.
 .RE
 .PP
+\fIStatusUnitFormat=\fR
+.RS 4
+Takes either
+\fBname\fR
+or
+\fBdescription\fR
+as the value\&. If
+\fBname\fR, the system manager will use unit names in status messages, instead of the longer and more informative descriptions set with
+\fIDescription=\fR, see
+\fBsystemd.unit\fR(5)\&.
+.RE
+.PP
 \fIDefaultTimerAccuracySec=\fR
 .RS 4
 Sets the default accuracy of timer units\&. This controls the global default for the
@@ -197,11 +240,12 @@ set in individual units override the global default for the specific unit\&. Def
 above\&.
 .RE
 .PP
-\fIDefaultTimeoutStartSec=\fR, \fIDefaultTimeoutStopSec=\fR, \fIDefaultRestartSec=\fR
+\fIDefaultTimeoutStartSec=\fR, \fIDefaultTimeoutStopSec=\fR, \fIDefaultTimeoutAbortSec=\fR, \fIDefaultRestartSec=\fR
 .RS 4
-Configures the default timeouts for starting and stopping of units, as well as the default time to sleep between automatic restarts of units, as configured per\-unit in
+Configures the default timeouts for starting, stopping and aborting of units, as well as the default time to sleep between automatic restarts of units, as configured per\-unit in
 \fITimeoutStartSec=\fR,
-\fITimeoutStopSec=\fR
+\fITimeoutStopSec=\fR,
+\fITimeoutAbortSec=\fR
 and
 \fIRestartSec=\fR
 (for services, see
@@ -217,6 +261,9 @@ value\&.
 and
 \fIDefaultTimeoutStopSec=\fR
 default to 90s\&.
+\fIDefaultTimeoutAbortSec=\fR
+is not set by default so that all units fall back to
+\fITimeoutStopSec=\fR\&.
 \fIDefaultRestartSec=\fR
 defaults to 100ms\&.
 .RE
@@ -290,23 +337,23 @@ for details\&. This setting applies to all unit types that support resource cont
 .PP
 \fIDefaultLimitCPU=\fR, \fIDefaultLimitFSIZE=\fR, \fIDefaultLimitDATA=\fR, \fIDefaultLimitSTACK=\fR, \fIDefaultLimitCORE=\fR, \fIDefaultLimitRSS=\fR, \fIDefaultLimitNOFILE=\fR, \fIDefaultLimitAS=\fR, \fIDefaultLimitNPROC=\fR, \fIDefaultLimitMEMLOCK=\fR, \fIDefaultLimitLOCKS=\fR, \fIDefaultLimitSIGPENDING=\fR, \fIDefaultLimitMSGQUEUE=\fR, \fIDefaultLimitNICE=\fR, \fIDefaultLimitRTPRIO=\fR, \fIDefaultLimitRTTIME=\fR
 .RS 4
-These settings control various default resource limits for units\&. See
+These settings control various default resource limits for processes executed by units\&. See
 \fBsetrlimit\fR(2)
-for details\&. The resource limit is possible to specify in two formats,
-\fBvalue\fR
-to set soft and hard limits to the same value, or
-\fBsoft:hard\fR
-to set both limits individually (e\&.g\&. DefaultLimitAS=4G:16G)\&. Use the string
-\fIinfinity\fR
-to configure no limit on a specific resource\&. The multiplicative suffixes K (=1024), M (=1024*1024) and so on for G, T, P and E may be used for resource limits measured in bytes (e\&.g\&. DefaultLimitAS=16G)\&. For the limits referring to time values, the usual time units ms, s, min, h and so on may be used (see
-\fBsystemd.time\fR(7)
-for details)\&. Note that if no time unit is specified for
-\fIDefaultLimitCPU=\fR
-the default unit of seconds is implied, while for
-\fIDefaultLimitRTTIME=\fR
-the default unit of microseconds is implied\&. Also, note that the effective granularity of the limits might influence their enforcement\&. For example, time limits specified for
-\fIDefaultLimitCPU=\fR
-will be rounded up implicitly to multiples of 1s\&. These settings may be overridden in individual units using the corresponding LimitXXX= directives\&. Note that these resource limits are only defaults for units, they are not applied to PID 1 itself\&.
+for details\&. These settings may be overridden in individual units using the corresponding
+\fILimitXXX=\fR
+directives, see
+\fBsystemd.exec\fR(5), for details, and they accept the same parameter syntax\&. Note that these resource limits are only defaults for units, they are not applied to the service manager process (i\&.e\&. PID 1) itself\&.
+.RE
+.PP
+\fIDefaultOOMPolicy=\fR
+.RS 4
+Configure the default policy for reacting to processes being killed by the Linux Out\-Of\-Memory (OOM) killer\&. This may be used to pick a global default for the per\-unit
+\fIOOMPolicy=\fR
+setting\&. See
+\fBsystemd.service\fR(5)
+for details\&. Note that this default is not used for services that have
+\fIDelegate=\fR
+turned on\&.
 .RE
 .SH "SEE ALSO"
 .PP

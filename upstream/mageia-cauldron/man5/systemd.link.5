@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.LINK" "5" "" "systemd 241" "systemd.link"
+.TH "SYSTEMD\&.LINK" "5" "" "systemd 245" "systemd.link"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -26,9 +26,13 @@ systemd.link \- Network device configuration
 \fIlink\fR\&.link
 .SH "DESCRIPTION"
 .PP
-Network link configuration is performed by the
+A plain ini\-style text file that encodes configuration for matching network devices, used by
+\fBsystemd-udev\fR(8)
+and in particular its
 \fBnet_setup_link\fR
-udev builtin\&.
+builtin\&. See
+\fBsystemd.syntax\fR(5)
+for a general description of the syntax\&.
 .PP
 The link files are read from the files located in the system network directory
 /usr/lib/systemd/network, the volatile runtime network directory
@@ -56,7 +60,25 @@ for diagnosing problems with
 files\&.
 .SH "[MATCH] SECTION OPTIONS"
 .PP
-A link file is said to match a device if each of the entries in the [Match] section matches, or if the section is empty\&. The following keys are accepted:
+A link file is said to match a device if all matches specified by the
+"[Match]"
+section are satisfied\&. When a link file does not contain valid settings in
+"[Match]"
+section, then the file will match all devices and
+\fBsystemd\-udevd\fR
+warns about that\&. Hint: to avoid the warning and to make it clear that all interfaces shall be matched, add the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+OriginalName=*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The following keys are accepted:
 .PP
 \fIMACAddress=\fR
 .RS 4
@@ -75,9 +97,11 @@ MACAddress=01:23:45:67:89:ab 00\-11\-22\-33\-44\-55 AABB\&.CCDD\&.EEFF
 .\}
 .RE
 .PP
-\fIOriginalName=\fR
+\fIPermanentMACAddress=\fR
 .RS 4
-A whitespace\-separated list of shell\-style globs matching the device name, as exposed by the udev property "INTERFACE"\&. This cannot be used to match on names that have already been changed from userspace\&. Caution is advised when matching on kernel\-assigned names, as they are known to be unstable between reboots\&.
+A whitespace\-separated list of hardware\*(Aqs permanent addresses\&. While
+\fIMACAddress=\fR
+matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
 .RE
 .PP
 \fIPath=\fR
@@ -92,13 +116,38 @@ A whitespace\-separated list of shell\-style globs matching the driver currently
 \fIID_NET_DRIVER\fR
 of its parent device, or if that is not set, the driver as exposed by
 \fBethtool \-i\fR
-of the device itself\&.
+of the device itself\&. If the list is prefixed with a "!", the test is inverted\&.
 .RE
 .PP
 \fIType=\fR
 .RS 4
-A whitespace\-separated list of shell\-style globs matching the device type, as exposed by the udev property
-\fIDEVTYPE\fR\&.
+A whitespace\-separated list of shell\-style globs matching the device type, as exposed by
+\fBnetworkctl status\fR\&. If the list is prefixed with a "!", the test is inverted\&.
+.RE
+.PP
+\fIProperty=\fR
+.RS 4
+A whitespace\-separated list of udev property name with its value after a equal ("=")\&. If multiple properties are specified, the test results are ANDed\&. If the list is prefixed with a "!", the test is inverted\&. If a value contains white spaces, then please quote whole key and value pair\&. If a value contains quotation, then please escape the quotation with
+"\e"\&.
+.sp
+Example: if a \&.link file has the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Property=ID_MODEL_ID=9999 "ID_VENDOR_FROM_DATABASE=vendor name" "KEY=with \e"quotation\e""
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then, the \&.link file matches only when an interface has all the above three properties\&.
+.RE
+.PP
+\fIOriginalName=\fR
+.RS 4
+A whitespace\-separated list of shell\-style globs matching the device name, as exposed by the udev property "INTERFACE"\&. This cannot be used to match on names that have already been changed from userspace\&. Caution is advised when matching on kernel\-assigned names, as they are known to be unstable between reboots\&.
 .RE
 .PP
 \fIHost=\fR
@@ -200,7 +249,8 @@ An ordered, space\-separated list of policies by which the interface name should
 may be disabled by specifying
 \fBnet\&.ifnames=0\fR
 on the kernel command line\&. Each of the policies may fail, and the first successful one is used\&. The name is not set directly, but is exported to udev as the property
-\fBID_NET_NAME\fR, which is, by default, used by a udev rule to set
+\fBID_NET_NAME\fR, which is, by default, used by a
+\fBudev\fR(7), rule to set
 \fINAME\fR\&. The available policies are:
 .PP
 \fBkernel\fR
@@ -217,25 +267,29 @@ The name is set based on entries in the udev\*(Aqs Hardware Database with the ke
 \fBonboard\fR
 .RS 4
 The name is set based on information given by the firmware for on\-board devices, as exported by the udev property
-\fIID_NET_NAME_ONBOARD\fR\&.
+\fIID_NET_NAME_ONBOARD\fR\&. See
+\fBsystemd.net-naming-scheme\fR(7)\&.
 .RE
 .PP
 \fBslot\fR
 .RS 4
 The name is set based on information given by the firmware for hot\-plug devices, as exported by the udev property
-\fIID_NET_NAME_SLOT\fR\&.
+\fIID_NET_NAME_SLOT\fR\&. See
+\fBsystemd.net-naming-scheme\fR(7)\&.
 .RE
 .PP
 \fBpath\fR
 .RS 4
 The name is set based on the device\*(Aqs physical location, as exported by the udev property
-\fIID_NET_NAME_PATH\fR\&.
+\fIID_NET_NAME_PATH\fR\&. See
+\fBsystemd.net-naming-scheme\fR(7)\&.
 .RE
 .PP
 \fBmac\fR
 .RS 4
 The name is set based on the device\*(Aqs persistent MAC address, as exported by the udev property
-\fIID_NET_NAME_MAC\fR\&.
+\fIID_NET_NAME_MAC\fR\&. See
+\fBsystemd.net-naming-scheme\fR(7)\&.
 .RE
 .PP
 \fBkeep\fR
@@ -246,17 +300,32 @@ If the device already had a name given by userspace (as part of creation of the 
 .PP
 \fIName=\fR
 .RS 4
-The interface name to use in case all the policies specified in
+The interface name to use\&. This option has lower precedence than
+\fINamePolicy=\fR, so for this setting to take effect,
 \fINamePolicy=\fR
-fail, or in case
-\fINamePolicy=\fR
-is missing or disabled\&.
+must either be unset, empty, disabled, or all policies configured there must fail\&. Also see the example below with
+"Name=dmz0"\&.
 .sp
 Note that specifying a name that the kernel might use for another interface (for example
 "eth0") is dangerous because the name assignment done by udev will race with the assignment done by the kernel, and only one interface may use the name\&. Depending on the order of operations, either udev or the kernel will win, making the naming unpredictable\&. It is best to use some different prefix, for example
 "internal0"/"external0"
 or
 "lan0"/"lan1"/"lan3"\&.
+.RE
+.PP
+\fIAlternativeNamesPolicy=\fR
+.RS 4
+A space\-separated list of policies by which the interface\*(Aqs alternative names should be set\&. Each of the policies may fail, and all successful policies are used\&. The available policies are
+"database",
+"onboard",
+"slot",
+"path", and
+"mac"\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
+.RE
+.PP
+\fIAlternativeName=\fR
+.RS 4
+The alternative interface name to use\&. This option can be specified multiple times\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
 .RE
 .PP
 \fIMTUBytes=\fR
@@ -281,7 +350,7 @@ and
 .RS 4
 Takes a boolean\&. If set to yes, automatic negotiation of transmission parameters is enabled\&. Autonegotiation is a procedure by which two connected ethernet devices choose common transmission parameters, such as speed, duplex mode, and flow control\&. When unset, the kernel\*(Aqs default will be used\&.
 .sp
-Note that if autonegotiation is enabled, speed and duplex settings are read\-only\&. If autonegotation is disabled, speed and duplex settings are writable if the driver supports multiple link modes\&.
+Note that if autonegotiation is enabled, speed and duplex settings are read\-only\&. If autonegotiation is disabled, speed and duplex settings are writable if the driver supports multiple link modes\&.
 .RE
 .PP
 \fIWakeOnLan=\fR
@@ -500,6 +569,16 @@ T}
 By default this is unset, i\&.e\&. all possible modes will be advertised\&. This option may be specified more than once, in which case all specified speeds and modes are advertised\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&.
 .RE
 .PP
+\fIReceiveChecksumOffload=\fR
+.RS 4
+Takes a boolean\&. If set to true, the hardware offload for checksumming of ingress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITransmitChecksumOffload=\fR
+.RS 4
+Takes a boolean\&. If set to true, the hardware offload for checksumming of egress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
 \fITCPSegmentationOffload=\fR
 .RS 4
 Takes a boolean\&. If set to true, the TCP Segmentation Offload (TSO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
@@ -544,6 +623,16 @@ Sets the number of other channels (a number between 1 and 4294967295)\&.
 .RS 4
 Sets the number of combined set channels (a number between 1 and 4294967295)\&.
 .RE
+.PP
+\fIRxBufferSize=\fR
+.RS 4
+Takes a integer\&. Specifies the NIC receive ring buffer size\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITxBufferSize=\fR
+.RS 4
+Takes a integer\&. Specifies the NIC transmit ring buffer size\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&/usr/lib/systemd/network/99\-default\&.link\fR
@@ -584,7 +673,92 @@ Name=dmz0
 .RE
 .\}
 .PP
-\fBExample\ \&3.\ \&/etc/systemd/network/10\-internet\&.link\fR
+\fINamePolicy=\fR
+is not set, so
+\fIName=\fR
+takes effect\&. We use the
+"10\-"
+prefix to order this file early in the list\&. Note that it needs to be before
+"99\-link", i\&.e\&. it needs a numerical prefix, to have any effect at all\&.
+.PP
+\fBExample\ \&3.\ \&Debugging \fINamePolicy=\fR assignments\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ sudo SYSTEMD_LOG_LEVEL=debug udevadm test\-builtin net_setup_link /sys/class/net/hub0
+\&...
+Parsed configuration file /usr/lib/systemd/network/99\-default\&.link
+Parsed configuration file /etc/systemd/network/10\-eth0\&.link
+ID_NET_DRIVER=cdc_ether
+Config file /etc/systemd/network/10\-eth0\&.link applies to device hub0
+link_config: autonegotiation is unset or enabled, the speed and duplex are not writable\&.
+hub0: Device has name_assign_type=4
+Using default interface naming scheme \*(Aqv240\*(Aq\&.
+hub0: Policies didn\*(Aqt yield a name, using specified Name=hub0\&.
+ID_NET_LINK_FILE=/etc/systemd/network/10\-eth0\&.link
+ID_NET_NAME=hub0
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Explicit
+\fIName=\fR
+configuration wins in this case\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sudo SYSTEMD_LOG_LEVEL=debug udevadm test\-builtin net_setup_link /sys/class/net/enp0s31f6
+\&...
+Parsed configuration file /usr/lib/systemd/network/99\-default\&.link
+Parsed configuration file /etc/systemd/network/10\-eth0\&.link
+Created link configuration context\&.
+ID_NET_DRIVER=e1000e
+Config file /usr/lib/systemd/network/99\-default\&.link applies to device enp0s31f6
+link_config: autonegotiation is unset or enabled, the speed and duplex are not writable\&.
+enp0s31f6: Device has name_assign_type=4
+Using default interface naming scheme \*(Aqv240\*(Aq\&.
+enp0s31f6: Policy *keep*: keeping existing userspace name
+enp0s31f6: Device has addr_assign_type=0
+enp0s31f6: MAC on the device already matches policy *persistent*
+ID_NET_LINK_FILE=/usr/lib/systemd/network/99\-default\&.link
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+In this case, the interface was already renamed, so the
+\fBkeep\fR
+policy specified as the first option in
+99\-default\&.link
+means that the existing name is preserved\&. If
+\fBkeep\fR
+was removed, or if were in boot before the renaming has happened, we might get the following instead:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+enp0s31f6: Policy *path* yields "enp0s31f6"\&.
+enp0s31f6: Device has addr_assign_type=0
+enp0s31f6: MAC on the device already matches policy *persistent*
+ID_NET_LINK_FILE=/usr/lib/systemd/network/99\-default\&.link
+ID_NET_NAME=enp0s31f6
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Please note that the details of output are subject to change\&.
+.PP
+\fBExample\ \&4.\ \&/etc/systemd/network/10\-internet\&.link\fR
 .PP
 This example assigns the fixed name
 "internet0"
@@ -605,7 +779,7 @@ Name=internet0
 .RE
 .\}
 .PP
-\fBExample\ \&4.\ \&/etc/systemd/network/25\-wireless\&.link\fR
+\fBExample\ \&5.\ \&/etc/systemd/network/25\-wireless\&.link\fR
 .PP
 Here\*(Aqs an overly complex example that shows the use of a large number of [Match] and [Link] settings\&.
 .sp
