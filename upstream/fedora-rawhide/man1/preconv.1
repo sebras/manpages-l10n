@@ -1,59 +1,63 @@
-.TH PRECONV 1 "4 November 2014" "Groff Version 1.22.3"
+.TH PRECONV 1 "5 March 2020" "groff 1.22.4"
 .SH NAME
-preconv \- convert encoding of input files to something GNU troff understands
+preconv \- convert encoding of input files to something GNU troff \
+understands
 .
 .
-.\" license (copying)
-.de co
-Copyright \[co] 2006-2014 Free Software Foundation, Inc.
-
-Permission is granted to make and distribute verbatim copies of
-this manual provided the copyright notice and this permission notice
-are preserved on all copies.
-
-Permission is granted to copy and distribute modified versions of this
-manual under the conditions for verbatim copying, provided that the
-entire resulting derived work is distributed under the terms of a
-permission notice identical to this one.
-
-Permission is granted to copy and distribute translations of this
-manual into another language, under the above conditions for modified
-versions, except that this permission notice may be included in
-translations approved by the Free Software Foundation instead of in
-the original English.
-..
+.\" Save and disable compatibility mode (for, e.g., Solaris 10/11).
+.do nr preconv_C \n[.C]
+.cp 0
 .
-.\" --------------------------------------------------------------------
+.
+.\" ====================================================================
+.\" Legal Terms
+.\" ====================================================================
+.\"
+.\" Copyright (C) 2006-2018 Free Software Foundation, Inc.
+.\"
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Permission is granted to copy and distribute translations of this
+.\" manual into another language, under the above conditions for
+.\" modified versions, except that this permission notice may be
+.\" included in translations approved by the Free Software Foundation
+.\" instead of in the original English.
+.
+.
+.\" ====================================================================
 .SH SYNOPSIS
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 .SY preconv
 .OP \-dr
+.OP \-D default_encoding
 .OP \-e encoding
-.RI [ files
-.IR .\|.\|. ]
+.RI [ file
+\&.\|.\|.\&]
 .
 .SY preconv
 .B \-h
-|
+.SY preconv
 .B \-\-help
+.YS
 .
 .SY preconv
 .B \-v
-|
+.SY preconv
 .B \-\-version
 .YS
 .
 .
-.PP
-It is possible to have whitespace between the
-.B \-e
-command line option and its parameter.
-.
-.
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH DESCRIPTION
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 .B preconv
 reads
@@ -76,9 +80,12 @@ options of
 .BR groff .
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH OPTIONS
-.\" --------------------------------------------------------------------
+.\" ====================================================================
+.
+Whitespace is permitted between a command-line option and its argument.
+.
 .
 .TP
 .B \-d
@@ -93,7 +100,7 @@ Specify default encoding if everything fails (see below).
 Specify input encoding explicitly, overriding all other methods.
 .
 This corresponds to
-.BR groff \[aq]s
+.BR groff 's
 .BI \-K encoding
 option.
 .
@@ -105,7 +112,7 @@ uses the algorithm described below to select the input encoding.
 .B \-\-help
 .TQ
 .B \-h
-Print help message.
+Print a help message and exit.
 .
 .TP
 .B \-r
@@ -115,12 +122,12 @@ Do not add \&.lf requests.
 .B \-\-version
 .TQ
 .B \-v
-Print version number.
+Print the version number and exit.
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH USAGE
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 .B preconv
 tries to find the input encoding with the following algorithm.
@@ -138,13 +145,20 @@ Otherwise, check whether the input starts with a
 If found, use it.
 .
 .IP 3.
-Finally, check whether there is a known
+Otherwise, check whether there is a known
 .I coding tag
 (see below) in either the first or second input line.
 .
 If found, use it.
 .
-.IP 4.
+.IP 4
+Finally, if the
+.B uchardet
+library
+(an encoding detector library available on most major distributions)
+is available on the system, use it to try to detect the encoding of the file.
+.
+.IP 5.
 If everything fails, use a default encoding as given with option
 .BR \-D ,
 by the current locale, or \[oq]latin1\[cq] if the locale is set to
@@ -155,14 +169,14 @@ by the current locale, or \[oq]latin1\[cq] if the locale is set to
 Note that the
 .B groff
 program supports a
-.B GROFF_ENCODING
+.I \%GROFF_ENCODING
 environment variable which is eventually expanded to option
 .BR \-k .
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SS "Byte Order Mark"
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 The Unicode Standard defines character U+FEFF as the Byte Order Mark
 (BOM).
@@ -170,8 +184,8 @@ The Unicode Standard defines character U+FEFF as the Byte Order Mark
 On the other hand, value U+FFFE is guaranteed not be a Unicode character at
 all.
 .
-This allows to detect the byte order within the data stream (either
-big-endian or lower-endian), and the MIME encodings \%\[oq]UTF-16\[cq]
+This allows detection of the byte order within the data stream (either
+big-endian or little-endian), and the MIME encodings \%\[oq]UTF-16\[cq]
 and \%\[oq]UTF-32\[cq] mandate that the data stream starts with U+FEFF.
 .
 Similarly, the data stream encoded as \%\[oq]UTF-8\[cq] might start
@@ -180,8 +194,8 @@ with a BOM (to ease the conversion from and to \%UTF-16 and \%UTF-32).
 In all cases, the byte order mark is
 .I not
 part of the data but part of the encoding protocol; in other words,
-.BR preconv \[aq]s
-output doesn\[aq]t contain it.
+.BR preconv 's
+output doesn't contain it.
 .
 .
 .PP
@@ -191,19 +205,19 @@ space\[cq] character \[en] something not needed normally in
 .BR groff .
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SS "Coding Tags"
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 Editors which support more than a single character encoding need tags
-within the input files to mark the file\[aq]s encoding.
+within the input files to mark the file's encoding.
 .
 While it is possible to guess the right input encoding with the help of
 heuristic algorithms for data which represents a greater amount of a natural
 language, it is still just a guess.
 .
 Additionally, all algorithms fail easily for input which is either too short
-or doesn\[aq]t represent a natural language.
+or doesn't represent a natural language.
 .
 .
 .PP
@@ -251,7 +265,7 @@ to edit a file in troff mode, and to use \%latin2 as its encoding.
 .RS
 .PP
 .EX
-\&.\[rs]" \-*\- mode: troff; coding: latin-2 \-*\-\""
+\&.\[rs]" \-*\- mode: troff; coding: latin-2 \-*\-
 .EE
 .RE
 .
@@ -323,12 +337,12 @@ implementation; a call to \[oq]preconv \-\-version\[cq] shows whether
 is used.
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH BUGS
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 .B preconv
-doesn\[aq]t support
+doesn't support
 .I "local variable lists"
 yet.
 .
@@ -336,9 +350,9 @@ This is a different syntax form to specify local variables at the end of a
 file.
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH "SEE ALSO"
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
 .BR groff (1)
 .br
@@ -349,13 +363,12 @@ and
 info pages
 .
 .
-.\" --------------------------------------------------------------------
-.SH COPYING
-.\" --------------------------------------------------------------------
-.co
+.\" Restore compatibility mode (for, e.g., Solaris 10/11).
+.cp \n[preconv_C]
 .
 .
 .\" Emacs setting
 .\" Local Variables:
 .\" mode: nroff
 .\" End:
+.\" vim: set filetype=groff:
