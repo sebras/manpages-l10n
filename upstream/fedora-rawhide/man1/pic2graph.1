@@ -1,238 +1,204 @@
-.TH PIC2GRAPH 1 "4 November 2014" "Groff Version 1.22.3"
+.TH PIC2GRAPH 1 "5 March 2020" "groff 1.22.4"
 .SH NAME
 pic2graph \- convert a PIC diagram into a cropped image
 .
 .
-.\" --------------------------------------------------------------------
-.\" Legalese
-.\" --------------------------------------------------------------------
+.\" ====================================================================
+.\" Legal Terms
+.\" ====================================================================
+.\"
+.\" This documentation is released to the public domain.
 .
-.de co
-This documentation is released to the public domain.
-..
 .
-.de au
-.ME esr@thyrsus.com
-Eric S.\& Raymond
-.UE ,
-based on a recipe by W.\& Richard Stevens.
-..
-.
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH SYNOPSIS
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
-.B pic2graph
-[
-.B \-unsafe
-]
-[
-.BI "\-format " fmt
-]
-[
-.BI "\-eqn " delim
-]
+.SY pic2graph
+.OP \-unsafe
+.OP \-format output-format
+.OP \-eqn delimiters
+.RI [ convert-arguments ]
+.YS
+.
+.SY pic2graph
+.B \-\-help
+.YS
+.
+.SY pic2graph
+.B \-v
+.SY pic2graph
+.B \-\-version
+.YS
 .
 .
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .SH DESCRIPTION
-.\" --------------------------------------------------------------------
+.\" ====================================================================
 .
-Reads a PIC program as input; produces an image file (by default in
-Portable Network Graphics format) suitable for the Web as output.
+.I pic2graph
+reads a
+.IR pic (1)
+program from the standard input and writes an image file,
+by default in Portable Network Graphics (PNG) format,
+to the standard output.
 .
-Also translates
-.BR eqn (1)
+It furthermore translates
+.IR eqn (1)
 constructs, so it can be used for generating images of mathematical
 formulae.
 .
 .
-.P
-PIC is a rather expressive graphics minilanguage suitable for
-producing box-and-arrow diagrams of the kind frequently used in
-technical papers and textbooks.
-.
-The language is sufficiently flexible to be quite useful for state
-charts, Petri-net diagrams, flow charts, simple circuit schematics,
-jumper layouts, and other kinds of illustration involving repetitive
-uses of simple geometric forms and splines.
-.
-Because PIC descriptions are procedural and object-based, they are
-both compact and easy to modify.
-.
-.
-.P
-The PIC language is fully documented in
-.IR "Making Pictures With GNU PIC" ,
-a document which is part of the
-.BR groff (1)
-distribution.
-.
-.
-.P
-Your input PIC code should
+.PP
+The input PIC code should
 .I not
-be wrapped with the \&.PS and \&.PE macros that normally guard it within
-.BR groff (1)
-macros.
+be wrapped with the
+.B \&.PS
+and
+.B \&.PE
+macros that normally guard it within
+.IR groff (1)
+documents.
 .
 .
-.P
-The output image will be clipped to the smallest possible bounding box
-that contains all the black pixels.
+.\" FIXME: How old?  This text hasn't been touched since 2008 at latest.
+.\" Older versions of
+.\" .I \%convert
+.\" will produce a black-on-white graphic; newer ones may produce a
+.\" black-on-transparent graphic.
 .
-Older versions of
-.BR \%convert (1)
-will produce a black-on-white graphic; newer ones may produce a
-black-on-transparent graphic.
-.
-By specifying command-line options to be passed to
-.BR \%convert (1)
-you can give it a border, force the background transparent, set the
-image\[aq]s pixel density, or perform other useful transformations.
+.PP
+Arguments not recognized by
+.I pic2graph
+are passed to the ImageMagick or GraphicsMagick program
+.IR \%convert (1).
 .
 .
-.P
-This program uses
-.BR pic (1),
-.BR eqn (1),
-.BR groff (1),
-.BR gs (1),
-and the ImageMagick
-.BR \%convert (1)
-program.
-These programs must be installed on your system and accessible on your
-$PATH for
-.B pic2graph
-to work.
+By specifying these, you can give your image a border,
+.\" Transparent backgrounds are the default in 2018.
+.\" force the background transparent,
+set the image's pixel density,
+or perform other useful transformations.
 .
 .
-.\" --------------------------------------------------------------------
+.PP
+The output image is clipped using
+.IR \%convert 's
+.B \-trim
+option to the smallest possible bounding box that contains all the black
+pixels.
+.
+.
+.\" ====================================================================
 .SH OPTIONS
-.\" --------------------------------------------------------------------
+.\" ====================================================================
+.
+.TP
+.BI "\-eqn " delimiters
+Use
+.I delimiters
+as the opening and closing
+characters that delimit
+.I eqn
+directives;
+the default is \(lq$$\(rq.
+.
+The option argument
+.I delimiters
+should be a two-character string,
+but an empty string (\(dq\(dq) is accepted as a directive to disable
+.I eqn
+processing.
+.
+.
+.TP
+.BI "\-format " output-format
+Write the image in
+.IR output-format ,
+which must be understood by
+.IR \%convert ;
+the default is PNG.
+.
+.
+.TP
+.B \-\-help
+Display a usage message and exit.
+.
 .
 .TP
 .B \-unsafe
 Run
-.BR pic (1)
-and
-.BR groff (1)
-in the \[oq]unsafe\[cq] mode enabling the PIC macro
+.I groff
+in
+.I unsafe
+mode, enabling the PIC command
 .B sh
-to execute arbitrary commands.
+to execute arbitrary Unix shell commands.
 .
-The default is to forbid this.
+The
+.I groff
+default is to forbid this.
 .
-.TP
-.BI "\-format " fmt
-Specify an output format; the default is PNG (Portable Network Graphics).
-.
-Any format that
-.BR \%convert (1)
-can emit is supported.
 .
 .TP
-.BI "\-eqn " delim
-Change the fencepost characters that delimit
-.BR eqn (1)
-directives
-.RB ( $
-and
-.BR $ ,
-by default).
+.B \-v
+.TQ
+.B \-\-version
+Display version information and exit.
 .
-This option requires an argument, but an empty string is accepted as a
-directive to disable
-.BR eqn (1)
-processing.
+.
+.\" ====================================================================
+.SH ENVIRONMENT
+.\" ====================================================================
+.
+.TP
+.I \%GROFF_TMPDIR
+.TQ
+.I \%TMPDIR
+.TQ
+.I TMP
+.TQ
+.I TEMP
+These environment variables are searched in the given order to determine
+the directory where temporary files will be created.
+.
+If none are set,
+.I /tmp
+is used.
+.
+.
+.\" ====================================================================
+.SH AUTHORS
+.\" ====================================================================
+.
+.I pic2graph
+was written by
+.MT esr@\:thyrsus.com
+Eric S.\& Raymond
+.ME ,
+based on a recipe by W.\& Richard Stevens.
+.
+.
+.\" ====================================================================
+.SH "SEE ALSO"
+.\" ====================================================================
+.
+W.\& Richard Stevens,
+.UR http://\:www.kohala.com/\:start/\:troff/\:pic2html.html
+.I Turning PIC into HTML
+.UE
 .
 .
 .PP
-Command-line switches and arguments not listed above are passed to
-.BR \%convert (1).
-.
-.
-.\" --------------------------------------------------------------------
-.SH FILES
-.\" --------------------------------------------------------------------
-.
-.TP \w'\fB/usr/share/groff/1.22.3/tmac/eqnrc'u+2n
-.B /usr/share/groff/1.22.3/tmac/eqnrc
-The
-.BR eqn (1)
-initialization file.
-.
-.
-.\" --------------------------------------------------------------------
-.SH ENVIRONMENT
-.\" --------------------------------------------------------------------
-.
-.TP
-.B GROFF_TMPDIR
-The directory in which temporary files will be created.
-.
-If this is not set
-.B pic2graph
-searches the environment variables
-.BR \%TMPDIR ,
-.BR TMP ,
-and
-.B TEMP
-(in that order).
-.
-Otherwise, temporary files will be created in
-.BR /tmp .
-.
-.
-.\" --------------------------------------------------------------------
-.SH BUGS
-.\" --------------------------------------------------------------------
-.
-Due to changes in the behavior of ImageMagick
-.BR \%convert (1)
-that are both forward and backward-incompatible,
-mismatches between your
-.B pic2graph
-and
-.BR \%convert (1)
-versions may produce zero-sized or untrimmed output images.
-.
-For this version of
-.B pic2graph
-you will need a version of
-.BR \%convert (1)
-that supports the
-.B \-trim
-option; older versions of
-.B pic2graph
-used
-.BR \-crop\~0x0 ,
-which no longer has trimming behavior.
-.
-.
-.\" --------------------------------------------------------------------
-.SH "SEE ALSO"
-.\" --------------------------------------------------------------------
-.
-.BR eqn2graph (1),
-.BR grap2graph (1),
-.BR pic (1),
-.BR eqn (1),
-.BR groff (1),
-.BR gs (1),
-.BR \%convert (1).
-.
-.
-.\" --------------------------------------------------------------------
-.SH COPYING
-.\" --------------------------------------------------------------------
-.co
-.\" --------------------------------------------------------------------
-.SH AUTHORS
-.\" --------------------------------------------------------------------
-.au
+.IR eqn2graph (1),
+.IR grap2graph (1),
+.IR pic (1),
+.IR eqn (1),
+.IR groff (1),
+.IR \%convert (1)
 .
 .
 .\" Local Variables:
 .\" mode: nroff
 .\" End:
+.\" vim: set filetype=groff:
