@@ -55,7 +55,7 @@ The header of a .po file usually looks as follows:
 The first three lines will be added automatically if they don't exist. But from
 the fourth line on, you must not write other lines than those with translator
 names, mail adresses and the copyright year. Otherwise, some of our scripts
-won't work properly. The script »po/*your_language_code*/generate-manpage.sh«
+won't work properly. The script `po/*your_language_code*/generate-manpage.sh`
 needs this for generate the addendum. The script create-authors-file.sh also
 reads translator names from there and would produce garbage if there are some
 additional lines.
@@ -71,11 +71,11 @@ After translating and reviewing a .po file (assuming you was using a copy of
 that file and haven't applied your changes directly in your local Git checkout),
 you should do the following steps:
 
-* Run »git pull« to get the latest changes from other submitters.
-* Verify your .po file with »msgfmt -vc«.
+* Run `git pull` to get the latest changes from other submitters.
+* Verify your .po file with `msgfmt -vc`.
 * Put your .po file at the right place in the Git hierarchy (don't commit it for
   the time being).
-* Run »git status« and/or »git diff« to see what would be changed.
+* Run `git status` and/or `git diff` to see what would be changed.
 * Run the script po/*your_language_code*/update-po.sh to merge your .po file
   with the latest template and the messages from compendium. Now you should take
   a look again at the .po file. If there's something wrong, fix it.
@@ -87,9 +87,9 @@ git commit -a -m "[de] Update chown.1.po"
 
 * To make it easier to distinguish between the different languages, prepend
   [your_language_code] to the commit message.
-* Run »git push«. Normally, all should be fine after typing your SSH password.
+* Run `git push`. Normally, all should be fine after typing your SSH password.
   But in some cases, another contributor has applied some changes in the
-  meantime. Then Git refuses the commit. Just run »git pull« first. This applies
+  meantime. Then Git refuses the commit. Just run `git pull` first. This applies
   the remote changes to your local repo and opens an editor where you can change
   the commit message. In most cases, it is unneeded to change anything, just
   close the editor (after saving the message, if needed).
@@ -113,7 +113,7 @@ your own.
 After reviewing and committing a .po file, you can run
 po/*your_language_code*/use-for-compendium.sh to add the previously reviewed
 Gettext messages to your compendium. Example:
-»use-for-compendium.sh man1/chown.1.po«. This makes sense if your .po file
+`use-for-compendium.sh man1/chown.1.po`. This makes sense if your .po file
 contains some messages which also appear in other .po files. The script
 recognizes messages with at least two occurences in our man page collection.
 Note, you always have to submit the relative path, a simple file name isn't
@@ -126,10 +126,10 @@ After adding the file to the compendium, you can write the changes back to all
 ### Formatting \*.po files
 
 The script po/*your_language_code*/format-po.sh formats all .po files of your
-language as »msgcat -w 80« would do; it wraps all lines at 80 characters.
+language as `msgcat -w 80` would do; it wraps all lines at 80 characters.
 Besides that, the unused Gettext messages at the end of the .po files will be
 removed. Note, this script expects proper .po files; run
-»msgfmt -vc *your_po_file*« to make sure the file is properly formatted in terms
+`msgfmt -vc *your_po_file*` to make sure the file is properly formatted in terms
 of Gettext. Otherwise, the script can destroy a file completely and you need to
 revert the changes.
 
@@ -137,11 +137,11 @@ revert the changes.
 ### Generating translated man pages
 
 A single translated man page can be created with the command
-»po/*your_language_code*/generate-manpage.sh *distribution_name* *your_po_file*«,
-for example »po/*your_language_code*/generate-manpage.sh archlinux man1/chown.1.po«.
+`po/*your_language_code*/generate-manpage.sh *distribution_name* *your_po_file*`,
+for example `po/*your_language_code*/generate-manpage.sh archlinux man1/chown.1.po`.
 This creates the man page in a subdirectory named »archlinux«. But you can also
 generate all man pages from the whole .po collection using the command
-»po/*your_language_code*/generate-all-manpages.sh *distribution_name*«. All the
+`po/*your_language_code*/generate-all-manpages.sh *distribution_name*`. All the
 generated man pages get an addendum, which consists of the translators names and
 mail addresses as found in the .po file headers, and a license declaration,
 taken from the file po/*your_language_code*/license.add.
