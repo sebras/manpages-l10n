@@ -146,3 +146,13 @@ generated man pages get an addendum, which consists of the translators names and
 mail addresses as found in the .po file headers, and a license declaration,
 taken from the file po/*your_language_code*/license.add.
 
+### Safety checks using git hooks
+
+Git hooks are a way to run scripts before or after specific steps.
+The `hooks` directory currently contains the `pre-commit` script, which will check the formatting of .po files about to be commited and abort the commit with an explanation in case some of these files are invalid.
+
+To 'install' this hook, run from the root folder of the project:
+
+~~~
+ln -s ../../hooks/pre-commit .git/hooks/pre-commit
+~~~
