@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.7
 #
 # Copyright © 2020 Dr. Tobias Quathamer <toddy@debian.org>
 #
