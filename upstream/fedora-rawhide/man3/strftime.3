@@ -34,7 +34,7 @@
 .\" 2005-11-22 mtk, added Glibc Notes covering optional 'flag' and
 .\"           'width' components of conversion specifications.
 .\"
-.TH STRFTIME 3  2019-03-06 "GNU" "Linux Programmer's Manual"
+.TH STRFTIME 3  2020-04-11 "GNU" "Linux Programmer's Manual"
 .SH NAME
 strftime \- format date and time
 .SH SYNOPSIS
@@ -89,27 +89,63 @@ structure are also shown.
 The abbreviated name of the day of the week according to the current locale.
 (Calculated from
 .IR tm_wday .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR ABDAY_ { 1 \(en 7 }
+as an argument.)
 .TP
 .B %A
 The full name of the day of the week according to the current locale.
 (Calculated from
 .IR tm_wday .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR DAY_ { 1 \(en 7 }
+as an argument.)
 .TP
 .B %b
 The abbreviated month name according to the current locale.
 (Calculated from
 .IR tm_mon .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR ABMON_ { 1 \(en 12 }
+as an argument.)
 .TP
 .B %B
 The full month name according to the current locale.
 (Calculated from
 .IR tm_mon .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR MON_ { 1 \(en 12 }
+as an argument.)
 .TP
 .B %c
 The preferred date and time representation for the current locale.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B D_T_FMT
+as an argument for the
+.B %c
+conversion specification, and with
+.B ERA_D_T_FMT
+for the
+.B %Ec
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR "%a %b %e %H:%M:%S %Y" .)
 .TP
 .B %C
 The century number (year/100) as a 2-digit integer. (SU)
+(The
+.B %EC
+conversion specification corresponds to the name of the era.)
 (Calculated from
 .IR tm_year .)
 .TP
@@ -137,7 +173,7 @@ zero is replaced by a space. (SU)
 .IR tm_mday .)
 .TP
 .B %E
-Modifier: use alternative format, see below. (SU)
+Modifier: use alternative ("era-based") format, see below. (SU)
 .TP
 .B %F
 Equivalent to
@@ -220,7 +256,7 @@ The minute as a decimal number (range 00 to 59).
 A newline character. (SU)
 .TP
 .B %O
-Modifier: use alternative format, see below. (SU)
+Modifier: use alternative numeric symbols, see below. (SU)
 .TP
 .B %p
 Either "AM" or "PM" according to the given time value, or the
@@ -228,6 +264,12 @@ corresponding strings for the current locale.
 Noon is treated as "PM" and midnight as "AM".
 (Calculated from
 .IR tm_hour .)
+(The specific string representations used for "AM" and "PM"
+in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR AM_STR " and " PM_STR ,
+respectively.)
 .TP
 .B %P
 Like
@@ -240,9 +282,14 @@ string for the current locale.
 .TP
 .B %r
 The time in a.m. or p.m. notation.
-In the POSIX locale this is equivalent to
-.BR "%I:%M:%S %p" .
 (SU)
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B T_FMT_AMPM
+as an argument.)
+(In the POSIX locale this is equivalent to
+.BR "%I:%M:%S %p" .)
 .TP
 .B %R
 The time in 24-hour notation
@@ -324,17 +371,52 @@ and
 .TP
 .B %x
 The preferred date representation for the current locale without the time.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B D_FMT
+as an argument for the
+.B %x
+conversion specification, and with
+.B ERA_D_FMT
+for the
+.B %Ex
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR %m/%d/%y .)
 .TP
 .B %X
 The preferred time representation for the current locale without the date.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B T_FMT
+as an argument for the
+.B %X
+conversion specification, and with
+.B ERA_T_FMT
+for the
+.B %EX
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR %H:%M:%S .)
 .TP
 .B %y
 The year as a decimal number without a century (range 00 to 99).
+(The
+.B %Ey
+conversion specification corresponds to the year since the beginning of the era
+denoted by the
+.B %EC
+conversion specification.)
 (Calculated from
 .IR tm_year )
 .TP
 .B %Y
 The year as a decimal number including the century.
+(The
+.B %EY
+conversion specification corresponds to the full alternative year representation.)
 (Calculated from
 .IR tm_year )
 .TP
@@ -393,7 +475,17 @@ where the effect of the
 .B O
 modifier is to use
 alternative numeric symbols (say, roman numerals), and that of the
-E modifier is to use a locale-dependent alternative representation.
+.B E
+modifier is to use a locale-dependent alternative representation.
+The rules governing date representation with the
+.B E
+modifier can be obtained by supplying
+.B ERA
+as an argument to a
+.BR nl_langinfo (3).
+One example of such alternative forms is the Japanese era calendar scheme in the
+.B ja_JP
+glibc locale.
 .SH RETURN VALUE
 Provided that the result string,
 including the terminating null byte, does not exceed
@@ -651,11 +743,12 @@ main(int argc, char *argv[])
 .BR date (1),
 .BR time (2),
 .BR ctime (3),
+.BR nl_langinfo (3),
 .BR setlocale (3),
 .BR sprintf (3),
 .BR strptime (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,

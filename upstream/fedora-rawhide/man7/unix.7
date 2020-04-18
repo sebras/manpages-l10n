@@ -17,7 +17,7 @@
 .\"     address that can appear in the sockaddr_un structure: pathname,
 .\"     unnamed, and abstract.
 .\"
-.TH UNIX  7 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH UNIX  7 2020-02-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 unix \- sockets for local interprocess communication
 .SH SYNOPSIS
@@ -503,7 +503,8 @@ of this structure.
 The credentials which the sender specifies are checked by the kernel.
 A privileged process is allowed to specify values that do not match its own.
 The sender must specify its own process ID (unless it has the capability
-.BR CAP_SYS_ADMIN ),
+.BR CAP_SYS_ADMIN ,
+in which case the PID of any existing process may be specified),
 its real user ID, effective user ID, or saved set-user-ID (unless it has
 .BR CAP_SETUID ),
 and its real group ID, effective group ID, or saved set-group-ID
@@ -720,6 +721,11 @@ versus
 .B ESOCKTNOSUPPORT
 Unknown socket type.
 .TP
+.B ESRCH
+While sending an ancillary message containing credentials
+.RB ( SCM_CREDENTIALS ),
+the caller specified a PID that does not match any existing process.
+.TP
 .B ETOOMANYREFS
 This error can occur for
 .BR sendmsg (2)
@@ -927,13 +933,6 @@ main(int argc, char *argv[])
     int data_socket;
     int result;
     char buffer[BUFFER_SIZE];
-
-    /*
-     * In case the program exited inadvertently on the last run,
-     * remove the socket.
-     */
-
-    unlink(SOCKET_NAME);
 
     /* Create local socket. */
 
@@ -1153,7 +1152,7 @@ see
 .BR socket (7),
 .BR udp (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,

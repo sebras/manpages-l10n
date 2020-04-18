@@ -48,7 +48,7 @@
 .\" FIXME . Apr 08: The next POSIX revision has O_EXEC, O_SEARCH, and
 .\" O_TTYINIT.  Eventually these may need to be documented.  --mtk
 .\"
-.TH OPEN 2 2018-04-30 "Linux" "Linux Programmer's Manual"
+.TH OPEN 2 2020-02-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 open, openat, creat \- open and possibly create a file
 .SH SYNOPSIS
@@ -65,6 +65,10 @@ open, openat, creat \- open and possibly create a file
 .BI "int openat(int " dirfd ", const char *" pathname ", int " flags );
 .BI "int openat(int " dirfd ", const char *" pathname ", int " flags \
 ", mode_t " mode );
+.PP
+/* Documented separately, in \fBopenat2\fP(2): */
+.BI "int openat2(int " dirfd ", const char *" pathname ,
+.BI "            const struct open_how *" how ", size_t " size ");
 .fi
 .PP
 .in -4n
@@ -536,7 +540,9 @@ will not become the process's controlling terminal even if the
 process does not have one.
 .TP
 .B O_NOFOLLOW
-If \fIpathname\fP is a symbolic link, then the open fails, with the error
+If the trailing component (i.e., basename) of
+.I pathname
+is a symbolic link, then the open fails, with the error
 .BR ELOOP .
 Symbolic links in earlier components of the pathname will still be
 followed.
@@ -811,9 +817,17 @@ fd = open("/path/to/dir", O_TMPFILE | O_RDWR,
 
 /* File I/O on 'fd'... */
 
+linkat(fd, NULL, AT_FDCWD, "/path/for/file", AT_EMPTY_PATH);
+
+/* If the caller doesn't have the CAP_DAC_READ_SEARCH
+   capability (needed to use AT_EMPTY_PATH with linkat(2)),
+   and there is a proc(5) filesystem mounted, then the
+   linkat(2) call above can be replaced with:
+
 snprintf(path, PATH_MAX,  "/proc/self/fd/%d", fd);
 linkat(AT_FDCWD, path, AT_FDCWD, "/path/for/file",
                         AT_SYMLINK_FOLLOW);
+*/
 .EE
 .in
 .IP
@@ -933,12 +947,23 @@ If
 is absolute, then
 .I dirfd
 is ignored.
+.\"
+.SS openat2(2)
+The
+.BR openat2 (2)
+system call is an extension of
+.BR openat (),
+and provides a superset of the features of
+.BR openat ().
+It is separate documented, in
+.BR openat2 (2).
 .SH RETURN VALUE
 .BR open (),
 .BR openat (),
 and
 .BR creat ()
-return the new file descriptor, or \-1 if an error occurred
+return the new file descriptor (a nonnegative integer),
+or \-1 if an error occurred
 (in which case,
 .I errno
 is set appropriately).
@@ -1013,6 +1038,13 @@ was specified.
 was specified in
 .I flags
 and the final component ("basename") of the new file's
+.I pathname
+is invalid
+(e.g., it contains characters not permitted by the underlying filesystem).
+.TP
+ .TP
+.B EINVAL
+The final component ("basename") of
 .I pathname
 is invalid
 (e.g., it contains characters not permitted by the underlying filesystem).
@@ -1219,6 +1251,9 @@ SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008.
 .PP
 .BR openat ():
 POSIX.1-2008.
+.PP
+.BR openat2 (2)
+is Linux-specific.
 .PP
 The
 .BR O_DIRECT ,
@@ -1778,6 +1813,7 @@ is ignored).
 .BR mknod (2),
 .BR mmap (2),
 .BR mount (2),
+.BR openat2 (2),
 .BR open_by_handle_at (2),
 .BR read (2),
 .BR socket (2),
@@ -1792,7 +1828,7 @@ is ignored).
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,
