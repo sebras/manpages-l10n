@@ -8,7 +8,7 @@
 .\" %%%LICENSE_END
 .\"
 .\" $Id: cmsg.3,v 1.8 2000/12/20 18:10:31 ak Exp $
-.TH CMSG 3 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH CMSG 3 2020-02-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 CMSG_ALIGN, CMSG_SPACE, CMSG_NXTHDR, CMSG_FIRSTHDR \- access ancillary data
 .SH SYNOPSIS
@@ -106,6 +106,12 @@ This is a constant expression.
 .BR CMSG_DATA ()
 returns a pointer to the data portion of a
 .IR cmsghdr .
+The pointer returned cannot be assumed to be suitably aligned for
+accessing arbitrary payload data types.
+Applications should not cast it to a pointer type matching the payload,
+but should instead use
+.BR memcpy (3)
+to copy data to or from a suitably declared object.
 .IP *
 .BR CMSG_LEN ()
 returns the value to store in the
@@ -178,7 +184,6 @@ option in a received ancillary buffer:
 .EX
 struct msghdr msgh;
 struct cmsghdr *cmsg;
-int *ttlptr;
 int received_ttl;
 
 /* Receive auxiliary data in msgh */
@@ -187,8 +192,7 @@ for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg != NULL;
         cmsg = CMSG_NXTHDR(&msgh, cmsg)) {
     if (cmsg\->cmsg_level == IPPROTO_IP
             && cmsg\->cmsg_type == IP_TTL) {
-        ttlptr = (int *) CMSG_DATA(cmsg);
-        received_ttl = *ttlptr;
+        memcpy(&receive_ttl, CMSG_DATA(cmsg), sizeof(int));
         break;
     }
 }
@@ -236,7 +240,7 @@ memcpy(CMSG_DATA(cmsg), myfds, NUM_FD * sizeof(int));
 .PP
 RFC\ 2292
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH NAMESPACES 7 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH NAMESPACES 7 2020-04-11 "Linux" "Linux Programmer's Manual"
 .SH NAME
 namespaces \- overview of Linux namespaces
 .SH DESCRIPTION
@@ -66,6 +66,11 @@ stacks, ports, etc.
 T}
 Mount	CLONE_NEWNS	\fBmount_namespaces\fP(7)	Mount points
 PID	CLONE_NEWPID	\fBpid_namespaces\fP(7)	Process IDs
+Time	CLONE_NEWTIME	\fBtime_namespaces\fP(7)	T{
+Boot and monotonic
+.br
+clocks
+T}
 User	CLONE_NEWUSER	\fBuser_namespaces\fP(7)	User and group IDs
 UTS	CLONE_NEWUTS	\fButs_namespaces\fP(7)	T{
 Hostname and NIS
@@ -149,16 +154,18 @@ supports being manipulated by
 .PP
 .in +4n
 .EX
-$ \fBls \-l /proc/$$/ns\fP
+$ \fBls \-l /proc/$$/ns | awk \(aq{print $1, $9, $10, $11}\(aq\fP
 total 0
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 cgroup \-> cgroup:[4026531835]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 ipc \-> ipc:[4026531839]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 mnt \-> mnt:[4026531840]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 net \-> net:[4026531969]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 pid \-> pid:[4026531836]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 pid_for_children \-> pid:[4026531834]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 user \-> user:[4026531837]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 uts \-> uts:[4026531838]
+lrwxrwxrwx. cgroup \-> cgroup:[4026531835]
+lrwxrwxrwx. ipc \-> ipc:[4026531839]
+lrwxrwxrwx. mnt \-> mnt:[4026531840]
+lrwxrwxrwx. net \-> net:[4026531969]
+lrwxrwxrwx. pid \-> pid:[4026531836]
+lrwxrwxrwx. pid_for_children \-> pid:[4026531834]
+lrwxrwxrwx. time -> time:[4026531834]
+lrwxrwxrwx. time_for_children -> time:[4026531834]
+lrwxrwxrwx. user \-> user:[4026531837]
+lrwxrwxrwx. uts \-> uts:[4026531838]
 .EE
 .in
 .PP
@@ -242,6 +249,21 @@ is created in the namespace.
 (Beforehand,
 .BR readlink (2)
 of the symbolic link will return an empty buffer.)
+.TP
+.IR /proc/[pid]/ns/time " (since Linux 5.6)"
+This file is a handle for the time namespace of the process.
+.TP
+.IR /proc/[pid]/ns/time_for_children " (since Linux 5.6)"
+This file is a handle for the time namespace of
+child processes created by this process.
+This can change as a consequence of calls to
+.BR unshare (2)
+and
+.BR setns (2)
+(see
+.BR time_namespaces (7)),
+so the file may differ from
+.IR /proc/[pid]/ns/time .
 .TP
 .IR /proc/[pid]/ns/user " (since Linux 3.8)"
 .\" commit cde1975bc242f3e1072bde623ef378e547b73f91
@@ -340,6 +362,7 @@ for the creator UID in the ancestor namespace is not exceeded.
 The aforementioned point ensures that creating a new user namespace
 cannot be used as a means to escape the limits in force
 in the current user namespace.
+.RE
 .\"
 .SS Namespace lifetime
 Absent any other factors,
@@ -399,7 +422,7 @@ and
 .BR pam_namespace (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 5.05 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,

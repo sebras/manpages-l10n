@@ -34,7 +34,7 @@
 .\" 2007-09-14 Ollie Wild <aaw@google.com>, mtk
 .\"     Add text describing limits on command-line arguments + environment
 .\"
-.TH EXECVE 2 2019-10-10 "Linux" "Linux Programmer's Manual"
+.TH EXECVE 2 2020-04-11 "Linux" "Linux Programmer's Manual"
 .SH NAME
 execve \- execute program
 .SH SYNOPSIS
@@ -61,17 +61,26 @@ starting with a line of the form:
 .PP
 For details of the latter case, see "Interpreter scripts" below.
 .PP
-\fIargv\fP is an array of argument strings passed to the new program.
+\fIargv\fP is an array of pointers to strings passed to the new program
+as its command-line arguments.
 By convention, the first of these strings (i.e.,
 .IR argv[0] )
 should contain the filename associated with the file being executed.
-\fIenvp\fP is an array of strings, conventionally of the form
-\fBkey=value\fP, which are passed as environment to the new program.
-The \fIargv\fP and \fIenvp\fP arrays must each include a null pointer
-at the end of the array.
+The
+.I argv
+array must be terminated by a NULL pointer
+(Thus, in the new program,
+.IR argv[argc]
+will be NULL.)
+.PP
+\fIenvp\fP is an array of pointers to strings, conventionally of the form
+\fBkey=value\fP, which are passed as the environment of the new program.
+The
+.I envp
+array must be terminated by a NULL pointer
 .PP
 The argument vector and environment can be accessed by the
-called program's main function, when it is defined as:
+new program's main function, when it is defined as:
 .PP
 .in +4n
 .EX
@@ -150,7 +159,8 @@ This interpreter is typically
 .I /lib/ld-linux.so.2
 for binaries linked with glibc (see
 .BR ld-linux.so (8)).
-.PP
+.\"
+.SS Effect on process attributes
 All process attributes are preserved during an
 .BR execve (),
 except the following:
@@ -504,9 +514,7 @@ The system-wide limit on the total number of open files has been reached.
 .B ENOENT
 The file
 .I pathname
-or a script or ELF interpreter does not exist, or a shared library
-.\" FIXME but see http://sourceware.org/bugzilla/show_bug.cgi?id=12241
-needed for the file or interpreter cannot be found.
+or a script or ELF interpreter does not exist.
 .TP
 .B ENOEXEC
 An executable is not in a recognized format, is for the wrong
@@ -869,7 +877,7 @@ argv[4]: world
 .BR path_resolution (7),
 .BR ld.so (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.06 of the Linux
 .I man-pages
 project.
 A description of the project,
