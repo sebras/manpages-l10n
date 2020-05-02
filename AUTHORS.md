@@ -34,7 +34,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Cédric Boutillier <cedric.boutillier@gmail.com>
 * Cédric Lucantis <omer@no-log.org>
 * Christophe Blaess <ccb@club-internet.fr>
-* Christophe Blaess <http://www.blaess.fr/christophe/>
+* Christophe Blaess <https://www.blaess.fr/christophe/>
 * Christophe Sauthier <christophe@sauthier.com>
 * Cyril Guilloud <guilloud@lautre.net>
 * Danny <dannybrain@noos.fr>
@@ -63,6 +63,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>
 * Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
 * Jean-Marc Chaton <chaton@debian.org>
+* Jean-Paul Guillonneau <debian-l10n-french@lists.debian.org>
 * Jean-Philippe Guérard <fevrier@tigreraye.org>
 * Jean-Philippe MENGUAL <jpmengual@debian.org>
 * Jean-Pierre Giraud <jean-pierregiraud@neuf.fr>
@@ -72,6 +73,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Julien Rosal <albator.deb@gmail.com>
 * Luc Froidefond <luc.froidefond@free.fr>
 * Lyes Zemmouche <iliaas@hotmail.fr>
+* Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
 * Michel Quercia <quercia AT cal DOT enst DOT fr>
 * Nicolas François <nicolas.francois@centraliens.net>
 * Nicolas Haller <nicolas@boiteameuh.org>
