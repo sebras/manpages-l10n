@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 244" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 245" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -127,7 +127,13 @@ dbus\-org\&.freedesktop\&.network1\&.service, created during installation as a s
 \fBsystemd\fR
 is asked through D\-Bus to load
 dbus\-org\&.freedesktop\&.network1\&.service, it\*(Aqll load
-systemd\-networkd\&.service\&. Alias names may be used in commands like
+systemd\-networkd\&.service\&. As another example,
+default\&.target
+\(em the default system target started at boot \(em is commonly symlinked (aliased) to either
+multi\-user\&.target
+or
+graphical\&.target
+to select what is started by default\&. Alias names may be used in commands like
 \fBdisable\fR,
 \fBstart\fR,
 \fBstop\fR,
@@ -138,6 +144,13 @@ systemd\-networkd\&.service\&. Alias names may be used in commands like
 \fIAfter=\fR\&. Aliases cannot be used with the
 \fBpreset\fR
 command\&.
+.PP
+Aliases obey the following restrictions: a unit of a certain type ("\&.service",
+"\&.socket", \&...) can only be aliased by a name with the same type suffix\&. A plain unit (not a template or an instance), may only be aliased by a plain name\&. A template instance may only be aliased by another template instance, and the instance part must be identical\&. A template may be aliased by another template (in which case the alias applies to all instances of the template)\&. As a special case, a template instance (e\&.g\&.
+"alias@inst\&.service") may be a symlink to different template (e\&.g\&.
+"template@inst\&.service")\&. In that case, just this specific instance is aliased, while other instances of the template (e\&.g\&.
+"alias@foo\&.service",
+"alias@bar\&.service") are not aliased\&. Those rule preserve the requirement that the instance (if any) is always uniquely defined for a given unit and all its aliases\&.
 .PP
 Unit files may specify aliases through the
 \fIAlias=\fR
@@ -206,6 +219,18 @@ foo\-\&.service\&.d/\&. This is useful for defining common drop\-ins for a set o
 foo\-bar\-\&.service\&.d/10\-override\&.conf
 overrides
 foo\-\&.service\&.d/10\-override\&.conf\&.
+.PP
+In cases of unit aliases (described above), dropins for the aliased name and all aliases are loaded\&. In the example of
+default\&.target
+aliasing
+graphical\&.target,
+default\&.target\&.d/,
+default\&.target\&.wants/,
+default\&.target\&.requires/,
+graphical\&.target\&.d/,
+graphical\&.target\&.wants/,
+graphical\&.target\&.requires/
+would all be read\&. For templates, dropins for the template, any template aliases, the template instance, and all alias instances are read\&. When just a specific template instance is aliased, then the dropins for the target template, the target template instance, and the alias template instance are read\&.
 .PP
 In addition to
 /etc/systemd/system, the drop\-in
@@ -681,7 +706,7 @@ Configures requirement dependencies on other units\&. This option may be specifi
 \&.wants/
 directory accompanying the unit file\&. For details, see above\&.
 .sp
-Units listed in this option will be started if the configuring unit is\&. However, if the listed units fail to start or cannot be added to the transaction, this has no impact on the validity of the transaction as a whole, and this unit will still be started\&. This is the recommended way to hook start\-up of one unit to the start\-up of another unit\&.
+Units listed in this option will be started if the configuring unit is\&. However, if the listed units fail to start or cannot be added to the transaction, this has no impact on the validity of the transaction as a whole, and this unit will still be started\&. This is the recommended way to hook the start\-up of one unit to the start\-up of another unit\&.
 .sp
 Note that requirement dependencies do not influence the order in which services are started or stopped\&. This has to be configured independently with the
 \fIAfter=\fR
@@ -821,7 +846,7 @@ If unit A that conflicts with unit B is scheduled to be started at the same time
 .RS 4
 These two settings expect a space\-separated list of unit names\&. They may be specified more than once, in which case dependencies for all listed names are created\&.
 .sp
-Those two setttings configure ordering dependencies between units\&. If unit
+Those two settings configure ordering dependencies between units\&. If unit
 foo\&.service
 contains the setting
 \fBBefore=bar\&.service\fR
@@ -844,7 +869,7 @@ on another unit, the former is stopped before the latter if both are shut down\&
 or
 \fIBefore=\fR, in this case\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up; the shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&. It depends on the unit type when precisely a unit has finished starting up\&. Most importantly, for service units start\-up is considered completed for the purpose of
 \fIBefore=\fR/\fIAfter=\fR
-when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&.
+when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&. Note that this does includes ExecStartPost (or ExecStopPost for the shutdown case)\&.
 .sp
 Note that those settings are independent of and orthogonal to the requirement dependencies as configured by
 \fIRequires=\fR,
@@ -855,6 +880,10 @@ Note that those settings are independent of and orthogonal to the requirement de
 and
 \fIWants=\fR
 options, in which case the unit listed will be started before the unit that is configured with these options\&.
+.sp
+Note that
+\fIBefore=\fR
+dependencies on device units have no effect and are not supported\&. Devices generally become available as a result of an external hotplug event, and systemd creates the corresponding device unit without delay\&.
 .RE
 .PP
 \fIOnFailure=\fR

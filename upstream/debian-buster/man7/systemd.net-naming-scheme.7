@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 244" "systemd.net-naming-scheme"
+.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 245" "systemd.net-naming-scheme"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,6 +43,11 @@ and
 \fIMACAddressPolicy=\fR
 in
 \fBsystemd.link\fR(5)\&.
+.PP
+Note that while the concept of network interface naming schemes is primarily relevant in the context of
+systemd\-udevd\&.service, the
+\fBsystemd-nspawn\fR(1)
+container manager also takes it into account when naming network interfaces, see below\&.
 .SH "NAMING"
 .PP
 All names start with a two\-character prefix that signifies the interface type\&.
@@ -79,7 +84,7 @@ T}
 T{
 \fBsl\fR
 T}:T{
-serial line IP (slip)
+Serial line IP (slip)
 T}
 T{
 \fBwl\fR
@@ -304,6 +309,15 @@ Previously two\-letter interface type prefix was prepended to
 \fIID_NET_LABEL_ONBOARD=\fR\&. This is not done anymore\&.
 .RE
 .PP
+\fBv245\fR
+.RS 4
+When
+\fBsystemd-nspawn\fR(1)
+derives the name for the host side of the network interface created with
+\fB\-\-network\-veth\fR
+from the container name it previously simply truncated the result at 15 characters if longer (since that\*(Aqs the maximum length for network interface names)\&. From now on, for any interface name that would be longer than 15 characters the last 4 characters are set to a 24bit hash value of the full interface name\&. This way network interface name collisions between multiple similarly named containers (who only differ in container name suffix) should be less likely (but still possible, since the 24bit hash value is very small)\&.
+.RE
+.PP
 Note that
 \fBlatest\fR
 may be used to denote the latest scheme known (to this particular version of systemd\&.
@@ -450,10 +464,11 @@ ID_NET_NAME_PATH=encf5f0
 .PP
 \fBudev\fR(7),
 \fBudevadm\fR(8),
-\m[blue]\fBthe original page describing stable interface names\fR\m[]\&\s-2\u[1]\d\s+2
+\m[blue]\fBPredictable Network Interface Names\fR\m[]\&\s-2\u[1]\d\s+2,
+\fBsystemd-nspawn\fR(1)
 .SH "NOTES"
 .IP " 1." 4
-the original page describing stable interface names
+Predictable Network Interface Names
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames
+\%https://systemd.io/PREDICTABLE_INTERFACE_NAMES
 .RE
