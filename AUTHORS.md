@@ -35,6 +35,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Cédric Lucantis <omer@no-log.org>
 * Christophe Blaess <ccb@club-internet.fr>
 * Christophe Blaess <https://www.blaess.fr/christophe/>
+* Christophe Blaess <http://www.blaess.fr/christophe/>
 * Christophe Sauthier <christophe@sauthier.com>
 * Cyril Guilloud <guilloud@lautre.net>
 * Danny <dannybrain@noos.fr>
@@ -162,6 +163,16 @@ of Linux manpages. The list is sorted alphabetically.
 * Thomas Koenig <ig25@rz.uni-karlsruhe.de>
 * Walter Harms <walter.harms@informatik.uni-oldenburg.de>
 * Wolfgang Jung <woju@keep.in-berlin.de>
+
+
+## Italian:
+
+* #
+* Alessandro Rubini <rubini@linux.it>
+* Elisabetta Galli <lab@kkk.it>
+* Giovanni Bortolozzo <borto@dei.unipd.it>
+* Giulio Daprelà <giulio@pluto.it>
+* Marco Curreli <marcocurreli@tiscali.it>
 
 
 ## Polish:
