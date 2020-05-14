@@ -167,7 +167,6 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Italian:
 
-* #
 * Alessandro Rubini <rubini@linux.it>
 * Elisabetta Galli <lab@kkk.it>
 * Giovanni Bortolozzo <borto@dei.unipd.it>
