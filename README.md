@@ -5,6 +5,7 @@ languages. Currently we support the following languages:
 
 *  de - German
 *  fr - French
+*  it - Italian
 *  nl - Dutch *
 *  pl - Polish
 *  pt_BR - Brazilian Portuguese
