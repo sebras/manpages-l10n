@@ -178,7 +178,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Giulio Daprelà <giulio@pluto.it>
 * Goffredo Baroncelli <kreijack@usa.net>
 * Marco Curreli <marcocurreli@tiscali.it>
-* Michele Dalla Silvestra
+* Michele Dalla Silvestra <dalla@maya.dei.unipd.it>
 * Ottavio G. Rizzo <rizzo@pluto.linux.it>
 
 
