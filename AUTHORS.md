@@ -169,6 +169,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 * Alessandro Rubini <rubini@linux.it>
 * Antonio Giovanni Colombo <azc100@gmail.com>
+* Beatrice Torracca <beatricet@libero.it>
 * Claudio Ferronato <claiudio@libero.it>
 * Daniele Giacomini <daniele@evo.it>
 * Davide Cendron <davcen@interfree.it>
@@ -177,9 +178,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Giovanni Bortolozzo <borto@dei.unipd.it>
 * Giulio Daprelà <giulio@pluto.it>
 * Goffredo Baroncelli <kreijack@usa.net>
+* Hugh Hartmann <hhartmann@libero.it>
 * Marco Curreli <marcocurreli@tiscali.it>
 * Michele Dalla Silvestra <dalla@maya.dei.unipd.it>
 * Ottavio G. Rizzo <rizzo@pluto.linux.it>
+* Valerio Dodet <dodetvalerio@tiscali.it>
 
 
 ## Polish:
