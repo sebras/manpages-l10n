@@ -299,7 +299,7 @@ messages will be moved to that folder when the mail folder is left.
 The first matching \fBmbox-hook\fP applies.
 .PP
 .nf
-\fBmailboxes\fP \fIfilename\fP [ \fIfilename\fP ... ]
+\fBmailboxes\fP [[\fB-poll\fP | \fB-nopoll\fP] [[\fB-label\fP \fIlabel\fP] | \fB-nolabel\fP] \fIfilename\fP] [ ... ]
 \fBunmailboxes\fP [ \fB*\fP | \fIfilename\fP ... ]
 .fi
 .IP
@@ -716,6 +716,8 @@ greater than or equal to 70 as lying in the 20th century.
 .PP
 Note that this behavior \fIis\fP Y2K compliant, but that mutt
 \fIdoes\fP have a Y2.07K problem.
+.PP
+Alternatively, you may use \fIYYYYMMDD\fP to specify a date.
 .PP
 If a date range consists of a single date, the operator in question
 will match that precise date.  If the date range consists of a dash
@@ -1260,6 +1262,76 @@ Also see $fast_reply.
 
 
 .TP
+.B background_edit
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt will run $editor in the background during
+message composition.  A landing page will display, waiting for
+the $editor to exit.  The landing page may be exited, allowing
+perusal of the mailbox, or even for other messages to be
+composed.  Backgrounded sessions may be returned to via the
+\fC<background\-compose\-menu>\fP function.
+.IP
+For background editing to work properly, $editor must be set to
+an editor that does not try to use the Mutt terminal: for example
+a graphical editor, or a script launching (and waiting for) the
+editor in another Gnu Screen window.
+.IP
+For more details, see \(lqbgedit\(rq (\(rqBackground Editing\(rq in the manual).
+
+
+.TP
+.B background_confirm_quit
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When \fIset\fP, if there are any background edit sessions, you
+will be prompted to confirm exiting Mutt, in addition to the
+$quit prompt.
+
+
+.TP
+.B background_format
+.nf
+Type: string
+Default: \(lq%10S %7p %s\(rq
+.fi
+.IP
+This variable describes the format of the \(lqbackground compose\(rq
+menu.  The following \fCprintf(3)\fP\-style sequences are
+understood:
+.RS
+.PD 0
+.TP
+%i 
+parent message id (for replies and forwarded messages)
+.TP
+%n 
+the running number on the menu
+.TP
+%p 
+pid of the $editor process
+.TP
+%r 
+comma separated list of \(lqTo:\(rq recipients
+.TP
+%R 
+comma separated list of \(lqCc:\(rq recipients
+.TP
+%s 
+subject of the message
+.TP
+%S 
+status of the $editor process: running/finished
+.RE
+.PD 1
+
+.TP
 .B beep
 .nf
 Type: boolean
@@ -1675,6 +1747,25 @@ If $crypt_autoencrypt or $crypt_replyencrypt enable encryption for
 a message, this option will be disabled for that message.  It can
 be manually re\-enabled in the pgp or smime menus.
 (Crypto only)
+
+
+.TP
+.B crypt_opportunistic_encrypt_strong_keys
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, this modifies the behavior of $crypt_opportunistic_encrypt
+to only search for \(rqstrong keys\(rq, that is, keys with full validity
+according to the web\-of\-trust algorithm.  A key with marginal or no
+validity will not enable opportunistic encryption.
+.IP
+For S/MIME, the behavior depends on the backend.  Classic S/MIME will
+filter for certificates with the 't' (trusted) flag in the .index file.
+The GPGME backend will use the same filters as with OpenPGP, and depends
+on GPGME's logic for assigning the GPGME_VALIDITY_FULL and
+GPGME_VALIDITY_ULTIMATE validity flag.
 
 
 .TP
@@ -2188,6 +2279,20 @@ When this variable is \fIset\fP, FCCs will be stored unencrypted and
 unsigned, even when the actual message is encrypted and/or
 signed.
 (PGP only)
+
+
+.TP
+.B fcc_delimiter
+.nf
+Type: string
+Default: \(lq\(rq
+.fi
+.IP
+When specified, this allows the ability to Fcc to more than one
+mailbox.  The fcc value will be split by this delimiter and Mutt
+will evaluate each part as a mailbox separately.
+.IP
+See $record, \(lqfcc-hook\(rq, and \(lqfcc-save-hook\(rq.
 
 
 .TP
@@ -2838,6 +2943,20 @@ mileage may vary.
 
 
 .TP
+.B imap_deflate
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, mutt will use the COMPRESS=DEFLATE extension (RFC
+4978) if advertised by the server.
+.IP
+In general a good compression efficiency can be achieved, which
+speeds up reading large mailboxes also on fairly good connections.
+
+
+.TP
 .B imap_delim_chars
 .nf
 Type: string
@@ -2856,10 +2975,11 @@ Type: number (long)
 Default: 0
 .fi
 .IP
-When set to a value greater than 0, new headers will be downloaded
-in sets of this size.  If you have a very large mailbox, this might
-prevent a timeout and disconnect when opening the mailbox, by sending
-a FETCH per set of this size instead of a single FETCH for all new
+When set to a value greater than 0, new headers will be
+downloaded in groups of this many headers per request.  If you
+have a very large mailbox, this might prevent a timeout and
+disconnect when opening the mailbox, by sending a FETCH per set
+of this many headers, instead of a single FETCH for all new
 headers.
 
 
@@ -3329,7 +3449,7 @@ and $post_indent_string.
 .B ispell
 .nf
 Type: path
-Default: \(lqaspell \-\-mode=email\(rq
+Default: \(lq/usr/bin/ispell\(rq
 .fi
 .IP
 How to invoke ispell (GNU's spell\-checking software).
@@ -5083,6 +5203,9 @@ command to create a \(lqBcc:\(rq field with your email address in it.)
 The value of \fI$record\fP is overridden by the $force_name and
 $save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy
 and $write_bcc.
+.IP
+Multiple mailboxes may be specified if $fcc_delimiter is
+set to a string delimiter.
 
 
 .TP
@@ -5439,7 +5562,7 @@ before search results. By default, search results will be top\-aligned.
 .B send_charset
 .nf
 Type: string
-Default: \(lqiso\-8859\-1:iso\-8859\-2:iso\-8859\-7:iso\-8859\-9:koi8\-r:iso\-2022\-jp:euc\-kr:gb2312:big5:utf\-8\(rq
+Default: \(lqus\-ascii:iso\-8859\-1:utf\-8\(rq
 .fi
 .IP
 A colon\-delimited list of character sets for outgoing messages. Mutt will use the
@@ -6841,7 +6964,7 @@ forwarding, etc. are not permitted in this mode).
 .B status_format
 .nf
 Type: string
-Default: \(lq\-%r\-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]\-\-\-(%s/%S)\-%>\-(%P)\-\-\-\(rq
+Default: \(lq\-%r\-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?B? Back:%B?%?l? %l?]\-\-\-(%s/%S)\-%>\-(%P)\-\-\-\(rq
 .fi
 .IP
 Controls the format of the status line displayed in the \(lqindex\(rq
@@ -6852,6 +6975,9 @@ set of \fCprintf(3)\fP\-like sequences:
 .TP
 %b  
 number of mailboxes with new mail *
+.TP
+%B  
+number of backgrounded editing sessions *
 .TP
 %d  
 number of deleted messages *
