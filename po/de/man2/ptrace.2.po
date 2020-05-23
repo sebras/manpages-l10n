@@ -4,12 +4,12 @@
 # Patrick Rother <krd@gulu.net>
 # Chris Leick <c.leick@vollbio.de>, 2010-2014.
 # Mario Blättermann <mario.blaettermann@gmail.com>, 2014, 2019.
-# Helge Kreutzmann <debian@helgefjell.de>, 2012, 2016-2019.
+# Helge Kreutzmann <debian@helgefjell.de>, 2012, 2016-2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-de 4.09\n"
 "POT-Creation-Date: 2020-04-18 20:19+02:00\n"
-"PO-Revision-Date: 2020-05-22 21:25+0200\n"
+"PO-Revision-Date: 2020-05-23 08:30+0200\n"
 "Last-Translator: Mario Blättermann <mario.blaettermann@gmail.com>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -1342,6 +1342,15 @@ msgid ""
 "size of the data to be written by the kernel exceeds the size specified by "
 "the I<addr> argument, the output data is truncated."
 msgstr ""
+"Ermittelt Informationen über den Systemaufruf, der den Stopp ausgelöst hat. "
+"Die Information wird in den Puffer gelegt, auf den das Argument I<data> "
+"zeigt, das ein Zeiger auf einen Puffer vom Typ I<struct ptrace_syscall_info> "
+"sein sollte. Das Argument I<addr> enthält die Größe des Puffers, auf den das "
+"Argument I<data> zeigt (d.h. I<sizeof(struct ptrace_syscall_info)>). Der "
+"Rückgabewert enthält die Anzahl von Bytes, die zum Schreiben durch den "
+"Kernel verfügbar sind. Falls die Größe der durch den Kernel zu schreibenden "
+"Bytes die durch das Argument I<addr> festgelegte Größe überschreiten sollte, "
+"wird die Ausgabe abgeschnitten."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1379,6 +1388,32 @@ msgid ""
 "    };\n"
 "};\n"
 msgstr ""
+"struct ptrace_syscall_info {\n"
+"    __u8 op;         /* Typ des Systemaufruf-Stopps */\n"
+"    __u32 arch;      /* AUDIT_ARCH_*-Wert; siehe seccomp(2) */\n"
+"    __u64 instruction_pointer; /* CPU-Anweisungszeiger */\n"
+"    __u64 stack_pointer;       /* CPU-Stack-Zeiger */\n"
+"    union {\n"
+"        struct {     /* op == PTRACE_SYSCALL_INFO_ENTRY */\n"
+"            __u64 nr;          /* Systemaufrufnummer */\n"
+"            __u64 args[6];     /* Systemaufrufargumente */\n"
+"        } entry;\n"
+"        struct {     /* op == PTRACE_SYSCALL_INFO_EXIT */\n"
+"            __s64 rval;        /* Systemaufruf-Rückgabewert */\n"
+"            __u8 is_error;     /* Systemaufruf-Fehlerschalter;\n"
+"                                  logisch: enthält rval einen\n"
+"                                  Fehlerwert (-ERRCODE) oder\n"
+"                                  einen nichtfehler-Rückgabewert? */\n"
+"        } exit;\n"
+"        struct {     /* op == PTRACE_SYSCALL_INFO_SECCOMP */\n"
+"            __u64 nr;          /* Systemaufrufnummer */\n"
+"            __u64 args[6];     /* Systemaufrufargumente */\n"
+"            __u32 ret_data;    /* SECCOMP_RET_DATA-Anteil\n"
+"                                  vom SECCOMP_RET_TRACE-\n"
+"                                  Rückgabewert */\n"
+"        } seccomp;\n"
+"    };\n"
+"};\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1388,6 +1423,10 @@ msgid ""
 "structure is a union; one should read only those fields that are meaningful "
 "for the kind of system call stop specified by the I<op> field."
 msgstr ""
+"Die Felder I<op>, I<arch>, I<instruction_pointer> und I<stack_pointer> sind "
+"für alle Arten von Ptrace-Systemaufrufstopps definiert. Der Rest der "
+"Struktur ist eine Union; Sie sollten nur solche Felder lesen, die für Ihre "
+"Art von Systemaufrufstopp durch das Feld I<op> definiert sind."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1396,6 +1435,9 @@ msgid ""
 "ptrace.hE<gt>)> indicating what type of stop occurred and which part of the "
 "union is filled:"
 msgstr ""
+"Das Feld I<op> enthält einen der folgenden Werte (definiert in I<E<lt>linux/"
+"ptrace.hE<gt>)>, der anzeigt, welcher Stopp-Typ aufgetreten und welcher Teil "
+"der Union gefüllt ist:"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1409,6 +1451,8 @@ msgid ""
 "The I<entry> component of the union contains information relating to a "
 "system call entry stop."
 msgstr ""
+"Die Komponente I<entry> der Union enthält Informationen mit Bezug zu einem "
+"Systemaufruf-Eintrags-Stopp."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1422,6 +1466,8 @@ msgid ""
 "The I<exit> component of the union contains information relating to a system "
 "call exit stop."
 msgstr ""
+"Die Komponente I<exit> der Union enthält Informationen mit Bezug zu einem "
+"Systemaufruf-Exit-Stopp."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1435,6 +1481,8 @@ msgid ""
 "The I<seccomp> component of the union contains information relating to a "
 "B<PTRACE_EVENT_SECCOMP> stop."
 msgstr ""
+"Die Komponente I<seccomp> der Union enthält Informationen mit Bezug zu einem "
+"B<PTRACE_EVENT_SECCOMP>-Stopp"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1445,7 +1493,7 @@ msgstr "B<PTRACE_SYSCALL_INFO_NONE>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 msgid "No component of the union contains relevant information."
-msgstr ""
+msgstr "Keine Komponente der Union enthält relevante Informationen."
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2124,12 +2172,6 @@ msgstr ""
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, fuzzy
-#| msgid ""
-#| "B<PTRACE_EVENT> stops are observed by the tracer as B<waitpid>(2)  "
-#| "returning with I<WIFSTOPPED(status)>, and I<WSTOPSIG(status)> returns "
-#| "B<SIGTRAP>.  An additional bit is set in the higher byte of the status "
-#| "word: the value I<statusE<gt>E<gt>8> will be"
 msgid ""
 "B<PTRACE_EVENT> stops are observed by the tracer as B<waitpid>(2)  returning "
 "with I<WIFSTOPPED(status)>, and I<WSTOPSIG(status)> returns B<SIGTRAP> (or "
@@ -2138,8 +2180,10 @@ msgid ""
 "word: the value I<statusE<gt>E<gt>8> will be"
 msgstr ""
 "B<PTRACE_EVENT>-Stopps werden durch den Verfolger als B<waitpid>(2) "
-"beobachtet, kehren mit »I<WIFSTOPPED(status)> true« zurück und "
-"I<WSTOPSIG(status)> gibt B<SIGTRAP> zurück. Es wird ein zusätzliches Bit in "
+"beobachtet, kehren mit I<WIFSTOPPED(status)> zurück und "
+"I<WSTOPSIG(status)> gibt B<SIGTRAP> zurück (oder für B<PTRACE_EVENT_STOP>: "
+"gibt das Stopp-Signal zurück, falls der verfolgte Prozess in einem "
+"Gruppen-Stopp ist). Es wird ein zusätzliches Bit in "
 "das höhere Bit des Status (Datentyp Word) gesetzt: Der Wert "
 "I<statusE<gt>E<gt>8> wird wie folgt sein:"
 
@@ -4395,6 +4439,8 @@ msgid ""
 "The I<exit> component of the union contains information relating to a "
 "B<PTRACE_EVENT_SECCOMP> stop."
 msgstr ""
+"Die Komponente I<exit> der Union enthält Informationen mit Bezug zu einem "
+"B<PTRACE_EVENT_SECCOMP>-Stopp."
 
 #. type: Plain text
 #: debian-buster
