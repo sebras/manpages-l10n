@@ -1,11 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 #
-# An example hook script to verify what is about to be committed.
+# A hook script to verify what is about to be committed.
 # Called by "git commit" with no arguments.  The hook should
 # exit with non-zero status after issuing an appropriate message if
 # it wants to stop the commit.
+
 #
-# To enable this hook, rename this file to "pre-commit".
+# Checks provided by the hook template
+#
 
 if git rev-parse --verify HEAD >/dev/null 2>&1
 then
@@ -48,6 +50,10 @@ fi
 # If there are whitespace errors, print the offending file names and fail.
 git diff-index --check --cached $against --
 
+#
+# Check formating of the commited .po files
+#
+
 # Get the list of updated po files
 po_files=`git diff --cached --name-only --diff-filter=ACM | grep '\.po$'`
 # Run 'msgfmt -vc' on each po file
@@ -62,4 +68,65 @@ do
 		failure=1
 	fi
 done
-exit $failure
+
+# Exit only in case of error.
+if [ $failure -eq 1 ]; then
+	exit $failure
+fi
+
+#
+# Sending of [DONE] messages
+#
+
+CONFIG_FILE=hooks/pre-commit.conf
+# Bump this version number whenever a new, non-retrocompatible change
+# is introduced in the configuration.
+PRECOMMIT_SCRIPT_VERSION=1
+if [ -f "$CONFIG_FILE" ]; then
+	. "$CONFIG_FILE"
+	if [ $PRECOMMIT_SCRIPT_VERSION -ne $PRECOMMIT_CONFIG_VERSION ]; then
+		echo "Mismatch between the script and your configuration file."
+		echo "Please update your configuration according to the template and update the value of \$PRECOMMIT_CONFIG_VERSION to $PRECOMMIT_SCRIPT_VERSION."
+		exit 1
+	fi
+
+	# Prepare [DONE] messages
+	# First, collect the message-ids of the [RFR] or [LCFC] messages matching the files.
+	# Note: One message can be about several files, so we have to gather them.
+	content=$(curl -L --silent $COORDINATION_URL)
+	declare -A messages
+	for po_file in $po_files
+	do
+		name=$(echo "$po_file" | sed -E 's#po/.+/##' | sed -E 's/\..*//')
+		msgurl=$(echo "$content" | grep -A 6 "<td>manpages" | grep -A 4 "<td>$name/" | grep -o "https.*html")
+		if [ -z "$msgurl" ]
+		then
+			echo "$po_file has not been found on $COORDINATION_URL"
+		else
+			msg=$(curl -L --silent $msgurl)
+			msgid=$(echo "$msg" | grep "Message-id" | grep -oP '"/msgid-search/.*?"' | sed 's#"/msgid-search/\(.*\)"#\1#')
+			title=$(echo "$msg" | grep h1 | sed -E 's/<.?h1>//g' | sed -E 's/\[.*\]//')
+			messages[$msgid]=$title
+		fi
+	done
+
+	# Now, for each collected message, send a [DONE] reply to the l10n list.
+	for msgid in "${!messages[@]}"
+	do
+		case $MUA in
+		mailto)
+			# Escape line endings so they can be correctly interpreted by the MUA.
+			escaped_done_msg=$(echo "$DONE_MSG" | sed ':a;N;$!ba;s/\n/%0D%0A/g')
+			echo -e 'Ctrl+click on \e]8;;mailto:'"${LIST_ADDRESS}"'?subject=[DONE] '"${messages[$msgid]}"'&in-reply-to=<'"$msgid"'>&body='"$escaped_done_msg"'\e\\this link\e]8;;\e\\ to send your message.'
+			;;
+		thunderbird)
+			thunderbird -compose "to='${LIST_ADDRESS}',subject='[DONE] ${messages[$msgid]}',body='$DONE_MSG'"
+			;;
+		*)
+			echo "Unknown Mail User Agent, you can use 'mailto' for the default behavior."
+			;;
+		esac
+	done
+fi
+
+exit 0
