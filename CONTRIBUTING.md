@@ -156,3 +156,14 @@ To 'install' this hook, run from the root folder of the project:
 ~~~
 ln -s hooks/pre-commit .git/hooks/pre-commit
 ~~~
+
+### Automatic composing of [DONE] messages using git hooks
+
+Using the same git hook as above, it as also possible to enable the automatic composing of "[DONE]" messages to your l10n mailing list when you commit new translations.
+To enable this feature, follow the same instruction as above to activate the git hook, then create a configuration file using the template provided:
+
+~~~
+cp hooks/pre-commit.conf.template hooks/pre-commit.conf
+~~~
+
+Once the file _pre-commit.conf_ exists, just fill it with the required info.
