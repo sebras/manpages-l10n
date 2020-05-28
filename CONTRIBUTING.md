@@ -167,3 +167,5 @@ cp hooks/pre-commit.conf.template hooks/pre-commit.conf
 ~~~
 
 Once the file _pre-commit.conf_ exists, just fill it with the required info.
+
+WARNING: this hook requires the curl package to be installed.
