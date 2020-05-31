@@ -7,9 +7,14 @@ of Linux manpages. The list is sorted alphabetically.
 ## Brazilian Portuguese:
 
 * André L. Fassone Canova <lonelywolf@blv.com.br>
+* André Luiz Fassone <lonely_wolf@ig.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
+* Fábio Henrique F. Silva <fabiohfs@mail.com>
+* Leslie Harlley Watter <leslie@conectiva.com.br>
 * Leslie Harlley Watter <leslie@netpar.com.br>
+* Marcelo D. Beckmann <marcelobeckmann@yahoo.com>
 * Rafael Fontenelle <rafaelff@gnome.org>
+* Ricardo C.O.Freitas <english.quest@best-service.com>
 * Roberto Selbach Teixeira <robteix@zaz.com.br>
 * Rubens de Jesus Nogueira <darkseid99@usa.net>
 
@@ -65,6 +70,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
 * Jean-Marc Chaton <chaton@debian.org>
 * Jean-Paul Guillonneau <debian-l10n-french@lists.debian.org>
+* Jean-Paul Guillonneau <guillonneau.jeanpaul@free.fr>
 * Jean-Philippe Guérard <fevrier@tigreraye.org>
 * Jean-Philippe MENGUAL <jpmengual@debian.org>
 * Jean-Pierre Giraud <jean-pierregiraud@neuf.fr>
@@ -109,6 +115,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Daniel Kobras <kobras@linux.de>
 * David Thamm <dthamm@bfs.de>
 * Dennis Stampfer <kontakt@dstampfer.de>
+* Dr. Helge Kreutzmann <debian@helgefjell.de>
 * Dr. Tobias Quathamer <toddy@debian.org>
 * Eduard Bloch <blade@debian.org>
 * Elmar Jansen <ej@pumuckel.gun.de>
@@ -168,7 +175,9 @@ of Linux manpages. The list is sorted alphabetically.
 ## Italian:
 
 * Alessandro Rubini <rubini@linux.it>
+* Antonio Colombo <azc100@gmail.com>
 * Antonio Giovanni Colombo <azc100@gmail.com>
+* Augusto Lenardi <augusto@comune.modena.it>
 * Beatrice Torracca <beatricet@libero.it>
 * Claudio Ferronato <claiudio@libero.it>
 * Daniele Giacomini <daniele@evo.it>
@@ -182,7 +191,9 @@ of Linux manpages. The list is sorted alphabetically.
 * Marco Curreli <marcocurreli@tiscali.it>
 * Michele Dalla Silvestra <dalla@maya.dei.unipd.it>
 * Ottavio G. Rizzo <rizzo@pluto.linux.it>
+* Silvano Sallese <silvano@pluto.it>
 * Valerio Dodet <dodetvalerio@tiscali.it>
+* Vieri Giugni <v.giugni@gmail.com>
 
 
 ## Polish:
