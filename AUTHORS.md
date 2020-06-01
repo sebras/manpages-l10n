@@ -10,13 +10,19 @@ of Linux manpages. The list is sorted alphabetically.
 * André Luiz Fassone <lonely_wolf@ig.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
 * Fábio Henrique F. Silva <fabiohfs@mail.com>
-* Leslie Harlley Watter <leslie@conectiva.com.br>
-* Leslie Harlley Watter <leslie@netpar.com.br>
+* Fernando Boaglio <boaglio@netscape.net>
+* Jorge Godoy <godoy@conectiva.com.br>
+* Leslie Harlley Watter <leslie@watter.org>
 * Marcelo D. Beckmann <marcelobeckmann@yahoo.com>
+* Orlando V. de Castro Jr. <orlandocastro@yahoo.com>
+* Rafael Caetano dos Santos <rcaetano@linux.ime.usp.br>
 * Rafael Fontenelle <rafaelff@gnome.org>
 * Ricardo C.O.Freitas <english.quest@best-service.com>
 * Roberto Selbach Teixeira <robteix@zaz.com.br>
+* Rodrigo Stulzer Lopes <rodrigo@conectiva.com.br>
 * Rubens de Jesus Nogueira <darkseid99@usa.net>
+* Sandro Nunes Henrique <sandro@conectiva.com.br>
+* Walter Rodrigo de Sá Cruz <keytech@bol.com.br>
 
 
 ## Dutch:
