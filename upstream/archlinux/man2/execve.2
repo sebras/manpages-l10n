@@ -107,8 +107,8 @@ If the set-user-ID bit is set on the program file referred to by
 \fIpathname\fP,
 then the effective user ID of the calling process is changed
 to that of the owner of the program file.
-Similarly, when the set-group-ID
-bit of the program file is set the effective group ID of the calling
+Similarly, if the set-group-ID bit is set on the program file,
+then the effective group ID of the calling
 process is set to the group of the program file.
 .PP
 The aforementioned transformations of the effective IDs are
@@ -210,12 +210,22 @@ The following Linux-specific process attributes are also
 not preserved during an
 .BR execve ():
 .IP * 3
-The
-.BR prctl (2)
-.B PR_SET_DUMPABLE
-flag is set,
-unless a set-user-ID or set-group ID program is being executed,
-in which case it is cleared.
+The process's "dumpable" attribute is set to the value 1,
+unless a set-user-ID program, a set-group-ID program,
+or a program with capabilities is being executed,
+in which case the dumpable flag may instead be reset to the value in
+.IR /proc/sys/fs/suid_dumpable ,
+in the circumstances described under
+.BR PR_SET_DUMPABLE
+in
+.BR prctl (2).
+Note that changes to the "dumpable" attribute may cause ownership
+of files in the process's
+.IR /proc/[pid]
+directory to change to
+.IR root:root ,
+as described in
+.BR proc (5).
 .IP *
 The
 .BR prctl (2)
@@ -295,7 +305,7 @@ POSIX.1 says that if file descriptors 0, 1, and 2 would
 otherwise be closed after a successful
 .BR execve (),
 and the process would gain privilege because the set-user-ID or
-set-group_ID mode bit was set on the executed file,
+set-group-ID mode bit was set on the executed file,
 then the system may open an unspecified file for each of these
 file descriptors.
 As a general principle, no portable program, whether privileged or not,
@@ -630,7 +640,10 @@ failure may occur past the point of no return:
 the original executable image has been torn down,
 but the new image could not be completely built.
 In such cases, the kernel kills the process with a
-.BR SIGKILL
+.\" commit 19d860a140beac48a1377f179e693abe86a9dac9
+.BR SIGSEGV
+.RB ( SIGKILL
+until Linux 3.17)
 signal.
 .\"
 .SS Interpreter scripts
@@ -767,7 +780,7 @@ Since UNIX\ V7, both are NULL.
 .\" .BR execve ()
 .\" that could be exploited for denial of service by a suitably crafted
 .\" ELF binary. There are no known problems with 2.0.34 or 2.2.15.
-.SH EXAMPLE
+.SH EXAMPLES
 The following program is designed to be execed by the second program below.
 It just echoes its command-line arguments, one per line.
 .PP
@@ -872,12 +885,13 @@ argv[4]: world
 .BR fexecve (3),
 .BR getopt (3),
 .BR system (3),
+.BR capabilities (7),
 .BR credentials (7),
 .BR environ (7),
 .BR path_resolution (7),
 .BR ld.so (8)
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,
