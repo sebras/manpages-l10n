@@ -138,7 +138,9 @@ override files with the same name in
 /usr/lib/tmpfiles\&.d\&. Packages should install their configuration files in
 /usr/lib/tmpfiles\&.d\&. Files in
 /etc/tmpfiles\&.d
-are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same path, the entry in the file with the lexicographically earliest name will be applied\&. All other conflicting entries will be logged as errors\&. When two lines are prefix path and suffix path of each other, then the prefix line is always created first, the suffix later (and if removal applies to the line, the order is reversed: the suffix is removed first, the prefix later)\&. Lines that take globs are applied after those accepting no globs\&. If multiple operations shall be applied on the same file (such as ACL, xattr, file attribute adjustments), these are always done in the same fixed order\&. Except for those cases, the files/directories are processed in the order they are listed\&.
+are reserved for the local administrator, who may use this logic to override the configuration files installed by vendor packages\&. All configuration files are sorted by their filename in lexicographic order, regardless of which of the directories they reside in\&. If multiple files specify the same path, the entry in the file with the lexicographically earliest name will be applied (note that lines suppressed due to the
+"!"
+are filtered before application, meaning that if an early line carries the exclamation mark and is suppressed because of that, a later line matching in path will be applied)\&. All other conflicting entries will be logged as errors\&. When two lines are prefix path and suffix path of each other, then the prefix line is always created first, the suffix later (and if removal applies to the line, the order is reversed: the suffix is removed first, the prefix later)\&. Lines that take globs are applied after those accepting no globs\&. If multiple operations shall be applied on the same file (such as ACL, xattr, file attribute adjustments), these are always done in the same fixed order\&. Except for those cases, the files/directories are processed in the order they are listed\&.
 .PP
 If the administrator wants to disable a configuration file supplied by the vendor, the recommended way is to place a symlink to
 /dev/null
@@ -164,7 +166,7 @@ L     /tmp/foobar \-    \-    \-     \-   /dev/null
 Fields may be enclosed within quotes and contain C\-style escapes\&.
 .SS "Type"
 .PP
-The type consists of a single letter and optionally an exclamation mark and/or minus sign\&.
+The type consists of a single letter and optionally an exclamation mark ("!") and/or minus sign ("\-")\&.
 .PP
 The following line types are understood:
 .PP
@@ -416,11 +418,11 @@ and
 \fIa+\fR, but recursive\&. Does not follow symlinks\&.
 .RE
 .PP
-If the exclamation mark is used, this line is only safe to execute during boot, and can break a running system\&. Lines without the exclamation mark are presumed to be safe to execute at any time, e\&.g\&. on package upgrades\&.
+If the exclamation mark ("!") is used, this line is only safe to execute during boot, and can break a running system\&. Lines without the exclamation mark are presumed to be safe to execute at any time, e\&.g\&. on package upgrades\&.
 \fBsystemd\-tmpfiles\fR
-will execute line with an exclamation mark only if option
+will take lines with an exclamation mark only into consideration, if the
 \fB\-\-boot\fR
-is given\&.
+option is given\&.
 .PP
 For example:
 .sp
@@ -441,7 +443,7 @@ r! /tmp/\&.X[0\-9]*\-lock
 The second line in contrast to the first one would break a running system, and will only be executed with
 \fB\-\-boot\fR\&.
 .PP
-If the minus sign is used, this line failing to run successfully during create (and only create) will not cause the execution of
+If the minus sign ("\-") is used, this line failing to run successfully during create (and only create) will not cause the execution of
 \fBsystemd\-tmpfiles\fR
 to return an error\&.
 .PP
