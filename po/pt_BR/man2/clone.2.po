@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: manpages-l10n\n"
-"POT-Creation-Date: 2020-04-18 20:17+02:00\n"
+"POT-Creation-Date: 2020-06-12 19:04+02:00\n"
 "PO-Revision-Date: 2001-05-31 16:20+0200\n"
 "Last-Translator: André Luiz Fassone <lonely_wolf@ig.com.br>\n"
 "Language-Team: Brazilian Portuguese <debian-l10n-portuguese@lists.debian."
@@ -25,10 +25,10 @@ msgid "CLONE"
 msgstr "CLONE"
 
 #. type: TH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#: archlinux debian-unstable
 #, no-wrap
-msgid "2019-11-19"
-msgstr "19 novembro 2019"
+msgid "2020-06-09"
+msgstr "9 junho 2020"
 
 #. type: TH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -293,7 +293,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#: archlinux debian-unstable
 #, no-wrap
 msgid ""
 "struct clone_args {\n"
@@ -309,8 +309,12 @@ msgid ""
 "    u64 stack;        /* Pointer to lowest byte of stack */\n"
 "    u64 stack_size;   /* Size of stack */\n"
 "    u64 tls;          /* Location of new TLS */\n"
-"    u64 set_tid;      /* Pointer to a I<pid_t> array */\n"
-"    u64 set_tid_size; /* Number of elements in I<set_tid> */\n"
+"    u64 set_tid;      /* Pointer to a I<pid_t> array\n"
+"                         (since Linux 5.5) */\n"
+"    u64 set_tid_size; /* Number of elements in I<set_tid>\n"
+"                         (since Linux 5.5) */\n"
+"    u64 cgroup;       /* File descriptor for target cgroup\n"
+"                         of child (since Linux 5.7) */\n"
 "};\n"
 msgstr ""
 
@@ -495,6 +499,19 @@ msgstr ""
 #, no-wrap
 msgid "set_tid_size"
 msgstr "set_tid_size"
+
+#. type: tbl table
+#: archlinux debian-unstable
+#, no-wrap
+msgid "cgroup"
+msgstr ""
+
+#. type: tbl table
+#: archlinux debian-unstable
+#, fuzzy, no-wrap
+#| msgid "B<CLONE_PID>"
+msgid "See CLONE_INTO_CGROUP"
+msgstr "B<CLONE_PID>"
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -893,6 +910,69 @@ msgstr ""
 "sistema de informações de arquivos do pai no momento do B<clone>. Chamadas a "
 "B<chroot>(2), B<chdir>(2), B<umask>(2) feitas depois por um dos processos "
 "não afeta o outro."
+
+#. type: TP
+#: archlinux debian-unstable
+#, fuzzy, no-wrap
+#| msgid "B<CLONE_VFORK>"
+msgid "B<CLONE_INTO_CGROUP> (since Linux 5.7)"
+msgstr "B<CLONE_VFORK>"
+
+#.  commit ef2c41cf38a7559bbf91af42d5b6a4429db8fc68
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"By default, a child process is placed in the same version 2 cgroup as its "
+"parent.  The B<CLONE_INTO_CGROUP> flag allows the child process to be "
+"created in a different version 2 cgroup.  (Note that B<CLONE_INTO_CGROUP> "
+"has effect only for version 2 cgroups.)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"In order to place the child process in a different cgroup, the caller "
+"specifies B<CLONE_INTO_CGROUP> in I<cl_args.flags> and passes a file "
+"descriptor that refers to a version 2 cgroup in the I<cl_args.cgroup> "
+"field.  (This file descriptor can be obtained by opening a cgroup v2 "
+"directory using either the B<O_RDONLY> or the B<O_PATH> flag.)  Note that "
+"all of the usual restrictions (described in B<cgroups>(7))  on placing a "
+"process into a version 2 cgroup apply."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"Among the possible use cases for B<CLONE_INTO_CGROUP> are the following:"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"Spawning a process into a cgroup different from the parent's cgroup makes it "
+"possible for a service manager to directly spawn new services into dedicated "
+"cgroups.  This eliminates the accounting jitter that would be caused if the "
+"child process was first created in the same cgroup as the parent and then "
+"moved into the target cgroup.  Furthermore, spawning the child process "
+"directly into a target cgroup is significantly cheaper than moving the child "
+"process into the target cgroup after it has been created."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"The B<CLONE_INTO_CGROUP> flag also allows the creation of frozen child "
+"processes by spawning them into a frozen cgroup.  (See B<cgroups>(7)  for a "
+"description of the freezer controller.)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"For threaded applications (or even thread implementations which make use of "
+"cgroups to limit individual threads), it is possible to establish a fixed "
+"cgroup layout before spawning each thread directly into its target cgroup."
+msgstr ""
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1697,6 +1777,480 @@ msgstr ""
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #, no-wrap
+msgid "RETURN VALUE"
+msgstr "VALOR DE RETORNO"
+
+#.  gettid(2) returns current->pid;
+#.  getpid(2) returns current->tgid;
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, fuzzy
+#| msgid ""
+#| "On success, the PID of the child process is returned in the caller's "
+#| "thread of execution.  On failure, a -1 will be returned in the caller's "
+#| "context, no child process will be created, and I<errno> will be set "
+#| "appropriately."
+msgid ""
+"On success, the thread ID of the child process is returned in the caller's "
+"thread of execution.  On failure, -1 is returned in the caller's context, no "
+"child process will be created, and I<errno> will be set appropriately."
+msgstr ""
+"Em caso de sucesso, a PID do processo filho é devolvido no segmento de "
+"execução do processo pai. Caso contrário, -1 -e devolvido no contexto do "
+"pai, não será criado o processo filho, e I<errno> será selecionado "
+"adequadamente."
+
+#. type: SH
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "ERRORS"
+msgstr "ERROS"
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EAGAIN>"
+msgstr "B<EAGAIN>"
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, fuzzy
+#| msgid "Too many processes are already running."
+msgid "Too many processes are already running; see B<fork>(2)."
+msgstr "Muitos processos já estão rodando."
+
+#. type: TP
+#: archlinux debian-unstable
+#, no-wrap
+msgid "B<EBUSY> (B<clone3>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"B<CLONE_INTO_CGROUP> was specified in I<cl_args.flags>, but the file "
+"descriptor specified in I<cl_args.cgroup> refers to a version 2 cgroup in "
+"which a domain controller is enabled."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EEXIST> (B<clone3>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"One (or more) of the PIDs specified in I<set_tid> already exists in the "
+"corresponding PID namespace."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL>"
+msgstr "B<EINVAL>"
+
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Both B<CLONE_SIGHAND> and B<CLONE_CLEAR_SIGHAND> were specified in the "
+"I<flags> mask."
+msgstr ""
+
+#.  Precisely: Linux 2.6.0-test6
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_SIGHAND> was specified in the I<flags> mask, but B<CLONE_VM> was "
+"not.  (Since Linux 2.6.0.)"
+msgstr ""
+
+#.  .TP
+#.  .B EINVAL
+#.  Precisely one of
+#.  .B CLONE_DETACHED
+#.  and
+#.  .B CLONE_THREAD
+#.  was specified.
+#.  (Since Linux 2.6.0-test6.)
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_THREAD> was specified in the I<flags> mask, but B<CLONE_SIGHAND> was "
+"not.  (Since Linux 2.5.35.)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_THREAD> was specified in the I<flags> mask, but the current process "
+"previously called B<unshare>(2)  with the B<CLONE_NEWPID> flag or used "
+"B<setns>(2)  to reassociate itself with a PID namespace."
+msgstr ""
+
+#.  commit e66eded8309ebf679d3d3c1f5820d1f2ca332c71
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Both B<CLONE_FS> and B<CLONE_NEWNS> were specified in the I<flags> mask."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL> (since Linux 3.9)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Both B<CLONE_NEWUSER> and B<CLONE_FS> were specified in the I<flags> mask."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Both B<CLONE_NEWIPC> and B<CLONE_SYSVSEM> were specified in the I<flags> "
+"mask."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"One (or both) of B<CLONE_NEWPID> or B<CLONE_NEWUSER> and one (or both) of "
+"B<CLONE_THREAD> or B<CLONE_PARENT> were specified in the I<flags> mask."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL> (since Linux 2.6.32)"
+msgstr ""
+
+#.  commit 123be07b0b399670a7cc3d82fef0cb4f93ef885c
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, fuzzy
+#| msgid "B<CLONE_PID> was specified by a process with a non-zero PID."
+msgid "B<CLONE_PARENT> was specified, and the caller is an init process."
+msgstr "B<CLONE_PID> foi especificado por um processo com PID diferente de 0."
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Returned by the glibc B<clone>()  wrapper function when I<fn> or I<stack> is "
+"specified as NULL."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWIPC> was specified in the I<flags> mask, but the kernel was not "
+"configured with the B<CONFIG_SYSVIPC> and B<CONFIG_IPC_NS> options."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWNET> was specified in the I<flags> mask, but the kernel was not "
+"configured with the B<CONFIG_NET_NS> option."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWPID> was specified in the I<flags> mask, but the kernel was not "
+"configured with the B<CONFIG_PID_NS> option."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUSER> was specified in the I<flags> mask, but the kernel was not "
+"configured with the B<CONFIG_USER_NS> option."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUTS> was specified in the I<flags> mask, but the kernel was not "
+"configured with the B<CONFIG_UTS_NS> option."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"I<stack> is not aligned to a suitable boundary for this architecture.  For "
+"example, on aarch64, I<stack> must be a multiple of 16."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL> (B<clone3>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid "B<CLONE_DETACHED> was specified in the I<flags> mask."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL> (B<clone>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_PIDFD> was specified together with B<CLONE_DETACHED> in the I<flags> "
+"mask."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_PIDFD> was specified together with B<CLONE_THREAD> in the I<flags> "
+"mask."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL >(B<clone>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_PIDFD> was specified together with B<CLONE_PARENT_SETTID> in the "
+"I<flags> mask."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+msgid "I<set_tid_size> is greater than the number of nested PID namespaces."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid "One of the PIDs specified in I<set_tid> was an invalid."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EINVAL> (AArch64 only, Linux 4.6 and earlier)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+msgid "I<stack> was not aligned to a 126-bit boundary."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<ENOMEM>"
+msgstr "B<ENOMEM>"
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Cannot allocate sufficient memory to allocate a task structure for the "
+"child, or to copy those parts of the caller's context that need to be copied."
+msgstr ""
+"Não pode alocar memória suficiente para alocar a estrutura de tarefas para o "
+"processo filho, ou para copiar estas partes do contexto do processo pai que "
+"precisam ser copiadas."
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<ENOSPC> (since Linux 3.7)"
+msgstr ""
+
+#.  commit f2302505775fd13ba93f034206f1e2a587017929
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWPID> was specified in the I<flags> mask, but the limit on the "
+"nesting depth of PID namespaces would have been exceeded; see "
+"B<pid_namespaces>(7)."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<ENOSPC> (since Linux 4.9; beforehand B<EUSERS>)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUSER> was specified in the I<flags> mask, and the call would "
+"cause the limit on the number of nested user namespaces to be exceeded.  See "
+"B<user_namespaces>(7)."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"From Linux 3.11 to Linux 4.8, the error diagnosed in this case was B<EUSERS>."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<ENOSPC> (since Linux 4.9)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"One of the values in the I<flags> mask specified the creation of a new user "
+"namespace, but doing so would have caused the limit defined by the "
+"corresponding file in I</proc/sys/user> to be exceeded.  For further "
+"details, see B<namespaces>(7)."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable
+#, no-wrap
+msgid "B<EOPNOTSUP> (B<clone3>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable
+msgid ""
+"B<CLONE_INTO_CGROUP> was specified in I<cl_args.flags>, but the file "
+"descriptor specified in I<cl_args.cgroup> refers to a version 2 cgroup that "
+"is in the I<domain invalid> state."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EPERM>"
+msgstr "B<EPERM>"
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWCGROUP>, B<CLONE_NEWIPC>, B<CLONE_NEWNET>, B<CLONE_NEWNS>, "
+"B<CLONE_NEWPID>, or B<CLONE_NEWUTS> was specified by an unprivileged process "
+"(process without B<CAP_SYS_ADMIN>)."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_PID> was specified by a process other than process 0.  (This error "
+"occurs only on Linux 2.5.15 and earlier.)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUSER> was specified in the I<flags> mask, but either the "
+"effective user ID or the effective group ID of the caller does not have a "
+"mapping in the parent namespace (see B<user_namespaces>(7))."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EPERM> (since Linux 3.9)"
+msgstr ""
+
+#.  commit 3151527ee007b73a0ebd296010f1c0454a919c7d
+#.  FIXME What is the rationale for this restriction?
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUSER> was specified in the I<flags> mask and the caller is in a "
+"chroot environment (i.e., the caller's root directory does not match the "
+"root directory of the mount namespace in which it resides)."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EPERM> (B<clone3>() only)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"I<set_tid_size> was greater than zero, and the caller lacks the "
+"B<CAP_SYS_ADMIN> capability in one or more of the user namespaces that own "
+"the corresponding PID namespaces."
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<ERESTARTNOINTR> (since Linux 2.6.17)"
+msgstr ""
+
+#.  commit 4a2c7a7837da1b91468e50426066d988050e4d56
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"System call was interrupted by a signal and will be restarted.  (This can be "
+"seen only during a trace.)"
+msgstr ""
+
+#. type: TP
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "B<EUSERS> (Linux 3.11 to Linux 4.8)"
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"B<CLONE_NEWUSER> was specified in the I<flags> mask, and the limit on the "
+"number of nested user namespaces would be exceeded.  See the discussion of "
+"the B<ENOSPC> error above."
+msgstr ""
+
+#. type: SH
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "VERSIONS"
+msgstr "VERSÕES"
+
+#.  There is no entry for
+#.  .BR clone ()
+#.  in libc5.
+#.  glibc2 provides
+#.  .BR clone ()
+#.  as described in this manual page.
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid "The B<clone3>()  system call first appeared in Linux 5.3."
+msgstr ""
+
+#. type: SH
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "CONFORMING TO"
+msgstr "DE ACORDO COM"
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"These system calls are Linux-specific and should not be used in programs "
+"intended to be portable."
+msgstr ""
+
+#. type: SH
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#, no-wrap
 msgid "NOTES"
 msgstr "NOTAS"
 
@@ -1729,6 +2283,37 @@ msgid ""
 "correctly for the child)  I<before> invoking the B<clone>()  system call.  "
 "So, in cases where B<clone>()  is used to recursively create children, do "
 "not use the buffer employed for the parent's stack as the stack of the child."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"The B<kcmp>(2)  system call can be used to test whether two processes share "
+"various resources such as a file descriptor table, System V semaphore undo "
+"operations, or a virtual address space."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"Handlers registered using B<pthread_atfork>(3)  are not executed during a "
+"clone call."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"In the Linux 2.4.x series, B<CLONE_THREAD> generally does not make the "
+"parent of the new thread the same as the parent of the calling process.  "
+"However, for kernel versions 2.4.7 to 2.4.18 the B<CLONE_THREAD> flag "
+"implied the B<CLONE_PARENT> flag (as in Linux 2.6.0 and later)."
+msgstr ""
+
+#. type: Plain text
+#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+msgid ""
+"On i386, B<clone>()  should not be called through vsyscall, but directly "
+"through I<int $0x80>."
 msgstr ""
 
 #. type: SS
@@ -1950,483 +2535,6 @@ msgstr ""
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #, no-wrap
-msgid "RETURN VALUE"
-msgstr "VALOR DE RETORNO"
-
-#.  gettid(2) returns current->pid;
-#.  getpid(2) returns current->tgid;
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, fuzzy
-#| msgid ""
-#| "On success, the PID of the child process is returned in the caller's "
-#| "thread of execution.  On failure, a -1 will be returned in the caller's "
-#| "context, no child process will be created, and I<errno> will be set "
-#| "appropriately."
-msgid ""
-"On success, the thread ID of the child process is returned in the caller's "
-"thread of execution.  On failure, -1 is returned in the caller's context, no "
-"child process will be created, and I<errno> will be set appropriately."
-msgstr ""
-"Em caso de sucesso, a PID do processo filho é devolvido no segmento de "
-"execução do processo pai. Caso contrário, -1 -e devolvido no contexto do "
-"pai, não será criado o processo filho, e I<errno> será selecionado "
-"adequadamente."
-
-#. type: SH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "ERRORS"
-msgstr "ERROS"
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EAGAIN>"
-msgstr "B<EAGAIN>"
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, fuzzy
-#| msgid "Too many processes are already running."
-msgid "Too many processes are already running; see B<fork>(2)."
-msgstr "Muitos processos já estão rodando."
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EEXIST> (B<clone3>() only)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"One (or more) of the PIDs specified in I<set_tid> already exists in the "
-"corresponding PID namespace."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL>"
-msgstr "B<EINVAL>"
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Both B<CLONE_SIGHAND> and B<CLONE_CLEAR_SIGHAND> were specified in the "
-"I<flags> mask."
-msgstr ""
-
-#.  Precisely: Linux 2.6.0-test6
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_SIGHAND> was specified in the I<flags> mask, but B<CLONE_VM> was "
-"not.  (Since Linux 2.6.0.)"
-msgstr ""
-
-#.  .TP
-#.  .B EINVAL
-#.  Precisely one of
-#.  .B CLONE_DETACHED
-#.  and
-#.  .B CLONE_THREAD
-#.  was specified.
-#.  (Since Linux 2.6.0-test6.)
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_THREAD> was specified in the I<flags> mask, but B<CLONE_SIGHAND> was "
-"not.  (Since Linux 2.5.35.)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_THREAD> was specified in the I<flags> mask, but the current process "
-"previously called B<unshare>(2)  with the B<CLONE_NEWPID> flag or used "
-"B<setns>(2)  to reassociate itself with a PID namespace."
-msgstr ""
-
-#.  commit e66eded8309ebf679d3d3c1f5820d1f2ca332c71
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Both B<CLONE_FS> and B<CLONE_NEWNS> were specified in the I<flags> mask."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL> (since Linux 3.9)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Both B<CLONE_NEWUSER> and B<CLONE_FS> were specified in the I<flags> mask."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Both B<CLONE_NEWIPC> and B<CLONE_SYSVSEM> were specified in the I<flags> "
-"mask."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"One (or both) of B<CLONE_NEWPID> or B<CLONE_NEWUSER> and one (or both) of "
-"B<CLONE_THREAD> or B<CLONE_PARENT> were specified in the I<flags> mask."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL> (since Linux 2.6.32)"
-msgstr ""
-
-#.  commit 123be07b0b399670a7cc3d82fef0cb4f93ef885c
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, fuzzy
-#| msgid "B<CLONE_PID> was specified by a process with a non-zero PID."
-msgid "B<CLONE_PARENT> was specified, and the caller is an init process."
-msgstr "B<CLONE_PID> foi especificado por um processo com PID diferente de 0."
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Returned by the glibc B<clone>()  wrapper function when I<fn> or I<stack> is "
-"specified as NULL."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWIPC> was specified in the I<flags> mask, but the kernel was not "
-"configured with the B<CONFIG_SYSVIPC> and B<CONFIG_IPC_NS> options."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWNET> was specified in the I<flags> mask, but the kernel was not "
-"configured with the B<CONFIG_NET_NS> option."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWPID> was specified in the I<flags> mask, but the kernel was not "
-"configured with the B<CONFIG_PID_NS> option."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUSER> was specified in the I<flags> mask, but the kernel was not "
-"configured with the B<CONFIG_USER_NS> option."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUTS> was specified in the I<flags> mask, but the kernel was not "
-"configured with the B<CONFIG_UTS_NS> option."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"I<stack> is not aligned to a suitable boundary for this architecture.  For "
-"example, on aarch64, I<stack> must be a multiple of 16."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL> (B<clone3>() only)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid "B<CLONE_DETACHED> was specified in the I<flags> mask."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL> (B<clone>() only)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_PIDFD> was specified together with B<CLONE_DETACHED> in the I<flags> "
-"mask."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_PIDFD> was specified together with B<CLONE_THREAD> in the I<flags> "
-"mask."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL >(B<clone>() only)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_PIDFD> was specified together with B<CLONE_PARENT_SETTID> in the "
-"I<flags> mask."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid "I<set_tid_size> is greater than the number of nested PID namespaces."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid "If one of the PIDs specified in I<set_tid> was an invalid PID."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EINVAL> (AArch64 only, Linux 4.6 and earlier)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid "I<stack> was not aligned to a 126-bit boundary."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<ENOMEM>"
-msgstr "B<ENOMEM>"
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Cannot allocate sufficient memory to allocate a task structure for the "
-"child, or to copy those parts of the caller's context that need to be copied."
-msgstr ""
-"Não pode alocar memória suficiente para alocar a estrutura de tarefas para o "
-"processo filho, ou para copiar estas partes do contexto do processo pai que "
-"precisam ser copiadas."
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<ENOSPC> (since Linux 3.7)"
-msgstr ""
-
-#.  commit f2302505775fd13ba93f034206f1e2a587017929
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWPID> was specified in the I<flags> mask, but the limit on the "
-"nesting depth of PID namespaces would have been exceeded; see "
-"B<pid_namespaces>(7)."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<ENOSPC> (since Linux 4.9; beforehand B<EUSERS>)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUSER> was specified in the I<flags> mask, and the call would "
-"cause the limit on the number of nested user namespaces to be exceeded.  See "
-"B<user_namespaces>(7)."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"From Linux 3.11 to Linux 4.8, the error diagnosed in this case was B<EUSERS>."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<ENOSPC> (since Linux 4.9)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"One of the values in the I<flags> mask specified the creation of a new user "
-"namespace, but doing so would have caused the limit defined by the "
-"corresponding file in I</proc/sys/user> to be exceeded.  For further "
-"details, see B<namespaces>(7)."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EPERM>"
-msgstr "B<EPERM>"
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWCGROUP>, B<CLONE_NEWIPC>, B<CLONE_NEWNET>, B<CLONE_NEWNS>, "
-"B<CLONE_NEWPID>, or B<CLONE_NEWUTS> was specified by an unprivileged process "
-"(process without B<CAP_SYS_ADMIN>)."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_PID> was specified by a process other than process 0.  (This error "
-"occurs only on Linux 2.5.15 and earlier.)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUSER> was specified in the I<flags> mask, but either the "
-"effective user ID or the effective group ID of the caller does not have a "
-"mapping in the parent namespace (see B<user_namespaces>(7))."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EPERM> (since Linux 3.9)"
-msgstr ""
-
-#.  commit 3151527ee007b73a0ebd296010f1c0454a919c7d
-#.  FIXME What is the rationale for this restriction?
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUSER> was specified in the I<flags> mask and the caller is in a "
-"chroot environment (i.e., the caller's root directory does not match the "
-"root directory of the mount namespace in which it resides)."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EPERM> (B<clone3>() only)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"I<set_tid_size> was greater than zero, and the caller lacks the "
-"B<CAP_SYS_ADMIN> capability in one or more of the user namespaces that own "
-"the corresponding PID namespaces."
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<ERESTARTNOINTR> (since Linux 2.6.17)"
-msgstr ""
-
-#.  commit 4a2c7a7837da1b91468e50426066d988050e4d56
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"System call was interrupted by a signal and will be restarted.  (This can be "
-"seen only during a trace.)"
-msgstr ""
-
-#. type: TP
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "B<EUSERS> (Linux 3.11 to Linux 4.8)"
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"B<CLONE_NEWUSER> was specified in the I<flags> mask, and the limit on the "
-"number of nested user namespaces would be exceeded.  See the discussion of "
-"the B<ENOSPC> error above."
-msgstr ""
-
-#. type: SH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "VERSIONS"
-msgstr "VERSÕES"
-
-#.  There is no entry for
-#.  .BR clone ()
-#.  in libc5.
-#.  glibc2 provides
-#.  .BR clone ()
-#.  as described in this manual page.
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid "The B<clone3>()  system call first appeared in Linux 5.3."
-msgstr ""
-
-#. type: SH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
-msgid "CONFORMING TO"
-msgstr "DE ACORDO COM"
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"These system calls are Linux-specific and should not be used in programs "
-"intended to be portable."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"The B<kcmp>(2)  system call can be used to test whether two processes share "
-"various resources such as a file descriptor table, System V semaphore undo "
-"operations, or a virtual address space."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"Handlers registered using B<pthread_atfork>(3)  are not executed during a "
-"clone call."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"In the Linux 2.4.x series, B<CLONE_THREAD> generally does not make the "
-"parent of the new thread the same as the parent of the calling process.  "
-"However, for kernel versions 2.4.7 to 2.4.18 the B<CLONE_THREAD> flag "
-"implied the B<CLONE_PARENT> flag (as in Linux 2.6.0 and later)."
-msgstr ""
-
-#. type: Plain text
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-msgid ""
-"On i386, B<clone>()  should not be called through vsyscall, but directly "
-"through I<int $0x80>."
-msgstr ""
-
-#. type: SH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
-#, no-wrap
 msgid "BUGS"
 msgstr "BUGS"
 
@@ -2475,10 +2583,10 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
+#: archlinux debian-unstable
 #, no-wrap
-msgid "EXAMPLE"
-msgstr "EXEMPLO"
+msgid "EXAMPLES"
+msgstr "EXEMPLOS"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2785,17 +2893,23 @@ msgid "COLOPHON"
 msgstr "COLOFÃO"
 
 #. type: Plain text
-#: archlinux debian-unstable fedora-rawhide mageia-cauldron
+#: archlinux debian-unstable
 msgid ""
-"This page is part of release 5.06 of the Linux I<man-pages> project.  A "
+"This page is part of release 5.07 of the Linux I<man-pages> project.  A "
 "description of the project, information about reporting bugs, and the latest "
 "version of this page, can be found at \\%https://www.kernel.org/doc/man-"
 "pages/."
 msgstr ""
-"Esta página faz parte da versão 5.06 do projeto Linux I<man-pages>. Uma "
+"Esta página faz parte da versão 5.07 do projeto Linux I<man-pages>. Uma "
 "descrição do projeto, informações sobre relatórios de bugs e a versão mais "
 "recente desta página podem ser encontradas em \\%https://www.kernel.org/doc/"
 "man-pages/."
+
+#. type: TH
+#: debian-buster fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "2019-11-19"
+msgstr "19 novembro 2019"
 
 #. type: Plain text
 #: debian-buster
@@ -2852,6 +2966,12 @@ msgstr ""
 msgid "B<EINVAL> (B<clone>() only"
 msgstr ""
 
+#. type: SH
+#: debian-buster fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid "EXAMPLE"
+msgstr "EXEMPLO"
+
 #. type: Plain text
 #: debian-buster
 msgid ""
@@ -2861,6 +2981,46 @@ msgid ""
 "pages/."
 msgstr ""
 "Esta página faz parte da versão 5.04 do projeto Linux I<man-pages>. Uma "
+"descrição do projeto, informações sobre relatórios de bugs e a versão mais "
+"recente desta página podem ser encontradas em \\%https://www.kernel.org/doc/"
+"man-pages/."
+
+#. type: Plain text
+#: fedora-rawhide mageia-cauldron
+#, no-wrap
+msgid ""
+"struct clone_args {\n"
+"    u64 flags;        /* Flags bit mask */\n"
+"    u64 pidfd;        /* Where to store PID file descriptor\n"
+"                         (I<pid_t *>) */\n"
+"    u64 child_tid;    /* Where to store child TID,\n"
+"                         in child's memory (I<pid_t *>) */\n"
+"    u64 parent_tid;   /* Where to store child TID,\n"
+"                         in parent's memory (I<int *>) */\n"
+"    u64 exit_signal;  /* Signal to deliver to parent on\n"
+"                         child termination */\n"
+"    u64 stack;        /* Pointer to lowest byte of stack */\n"
+"    u64 stack_size;   /* Size of stack */\n"
+"    u64 tls;          /* Location of new TLS */\n"
+"    u64 set_tid;      /* Pointer to a I<pid_t> array */\n"
+"    u64 set_tid_size; /* Number of elements in I<set_tid> */\n"
+"};\n"
+msgstr ""
+
+#. type: Plain text
+#: fedora-rawhide mageia-cauldron
+msgid "If one of the PIDs specified in I<set_tid> was an invalid PID."
+msgstr ""
+
+#. type: Plain text
+#: fedora-rawhide mageia-cauldron
+msgid ""
+"This page is part of release 5.06 of the Linux I<man-pages> project.  A "
+"description of the project, information about reporting bugs, and the latest "
+"version of this page, can be found at \\%https://www.kernel.org/doc/man-"
+"pages/."
+msgstr ""
+"Esta página faz parte da versão 5.06 do projeto Linux I<man-pages>. Uma "
 "descrição do projeto, informações sobre relatórios de bugs e a versão mais "
 "recente desta página podem ser encontradas em \\%https://www.kernel.org/doc/"
 "man-pages/."
