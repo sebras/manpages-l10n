@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-l10n 4.0.0\n"
 "POT-Creation-Date: 2020-06-12 19:04+02:00\n"
-"PO-Revision-Date: 2020-06-12 21:44+0200\n"
+"PO-Revision-Date: 2020-06-14 07:25+0200\n"
 "Last-Translator: Dr. Tobias Quathamer <toddy@debian.org>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -305,24 +305,7 @@ msgstr ""
 
 #. type: Plain text
 #: archlinux debian-unstable
-#, fuzzy, no-wrap
-#| msgid ""
-#| "struct clone_args {\n"
-#| "    u64 flags;        /* Flags bit mask */\n"
-#| "    u64 pidfd;        /* Where to store PID file descriptor\n"
-#| "                         (I<pid_t *>) */\n"
-#| "    u64 child_tid;    /* Where to store child TID,\n"
-#| "                         in child's memory (I<pid_t *>) */\n"
-#| "    u64 parent_tid;   /* Where to store child TID,\n"
-#| "                         in parent's memory (I<int *>) */\n"
-#| "    u64 exit_signal;  /* Signal to deliver to parent on\n"
-#| "                         child termination */\n"
-#| "    u64 stack;        /* Pointer to lowest byte of stack */\n"
-#| "    u64 stack_size;   /* Size of stack */\n"
-#| "    u64 tls;          /* Location of new TLS */\n"
-#| "    u64 set_tid;      /* Pointer to a I<pid_t> array */\n"
-#| "    u64 set_tid_size; /* Number of elements in I<set_tid> */\n"
-#| "};\n"
+#, no-wrap
 msgid ""
 "struct clone_args {\n"
 "    u64 flags;        /* Flags bit mask */\n"
@@ -358,8 +341,12 @@ msgstr ""
 "    u64 stack;        /* Zeiger auf das niedrigste Byte des Stacks */\n"
 "    u64 stack_size;   /* Größe des Stacks */\n"
 "    u64 tls;          /* Ort eines neuen TLS */\n"
-"    u64 set_tid;      /* Zeiger auf ein I<pid_t>-Feld */\n"
-"    u64 set_tid_size; /* Anzahl von Elementen in I<set_tid> */\n"
+"    u64 set_tid;      /* Zeiger auf ein I<pid_t>-Feld\n"
+"                         (seit Linux 5.5) */\n"
+"    u64 set_tid_size; /* Anzahl von Elementen in I<set_tid>\n"
+"                         (seit Linux 5.5) */\n"
+"    u64 cgroup;       /* Dateideskriptor für Ziel-Cgroup\n"
+"                         eines Kindes (seit Linux 5.7) */\n"
 "};\n"
 
 #. type: Plain text
@@ -562,10 +549,9 @@ msgstr "set_tid_size"
 
 #. type: tbl table
 #: archlinux debian-unstable
-#, fuzzy, no-wrap
-#| msgid "B<group>"
+#, no-wrap
 msgid "cgroup"
-msgstr "B<group>"
+msgstr "cgroup"
 
 #. type: tbl table
 #: archlinux debian-unstable
@@ -1031,6 +1017,10 @@ msgid ""
 "created in a different version 2 cgroup.  (Note that B<CLONE_INTO_CGROUP> "
 "has effect only for version 2 cgroups.)"
 msgstr ""
+"Standardmäßig wird ein Kindprozess in die gleiche Version-2-Cgroup wie sein "
+"Elternprozess abgelegt. Der Schalter B<CLONE_INTO_CGROUP> ermöglicht es, den "
+"Kindprozess in einer anderen Version-2-Cgroup zu erstellen. (Beachten Sie, "
+"dass B<CLONE_INTO_CGROUP> nur für Version-2-Cgroups wirksam wird.)"
 
 #. type: Plain text
 #: archlinux debian-unstable
@@ -1043,12 +1033,21 @@ msgid ""
 "all of the usual restrictions (described in B<cgroups>(7))  on placing a "
 "process into a version 2 cgroup apply."
 msgstr ""
+"Um den Kindprozess in eine andere Cgroup abzulegen, legt der Aufrufende "
+"B<CLONE_INTO_CGROUP> in I<cl_args.flags> fest und übergibt im Feld I<cl_args."
+"cgroup> einen Dateideskriptor, der sich auf eine Version-2-Cgroup bezieht. "
+"(Dieser Dateideskriptor kann erhalten werden, indem ein Cgroup-v2-"
+"Verzeichnis mittels des Schalters B<O_RDONLY> oder B<O_PATH> geöffnet wird.) "
+"Beachten Sie, dass sämtliche übliche Einschränkungen (beschrieben in "
+"B<cgroups>(7)) über das Ablegen eines Prozesses in einer Version-2-Cgroup "
+"gültig bleiben."
 
 #. type: Plain text
 #: archlinux debian-unstable
 msgid ""
 "Among the possible use cases for B<CLONE_INTO_CGROUP> are the following:"
 msgstr ""
+"Folgende Anwendungsfälle für B<CLONE_INTO_CGROUP> sind unter anderen möglich:"
 
 #. type: Plain text
 #: archlinux debian-unstable
@@ -1061,6 +1060,14 @@ msgid ""
 "directly into a target cgroup is significantly cheaper than moving the child "
 "process into the target cgroup after it has been created."
 msgstr ""
+"Das Erzeugen eines Prozesses in einer Cgroup, die sich von der des "
+"Elternprozesses unterscheidet, ermöglicht es einem Diensteverwalter, neue "
+"Dienste direkt in dedizierte Cgroups zu erzeugen. Dies beseitigt das "
+"Flackern bei der Buchführung, das erzeugt würde, falls der Kindprozess erst "
+"in der gleichen Cgroup wie der Elternprozess erzeugt und dann in die Ziel-"
+"Cgroup verschoben würde. Desweiteren ist die Erzeugung des Kindprozesses "
+"direkt in der Ziel-Cgroup deutlich billiger als das Verschieben des "
+"Kindprozesses in die Ziel-Cgroup, nachdem er erstellt wurde."
 
 #. type: Plain text
 #: archlinux debian-unstable
@@ -1069,6 +1076,9 @@ msgid ""
 "processes by spawning them into a frozen cgroup.  (See B<cgroups>(7)  for a "
 "description of the freezer controller.)"
 msgstr ""
+"Der Schalter B<CLONE_INTO_CGROUP> erlaubt auch die Erstellung eingefrorener "
+"Kindprozesse durch Erzeugung dieser in einer eingefrorenen Cgroup. (Siehe "
+"B<cgroups>(7) für eine Beschreibung des Einfrier-Controllers.)"
 
 #. type: Plain text
 #: archlinux debian-unstable
@@ -1077,6 +1087,10 @@ msgid ""
 "cgroups to limit individual threads), it is possible to establish a fixed "
 "cgroup layout before spawning each thread directly into its target cgroup."
 msgstr ""
+"Für Anwendungen mit Threads (oder sogar Thread-Implementierungen, die "
+"Cgroups verwenden, um einzelne Threads zu begrenzen) ist es möglich, ein "
+"festes Cgroup-Layout zu errichten, bevor jeder Thread direkt in seine Ziel-"
+"Cgroup erzeugt wird."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2088,6 +2102,9 @@ msgid ""
 "descriptor specified in I<cl_args.cgroup> refers to a version 2 cgroup in "
 "which a domain controller is enabled."
 msgstr ""
+"B<CLONE_INTO_CGROUP> wurde in I<cl_args.flags> angegeben, aber der in "
+"I<cl_args.cgroup> angegebene Dateideskriptor bezieht sich auf eine Version-2-"
+"Cgroup, in der ein Domain-Controller aktiviert wurde."
 
 #. type: TP
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron
@@ -2335,10 +2352,8 @@ msgstr ""
 
 #. type: Plain text
 #: archlinux debian-unstable
-#, fuzzy
-#| msgid "If one of the PIDs specified in I<set_tid> was an invalid PID."
 msgid "One of the PIDs specified in I<set_tid> was an invalid."
-msgstr "Falls eine der in I<set_tid> festgelegten PIDs eine ungültige PID war."
+msgstr "Eine der in I<set_tid> festgelegten PIDs war ungültige."
 
 #. type: TP
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron
@@ -2442,6 +2457,9 @@ msgid ""
 "descriptor specified in I<cl_args.cgroup> refers to a version 2 cgroup that "
 "is in the I<domain invalid> state."
 msgstr ""
+"B<CLONE_INTO_CGROUP> wurde in I<cl_args.flags> angegeben, aber der in "
+"I<cl_args.cgroup> angegebene Dateideskriptor bezieht sich auf eine Version-2-"
+"Cgroup, die im Zustand I<Domain ungültig> ist."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
