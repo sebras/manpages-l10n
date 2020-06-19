@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
-# Copyright © 2019 Helge Kreutzmann <debian@helgefjell.de>
+# Copyright © 2019,2020 Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ cat > index.html <<-END_OF_HEADER
     <title>Translation of manual pages</title>
   </head>
   <body>
-<h1> Welcome to the l10n project</h1>
+<h1>Welcome to the l10n project</h1>
 <p>
   In the past, several projects independently maintained man page translation. Some tried to manually keep
   the translation and the upstream text in sync, while others used tools like 
@@ -65,6 +65,23 @@ cat > index.html <<-END_OF_HEADER
       <p>
       You also  might want to <a href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">view the git repository</a> directly.
       </p>
+ <h1>Other man pages translations</h1>
+ <p>
+   Some further man page translations are hosted independently. They consider various parts of man pages and use various tools. For
+   details please contact the respective maintainers.
+   </p>
+     <ul>
+       <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
+       <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, license situation unclear</li>
+       <li><a href="http://lme.linux.hu/forditas/index.html">Hungarian (link dead)</a>, appears inactive, last release 2001, license situation unclear</li>
+       <li>Indonesian (no web page), last release 1999, appears inactive, license situation unclear</li>
+       <li><a href="https://linuxjm.osdn.jp/">Japanese</a>, active, but not current (e.g. partially on the state of 2011/2016)</li>
+       <li>Korean (no web page), appears inactive, last release 2005, license situation unclear</li>
+       <li>Portuguese (no web page), last release 2004</li>
+       <li><a href="https://www.transifex.com/kruvalig/man-pages/">Russian</a>, active and current, only man-pages itself (e.g. no coreutils)</li>
+       <li><a href="http://es.tldp.org/htmls/pameli.html">Spanish</a>, appears inactive, last known release 2005, based on manpages-1.55</li>
+       <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008, focused on <q>exotic</q> man pages</li>
+     </ul>
    </body>
   </html>
 END_OF_HEADER
