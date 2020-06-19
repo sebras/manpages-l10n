@@ -73,7 +73,7 @@ cat > index.html <<-END_OF_HEADER
      <ul>
        <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
        <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, license situation unclear</li>
-       <li><a href="http://lme.linux.hu/forditas/index.html">Hungarian</a>, appears dead, last release 2001, license situation unclear</li>
+       <li><a href="http://lme.linux.hu/forditas/index.html">Hungarian (link dead)</a>, appears inactive, last release 2001, license situation unclear</li>
        <li>Indonesian (no web page), last release 1999, appears inactive, license situation unclear</li>
        <li><a href="https://linuxjm.osdn.jp/">Japanese</a>, active, but not current (e.g. partially on the state of 2011/2016)</li>
        <li>Korean (no web page), appears inactive, last release 2005, license situation unclear</li>
