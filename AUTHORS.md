@@ -20,6 +20,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Marcelo M. de Abreu <mmabreu@terra.com.br>
 * Marcelo Pereira da Silva <marcelo@pereira.com>
 * Marcus Vinicius S. Brito <pazu@visaotec.com.br>
+* Mila <misfit@linuxbr.com.br>
 * Orlando V. de Castro Jr. <orlandocastro@yahoo.com>
 * Paulo César Mendes <drpc@ism.com.br>
 * Rafael Caetano dos Santos <rcaetano@linux.ime.usp.br>
