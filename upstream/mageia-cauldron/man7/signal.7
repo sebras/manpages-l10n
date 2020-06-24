@@ -216,6 +216,24 @@ or
 .PP
 A process-directed signal may be delivered to any one of the
 threads that does not currently have the signal blocked.
+.\" Joseph C. Sible notes:
+.\" On Linux, if the main thread has the signal unblocked, then the kernel
+.\" will always deliver the signal there, citing this kernel code
+.\"
+.\"     Per this comment in kernel/signal.c since time immemorial:
+.\"
+.\"     /*
+.\"     * Now find a thread we can wake up to take the signal off the queue.
+.\"     *
+.\"     * If the main thread wants the signal, it gets first crack.
+.\"     * Probably the least surprising to the average bear.
+.\"     */
+.\"
+.\" But this does not mean the signal will be delivered only in the
+.\" main thread, since if a handler is already executing in the main thread
+.\" (and thus the signal is blocked in that thread), then a further
+.\" might be delivered in a different thread.
+.\"
 If more than one of the threads has the signal unblocked, then the
 kernel chooses an arbitrary thread to which to deliver the signal.
 .PP
@@ -261,8 +279,8 @@ SIGKILL	P1990	Term	Kill signal
 SIGLOST	\-	Term	File lock lost (unused)
 SIGPIPE	P1990	Term	Broken pipe: write to pipe with no
 			readers; see \fBpipe\fP(7)
-SIGPOLL	P2001	Term	Pollable event (Sys V).
-			Synonym for \fBSIGIO\fP
+SIGPOLL	P2001	Term	Pollable event (Sys V);
+			synonym for \fBSIGIO\fP
 SIGPROF	P2001	Term	Profiling timer expired
 SIGPWR	\-	Term	Power failure (System V)
 SIGQUIT	P1990	Core	Quit from keyboard
@@ -796,6 +814,32 @@ Linux 2.4 and earlier:
 .BR nanosleep (2).
 .SH CONFORMING TO
 POSIX.1, except as noted.
+.SH NOTES
+For a discussion of async-signal-safe functions, see
+.BR signal-safety (7).
+.PP
+The
+.I /proc/[pid]/task/[tid]/status
+file contains various fields that show the signals
+that a thread is blocking
+.RI ( SigBlk ),
+catching
+.RI ( SigCgt ),
+or ignoring
+.RI ( SigIgn ).
+(The set of signals that are caught or ignored will be the same
+across all threads in a process.)
+Other fields show the set of pending signals that are directed to the thread
+.RI ( SigPnd )
+as well as the set of pending signals that are directed
+to the process as a whole
+.RI ( ShdPnd ).
+The corresponding fields in
+.I /proc/[pid]/status
+show the information for the main thread.
+See
+.BR proc (5)
+for further details.
 .SH BUGS
 There are six signals that can be delivered
 as a consequence of a hardware exception:
@@ -826,40 +870,14 @@ even though
 .B SIGILL
 would make more sense,
 because of how the CPU reports the forbidden operation to the kernel.
-.SH NOTES
-For a discussion of async-signal-safe functions, see
-.BR signal-safety (7).
-.PP
-The
-.I /proc/[pid]/task/[tid]/status
-file contains various fields that show the signals
-that a thread is blocking
-.RI ( SigBlk ),
-catching
-.RI ( SigCgt ),
-or ignoring
-.RI ( SigIgn ).
-(The set of signals that are caught or ignored will be the same
-across all threads in a process.)
-Other fields show the set of pending signals that are directed to the thread
-.RI ( SigPnd )
-as well as the set of pending signals that are directed
-to the process as a whole
-.RI ( ShdPnd ).
-The corresponding fields in
-.I /proc/[pid]/status
-show the information for the main thread.
-See
-.BR proc (5)
-for further details.
 .SH SEE ALSO
 .BR kill (1),
 .BR clone (2),
 .BR getrlimit (2),
 .BR kill (2),
+.BR pidfd_send_signal (2),
 .BR restart_syscall (2),
 .BR rt_sigqueueinfo (2),
-.BR pidfd_send_signal (2),
 .BR setitimer (2),
 .BR setrlimit (2),
 .BR sgetmask (2),
@@ -891,7 +909,7 @@ for further details.
 .BR pthreads (7),
 .BR sigevent (7)
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,

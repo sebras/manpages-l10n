@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH BPF 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH BPF 2 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 bpf \- perform a command on an extended BPF map or program
 .SH SYNOPSIS
@@ -367,6 +367,14 @@ enum bpf_map_type {
     BPF_MAP_TYPE_DEVMAP,
     BPF_MAP_TYPE_SOCKMAP,
     BPF_MAP_TYPE_CPUMAP,
+    BPF_MAP_TYPE_XSKMAP,
+    BPF_MAP_TYPE_SOCKHASH,
+    BPF_MAP_TYPE_CGROUP_STORAGE,
+    BPF_MAP_TYPE_REUSEPORT_SOCKARRAY,
+    BPF_MAP_TYPE_PERCPU_CGROUP_STORAGE,
+    BPF_MAP_TYPE_QUEUE,
+    BPF_MAP_TYPE_STACK,
+    /* See /usr/include/linux/bpf.h for the full list. */
 };
 .EE
 .in
@@ -756,6 +764,25 @@ enum bpf_prog_type {
     BPF_PROG_TYPE_KPROBE,
     BPF_PROG_TYPE_SCHED_CLS,
     BPF_PROG_TYPE_SCHED_ACT,
+    BPF_PROG_TYPE_TRACEPOINT,
+    BPF_PROG_TYPE_XDP,
+    BPF_PROG_TYPE_PERF_EVENT,
+    BPF_PROG_TYPE_CGROUP_SKB,
+    BPF_PROG_TYPE_CGROUP_SOCK,
+    BPF_PROG_TYPE_LWT_IN,
+    BPF_PROG_TYPE_LWT_OUT,
+    BPF_PROG_TYPE_LWT_XMIT,
+    BPF_PROG_TYPE_SOCK_OPS,
+    BPF_PROG_TYPE_SK_SKB,
+    BPF_PROG_TYPE_CGROUP_DEVICE,
+    BPF_PROG_TYPE_SK_MSG,
+    BPF_PROG_TYPE_RAW_TRACEPOINT,
+    BPF_PROG_TYPE_CGROUP_SOCK_ADDR,
+    BPF_PROG_TYPE_LWT_SEG6LOCAL,
+    BPF_PROG_TYPE_LIRC_MODE2,
+    BPF_PROG_TYPE_SK_REUSEPORT,
+    BPF_PROG_TYPE_FLOW_DISSECTOR,
+    /* See /usr/include/linux/bpf.h for the full list. */
 };
 .EE
 .in
@@ -1120,11 +1147,33 @@ The
 .BR bpf ()
 system call is Linux-specific.
 .SH NOTES
-In the current implementation, all
+Prior to Linux 4.4, all
 .BR bpf ()
 commands require the caller to have the
 .B CAP_SYS_ADMIN
 capability.
+From Linux 4.4 onwards,
+.\" commit 1be7f75d1668d6296b80bf35dcf6762393530afc
+an unprivileged user may create limited programs of type
+.BR BPF_PROG_TYPE_SOCKET_FILTER
+and associated maps.
+However they may not store kernel pointers within
+the maps and are presently limited to the following helper functions:
+.\" [Linux 5.6] mtk: The list of available functions is, I think, governed
+.\" by the check in net/core/filter.c::bpf_base_func_proto().
+.IP * 3
+get_random
+.PD 0
+.IP *
+get_smp_processor_id
+.IP *
+tail_call
+.IP *
+ktime_get_ns
+.PD 1
+.PP
+Unprivileged access may be blocked by setting the sysctl
+.IR /proc/sys/kernel/unprivileged_bpf_disabled .
 .PP
 eBPF objects (maps and programs) can be shared between processes.
 For example, after
@@ -1229,7 +1278,7 @@ riscv (since Linux 5.1).
 Both classic and extended BPF are explained in the kernel source file
 .IR Documentation/networking/filter.txt .
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,

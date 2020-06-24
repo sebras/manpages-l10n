@@ -278,6 +278,12 @@ The attribute was reset to the value in the file
 Resetting the "dumpable" attribute to 1 reverts the ownership of the
 .IR /proc/[pid]/*
 files to the process's effective UID and GID.
+Note, however, that if the effective UID or GID is subsequently modified,
+then the "dumpable" attribute may be reset, as described in
+.BR prctl (2).
+Therefore, it may be desirable to reset the "dumpable" attribute
+.I after
+making any desired changes to the process's effective UID or GID.
 .TP
 .I /proc/[pid]/attr
 .\" https://lwn.net/Articles/28222/
@@ -319,7 +325,7 @@ trusted to maintain any desired separation between the old and new security
 contexts.
 .IP
 Prior to Linux 2.6.28, SELinux did not allow threads within a
-multi-threaded process to set their security context via this node
+multithreaded process to set their security context via this node
 as it would yield an inconsistency among the security contexts of the
 threads sharing the same memory space.
 Since Linux 2.6.28, SELinux lifted
@@ -526,8 +532,8 @@ Furthermore, a process may change the memory location that this file refers via
 .BR prctl (2)
 operations such as
 .BR PR_SET_MM_ARG_START .
-+.IP
-+Think of this file as the command line that the process wants you to see.
+.IP
+Think of this file as the command line that the process wants you to see.
 .TP
 .IR /proc/[pid]/comm " (since Linux 2.6.33)"
 .\" commit 4614a696bd1c3a9af3a08f0e5874830a85b889d4
@@ -549,7 +555,7 @@ by writing to the file
 .IR /proc/self/task/[tid]/comm .
 Strings longer than
 .B TASK_COMM_LEN
-(16) characters are silently truncated.
+(16) characters (including the terminating null byte) are silently truncated.
 .IP
 This file provides a superset of the
 .BR prctl (2)
@@ -559,6 +565,12 @@ and
 operations, and is employed by
 .BR pthread_setname_np (3)
 when used to rename threads other than the caller.
+The value in this file is used for the
+.I %e
+specifier in
+.IR /proc/sys/kernel/core_pattern ;
+see
+.BR proc (5).
 .TP
 .IR /proc/[pid]/coredump_filter " (since Linux 2.6.23)"
 See
@@ -1172,9 +1184,9 @@ the storage layer.
 .TP
 .IR cancelled_write_bytes :
 The big inaccuracy here is truncate.
-If a process writes 1MB to a file and then deletes the file,
+If a process writes 1 MB to a file and then deletes the file,
 it will in fact perform no writeout.
-But it will have been accounted as having caused 1MB of write.
+But it will have been accounted as having caused 1 MB of write.
 In other words: this field represents the number of bytes which this process
 caused to not happen, by truncating pagecache.
 A task can cause "negative" I/O too.
@@ -1248,16 +1260,19 @@ lrw\-\-\-\-\-\-\-. 1 root root 64 Apr 16 21:33
 .EE
 .in
 .IP
-This directory appears only if the
+Permission to access this file is governed by a ptrace access mode
+.B PTRACE_MODE_READ_FSCREDS
+check; see
+.BR ptrace (2).
+.IP
+Until kernel version 4.3,
+.\" commit bdb4d100afe9818aebd1d98ced575c5ef143456c
+this directory appeared only if the
 .B CONFIG_CHECKPOINT_RESTORE
-kernel configuration option is enabled.
-Privilege
+kernel configuration option was enabled.
+Additionally, in those kernel versions, privilege
 .RB ( CAP_SYS_ADMIN )
-.\" FIXME
-.\" This may change. See the mail thread
-.\" "[RFC][PATCH v2] procfs: Always expose /proc/<pid>/map_files/ and make it readable"
-.\" from Jan 2015
-is required to view the contents of this directory.
+was required to view the contents of this directory.
 .TP
 .I /proc/[pid]/maps
 A file containing the currently mapped memory regions and their access
@@ -1546,8 +1561,8 @@ Lines in this file have the form:
 .IP
 .in +4n
 .EX
-device /dev/sda7 mounted on /home with fstype ext3 [statistics]
-(       1      )            ( 2 )             (3 ) (4)
+device /dev/sda7 mounted on /home with fstype ext3 [stats]
+(       1      )            ( 2 )             (3 ) (  4  )
 .EE
 .in
 .IP
@@ -1968,7 +1983,7 @@ The "KernelPageSize" line (available since Linux 2.6.29)
 is the page size used by the kernel to back the virtual memory area.
 This matches the size used by the MMU in the majority of cases.
 However, one counter-example occurs on PPC64 kernels
-whereby a kernel using 64kB as a base page size may still use 4kB
+whereby a kernel using 64 kB as a base page size may still use 4 kB
 pages for the MMU on older processors.
 To distinguish the two attributes, the "MMUPageSize" line
 (also available since Linux 2.6.29)
@@ -2009,17 +2024,21 @@ encoded using the following two-letter codes:
     ac  - area is accountable
     nr  - swap space is not reserved for the area
     ht  - area uses huge tlb pages
-    nl  - non-linear mapping
+    sf  - perform synchronous page faults (since Linux 4.15)
+    nl  - non-linear mapping (removed in Linux 4.0)
     ar  - architecture specific flag
+    wf  - wipe on fork (since Linux 4.14)
     dd  - do not include area into core dump
-    sd  - soft-dirty flag
+    sd  - soft-dirty flag (since Linux 3.13)
     mm  - mixed map area
     hg  - huge page advise flag
     nh  - no-huge page advise flag
     mg  - mergeable advise flag
+    um  - userfaultfd missing pages tracking (since Linux 4.3)
+    uw  - userfaultfd wprotect pages tracking (since Linux 4.3)
 .IP
 "ProtectionKey" field contains the memory protection key (see
-.BR pkeys (5))
+.BR pkeys (7))
 associated with the virtual memory area.
 Present only if the kernel was built with the
 .B CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
@@ -2498,7 +2517,7 @@ One of
 "S (sleeping)",
 "D (disk sleep)",
 "T (stopped)",
-"T (tracing stop)",
+"t (tracing stop)",
 "Z (zombie)",
 or
 "X (dead)".
@@ -2979,7 +2998,7 @@ is defined at kernel compilation time.
 This file contains information which is used for diagnosing memory
 fragmentation issues.
 Each line starts with the identification of the node and the name
-of the zone which together identify a memory region
+of the zone which together identify a memory region.
 This is then
 followed by the count of available chunks of a certain order in
 which these zones are split.
@@ -3170,8 +3189,8 @@ identify           in hexadecimal
 media              media type
 model              manufacturer's model number
 settings           drive settings
-smart_thresholds   in hexadecimal
-smart_values       in hexadecimal
+smart_thresholds   IDE disk management thresholds (in hex)
+smart_values       IDE disk management values (in hex)
 .EE
 .in
 .IP
@@ -3482,7 +3501,7 @@ applications, without swapping.
 .TP
 .IR Buffers " %lu"
 Relatively temporary storage for raw disk blocks that
-shouldn't get tremendously large (20MB or so).
+shouldn't get tremendously large (20 MB or so).
 .TP
 .IR Cached " %lu"
 In-memory cache for files read from the disk (the page cache).
@@ -3530,7 +3549,7 @@ It is more eligible to be reclaimed for other purposes.
 .IR HighTotal " %lu"
 (Starting with Linux 2.6.19, \fBCONFIG_HIGHMEM\fP is required.)
 Total amount of highmem.
-Highmem is all memory above ~860MB of physical memory.
+Highmem is all memory above ~860 MB of physical memory.
 Highmem areas are for use by user-space programs,
 or for the page cache.
 The kernel must use tricks to access
@@ -3643,13 +3662,13 @@ The amount of memory presently allocated on the system.
 The committed memory is a sum of all of the memory which
 has been allocated by processes, even if it has not been
 "used" by them as of yet.
-A process which allocates 1GB of memory (using
+A process which allocates 1 GB of memory (using
 .BR malloc (3)
-or similar), but touches only 300MB of that memory will show up
-as using only 300MB of memory even if it has the address space
-allocated for the entire 1GB.
+or similar), but touches only 300 MB of that memory will show up
+as using only 300 MB of memory even if it has the address space
+allocated for the entire 1 GB.
 .IP
-This 1GB is memory which has been "committed" to by the VM
+This 1 GB is memory which has been "committed" to by the VM
 and can be used at any time by the allocating application.
 With strict overcommit enabled on the system (mode 2 in
 .IR /proc/sys/vm/overcommit_memory ),
@@ -3695,7 +3714,7 @@ Non-file backed huge pages mapped into user-space page tables.
 (\fBCONFIG_TRANSPARENT_HUGEPAGE\fP is required.)
 Memory used by shared memory (shmem) and
 .BR tmpfs (5)
-allocated with huge pages
+allocated with huge pages.
 .TP
 .IR ShmemPmdMapped " %lu (since Linux 4.8)"
 (\fBCONFIG_TRANSPARENT_HUGEPAGE\fP is required.)
@@ -3739,11 +3758,11 @@ The maximum number of surplus huge pages is controlled by
 The size of huge pages.
 .TP
 .IR DirectMap4k " %lu (since Linux 2.6.27)"
-Number of bytes of RAM linearly mapped by kernel in 4kB pages.
+Number of bytes of RAM linearly mapped by kernel in 4 kB pages.
 (x86.)
 .TP
 .IR DirectMap4M " %lu (since Linux 2.6.27)"
-Number of bytes of RAM linearly mapped by kernel in 4MB pages.
+Number of bytes of RAM linearly mapped by kernel in 4 MB pages.
 (x86 with
 .BR CONFIG_X86_64
 or
@@ -3751,7 +3770,7 @@ or
 enabled.)
 .TP
 .IR DirectMap2M " %lu (since Linux 2.6.27)"
-Number of bytes of RAM linearly mapped by kernel in 2MB pages.
+Number of bytes of RAM linearly mapped by kernel in 2 MB pages.
 (x86 with neither
 .BR CONFIG_X86_64
 nor
@@ -4243,7 +4262,7 @@ in certain conditions.
 .\" Precisely: Linux 2.6.0-test4
 (6) Time servicing interrupts.
 .TP
-.IR softirq " (since Linux 2.6.0"
+.IR softirq " (since Linux 2.6.0)"
 .\" Precisely: Linux 2.6.0-test4
 (7) Time servicing softirqs.
 .TP
@@ -4351,6 +4370,24 @@ some systems, it may be empty.
 .I /proc/sys/fs
 This directory contains the files and subdirectories for kernel variables
 related to filesystems.
+.TP
+.IR /proc/sys/fs/aio-max-nr " and " /proc/sys/fs/aio-nr " (since Linux 2.6.4)"
+.I aio-nr
+is the running total of the number of events specified by
+.BR io_setup (2)
+calls for all currently active AIO contexts.
+If
+.I aio-nr
+reaches
+.IR aio-max-nr ,
+then
+.BR io_setup (2)
+will fail with the error
+.BR EAGAIN .
+Raising
+.I aio-max-nr
+does not result in the preallocation or resizing
+of any kernel data structures.
 .TP
 .I /proc/sys/fs/binfmt_misc
 Documentation for files in this directory can be found
@@ -4544,7 +4581,7 @@ for details.
 .TP
 .IR /proc/sys/fs/nr_open " (since Linux 2.6.25)
 .\" commit 9cfe015aa424b3c003baba3841a60dd9b5ad319b
-This file imposes ceiling on the value to which the
+This file imposes a ceiling on the value to which the
 .BR RLIMIT_NOFILE
 resource limit can be raised (see
 .BR getrlimit (2)).
@@ -4575,6 +4612,28 @@ See
 .IR /proc/sys/fs/pipe\-user\-pages\-soft " (since Linux 4.5)"
 See
 .BR pipe (7).
+.TP
+.IR /proc/sys/fs/protected_fifos " (since Linux 4.19)"
+The value in this file is/can be set to one of the following:
+.RS
+.TP 4
+0
+Writing to FIFOs is unrestricted.
+.TP
+1
+Don't allow
+.B O_CREAT
+.BR open (2) 
+on FIFOs that the caller doesn't own in world-writable sticky directories,
+unless the FIFO is owned by the owner of the directory.
+.TP
+2
+As for the value 1,
+but the restriction also applies to group-writable sticky directories.
+.RE
+.IP
+The intent of the above protections is to avoid unintentional writes to an
+attacker-controlled FIFO when a program expected to create a regular file.
 .TP
 .IR /proc/sys/fs/protected_hardlinks " (since Linux 3.6)"
 .\" commit 800179c9b8a1e796e441674776d11cd4c05d61d7
@@ -4626,6 +4685,32 @@ Additionally, on systems without separated partitions,
 this stops unauthorized users from "pinning" vulnerable set-user-ID and
 set-group-ID files against being upgraded by
 the administrator, or linking to special files.
+.TP
+.IR /proc/sys/fs/protected_regular " (since Linux 4.19)"
+The value in this file is/can be set to one of the following:
+.RS
+.TP 4
+0
+Writing to regular files is unrestricted.
+.TP
+1
+Don't allow
+.B O_CREAT
+.BR open (2) 
+on regular files that the caller doesn't own in
+world-writable sticky directories,
+unless the regular file is owned by the owner of the directory.
+.TP
+2
+As for the value 1,
+but the restriction also applies to group-writable sticky directories.
+.RE
+.IP
+The intent of the above protections is similar to
+.IR protected_fifos ,
+but allows an application to
+avoid writes to an attacker-controlled regular file,
+where the application expected to create one.
 .TP
 .IR /proc/sys/fs/protected_symlinks " (since Linux 3.6)"
 .\" commit 800179c9b8a1e796e441674776d11cd4c05d61d7
@@ -5236,7 +5321,7 @@ This file
 can be used to query and set the run-time limit
 on the maximum (System V IPC) shared memory segment size that can be
 created.
-Shared memory segments up to 1GB are now supported in the
+Shared memory segments up to 1 GB are now supported in the
 kernel.
 This value defaults to
 .BR SHMMAX .
@@ -5553,7 +5638,7 @@ Present only if the kernel was configured with
 .TP
 .IR /proc/sys/vm/memory_failure_recovery " (since Linux 2.6.32)"
 .\" The following is based on the text in Documentation/sysctl/vm.txt
-Enable memory failure recovery (when supported by the platform)
+Enable memory failure recovery (when supported by the platform).
 .RS
 .IP 1: 4
 Attempt recovery.
@@ -5696,12 +5781,12 @@ and
 is the amount of swap space.
 .RE
 .IP
-For example, on a system with 16GB of physical RAM, 16GB
+For example, on a system with 16 GB of physical RAM, 16 GB
 of swap, no space dedicated to huge pages, and an
 .I overcommit_ratio
 of 50, this formula yields a
 .I CommitLimit
-of 24GB.
+of 24 GB.
 .IP
 Since Linux 3.14, if the value in
 .I /proc/sys/vm/overcommit_kbytes
@@ -5765,7 +5850,7 @@ The default value is 60.
 .TP
 .IR /proc/sys/vm/user_reserve_kbytes " (since Linux 3.10)"
 .\" commit c9b1d0981fcce3d9976d7b7a56e4e0503bc610dd
-Specifies an amount of memory (in KiB) to reserve for user processes,
+Specifies an amount of memory (in KiB) to reserve for user processes.
 This is intended to prevent a user from starting a single memory hogging
 process, such that they cannot recover (kill the hog).
 The value in this file has an effect only when
@@ -6670,7 +6755,7 @@ See the kernel source file
 .RE
 .TP
 .IR /proc/zoneinfo " (since Linux 2.6.13)"
-This file display information about memory zones.
+This file displays information about memory zones.
 This is useful for analyzing virtual memory behavior.
 .\" FIXME more should be said about /proc/zoneinfo
 .SH NOTES
@@ -6730,7 +6815,7 @@ The Linux kernel source files:
 and
 .IR Documentation/sysctl/vm.txt .
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,
