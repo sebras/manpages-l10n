@@ -2,12 +2,12 @@
 .\"     Title: btrfs-man5
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/05/2020
+.\"      Date: 06/15/2020
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.6
+.\"    Source: Btrfs v5.6.1
 .\"  Language: English
 .\"
-.TH "BTRFS\-MAN5" "5" "04/05/2020" "Btrfs v5\&.6" "Btrfs Manual"
+.TH "BTRFS\-MAN5" "5" "06/15/2020" "Btrfs v5\&.6\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -109,6 +109,17 @@ file attributes
 .\}
 control device
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 8.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  8." 4.2
+.\}
+filesystems with multiple block group profiles
+.RE
 .SH "MOUNT OPTIONS"
 .sp
 This section describes mount options specific to BTRFS\&. For the generic mount options please refer to \fBmount\fR(8) manpage\&. The options are sorted alphabetically (discarding the \fIno\fR prefix)\&.
@@ -128,6 +139,8 @@ This section describes mount options specific to BTRFS\&. For the generic mount 
 most mount options apply to the whole filesystem and only options in the first mounted subvolume will take effect\&. This is due to lack of implementation and may change in the future\&. This means that (for example) you can\(cqt set per\-subvolume \fInodatacow\fR, \fInodatasum\fR, or \fIcompress\fR using mount options\&. This should eventually be fixed, but it has proved to be difficult to implement correctly within the Linux VFS framework\&.
 .sp .5v
 .RE
+.sp
+Mount options are processed in order, only the last occurence of an option takes effect and may disable other options due to constraints (see eg\&. \fInodatacow\fR and \fIcompress\fR)\&. The output of \fImount\fR command shows which options have been applied\&.
 .PP
 \fBacl\fR, \fBnoacl\fR
 .RS 4
@@ -1398,6 +1411,77 @@ The device is usually created by a system device node manager (eg\&. udev), but 
 .\}
 .sp
 The control device is not strictly required but the device scanning will not work and a workaround would need to be used to mount a multi\-device filesystem\&. The mount option \fIdevice\fR can trigger the device scanning during mount\&.
+.SH "FILESYSTEM WITH MULTIPLE PROFILES"
+.sp
+It is possible that a btrfs filesystem contains multiple block group profiles of the same type\&. This could happen when a profile conversion using balance filters is interrupted (see \fBbtrfs\-balance\fR(8))\&. Some \fIbtrfs\fR commands perform a test to detect this kind of condition and print a warning like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+WARNING: Multiple block group profiles detected, see \*(Aqman btrfs(5)\*(Aq\&.
+WARNING:   Data: single, raid1
+WARNING:   Metadata: single, raid1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The corresponding output of \fBbtrfs filesystem df\fR might look like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+WARNING: Multiple block group profiles detected, see \*(Aqman btrfs(5)\*(Aq\&.
+WARNING:   Data: single, raid1
+WARNING:   Metadata: single, raid1
+Data, RAID1: total=832\&.00MiB, used=0\&.00B
+Data, single: total=1\&.63GiB, used=0\&.00B
+System, single: total=4\&.00MiB, used=16\&.00KiB
+Metadata, single: total=8\&.00MiB, used=112\&.00KiB
+Metadata, RAID1: total=64\&.00MiB, used=32\&.00KiB
+GlobalReserve, single: total=16\&.25MiB, used=0\&.00B
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+There\(cqs more than one line for type \fIData\fR and \fIMetadata\fR, while the profiles are \fIsingle\fR and \fIRAID1\fR\&.
+.sp
+This state of the filesystem OK but most likely needs the user/administrator to take an action and finish the interrupted tasks\&. This cannot be easily done automatically, also the user knows the expected final profiles\&.
+.sp
+In the example above, the filesystem started as a single device and \fIsingle\fR block group profile\&. Then another device was added, followed by balance with \fIconvert=raid1\fR but for some reason hasn\(cqt finished\&. Restarting the balance with \fIconvert=raid1\fR will continue and end up with filesystem with all block group profiles \fIRAID1\fR\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+If you\(cqre familiar with balance filters, you can use \fIconvert=raid1,profiles=single,soft\fR, which will take only the unconverted \fIsingle\fR profiles and convert them to \fIraid1\fR\&. This may speed up the conversion as it would not try to rewrite the already convert \fIraid1\fR profiles\&.
+.sp .5v
+.RE
+.sp
+Having just one profile is desired as this also clearly defines the profile of newly allocated block groups, otherwise this depends on internal allocation policy\&. When there are multiple profiles present, the order of selection is RAID6, RAID5, RAID10, RAID1, RAID0 as long as the device number constraints are satisfied\&.
+.sp
+Commands that print the warning were chosen so they\(cqre brought to user attention when the filesystem state is being changed in that regard\&. This is: \fIdevice add\fR, \fIdevice delete\fR, \fIbalance cancel\fR, \fIbalance pause\fR\&. Commands that report space usage: \fIfilesystem df\fR, \fIdevice usage\fR\&. The command \fIfilesystem usage\fR provides a line in the overall summary:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    Multiple profiles:                 yes (data, metadata)
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .sp
 \fBacl\fR(5), \fBbtrfs\fR(8), \fBchattr\fR(1), \fBfstrim\fR(8), \fBioctl\fR(2), \fBmkfs\&.btrfs\fR(8), \fBmount\fR(8), \fBswapon\fR(8)

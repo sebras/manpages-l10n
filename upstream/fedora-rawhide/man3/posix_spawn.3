@@ -155,9 +155,16 @@ and the
 .BR exec ()
 step (executed in the child).
 .SS fork() step
-The
+Since glibc 2.24, the
 .BR posix_spawn ()
 function commences by calling
+.BR clone (2)
+with
+.BR CLONE_VM
+and
+.BR CLONE_VFORK
+flags.
+Older implementations use
 .BR fork (2),
 or possibly
 .BR vfork (2)
@@ -176,7 +183,7 @@ If the child fails in any of the housekeeping steps described below,
 or fails to execute the desired file,
 it exits with a status of 127.
 .PP
-The child process is created using
+Before glibc 2.24, the child process is created using
 .BR vfork (2)
 instead of
 .BR fork (2)
@@ -213,10 +220,10 @@ the requested file.
 .PP
 .SS pre-exec() step: housekeeping
 In between the
-.BR fork (2)
+.BR fork()
 and the
-.BR exec (3),
-a child process may need to perform a set of housekeeping actions.
+.BR exec()
+steps, a child process may need to perform a set of housekeeping actions.
 The
 .BR posix_spawn ()
 and
@@ -375,6 +382,32 @@ the child's process group ID is made the same as its process ID.
 If the
 .B POSIX_SPAWN_SETPGROUP
 flag is not set, the child inherits the parent's process group ID.
+.TP
+.B POSIX_SPAWN_USEVFORK
+Since glibc 2.24, this flag has no effect.
+On older implementations, setting this flag forces the
+.BR fork()
+step to use
+.BR vfork (2)
+instead of
+.BR fork (2).
+The
+.B _GNU_SOURCE
+feature test macro must be defined to obtain the definition of this constant.
+.TP
+.BR POSIX_SPAWN_SETSID " (since glibc 2.26)"
+If this flag is set,
+the child process shall create a new session and become the session leader.
+The child process shall also become the process group leader of the new process
+group in the session (see
+.BR setsid (2)).
+The
+.B _GNU_SOURCE
+feature test macro must be defined to obtain the definition of this constant.
+.\" This flag has been accepted in POSIX, see:
+.\" http://austingroupbugs.net/view.php?id=1044
+.\" and has been implemented in glibc since version 2.26
+.\" commit daeb1fa2e1b33323e719015f5f546988bd4cc73b
 .PP
 If
 .I attrp
@@ -459,8 +492,9 @@ and
 place the PID of the child process in
 .IR pid ,
 and return 0.
-If there is an error before or during the
-.BR fork (2),
+If there is an error during the
+.BR fork()
+step,
 then no child is created,
 the contents of
 .IR *pid
@@ -480,14 +514,16 @@ The
 and
 .BR posix_spawnp ()
 functions fail only in the case where the underlying
-.BR fork (2)
-or
+.BR fork (2),
 .BR vfork (2)
+or
+.BR clone (2)
 call fails;  in these cases, these functions return an error number,
 which will be one of the errors described for
-.BR fork (2)
+.BR fork (2),
+.BR vfork (2)
 or
-.BR vfork (2).
+.BR clone (2).
 .PP
 In addition, these functions fail if:
 .TP
@@ -527,13 +563,14 @@ only the POSIX-specified functions.
 although these objects may be implemented as structures containing fields,
 portable programs must avoid dependence on such implementation details.)
 .PP
-According to POSIX, it unspecified whether fork handlers established with
+According to POSIX, it is unspecified whether fork handlers established with
 .BR pthread_atfork (3)
 are called when
 .BR posix_spawn ()
 is invoked.
-On glibc,
+Since glibc 2.24, the fork handlers are not executed in any case.
 .\" Tested on glibc 2.12
+On older implementations,
 fork handlers are called only if the child is created using
 .BR fork (2).
 .PP
@@ -563,7 +600,7 @@ failed with an error if
 .BR POSIX_SPAWN_SETSCHEDULER
 was specified without also specifying
 .BR POSIX_SPAWN_SETSCHEDPARAM .
-.SH EXAMPLE
+.SH EXAMPLES
 The program below demonstrates the use of various functions in the
 POSIX spawn API.
 The program accepts command-line attributes that can be used
@@ -807,7 +844,7 @@ main(int argc, char *argv[])
 Base Definitions volume of POSIX.1-2001,
 .I http://www.opengroup.org/unix/online.html
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,

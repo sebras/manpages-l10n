@@ -12,7 +12,7 @@
 .\" help from Matthew Wilcox.
 .\" $Id: rtnetlink.7,v 1.8 2000/01/22 01:55:04 freitag Exp $
 .\"
-.TH RTNETLINK  7 2020-02-09 "Linux" "Linux Programmer's Manual"
+.TH RTNETLINK  7 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 rtnetlink \- Linux IPv4 routing socket
 .SH SYNOPSIS
@@ -94,18 +94,18 @@ tab(:);
 c s s
 l l l.
 Routing attributes
-rta_type:value type:description
+rta_type:Value type:Description
 _
-IFLA_UNSPEC:-:unspecified.
+IFLA_UNSPEC:-:unspecified
 IFLA_ADDRESS:hardware address:interface L2 address
-IFLA_BROADCAST:hardware address:L2 broadcast address.
-IFLA_IFNAME:asciiz string:Device name.
-IFLA_MTU:unsigned int:MTU of the device.
-IFLA_LINK:int:Link type.
-IFLA_QDISC:asciiz string:Queueing discipline.
+IFLA_BROADCAST:hardware address:L2 broadcast address
+IFLA_IFNAME:asciiz string:Device name
+IFLA_MTU:unsigned int:MTU of the device
+IFLA_LINK:int:Link type
+IFLA_QDISC:asciiz string:Queueing discipline
 IFLA_STATS:T{
 see below
-T}:Interface Statistics.
+T}:Interface Statistics
 .TE
 .PP
 The value type for
@@ -161,15 +161,15 @@ tab(:);
 c s s
 l l l.
 Attributes
-rta_type:value type:description
+rta_type:Value type:Description
 _
-IFA_UNSPEC:-:unspecified.
+IFA_UNSPEC:-:unspecified
 IFA_ADDRESS:raw protocol address:interface address
 IFA_LOCAL:raw protocol address:local address
 IFA_LABEL:asciiz string:name of the interface
-IFA_BROADCAST:raw protocol address:broadcast address.
+IFA_BROADCAST:raw protocol address:broadcast address
 IFA_ANYCAST:raw protocol address:anycast address
-IFA_CACHEINFO:struct ifa_cacheinfo:Address information.
+IFA_CACHEINFO:struct ifa_cacheinfo:Address information
 .TE
 .\" FIXME Document struct ifa_cacheinfo
 .TP
@@ -199,8 +199,8 @@ struct rtmsg {
     unsigned char rtm_dst_len;  /* Length of destination */
     unsigned char rtm_src_len;  /* Length of source */
     unsigned char rtm_tos;      /* TOS filter */
-
-    unsigned char rtm_table;    /* Routing table ID */
+    unsigned char rtm_table;    /* Routing table ID;
+                                   see RTA_TABLE below */
     unsigned char rtm_protocol; /* Routing protocol; see below */
     unsigned char rtm_scope;    /* See below */
     unsigned char rtm_type;     /* See below */
@@ -235,7 +235,7 @@ T}
 .TS
 tab(:);
 l l.
-rtm_protocol:Route origin.
+rtm_protocol:Route origin
 _
 RTPROT_UNSPEC:unknown
 RTPROT_REDIRECT:T{
@@ -308,24 +308,107 @@ and
 .TS
 tab(:);
 c s s
-l l l.
+l2 l2 l.
 Attributes
-rta_type:value type:description
+rta_type:Value type:Description
 _
-RTA_UNSPEC:-:ignored.
-RTA_DST:protocol address:Route destination address.
-RTA_SRC:protocol address:Route source address.
-RTA_IIF:int:Input interface index.
-RTA_OIF:int:Output interface index.
+RTA_UNSPEC:-:ignored
+RTA_DST:protocol address:Route destination address
+RTA_SRC:protocol address:Route source address
+RTA_IIF:int:Input interface index
+RTA_OIF:int:Output interface index
 RTA_GATEWAY:protocol address:The gateway of the route
-RTA_PRIORITY:int:Priority of route.
-RTA_PREFSRC::
+RTA_PRIORITY:int:Priority of route
+RTA_PREFSRC:protocol address:Preferred source address
 RTA_METRICS:int:Route metric
-RTA_MULTIPATH::
-RTA_PROTOINFO::
-RTA_FLOW::
-RTA_CACHEINFO::
+RTA_MULTIPATH::T{
+Multipath nexthop data
+br
+(see below).
+T}
+RTA_PROTOINFO::No longer used
+RTA_FLOW:int:Route realm
+RTA_CACHEINFO:struct rta_cacheinfo:(see linux/rtnetlink.h)
+RTA_SESSION::No longer used
+RTA_MP_ALGO::No longer used
+RTA_TABLE:int:T{
+Routing table ID; if set,
+.br
+rtm_table is ignored
+T}
+RTA_MARK:int:
+RTA_MFC_STATS:struct rta_mfc_stats:(see linux/rtnetlink.h)
+RTA_VIA:struct rtvia:T{
+Gateway in different AF
+(see below)
+T}
+RTA_NEWDST:protocol address:T{
+Change packet
+destination address
+T}
+RTA_PREF:char:T{
+RFC4191 IPv6 router
+preference (see below)
+T}
+RTA_ENCAP_TYPE:short:T{
+Encapsulation type for
+.br
+lwtunnels (see below)
+T}
+RTA_ENCAP::Defined by RTA_ENCAP_TYPE
+RTA_EXPIRES:int:T{
+Expire time for IPv6
+routes (in seconds)
+T}
 .TE
+.PP
+.I RTA_MULTIPATH
+contains several packed instances of
+.I struct rtnexthop
+together with nested RTAs
+.RB ( RTA_GATEWAY ):
+.PP
+.in +4n
+.EX
+struct rtnexthop {
+    unsigned short rtnh_len;     /* Length of struct + length
+                                    of RTAs */
+    unsigned char  rtnh_flags;   /* Flags (see linux/rtnetlink.h) */
+    unsigned char  rtnh_hops;    /* Nexthop priority */
+    int            rtnh_ifindex; /* Interface index for this
+                                    nexthop */
+}
+.EE
+.in
+.PP
+There exist a bunch of RTNH_* macros similar to RTA_* and NLHDR_* macros
+useful to handle these structures.
+.PP
+.nf
+.in +4n
+.EX
+struct rtvia {
+    unsigned short rtvia_family;
+    unsigned char  rtvia_addr[0];
+};
+.EE
+.in
+.PP
+.I rtvia_addr
+is the address,
+.I rtvia_family
+is its family type.
+.PP
+.I RTA_PREF
+may contain values ICMPV6_ROUTER_PREF_LOW,
+ICMPV6_ROUTER_PREF_MEDIUM and
+ICMPV6_ROUTER_PREF_HIGH defined in <linux/icmpv6.h>
+.PP
+.I RTA_ENCAP_TYPE
+may contain values
+LWTUNNEL_ENCAP_MPLS, LWTUNNEL_ENCAP_IP,
+LWTUNNEL_ENCAP_ILA or LWTUNNEL_ENCAP_IP6
+defined in <linux/lwtunnel.h>.
 .sp 1
 .B Fill these values in!
 .TP
@@ -391,7 +474,7 @@ l l.
 NDA_UNSPEC:unknown type
 NDA_DST:a neighbor cache n/w layer destination address
 NDA_LLADDR:a neighbor cache link layer address
-NDA_CACHEINFO:cache statistics.
+NDA_CACHEINFO:cache statistics
 .TE
 .sp 1
 If the
@@ -428,14 +511,14 @@ tab(:);
 c s s
 l2 l2 l.
 Attributes
-rta_type:value type:Description
+rta_type:Value type:Description
 _
 TCA_UNSPEC:-:unspecified
 TCA_KIND:asciiz string:Name of queueing discipline
 TCA_OPTIONS:byte sequence:Qdisc-specific options follow
-TCA_STATS:struct tc_stats:Qdisc statistics.
-TCA_XSTATS:qdisc-specific:Module-specific statistics.
-TCA_RATE:struct tc_estimator:Rate limit.
+TCA_STATS:struct tc_stats:Qdisc statistics
+TCA_XSTATS:qdisc-specific:Module-specific statistics
+TCA_RATE:struct tc_estimator:Rate limit
 .TE
 .sp 1
 In addition, various other qdisc-module-specific attributes are allowed.
@@ -463,7 +546,7 @@ This manual page is incomplete.
 .BR ip (7),
 .BR netlink (7)
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,

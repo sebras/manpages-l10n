@@ -21,7 +21,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY_MARK 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY_MARK 2 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify_mark \- add, remove, or modify an fanotify mark on a filesystem
 object
@@ -126,12 +126,22 @@ is not itself a mount point, the mount point containing
 will be marked.
 All directories, subdirectories, and the contained files of the mount point
 will be monitored.
-This value cannot be used if the
+The events which require the
 .I fanotify_fd
-file descriptor has been initialized with the flag
-.BR FAN_REPORT_FID
-or if any of the new directory modification events are provided as a
-.IR mask .
+file descriptor to have been initialized with the flag
+.BR FAN_REPORT_FID ,
+such as
+.BR FAN_CREATE ,
+.BR FAN_ATTRIB ,
+.BR FAN_MOVE ,
+and
+.BR FAN_DELETE_SELF ,
+cannot be provided as a
+.IR mask
+when
+.I flags
+contains
+.BR FAN_MARK_MOUNT .
 Attempting to do so will result in the error
 .B EINVAL
 being returned.
@@ -184,41 +194,55 @@ See NOTES for additional details.
 .BR FAN_ATTRIB " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when the metadata for a file or directory has changed.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_CREATE " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been created in a marked
 parent directory.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_DELETE " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been deleted in a marked
 parent directory.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_DELETE_SELF " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a marked file or directory itself is deleted.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_MOVED_FROM " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been moved from a marked
 parent directory.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_MOVED_TO " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been moved to a marked parent
 directory.
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .BR FAN_MOVE_SELF " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a marked file or directory itself has been moved.
-.TP
-.B FAN_Q_OVERFLOW
-Create an event when an overflow of the event queue occurs.
-The size of the event queue is limited to 16384 entries if
-.B FAN_UNLIMITED_QUEUE
-is not set in
-.BR fanotify_init (2).
+An fanotify file descriptor created with
+.B FAN_REPORT_FID
+is required.
 .TP
 .B FAN_OPEN_PERM
 Create an event when a permission to open a file or directory is requested.
@@ -254,37 +278,40 @@ Create events for directories\(emfor example, when
 (but see BUGS), and
 .BR closedir (3)
 are called.
-Without this flag, only events for files are created.
-The
-.BR FAN_ONDIR
-flag is reported in an event mask only if the
-.I fanotify_fd
-file descriptor has been initialized with the flag
-.BR FAN_REPORT_FID .
+Without this flag, events are created only for files.
 In the context of directory entry events, such as
 .BR FAN_CREATE ,
 .BR FAN_DELETE ,
 .BR FAN_MOVED_FROM ,
 and
-.BR FAN_MOVED_TO
-for example, specifying the flag
+.BR FAN_MOVED_TO ,
+specifying the flag
 .BR FAN_ONDIR
 is required in order to create events when subdirectory entries are
 modified (i.e.,
 .BR mkdir (2)/
 .BR rmdir (2)).
-Subdirectory entry modification events will never be merged with
-nonsubdirectory entry modification events.
-This flag is never reported individually within an event and is always
-supplied in conjunction with another event type.
 .TP
 .B FAN_EVENT_ON_CHILD
 Events for the immediate children of marked directories shall be created.
 The flag has no effect when marking mounts and filesystems.
 Note that events are not generated for children of the subdirectories
 of marked directories.
+More specifically, the directory entry modification events
+.BR FAN_CREATE ,
+.BR FAN_DELETE ,
+.BR FAN_MOVED_FROM ,
+and
+.BR FAN_MOVED_TO
+are not generated for any entry modifications performed inside subdirectories
+of marked directories.
+Note that the events
+.BR FAN_DELETE_SELF
+and
+.BR FAN_MOVE_SELF
+are not generated for children of marked directories.
 To monitor complete directory trees it is necessary to mark the relevant
-mount.
+mount or filesystem.
 .PP
 The following composed values are defined:
 .TP
@@ -526,7 +553,7 @@ is not checked for invalid values.
 .BR fanotify_init (2),
 .BR fanotify (7)
 .SH COLOPHON
-This page is part of release 5.06 of the Linux
+This page is part of release 5.07 of the Linux
 .I man-pages
 project.
 A description of the project,

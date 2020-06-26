@@ -219,5 +219,33 @@ done
 sort translators_ro.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_ro.list
 cat tmp_ro.list >> AUTHORS.md
 
+# Generate Spanish authors list
+echo >> AUTHORS.md
+echo >> AUTHORS.md
+echo "## Spanish:" >> AUTHORS.md
+echo >> AUTHORS.md
+
+# Extract all Spanish translators from the copyright headers
+files=$(find po/es/man? -name "*po" | sort)
+# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
+for translation in $files; do
+	# Use the header up until the first msgid
+	# and remove the comment character
+	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
+	# Throw away the common (non translator) lines
+	grep -v "Spanish translation of manpages" |
+	grep -v "This file is distributed under the same license as the manpages-l10n package" |
+	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
+	grep -v "msgid" |
+	# Split lines to extract the name (and e-mail address)
+	cut -f1 -d",")
+	# Save a list of all translators in a temporary file for copyright determination
+	echo "$translators" >> translators_es.list
+done
+# Sort, unique, remove blank lines from file, and indent with an asterisk
+sort translators_es.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_es.list
+cat tmp_es.list >> AUTHORS.md
+
 # Finally, delete all temporary lists
 rm tmp*.list translators*.list
