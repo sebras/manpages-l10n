@@ -61,6 +61,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-pl.html">The Polish translation</a></li>
         <li><a href="index-pt_BR.html">The Brazilian Portuguese translation</a></li>
         <li><a href="index-ro.html">The Romanian translation</a></li>
+        <li><a href="index-es.html">The Spanish translation</a></li>
       </ul>
       <p>
       You also  might want to <a href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">view the git repository</a> directly.
@@ -80,14 +81,14 @@ cat > index.html <<-END_OF_HEADER
        <li><a href="https://web.archive.org/web/20060205162241/http://man.kldp.org/wiki">Korean (archived website)</a>, appears inactive, last release 2005, license situation unclear</li>
        <li>Portuguese (no web page), last release 2004</li>
        <li><a href="https://www.transifex.com/kruvalig/man-pages/">Russian</a>, active and current, only man-pages itself (e.g. no coreutils)</li>
-       <li><a href="http://es.tldp.org/htmls/pameli.html">Spanish</a>, appears inactive, last known release 2005, based on manpages-1.55</li>
+       <li><a href="http://es.tldp.org/htmls/pameli.html">Spanish</a>, appears inactive, last known release 2005, based on manpages-1.55 (Integration in manpages-l10n is in progress)</li>
        <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008, focused on <q>exotic</q> man pages</li>
      </ul>
    </body>
   </html>
 END_OF_HEADER
 
-for tlang in de fr it nl pl pt_BR ro; do
+for tlang in de es fr it nl pl pt_BR ro; do
     echo $tlang
 
 # Determine manpage section names
