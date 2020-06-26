@@ -247,6 +247,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Rafał Witowski
 * Robert Luberda <robert@debian.org>
 * Szymon Lamkiewicz <s.lam@o2.pl>
+* Szymon Lamkiewicz <szymon@slam.net.pl>
 * Tomasz Kłoczko <kloczek@rudy.mif.pg.gda.pl>
 * Tomasz Wendlandt <juggler@box.cp.com.pl>
 * Wiktor J. Łukasik <wiktorlu@technologist.com>
@@ -258,3 +259,15 @@ of Linux manpages. The list is sorted alphabetically.
 * Eugen Hoanca <eugenh@urban-grafx.ro>
 * Laurențiu Buzdugan <lbuz@rolix.org>
 * Mihai Cristescu <mihai.cristescu@gmail.com>
+
+
+## Spanish:
+
+* Diego Novillo <diego@cs.ualberta.ca>
+* Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
+* Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
+* Javi Polo <javipolo@CyberJunkie.com>
+* Juan Piernas <piernas@ditec.um.es>
+* Miguel Angel Sepulveda <angel@vivaldi.princeton.edu>
+* Rafael Godínez <1ragodin@rigel.deusto.es>
+* Urko Lusa <ulusa@lacueva.ddns.org>
