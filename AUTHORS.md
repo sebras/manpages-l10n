@@ -9,6 +9,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Ademar de Souza Reis Jr. <ademar@ademar.org>
 * André L. Fassone Canova <lonelywolf@blv.com.br>
 * André Luiz Fassone <lonely_wolf@ig.com.br>
+* Antonio Belloni <abelloni@ig.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
 * E. A. Tacão <tacao@conectiva.com.br>
 * Fábio Henrique F. Silva <fabiohfs@mail.com>
