@@ -1,5 +1,16 @@
 # Changelog for manpages-de
 
+## Version 4.1.0
+*Wed Jul  1 12:26:57 CEST 2020*
+
+* Prepare inclusion of two new languages: Spanish and Italian.
+  Both languages are in very early beginning stages, so they
+  are not installed yet.
+* Add support for two more distributions: Fedora Rawhide and
+  Opensuse Tumbleweed. The manpages-l10n project now supports
+  six different distributions!
+* Updated many translations
+
 ## Version 4.0.0
 *Mon Mar  2 22:09:38 CET 2020*
 
