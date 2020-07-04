@@ -4,6 +4,7 @@ This project provides an infrastructure for translating manpages to different
 languages. Currently we support the following languages:
 
 *  de - German
+*  es - Spanish
 *  fr - French
 *  it - Italian
 *  nl - Dutch *

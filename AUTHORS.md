@@ -264,6 +264,8 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Spanish:
 
+* Carlos Costa Portela <c.c.portela@ieee.org>
+* Cesar D. Lobejon <cesar@alien.mec.es>
 * Diego Novillo <diego@cs.ualberta.ca>
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
