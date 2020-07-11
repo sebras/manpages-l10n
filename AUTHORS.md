@@ -11,11 +11,13 @@ of Linux manpages. The list is sorted alphabetically.
 * André Luiz Fassone <lonely_wolf@ig.com.br>
 * Antonio Belloni <abelloni@ig.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
+* Daniel Chicayban <daniel@chicayban.com.br>
 * E. A. Tacão <tacao@conectiva.com.br>
 * Fábio Henrique F. Silva <fabiohfs@mail.com>
 * Felipe M Pereira <Felipe.Pereira@ic.unicamp.br>
 * Fernando Boaglio <boaglio@netscape.net>
 * Jorge Godoy <godoy@conectiva.com.br>
+* Kenzo Marcelo Okamura <kenzo.okamura@poli.usp.br>
 * Leslie Harlley Watter <leslie@watter.org>
 * Marcelo D. Beckmann <marcelobeckmann@yahoo.com>
 * Marcelo M. de Abreu <mmabreu@terra.com.br>
@@ -31,6 +33,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Rodrigo Stulzer Lopes <rodrigo@conectiva.com.br>
 * Rubens de Jesus Nogueira <darkseid99@usa.net>
 * Sandro Nunes Henrique <sandro@conectiva.com.br>
+* Valter Ferraz Sanches <vfs@ezlinux.cjb.net>
 * Walter Rodrigo de Sá Cruz <keytech@bol.com.br>
 
 
