@@ -1,5 +1,5 @@
 '\" t
-.TH "NSS\-RESOLVE" "8" "" "systemd 245" "nss-resolve"
+.TH "NSS\-RESOLVE" "8" "" "systemd 246" "nss-resolve"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,21 +20,21 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nss-resolve, libnss_resolve.so.2 \- Provide hostname resolution via systemd\-resolved\&.service
+nss-resolve, libnss_resolve.so.2 \- Hostname resolution via systemd\-resolved\&.service
 .SH "SYNOPSIS"
 .PP
 libnss_resolve\&.so\&.2
 .SH "DESCRIPTION"
 .PP
 \fBnss\-resolve\fR
-is a plug\-in module for the GNU Name Service Switch (NSS) functionality of the GNU C Library (\fBglibc\fR) enabling it to resolve host names via the
+is a plug\-in module for the GNU Name Service Switch (NSS) functionality of the GNU C Library (\fBglibc\fR) enabling it to resolve hostnames via the
 \fBsystemd-resolved\fR(8)
 local network name resolution service\&. It replaces the
 \fBnss\-dns\fR
 plug\-in module that traditionally resolves hostnames via DNS\&.
 .PP
 To activate the NSS module, add
-"resolve"
+"resolve\ \&[!UNAVAIL=return]"
 to the line starting with
 "hosts:"
 in
@@ -43,18 +43,21 @@ in
 early in
 /etc/nsswitch\&.conf\*(Aqs
 "hosts:"
-line (but after the
+line\&. It should be before the
 "files"
-or
-"mymachines"
-entries), right before the
+entry, since
+systemd\-resolved
+supports
+/etc/hosts
+internally, but with caching\&. To the contrary, it should be after
+"mymachines", to give hostnames given to local VMs and containers precedence over names received over DNS\&. Finally, we recommend placing
 "dns"
-entry if it exists, followed by
-"[!UNAVAIL=return]", to ensure DNS queries are always routed via
-\fBsystemd-resolved\fR(8)
-if it is running, but are routed to
+somewhere after
+"resolve", to fall back to
 \fBnss\-dns\fR
-if this service is not available\&.
+if
+systemd\-resolved\&.service
+is not available\&.
 .PP
 Note that
 \fBsystemd\-resolved\fR
@@ -85,7 +88,7 @@ passwd:         compat mymachines systemd
 group:          compat mymachines systemd
 shadow:         compat
 
-hosts:          files mymachines \fBresolve [!UNAVAIL=return]\fR dns myhostname
+hosts:          mymachines \fBresolve [!UNAVAIL=return]\fR myhostname files dns
 networks:       files
 
 protocols:      db files
