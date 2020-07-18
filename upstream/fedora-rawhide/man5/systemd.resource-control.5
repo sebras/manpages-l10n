@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 245" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 246" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -457,15 +457,15 @@ in
 .PP
 \fIIPAddressAllow=\fR\fI\fIADDRESS[/PREFIXLENGTH]\&...\fR\fR, \fIIPAddressDeny=\fR\fI\fIADDRESS[/PREFIXLENGTH]\&...\fR\fR
 .RS 4
-Turn on address range network traffic filtering for IP packets sent and received over
+Turn on network traffic filtering for IP packets sent and received over
 \fBAF_INET\fR
 and
 \fBAF_INET6\fR
-sockets\&. Both directives take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length in bits (separated by a
+sockets\&. Both directives take a space separated list of IPv4 or IPv6 addresses, each optionally suffixed with an address prefix length in bits after a
 "/"
-character)\&. If the latter is omitted, the address is considered a host address, i\&.e\&. the prefix covers the whole address (32 for IPv4, 128 for IPv6)\&.
+character\&. If the suffix is omitted, the address is considered a host address, i\&.e\&. the filter covers the whole address (32 bits for IPv4, 128 bits for IPv6)\&.
 .sp
-The access lists configured with this option are applied to all sockets created by processes of this unit (or in the case of socket units, associated with it)\&. The lists are implicitly combined with any lists configured for any of the parent slice units this unit might be a member of\&. By default all access lists are empty\&. Both ingress and egress traffic is filtered by these settings\&. In case of ingress traffic the source IP address is checked against these access lists, in case of egress traffic the destination IP address is checked\&. When configured the lists are enforced as follows:
+The access lists configured with this option are applied to all sockets created by processes of this unit (or in the case of socket units, associated with it)\&. The lists are implicitly combined with any lists configured for any of the parent slice units this unit might be a member of\&. By default both access lists are empty\&. Both ingress and egress traffic is filtered by these settings\&. In case of ingress traffic the source IP address is checked against these access lists, in case of egress traffic the destination IP address is checked\&. The following rules are applied in turn:
 .sp
 .RS 4
 .ie n \{\
@@ -475,9 +475,9 @@ The access lists configured with this option are applied to all sockets created 
 .sp -1
 .IP \(bu 2.3
 .\}
-Access will be granted in case an IP packet\*(Aqs destination/source address matches any entry in the
+Access is granted when the checked IP address matches an entry in the
 \fIIPAddressAllow=\fR
-setting\&.
+list\&.
 .RE
 .sp
 .RS 4
@@ -488,9 +488,9 @@ setting\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Otherwise, access will be denied in case its destination/source address matches any entry in the
+Otherwise, access is denied when the checked IP address matches an entry in the
 \fIIPAddressDeny=\fR
-setting\&.
+list\&.
 .RE
 .sp
 .RS 4
@@ -501,10 +501,10 @@ setting\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Otherwise, access will be granted\&.
+Otherwise, access is granted\&.
 .RE
 .sp
-In order to implement a whitelisting IP firewall, it is recommended to use a
+In order to implement an allow\-listing IP firewall, it is recommended to use a
 \fIIPAddressDeny=\fR\fBany\fR
 setting on an upper\-level slice unit (such as the root slice
 \-\&.slice
@@ -516,7 +516,7 @@ for details on these slice units), plus individual per\-service
 \fIIPAddressAllow=\fR
 lines permitting network access to relevant services, and only them\&.
 .sp
-Note that for socket\-activated services, the IP access list configured on the socket unit applies to all sockets associated with it directly, but not to any sockets created by the ultimately activated services for it\&. Conversely, the IP access list configured for the service is not applied to any sockets passed into the service via socket activation\&. Thus, it is usually a good idea, to replicate the IP access lists on both the socket and the service unit, however it often makes sense to maintain one list more open and the other one more restricted, depending on the usecase\&.
+Note that for socket\-activated services, the IP access list configured on the socket unit applies to all sockets associated with it directly, but not to any sockets created by the ultimately activated services for it\&. Conversely, the IP access list configured for the service is not applied to any sockets passed into the service via socket activation\&. Thus, it is usually a good idea to replicate the IP access lists on both the socket and the service unit\&. Nevertheless, it may make sense to maintain one list more open and the other one more restricted, depending on the usecase\&.
 .sp
 If these settings are used multiple times in the same unit the specified lists are combined\&. If an empty string is assigned to these settings the specific access list is reset and all previous settings undone\&.
 .sp
@@ -575,7 +575,7 @@ T}
 Note that these settings might not be supported on some systems (for example if eBPF control group support is not enabled in the underlying kernel or container manager)\&. These settings will have no effect in that case\&. If compatibility with such systems is desired it is hence recommended to not exclusively rely on them for IP security\&.
 .RE
 .PP
-\fIIPIngressFilterPath=\fR\fI\fIBPF_FS_PROGRAMM_PATH\fR\fR, \fIIPEgressFilterPath=\fR\fI\fIBPF_FS_PROGRAMM_PATH\fR\fR
+\fIIPIngressFilterPath=\fR\fI\fIBPF_FS_PROGRAM_PATH\fR\fR, \fIIPEgressFilterPath=\fR\fI\fIBPF_FS_PROGRAM_PATH\fR\fR
 .RS 4
 Add custom network traffic filters implemented as BPF programs, applying to all IP packets sent and received over
 \fBAF_INET\fR
@@ -616,7 +616,7 @@ The device node specifier is either a path to a device node in the file system, 
 or
 "block\-"
 followed by a device group name, as listed in
-/proc/devices\&. The latter is useful to whitelist all current and future devices belonging to a specific device group at once\&. The device group is matched according to filename globbing rules, you may hence use the
+/proc/devices\&. The latter is useful to allow\-list all current and future devices belonging to a specific device group at once\&. The device group is matched according to filename globbing rules, you may hence use the
 "*"
 and
 "?"
@@ -636,7 +636,7 @@ are specifiers for all pseudo TTYs and all ALSA sound devices, respectively\&.
 "char\-cpu/*"
 is a specifier matching all CPU related device groups\&.
 .sp
-Note that whitelists defined this way should only reference device groups which are resolvable at the time the unit is started\&. Any device groups not resolvable then are not added to the device whitelist\&. In order to work around this limitation, consider extending service units with a pair of
+Note that allow lists defined this way should only reference device groups which are resolvable at the time the unit is started\&. Any device groups not resolvable then are not added to the device allow list\&. In order to work around this limitation, consider extending service units with a pair of
 \fBAfter=modprobe@xyz\&.service\fR
 and
 \fBWants=modprobe@xyz\&.service\fR

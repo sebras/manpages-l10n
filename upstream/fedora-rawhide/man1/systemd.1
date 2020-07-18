@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD" "1" "" "systemd 245" "systemd"
+.TH "SYSTEMD" "1" "" "systemd 246" "systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -261,7 +261,7 @@ It has a job queued for it
 .sp -1
 .IP "  3." 4.2
 .\}
-It is a dependency of some sort of at least one other unit that is loaded into memory
+It is a dependency of at least one other unit that is loaded into memory
 .RE
 .sp
 .RS 4
@@ -310,7 +310,7 @@ database are supported\&.
 .PP
 systemd has a minimal transaction system: if a unit is requested to start up or shut down it will add it and all its dependencies to a temporary transaction\&. Then, it will verify if the transaction is consistent (i\&.e\&. whether the ordering of all units is cycle\-free)\&. If it is not, systemd will try to fix it up, and removes non\-essential jobs from the transaction that might remove the loop\&. Also, systemd tries to suppress non\-essential jobs in the transaction that would stop a running service\&. Finally it is checked whether the jobs of the transaction contradict jobs that have already been queued, and optionally the transaction is aborted then\&. If all worked out and the transaction is consistent and minimized in its impact it is merged with all already outstanding jobs and added to the run queue\&. Effectively this means that before executing a requested operation, systemd will verify that it makes sense, fixing it if possible, and only failing if it really cannot work\&.
 .PP
-Note that transactions are generated independently of a unit\*(Aqs state at runtime, hence, for example, if a start job is requested on an already started unit, it will still generate a transaction and wake up any inactive dependencies (and cause propagation of other jobs as per the defined relationships)\&. This is because the enqueued job is at the time of execution compared to the target unit\*(Aqs state and is marked successful and complete when both satisfy\&. However, this job also pulls in other dependencies due to the defined relationships and thus leads to, in our our example, start jobs for any of those inactive units getting queued as well\&.
+Note that transactions are generated independently of a unit\*(Aqs state at runtime, hence, for example, if a start job is requested on an already started unit, it will still generate a transaction and wake up any inactive dependencies (and cause propagation of other jobs as per the defined relationships)\&. This is because the enqueued job is at the time of execution compared to the target unit\*(Aqs state and is marked successful and complete when both satisfy\&. However, this job also pulls in other dependencies due to the defined relationships and thus leads to, in our example, start jobs for any of those inactive units getting queued as well\&.
 .PP
 systemd contains native implementations of various tasks that need to be executed as part of the boot process\&. For example, it sets the hostname or configures the loopback network device\&. It also sets up and mounts various API file systems, such as
 /sys
@@ -325,6 +325,13 @@ Note that some but not all interfaces provided by systemd are covered by the
 .PP
 Units may be generated dynamically at boot and system manager reload time, for example based on other configuration files or parameters passed on the kernel command line\&. For details, see
 \fBsystemd.generator\fR(7)\&.
+.PP
+The D\-Bus API of
+\fBsystemd\fR
+is described in
+\fBorg.freedesktop.systemd1\fR(5)
+and
+\fBorg.freedesktop.LogControl1\fR(5)\&.
 .PP
 Systems which invoke systemd in a container or initrd environment should implement the
 \m[blue]\fBContainer Interface\fR\m[]\&\s-2\u[4]\d\s+2
@@ -581,10 +588,22 @@ on
 .RE
 .SH "ENVIRONMENT"
 .PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+Controls whether systemd highlights important log messages\&. This can be overridden with
+\fB\-\-log\-color\fR\&.
+.RE
+.PP
 \fI$SYSTEMD_LOG_LEVEL\fR
 .RS 4
 systemd reads the log level from this environment variable\&. This can be overridden with
 \fB\-\-log\-level=\fR\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+Controls whether systemd prints the code location along with log messages\&. This can be overridden with
+\fB\-\-log\-location\fR\&.
 .RE
 .PP
 \fI$SYSTEMD_LOG_TARGET\fR
@@ -593,16 +612,10 @@ systemd reads the log target from this environment variable\&. This can be overr
 \fB\-\-log\-target=\fR\&.
 .RE
 .PP
-\fI$SYSTEMD_LOG_COLOR\fR
+\fI$SYSTEMD_LOG_TIME\fR
 .RS 4
-Controls whether systemd highlights important log messages\&. This can be overridden with
-\fB\-\-log\-color=\fR\&.
-.RE
-.PP
-\fI$SYSTEMD_LOG_LOCATION\fR
-.RS 4
-Controls whether systemd prints the code location along with log messages\&. This can be overridden with
-\fB\-\-log\-location=\fR\&.
+Controls whether systemd prefixes log messages with the current time\&. This can be overridden with
+\fB\-\-log\-time=\fR\&.
 .RE
 .PP
 \fI$XDG_CONFIG_HOME\fR, \fI$XDG_CONFIG_DIRS\fR, \fI$XDG_DATA_HOME\fR, \fI$XDG_DATA_DIRS\fR
@@ -612,9 +625,11 @@ The systemd user manager uses these variables in accordance to the
 to find its configuration\&.
 .RE
 .PP
-\fI$SYSTEMD_UNIT_PATH\fR
+\fI$SYSTEMD_UNIT_PATH\fR, \fI$SYSTEMD_GENERATOR_PATH\fR, \fI$SYSTEMD_ENVIRONMENT_GENERATOR_PATH\fR
 .RS 4
-Controls where systemd looks for unit files\&.
+Controls where systemd looks for unit files and generators\&.
+.sp
+These variables may contain a list of paths, separated by colons (":")\&. When set, if the list ends with an empty component ("\&.\&.\&.:"), this list is prepended to the usual set of of paths\&. Otherwise, the specified list replaces the usual set of paths\&.
 .RE
 .PP
 \fI$SYSTEMD_SYSVINIT_PATH\fR
@@ -751,7 +766,7 @@ Takes a boolean argument or enables the option if specified without an argument\
 .PP
 \fIsystemd\&.crash_chvt\fR
 .RS 4
-Takes a positive integer, or a boolean argument\&. Can be also specified without an argument, with the same effect as a positive boolean\&. If a positive integer (in the range 1\(en63) is specified, the system manager (PID 1) will activate the specified virtual terminal (VT) when it crashes\&. Defaults to disabled, meaning that no such switch is attempted\&. If set to enabled, the VT the kernel messages are written to is selected\&.
+Takes a positive integer, or a boolean argument\&. Can be also specified without an argument, with the same effect as a positive boolean\&. If a positive integer (in the range 1\(en63) is specified, the system manager (PID 1) will activate the specified virtual terminal when it crashes\&. Defaults to disabled, meaning that no such switch is attempted\&. If set to enabled, the virtual terminal the kernel messages are written to is used instead\&.
 .RE
 .PP
 \fIsystemd\&.crash_shell\fR
@@ -811,15 +826,17 @@ as the value\&. If
 \fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
-\fIsystemd\&.log_target=\fR, \fIsystemd\&.log_level=\fR, \fIsystemd\&.log_location=\fR, \fIsystemd\&.log_color\fR
+\fIsystemd\&.log_color\fR, \fIsystemd\&.log_level=\fR, \fIsystemd\&.log_location\fR, \fIsystemd\&.log_target=\fR, \fIsystemd\&.log_time\fR
 .RS 4
 Controls log output, with the same effect as the
-\fI$SYSTEMD_LOG_TARGET\fR,
+\fI$SYSTEMD_LOG_COLOR\fR,
 \fI$SYSTEMD_LOG_LEVEL\fR,
 \fI$SYSTEMD_LOG_LOCATION\fR,
-\fI$SYSTEMD_LOG_COLOR\fR
-environment variables described above\&.
-\fIsystemd\&.log_color\fR
+\fI$SYSTEMD_LOG_TARGET\fR,
+\fI$SYSTEMD_LOG_TIME\fR, environment variables described above\&.
+\fIsystemd\&.log_color\fR,
+\fIsystemd\&.log_location\fR, and
+\fIsystemd\&.log_time\fR
 can be specified without an argument, with the same effect as a positive boolean\&.
 .RE
 .PP
@@ -985,12 +1002,12 @@ Those options correspond directly to options listed above in "Kernel Command Lin
 .PP
 When
 \fBsystemd\fR
-is used a user manager, the kernel command line is ignored and the options described are understood\&. Nevertheless,
+is used as a user manager, the kernel command line is ignored and the options described are understood\&. Nevertheless,
 \fBsystemd\fR
 is usually started in this mode through the
 \fBuser@.service\fR(5)
 service, which is shared between all users, and it may be more convenient to use configuration files to modify settings, see
-\fBsystemd-user.conf\fR(5), or a drop\-in that specifies one of the environment variables listed above in "Environment, see
+\fBsystemd-user.conf\fR(5), or a drop\-in that specifies one of the environment variables listed above in the Environment section, see
 \fBsystemd.unit\fR(5)\&.
 .PP
 \fB\-\-unit=\fR
@@ -1038,22 +1055,8 @@ above\&.
 .PP
 \fB\-\-show\-status\fR
 .RS 4
-Show terse unit status information is shown on the console during boot\-up and shutdown\&. See
+Show terse unit status information on the console during boot\-up and shutdown\&. See
 \fIsystemd\&.show_status\fR
-above\&.
-.RE
-.PP
-\fB\-\-log\-target=\fR
-.RS 4
-Set log target\&. See
-\fIsystemd\&.log_target\fR
-above\&.
-.RE
-.PP
-\fB\-\-log\-level=\fR
-.RS 4
-Set log level\&. See
-\fIsystemd\&.log_level\fR
 above\&.
 .RE
 .PP
@@ -1064,10 +1067,31 @@ Highlight important log messages\&. See
 above\&.
 .RE
 .PP
+\fB\-\-log\-level=\fR
+.RS 4
+Set log level\&. See
+\fIsystemd\&.log_level\fR
+above\&.
+.RE
+.PP
 \fB\-\-log\-location\fR
 .RS 4
 Include code location in log messages\&. See
 \fIsystemd\&.log_location\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-target=\fR
+.RS 4
+Set log target\&. See
+\fIsystemd\&.log_target\fR
+above\&.
+.RE
+.PP
+\fB\-\-log\-time=\fR
+.RS 4
+Prefix messages with timestamp\&. See
+\fIsystemd\&.log_time\fR
 above\&.
 .RE
 .PP
@@ -1129,6 +1153,7 @@ The
 \fBsystemd-notify\fR(1),
 \fBdaemon\fR(7),
 \fBsd-daemon\fR(3),
+\fBorg.freedesktop.systemd1\fR(5),
 \fBsystemd.unit\fR(5),
 \fBsystemd.special\fR(5),
 \fBpkg-config\fR(1),

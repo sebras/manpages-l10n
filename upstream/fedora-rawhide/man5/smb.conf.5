@@ -2,12 +2,12 @@
 .\"     Title: smb.conf
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 06/25/2020
+.\"      Date: 07/14/2020
 .\"    Manual: File Formats and Conventions
-.\"    Source: Samba 4.12.3
+.\"    Source: Samba 4.13.0rc1
 .\"  Language: English
 .\"
-.TH "SMB\&.CONF" "5" "06/25/2020" "Samba 4\&.12\&.3" "File Formats and Conventions"
+.TH "SMB\&.CONF" "5" "07/14/2020" "Samba 4\&.13\&.0rc1" "File Formats and Conventions"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -3276,7 +3276,7 @@ dns update command (G)
 This option sets the command that is called when there are DNS updates\&. It should update the local machines DNS names using TSIG\-GSS\&.
 .sp
 Default:
-\fI\fIdns update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.12\&.3/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
+\fI\fIdns update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.13\&.0rc1/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIdns update command\fR\fR\fI = \fR\fI/usr/local/sbin/dnsupdate\fR\fI \fR
@@ -4182,7 +4182,7 @@ gpo update command (G)
 This option sets the command that is called to apply GPO policies\&. The samba\-gpupdate script applies System Access and Kerberos Policies to the KDC\&. System Access policies set minPwdAge, maxPwdAge, minPwdLength, and pwdProperties in the samdb\&. Kerberos Policies set kdc:service ticket lifetime, kdc:user ticket lifetime, and kdc:renewal lifetime in smb\&.conf\&.
 .sp
 Default:
-\fI\fIgpo update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.12\&.3/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
+\fI\fIgpo update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.13\&.0rc1/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIgpo update command\fR\fR\fI = \fR\fI/usr/local/sbin/gpoupdate\fR\fI \fR
@@ -4886,19 +4886,36 @@ The "IP" parameters above can either be a full dotted decimal IP address or a ho
 .sp
 By default Samba enables all active interfaces that are broadcast capable except the loopback adaptor (IP address 127\&.0\&.0\&.1)\&.
 .sp
-In order to support SMB3 multi\-channel configurations, smbd understands some extra data that can be appended after the actual interface with this extended syntax:
+In order to support SMB3 multi\-channel configurations, smbd understands some extra parameters which can be appended after the actual interface with this extended syntax (note that the quoting is important in order to handle the ; and , characters):
 .sp
-interface[;key1=value1[,key2=value2[\&.\&.\&.]]]
+"interface[;key1=value1[,key2=value2[\&.\&.\&.]]]"
 .sp
-Known keys are speed, capability, and if_index\&. Speed is specified in bits per second\&. Known capabilities are RSS and RDMA\&. The if_index should be used with care: the values must not coincide with indexes used by the kernel\&. Note that these options are mainly intended for testing and development rather than for production use\&. At least on Linux systems, these values should be auto\-detected, but the settings can serve as last a resort when autodetection is not working or is not available\&.
+Known keys are speed, capability, and if_index\&. Speed is specified in bits per second\&. Known capabilities are RSS and RDMA\&. The if_index should be used with care: the values must not coincide with indexes used by the kernel\&. Note that these options are mainly intended for testing and development rather than for production use\&. At least on Linux systems, these values should be auto\-detected, but the settings can serve as last a resort when autodetection is not working or is not available\&. The specified values overwrite the auto\-detected values\&.
 .sp
-The example below configures three network interfaces corresponding to the eth0 device and IP addresses 192\&.168\&.2\&.10 and 192\&.168\&.3\&.10\&. The netmasks of the latter two interfaces would be set to 255\&.255\&.255\&.0\&.
+The first two example below configures three network interfaces corresponding to the eth0 device and IP addresses 192\&.168\&.2\&.10 and 192\&.168\&.3\&.10\&. The netmasks of the latter two interfaces would be set to 255\&.255\&.255\&.0\&.
+.sp
+The other examples show how per interface extra parameters can be specified\&. Notice the possible usage of "," and ";", which makes the double quoting necessary\&.
 .sp
 Default:
 \fI\fIinterfaces\fR\fR\fI = \fR\fI\fR\fI \fR
 .sp
 Example:
 \fI\fIinterfaces\fR\fR\fI = \fR\fIeth0 192\&.168\&.2\&.10/24 192\&.168\&.3\&.10/255\&.255\&.255\&.0\fR\fI \fR
+.sp
+Example:
+\fI\fIinterfaces\fR\fR\fI = \fR\fIeth0, 192\&.168\&.2\&.10/24; 192\&.168\&.3\&.10/255\&.255\&.255\&.0\fR\fI \fR
+.sp
+Example:
+\fI\fIinterfaces\fR\fR\fI = \fR\fI"eth0;if_index=65,speed=1000000000,capability=RSS"\fR\fI \fR
+.sp
+Example:
+\fI\fIinterfaces\fR\fR\fI = \fR\fI"lo;speed=1000000000" "eth0;capability=RSS"\fR\fI \fR
+.sp
+Example:
+\fI\fIinterfaces\fR\fR\fI = \fR\fI"lo;speed=1000000000" , "eth0;capability=RSS"\fR\fI \fR
+.sp
+Example:
+\fI\fIinterfaces\fR\fR\fI = \fR\fI"eth0;capability=RSS" , "rdma1;capability=RDMA" ; "rdma2;capability=RSS,capability=RDMA"\fR\fI \fR
 .RE
 
 invalid users (S)
@@ -7099,7 +7116,7 @@ map acl inherit (S)
 .RS 4
 This boolean parameter controls whether
 \fBsmbd\fR(8)
-will attempt to map the \*(Aqinherit\*(Aq and \*(Aqprotected\*(Aq access control entry flags stored in Windows ACLs into an extended attribute called user\&.SAMBA_PAI\&. This parameter only takes effect if Samba is being run on a platform that supports extended attributes (Linux and IRIX so far) and allows the Windows 2000 ACL editor to correctly use inheritance with the Samba POSIX ACL mapping code\&.
+will attempt to map the \*(Aqinherit\*(Aq and \*(Aqprotected\*(Aq access control entry flags stored in Windows ACLs into an extended attribute called user\&.SAMBA_PAI (POSIX ACL Inheritance)\&. This parameter requires supports for extended attributes on the filesystem and allows the Windows ACL editor to store inheritance information while NT ACLs are mapped best\-effort to the POSIX ACLs\&.
 .sp
 Default:
 \fI\fImap acl inherit\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -10005,7 +10022,7 @@ samba_kcc
 was installed in a non\-default location\&.
 .sp
 Default:
-\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.12\&.3/source4/scripting/bin/samba_kcc\fR\fI \fR
+\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.13\&.0rc1/source4/scripting/bin/samba_kcc\fR\fI \fR
 .sp
 Example:
 \fI\fIsamba kcc command\fR\fR\fI = \fR\fI/usr/local/bin/kcc\fR\fI \fR
@@ -10343,6 +10360,10 @@ will support SMB3 multi\-channel\&.
 This parameter was added with version 4\&.4\&.
 .sp
 Warning: Note that this feature is still considered experimental\&. Use it at your own risk: Even though it may seem to work well in testing, it may result in data corruption under some race conditions\&. Future releases may improve this situation\&.
+.sp
+Due to dependencies to kernel APIs of Linux or FreeBSD, it\*(Aqs only possible to use this feature on Linux and FreeBSD for now\&. For testing this restriction can be overwritten by specifying
+\fBforce:server multi channel support=yes\fR
+in addition\&.
 .sp
 Default:
 \fI\fIserver multi channel support\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -10867,6 +10888,59 @@ Default:
 .sp
 Example:
 \fI\fIshutdown script\fR\fR\fI = \fR\fI/usr/local/samba/sbin/shutdown %m %t %r %f\fR\fI \fR
+.RE
+
+smb2 disable lock sequence checking (G)
+.PP
+.RS 4
+This boolean parameter controls whether
+\fBsmbd\fR(8)
+will disable lock sequence checking even for multi\-channel connections as well as durable handles\&.
+.sp
+The [MS\-SMB2] specification (under 3\&.3\&.5\&.14 Receiving an SMB2 LOCK Request) documents that a server should do lock sequence if Open\&.IsResilient or Open\&.IsDurable or Open\&.IsPersistent is TRUE or if Connection\&.Dialect belongs to the SMB 3\&.x dialect family and Connection\&.ServerCapabilities includes SMB2_GLOBAL_CAP_MULTI_CHANNEL\&.
+.sp
+But Windows Server (at least up to v2004) only does these checks for the Open\&.IsResilient and Open\&.IsPersistent\&. That means they do not implement the behavior specified in [MS\-SMB2]\&.
+.sp
+By default Samba behaves according to the specification and sends smb2 oplock break notification retries\&.
+.sp
+Warning: Only enable this option if existing clients can\*(Aqt handle lock sequence checking for handles without Open\&.IsResilient and Open\&.IsPersistent\&. And it turns out that the Windows Server behavior is required\&.
+.sp
+Note: it\*(Aqs likely that this option will be removed again if future Windows versions change their behavior\&.
+.sp
+Note: Samba does not implement Open\&.IsResilient and Open\&.IsPersistent yet\&.
+.sp
+Default:
+\fI\fIsmb2 disable lock sequence checking\fR\fR\fI = \fR\fIno\fR\fI \fR
+.sp
+Example:
+\fI\fIsmb2 disable lock sequence checking\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
+smb2 disable oplock break retry (G)
+.PP
+.RS 4
+This boolean parameter controls whether
+\fBsmbd\fR(8)
+will trigger smb2 oplock break notification retries when using
+\m[blue]\fBserver multi channel support = yes\fR\m[]\&.
+.sp
+The [MS\-SMB2] specification documents that a server should send smb2 oplock break notification retries on all available channel to the given client\&.
+.sp
+But Windows Server versions (at least up to 2019) do not send smb2 oplock break notification retries on channel failures\&. That means they do not implement the behavior specified in [MS\-SMB2]\&.
+.sp
+By default Samba behaves according to the specification and send smb2 oplock break notification retries\&.
+.sp
+Warning: Only enable this option if existing clients can\*(Aqt handle possible retries and it turns out that the Windows Server behavior is required\&.
+.sp
+Note: it\*(Aqs likely that this option gets removed again if future Windows versions change their behavior\&.
+.sp
+Note: this only applies to oplocks and not SMB2 leases\&.
+.sp
+Default:
+\fI\fIsmb2 disable oplock break retry\fR\fR\fI = \fR\fIno\fR\fI \fR
+.sp
+Example:
+\fI\fIsmb2 disable oplock break retry\fR\fR\fI = \fR\fIyes\fR\fI \fR
 .RE
 
 smb2 leases (G)
@@ -11545,6 +11619,17 @@ TCP_KEEPALIVE_ABORT_THRESHOLD *
 TCP_DEFER_ACCEPT *
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+TCP_USER_TIMEOUT *
+.RE
+.sp
 .RE
 Those marked with a
 \fI\*(Aq*\*(Aq\fR
@@ -11579,7 +11664,7 @@ This option sets the command that for updating servicePrincipalName names from
 spn_update_list\&.
 .sp
 Default:
-\fI\fIspn update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.12\&.3/source4/scripting/bin/samba_spnupdate\fR\fI \fR
+\fI\fIspn update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.13\&.0rc1/source4/scripting/bin/samba_spnupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIspn update command\fR\fR\fI = \fR\fI/usr/local/sbin/spnupdate\fR\fI \fR
@@ -12135,10 +12220,12 @@ tls priority (G)
 .RS 4
 This option can be set to a string describing the TLS protocols to be supported in the parts of Samba that use GnuTLS, specifically the AD DC\&.
 .sp
-The default turns off SSLv3, as this protocol is no longer considered secure after CVE\-2014\-3566 (otherwise known as POODLE) impacted SSLv3 use in HTTPS applications\&.
+The string is appended to the default priority list of GnuTLS\&.
 .sp
 The valid options are described in the
 GNUTLS Priority\-Strings documentation at http://gnutls\&.org/manual/html_node/Priority\-Strings\&.html
+.sp
+The SSL3\&.0 protocol will be disabled\&.
 .sp
 Default:
 \fI\fItls priority\fR\fR\fI = \fR\fINORMAL:\-VERS\-SSL3\&.0\fR\fI \fR
@@ -12276,9 +12363,8 @@ Default:
 use mmap (G)
 .PP
 .RS 4
-This global parameter determines if the tdb internals of Samba can depend on mmap working correctly on the running system\&. Samba requires a coherent mmap/read\-write system memory cache\&. Currently only HPUX does not have such a coherent cache, and so this parameter is set to
-\fBno\fR
-by default on HPUX\&. On all other systems this parameter should be left alone\&. This parameter is provided to help the Samba developers track down problems with the tdb internal code\&.
+This global parameter determines if the tdb internals of Samba can depend on mmap working correctly on the running system\&. Samba requires a coherent mmap/read\-write system memory cache\&. Currently only OpenBSD and HPUX do not have such a coherent cache, and on those platforms this paramter is overridden internally to be effeceively
+\fBno\fR\&. On all systems this parameter should be left alone\&. This parameter is provided to help the Samba developers track down problems with the tdb internal code\&.
 .sp
 Default:
 \fI\fIuse mmap\fR\fR\fI = \fR\fIyes\fR\fI \fR
@@ -13454,7 +13540,7 @@ and
 special sections make life for an administrator easy, but the various combinations of default attributes can be tricky\&. Take extreme care when designing these sections\&. In particular, ensure that the permissions on spool directories are correct\&.
 .SH "VERSION"
 .PP
-This man page is part of version 4\&.12\&.3 of the Samba suite\&.
+This man page is part of version 4\&.13\&.0rc1 of the Samba suite\&.
 .SH "SEE ALSO"
 .PP
 \fBsamba\fR(7),
