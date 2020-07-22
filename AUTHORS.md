@@ -33,6 +33,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Rodrigo Stulzer Lopes <rodrigo@conectiva.com.br>
 * Rubens de Jesus Nogueira <darkseid99@usa.net>
 * Sandro Nunes Henrique <sandro@conectiva.com.br>
+* Silvio Gissi Fonseca <gissi@mackenzie.com.br>
 * Valter Ferraz Sanches <vfs@ezlinux.cjb.net>
 * Walter Rodrigo de Sá Cruz <keytech@bol.com.br>
 
@@ -90,6 +91,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jean-Paul Guillonneau <debian-l10n-french@lists.debian.org>
 * Jean-Paul Guillonneau <guillonneau.jeanpaul@free.fr>
 * Jean-Philippe Guérard <fevrier@tigreraye.org>
+* Jean-Philippe Mengual <jpmengual@debian.org>
 * Jean-Philippe MENGUAL <jpmengual@debian.org>
 * Jean-Pierre Giraud <jean-pierregiraud@neuf.fr>
 * Jérôme Perzyna <jperzyna@yahoo.fr>
@@ -98,6 +100,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Julien Rosal <albator.deb@gmail.com>
 * Luc Froidefond <luc.froidefond@free.fr>
 * Lyes Zemmouche <iliaas@hotmail.fr>
+* Marc Poiroud <marci1@archlinux.fr>
 * Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
 * Michel Quercia <quercia AT cal DOT enst DOT fr>
 * Nicolas François <nicolas.francois@centraliens.net>
