@@ -276,6 +276,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
 * Javi Polo <javipolo@CyberJunkie.com>
+* Jorge Rodriguez (A.K.A. Tiriel) <tiriel@users.sourceforge.net>
 * Juan Pablo Puerta <jppuerta@full-moon.com>
 * Juan Piernas <piernas@ditec.um.es>
 * Julio González Durán <jugonzalez@mx3.redestb.es>
@@ -283,6 +284,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Miguel Angel Sepulveda <angel@vivaldi.princeton.edu>
 * Miguel Pérez Ibars <mpi79470@alu.um.es>
 * Nicolás Lichtmaier <nick@debian.org>
+* Pedro A. Carrasco Ponce <pacp@jet.es>
 * Rafael Godínez <1ragodin@rigel.deusto.es>
 * Rafael Rios <rafarios@arrakis.es>
 * Sebastian Desimone <chipy@argenet.com.ar>
