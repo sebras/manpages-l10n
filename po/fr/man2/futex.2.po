@@ -15,12 +15,13 @@
 # Simon Paillard <simon.paillard@resel.enst-bretagne.fr>, 2006, 2013-2014.
 # Denis Barbier <barbier@debian.org>, 2006, 2010.
 # David Prévot <david@tilapin.org>, 2010-2014.
+# Jean-Philippe MENGUAL <jpmengual@debian.org>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: perkamon\n"
 "POT-Creation-Date: 2020-06-30 19:04+02:00\n"
-"PO-Revision-Date: 2018-09-10 20:55+0000\n"
-"Last-Translator: Weblate Admin <jean-baptiste@holcroft.fr>\n"
+"PO-Revision-Date: 2020-07-12 08:15+0200\n"
+"Last-Translator: Jean-Philippe MENGUAL <jpmengual@debian.org>\n"
 "Language-Team: French <https://translate.holcroft.fr/projects/man-pages-fr/"
 "man2/fr/>\n"
 "Language: fr\n"
@@ -91,12 +92,16 @@ msgstr ""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid ""
 "B<int futex(int *>I<uaddr>B<, int >I<futex_op>B<, int >I<val>B<,>\n"
 "B<          const struct timespec *>I<timeout>B<,>I< >  /* or: B<uint32_t >I<val2>B< */>\n"
 "B<          int *>I<uaddr2>B<, int >I<val3>B<);>\n"
-msgstr "B<int futex(int *>I<uaddr>B<, int >I<op>B<, int >I<val>B<, const struct timespec *>I<timeout>B<,>\n"
+msgstr ""
+"B<int futex(int *>I<uaddr>B<, int >I<futex_op>B<, int >I<val>B<,>\n"
+"B<          const struct timespec *>I<timeout>B<,>I< >  /* ou : B<uint32_t >I<val2>B< */>\n"
+"B<          int *>I<uaddr2>B<, int >I<val3>B<);>\n"
+"\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -126,6 +131,15 @@ msgid ""
 "Other B<futex>()  operations can be used to wake any processes or threads "
 "waiting for a particular condition."
 msgstr ""
+"L'appel système B<futex>() offre une méthode pour attendre qu'une condition "
+"soit vraie. On l'utilise en général comme construction de blocage dans le "
+"contexte de la synchronisation de la mémoire partagée. Quand on utilise des "
+"futex, la majorité des opérations de synchronisation s'effectue dans "
+"l'espace utilisateur. Un programme de l'espace utilisateur n'utilise l'appel "
+"système B<futex>() que lorsqu'il est probable qu'il doive se bloquer plus "
+"longtemps avant que la condition ne soit vraie. D'autres opérations "
+"B<futex>() peuvent être utilisées pour réveiller des processus ou des "
+"threads qui attendent une condition en particulier."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -142,6 +156,17 @@ msgid ""
 "sufficient to place the futex word in a global variable shared by all "
 "threads."
 msgstr ""
+"Un futex est une valeur 32 bits — désignée ci-dessous comme « I<mot "
+"futex> » —dont l'adresse est fournie à l'appel système B<futex>() (les futex "
+"ont une taille de 32 bits sur toutes les plateformes, y compris les systèmes "
+"64 bits). Toutes les opérations futex sont pilotées par cette valeur. Afin "
+"de partager un futex entre des processus, le futex est placé dans une zone "
+"de la mémoire partagée créée en utilisant (par exemple) B<mmap>(2) ou "
+"B<shmat>(2) (ainsi, le mot futex peut avoir plusieurs adresses virtuelles "
+"dans différents processus, mais ces adresses se rapportent toutes au même "
+"emplacement de la mémoire physique). Dans un programme multithreadé, il "
+"suffit de mettre le mot futex dans une variable globale partagée par tous "
+"les threads."
 
 #
 #.  Notes from Darren Hart (Dec 2015):
@@ -176,6 +201,18 @@ msgid ""
 "compare-and-exchange operation that potentially changes shared memory, "
 "blocking via a futex is an atomic compare-and-block operation."
 msgstr ""
+"Lors de l'exécution d'une opération futex qui demande le blocage d'un "
+"thread, le noyau ne le bloquera que si le mot futex a une valeur fournie par "
+"le thread appelant (en tant qu'un des paramètres de l'appel B<futex>()) "
+"correspondant à celle prévue du mot futex. Le chargement de la valeur du mot "
+"futex, la comparaison de cette valeur avec celle attendue et le blocage "
+"s'effectueront de manière atomique et seront entièrement organisés par "
+"rapport aux opérations qui sont effectuées en parallèle par d'autres threads "
+"sur le même mot futex. Ainsi, le mot futex est utilisé pour relier la "
+"synchronisation de l'espace utilisateur et l'implémentation du blocage par "
+"le noyau. Tout comme une opération compare-and-exchange atomique qui modifie "
+"potentiellement la mémoire partagée, le blocage par futex est une opération "
+"compare-and-block atomique."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -199,6 +236,26 @@ msgid ""
 "(this can be further optimized to avoid unnecessary wake-ups).  See "
 "B<futex>(7)  for more detail on how to use futexes."
 msgstr ""
+"Une utilisation des futex consiste à implémenter des verrous. L'état du "
+"verrou (c'est-à-dire acquis ou non acquis) peut se représenter comme un "
+"drapeau auquel on a un accès atomique en mémoire partagée. En absence de "
+"conflit (uncontended case), un thread peut accéder et modifier l'état du "
+"verrou avec des instructions atomiques, par exemple le passer de manière "
+"atomique de l'état non acquis à acquis, en utilisant une instruction compare-"
+"and-exchange atomique (de telles instructions s'effectuent entièrement dans "
+"l'espace utilisateur et le noyau ne conserve aucune information sur l'état "
+"du verrou). D'un autre côté, un thread peut être incapable d'acquérir un "
+"verrou parce qu'il est déjà acquis par un autre thread. Il peut alors passer "
+"l'attribut du verrou en tant que mot futex, et la valeur représentant l'état "
+"acquis en tant que valeur attendue pour l'opération d'attente de B<futex>(). "
+"Cette opération B<futex>() bloquera si et seulement si le verrou est encore "
+"acquis (c'est-à-dire si la valeur du mot futex correspond toujours à "
+"« l'état acquis »). Lorsque le verrou est relâché, le thread doit d'abord "
+"réinitialiser l'état du verrou sur non acquis puis exécuter une opération "
+"futex qui réveille les threads bloqués par le drapeau de verrou utilisé en "
+"tant que mot futex (cela peut être mieux optimisé pour éviter les réveils "
+"inutiles). Voir B<futex>(7) pour plus de détails sur la manière d'utiliser "
+"les futex."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -207,6 +264,9 @@ msgid ""
 "Besides the basic wait and wake-up futex functionality, there are further "
 "futex operations aimed at supporting more complex use cases."
 msgstr ""
+"Outre la fonctionnalité de base du futex consistant à attendre et à "
+"réveiller, d'autres opérations futex visent à gérer des cas d'utilisation "
+"plus complexes."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -217,6 +277,11 @@ msgid ""
 "implementation artifact)  only while operations such as B<FUTEX_WAIT>, "
 "described below, are being performed on a particular futex word."
 msgstr ""
+"Remarquez qu'aucune initialisation ou destruction explicite n'est nécessaire "
+"pour utiliser les futex ; le noyau ne garde un futex (c'est-à-dire un "
+"artefact d'implémentation interne au noyau) que pendant que les opérations "
+"telles que B<FUTEX_WAIT>, décrite ci-dessous, s'effectuent sur un mot futex "
+"en particulier."
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -234,6 +299,11 @@ msgid ""
 "operation to perform on the futex is specified in the I<futex_op> argument; "
 "I<val> is a value whose meaning and purpose depends on I<futex_op>."
 msgstr ""
+"Le paramètre I<uaddr> pointe vers un mot futex. Sur toutes les plateformes, "
+"les futex sont des entiers de quatre octets qui doivent être alignés sur une "
+"limite de quatre octets. L'opération à effectuer sur le futex est indiquée "
+"dans le paramètre de I<futex_op> ; I<val> est une valeur dont la "
+"signification et l'objectif dépendent de I<futex_op>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -243,6 +313,9 @@ msgid ""
 "only for certain of the futex operations described below.  Where one of "
 "these arguments is not required, it is ignored."
 msgstr ""
+"Les autres paramètres (I<timeout>, I<uaddr2> et I<val3>) ne sont nécessaires "
+"que pour certaines opérations futex décrites ci-dessous. Si un de ces "
+"arguments n'est pas nécessaire, il est ignoré."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -257,6 +330,15 @@ msgid ""
 "and in the remainder of this page, this argument is referred to as I<val2> "
 "when interpreted in this fashion."
 msgstr ""
+"Pour plusieurs opérations de blocage, le paramètre I<timeout> est un "
+"pointeur vers une structure I<timespec> qui indique la durée maximale de "
+"l'opération. Toutefois, contrairement au prototype décrit ci-dessus, pour "
+"certaines opérations, les quatre octets les moins significatifs de ce "
+"paramètre sont utilisés comme un entier dont la signification est déterminée "
+"par l'opération. Pour ces opérations, le noyau diffuse la valeur I<timeout> "
+"d'abord à I<unsigned long>, puis à I<uint32_t>, et dans le reste de cette "
+"page, ce paramètre est désigné par I<val2> quand il est interprété de cette "
+"manière."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -265,6 +347,8 @@ msgid ""
 "Where it is required, the I<uaddr2> argument is a pointer to a second futex "
 "word that is employed by the operation."
 msgstr ""
+"Lorsqu'il est nécessaire, le paramètre I<uaddr2> est un pointeur vers un "
+"deuxième mot futex utilisé par l'opération."
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -275,13 +359,15 @@ msgid ""
 "The interpretation of the final integer argument, I<val3>, depends on the "
 "operation."
 msgstr ""
+"L'interprétation du paramètre de l'entier final, I<val3>, dépend de "
+"l'opération."
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "Futex operations"
-msgstr ""
+msgstr "Opérations futex"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -292,13 +378,17 @@ msgid ""
 "modify the behaviour of the operation.  The options that may be included in "
 "I<futex_op> are as follows:"
 msgstr ""
+"Le paramètre I<futex_op> est en deux parties : une commande qui indique "
+"l'opération à effectuer et un bit ORed avec zéro ou plusieurs options qui "
+"changent le comportement de l'opération. Les options qui peuvent être "
+"incluses dans I<futex_op> sont les suivantes :"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_PRIVATE_FLAG> (since Linux 2.6.22)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_PRIVATE_FLAG> (depuis Linux 2.6.22)"
 
 #.  commit 34f01cc1f512fa783302982776895c73714ebbc2
 #.  I.e., It allows the kernel choose the fast path for validating
@@ -314,6 +404,11 @@ msgid ""
 "process).  This allows the kernel to make some additional performance "
 "optimizations."
 msgstr ""
+"Ce bit d'option peut être utilisé avec toutes les opérations futex. Il dit "
+"au noyau que le futex est un processus privé non partagé avec d'autres "
+"processus (c'est-à-dire qu'il n'est utilisé que pour la synchronisation "
+"entre les threads du même processus). Cela permet au noyau d'effectuer des "
+"optimisations de performance supplémentaires."
 
 #.  except the obsolete FUTEX_FD, for which the "private" flag was
 #.  meaningless
@@ -326,13 +421,18 @@ msgid ""
 "below, but with the B<FUTEX_PRIVATE_FLAG> ORed into the constant value.  "
 "Thus, there are B<FUTEX_WAIT_PRIVATE>, B<FUTEX_WAKE_PRIVATE>, and so on."
 msgstr ""
+"Par commodité, I<E<lt>linux/futex.hE<gt>> définit un ensemble de constantes "
+"dont le suffixe est B<_PRIVATE> et qui sont équivalentes à toutes les "
+"opérations listées ci-dessous mais avec l'attribut B<FUTEX_PRIVATE_FLAG> "
+"ORed dans la valeur de la constante. On trouve ainsi B<FUTEX_WAIT_PRIVATE>, "
+"B<FUTEX_WAKE_PRIVATE> et ainsi de suite."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_CLOCK_REALTIME> (since Linux 2.6.28)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_CLOCK_REALTIME> (depuis Linux 2.6.28)"
 
 #.  commit 1acdac104668a0834cfa267de9946fac7764d486
 #.  commit 337f13046ff03717a9e99675284a817527440a49
@@ -343,6 +443,9 @@ msgid ""
 "This option bit can be employed only with the B<FUTEX_WAIT_BITSET>, "
 "B<FUTEX_WAIT_REQUEUE_PI>, and (since Linux 4.5)  B<FUTEX_WAIT> operations."
 msgstr ""
+"Ce bit d'option ne peut être utilisé qu'avec les opérations "
+"B<FUTEX_WAIT_BITSET>, B<FUTEX_WAIT_REQUEUE_PI> et (depuis Linux 4.5) "
+"B<FUTEX_WAIT>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -351,6 +454,8 @@ msgid ""
 "If this option is set, the kernel measures the I<timeout> against the "
 "B<CLOCK_REALTIME> clock."
 msgstr ""
+"Si cette option est positionnée, le noyau mesure le I<timeout> par rapport à "
+"l'horloge B<CLOCK_REALTIME>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -359,21 +464,22 @@ msgid ""
 "If this option is not set, the kernel measures the I<timeout> against the "
 "B<CLOCK_MONOTONIC> clock."
 msgstr ""
+"Si cette option n'est pas positionnée, le noyau mesure le I<timeout> par "
+"rapport à l'horloge B<CLOCK_MONOTONIC>."
 
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The operation specified in I<futex_op> is one of the following:"
-msgstr "La valeur de I<subcmd> prend une de ces valeurs\\ :"
+msgstr "L'opération indiquée dans I<futex_op> prend une de ces valeurs\\ :"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAIT> (since Linux 2.6.0)"
-msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.5.70)"
+msgstr "B<FUTEX_WAIT> (depuis Linux 2.6.0)"
 
 #.  Strictly speaking, since some time in 2.5.x
 #.  FIXME: Torvald, I think we may need to add some explanation of
@@ -393,6 +499,17 @@ msgid ""
 "on this futex word.  If the futex value does not match I<val>, then the call "
 "fails immediately with the error B<EAGAIN>."
 msgstr ""
+"Cette option teste que la valeur du mot futex vers laquelle pointe l'adresse "
+"I<uaddr> contient toujours la valeur I<val> attendue, et si tel est le cas, "
+"elle s'endort jusqu'à une opération B<FUTEX_WAKE> sur le mot futex. Le "
+"chargement de la valeur du mot futex est un accès en mémoire atomique (c'est-"
+"à-dire qu'il utilise des instructions machine atomiques de l'architecture "
+"concernée). Ce chargement, la comparaison avec la valeur attendue et la mise "
+"en sommeil s'effectuent de manière atomique et sont totalement organisés "
+"selon les autres opérations futex sur le même mot futex. Si le thread "
+"commence à dormir, il est considéré comme en attente de ce mot futex. Si la "
+"valeur futex ne correspond pas à I<val>, l'appel échoue immédiatement avec "
+"l'erreur B<EAGAIN>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -405,6 +522,13 @@ msgid ""
 "value change and before this B<FUTEX_WAIT> operation, then the calling "
 "thread will observe the value change and will not start to sleep."
 msgstr ""
+"Le but de la comparaison avec la valeur attendue est d'empêcher des réveils "
+"perdus. Si un autre thread a changé la valeur du mot futex après que le "
+"thread a décidé de se bloquer en se fondant sur la valeur d'avant, et si "
+"l'autre thread a effectué une opération B<FUTEX_WAKE> (ou un réveil "
+"équivalent) après le changement de cette valeur et avant cette opération "
+"B<FUTEX_WAIT>, le thread appelant observera cette valeur et ne commencera "
+"pas à dormir."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -418,6 +542,13 @@ msgid ""
 "B<FUTEX_CLOCK_REALTIME> in I<futex_op>.  If I<timeout> is NULL, the call "
 "blocks indefinitely."
 msgstr ""
+"Si le I<timeout> n'est pas NULL, la structure vers laquelle il pointe "
+"indique un délai d'attente (cet intervalle sera arrondi à la valeur "
+"supérieure à partir de la granularité de l'horloge système et il est garanti "
+"de ne pas expirer en avance). Le délai est mesuré par défaut par rapport à "
+"l'horloge B<CLOCK_MONOTONIC> mais depuis Linux 4.5, l'horloge "
+"B<CLOCK_REALTIME> peut être choisie en indiquant B<FUTEX_CLOCK_REALTIME> "
+"dans I<futex_op>. Si le I<timeout> est NULL, l'appel se bloque indéfiniment."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -429,6 +560,11 @@ msgid ""
 "with an absolute timeout, employ B<FUTEX_WAIT_BITSET> with I<val3> specified "
 "as B<FUTEX_BITSET_MATCH_ANY>."
 msgstr ""
+"I<Remarque> : pour B<FUTEX_WAIT>, le I<timeout> est interprété comme une "
+"I<valeur> relative. Cela diffère des autres opérations futex où le "
+"I<timeout> est interprété comme une valeur absolue. Pour obtenir "
+"l'équivalent de B<FUTEX_WAIT>, avec un délai absolu, utilisez "
+"B<FUTEX_WAIT_BITSET> en indiquant I<val3> comme B<FUTEX_BITSET_MATCH_ANY>."
 
 #
 #
@@ -447,14 +583,14 @@ msgstr ""
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "The arguments I<uaddr2> and I<val3> are ignored."
-msgstr ""
+msgstr "Les paramètres I<uaddr2> et I<val3> sont ignorés."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAKE> (since Linux 2.6.0)"
-msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.5.70)"
+msgstr "B<FUTEX_WAKE> (depuis Linux 2.6.0)"
 
 #.  Strictly speaking, since Linux 2.5.x
 #. type: Plain text
@@ -468,6 +604,13 @@ msgid ""
 "waiters are awoken (e.g., a waiter with a higher scheduling priority is not "
 "guaranteed to be awoken in preference to a waiter with a lower priority)."
 msgstr ""
+"Cette opération réveille jusqu'à I<val> éléments en attente (comme dans "
+"B<FUTEX_WAIT>) sur le mot futex à l'adresse I<uaddr>. Généralement, I<val> "
+"est indiqué soit sous la forme de B<1> (réveil d'un seul élément en attente) "
+"soit avec B<INT_MAX> (réveil de tous les éléments en attente). Vous n'avez "
+"aucune garantie quant aux éléments qui sont réveillés (par exemple un "
+"élément en attente dont la priorité d'ordonnancement élevée n'est pas "
+"garanti de se réveiller avant un autre d'une priorité plus basse)."
 
 #
 #
@@ -486,14 +629,14 @@ msgstr ""
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "The arguments I<timeout>, I<uaddr2>, and I<val3> are ignored."
-msgstr ""
+msgstr "Les paramètres I<timeout>, I<uaddr2> et I<val3> sont ignorés."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_FD> (from Linux 2.6.0 up to and including Linux 2.6.25)"
-msgstr "B<FUTEX_FD> (présent jusqu'à Linux 2.6.25 inclus)"
+msgstr "B<FUTEX_FD> (de Linux 2.6.0 jusqu'à Linux 2.6.25 inclus)"
 
 #.  Strictly speaking, from Linux 2.5.x to 2.6.25
 #. type: Plain text
@@ -506,6 +649,11 @@ msgid ""
 "the file descriptor indicates as being readable with B<select>(2), "
 "B<poll>(2), and B<epoll>(7)"
 msgstr ""
+"Cette opération crée un descripteur de fichier associé au futex sur "
+"I<uaddr>. L'appelant doit fermer le descripteur de fichier renvoyé après "
+"l'avoir utilisé. Quand un autre processus ou un autre thread effectue un "
+"B<FUTEX_WAKE> sur le mot futex, le descripteur de fichier indique qu'il est "
+"accessible en lecture avec B<select>(2), B<poll>(2), et B<epoll>(7)"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -516,12 +664,16 @@ msgid ""
 "B<FUTEX_WAKE>, the caller will receive the signal number that was passed in "
 "I<val>."
 msgstr ""
+"Le descripteur de fichier peut être utilisé pour avoir des notifications "
+"asynchrones, si I<val> n'est pas nul, puis, quand un autre processus ou un "
+"autre thread exécute B<FUTEX_WAKE>, l'appelant recevra le numéro du signal "
+"passé à I<val>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "The arguments I<timeout>, I<uaddr2> and I<val3> are ignored."
-msgstr ""
+msgstr "Les paramètres I<timeout>, I<uaddr2> et I<val3> sont ignorés."
 
 #.  commit 82af7aca56c67061420d618cc5a30f0fd4106b80
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -532,15 +684,15 @@ msgid ""
 "Because it was inherently racy, B<FUTEX_FD> has been removed from Linux "
 "2.6.26 onward."
 msgstr ""
-"Parce qu'il était de façon inhérent sujet à des situations de concurrence, "
+"Parce qu'il était de façon inhérente sujet à des situations de concurrence, "
 "B<FUTEX_FD> a été supprimé de Linux 2.6.26 et les suivants."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_REQUEUE> (since Linux 2.6.0)"
-msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.5.70)"
+msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.6.0)"
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -552,6 +704,9 @@ msgid ""
 "except that no check is made using the value in I<val3>.  (The argument "
 "I<val3> is ignored.)"
 msgstr ""
+"Cette opération effectue la même chose que B<FUTEX_CMP_REQUEUE> (voir ci-"
+"dessous), sauf qu'elle ne vérifie rien en utilisant la valeur dans I<val3> "
+"(le paramètre I<val3> est ignoré)."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -573,6 +728,14 @@ msgid ""
 "I<uaddr2>.  The I<val2> argument specifies an upper limit on the number of "
 "waiters that are requeued to the futex at I<uaddr2>."
 msgstr ""
+"Cette opération vérifie d'abord si l'emplacement I<uaddr> contient toujours "
+"la valeur I<val3>. Si tel n'est pas le cas, l'opération échoue avec l'erreur "
+"B<EAGAIN>. Si tel est le cas, l'opération réveille un maximum de I<val> "
+"éléments en attente du futex sur I<uaddr>. S'il y a plus de I<val> éléments "
+"en attente, les autres sont supprimés de la file d'attente du futex source "
+"sur I<uaddr> et ajoutés à la file d'attente du futex cible sur I<uaddr2>. Le "
+"paramètre I<val2> indique une limite supérieure du nombre d'éléments remis "
+"en attente dans le futex sur I<uaddr2>."
 
 #.  FIXME(Torvald) Is the following correct?  Or is just the decision
 #.  which threads to wake or requeue part of the atomic operation?
@@ -591,6 +754,11 @@ msgid ""
 "atomically and totally ordered with respect to other operations on the same "
 "futex word."
 msgstr ""
+"Le chargement à partir de I<uaddr> est un accès atomique en mémoire (c'est-à-"
+"dire qu'il utilise les instructions machine atomiques de l'architecture "
+"concernée). Ce chargement, la comparaison avec I<val3> et la remise en "
+"attente d'éléments s'effectuent de manière atomique et sont totalement "
+"organisées par rapport aux autres opérations sur le même mot futex."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -603,6 +771,12 @@ msgid ""
 "useful, because it would make the B<FUTEX_CMP_REQUEUE> operation equivalent "
 "to B<FUTEX_WAIT>.)"
 msgstr ""
+"Les valeurs classiques qu'on indique à I<val> sont B<0> ou B<1> (indiquer "
+"B<INT_MAX> n'est pas utile car cela rendrait l'opération "
+"B<FUTEX_CMP_REQUEUE> équivalente à B<FUTEX_WAKE>). La valeur limite indiquée "
+"avec I<val2> est généralement B<1> ou B<INT_MAX> (indiquer B<0> en paramètre "
+"n'est pas utile car cela rendrait l'opération B<FUTEX_CMP_REQUEUE> "
+"équivalente à B<FUTEX_WAIT>)."
 
 #.  But, as Rich Felker points out, there remain valid use cases for
 #.  FUTEX_REQUEUE, for example, when the calling thread is requeuing
@@ -621,6 +795,11 @@ msgid ""
 "I<uaddr> can be used to ensure that requeueing happens only under certain "
 "conditions, which allows race conditions to be avoided in certain use cases."
 msgstr ""
+"L'opération B<FUTEX_CMP_REQUEUE> a été ajoutée pour remplacer l'ancienne "
+"B<FUTEX_REQUEUE>. La différence est que la vérification de la valeur sur "
+"I<uaddr> peut être utilisée pour s'assurer que la remise en attente ne se "
+"produit que sous certaines conditions, ce qui évite les conflits de mémoire "
+"(race conditions) dans certains cas d'utilisation."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -632,6 +811,12 @@ msgid ""
 "futex.  Consider the following scenario, where multiple waiter threads are "
 "waiting on B, a wait queue implemented using a futex:"
 msgstr ""
+"B<FUTEX_REQUEUE> et B<FUTEX_CMP_REQUEUE> peuvent être utilisées pour éviter "
+"des réveils en troupeau (thundering herd) qui peuvent survenir quand on "
+"utilise B<FUTEX_WAKE> dans des cas où tous les éléments en attente qu'on "
+"réveille doivent acquérir un autre futex. Imaginons le scénario suivant où "
+"plusieurs threads attendent en B, une file d'attente implémentée en "
+"utilisant un futex :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -646,6 +831,13 @@ msgid ""
 "};\n"
 "unlock(A);\n"
 msgstr ""
+"lock(A)\n"
+"while (!check_value(V)) {\n"
+"    unlock(A);\n"
+"    block_on(B);\n"
+"    lock(A);\n"
+"};\n"
+"unlock(A);\n"
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -660,13 +852,20 @@ msgid ""
 "operation wakes just one waiter and moves the other waiters to lock A, and "
 "when the woken waiter unlocks A then the next waiter can proceed."
 msgstr ""
+"Si un thread qui se réveille utilisait B<FUTEX_WAKE>, tous les éléments "
+"attendant en B se réveilleraient et essaieraient d'acquérir le verrou A. "
+"Cependant, réveiller tous ces threads de cette manière serait vain car tous "
+"les threads, sauf un, se bloqueraient immédiatement à nouveau via le verrou "
+"A. Au contraire, une remise dans la file d'attente ne réveille qu'un élément "
+"et déplace les autres sur le verrou A et quand celui réveillé déverrouille "
+"A, le suivant peut continuer."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAKE_OP> (since Linux 2.6.14)"
-msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.5.70)"
+msgstr "B<FUTEX_WAKE_OP> (depuis Linux 2.6.14)"
 
 #.  commit 4732efbeb997189d9f9b04708dc26bf8613ed721
 #. 	Author: Jakub Jelinek <jakub@redhat.com>
@@ -687,6 +886,14 @@ msgid ""
 "variable.  B<FUTEX_WAKE_OP> allows such cases to be implemented without "
 "leading to high rates of contention and context switching."
 msgstr ""
+"Cette opération a été ajoutée pour prendre en charge certains cas "
+"d'utilisation de l'espace utilisateur où plus d'un futex à la fois doit être "
+"géré. L'exemple le plus frappant est l'implémentation de "
+"B<pthread_cond_signal>(3), qui nécessite des opérations sur deux futex, une "
+"pour implémenter le mutex, l'autre pour utiliser dans l'implémentation de la "
+"file d'attente associée à la variable conditionnelle. B<FUTEX_WAKE_OP> "
+"permet d'implémenter de tels cas sans augmenter le nombre de conflits et de "
+"changement de contexte."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -696,6 +903,9 @@ msgid ""
 "atomically and totally ordered with respect to other futex operations on any "
 "of the two supplied futex words:"
 msgstr ""
+"L'opération B<FUTEX_ WAKE_OP> revient à exécuter le code suivant de manière "
+"atomique et complètement organisé en fonction des opérations futex sur un "
+"des deux mots futex fournis :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -708,12 +918,17 @@ msgid ""
 "if (oldval I<cmp> I<cmparg>)\n"
 "    futex(uaddr2, FUTEX_WAKE, val2, 0, 0, 0);\n"
 msgstr ""
+"int oldval = *(int *) uaddr2;\n"
+"*(int *) uaddr2 = oldval I<op> I<oparg>;\n"
+"futex(uaddr, FUTEX_WAKE, val, 0, 0, 0);\n"
+"if (oldval I<cmp> I<cmparg>)\n"
+"    futex(uaddr2, FUTEX_WAKE, val2, 0, 0, 0);\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "In other words, B<FUTEX_WAKE_OP> does the following:"
-msgstr ""
+msgstr "En d'autres termes, B<FUTEX_WAKE_OP> fait ce qui suit :"
 
 #. type: IP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -731,6 +946,10 @@ msgid ""
 "read-modify-write memory access (i.e., using atomic machine instructions of "
 "the respective architecture)"
 msgstr ""
+"sauvegarde la valeur d'origine du mot futex sur I<uaddr2> et effectue une "
+"opération pour modifier la valeur du futex sur I<uaddr2> ; il s'agit d'un "
+"accès en mémoire read-modify-write atomique (c'est-à-dire d'une utilisation "
+"des instructions machine atomiques liées à l'architecture concernée)"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -739,6 +958,8 @@ msgid ""
 "wakes up a maximum of I<val> waiters on the futex for the futex word at "
 "I<uaddr>; and"
 msgstr ""
+"réveille un maximum de I<val> éléments en attente sur le futex pour le mot "
+"futex sur I<uaddr> ;"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -748,6 +969,9 @@ msgid ""
 "at I<uaddr2>, wakes up a maximum of I<val2> waiters on the futex for the "
 "futex word at I<uaddr2>."
 msgstr ""
+"et selon les résultats d'un test de la valeur d'origine du mot futex sur "
+"I<uaddr2>, réveille un maximum de I<val2> éléments en attente du mot futex "
+"sur le futex sur I<uaddr2>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -756,6 +980,8 @@ msgid ""
 "The operation and comparison that are to be performed are encoded in the "
 "bits of the argument I<val3>.  Pictorially, the encoding is:"
 msgstr ""
+"L'opération et la comparaison qui doivent être effectuées sont encodées dans "
+"les bits du paramètre I<val3>. Visuellement, l'encodage est :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -767,12 +993,16 @@ msgid ""
 "+---+---+-----------+-----------+\n"
 "  4   4       12          12    E<lt>== # of bits\n"
 msgstr ""
+"+---+---+-----------+-----------+\n"
+"|op |cmp|   oparg   |  cmparg   |\n"
+"+---+---+-----------+-----------+\n"
+"  4   4       12          12    E<lt>== # of bits\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Expressed in code, the encoding is:"
-msgstr ""
+msgstr "Exprimé en code, l'encodage est :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -785,6 +1015,11 @@ msgid ""
 "                ((oparg & 0xfff) E<lt>E<lt> 12) | \\e\n"
 "                (cmparg & 0xfff))\n"
 msgstr ""
+"#define FUTEX_OP(op, oparg, cmp, cmparg) \\e\n"
+"                (((op & 0xf) E<lt>E<lt> 28) | \\e\n"
+"                ((cmp & 0xf) E<lt>E<lt> 24) | \\e\n"
+"                ((oparg & 0xfff) E<lt>E<lt> 12) | \\e\n"
+"                (cmparg & 0xfff))\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -794,13 +1029,15 @@ msgid ""
 "I<oparg> and I<cmparg> components are literal numeric values, except as "
 "noted below."
 msgstr ""
+"Dans ce qui précède, I<op> et I<cmp> sont chacun des codes listés ci-"
+"dessous. Les composants I<oparg> et I<cmparg> sont des valeurs numériques "
+"littérales, sauf les remarques ci-dessous."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The I<op> component has one of the following values:"
-msgstr "La valeur de I<subcmd> prend une de ces valeurs\\ :"
+msgstr "Le composant I<op> prend une de ces valeurs\\ :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -813,6 +1050,11 @@ msgid ""
 "FUTEX_OP_ANDN       3  /* uaddr2 &= ~oparg; */\n"
 "FUTEX_OP_XOR        4  /* uaddr2 ^= oparg; */\n"
 msgstr ""
+"FUTEX_OP_SET        0  /* uaddr2 = oparg; */\n"
+"FUTEX_OP_ADD        1  /* uaddr2 += oparg; */\n"
+"FUTEX_OP_OR         2  /* uaddr2 |= oparg; */\n"
+"FUTEX_OP_ANDN       3  /* uaddr2 &= ~oparg; */\n"
+"FUTEX_OP_XOR        4  /* uaddr2 ^= oparg; */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -821,20 +1063,22 @@ msgid ""
 "In addition, bit-wise ORing the following value into I<op> causes I<(1\\ "
 "E<lt>E<lt>\\ oparg)> to be used as the operand:"
 msgstr ""
+"En outre, comparer bit à bit (ORing) la valeur suivante dans I<op> a pour "
+"conséquence que I<(1\\ E<lt>E<lt>\\ oparg)> sera utilisé en tant "
+"qu'opérande :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "FUTEX_OP_ARG_SHIFT  8  /* Use (1 E<lt>E<lt> oparg) as operand */\n"
-msgstr ""
+msgstr "FUTEX_OP_ARG_SHIFT  8  /* Utiliser (1 E<lt>E<lt> oparg) comme opérande */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The I<cmp> field is one of the following:"
-msgstr "La valeur de I<subcmd> prend une de ces valeurs\\ :"
+msgstr "Le champ I<cmp> prend une de ces valeurs\\ :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -848,6 +1092,12 @@ msgid ""
 "FUTEX_OP_CMP_GT     4  /* if (oldval E<gt> cmparg) wake */\n"
 "FUTEX_OP_CMP_GE     5  /* if (oldval E<gt>= cmparg) wake */\n"
 msgstr ""
+"FUTEX_OP_CMP_EQ     0  /* si (oldval == cmparg) réveiller */\n"
+"FUTEX_OP_CMP_NE     1  /* si (oldval != cmparg) réveiller */\n"
+"FUTEX_OP_CMP_LT     2  /* si (oldval E<lt> cmparg) réveiller */\n"
+"FUTEX_OP_CMP_LE     3  /* si (oldval E<lt>= cmparg) réveiller */\n"
+"FUTEX_OP_CMP_GT     4  /* si (oldval E<gt> cmparg) réveiller */\n"
+"FUTEX_OP_CMP_GE     5  /* si (oldval E<gt>= cmparg) réveiller */\n"
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -859,13 +1109,16 @@ msgid ""
 "woken on the futex I<uaddr> plus the number of waiters woken on the futex "
 "I<uaddr2>."
 msgstr ""
+"Le code de retour de B<FUTEX_WAKE_OP> est la somme du nombre d'éléments en "
+"attente réveillés par le futex I<uaddr> et du nombre d'éléments en attente "
+"réveillés sur le futex I<uaddr2>."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAIT_BITSET> (since Linux 2.6.25)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_WAIT_BITSET> (depuis Linux 2.6.25)"
 
 #.  commit cd689985cf49f6ff5c8eddc48d98b9d581d9475d
 #. type: Plain text
@@ -877,6 +1130,11 @@ msgid ""
 "must be set, is stored in the kernel-internal state of the waiter.  See the "
 "description of B<FUTEX_WAKE_BITSET> for further details."
 msgstr ""
+"Cette opération est équivalente à B<FUTEX_WAIT>, sauf que I<val3> est "
+"utilisé pour fournir un masque de bit de 32 bits au noyau. Ce masque, où au "
+"moins un bit doit être positionné, est stocké dans la partie interne du "
+"noyau de l'élément en attente. Voir la description de B<FUTEX_WAKE_BITSET> "
+"pour plus de détails."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -886,21 +1144,23 @@ msgid ""
 "timeout for the wait operation.  If I<timeout> is NULL, the operation can "
 "block indefinitely."
 msgstr ""
+"Si I<timeout> n'est pas NULL, la structure vers laquelle il pointe indique "
+"un délai absolu de l'opération d'attente. Si I<timeout> est NULL, "
+"l'opération peut se bloquer indéfiniment."
 
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The I<uaddr2> argument is ignored."
-msgstr "L'argument d'ioctl est ignoré."
+msgstr "L'argument I<uaddr2> est ignoré."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAKE_BITSET> (since Linux 2.6.25)"
-msgstr "B<FUTEX_REQUEUE> (depuis Linux 2.5.70)"
+msgstr "B<FUTEX_WAKE_BITSET> (depuis Linux 2.6.25)"
 
 #.  commit cd689985cf49f6ff5c8eddc48d98b9d581d9475d
 #. type: Plain text
@@ -916,6 +1176,15 @@ msgid ""
 "B<FUTEX_WAIT_BITSET>).  All of the waiters for which the result of the AND "
 "is nonzero are woken up; the remaining waiters are left sleeping."
 msgstr ""
+"Cette opération est identique à B<FUTEX_WAKE>, sauf que le paramètre I<val3> "
+"est utilisé pour fournir un masque de bit de 32 bits au noyau. Ce masque, où "
+"au moins un bit doit être positionné, est utilisé pour choisir les éléments "
+"en attente qui doivent être réveillés. Le choix se fait par une comparaison "
+"bit à bit AND du masque de bit « wait » (à savoir la valeur de I<val3>) et "
+"par un masque de bit stocké dans la partie interne de l'élément en attente "
+"(le masque de bit « wait » positionné en utilisant B<FUTEX_WAIT_BITSET>). "
+"Tous les éléments en attente pour lesquels le AND est positif sont "
+"réveillés ; les autres restent endormis."
 
 #
 #
@@ -943,6 +1212,14 @@ msgid ""
 "interested in being woken up (i.e., they do not have the relevant bit set in "
 "their \"wait\" bit mask)."
 msgstr ""
+"L'effet de B<FUTEX_WAIT_BITSET> et de B<FUTEX_WAKE_BITSET> est de permettre "
+"un réveil sélectif parmi les éléments en attente bloqués sur le même futex. "
+"Cependant, remarquez que selon le cas, l'utilisation de cette fonction de "
+"mélange de masques de bit sur un futex peut être moins efficace que le fait "
+"d'avoir plusieurs futex, car elle a besoin que le noyau vérifie tous les "
+"éléments en attente sur un futex, y compris ceux non concernés par le réveil "
+"(à savoir qu'ils n'ont pas de bit pertinent positionné dans leur masque de "
+"bit « wait »)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -957,21 +1234,30 @@ msgid ""
 "B<FUTEX_WAKE> operation is equivalent to B<FUTEX_WAKE_BITSET> with I<val3> "
 "specified as B<FUTEX_BITSET_MATCH_ANY>; that is, wake up any waiter(s)."
 msgstr ""
+"La constante B<FUTEX_BITSET_MATCH_ANY>, qui correspond à tous les "
+"positionnements 32 bits du masque, peut être utilisé en tant que I<val3> de "
+"B<FUTEX_WAIT_BITSET> et de B<FUTEX_WAKE_BITSET>. En dehors des différences "
+"dans la gestion du paramètre I<timeout>, l'opération B<FUTEX_WAIT> est "
+"équivalente à B<FUTEX_WAIT_BITSET> où I<val3> est indiqué en tant que "
+"B<FUTEX_BITSET_MATCH_ANY> ; c'est-à-dire permettre le réveil par n'importe "
+"quel élément en attente). L’opération B<FUTEX_WAKE> est équivalente à "
+"B<FUTEX_WAKE_BITSET> où I<val3> est indiqué en tant que "
+"B<FUTEX_BITSET_MATCH_ANY> ; c'est-à-dire, réveiller n’importe quel élément "
+"en attente."
 
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The I<uaddr2> and I<timeout> arguments are ignored."
-msgstr "L'argument d'ioctl est ignoré."
+msgstr "Les arguments I<uaddr2> et I<timeout> sont ignorés."
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "Priority-inheritance futexes"
-msgstr ""
+msgstr "Futex et héritage de priorité"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -985,6 +1271,13 @@ msgid ""
 "the CPU.  Consequently, the low-priority task makes no progress toward "
 "releasing the lock, and the high-priority task remains blocked."
 msgstr ""
+"Linux prend en charge l'héritage de priorité (priority inheritance, PI) des "
+"futex, afin de gérer des problèmes d'inversion des priorités qu'on peut "
+"rencontrer avec des verrous futex normaux. L'inversion des priorités est un "
+"problème qui survient quand une tâche de haute priorité est bloquée en "
+"attente d'acquérir un verrou que possède une tâche de basse priorité issue "
+"du processeur. Du coup, la tâche de priorité basse ne va pas relâcher le "
+"verrou et celle de haute priorité reste bloquée."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1002,6 +1295,18 @@ msgid ""
 "both of those tasks (or more generally, all of the tasks in a lock chain)  "
 "have their priorities raised to be the same as the high-priority task."
 msgstr ""
+"L'héritage de priorité est un mécanisme pour gérer le problème d'inversion "
+"des priorités. Avec ce mécanisme, quand une tâche à haute priorité est "
+"bloquée par un verrou possédé par une tâche à basse priorité, la priorité de "
+"la seconde est temporairement amenée au même niveau que celle à haute "
+"priorité, de sorte qu'elle ne soit pas doublée par une tâche de niveau "
+"intermédiaire et qu'elle puisse ainsi avancer pour relâcher le verrou. Pour "
+"fonctionner, l'héritage de priorité doit être transitif, ce qui signifie que "
+"si une tâche à haute priorité bloque sur le verrou d'une tâche à priorité "
+"intermédiaire (et ainsi de suite sur des chaînes de la taille de votre "
+"choix), les deux tâches (ou plus généralement toutes les tâches de la chaîne "
+"de verrous) voient leur niveau de priorité amené à celui de la tâche à haute "
+"priorité."
 
 #
 #.  Quoting Darren Hart:
@@ -1022,6 +1327,12 @@ msgid ""
 "futex operations are designed for the implementation of very specific IPC "
 "mechanisms.)"
 msgstr ""
+"Du point de vue de l'espace utilisateur, le futex a conscience d'un PI en "
+"acceptant une réglementation (décrite ci-dessous) entre l'espace utilisateur "
+"et le noyau sur la valeur du mot futex, couplé à l'utilisation d'opérations "
+"futex PI décrites ci-dessous (contrairement aux autres opérations futex "
+"décrites ci-dessus, celles PI-futex sont conçues pour l'implémentation de "
+"mécanismes IPC très spécifiques)."
 
 #.        mtk: The following text is drawn from the Hart/Guniguntala paper
 #.        (listed in SEE ALSO), but I have reworded some pieces
@@ -1034,12 +1345,15 @@ msgid ""
 "operations in that they impose policy on the use of the value of the futex "
 "word:"
 msgstr ""
+"Les opérations PI-futex décrites ci-dessous diffèrent des autres opérations "
+"dans le sens où elles imposent des règles dans l'utilisation de la valeur du "
+"mot futex :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "If the lock is not acquired, the futex word's value shall be 0."
-msgstr ""
+msgstr "Si le verrou n'est pas acquis, la valeur du mot futex doit être B<0>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1048,6 +1362,8 @@ msgid ""
 "If the lock is acquired, the futex word's value shall be the thread ID (TID; "
 "see B<gettid>(2))  of the owning thread."
 msgstr ""
+"Si le verrou est acquis, la valeur du mot futex doit être l'ID du thread "
+"(TID ; voir B<gettid>(2)) du thread propriétaire."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1057,13 +1373,16 @@ msgid ""
 "B<FUTEX_WAITERS> bit shall be set in the futex word's value; in other words, "
 "this value is:"
 msgstr ""
+"Si le verrou a un propriétaire et s'il y a des threads en concurrence pour "
+"le verrou, le bit B<FUTEX_WAITERS> doit être positionné dans la valeur du "
+"mot futex ; autrement dit, cette valeur est :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    FUTEX_WAITERS | TID\n"
-msgstr ""
+msgstr "    FUTEX_WAITERS | TID\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1072,6 +1391,8 @@ msgid ""
 "(Note that is invalid for a PI futex word to have no owner and "
 "B<FUTEX_WAITERS> set.)"
 msgstr ""
+"(Remarquez que cela n'est pas possible pour un mot futex PI d'être sans "
+"propriétaire ni B<FUTEX_WAITERS> défini)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1085,6 +1406,15 @@ msgid ""
 "value was 0.  Releasing a lock requires using compare-and-swap to set the "
 "futex word's value to 0 if the previous value was the expected TID."
 msgstr ""
+"Avec cette règle, une application de l'espace utilisateur peut acquérir un "
+"verrou non acquis ou en relâcher un en utilisant des instructions atomiques "
+"dans l'espace utilisateur (comme une opération compare-and-swap telle que "
+"I<cmpxchg> sur l'architecture x86). L'acquisition d'un verrou consiste "
+"simplement dans l'utilisation de compare-and-swap pour positionner la valeur "
+"du mot futex de manière atomique sur le TID de l'appelant si sa valeur "
+"précédente était B<0>. Relâcher un verrou exige d'utiliser compare-and-swap "
+"pour positionner la valeur du mot futex sur B<0> si la valeur précédente "
+"était le TID prévu."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1096,6 +1426,12 @@ msgid ""
 "value; in this case, the lock owner must employ the B<FUTEX_UNLOCK_PI> "
 "operation to release the lock."
 msgstr ""
+"Si un futex est déjà acquis (c'est-à-dire qu'il a une valeur positive), les "
+"éléments en attente doivent utiliser l'opération B<FUTEX_LOCK_PI> pour "
+"acquérir le verrou. Si d'autres threads attendent le verrou, le bit "
+"B<FUTEX_WAITERS> est défini dans la valeur du futex ; dans ce cas le "
+"détenteur du verrou doit utiliser l'opération B<FUTEX_UNLOCK_PI> pour "
+"relâcher le verrou."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1107,6 +1443,12 @@ msgid ""
 "inheritance semantics.  After the RT-mutex is acquired, the futex value is "
 "updated accordingly, before the calling thread returns to user space."
 msgstr ""
+"Dans le cas où les appelants sont bloqués dans le noyau (c'est-à-dire qu'ils "
+"doivent effectuer un appel B<futex>()), ils traitent directement avec ce "
+"qu'on appelle un RT-mutex, un mécanisme de verrouillage du noyau qui "
+"implémente la sémantique de l'héritage de priorité requis. Après que le RT-"
+"mutex est acquis, la valeur futex est mise à jour en fonction, avant que le "
+"thread appelant ne renvoie vers l'espace utilisateur."
 
 #.  tglx (July 2015):
 #.      If there are multiple waiters on a pi futex then a wake pi operation
@@ -1126,6 +1468,12 @@ msgid ""
 "but the value being 0, or having waiters but not having the B<FUTEX_WAITERS> "
 "bit set.)"
 msgstr ""
+"Il est important de remarquer que le noyau mettra à jour la valeur du mot "
+"futex avant de renvoyer vers l'espace utilisateur (cela enlève la "
+"possibilité pour la valeur d'un mot futex de se terminer dans un état non "
+"valable, par exemple en ayant un propriétaire mais en ayant la valeur B<0>, "
+"ou en ayant des éléments en attente mais aucun bit B<FUTEX_WAITERS> "
+"positionné)."
 
 #.  tglx (July 2015):
 #.      The FUTEX_OWNER_DIED bit can also be set on uncontended futexes, where
@@ -1146,6 +1494,16 @@ msgid ""
 "this situation via the presence of the B<FUTEX_OWNER_DIED> bit and is then "
 "responsible for cleaning up the stale state left over by the dead owner."
 msgstr ""
+"Si un futex a un RT-mutex associé dans le noyau (c'est-à-dire qu'il y a des "
+"éléments en attente bloqués) et si le propriétaire du futex/RT-mutex meurt "
+"de manière inattendue, le noyau nettoie le RT-mutex et passe la main au "
+"prochain élément en attente. Cela implique, en retour, que la valeur dans "
+"l'espace utilisateur soit mise à jour en fonction. Pour dire que c'est "
+"nécessaire, le noyau positionne le bit B<FUTEX_OWNER_DIED> dans le mot futex "
+"ainsi que dans l'ID du thread du nouveau propriétaire. L'espace utilisateur "
+"peut détecter cette situation par la présence du bit B<FUTEX_OWNER_DIED> et "
+"il est alors responsable pour nettoyer l'espace laissé par le propriétaire "
+"mort."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1155,6 +1513,9 @@ msgid ""
 "I<futex_op>.  Note that the PI futex operations must be used as paired "
 "operations and are subject to some additional requirements:"
 msgstr ""
+"Les PI futex sont utilisés en indiquant une des valeurs listées ci-dessous "
+"dans I<futex_op>. Remarquez que les opérations de PI futex doivent être "
+"utilisées par paires et sont soumises à des exigences supplémentaires :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1164,6 +1525,10 @@ msgid ""
 "B<FUTEX_UNLOCK_PI> must be called only on a futex owned by the calling "
 "thread, as defined by the value policy, otherwise the error B<EPERM> results."
 msgstr ""
+"B<FUTEX_LOCK_PI> et B<FUTEX_TRYLOCK_PI> vont de pair avec "
+"B<FUTEX_UNLOCK_PI>. B<FUTEX_UNLOCK_PI> ne doit être appelé que sur un futex "
+"appartenant au thread appelant, tel que défini par les règles de la valeur, "
+"sans quoi on obtient l'erreur B<EPERM>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1174,21 +1539,25 @@ msgid ""
 "results).  Additionally, I<val> (the number of waiters to be woken) must be "
 "1 (or the error B<EINVAL> results)."
 msgstr ""
+"B<FUTEX_WAIT_REQUEUE_PI> va de pair avec B<FUTEX_CMP_REQUEUE_PI>. Elles "
+"doivent s'effectuer depuis un futex non-PI vers un PI futex distinct (sans "
+"quoi on obtient l'erreur B<EINVAL>). De plus, I<val> (le nombre d'éléments "
+"en attente à réveiller) doit être de B<1> (sans quoi on obtient l'erreur "
+"B<EINVAL>)."
 
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The PI futex operations are as follows:"
-msgstr "Les valeurs lues sont les suivantes."
+msgstr "Les opérations PI futex sont comme suit :"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_LOCK_PI> (since Linux 2.6.18)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_LOCK_PI> (depuis Linux 2.6.18)"
 
 #.  commit c87e2837be82df479a6bae9f155c43516d2feebc
 #. type: Plain text
@@ -1200,6 +1569,10 @@ msgid ""
 "\\(emspecifically, because it contained the (PID-namespace-specific) TID of "
 "the lock owner."
 msgstr ""
+"Cette opération est utilisée après avoir essayé sans succès d'acquérir un "
+"verrou en utilisant une instruction atomique en mode utilisateur, car le mot "
+"futex a une valeur positive – en particulier parce qu'il contenait le TID "
+"(spécifique à l’espace de noms PID) du verrou propriétaire."
 
 #
 #
@@ -1242,6 +1615,13 @@ msgid ""
 "it cannot unlock the futex in user space atomically by setting the futex "
 "value to 0.  After that, the kernel:"
 msgstr ""
+"L'opération vérifie la valeur du mot futex sur l'adresse I<uaddr>. Si la "
+"valeur est de B<0>, le noyau essaie de positionner de manière atomique la "
+"valeur du futex sur le TID de l'appelant. Si la valeur du mot futex est "
+"positive, le noyau positionne de manière atomique le bit B<FUTEX_WAITERS>, "
+"qui signale au propriétaire du futex qu'il ne peut pas déverrouiller le "
+"futex dans l'espace utilisateur de manière atomique, en positionnant la "
+"valeur du futex à B<0>. Après cela, le noyau :"
 
 #. type: IP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1254,7 +1634,7 @@ msgstr "1."
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Tries to find the thread which is associated with the owner TID."
-msgstr ""
+msgstr "Essaie de trouver le thread associé au TID du propriétaire."
 
 #. type: IP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1272,6 +1652,11 @@ msgid ""
 "created by locking the RT-mutex and the futex owner is made the owner of the "
 "RT-mutex.  If there are existing waiters, then the existing state is reused.)"
 msgstr ""
+"Crée ou réutilise l'état du noyau sur la base du propriétaire (s'il s'agit "
+"du premier élément en attente, il n'existe pas d'état du noyau pour ce "
+"futex, donc il est créé en verrouillant le RT-mutex et le propriétaire du "
+"futex devient propriétaire du RT-mutex). Si des éléments en attente "
+"existent, l'état existant est réutilisé."
 
 #. type: IP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1287,6 +1672,8 @@ msgid ""
 "Attaches the waiter to the futex (i.e., the waiter is enqueued on the RT-"
 "mutex waiter list)."
 msgstr ""
+"Rattache l'élément en attente au futex (c'est-à-dire que l'élément est mis "
+"dans la file d'attente du RT-futex)."
 
 #
 #.  August 2015:
@@ -1308,6 +1695,16 @@ msgid ""
 "B<SCHED_RR> or B<SCHED_FIFO> policy).  This inheritance follows the lock "
 "chain in the case of nested locking and performs deadlock detection."
 msgstr ""
+"S'il existe plus d'un élément en attente, la mise dans la file d'un élément "
+"se fait par ordre de priorité descendant (pour des informations sur l'ordre "
+"des priorités, voir les points sur l'ordonnancement B<SCHED_DEADLINE>, "
+"B<SCHED_FIFO> et B<SCHED_RR> dans B<sched>(7)). Le propriétaire hérite soit "
+"de la bande passante de processeur de l'élément en attente (si l'élément est "
+"programmé sous la règle B<SCHED_DEADLINE> ou B<SCHED_FIFO>), soit de la "
+"priorité de l'élément en attente (s'il est programmé sous la règle "
+"B<SCHED_RR> ou B<SCHED_FIFO>). Cet héritage suit la chaîne de verrous dans "
+"les cas de verrous imbriqués et il effectue la détection des verrous morts "
+"(deadlocks)."
 
 #
 #
@@ -1334,6 +1731,10 @@ msgid ""
 "timeout, measured against the B<CLOCK_REALTIME> clock.  If I<timeout> is "
 "NULL, the operation will block indefinitely."
 msgstr ""
+"Le paramètre I<timeout> fournit un délai de tentative de verrouillage. Si "
+"I<timeout> est positif, la structure vers laquelle il pointe indique un "
+"délai absolu mesuré en fonction de l'horloge B<CLOCK_REALTIME>. Si "
+"I<timeout> est NULL, l'opération se bloquera indéfiniment."
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1341,14 +1742,14 @@ msgstr ""
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "The I<uaddr2>, I<val>, and I<val3> arguments are ignored."
-msgstr ""
+msgstr "Les paramètres I<uaddr2>, I<val> et I<val3> sont ignorés."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_TRYLOCK_PI> (since Linux 2.6.18)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_TRYLOCK_PI> (depuis Linux 2.6.18)"
 
 #.  commit c87e2837be82df479a6bae9f155c43516d2feebc
 #. type: Plain text
@@ -1358,6 +1759,9 @@ msgid ""
 "This operation tries to acquire the lock at I<uaddr>.  It is invoked when a "
 "user-space atomic acquire did not succeed because the futex word was not 0."
 msgstr ""
+"L'opération essaie d'acquérir le verrou sur I<uaddr>. Elle est appelée quand "
+"l'acquisition atomique dans l'espace utilisateur n'a pas réussi parce que le "
+"mot futex ne valait pas B<0>."
 
 #.  Paraphrasing a f2f conversation with Thomas Gleixner about the
 #.  above point (Aug 2015): ###
@@ -1384,6 +1788,14 @@ msgid ""
 "condition in a race-free manner, but the kernel can fix this up and acquire "
 "the futex."
 msgstr ""
+"Du fait que le noyau accède à plus d'informations d'état que l'espace "
+"utilisateur, l'acquisition du verrou pourrait réussir si elle est effectuée "
+"par le noyau dans les cas où le mot futex (c'est-à-dire les informations "
+"d'état accessibles dans l'espace utilisateur) contient un état stable "
+"(B<FUTEX_WAITERS> et/ou B<FUTEX_OWNER_DIED>). Cela peut arriver quand le "
+"propriétaire du futex est mort. L'espace utilisateur ne peut pas gérer cette "
+"condition de manière \"race-free\", mais le noyau peut corriger cela et "
+"acquérir le futex."
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1391,14 +1803,14 @@ msgstr ""
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "The I<uaddr2>, I<val>, I<timeout>, and I<val3> arguments are ignored."
-msgstr ""
+msgstr "Les paramètres I<uaddr2>, I<val>, I<timeout> et I<val3> sont ignorés."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_UNLOCK_PI> (since Linux 2.6.18)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_UNLOCK_PI> (depuis Linux 2.6.18)"
 
 #.  commit c87e2837be82df479a6bae9f155c43516d2feebc
 #. type: Plain text
@@ -1408,6 +1820,8 @@ msgid ""
 "This operation wakes the top priority waiter that is waiting in "
 "B<FUTEX_LOCK_PI> on the futex address provided by the I<uaddr> argument."
 msgstr ""
+"Cette opération réveille l'élément ayant la plus haute priorité et attendant "
+"un B<FUTEX_LOCK_PI> à l'adresse indiquée par le paramètre I<uaddr>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1416,13 +1830,16 @@ msgid ""
 "This is called when the user-space value at I<uaddr> cannot be changed "
 "atomically from a TID (of the owner) to 0."
 msgstr ""
+"Cela est appelé quand la valeur dans l'espace utilisateur sur I<uaddr> ne "
+"peut pas être passée à B<0> de manière atomique depuis un TID (du "
+"propriétaire)."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_CMP_REQUEUE_PI> (since Linux 2.6.31)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_CMP_REQUEUE_PI> (depuis Linux 2.6.31)"
 
 #.  commit 52400ba946759af28442dee6265c5c0180ac7122
 #. type: Plain text
@@ -1433,6 +1850,10 @@ msgid ""
 "waiters that are blocked via B<FUTEX_WAIT_REQUEUE_PI> on I<uaddr> from a non-"
 "PI source futex (I<uaddr>)  to a PI target futex (I<uaddr2>)."
 msgstr ""
+"Cette opération est une variante PI-aware de B<FUTEX_CMP_REQUEUE>. Elle "
+"remet en attente des éléments bloqués avec B<FUTEX_WAIT_REQUEUE_PI> sur "
+"I<uaddr> à partir d'un futex source non-PI (I<uaddr>) vers un futex cible PI "
+"(I<uaddr2>)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1445,6 +1866,12 @@ msgid ""
 "wait queue of the source futex at I<uaddr> and added to the wait queue of "
 "the target futex at I<uaddr2>."
 msgstr ""
+"Comme avec B<FUTEX_CMP_REQUEUE>, cette opération réveille un maximum de "
+"I<val> éléments qui attendent le futex sur I<uaddr>. Toutefois, pour "
+"B<FUTEX_CMP_REQUEUE_PI>, I<val> doit valoir B<1> (puisque son but principal "
+"est d'éviter l’effet de troupeau (thundering herd). Les autres éléments sont "
+"supprimés de la file d'attente du futex source sur I<uaddr> et ajoutés sur "
+"celle du futex cible sur I<uaddr2>."
 
 #
 #
@@ -1465,13 +1892,15 @@ msgid ""
 "The I<val2> and I<val3> arguments serve the same purposes as for "
 "B<FUTEX_CMP_REQUEUE>."
 msgstr ""
+"Les paramètres I<val2> et I<val3> ont le même objectif qu'avec "
+"B<FUTEX_CMP_REQUEUE>."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAIT_REQUEUE_PI> (since Linux 2.6.31)"
-msgstr "B<FUTEX_CMP_REQUEUE> (depuis Linux 2.6.7)"
+msgstr "B<FUTEX_WAIT_REQUEUE_PI> (depuis Linux 2.6.31)"
 
 #.  commit 52400ba946759af28442dee6265c5c0180ac7122
 #. type: Plain text
@@ -1482,6 +1911,10 @@ msgid ""
 "B<FUTEX_CMP_REQUEUE_PI> operation in another task) onto a PI futex at "
 "I<uaddr2>.  The wait operation on I<uaddr> is the same as for B<FUTEX_WAIT>."
 msgstr ""
+"Attendre un futex non-PI sur I<uaddr> et se mettre potentiellement en "
+"attente (avec une opération B<FUTEX_CMP_REQUEUE_PI> dans une autre tâche), "
+"d'un futex PI sur I<uaddr2>. L'opération d'attente sur I<uaddr> est la même "
+"que pour B<FUTEX_WAIT>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1491,13 +1924,16 @@ msgid ""
 "I<uaddr2> via a B<FUTEX_WAKE> operation in another task.  In this case, the "
 "B<FUTEX_WAIT_REQUEUE_PI> operation fails with the error B<EAGAIN>."
 msgstr ""
+"L'élément peut être retiré de la file d'attente sur I<uaddr> sans être "
+"transféré sur I<uaddr2> à l’aide d’une opération B<FUTEX_WAKE> dans une "
+"autre tâche. Dans ce cas, l'opération B<FUTEX_WAIT_REQUEUE_PI> échoue avec "
+"l'erreur B<EAGAIN>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The I<val3> argument is ignored."
-msgstr "L'argument d'ioctl est ignoré."
+msgstr "L'argument I<val3> est ignoré."
 
 #
 #
@@ -1539,6 +1975,14 @@ msgid ""
 "application pre-specifies the target of the requeue that takes place in the "
 "B<FUTEX_CMP_REQUEUE_PI> operation."
 msgstr ""
+"B<FUTEX_WAIT_REQUEUE_PI> et B<FUTEX_CMP_REQUEUE_PI> ont été ajoutés pour "
+"gérer un cas d'utilisation bien particulier : la prise en charge des "
+"variables conditionnelles de threads POSIX ayant connaissance de l'héritage "
+"de priorité. L'idée est que ces opérations devraient toujours aller par "
+"paires, afin de garantir que l'espace utilisateur et le noyau restent "
+"toujours synchronisés. Ainsi, dans l'opération B<FUTEX_WAIT_REQUEUE_PI>, "
+"l'application dans l'espace utilisateur pré-indique la cible de la remise en "
+"attente qui va se faire dans l'opération B<FUTEX_CMP_REQUEUE_PI>."
 
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1555,18 +1999,19 @@ msgid ""
 "B<syscall>(2)), all operations return -1 and set I<errno> to indicate the "
 "cause of the error."
 msgstr ""
+"En cas d'erreur (en supposant que B<futex>() a été appelé à l’aide de "
+"B<syscall>(2)), toutes les opérations renvoient B<-1> et positionnent "
+"I<errno> pour indiquer la cause de l'erreur."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "The return value on success depends on the operation, as described in the "
 "following list:"
 msgstr ""
-"En cas d'erreur, toutes les opérations renvoient -1, et I<errno> contient le "
-"code d'erreur. La valeur de retour en cas de succès dépend de l'opération, "
-"conformément à la description de la liste suivante."
+"En cas de succès, le code de retour dépend de l'opération, comme décrit dans "
+"la liste suivante :"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1588,6 +2033,15 @@ msgid ""
 "value (i.e., the user-space synchronization scheme)  to decide whether to "
 "continue to block or not."
 msgstr ""
+"Renvoie B<0> si l'appelant a été réveillé. Remarquez qu'un réveil peut "
+"également résulter de l'utilisation de motifs d'utilisation classiques de "
+"futex dans du code non lié qui a pu utiliser l'emplacement mémoire du mot "
+"futex (par exemple des implémentations classiques basées sur futex de mutex "
+"Pthreads peuvent provoquer cela dans certaines conditions). Donc, les "
+"appelants devraient toujours, à titre conservatoire, supposer qu'un code de "
+"retour B<0> peut signifier un faux réveil, et donc utiliser la valeur du mot "
+"futex (à savoir le schéma de synchronisation de l'espace utilisateur) pour "
+"décider de rester bloqués ou pas."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1599,9 +2053,8 @@ msgstr "B<FUTEX_WAKE>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "Returns the number of waiters that were woken up."
-msgstr "Renvoie le nombre de processus réveillés."
+msgstr "Renvoie le nombre de processus en attente qui ont été réveillés."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1614,7 +2067,7 @@ msgstr "B<FUTEX_FD>"
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Returns the new file descriptor associated with the futex."
-msgstr "Renvoie le nouveau descripteur associé au futex."
+msgstr "Renvoie le nouveau descripteur de fichier associé au futex."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1639,13 +2092,17 @@ msgid ""
 "I<val>, then the difference is the number of waiters requeued to the futex "
 "for the futex word at I<uaddr2>."
 msgstr ""
+"Renvoie le nombre total d'éléments en attente réveillés ou remis dans la "
+"file du futex pour le mot futex sur I<uaddr2>. Si cette valeur est "
+"supérieure à I<val>, la différence devient le nombre d'éléments en attente "
+"remis dans la file du futex pour le mot futex sur I<uaddr2>."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAKE_OP>"
-msgstr "B<FUTEX_WAKE>"
+msgstr "B<FUTEX_WAKE_OP>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1655,13 +2112,16 @@ msgid ""
 "the woken waiters on the two futexes for the futex words at I<uaddr> and "
 "I<uaddr2>."
 msgstr ""
+"Renvoie le nombre total d'éléments en attente réveillés. Il s'agit de la "
+"somme des éléments réveillés sur les deux futex pour les mots futex sur "
+"I<uaddr> et I<uaddr2>."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAIT_BITSET>"
-msgstr "B<FUTEX_WAIT>"
+msgstr "B<FUTEX_WAIT_BITSET>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1670,53 +2130,55 @@ msgid ""
 "Returns 0 if the caller was woken up.  See B<FUTEX_WAIT> for how to "
 "interpret this correctly in practice."
 msgstr ""
+"Renvoie B<0> si l'appelant a été réveillé. Voir B<FUTEX_WAIT> sur la manière "
+"d'interpréter cela correctement en pratique."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAKE_BITSET>"
-msgstr "B<FUTEX_WAKE>"
+msgstr "B<FUTEX_WAKE_BITSET>"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_LOCK_PI>"
-msgstr "B<FUTEX_WAIT>"
+msgstr "B<FUTEX_LOCK_PI>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Returns 0 if the futex was successfully locked."
-msgstr ""
+msgstr "Renvoie B<0> si le futex a appliqué le verrou avec succès."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_TRYLOCK_PI>"
-msgstr "B<FUTEX_WAIT>"
+msgstr "B<FUTEX_TRYLOCK_PI>"
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_UNLOCK_PI>"
-msgstr "B<FUTEX_WAIT>"
+msgstr "B<FUTEX_UNLOCK_PI>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Returns 0 if the futex was successfully unlocked."
-msgstr ""
+msgstr "Renvoie B<0> si le futex a correctement enlevé le verrou."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_CMP_REQUEUE_PI>"
-msgstr "B<FUTEX_CMP_REQUEUE>"
+msgstr "B<FUTEX_CMP_REQUEUE_PI>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1727,13 +2189,17 @@ msgid ""
 "I<val>, then difference is the number of waiters requeued to the futex for "
 "the futex word at I<uaddr2>."
 msgstr ""
+"Renvoie le nombre total d'éléments en attente réveillés ou remis dans la "
+"file du futex pour le mot futex sur I<uaddr2>. Si cette valeur est "
+"supérieure à I<val>, la différence devient le nombre d'éléments en attente "
+"remis dans la file du futex pour le mot futex sur I<uaddr2>."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "B<FUTEX_WAIT_REQUEUE_PI>"
-msgstr "B<FUTEX_REQUEUE>"
+msgstr "B<FUTEX_WAIT_REQUEUE_PI>"
 
 #
 #. """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1744,6 +2210,8 @@ msgid ""
 "Returns 0 if the caller was successfully requeued to the futex for the futex "
 "word at I<uaddr2>."
 msgstr ""
+"Renvoie B<0> si l'appelant a été mis dans la file d'attente avec succès au "
+"futex pour le mot futex sur I<uaddr2>."
 
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1762,9 +2230,8 @@ msgstr "B<EACCES>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "No read access to the memory of a futex word."
-msgstr "Pas d'accès en lecture à la mémoire futex."
+msgstr "Pas d'accès en lecture à la mémoire d'un mot futex."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1776,14 +2243,14 @@ msgstr "B<EAGAIN>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "(B<FUTEX_WAIT>, B<FUTEX_WAIT_BITSET>, B<FUTEX_WAIT_REQUEUE_PI>)  The value "
 "pointed to by I<uaddr> was not equal to the expected value I<val> at the "
 "time of the call."
 msgstr ""
-"I<op> était B<FUTEX_WAIT> et la valeur pointée par I<uaddr> n'était pas "
-"égale à la valeur I<val> attendue au moment de l'appel."
+"(B<FUTEX_WAIT>, B<FUTEX_WAIT_BITSET>, B<FUTEX_WAIT_REQUEUE_PI>) La valeur "
+"vers laquelle pointait I<uaddr> n'était pas égale à la valeur I<val> "
+"attendue au moment de l'appel."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1793,17 +2260,19 @@ msgid ""
 "which appear in different parts of the kernel futex code)  have the same "
 "value."
 msgstr ""
+"B<Remarque> : sur Linux, les noms symboliques B<EAGAIN> et B<EWOULDBLOCK> "
+"(les deux apparaissent dans différents endroits du code futex du noyau) ont "
+"la même valeur."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "(B<FUTEX_CMP_REQUEUE>, B<FUTEX_CMP_REQUEUE_PI>)  The value pointed to by "
 "I<uaddr> is not equal to the expected value I<val3>."
 msgstr ""
-"I<op> était B<FUTEX_WAIT> et la valeur pointée par I<uaddr> n'était pas "
-"égale à la valeur I<val> attendue au moment de l'appel."
+"(B<FUTEX_CMP_REQUEUE>, B<FUTEX_CMP_REQUEUE_PI>) La valeur vers laquelle "
+"pointait I<uaddr> n'était pas égale à la valeur I<val3> attendue."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1814,6 +2283,10 @@ msgid ""
 "about to exit, but has not yet handled the internal state cleanup.  Try "
 "again."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>) L'ID du "
+"thread propriétaire du futex sur I<uaddr> (pour B<FUTEX_CMP_REQUEUE_PI> : "
+"I<uaddr2>) est sur le point de se terminer, mais il n'a pas encore géré le "
+"nettoyage de l'état interne. Réessayez."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1829,6 +2302,8 @@ msgid ""
 "(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>)  The futex "
 "word at I<uaddr> is already locked by the caller."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>) Le mot "
+"futex sur I<uaddr> est déjà verrouillé par l'appelant."
 
 #
 #.  FIXME . I see that kernel/locking/rtmutex.c uses EDEADLK in some
@@ -1843,6 +2318,9 @@ msgid ""
 "(B<FUTEX_CMP_REQUEUE_PI>)  While requeueing a waiter to the PI futex for the "
 "futex word at I<uaddr2>, the kernel detected a deadlock."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) Pendant qu'il remettait en attente un élément du "
+"PI futex pour le mot futex sur I<uaddr2>, le noyau a détecté un verrou mort "
+"(deadlock)."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1858,6 +2336,8 @@ msgid ""
 "A required pointer argument (i.e., I<uaddr>, I<uaddr2>, or I<timeout>)  did "
 "not point to a valid user-space address."
 msgstr ""
+"Le paramètre d'un pointeur nécessaire (c'est-à-dire I<uaddr>, I<uaddr2> ou "
+"I<timeout>) ne pointait pas vers une adresse valable de l'espace utilisateur."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1875,6 +2355,10 @@ msgid ""
 "also be returned for a spurious wakeup; since Linux 2.6.22, this no longer "
 "happens."
 msgstr ""
+"Une opération B<FUTEX_WAIT> ou B<FUTEX_WAIT_BITSET> a été interrompue par un "
+"signal (voir B<signal>(7)). Dans les noyaux précédents Linux 2.6.22, cette "
+"erreur pouvait aussi être renvoyée pour un faux réveil ; depuis Linux "
+"2.6.22, cela n'arrive plus."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1891,6 +2375,9 @@ msgid ""
 "supplied I<timeout> argument was invalid (I<tv_sec> was less than zero, or "
 "I<tv_nsec> was not less than 1,000,000,000)."
 msgstr ""
+"L'opération dans I<futex_op> fait partie de celles qui utilisent un délai, "
+"mais le paramètre I<timeout> fourni n'était pas valable (I<tv_sec> valait "
+"moins de B<0> ou I<tv_nsec> ne valait pas moins de 1 000 000 000)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1900,6 +2387,9 @@ msgid ""
 "I<uaddr> and I<uaddr2>, but one of these does not point to a valid object"
 "\\(emthat is, the address is not four-byte-aligned."
 msgstr ""
+"L'opération indiquée dans I<futex_op> utilise I<uaddr> et/ou I<uaddr2> mais "
+"l'un d'eux ne pointe pas vers un objet valable — c'est-à-dire, l'adresse "
+"n'est pas alignée sur quatre octets."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1908,6 +2398,8 @@ msgid ""
 "(B<FUTEX_WAIT_BITSET>, B<FUTEX_WAKE_BITSET>)  The bit mask supplied in "
 "I<val3> is zero."
 msgstr ""
+"(B<FUTEX_WAIT_BITSET>, B<FUTEX_WAKE_BITSET>) Le masque de bit fourni dans "
+"I<val3> vaut zéro."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1916,12 +2408,15 @@ msgid ""
 "(B<FUTEX_CMP_REQUEUE_PI>)  I<uaddr> equals I<uaddr2> (i.e., an attempt was "
 "made to requeue to the same futex)."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>)  I<uaddr> est égal à I<uaddr2> (c'est-à-dire "
+"qu'une remise en attente a été tentée sur le même futex)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "(B<FUTEX_FD>)  The signal number supplied in I<val> is invalid."
 msgstr ""
+"(B<FUTEX_FD>) Le numéro du signal fourni dans I<val> n'est pas valable."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1932,6 +2427,10 @@ msgid ""
 "space state at I<uaddr> and the kernel state\\(emthat is, it detected a "
 "waiter which waits in B<FUTEX_LOCK_PI> on I<uaddr>."
 msgstr ""
+"(B<FUTEX_WAKE>, B<FUTEX_WAKE_OP>, B<FUTEX_WAKE_BITSET>, B<FUTEX_REQUEUE>, "
+"B<FUTEX_CMP_REQUEUE>) Le noyau a détecté une incohérence entre l'état de "
+"l'espace utilisateur sur I<uaddr> et l'état du noyau — c'est-à-dire qu'il a "
+"détecté un élément qui attend dans B<FUTEX_LOCK_PI> sur I<uaddr>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1943,6 +2442,11 @@ msgid ""
 "found a waiter on I<uaddr> which is waiting via B<FUTEX_WAIT> or "
 "B<FUTEX_WAIT_BITSET>."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_UNLOCK_PI>) Le noyau a "
+"détecté une incohérence entre l'état de l'espace utilisateur sur I<uaddr> et "
+"l'état du noyau. Cela indique soit une corruption d'état, soit que le noyau "
+"a trouvé un élément en attente sur I<uaddr> qui attend aussi via "
+"B<FUTEX_WAIT> ou B<FUTEX_WAIT_BITSET>."
 
 #.  From a conversation with Thomas Gleixner (Aug 2015): ###
 #. 	The kernel sees: I have non PI state for a futex you tried to
@@ -1956,6 +2460,10 @@ msgid ""
 "detected a waiter which waits via B<FUTEX_WAIT> or B<FUTEX_WAIT_BITSET> on "
 "I<uaddr2>."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) Le noyau a détecté une incohérence entre l'état de "
+"l'espace utilisateur sur I<uaddr> et l'état du noyau ; c'est-à-dire qu'il a "
+"détecté un élément qui attend via B<FUTEX_WAIT> ou B<FUTEX_WAIT_BITSET> sur "
+"I<uaddr2>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1966,6 +2474,10 @@ msgid ""
 "detected a waiter which waits via B<FUTEX_WAIT> or B<FUTEX_WAIT_BITESET> on "
 "I<uaddr>."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) Le noyau a détecté une incohérence entre l'état de "
+"l'espace utilisateur sur I<uaddr> et l'état du noyau ; c'est-à-dire qu'il a "
+"détecté un élément qui attend via B<FUTEX_WAIT> ou B<FUTEX_WAIT_BITESET> sur "
+"I<uaddr>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -1976,6 +2488,10 @@ msgid ""
 "detected a waiter which waits on I<uaddr> via B<FUTEX_LOCK_PI> (instead of "
 "B<FUTEX_WAIT_REQUEUE_PI>)."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) Le noyau a détecté une incohérence entre l'état de "
+"l'espace utilisateur sur I<uaddr> et l'état du noyau ; c'est-à-dire qu'il a "
+"détecté un élément qui attend via B<FUTEX_LOCK_PI> (au lieu de "
+"B<FUTEX_WAIT_REQUEUE_PI>)."
 
 #.  This deals with the case:
 #.      wait_requeue_pi(A, B);
@@ -1988,12 +2504,15 @@ msgid ""
 "futex other than that specified by the matching B<FUTEX_WAIT_REQUEUE_PI> "
 "call for that waiter."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) Tentative de remise dans la file d'un élément en "
+"attente vers un futex différent de celui indiqué avec l'appel "
+"B<FUTEX_WAIT_REQUEUE_PI> correspondant pour cet élément."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "(B<FUTEX_CMP_REQUEUE_PI>)  The I<val> argument is not 1."
-msgstr ""
+msgstr "(B<FUTEX_CMP_REQUEUE_PI>) Le paramètre I<val> ne vaut pas B<1>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2011,12 +2530,12 @@ msgstr "B<ENFILE>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "(B<FUTEX_FD>)  The system-wide limit on the total number of open files has "
 "been reached."
 msgstr ""
-"La limite du nombre total de fichiers ouverts sur le système a été atteinte."
+"(B<FUTEX_FD>) La limite du nombre total de fichiers ouverts sur le système a "
+"été atteinte."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2032,6 +2551,8 @@ msgid ""
 "(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>)  The kernel "
 "could not allocate memory to hold state information."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>) Le noyau "
+"n'a pas pu allouer de la mémoire pour conserver les informations d'état."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2043,9 +2564,8 @@ msgstr "B<ENOSYS>"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "Invalid operation specified in I<futex_op>."
-msgstr "I<op> contient une opération non valable."
+msgstr "Opération non valable indiquée dans I<futex_op>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2055,6 +2575,9 @@ msgid ""
 "accompanying operation was neither B<FUTEX_WAIT>, B<FUTEX_WAIT_BITSET>, nor "
 "B<FUTEX_WAIT_REQUEUE_PI>."
 msgstr ""
+"L'option B<FUTEX_CLOCK_REALTIME> était indiquée dans I<futex_op>, mais "
+"l'opération qui l'accompagne n'est ni B<FUTEX_WAIT>, ni "
+"B<FUTEX_WAIT_BITSET>, ni B<FUTEX_WAIT_REQUEUE_PI>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2066,6 +2589,11 @@ msgid ""
 "not implemented on all architectures and are not supported on some CPU "
 "variants."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_UNLOCK_PI>, "
+"B<FUTEX_CMP_REQUEUE_PI>, B<FUTEX_WAIT_REQUEUE_PI>) Une vérification pendant "
+"l'exécution a déterminé que l'opération n'est pas disponible. Les opérations "
+"PI-futex ne sont pas implémentées sur toutes les architectures et ne sont "
+"pas prises en charge sur certaines variantes de processeur."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2083,6 +2611,10 @@ msgid ""
 "B<FUTEX_CMP_REQUEUE_PI>: the futex at I<uaddr2>).  (This may be caused by a "
 "state corruption in user space.)"
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>) L'appelant "
+"n'est pas autorisé à se rattacher au futex sur I<uaddr> (pour "
+"B<FUTEX_CMP_REQUEUE_PI> : le futex sur I<uaddr2>) (cela peut venir d'une "
+"corruption de l'état dans l'espace utilisateur)."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2091,6 +2623,8 @@ msgid ""
 "(B<FUTEX_UNLOCK_PI>)  The caller does not own the lock represented by the "
 "futex word."
 msgstr ""
+"(B<FUTEX_UNLOCK_PI>) Le verrou représenté par le mot futex n'appartient pas "
+"à l'appelant."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2106,6 +2640,8 @@ msgid ""
 "(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>)  The thread "
 "ID in the futex word at I<uaddr> does not exist."
 msgstr ""
+"(B<FUTEX_LOCK_PI>, B<FUTEX_TRYLOCK_PI>, B<FUTEX_CMP_REQUEUE_PI>) L'ID du "
+"thread dans le mot futex sur I<uaddr> n'existe pas."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2114,6 +2650,8 @@ msgid ""
 "(B<FUTEX_CMP_REQUEUE_PI>)  The thread ID in the futex word at I<uaddr2> does "
 "not exist."
 msgstr ""
+"(B<FUTEX_CMP_REQUEUE_PI>) L'ID du thread dans le mot futex sur I<uaddr2> "
+"n'existe pas."
 
 #. type: TP
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2131,6 +2669,8 @@ msgid ""
 "The operation in I<futex_op> employed the timeout specified in I<timeout>, "
 "and the timeout expired before the operation completed."
 msgstr ""
+"L'opération de I<futex_op> a utilisé un délai indiqué dans I<timeout> et le "
+"délai a expiré avant la fin de l'opération."
 
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2146,11 +2686,12 @@ msgid ""
 "Futexes were first made available in a stable kernel release with Linux "
 "2.6.0."
 msgstr ""
+"Les futex ont d'abord été disponibles dans une version stable du noyau avec "
+"Linux 2.6.0."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "Initial futex support was merged in Linux 2.5.7 but with different semantics "
 "from what was described above.  A four-argument system call with the "
@@ -2158,12 +2699,11 @@ msgid ""
 "argument was added in Linux 2.5.70, and a sixth argument was added in Linux "
 "2.6.7."
 msgstr ""
-"Le support initial des futex a été ajouté dans Linux 2.5.7 mais avec une "
-"sémantique différente de celle décrite ci\\(hydessus. Un appel système à "
-"4 paramètres avec la sémantique décrite dans cette page a été ajouté dans "
-"Linux 2.5.40. Dans Linux 2.5.70, un paramètre supplémentaire a été ajouté. "
-"Un sixième paramètre a été ajouté dans Linux 2.6.7 \\(em compliqué, surtout "
-"sur l'architecture s390."
+"La prise en charge initiale des futex a été ajoutée dans Linux 2.5.7 mais "
+"avec une sémantique différente de celle décrite ci\\(hydessus. Un appel "
+"système à 4 paramètres avec la sémantique décrite dans cette page a été "
+"ajouté dans Linux 2.5.40. Dans Linux 2.5.70, un cinquième paramètre a été "
+"ajouté. Un sixième paramètre a été ajouté dans Linux 2.6.7."
 
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2208,6 +2748,10 @@ msgid ""
 "including POSIX semaphores and various POSIX threads synchronization "
 "mechanisms (mutexes, condition variables, read-write locks, and barriers)."
 msgstr ""
+"Plusieurs abstractions programmatiques de haut niveau sont implémentées avec "
+"des futex, notamment les mécanismes POSIX de sémaphore et de synchronisation "
+"de threads (mutex, variables conditionnelles, verrous en lecture/écriture et "
+"barrières)."
 
 #. type: SH
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -2227,6 +2771,14 @@ msgid ""
 "synchronization protocol that ensures that they alternate in writing "
 "messages.  Upon running this program we see output such as the following:"
 msgstr ""
+"Le programme ci-dessous montre l'utilisation des futex dans un programme où "
+"un processus parent et un processus enfant utilisent une paire de futex "
+"située dans un tableau anonyme partagé pour synchroniser l'accès à une "
+"ressource partagée : le terminal. Les deux processus écrivent chacun un "
+"message I<nloops> (un paramètre en ligne de commande qui vaut 5 par défaut "
+"s'il est absent) sur le terminal et ils utilisent un protocole de "
+"synchronisation pour garantir qu'ils alternent dans l'écriture des messages. "
+"Pendant l'exécution de ce programme, nous voyons un affichage comme suit :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2245,6 +2797,17 @@ msgid ""
 "Parent (18534) 4\n"
 "Child  (18535) 4\n"
 msgstr ""
+"$ B<./futex_demo>\n"
+"Parent (18534) 0\n"
+"Child  (18535) 0\n"
+"Parent (18534) 1\n"
+"Child  (18535) 1\n"
+"Parent (18534) 2\n"
+"Child  (18535) 2\n"
+"Parent (18534) 3\n"
+"Child  (18535) 3\n"
+"Parent (18534) 4\n"
+"Child  (18535) 4\n"
 
 #. type: SS
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2258,7 +2821,7 @@ msgstr "Source du programme"
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "/* futex_demo.c\n"
-msgstr ""
+msgstr "/* futex_demo.c\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2268,6 +2831,8 @@ msgid ""
 "   Usage: futex_demo [nloops]\n"
 "                    (Default: 5)\n"
 msgstr ""
+"   Utilisation: futex_demo [nloops]\n"
+"                    (Par défaut : 5)\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2293,6 +2858,24 @@ msgid ""
 "#include E<lt>linux/futex.hE<gt>\n"
 "#include E<lt>sys/time.hE<gt>\n"
 msgstr ""
+"   Montrer l'utilisation des futex dans un programme où le parent et\n"
+"   l'enfant utilisent une paire de futex située dans un tableau\n"
+"   anonyme partagé pour synchroniser l'accès à une ressource partagée : le\n"
+"   terminal. Les processus écrivent chacun des messages \\(aqnum-loops\\(aq\n"
+"   sur le terminal et ils utilisent un protocole de synchronisation qui\n"
+"   garantit qu'ils alternent l'écriture des messages.\n"
+"*/\n"
+"#define _GNU_SOURCE\n"
+"#include E<lt>stdio.hE<gt>\n"
+"#include E<lt>errno.hE<gt>\n"
+"#include E<lt>stdatomic.hE<gt>\n"
+"#include E<lt>stdlib.hE<gt>\n"
+"#include E<lt>unistd.hE<gt>\n"
+"#include E<lt>sys/wait.hE<gt>\n"
+"#include E<lt>sys/mman.hE<gt>\n"
+"#include E<lt>sys/syscall.hE<gt>\n"
+"#include E<lt>linux/futex.hE<gt>\n"
+"#include E<lt>sys/time.hE<gt>\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2310,11 +2893,11 @@ msgstr ""
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "static int *futex1, *futex2, *iaddr;\n"
-msgstr ""
+msgstr "static int *futex1, *futex2, *iaddr;\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid ""
 "static int\n"
 "futex(int *uaddr, int futex_op, int val,\n"
@@ -2323,7 +2906,14 @@ msgid ""
 "    return syscall(SYS_futex, uaddr, futex_op, val,\n"
 "                   timeout, uaddr2, val3);\n"
 "}\n"
-msgstr "B<int futex(int *>I<uaddr>B<, int >I<op>B<, int >I<val>B<, const struct timespec *>I<timeout>B<,>\n"
+msgstr ""
+"static int\n"
+"futex(int *uaddr, int futex_op, int val,\n"
+"      const struct timespec *timeout, int *uaddr2, int val3)\n"
+"{\n"
+"    return syscall(SYS_futex, uaddr, futex_op, val,\n"
+"                   timeout, uaddr2, val3);\n"
+"}\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2333,6 +2923,8 @@ msgid ""
 "/* Acquire the futex pointed to by \\(aqfutexp\\(aq: wait for its value to\n"
 "   become 1, and then set the value to 0. */\n"
 msgstr ""
+"/* Acquérir le futex vers lequel pointe \\(aqfutexp\\(aq : attendre que sa\n"
+"   valeur passe à 1 puis positionner la valeur sur 0. */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2344,6 +2936,10 @@ msgid ""
 "{\n"
 "    int s;\n"
 msgstr ""
+"static void\n"
+"fwait(int *futexp)\n"
+"{\n"
+"    int s;\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2353,6 +2949,8 @@ msgid ""
 "    /* atomic_compare_exchange_strong(ptr, oldval, newval)\n"
 "       atomically performs the equivalent of:\n"
 msgstr ""
+"    /* atomic_compare_exchange_strong(ptr, oldval, newval)\n"
+"       fait atomiquement comme :\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2362,20 +2960,22 @@ msgid ""
 "           if (*ptr == *oldval)\n"
 "               *ptr = newval;\n"
 msgstr ""
+"           if (*ptr == *oldval)\n"
+"               *ptr = newval;\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "       It returns true if the test yielded true and *ptr was updated. */\n"
-msgstr ""
+msgstr "       Il renvoie true si le test a montré true et *ptr a été mis à jour. */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    while (1) {\n"
-msgstr ""
+msgstr "    while (1) {\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -2386,13 +2986,17 @@ msgid ""
 "        if (atomic_compare_exchange_strong(futexp, &one, 0))\n"
 "            break;      /* Yes */\n"
 msgstr ""
+"        /* Le futex est-il disponible ? */\n"
+"        const int one = 1;\n"
+"        if (atomic_compare_exchange_strong(futexp, &one, 0))\n"
+"            break;      /* Yes */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "        /* Futex is not available; wait */\n"
-msgstr ""
+msgstr "        /* Le futex n'est pas disponible ; attendre */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2405,6 +3009,11 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"        s = futex(futexp, FUTEX_WAIT, 0, NULL, NULL, 0);\n"
+"        if (s == -1 && errno != EAGAIN)\n"
+"            errExit(\"futex-FUTEX_WAIT\");\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2415,6 +3024,10 @@ msgid ""
 "   has the value 0, set its value to 1 and the wake any futex waiters,\n"
 "   so that if the peer is blocked in fpost(), it can proceed. */\n"
 msgstr ""
+"/* Relâcher le futex vers lequel pointe \\(aqfutexp\\(aq : si le futex\n"
+"  a actuellement la valeur 0, positionner la valeur à 1 et réveiller tous les\n"
+"  futex en attente pour que si le pair est bloqué dans fpost(), ça puisse\n"
+"  continuer. */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2426,6 +3039,10 @@ msgid ""
 "{\n"
 "    int s;\n"
 msgstr ""
+"static void\n"
+"fpost(int *futexp)\n"
+"{\n"
+"    int s;\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2433,6 +3050,8 @@ msgstr ""
 #, no-wrap
 msgid "    /* atomic_compare_exchange_strong() was described in comments above */\n"
 msgstr ""
+"    /* atomic_compare_exchange_strong() a été décrit dans les commentaires\n"
+"       ci-dessus */\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -2446,11 +3065,18 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    const int zero = 0;\n"
+"    if (atomic_compare_exchange_strong(futexp, &zero, 1)) {\n"
+"        s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);\n"
+"        if (s  == -1)\n"
+"            errExit(\"futex-FUTEX_WAKE\");\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid ""
 "int\n"
 "main(int argc, char *argv[])\n"
@@ -2461,22 +3087,22 @@ msgstr ""
 "int\n"
 "main(int argc, char *argv[])\n"
 "{\n"
-"    int fd;\n"
-"    int len, slen;\n"
+"    pid_t childPid;\n"
+"    int j, nloops;\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    setbuf(stdout, NULL);\n"
-msgstr ""
+msgstr "    setbuf(stdout, NULL);\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    nloops = (argc E<gt> 1) ? atoi(argv[1]) : 5;\n"
-msgstr ""
+msgstr "    nloops = (argc E<gt> 1) ? atoi(argv[1]) : 5;\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2488,6 +3114,10 @@ msgid ""
 "       subsequently use the \"shared\" futex operations (i.e., not the\n"
 "       ones suffixed \"_PRIVATE\") */\n"
 msgstr ""
+"     /* Créer un tableau anonyme partagé qui gardera les futex.\n"
+"        Comme les futex vont être partagés entre les processus, nous\n"
+"        utilisons donc les opérations futex « shared » (donc pas celles\n"
+"        dont le suffixe est \"_PRIVATE\") */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2499,6 +3129,10 @@ msgid ""
 "    if (iaddr == MAP_FAILED)\n"
 "        errExit(\"mmap\");\n"
 msgstr ""
+"    iaddr = mmap(NULL, sizeof(int) * 2, PROT_READ | PROT_WRITE,\n"
+"                MAP_ANONYMOUS | MAP_SHARED, -1, 0);\n"
+"    if (iaddr == MAP_FAILED)\n"
+"        errExit(\"mmap\");\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2508,6 +3142,8 @@ msgid ""
 "    futex1 = &iaddr[0];\n"
 "    futex2 = &iaddr[1];\n"
 msgstr ""
+"    futex1 = &iaddr[0];\n"
+"    futex2 = &iaddr[1];\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2517,6 +3153,8 @@ msgid ""
 "    *futex1 = 0;        /* State: unavailable */\n"
 "    *futex2 = 1;        /* State: available */\n"
 msgstr ""
+"    *futex1 = 0;        /* État : indisponible */\n"
+"    *futex2 = 1;        /* État : disponible */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2525,7 +3163,7 @@ msgstr ""
 msgid ""
 "    /* Create a child process that inherits the shared anonymous\n"
 "       mapping */\n"
-msgstr ""
+msgstr "    /* Créer un processus enfant qui hérite du tableau anonyme\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2536,6 +3174,9 @@ msgid ""
 "    if (childPid == -1)\n"
 "        errExit(\"fork\");\n"
 msgstr ""
+"    childPid = fork();\n"
+"    if (childPid == -1)\n"
+"        errExit(\\\"fork\\\");\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2549,24 +3190,30 @@ msgid ""
 "            fpost(futex2);\n"
 "        }\n"
 msgstr ""
+"    if (childPid == 0) {        /* Enfant */\n"
+"        for (j = 0; j E<lt> nloops; j++) {\n"
+"            fwait(futex1);\n"
+"            printf(\"Child  (%ld) %d\\en\", (long) getpid(), j);\n"
+"            fpost(futex2);\n"
+"        }\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy, no-wrap
+#, no-wrap
 msgid ""
 "        exit(EXIT_SUCCESS);\n"
 "    }\n"
 msgstr ""
-"    exit(EXIT_SUCCESS);\n"
-"}\n"
+"        exit(EXIT_SUCCESS);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    /* Parent falls through to here */\n"
-msgstr ""
+msgstr "    /* Le parent se retrouve ici */\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2579,13 +3226,18 @@ msgid ""
 "        fpost(futex1);\n"
 "    }\n"
 msgstr ""
+"    for (j = 0; j E<lt> nloops; j++) {\n"
+"        fwait(futex2);\n"
+"        printf(\"Parent (%ld) %d\\en\", (long) getpid(), j);\n"
+"        fpost(futex1);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "    wait(NULL);\n"
-msgstr ""
+msgstr "    wait(NULL);\n"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2612,55 +3264,56 @@ msgid ""
 "B<get_robust_list>(2), B<restart_syscall>(2), "
 "B<pthread_mutexattr_getprotocol>(3), B<futex>(7), B<sched>(7)"
 msgstr ""
+"B<get_robust_list>(2), B<restart_syscall>(2), "
+"B<pthread_mutexattr_getprotocol>(3), B<futex>(7), B<sched>(7)"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid "The following kernel source files:"
-msgstr "Les événements suivants existent."
+msgstr "Les fichiers suivants des sources du noyau :"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "I<Documentation/pi-futex.txt>"
-msgstr ""
+msgstr "I<Documentation/pi-futex.txt>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "I<Documentation/futex-requeue-pi.txt>"
-msgstr ""
+msgstr "I<Documentation/futex-requeue-pi.txt>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "I<Documentation/locking/rt-mutex.txt>"
-msgstr ""
+msgstr "I<Documentation/locking/rt-mutex.txt>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "I<Documentation/locking/rt-mutex-design.txt>"
-msgstr ""
+msgstr "I<Documentation/locking/rt-mutex-design.txt>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "I<Documentation/robust-futex-ABI.txt>"
-msgstr ""
+msgstr "I<Documentation/robust-futex-ABI.txt>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
 msgid ""
 "Franke, H., Russell, R., and Kirwood, M., 2002.  I<Fuss, Futexes and "
 "Furwocks: Fast Userlevel Locking in Linux> (from proceedings of the Ottawa "
 "Linux Symposium 2002),"
 msgstr ""
-"«\\ Fuss, Futexes and Furwocks: Fast Userlevel Locking in Linux\\ "
-"» (proceedings of the Ottawa Linux Symposium 2002), disponible en ligne à "
+"Franke, H., Russell, R., and Kirwood, M., 2002.  I<Fuss, Futexes and "
+"Furwocks: Fast Userlevel Locking in Linux> (à partir des actions d'Ottawa "
+"Linux Symposium 2002),"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2679,6 +3332,8 @@ msgid ""
 "Hart, D., 2009. I<A futex overview and update>, E<.UR http://lwn.net/"
 "Articles/360699/> E<.UE>"
 msgstr ""
+"Hart, D., 2009. I<A futex overview and update>, E<.UR http://lwn.net/"
+"Articles/360699/> E<.UE>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2688,6 +3343,9 @@ msgid ""
 "PI-Aware> (from proceedings of the 2009 Real-Time Linux Workshop), E<.UR "
 "http://lwn.net/images/conf/rtlws11/papers/proc/p10.pdf> E<.UE>"
 msgstr ""
+"Hart, D.\\& et Guniguntala, D., 2009.  I<Requeue-PI: Making Glibc Condvars "
+"PI-Aware> (à partir des recherches de l'atelier Real-Time Linux 2009), E<.UR "
+"http://lwn.net/images/conf/rtlws11/papers/proc/p10.pdf> E<.UE>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -2696,12 +3354,14 @@ msgid ""
 "Drepper, U., 2011. I<Futexes Are Tricky>, E<.UR http://www.akkadia.org/"
 "drepper/futex.pdf> E<.UE>"
 msgstr ""
+"Drepper, U., 2011. I<Futexes Are Tricky>, E<.UR http://www.akkadia.org/"
+"drepper/futex.pdf> E<.UE>"
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 msgid "Futex example library, futex-*.tar.bz2 at"
-msgstr "La bibliothèque d'exemple de futex, futex-*.tar.bz2 à"
+msgstr "La bibliothèque d'exemples de futex, futex-*.tar.bz2 à"
 
 #. #-#-#-#-#  archlinux: futex.2.pot (PACKAGE VERSION)  #-#-#-#-#
 #.  FIXME(Torvald) We should probably refer to the glibc code here, in
@@ -2787,6 +3447,13 @@ msgid ""
 "                   timeout, uaddr, val3);\n"
 "}\n"
 msgstr ""
+"static int\n"
+"futex(int *uaddr, int futex_op, int val,\n"
+"      const struct timespec *timeout, int *uaddr2, int val3)\n"
+"{\n"
+"    return syscall(SYS_futex, uaddr, futex_op, val,\n"
+"                   timeout, uaddr, val3);\n"
+"}\n"
 
 #. type: Plain text
 #: debian-buster
@@ -2797,6 +3464,10 @@ msgid ""
 "        if (atomic_compare_exchange_strong(futexp, &zero, 1))\n"
 "            break;      /* Yes */\n"
 msgstr ""
+"        /* Le futex est-il disponible ? */\n"
+"        const int zero = 0;\n"
+"        if (atomic_compare_exchange_strong(futexp, &zero, 1))\n"
+"            break;      /* Yes */\n"
 
 #. type: Plain text
 #: debian-buster
@@ -2810,6 +3481,13 @@ msgid ""
 "    }\n"
 "}\n"
 msgstr ""
+"    const int one = 1;\n"
+"    if (atomic_compare_exchange_strong(futexp, &one, 0)) {\n"
+"        s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);\n"
+"        if (s  == -1)\n"
+"            errExit(\"futex-FUTEX_WAKE\");\n"
+"    }\n"
+"}\n"
 
 #. type: Plain text
 #: debian-buster
