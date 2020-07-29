@@ -207,6 +207,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Giordano Neri <neri@cli.di.unipi.it>
 * Giovanni Bortolozzo <borto@dei.unipd.it>
 * Giulio Daprelà <giulio@pluto.it>
+* Giuseppe Guerrini <giusguerrini@racine.ra.it>
 * Goffredo Baroncelli <kreijack@usa.net>
 * Hugh Hartmann <hhartmann@libero.it>
 * Marco Curreli <marcocurreli@tiscali.it>
