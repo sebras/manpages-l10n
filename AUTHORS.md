@@ -285,6 +285,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Miguel Angel Sepulveda <angel@vivaldi.princeton.edu>
 * Miguel Pérez Ibars <mpi79470@alu.um.es>
 * Nicolás Lichtmaier <nick@debian.org>
+* Paul Slootman <paul@wurtel.demon.nl>
 * Pedro A. Carrasco Ponce <pacp@jet.es>
 * Rafael Godínez <1ragodin@rigel.deusto.es>
 * Rafael Rios <rafarios@arrakis.es>
