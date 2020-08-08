@@ -1,5 +1,5 @@
 '\" t
-.TH "NSS\-SYSTEMD" "8" "" "systemd 245" "nss-systemd"
+.TH "NSS\-SYSTEMD" "8" "" "systemd 246" "nss-systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nss-systemd, libnss_systemd.so.2 \- Provide UNIX user and group name resolution for user/group lookup via Varlink
+nss-systemd, libnss_systemd.so.2 \- UNIX user and group name resolution for user/group lookup via Varlink
 .SH "SYNOPSIS"
 .PP
 libnss_systemd\&.so\&.2
@@ -34,8 +34,9 @@ is a plug\-in module for the GNU Name Service Switch (NSS) functionality of the 
 \fIDynamicUser=\fR
 feature, see
 \fBsystemd.exec\fR(5)
-for details) or
-\fBsystemd-homed.service\fR(8)\&.
+for details),
+\fBsystemd-homed.service\fR(8), or
+\fBsystemd-machined.service\fR(8)\&.
 .PP
 This module also ensures that the root and nobody users and groups (i\&.e\&. the users/groups with the UIDs/GIDs 0 and 65534) remain resolvable at all times, even if they aren\*(Aqt listed in
 /etc/passwd
@@ -68,7 +69,7 @@ lines so that
 and
 /etc/group
 based mappings take precedence\&.
-.SH "EXAMPLE"
+.SH "CONFIGURATION IN /ETC/NSSWITCH\&.CONF"
 .PP
 Here is an example
 /etc/nsswitch\&.conf
@@ -80,11 +81,11 @@ correctly:
 .RS 4
 .\}
 .nf
-passwd:         compat mymachines \fBsystemd\fR
-group:          compat [SUCCESS=merge] mymachines [SUCCESS=merge] \fBsystemd\fR
+passwd:         compat \fBsystemd\fR
+group:          compat [SUCCESS=merge] \fBsystemd\fR
 shadow:         compat
 
-hosts:          files mymachines resolve [!UNAVAIL=return] dns myhostname
+hosts:          mymachines resolve [!UNAVAIL=return] myhostname files dns
 networks:       files
 
 protocols:      db files
@@ -97,6 +98,52 @@ netgroup:       nis
 .if n \{\
 .RE
 .\}
+.SH "EXAMPLE: MAPPINGS PROVIDED BY SYSTEMD\-MACHINED\&.SERVICE"
+.PP
+The container
+"rawhide"
+is spawned using
+\fBsystemd-nspawn\fR(1):
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-nspawn \-M rawhide \-\-boot \-\-network\-veth \-\-private\-users=pick
+Spawning container rawhide on /var/lib/machines/rawhide\&.
+Selected user namespace base 20119552 and range 65536\&.
+\&.\&.\&.
+
+$ machinectl \-\-max\-addresses=3
+MACHINE CLASS     SERVICE        OS     VERSION ADDRESSES
+rawhide container systemd\-nspawn fedora 30      169\&.254\&.40\&.164 fe80::94aa:3aff:fe7b:d4b9
+
+$ getent passwd vu\-rawhide\-0 vu\-rawhide\-81
+vu\-rawhide\-0:*:20119552:65534:vu\-rawhide\-0:/:/usr/sbin/nologin
+vu\-rawhide\-81:*:20119633:65534:vu\-rawhide\-81:/:/usr/sbin/nologin
+
+$ getent group vg\-rawhide\-0 vg\-rawhide\-81
+vg\-rawhide\-0:*:20119552:
+vg\-rawhide\-81:*:20119633:
+
+$ ps \-o user:15,pid,tty,command \-e|grep \*(Aq^vu\-rawhide\*(Aq
+vu\-rawhide\-0      692 ?        /usr/lib/systemd/systemd
+vu\-rawhide\-0      731 ?        /usr/lib/systemd/systemd\-journald
+vu\-rawhide\-192    734 ?        /usr/lib/systemd/systemd\-networkd
+vu\-rawhide\-193    738 ?        /usr/lib/systemd/systemd\-resolved
+vu\-rawhide\-0      742 ?        /usr/lib/systemd/systemd\-logind
+vu\-rawhide\-81     744 ?        /usr/bin/dbus\-daemon \-\-system \-\-address=systemd: \-\-nofork \-\-nopidfile \-\-systemd\-activation \-\-syslog\-only
+vu\-rawhide\-0      746 ?        /usr/sbin/sshd \-D \&.\&.\&.
+vu\-rawhide\-0      752 ?        /usr/lib/systemd/systemd \-\-user
+vu\-rawhide\-0      753 ?        (sd\-pam)
+vu\-rawhide\-0     1628 ?        login \-\- zbyszek
+vu\-rawhide\-1000  1630 ?        /usr/lib/systemd/systemd \-\-user
+vu\-rawhide\-1000  1631 ?        (sd\-pam)
+vu\-rawhide\-1000  1637 pts/8    \-zsh
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
@@ -104,6 +151,9 @@ netgroup:       nis
 \fBnss-resolve\fR(8),
 \fBnss-myhostname\fR(8),
 \fBnss-mymachines\fR(8),
+\fBsystemd-userdbd.service\fR(8),
+\fBsystemd-homed.service\fR(8),
+\fBsystemd-machined.service\fR(8),
 \fBnsswitch.conf\fR(5),
 \fBgetent\fR(1)
 .SH "NOTES"

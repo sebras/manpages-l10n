@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_NEGOTIATE_FDS" "3" "" "systemd 245" "sd_bus_negotiate_fds"
+.TH "SD_BUS_NEGOTIATE_FDS" "3" "" "systemd 246" "sd_bus_negotiate_fds"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_bus_negotiate_fds, sd_bus_negotiate_timestamp, sd_bus_negotiate_creds \- Control feature negotiation on bus connections
+sd_bus_negotiate_fds, sd_bus_negotiate_timestamp, sd_bus_negotiate_creds, sd_bus_get_creds_mask \- Control feature negotiation on bus connections
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -34,6 +34,8 @@ sd_bus_negotiate_fds, sd_bus_negotiate_timestamp, sd_bus_negotiate_creds \- Cont
 .BI "int sd_bus_negotiate_timestamp(sd_bus\ *" "bus" ", int\ " "b" ");"
 .HP \w'int\ sd_bus_negotiate_creds('u
 .BI "int sd_bus_negotiate_creds(sd_bus\ *" "bus" ", int\ " "b" ", uint64_t\ " "mask" ");"
+.HP \w'int\ sd_bus_get_creds_mask('u
+.BI "int sd_bus_get_creds_mask(sd_bus\ *" "bus" ", uint64_t\ *" "mask" ");"
 .SH "DESCRIPTION"
 .PP
 \fBsd_bus_negotiate_fds()\fR
@@ -58,6 +60,10 @@ and
 \fBSD_BUS_CREDS_UNIQUE_NAME\fR
 are enabled\&. In fact, these two credential fields are always sent along and cannot be turned off\&.
 .PP
+\fBsd_bus_get_creds_mask()\fR
+returns the set of sender credentials that was negotiated to be attached to all incoming messages in
+\fImask\fR\&. This value is an upper boundary only\&. Hence, always make sure to explicitly check which credentials are attached to a specific message before using it\&.
+.PP
 The
 \fBsd_bus_negotiate_fds()\fR
 function may be called only before the connection has been started with
@@ -69,7 +75,7 @@ may also be called after a connection has been set up\&. Note that, when operati
 \fBsd_bus_default\fR(3)), it is highly recommended to only enable additional per message metadata fields, but never disable them again, in order not to disable functionality needed by other components\&.
 .SH "RETURN VALUE"
 .PP
-On success, these functions return 0 or a positive integer\&. On failure, they return a negative errno\-style error code\&.
+On success, these functions return a non\-negative integer\&. On failure, they return a negative errno\-style error code\&.
 .SS "Errors"
 .PP
 Returned errors may indicate the following problems:
@@ -77,6 +83,21 @@ Returned errors may indicate the following problems:
 \fB\-EPERM\fR
 .RS 4
 The bus connection has already been started\&.
+.RE
+.PP
+\fB\-EINVAL\fR
+.RS 4
+An argument is invalid\&.
+.RE
+.PP
+\fB\-ENOPKG\fR
+.RS 4
+The bus cannot be resolved\&.
+.RE
+.PP
+\fB\-ECHILD\fR
+.RS 4
+The bus was created in a different process\&.
 .RE
 .SH "NOTES"
 .PP
@@ -88,7 +109,7 @@ file\&.
 \fBsystemd\fR(1),
 \fBsd-bus\fR(3),
 \fBsd_bus_start\fR(3),
-\fBsd_bus_message_can_send\fR(3),
+\fBsd_bus_can_send\fR(3),
 \fBsd_bus_message_get_monotonic_usec\fR(3),
 \fBsd_bus_message_get_realtime_usec\fR(3),
 \fBsd_bus_message_get_seqnum\fR(3),

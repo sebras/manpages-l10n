@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_JOURNAL_QUERY_UNIQUE" "3" "" "systemd 245" "sd_journal_query_unique"
+.TH "SD_JOURNAL_QUERY_UNIQUE" "3" "" "systemd 246" "sd_journal_query_unique"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_journal_query_unique, sd_journal_enumerate_unique, sd_journal_restart_unique, SD_JOURNAL_FOREACH_UNIQUE \- Read unique data fields from the journal
+sd_journal_query_unique, sd_journal_enumerate_unique, sd_journal_enumerate_available_unique, sd_journal_restart_unique, SD_JOURNAL_FOREACH_UNIQUE \- Read unique data fields from the journal
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -30,6 +30,8 @@ sd_journal_query_unique, sd_journal_enumerate_unique, sd_journal_restart_unique,
 .ft
 .HP \w'int\ sd_journal_query_unique('u
 .BI "int sd_journal_query_unique(sd_journal\ *" "j" ", const\ char\ *" "field" ");"
+.HP \w'int\ sd_journal_enumerate_available_unique('u
+.BI "int sd_journal_enumerate_available_unique(sd_journal\ *" "j" ", const\ void\ **" "data" ", size_t\ *" "length" ");"
 .HP \w'int\ sd_journal_enumerate_unique('u
 .BI "int sd_journal_enumerate_unique(sd_journal\ *" "j" ", const\ void\ **" "data" ", size_t\ *" "length" ");"
 .HP \w'void\ sd_journal_restart_unique('u
@@ -40,14 +42,23 @@ sd_journal_query_unique, sd_journal_enumerate_unique, sd_journal_restart_unique,
 .PP
 \fBsd_journal_query_unique()\fR
 queries the journal for all unique values the specified field can take\&. It takes two arguments: the journal to query and the field name to look for\&. Well\-known field names are listed on
-\fBsystemd.journal-fields\fR(7)\&. Field names must be specified without a trailing \*(Aq=\*(Aq\&. After this function has been executed successfully the field values may be queried using
-\fBsd_journal_enumerate_unique()\fR\&. Invoking this call a second time will change the field name being queried and reset the enumeration index to the first field value that matches\&.
+\fBsystemd.journal-fields\fR(7), but any field can be specified\&. Field names must be specified without a trailing
+"="\&. After this function has been executed successfully the field values may be queried using
+\fBsd_journal_enumerate_unique()\fR
+and
+\fBsd_journal_enumerate_available_unique()\fR\&. Invoking one of those calls will change the field name being queried and reset the enumeration index to the first field value that matches\&.
 .PP
 \fBsd_journal_enumerate_unique()\fR
 may be used to iterate through all data fields which match the previously selected field name as set with
-\fBsd_journal_query_unique()\fR\&. On each invocation the next field data matching the field name is returned\&. The order of the returned data fields is not defined\&. It takes three arguments: the journal context object, plus a pair of pointers to pointer/size variables where the data object and its size shall be stored in\&. The returned data is in a read\-only memory map and is only valid until the next invocation of
-\fBsd_journal_enumerate_unique()\fR\&. Note that the data returned will be prefixed with the field name and \*(Aq=\*(Aq\&. Note that this call is subject to the data field size threshold as controlled by
-\fBsd_journal_set_data_threshold()\fR\&.
+\fBsd_journal_query_unique()\fR\&. On each invocation the next field data matching the field name is returned\&. The order of the returned data fields is not defined\&. It takes three arguments: the journal object, plus a pair of pointers to pointer/size variables where the data object and its size shall be stored\&. The returned data is in a read\-only memory map and is only valid until the next invocation of
+\fBsd_journal_enumerate_unique()\fR\&. Note that the data returned will be prefixed with the field name and
+"="\&. Note that this call is subject to the data field size threshold as controlled by
+\fBsd_journal_set_data_threshold()\fR
+and only the initial part of the field up to the threshold is returned\&. An error is returned for fields which cannot be retrieved\&. See the error list below for details\&.
+.PP
+\fBsd_journal_enumerate_available_unique()\fR
+is similar to
+\fBsd_journal_enumerate_unique()\fR, but silently skips any fields which may be valid, but are too large or not supported by current implementation\&.
 .PP
 \fBsd_journal_restart_unique()\fR
 resets the data enumeration index to the beginning of the list\&. The next invocation of
@@ -59,7 +70,7 @@ Note that the
 macro may be used as a handy wrapper around
 \fBsd_journal_restart_unique()\fR
 and
-\fBsd_journal_enumerate_unique()\fR\&.
+\fBsd_journal_enumerate_available_unique()\fR\&.
 .PP
 Note that these functions currently are not influenced by matches set with
 \fBsd_journal_add_match()\fR
@@ -74,9 +85,63 @@ call\&.
 \fBsd_journal_query_unique()\fR
 returns 0 on success or a negative errno\-style error code\&.
 \fBsd_journal_enumerate_unique()\fR
-returns a positive integer if the next field data has been read, 0 when no more fields are known, or a negative errno\-style error code\&.
+and and
+\fBsd_journal_query_available_unique()\fR
+return a positive integer if the next field data has been read, 0 when no more fields remain, or a negative errno\-style error code\&.
 \fBsd_journal_restart_unique()\fR
-returns nothing\&.
+doesn\*(Aqt return anything\&.
+.SS "Errors"
+.PP
+Returned errors may indicate the following problems:
+.PP
+\fB\-EINVAL\fR
+.RS 4
+One of the required parameters is
+\fBNULL\fR
+or invalid\&.
+.RE
+.PP
+\fB\-ECHILD\fR
+.RS 4
+The journal object was created in a different process\&.
+.RE
+.PP
+\fB\-EADDRNOTAVAIL\fR
+.RS 4
+The read pointer is not positioned at a valid entry;
+\fBsd_journal_next\fR(3)
+or a related call has not been called at least once\&.
+.RE
+.PP
+\fB\-ENOENT\fR
+.RS 4
+The current entry does not include the specified field\&.
+.RE
+.PP
+\fB\-ENOBUFS\fR
+.RS 4
+A compressed entry is too large\&.
+.RE
+.PP
+\fB\-E2BIG\fR
+.RS 4
+The data field is too large for this computer architecture (e\&.g\&. above 4 GB on a 32\-bit architecture)\&.
+.RE
+.PP
+\fB\-EPROTONOSUPPORT\fR
+.RS 4
+The journal is compressed with an unsupported method or the journal uses an unsupported feature\&.
+.RE
+.PP
+\fB\-EBADMSG\fR
+.RS 4
+The journal is corrupted (possibly just the entry being iterated over)\&.
+.RE
+.PP
+\fB\-EIO\fR
+.RS 4
+An I/O error was reported by the kernel\&.
+.RE
 .SH "NOTES"
 .PP
 All functions listed here are thread\-agnostic and only a single specific thread may operate on a given object during its entire lifetime\&. It\*(Aqs safe to allocate multiple independent objects and use each from a specific thread in parallel\&. However, it\*(Aqs not safe to allocate such an object in one thread, and operate or free it from any other, even if locking is used to ensure these threads don\*(Aqt operate on it at the very same time\&.
@@ -88,7 +153,7 @@ file\&.
 .PP
 Use the
 \fBSD_JOURNAL_FOREACH_UNIQUE\fR
-macro to iterate through all values a field of the journal can take\&. The following example lists all unit names referenced in the journal:
+macro to iterate through all values a field of the journal can take (and which can be accessed on the given architecture and are not compressed with an unsupported mechanism)\&. The following example lists all unit names referenced in the journal:
 .sp
 .if n \{\
 .RS 4

@@ -1,5 +1,5 @@
 '\" t
-.TH "REPART\&.D" "5" "" "systemd 245" "repart.d"
+.TH "REPART\&.D" "5" "" "systemd 246" "repart.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -143,7 +143,7 @@ T}
 T{
 \fBroot\-secondary\fR
 T}:T{
-Root file system partition of the secondary architecture of the local architecture; usually the matching 32bit architecture for the local 64bit architecture)
+Root file system partition of the secondary architecture of the local architecture (usually the matching 32bit architecture for the local 64bit architecture)
 T}
 T{
 \fBroot\-secondary\-verity\fR
@@ -211,7 +211,12 @@ Most of the partition type UUIDs listed above are defined in the
 .PP
 \fILabel=\fR
 .RS 4
-The textual label to assign to the partition if none is assigned yet\&. Note that this setting is not used for matching\&. It is also not used when a label is already set for an existing partition\&. It is thus only used when a partition is newly created or when an existing one had a no label set (that is: an empty label)\&. If not specified a label derived from the partition type is automatically used\&.
+The textual label to assign to the partition if none is assigned yet\&. Note that this setting is not used for matching\&. It is also not used when a label is already set for an existing partition\&. It is thus only used when a partition is newly created or when an existing one had a no label set (that is: an empty label)\&. If not specified a label derived from the partition type is automatically used\&. Simple specifier expansion is supported, see below\&.
+.RE
+.PP
+\fIUUID=\fR
+.RS 4
+The UUID to assign to the partition if none is assigned yet\&. Note that this setting is not used for matching\&. It is also not used when a UUID is already set for an existing partition\&. It is thus only used when a partition is newly created or when an existing one had a all\-zero UUID set\&. If not specified a UUID derived from the partition type is automatically used\&.
 .RE
 .PP
 \fIPriority=\fR
@@ -258,12 +263,12 @@ the configured weight has no effect as the partition is explicitly sized to the 
 \fISizeMinBytes=\fR) or downwards (in case of
 \fISizeMaxBytes=\fR) otherwise\&. If the backing device does not provide enough space to fulfill the constraints placing the partition will fail\&. For partitions that shall be created, depending on the setting of
 \fIPriority=\fR
-(see above) the partition might be dropped and the placing algorithm restarted\&. By default no size constraints are set\&.
+(see above) the partition might be dropped and the placing algorithm restarted\&. By default a minimum size constraint of 10M and no maximum size constraint is set\&.
 .RE
 .PP
 \fIPaddingMinBytes=\fR, \fIPaddingMaxBytes=\fR
 .RS 4
-Specifies minimum and maximum size constrains in bytes for the free space after the partition (the "padding")\&. Semantics are similar to
+Specifies minimum and maximum size constraints in bytes for the free space after the partition (the "padding")\&. Semantics are similar to
 \fISizeMinBytes=\fR
 and
 \fISizeMaxBytes=\fR, except that unlike partition sizes free space can be shrunk and can be as small as zero\&. By default no size constraints on padding are set, so that only
@@ -271,10 +276,133 @@ and
 determines the size of the padding applied\&.
 .RE
 .PP
+\fICopyBlocks=\fR
+.RS 4
+Takes a path to a regular file, block device node or directory\&. If specified and the partition is newly created the data from the specified path is written to the newly created partition, on the block level\&. If a directory is specified the backing block device of the file system the directory is on is determined and the data read directly from that\&. This option is useful to efficiently replicate existing file systems on the block level on a new partition, for example to build a simple OS installer or OS image builder\&.
+.sp
+The file specified here must have a size that is a multiple of the basic block size 512 and not be empty\&. If this option is used, the size allocation algorithm is slightly altered: the partition is created as least as big as required to fit the data in, i\&.e\&. the data size is an additional minimum size value taken into consideration for the allocation algorithm, similar to and in addition to the
+\fISizeMin=\fR
+value configured above\&.
+.sp
+This option has no effect if the partition it is declared for already exists, i\&.e\&. existing data is never overwritten\&. Note that the data is copied in before the partition table is updated, i\&.e\&. before the partition actually is persistently created\&. This provides robustness: it is guaranteed that the partition either doesn\*(Aqt exist or exists fully populated; it is not possible that the partition exists but is not or only partially populated\&.
+.RE
+.PP
 \fIFactoryReset=\fR
 .RS 4
 Takes a boolean argument\&. If specified the partition is marked for removal during a factory reset operation\&. This functionality is useful to implement schemes where images can be reset into their original state by removing partitions and creating them anew\&. Defaults to off\&.
 .RE
+.SH "SPECIFIERS"
+.PP
+Specifiers may be used in the
+\fILabel=\fR
+setting\&. The following expansions are understood:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&2.\ \&Specifiers available
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Specifier
+T}:T{
+Meaning
+T}:T{
+Details
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+"%a"
+T}:T{
+Architecture
+T}:T{
+A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR in \fBsystemd.unit\fR(5) for a full list\&.
+T}
+T{
+"%b"
+T}:T{
+Boot ID
+T}:T{
+The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
+T}
+T{
+"%B"
+T}:T{
+Operating system build ID
+T}:T{
+The operating system build identifier of the running system, as read from the \fIBUILD_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%H"
+T}:T{
+Host name
+T}:T{
+The hostname of the running system\&.
+T}
+T{
+"%l"
+T}:T{
+Short host name
+T}:T{
+The hostname of the running system, truncated at the first dot to remove any domain component\&.
+T}
+T{
+"%m"
+T}:T{
+Machine ID
+T}:T{
+The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%o"
+T}:T{
+Operating system ID
+T}:T{
+The operating system identifier of the running system, as read from the \fIID=\fR field of /etc/os\-release\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%v"
+T}:T{
+Kernel release
+T}:T{
+Identical to \fBuname \-r\fR output\&.
+T}
+T{
+"%w"
+T}:T{
+Operating system version ID
+T}:T{
+The operating system version identifier of the running system, as read from the \fIVERSION_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%W"
+T}:T{
+Operating system variant ID
+T}:T{
+The operating system variant identifier of the running system, as read from the \fIVARIANT_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%%"
+T}:T{
+Single percent sign
+T}:T{
+Use "%%" in place of "%" to specify a single percent sign\&.
+T}
+.TE
+.sp 1
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Grow the root partition to the full disk size at first boot\fR

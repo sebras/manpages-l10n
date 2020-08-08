@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_NOTIFY" "3" "" "systemd 245" "sd_notify"
+.TH "SD_NOTIFY" "3" "" "systemd 246" "sd_notify"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_notify, sd_notifyf, sd_pid_notify, sd_pid_notifyf, sd_pid_notify_with_fds \- Notify service manager about start\-up completion and other service status changes
+sd_notify, sd_notifyf, sd_pid_notify, sd_pid_notifyf, sd_pid_notify_with_fds, sd_notify_barrier \- Notify service manager about start\-up completion and other service status changes
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -38,6 +38,8 @@ sd_notify, sd_notifyf, sd_pid_notify, sd_pid_notifyf, sd_pid_notify_with_fds \- 
 .BI "int sd_pid_notifyf(pid_t\ " "pid" ", int\ " "unset_environment" ", const\ char\ *" "format" ", \&...);"
 .HP \w'int\ sd_pid_notify_with_fds('u
 .BI "int sd_pid_notify_with_fds(pid_t\ " "pid" ", int\ " "unset_environment" ", const\ char\ *" "state" ", const\ int\ *" "fds" ", unsigned\ " "n_fds" ");"
+.HP \w'int\ sd_notify_barrier('u
+.BI "int sd_notify_barrier(int\ " "unset_environment" ", uint64_t\ " "timeout" ");"
 .SH "DESCRIPTION"
 .PP
 \fBsd_notify()\fR
@@ -161,7 +163,9 @@ Stores additional file descriptors in the service manager\&. File descriptors se
 memory file descriptor\&. Note that the service manager will accept messages for a service only if its
 \fIFileDescriptorStoreMax=\fR
 setting is non\-zero (defaults to zero, see
-\fBsystemd.service\fR(5))\&. If file descriptors sent are pollable (see
+\fBsystemd.service\fR(5))\&. If
+\fIFDPOLL=0\fR
+is not set and the file descriptors sent are pollable (see
 \fBepoll_ctl\fR(2)), then any
 \fBEPOLLHUP\fR
 or
@@ -191,6 +195,19 @@ assigned\&. Note that, if multiple file descriptors are submitted at once, the s
 ":"\&. It may not be longer than 255 characters\&. If a submitted name does not follow these restrictions, it is ignored\&.
 .RE
 .PP
+FDPOLL=0
+.RS 4
+When used in combination with
+\fIFDSTORE=1\fR, disables polling of the stored file descriptors regardless of whether or not they are pollable\&. As this option disables automatic cleanup of the stored file descriptors on EPOLLERR and EPOLLHUP, care must be taken to ensure proper manual cleanup\&. Use of this option is not generally recommended except for when automatic cleanup has unwanted behavior such as prematurely discarding file descriptors from the store\&.
+.RE
+.PP
+BARRIER=1
+.RS 4
+Tells the service manager that the client is explicitly requesting synchronization by means of closing the file descriptor sent with this command\&. The service manager guarantees that the processing of a
+\fI BARRIER=1\fR
+command will only happen after all previous notification messages sent before this command have been processed\&. Hence, this command accompanied with a single file descriptor can be used to synchronize against reception of all previous status messages\&. Note that this command cannot be mixed with other notifications, and has to be sent in a separate message to the service manager, otherwise all assignments will be ignored\&. Note that sending 0 or more than 1 file descriptor with this command is a violation of the protocol\&.
+.RE
+.PP
 It is recommended to prefix variable names that are not listed above with
 \fIX_\fR
 to avoid namespace clashes\&.
@@ -211,6 +228,12 @@ or
 message and immediately exits, the service manager might not be able to properly attribute the message to the unit, and thus will ignore it, even if
 \fINotifyAccess=\fR\fBall\fR
 is set for it\&.
+.PP
+Hence, to eliminate all race conditions involving lookup of the client\*(Aqs unit and attribution of notifications to units correctly,
+\fBsd_notify_barrier()\fR
+may be used\&. This call acts as a synchronization point and ensures all notifications sent before this call have been picked up by the service manager when it returns successfully\&. Use of
+\fBsd_notify_barrier()\fR
+is needed for clients which are not invoked by the service manager, otherwise this synchronization mechanism is unnecessary for attribution of notifications to the unit\&.
 .PP
 \fBsd_notifyf()\fR
 is similar to
@@ -238,6 +261,14 @@ but takes an additional array of file descriptors\&. These file descriptors are 
 messages, as described above\&. The additional arguments are a pointer to the file descriptor array plus the number of file descriptors in the array\&. If the number of file descriptors is passed as 0, the call is fully equivalent to
 \fBsd_pid_notify()\fR, i\&.e\&. no file descriptors are passed\&. Note that sending file descriptors to the service manager on messages that do not expect them (i\&.e\&. without
 "FDSTORE=1") they are immediately closed on reception\&.
+.PP
+\fBsd_notify_barrier()\fR
+allows the caller to synchronize against reception of previously sent notification messages and uses the
+"BARRIER=1"
+command\&. It takes a relative
+\fItimeout\fR
+value in microseconds which is passed to
+\fBppoll\fR(2)\&. A value of UINT64_MAX is interpreted as infinite timeout\&.
 .SH "RETURN VALUE"
 .PP
 On failure, these calls return a negative errno\-style error code\&. If
@@ -327,6 +358,25 @@ To store an open file descriptor in the service manager, in order to continue op
 .\}
 .nf
 sd_pid_notify_with_fds(0, 0, "FDSTORE=1\enFDNAME=foobar", &fd, 1);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&5.\ \&Eliminating race conditions\fR
+.PP
+When the client sending the notifications is not spawned by the service manager, it may exit too quickly and the service manager may fail to attribute them correctly to the unit\&. To prevent such races, use
+\fBsd_notify_barrier()\fR
+to synchronize against reception of all notifications sent before this call is made\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sd_notify(0, "READY=1");
+      /* set timeout to 5 seconds */
+      sd_notify_barrier(0, 5 * 1000000);
+      
 .fi
 .if n \{\
 .RE

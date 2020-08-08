@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-UDEVD\&.SERVICE" "8" "" "systemd 245" "systemd-udevd.service"
+.TH "SYSTEMD\-UDEVD\&.SERVICE" "8" "" "systemd 246" "systemd-udevd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -51,24 +51,35 @@ Detach and run in the background\&.
 Print debug messages to standard error\&.
 .RE
 .PP
-\fB\-c=\fR, \fB\-\-children\-max=\fR
+\fB\-c\fR, \fB\-\-children\-max=\fR
 .RS 4
 Limit the number of events executed in parallel\&.
 .RE
 .PP
-\fB\-e=\fR, \fB\-\-exec\-delay=\fR
+\fB\-e\fR, \fB\-\-exec\-delay=\fR
 .RS 4
 Delay the execution of
 \fIRUN\fR
 instructions by the given number of seconds\&. This option might be useful when debugging system crashes during coldplug caused by loading non\-working kernel modules\&.
 .RE
 .PP
-\fB\-t=\fR, \fB\-\-event\-timeout=\fR
+\fB\-t\fR, \fB\-\-event\-timeout=\fR
 .RS 4
 Set the number of seconds to wait for events to finish\&. After this time, the event will be terminated\&. The default is 180 seconds\&.
 .RE
 .PP
-\fB\-N=\fR, \fB\-\-resolve\-names=\fR
+\fB\-s\fR, \fB\-\-timeout\-signal=\fR
+.RS 4
+Set the signal which
+systemd\-udevd
+will send to forked off processes after reaching event timeout\&. The setting can be overridden at boot time with the kernel command line option
+\fIudev\&.timeout_signal=\fR\&. Setting to
+\fBSIGABRT\fR
+may be helpful in order to debug worker timeouts\&. Defaults to
+\fBSIGKILL\fR\&. Note that setting the option on the command line overrides the setting from the configuration file\&.
+.RE
+.PP
+\fB\-N\fR, \fB\-\-resolve\-names=\fR
 .RS 4
 Specify when systemd\-udevd should resolve names of users and groups\&. When set to
 \fBearly\fR
@@ -88,9 +99,9 @@ Print a short version string and exit\&.
 .RE
 .SH "KERNEL COMMAND LINE"
 .PP
-Parameters starting with "rd\&." will be read when
+Parameters prefixed with "rd\&." will be read when
 \fBsystemd\-udevd\fR
-is used in an initrd\&.
+is used in an initrd, those without will be processed both in the initrd and on the host\&.
 .PP
 \fIudev\&.log_priority=\fR, \fIrd\&.udev\&.log_priority=\fR
 .RS 4
@@ -112,6 +123,24 @@ instructions by the given number of seconds\&. This option might be useful when 
 \fIudev\&.event_timeout=\fR, \fIrd\&.udev\&.event_timeout=\fR
 .RS 4
 Wait for events to finish up to the given number of seconds\&. This option might be useful if events are terminated due to kernel drivers taking too long to initialize\&.
+.RE
+.PP
+\fIudev\&.timeout_signal=\fR, \fIrd\&.udev\&.timeout_signal=\fR
+.RS 4
+Specifies a signal that
+systemd\-udevd
+will send to workers on timeout\&. Note that kernel command line option overrides both the setting in the configuration file and the one on the program command line\&.
+.RE
+.PP
+\fIudev\&.blockdev_read_only\fR, \fIrd\&.udev\&.blockdev_read_only\fR
+.RS 4
+If specified, mark all physical block devices read\-only as they appear\&. Synthetic block devices (such as loopback block devices or device mapper devices) are left as they are\&. This is useful to guarantee that the contents of physical block devices remains unmodified during runtime, for example to implement fully stateless systems, for testing or for recovery situations where corrupted file systems shall not be corrupted further through accidental modification\&.
+.sp
+A block device may be marked writable again by issuing the
+\fBblockdev \-\-setrw\fR
+command, see
+\fBblockdev\fR(8)
+for details\&.
 .RE
 .PP
 \fInet\&.ifnames=\fR

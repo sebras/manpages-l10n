@@ -1,5 +1,5 @@
 '\" t
-.TH "NSS\-MYMACHINES" "8" "" "systemd 245" "nss-mymachines"
+.TH "NSS\-MYMACHINES" "8" "" "systemd 246" "nss-mymachines"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-nss-mymachines, libnss_mymachines.so.2 \- Provide hostname resolution for local container instances\&.
+nss-mymachines, libnss_mymachines.so.2 \- Hostname resolution for local container instances
 .SH "SYNOPSIS"
 .PP
 libnss_mymachines\&.so\&.2
@@ -34,24 +34,10 @@ in
 \fBsystemd-nspawn\fR(1))\&. Note that the name that is resolved is the one registered with
 \fBsystemd\-machined\fR, which may be different than the hostname configured inside of the container\&.
 .PP
-The module also provides name resolution for user and group identifiers mapped to containers\&. All names from the range allocated to a given container
-\fIcontainer\fR
-are exposed on the host as
-"vu\-\fIcontainer\fR\-\fIuid\fR"
-and
-"vg\-\fIcontainer\fR\-\fIgid\fR"
-(see example below)\&. This functionality only applies to containers using user namespacing (see the description of
-\fB\-\-private\-users\fR
-in
-\fBsystemd-nspawn\fR(1))\&.
-.PP
 To activate the NSS module, add
 "mymachines"
-to the lines starting with
-"hosts:",
-"passwd:"
-and
-"group:"
+to the line starting with
+"hosts:"
 in
 /etc/nsswitch\&.conf\&.
 .PP
@@ -63,11 +49,8 @@ or
 "compat"
 entry of the
 /etc/nsswitch\&.conf
-lines to make sure that its mappings are preferred over other resolvers such as DNS, but so that
-/etc/hosts,
-/etc/passwd
-and
-/etc/group
+line to make sure that its mappings are preferred over other resolvers such as DNS, but so that
+/etc/hosts
 based mappings take precedence\&.
 .SH "CONFIGURATION IN /ETC/NSSWITCH\&.CONF"
 .PP
@@ -81,11 +64,11 @@ correctly:
 .RS 4
 .\}
 .nf
-passwd:         compat \fBmymachines\fR systemd
-group:          compat \fBmymachines\fR systemd
+passwd:         compat systemd
+group:          compat systemd
 shadow:         compat
 
-hosts:          files \fBmymachines\fR resolve [!UNAVAIL=return] dns myhostname
+hosts:          \fBmymachines\fR resolve [!UNAVAIL=return] myhostname files dns
 networks:       files
 
 protocols:      db files
@@ -98,7 +81,7 @@ netgroup:       nis
 .if n \{\
 .RE
 .\}
-.SH "MAPPINGS PROVIDED BY NSS\-MYMACHINES"
+.SH "EXAMPLE: MAPPINGS PROVIDED BY NSS\-MYMACHINES"
 .PP
 The container
 "rawhide"
@@ -117,29 +100,6 @@ Selected user namespace base 20119552 and range 65536\&.
 $ machinectl \-\-max\-addresses=3
 MACHINE CLASS     SERVICE        OS     VERSION ADDRESSES
 rawhide container systemd\-nspawn fedora 30      169\&.254\&.40\&.164 fe80::94aa:3aff:fe7b:d4b9
-
-$ getent passwd vu\-rawhide\-0 vu\-rawhide\-81
-vu\-rawhide\-0:*:20119552:65534:vu\-rawhide\-0:/:/usr/sbin/nologin
-vu\-rawhide\-81:*:20119633:65534:vu\-rawhide\-81:/:/usr/sbin/nologin
-
-$ getent group vg\-rawhide\-0 vg\-rawhide\-81
-vg\-rawhide\-0:*:20119552:
-vg\-rawhide\-81:*:20119633:
-
-$ ps \-o user:15,pid,tty,command \-e|grep \*(Aq^vu\-rawhide\*(Aq
-vu\-rawhide\-0      692 ?        /usr/lib/systemd/systemd
-vu\-rawhide\-0      731 ?        /usr/lib/systemd/systemd\-journald
-vu\-rawhide\-192    734 ?        /usr/lib/systemd/systemd\-networkd
-vu\-rawhide\-193    738 ?        /usr/lib/systemd/systemd\-resolved
-vu\-rawhide\-0      742 ?        /usr/lib/systemd/systemd\-logind
-vu\-rawhide\-81     744 ?        /usr/bin/dbus\-daemon \-\-system \-\-address=systemd: \-\-nofork \-\-nopidfile \-\-systemd\-activation \-\-syslog\-only
-vu\-rawhide\-0      746 ?        /usr/sbin/sshd \-D \&.\&.\&.
-vu\-rawhide\-0      752 ?        /usr/lib/systemd/systemd \-\-user
-vu\-rawhide\-0      753 ?        (sd\-pam)
-vu\-rawhide\-0     1628 ?        login \-\- zbyszek
-vu\-rawhide\-1000  1630 ?        /usr/lib/systemd/systemd \-\-user
-vu\-rawhide\-1000  1631 ?        (sd\-pam)
-vu\-rawhide\-1000  1637 pts/8    \-zsh
 
 $ ping \-c1 rawhide
 PING rawhide(fe80::94aa:3aff:fe7b:d4b9%ve\-rawhide (fe80::94aa:3aff:fe7b:d4b9%ve\-rawhide)) 56 data bytes

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-REPART" "8" "" "systemd 245" "systemd-repart"
+.TH "SYSTEMD\-REPART" "8" "" "systemd 246" "systemd-repart"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -53,7 +53,7 @@ is intended to be used when deploying OS images, to automatically adjust them to
 .sp -1
 .IP \(bu 2.3
 .\}
-The root partition may be grown to cover the whole available disk space
+The root partition may be grown to cover the whole available disk space\&.
 .RE
 .sp
 .RS 4
@@ -66,8 +66,8 @@ The root partition may be grown to cover the whole available disk space
 .\}
 A
 /home/, swap or
-/srv
-partition can be added in
+/srv/
+partition can be added\&.
 .RE
 .sp
 .RS 4
@@ -78,7 +78,7 @@ partition can be added in
 .sp -1
 .IP \(bu 2.3
 .\}
-A second (or third, \&...) root partition may be added in, to cover A/B style setups where a second version of the root file system is alternatingly used for implementing update schemes\&. The deployed image would carry only a single partition ("A") but on first boot a second partition ("B") for this purpose is automatically created\&.
+A second (or third, \&...) root partition may be added, to cover A/B style setups where a second version of the root file system is alternatingly used for implementing update schemes\&. The deployed image would carry only a single partition ("A") but on first boot a second partition ("B") for this purpose is automatically created\&.
 .RE
 .PP
 The algorithm executed by
@@ -95,7 +95,7 @@ is roughly as follows:
 .\}
 The
 repart\&.d/*\&.conf
-configuration files are loaded and parsed, and ordered by filename (without the directory suffix)\&.
+configuration files are loaded and parsed, and ordered by filename (without the directory prefix)\&.
 .RE
 .sp
 .RS 4
@@ -190,16 +190,16 @@ I/O control command is issued to inform the hardware that the space is empty now
 The new partition table is finally written to disk\&. The kernel is asked to reread the partition table\&.
 .RE
 .PP
-As exception to the normally strictly incremental operation, when called in a special "factory reset" mode
+As exception to the normally strictly incremental operation, when called in a special "factory reset" mode,
 \fBsystemd\-repart\fR
-may also be used to erase select existing partitions to reset an installation back to vendor defaults\&. This mode of operation is used when either the
+may also be used to erase existing partitions to reset an installation back to vendor defaults\&. This mode of operation is used when either the
 \fB\-\-factory\-reset=yes\fR
 switch is passed on the tool\*(Aqs command line, or the
 \fBsystemd\&.factory_reset=yes\fR
 option specified on the kernel command line, or the
 \fIFactoryReset\fR
 EFI variable (vendor UUID
-\fB8cf2644b\-4b0b\-428f\-9387\-6d876050dc67\fR) is set to "yes"\&. It alters the algorithm above slightly: between the 3rd and the 4th step above the any partition marked explicitly via the
+\fB8cf2644b\-4b0b\-428f\-9387\-6d876050dc67\fR) is set to "yes"\&. It alters the algorithm above slightly: between the 3rd and the 4th step above any partition marked explicitly via the
 \fIFactoryReset=\fR
 boolean is deleted, and the algorithm restarted, thus immediately re\-creating these partitions anew empty\&.
 .PP
@@ -216,6 +216,10 @@ of the system, so that the machine ID reproducibly determines the UUIDs assigned
 \fB\-\-seed=random\fR, see below) the seed is generated randomly instead, so that the partition UUIDs are also effectively random\&. The seed value may also be set explicitly, formatted as UUID via the
 \fB\-\-seed=\fR
 option\&. By hashing these UUIDs from a common seed images prepared with this tool become reproducible and the result of the algorithm above deterministic\&.
+.PP
+The positional argument should specify the block device to operate on\&. Instead of a block device node path a regular file may be specified too, in which case the command operates on it like it would if a loopback block device node was specified with the file attached\&. If
+\fB\-\-empty=create\fR
+is specified the specified path is created as regular file, which is useful for generating disk images from scratch\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -238,9 +242,10 @@ will not actually touch the device\*(Aqs partition table\&.
 Takes one of
 "refuse",
 "allow",
-"require"
+"require",
+"force"
 or
-"force"\&. Controls how to operate on block devices that are entirely empty, i\&.e\&. carry no partition table/disk label yet\&. If this switch is not specified the implied default is
+"create"\&. Controls how to operate on block devices that are entirely empty, i\&.e\&. carry no partition table/disk label yet\&. If this switch is not specified the implied default is
 "refuse"\&.
 .sp
 If
@@ -254,7 +259,10 @@ the command will create a new partition table if none exists so far, and refuse 
 "force"
 it will create a fresh partition table unconditionally, erasing the disk fully in effect\&. If
 "force"
-no existing partitions will be taken into account or survive the operation\&. Hence: use with care, this is a great way to lose all your data\&.
+no existing partitions will be taken into account or survive the operation\&. Hence: use with care, this is a great way to lose all your data\&. If
+"create"
+a new loopback file is create under the path passed via the device node parameter, of the size indicated with
+\fB\-\-size=\fR, see below\&.
 .RE
 .PP
 \fB\-\-discard=\fR
@@ -263,7 +271,14 @@ Takes a boolean\&. If this switch is not specified
 \fB\-\-discard=yes\fR
 is the implied default\&. Controls whether to issue the
 \fBBLKDISCARD\fR
-I/O control command on the space taken up by any added partitions or on the space in between them\&. Usually, it\*(Aqs a good idea to issue this request since it tells the underlying hardware that the covered blocks shall be considered empty, improving performance\&.
+I/O control command on the space taken up by any added partitions or on the space in between them\&. Usually, it\*(Aqs a good idea to issue this request since it tells the underlying hardware that the covered blocks shall be considered empty, improving performance\&. If operating on a regular file instead of a block device node, a sparse file is generated\&.
+.RE
+.PP
+\fB\-\-size=\fR
+.RS 4
+Takes a size in bytes, using the usual K, M, G, T suffixes\&. If used the specified device node path must refer to a regular file, which is then grown to the specified size if smaller, before any change is made to the partition table\&. This is not supported if the specified node is a block device\&. This switch has no effect if the file is already as large as the specified size or larger\&. The specified size is implicitly rounded up to multiples of 4096\&. When used with
+\fB\-\-empty=create\fR
+this specifies the initial size of the loopback file to create\&.
 .RE
 .PP
 \fB\-\-factory\-reset=\fR
@@ -311,7 +326,7 @@ Takes a boolean argument\&. If this switch is not specified, it defaults to on w
 .RS 4
 Takes a file system path\&. If specified the
 *\&.conf
-are directly read from the specified directory instead of searching in
+files are read from the specified directory instead of searching in
 /usr/lib/repart\&.d/*\&.conf,
 /etc/repart\&.d/*\&.conf,
 /run/repart\&.d/*\&.conf\&.

@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_MESSAGE_READ" "3" "" "systemd 245" "sd_bus_message_read"
+.TH "SD_BUS_MESSAGE_READ" "3" "" "systemd 246" "sd_bus_message_read"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_bus_message_read, sd_bus_message_readv \- Read a sequence of values from a message
+sd_bus_message_read, sd_bus_message_readv, sd_bus_message_peek_type \- Read a sequence of values from a message
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -29,9 +29,11 @@ sd_bus_message_read, sd_bus_message_readv \- Read a sequence of values from a me
 .fi
 .ft
 .HP \w'int\ sd_bus_message_read('u
-.BI "int sd_bus_message_read(sd_bus_message\ *" "m" ", char\ char\ *" "types" ", \&.\&.\&.);"
+.BI "int sd_bus_message_read(sd_bus_message\ *" "m" ", const\ char\ *" "types" ", \&.\&.\&.);"
 .HP \w'int\ sd_bus_message_readv('u
-.BI "int sd_bus_message_readv(sd_bus_message\ *" "m" ", char\ char\ *" "types" ", va_list\ " "ap" ");"
+.BI "int sd_bus_message_readv(sd_bus_message\ *" "m" ", const\ char\ *" "types" ", va_list\ " "ap" ");"
+.HP \w'int\ sd_bus_message_peek_type('u
+.BI "int sd_bus_message_peek_type(char\ *" "type" ", const\ char\ **" "contents" ");"
 .SH "DESCRIPTION"
 .PP
 \fBsd_bus_message_read()\fR
@@ -59,7 +61,7 @@ for an
 "i", a pointer to
 \fBconst char*\fR
 for an
-"s", \&.\&.\&.) which are set based on the values in the message\&. As an exception, in case or array and variant types, the first argument is an "input" argument that further specifies how the message should be read\&. See the table below for a complete list of allowed arguments and their types\&. Note that, if the basic type is a pointer (e\&.g\&.,
+"s", \&.\&.\&.) which are set based on the values in the message\&. As an exception, in case of array and variant types, the first argument is an "input" argument that further specifies how the message should be read\&. See the table below for a complete list of allowed arguments and their types\&. Note that, if the basic type is a pointer (e\&.g\&.,
 \fBconst char *\fR
 in the case of a string), the argument is a pointer to a pointer, and also the pointer value that is written is only borrowed and the contents must be copied if they are to be used after the end of the messages lifetime\&.
 .PP
@@ -321,13 +323,21 @@ macro\&. Because it invokes the
 macro, the value of
 \fIap\fR
 is undefined after the call\&.
+.PP
+\fBsd_bus_message_peek_type()\fR
+determines the type of the next element in
+\fIm\fR
+to be read by
+\fBsd_bus_message_read()\fR
+or similar functions\&. On success, the type is stored in
+\fItype\fR, if it is not
+\fBNULL\fR\&. If the type is a container type, the type of its elements is stored in
+\fIcontents\fR, if it is not
+\fBNULL\fR\&. If this function successfully determines the type of the next element in
+\fIm\fR, it returns a positive integer\&. If there are no more elements to be read, it returns zero\&.
 .SH "RETURN VALUE"
 .PP
-On success,
-\fBsd_bus_message_read()\fR
-and
-\fBsd_bus_message_readv()\fR
-return 0 or a positive integer\&. On failure, they return a negative errno\-style error code\&.
+On success, these functions return a non\-negative integer\&. On failure, they return a negative errno\-style error code\&.
 .SS "Errors"
 .PP
 Returned errors may indicate the following problems:
@@ -456,4 +466,5 @@ sd_bus_message_read(m, "a{is}", 3, &i, &s, &j, &t, &k, &u);
 \fBsd-bus\fR(3),
 \fBsd_bus_message_read_basic\fR(3),
 \fBsd_bus_message_skip\fR(3),
-\fBsd_bus_message_append\fR(3)
+\fBsd_bus_message_append\fR(3),
+\fBsd_bus_message_enter_container\fR(3)

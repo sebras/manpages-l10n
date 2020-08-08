@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.KILL" "5" "" "systemd 245" "systemd.kill"
+.TH "SYSTEMD\&.KILL" "5" "" "systemd 246" "systemd.kill"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,20 +50,27 @@ The kill procedure configuration options are configured in the [Service], [Socke
 .RS 4
 Specifies how processes of this unit shall be killed\&. One of
 \fBcontrol\-group\fR,
-\fBprocess\fR,
 \fBmixed\fR,
+\fBprocess\fR,
 \fBnone\fR\&.
 .sp
 If set to
 \fBcontrol\-group\fR, all remaining processes in the control group of this unit will be killed on unit stop (for services: after the stop command is executed, as configured with
 \fIExecStop=\fR)\&. If set to
-\fBprocess\fR, only the main process itself is killed\&. If set to
 \fBmixed\fR, the
 \fBSIGTERM\fR
 signal (see below) is sent to the main process while the subsequent
 \fBSIGKILL\fR
 signal (see below) is sent to all remaining processes of the unit\*(Aqs control group\&. If set to
-\fBnone\fR, no process is killed\&. In this case, only the stop command will be executed on unit stop, but no process will be killed otherwise\&. Processes remaining alive after stop are left in their control group and the control group continues to exist after stop unless it is empty\&.
+\fBprocess\fR, only the main process itself is killed (not recommended!)\&. If set to
+\fBnone\fR, no process is killed (strongly recommended against!)\&. In this case, only the stop command will be executed on unit stop, but no process will be killed otherwise\&. Processes remaining alive after stop are left in their control group and the control group continues to exist after stop unless empty\&.
+.sp
+Note that it is not recommended to set
+\fIKillMode=\fR
+to
+\fBprocess\fR
+or even
+\fBnone\fR, as this allows processes to escape the service manager\*(Aqs lifecycle and resource management, and to remain running even while their service is considered stopped and is assumed to not consume any resources\&.
 .sp
 Processes will first be terminated via
 \fBSIGTERM\fR
@@ -146,8 +153,7 @@ and setting
 to either
 \fBSIGQUIT\fR
 or
-\fBSIGABRT\fR
-Defaults to
+\fBSIGABRT\fR\&. Defaults to
 \fBSIGKILL\fR\&.
 .RE
 .PP

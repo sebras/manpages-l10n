@@ -208,6 +208,15 @@ key\&.
 .sp
 This can only be used for very short\-running foreground tasks\&. For details, see
 \fIRUN\fR\&.
+.sp
+Note that multiple
+\fIPROGRAM\fR
+keys may be specified in one rule, and
+"=",
+":=", and
+"+="
+have the same effect as
+"=="\&.
 .RE
 .PP
 \fIRESULT\fR
@@ -319,8 +328,22 @@ Attach a tag to a device\&. This is used to filter events for users of libudev\*
 .PP
 \fIRUN{\fR\fI\fItype\fR\fR\fI}\fR
 .RS 4
-Add a program to the list of programs to be executed after processing all the rules for a specific event, depending on
-"type":
+Specify a program to be executed after processing of all the rules for the event\&. With
+"+=", this invocation is added to the list, and with
+"="
+or
+":=", it replaces any previous contents of the list\&. Please note that both
+"program"
+and
+"builtin"
+types described below use a single list, so clearing the list with
+":="
+and
+"="
+affects both types\&.
+.sp
+\fItype\fR
+may be:
 .PP
 "program"
 .RS 4
@@ -342,18 +365,10 @@ The program name and following arguments are separated by spaces\&. Single quote
 .sp
 This can only be used for very short\-running foreground tasks\&. Running an event process for a long period of time may block all further events for this or a dependent device\&.
 .sp
-Starting daemons or other long\-running processes is not appropriate for udev; the forked processes, detached or not, will be unconditionally killed after the event handling has finished\&.
-.sp
 Note that running programs that access the network or mount/unmount filesystems is not allowed inside of udev rules, due to the default sandbox that is enforced on
 systemd\-udevd\&.service\&.
 .sp
-Please also note that
-":="
-and
-"="
-are clearing both, program and builtin commands\&.
-.sp
-In order to activate long\-running processes from udev rules, provide a service unit, and pull it in from a udev device using the
+Starting daemons or other long\-running processes is not allowed; the forked processes, detached or not, will be unconditionally killed after the event handling has finished\&. In order to activate long\-running processes from udev rules, provide a service unit and pull it in from a udev device using the
 \fISYSTEMD_WANTS\fR
 device property\&. See
 \fBsystemd.device\fR(5)
@@ -377,7 +392,7 @@ with a matching name\&.
 \fIIMPORT{\fR\fI\fItype\fR\fR\fI}\fR
 .RS 4
 Import a set of variables as device properties, depending on
-"type":
+\fItype\fR:
 .PP
 "program"
 .RS 4
@@ -416,6 +431,17 @@ is used as a filter of key names to import (with the same shell glob pattern mat
 .sp
 This can only be used for very short\-running foreground tasks\&. For details see
 \fBRUN\fR\&.
+.sp
+Note that multiple
+\fIIMPORT{}\fR
+keys may be specified in one rule, and
+"=",
+":=", and
+"+="
+have the same effect as
+"=="\&. The key is true if the import is successful, unless
+"!="
+is used as the operator which causes the key to be true if the import failed\&.
 .RE
 .PP
 \fIOPTIONS\fR
@@ -479,8 +505,7 @@ The kernel name for this device\&.
 .RS 4
 The kernel number for this device\&. For example,
 "sda3"
-has kernel number
-"3"\&.
+has kernel number 3\&.
 .RE
 .PP
 \fB$devpath\fR, \fB%p\fR

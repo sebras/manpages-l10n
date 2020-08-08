@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NOTIFY" "1" "" "systemd 245" "systemd-notify"
+.TH "SYSTEMD\-NOTIFY" "1" "" "systemd 246" "systemd-notify"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,17 +48,21 @@ or
 \fINotifyAccess=\fR\fBexec\fR\&. Conversely, if an auxiliary process of the unit sends an
 \fBsd_notify()\fR
 message and immediately exits, the service manager might not be able to properly attribute the message to the unit, and thus will ignore it, even if
-\fINotifyAccess=\fR\fBall\fR
-is set for it\&.
+\fINotifyAccess=\fR\fBall \fR
+is set for it\&. When
+\fB\-\-no\-block\fR
+is used, all synchronization for reception of notifications is disabled, and hence the aforementioned race may occur if the invoking process is not the service manager or spawned by the service manager\&.
 .PP
+Hence,
 \fBsystemd\-notify\fR
 will first attempt to invoke
 \fBsd_notify()\fR
 pretending to have the PID of the invoking process\&. This will only succeed when invoked with sufficient privileges\&. On failure, it will then fall back to invoking it under its own PID\&. This behaviour is useful in order that when the tool is invoked from a shell script the shell process \(em and not the
 \fBsystemd\-notify\fR
 process \(em appears as sender of the message, which in turn is helpful if the shell process is the main process of a service, due to the limitations of
-\fINotifyAccess=\fR\fBall\fR
-described above\&.
+\fINotifyAccess=\fR\fBall\fR\&. Use the
+\fB\-\-pid=\fR
+switch to tweak this behaviour\&.
 .SH "OPTIONS"
 .PP
 The following options are understood:
@@ -72,9 +76,16 @@ Inform the init system about service start\-up completion\&. This is equivalent 
 .PP
 \fB\-\-pid=\fR
 .RS 4
-Inform the init system about the main PID of the daemon\&. Takes a PID as argument\&. If the argument is omitted, the PID of the process that invoked
+Inform the service manager about the main PID of the daemon\&. Takes a PID as argument\&. If the argument is specified as
+"auto"
+or omitted, the PID of the process that invoked
 \fBsystemd\-notify\fR
-is used\&. This is equivalent to
+is used, except if that\*(Aqs the service manager\&. If the argument is specified as
+"self", the PID of the
+\fBsystemd\-notify\fR
+command itself is used, and if
+"parent"
+is specified the calling process\*(Aq PID is used \(em even if it is the service manager\&. This is equivalent to
 \fBsystemd\-notify MAINPID=$PID\fR\&. For details about the semantics of this option see
 \fBsd_notify\fR(3)\&.
 .RE
@@ -101,6 +112,15 @@ with the
 command\&. It will return
 "offline"
 if the system was not booted with systemd\&.
+.RE
+.PP
+\fB\-\-no\-block\fR
+.RS 4
+Do not synchronously wait for the requested operation to finish\&. Use of this option is only recommended when
+\fBsystemd\-notify\fR
+is spawned by the service manager, or when the invoking process is directly spawned by the service manager and has enough privileges to allow
+\fBsystemd\-notify \fR
+to send the notification on its behalf\&. Sending notifications with this option set is prone to race conditions in all other cases\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR

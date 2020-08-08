@@ -2,12 +2,12 @@
 .\"     Title: btrfs-filesystem
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/05/2020
+.\"      Date: 07/02/2020
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.6
+.\"    Source: Btrfs v5.7
 .\"  Language: English
 .\"
-.TH "BTRFS\-FILESYSTEM" "8" "04/05/2020" "Btrfs v5\&.6" "Btrfs Manual"
+.TH "BTRFS\-FILESYSTEM" "8" "07/02/2020" "Btrfs v5\&.7" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -211,7 +211,7 @@ Defragment file data on a mounted filesystem\&. Requires kernel 2\&.6\&.33 and n
 .sp
 If
 \fI\-r\fR
-is passed, files in dir will be defragmented recursively (not descending to subvolumes and mount points)\&. The start position and the number of bytes to defragment can be specified by start and length using
+is passed, files in dir will be defragmented recursively (not descending to subvolumes, mount points and directory symlinks)\&. The start position and the number of bytes to defragment can be specified by start and length using
 \fI\-s\fR
 and
 \fI\-l\fR
@@ -259,11 +259,6 @@ it is possible to append units designator: \*(AqK\*(Aq, \*(AqM\*(Aq, \*(AqG\*(Aq
 .sp
 \fBOptions\fR
 .PP
-\-v
-.RS 4
-be verbose, print file names as they\(cqre submitted for defragmentation
-.RE
-.PP
 \-c[\fI<algo>\fR]
 .RS 4
 compress file contents while defragmenting\&. Optional argument selects the compression algorithm,
@@ -305,6 +300,13 @@ target extent size, do not touch extents bigger than
 \fIsize\fR, default: 32M
 .sp
 The value is only advisory and the final size of the extents may differ, depending on the state of the free space and fragmentation or other internal logic\&. Reasonable values are from tens to hundreds of megabytes\&.
+.RE
+.PP
+\-v
+.RS 4
+(deprecated) alias for global
+\fI\-v\fR
+option
 .RE
 .RE
 .PP
@@ -549,10 +551,125 @@ Overall:
     Data ratio:                       1\&.00
     Metadata ratio:                   1\&.00
     Global reserve:              512\&.00MiB      (used: 0\&.00B)
+    Multiple profiles:                  no
 .fi
 .if n \{\
 .RE
 .\}
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice size\fR \(em sum of raw device capacity available to the filesystem
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice allocated\fR \(em sum of total space allocated for data/metadata/system profiles, this also accounts space reserved but not yet used for extents
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice unallocated\fR \(em the remaining unallocated space for future allocations (difference of the above two numbers)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice missing\fR \(em sum of capacity of all missing devices
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIUsed\fR \(em sum of the used space of data/metadata/system profiles, not including the reserved space
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIFree (estimated)\fR \(em approximate size of the remaining free space usable for data, including currently allocated space and estimating the usage of the unallocated space based on the block group profiles, the
+\fImin\fR
+is the lower bound of the estimate in case multiple profiles are present
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData ratio\fR \(em ratio of total space for data including redundancy or parity to the effectively usable data space, eg\&. single is 1\&.0, RAID1 is 2\&.0 and for RAID5/6 it depends on the number of devices
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIMetadata ratio\fR \(em dtto, for metadata
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIGlobal reserve\fR \(em portion of metadata currently used for global block reserve, used for emergency purposes (like deletion on a full filesystem)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIMultiple profiles\fR \(em what block group types (data, metadata) have more than one profile (single, raid1, \&...), see
+\fBbtrfs\fR(5) section
+\fIFILESYSTEMS WITH MULTIPLE BLOCK GROUP PROFILES\fR\&.
+.RE
 .sp
 The root user will also see stats broken down by block group types:
 .sp
@@ -560,13 +677,13 @@ The root user will also see stats broken down by block group types:
 .RS 4
 .\}
 .nf
-Data,single: Size:1\&.15TiB, Used:1\&.13TiB
+Data,single: Size:1\&.15TiB, Used:1\&.13TiB (98\&.26%)
    /dev/sdb        1\&.15TiB
 
-Metadata,single: Size:12\&.00GiB, Used:6\&.45GiB
+Metadata,single: Size:12\&.00GiB, Used:6\&.45GiB (53\&.75%)
    /dev/sdb       12\&.00GiB
 
-System,single: Size:32\&.00MiB, Used:144\&.00KiB
+System,single: Size:32\&.00MiB, Used:144\&.00KiB (0\&.44%)
    /dev/sdb       32\&.00MiB
 
 Unallocated:
@@ -575,6 +692,18 @@ Unallocated:
 .if n \{\
 .RE
 .\}
+.sp
+\fIData\fR
+is block group type,
+\fIsingle\fR
+is block group profile,
+\fISize\fR
+is total size occupied by this type,
+\fIUsed\fR
+is the actually used space, the percent is ratio of
+\fIUsed/Size\fR\&. The
+\fIUnallocated\fR
+is remaining space\&.
 .sp
 \fBOptions\fR
 .PP

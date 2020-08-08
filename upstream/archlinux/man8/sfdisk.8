@@ -61,19 +61,14 @@ partitions.
 
 .B sfdisk
 uses BLKRRPART (reread partition table) ioctl to make sure that the device is
-not used by system or another tools (see also \-\-no-reread).  It's possible that
+not used by system or other tools (see also \-\-no-reread).  It's possible that
 this feature or another sfdisk activity races with \fBudevd\fR.  The recommended way
-how to avoid possible collisions is to use exclusive flock for the whole-disk
-device to serialize device access.  The exclusive lock will cause udevd to skip
-the event handling on the device.  For example:
-.RS
-.sp
-.nf
-.B "flock /dev/sdc sfdisk /dev/sdc"
-.fi
-.sp
-.RE
-Note, this semantic is not currently supported by udevd for MD and DM devices.
+how to avoid possible collisions is to use \fB\-\-lock\fR option.
+The exclusive lock will cause udevd to skip the event handling on the device.
+.PP
+The sfdisk prompt is only a hint for users and a displayed partition number does
+not mean that the same partition table entry will be created (if -N not
+specified), especially for tables with gaps.
 
 .SH COMMANDS
 The commands are mutually exclusive.
@@ -132,7 +127,9 @@ List the free unpartitioned areas on all or the specified devices.
 .TP
 .BR "\-\-part\-attrs \fIdevice partition-number " [ \fIattributes ]
 Change the GPT partition attribute bits.  If \fIattributes\fR is not specified,
-then print the current partition settings.  The \fIattributes\fR argument is a
+then print the current partition settings.
+.sp
+The \fIattributes\fR argument is a
 comma- or space-delimited list of bits.  The currently supported attribute
 bits are: RequiredPartition, NoBlockIOProtocol, LegacyBIOSBootable
 and GUID-specific bits in the range from 48 to 63.  For example, the string
@@ -144,13 +141,21 @@ then print the current partition label.
 .TP
 .BR "\-\-part\-type \fIdevice partition-number " [ \fItype ]
 Change the partition type.  If \fItype\fR is not specified, then print the
-current partition type.  The \fItype\fR argument is hexadecimal for MBR,
-or a GUID for GPT.  For backward compatibility the options \fB\-c\fR and
+current partition type.
+.sp
+The \fItype\fR argument is hexadecimal for MBR,
+GUID for GPT, type alias (e.g. "linux") or type shortcut (e.g. 'L').
+For backward compatibility the options \fB\-c\fR and
 \fB\-\-id\fR have the same meaning as this one.
 .TP
 .BR "\-\-part\-uuid \fIdevice partition-number " [ \fIuuid ]
 Change the GPT partition UUID.  If \fIuuid\fR is not specified,
 then print the current partition UUID.
+.TP
+.BR "\-\-disk\-id \fIdevice " [ \fIid ]
+Change the disk identifier.  If \fIid\fR is not specified,
+then print the current identifier.  The identifier is UUID for GPT
+or unsigned integer for MBR.
 .TP
 .BR \-r , " \-\-reorder " \fIdevice
 Renumber the partitions, ordering them by their start offset.
@@ -166,11 +171,28 @@ Print all supported types for the current disk label or the label specified by
 .TP
 .BR \-V , " \-\-verify " [ \fIdevice ...]
 Test whether the partition table and partitions seem correct.
-
+.TP
+.BR "\-\-relocate \fIoper " \fIdevice
+Relocate partition table header. This command is currently supported for GPT header only.
+The argument \fIoper\fP can be:
+.RS
+.TP
+.B gpt-bak-std
+Move GPT backup header to the standard location at the end of the device.
+.TP
+.B gpt-bak-mini
+Move GPT backup header behind the last partition. Note that UEFI
+standard requires the backup header at the end of the device and partitioning
+tools can automatically relocate the header to follow the standard.
+.RE
 .SH OPTIONS
 .TP
 .BR \-a , " \-\-append"
 Don't create a new partition table, but only append the specified partitions.
+.sp
+Note that unused partition maybe be re-used in this case although it is not the
+last partition in the partition table. See also \fB\-N\fR to specify entry in
+the partition table.
 .TP
 .BR \-b , " \-\-backup"
 Back up the current partition table sectors before starting the partitioning.
@@ -189,6 +211,14 @@ Disable all consistency checking.
 .B \-\-Linux
 Deprecated and ignored option.  Partitioning that is compatible with
 Linux (and other modern operating systems) is the default.
+.TP
+\fB\-\-lock\fR[=\fImode\fR]
+Use exclusive BSD lock for device or file it operates.  The optional argument
+\fImode\fP can be \fByes\fR, \fBno\fR (or 1 and 0) or \fBnonblock\fR.  If the \fImode\fR
+argument is omitted, it defaults to \fB"yes"\fR.  This option overwrites
+environment variable \fB$LOCK_BLOCK_DEVICE\fR.  The default is not to use any
+lock at all, but it's recommended to avoid collisions with udevd or other
+tools.
 .TP
 .BR \-n , " \-\-no\-act"
 Do everything except writing to the device.
@@ -229,7 +259,7 @@ and the last command reorders partitions to match disk order
 .sp
 .B "echo '+100M,' | sfdisk \-\-move-data /dev/sdc \-N 1"
 .br
-.B "echo '2048,' | sfdisk /dev/sdc \-\-append
+.B "echo '2048,' | sfdisk /dev/sdc \-\-append"
 .br
 .B sfdisk /dev/sdc \-\-reorder
 .sp
@@ -265,8 +295,7 @@ disk label (see the \fBEMPTY DISK LABEL\fR section below).
 .TP
 .BR \-Y , " \-\-label\-nested " \fItype
 Force editing of a nested disk label.  The primary disk label has to exist already.
-This option allows to edit for example a hybrid/protective MBR on devices with GPT.
-
+This option allows editing for example a hybrid/protective MBR on devices with GPT.
 .TP
 .BR \-w , " \-\-wipe "\fIwhen
 Wipe filesystem, RAID and partition-table signatures from the device, in order
@@ -299,7 +328,7 @@ Display version information and exit.
 .BR \-h , " \-\-help"
 Display help text and exit.
 
-.SH "INPUT FORMATS"
+.SH INPUT FORMATS
 .B sfdisk
 supports two input formats and generic header lines.
 
@@ -386,39 +415,49 @@ partition; existing partitions will be resized as required.
 .sp
 The partition
 .I type
-is given in hex for MBR (DOS), without the 0x prefix, a GUID string for GPT, or
-a shortcut:
+is given in hex for MBR (DOS) where 0x prefix is optional; a GUID string for
+GPT; a shortcut or an alias. It's recommended to use two letters for MBR hex codes to
+avoid collision between deprecated shortcut 'E' and '0E' MBR hex code. For backward
+compatibility sfdisk tries to interpret
+.I type
+as a shortcut as a first possibility in partitioning scripts although on other places (e.g.
+\fB\-\-part-type command)\fR it tries shortcuts as the last possibility.
+
+Since v2.36 libfdisk supports partition type aliases as extension to shortcuts. The alias is a
+simple human readable word (e.g. "linux").
+
+Supported shortcuts and aliases:
 .RS
 .TP
-.B L
+.B L - alias 'linux'
 Linux; means 83 for MBR and 0FC63DAF-8483-4772-8E79-3D69D8477DE4 for GPT.
 .TP
-.B S
+.B S - alias 'swap'
 swap area; means 82 for MBR and 0657FD6D-A4AB-43C4-84E5-0933C84B4F4F for GPT
 .TP
-.B E
-extended partition; means 5 for MBR
+.B Ex - alias 'extended'
+MBR extended partition; means 05 for MBR.  The original shortcut 'E' is deprecated due to collision with
+0x0E MBR partition type.
 .TP
-.B H
+.B H - alias 'home'
 home partition; means 933AC7E1-2EB4-4F13-B844-0E14E2AEF915 for GPT
 .TP
-.B X
-linux extended partition; means 85 for MBR.
-.TP
-.B U
+.B U - alias 'uefi'
 EFI System partition, means EF for MBR and C12A7328-F81F-11D2-BA4B-00A0C93EC93B for GPT
 .TP
-.B R
+.B R - alias 'raid'
 Linux RAID; means FD for MBR and A19D880F-05FC-4D3B-A006-743F0F84911E for GPT
 .TP
-.B V
+.B V - alias 'lvm'
 LVM; means 8E for MBR and E6D6D379-F507-44C2-A23C-238F2A3DF928 for GPT
 .RE
 .PP
 The default
 .I type
 value is
-.I L
+.I linux
+.sp
+The shortcut 'X' for Linux extended partition (85) is deprecated in favour of 'Ex'.
 
 .I bootable
 is specified as [\fB*\fR|\fB-\fR], with as default not-bootable.  The
@@ -429,7 +468,7 @@ loaders and for other operating systems.
 
 .B Named-fields format
 .RS
-This format is more readable, robust, extensible and allows to specify additional
+This format is more readable, robust, extensible and allows specifying additional
 information (e.g., a UUID).  It is recommended to use this format to keep your scripts
 more readable.
 .RS
@@ -440,7 +479,7 @@ more readable.
 The
 .I device
 field is optional.  \fBsfdisk\fR extracts the partition number from the
-device name.  It allows to specify the partitions in random order.
+device name.  It allows specifying the partitions in random order.
 This functionality is mostly used by \fB\-\-dump\fR.
 Don't use it if you are not sure.
 
@@ -481,7 +520,7 @@ For backward compatibility the \fBId=\fR field has the same meaning.
 .RE
 .RE
 
-.SH "EMPTY DISK LABEL"
+.SH EMPTY DISK LABEL
 .B sfdisk
 does not create partition table without partitions by default. The lines with
 partitions are expected in the script by default. The empty partition table has
@@ -494,7 +533,7 @@ partitions lines. For example:
 .RE
 creates empty GPT partition table. Note that the \fB\-\-append\fR disables this feature.
 
-.SH "BACKING UP THE PARTITION TABLE"
+.SH BACKING UP THE PARTITION TABLE
 It is recommended to save the layout of your devices.
 .B sfdisk
 supports two ways.
@@ -560,15 +599,6 @@ The warning messages.
 .B welcome
 The welcome message.
 
-.SH NOTES
-Since version 2.26 \fBsfdisk\fR no longer provides the \fB\-R\fR or
-\fB\-\-re\-read\fR option to force the kernel to reread the partition table.
-Use \fBblockdev \-\-rereadpt\fR instead.
-.PP
-Since version 2.26 \fBsfdisk\fR does not provide the \fB\-\-DOS\fR, \fB\-\-IBM\fR, \fB\-\-DOS\-extended\fR,
-\fB\-\-unhide\fR, \fB\-\-show\-extended\fR, \fB\-\-cylinders\fR, \fB\-\-heads\fR, \fB\-\-sectors\fR,
-\fB\-\-inside\-outer\fR, \fB\-\-not\-inside\-outer\fR options.
-
 .SH ENVIRONMENT
 .IP SFDISK_DEBUG=all
 enables sfdisk debug output.
@@ -578,19 +608,30 @@ enables libfdisk debug output.
 enables libblkid debug output.
 .IP LIBSMARTCOLS_DEBUG=all
 enables libsmartcols debug output.
+.IP LOCK_BLOCK_DEVICE=<mode>
+use exclusive BSD lock.  The mode is "1" or "0".  See \fB\-\-lock\fR for more details.
 
-.SH "SEE ALSO"
+.SH NOTES
+Since version 2.26 \fBsfdisk\fR no longer provides the \fB\-R\fR or
+\fB\-\-re\-read\fR option to force the kernel to reread the partition table.
+Use \fBblockdev \-\-rereadpt\fR instead.
+.PP
+Since version 2.26 \fBsfdisk\fR does not provide the \fB\-\-DOS\fR, \fB\-\-IBM\fR, \fB\-\-DOS\-extended\fR,
+\fB\-\-unhide\fR, \fB\-\-show\-extended\fR, \fB\-\-cylinders\fR, \fB\-\-heads\fR, \fB\-\-sectors\fR,
+\fB\-\-inside\-outer\fR, \fB\-\-not\-inside\-outer\fR options.
+
+.SH AUTHORS
+Karel Zak <kzak@redhat.com>
+.PP
+The current sfdisk implementation is based on the original sfdisk
+from Andries E. Brouwer.
+
+.SH SEE ALSO
 .BR fdisk (8),
 .BR cfdisk (8),
 .BR parted (8),
 .BR partprobe (8),
 .BR partx (8)
-
-.SH AUTHOR
-Karel Zak <kzak@redhat.com>
-.PP
-The current sfdisk implementation is based on the original sfdisk
-from Andries E. Brouwer.
 
 .SH AVAILABILITY
 The sfdisk command is part of the util-linux package and is available from
