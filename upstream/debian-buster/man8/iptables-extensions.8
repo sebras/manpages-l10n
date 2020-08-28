@@ -1,4 +1,4 @@
-.TH iptables-extensions 8 "" "iptables 1.8.3" "iptables 1.8.3"
+.TH iptables-extensions 8 "" "iptables 1.8.5" "iptables 1.8.5"
 .SH NAME
 iptables-extensions \(em list of extensions in the standard iptables distribution
 .SH SYNOPSIS
@@ -912,7 +912,7 @@ You can obtain
 from http://www.netfilter.org or, alternatively, from the git.netfilter.org
 repository.
 .SS osf
-The osf module does passive operating system fingerprinting. This modules
+The osf module does passive operating system fingerprinting. This module
 compares some data (Window Size, MSS, options and their order, TTL, DF,
 and others) from packets with the SYN bit set. 
 .TP
@@ -975,6 +975,10 @@ given user. You may also specify a numerical UID, or an UID range.
 Matches if the packet socket's file structure is owned by the given group.
 You may also specify a numerical GID, or a GID range.
 .TP
+\fB\-\-suppl\-groups\fP
+Causes group(s) specified with \fB\-\-gid-owner\fP to be also checked in the
+supplementary groups of a process.
+.TP
 [\fB!\fP] \fB\-\-socket\-exists\fP
 Matches if the packet is associated with a socket.
 .SS physdev
@@ -1017,7 +1021,7 @@ This module matches the link-layer packet type.
 .TP
 [\fB!\fP] \fB\-\-pkt\-type\fP {\fBunicast\fP|\fBbroadcast\fP|\fBmulticast\fP}
 .SS policy
-This modules matches the policy used by IPsec for handling a packet.
+This module matches the policy used by IPsec for handling a packet.
 .TP
 \fB\-\-dir\fP {\fBin\fP|\fBout\fP}
 Used to select whether to match the policy used for decapsulation or the
@@ -1528,7 +1532,7 @@ Set the initial counter value (0 <= p <= n\-1, default 0) for the
 .B nth 
 mode.
 .SS string
-This modules matches a given string by using some pattern matching strategy. It requires a linux kernel >= 2.6.14.
+This module matches a given string by using some pattern matching strategy. It requires a linux kernel >= 2.6.14.
 .TP
 \fB\-\-algo\fP {\fBbm\fP|\fBkmp\fP}
 Select the pattern matching strategy. (bm = Boyer-Moore, kmp = Knuth-Pratt-Morris)
@@ -1886,7 +1890,7 @@ iptables can use extended target modules: the following are included
 in the standard distribution.
 .\" @TARGET@
 .SS AUDIT
-This target allows creates audit records for packets hitting the target.
+This target creates audit records for packets hitting the target.
 It can be used to record accepted, dropped, and rejected packets. See
 auditd(8) for additional details.
 .TP
@@ -1922,6 +1926,9 @@ This module allows you to configure a simple cluster of nodes that share
 a certain IP and MAC address without an explicit load balancer in front of
 them.  Connections are statically distributed between the nodes in this
 cluster.
+.PP
+Please note that CLUSTERIP target is considered deprecated in favour of cluster
+match which is more flexible and not limited to IPv4.
 .TP
 \fB\-\-new\fP
 Create a new ClusterIP.  You always have to set this on the first rule
@@ -2313,8 +2320,8 @@ Log the userid of the process which generated the packet.
 .SS MARK
 This target is used to set the Netfilter mark value associated with the packet.
 It can, for example, be used in conjunction with routing based on fwmark (needs
-iproute2). If you plan on doing so, note that the mark needs to be set in the
-PREROUTING chain of the mangle table to affect routing.
+iproute2). If you plan on doing so, note that the mark needs to be set in
+either the PREROUTING or the OUTPUT chain of the mangle table to affect routing.
 The mark field is 32 bits wide.
 .TP
 \fB\-\-set\-xmark\fP \fIvalue\fP[\fB/\fP\fImask\fP]
@@ -2365,6 +2372,7 @@ Randomize source port mapping
 If option
 \fB\-\-random\fP
 is used then port mapping will be randomized (kernel >= 2.6.21).
+Since kernel 5.0, \fB\-\-random\fP is identical to \fB\-\-random-fully\fP.
 .TP
 \fB\-\-random-fully\fP
 Full randomize source port mapping
@@ -2480,7 +2488,8 @@ chains, and user-defined chains which are only called from those
 chains.  It redirects the packet to the machine itself by changing the
 destination IP to the primary address of the incoming interface
 (locally-generated packets are mapped to the localhost address,
-127.0.0.1 for IPv4 and ::1 for IPv6).
+127.0.0.1 for IPv4 and ::1 for IPv6, and packets arriving on
+interfaces that don't have an IP address configured are dropped).
 .TP
 \fB\-\-to\-ports\fP \fIport\fP[\fB\-\fP\fIport\fP]
 This specifies a destination port or range of ports to use: without

@@ -68,7 +68,7 @@ open, openat, creat \- open and possibly create a file
 .PP
 /* Documented separately, in \fBopenat2\fP(2): */
 .BI "int openat2(int " dirfd ", const char *" pathname ,
-.BI "            const struct open_how *" how ", size_t " size ");
+.BI "            const struct open_how *" how ", size_t " size ");"
 .fi
 .PP
 .in -4n
@@ -286,37 +286,49 @@ mount options described in
 .BR mount (8).
 .\" As at 2.6.25, bsdgroups is supported by ext2, ext3, ext4, and
 .\" XFS (since 2.6.14).
-.RS
-.PP
+.IP
 The
 .I mode
-argument specifies the file mode bits be applied when a new file is created.
-This argument must be supplied when
+argument specifies the file mode bits to be applied when a new file is created.
+If neither
+.B O_CREAT
+nor
+.B O_TMPFILE
+is specified in
+.IR flags ,
+then
+.I mode
+is ignored (and can thus be specified as 0, or simply omitted).
+The
+.I mode
+argument
+.B must
+be supplied if
 .B O_CREAT
 or
 .B O_TMPFILE
 is specified in
 .IR flags ;
-if neither
-.B O_CREAT
-nor
-.B O_TMPFILE
-is specified, then
-.I mode
-is ignored.
+if it is not supplied,
+some arbitrary bytes from the stack will be applied as the file mode.
+.IP
 The effective mode is modified by the process's
 .I umask
 in the usual way: in the absence of a default ACL, the mode of the
 created file is
-.IR "(mode\ &\ ~umask)" .
-Note that this mode applies only to future accesses of the
+.IR "(mode\ &\ \(tiumask)" .
+.IP
+Note that
+.I mode
+applies only to future accesses of the
 newly created file; the
 .BR open ()
 call that creates a read-only file may well return a read/write
 file descriptor.
-.PP
+.IP
 The following symbolic constants are provided for
 .IR mode :
+.RS
 .TP 9
 .B S_IRWXU
 00700 user (file owner) has read, write, and execute permission
@@ -1192,7 +1204,7 @@ does not support
 refers to a regular file that is too large to be opened.
 The usual scenario here is that an application compiled
 on a 32-bit platform without
-.I -D_FILE_OFFSET_BITS=64
+.I \-D_FILE_OFFSET_BITS=64
 tried to open a file whose size exceeds
 .I (1<<31)-1
 bytes;
@@ -1236,7 +1248,7 @@ flag was specified.
 .TP
 .B ETXTBSY
 .I pathname
-refers to a file that is currently being read by the kernel (e.g. for
+refers to a file that is currently being read by the kernel (e.g., for
 module/firmware loading), and write access was requested.
 .TP
 .B EWOULDBLOCK
@@ -1687,7 +1699,7 @@ When these APIs are given a
 argument of
 .BR AT_FDCWD
 or the specified pathname is absolute,
-then they handle their pathname argument in the same was as
+then they handle their pathname argument in the same way as
 the corresponding conventional APIs.
 However, in this case, several of the APIs have a
 .I flags
@@ -1696,7 +1708,6 @@ the corresponding conventional APIs.
 .\"
 .\"
 .SS O_DIRECT
-.PP
 The
 .B O_DIRECT
 flag may impose alignment restrictions on the length and address
@@ -1723,9 +1734,11 @@ The logical block size can be determined using the
 .B BLKSSZGET
 operation or from the shell using the command:
 .PP
+.in +4n
 .EX
-    blockdev \-\-getss
+blockdev \-\-getss
 .EE
+.in
 .PP
 .B O_DIRECT
 I/Os should never be run concurrently with the
@@ -1878,7 +1891,7 @@ is ignored).
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.07 of the Linux
+This page is part of release 5.08 of the Linux
 .I man-pages
 project.
 A description of the project,
