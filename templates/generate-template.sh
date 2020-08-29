@@ -41,10 +41,10 @@ fi
 
 # Determine if an encoding is specified,
 # otherwise fall back to ISO-8859-1
-coding=$(grep "\-\*\- coding:" "$upstream_manpage" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
-if [ -z "$coding" ]; then
-	coding="ISO-8859-1"
-fi
+# coding=$(grep "\-\*\- coding:" "$upstream_manpage" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
+# if [ -z "$coding" ]; then
+# 	coding="ISO-8859-1"
+# fi
 
 # Create pot with po4a
 po4a-gettextize -f man \
@@ -52,7 +52,7 @@ po4a-gettextize -f man \
 	--option generated \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
-	--master "$upstream_manpage" -M "$coding" |\
+	--master "$upstream_manpage" -M utf-8 |\
 	# Reduce the location lines from the full path and line number
 	# to the name of the distribution
 	sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
