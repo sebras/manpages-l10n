@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 245" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 246" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -260,9 +260,7 @@ Start the unit specified on the command line and its dependencies and stop all o
 "\&.target"
 will be assumed\&.
 .sp
-This is similar to changing the runlevel in a traditional init system\&. The
-\fBisolate\fR
-command will immediately stop processes that are not enabled in the new unit, possibly including the graphical environment or terminal you are currently using\&.
+This command is dangerous, since it will immediately stop processes that are not enabled in the new target, possibly including the graphical environment or terminal you are currently using\&.
 .sp
 Note that this is allowed only on units where
 \fBAllowIsolate=\fR
@@ -300,6 +298,22 @@ is selected, see
 \fBsystemd.timer\fR(5)\&. This command only applies to units that use either of these settings\&. If
 \fB\-\-what=\fR
 is not specified, both the cache and runtime data are removed (as these two types of data are generally redundant and reproducible on the next invocation of the unit)\&.
+.RE
+.PP
+\fBfreeze \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Freeze one or more units specified on the command line using cgroup freezer
+.sp
+Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended\&. Being suspended means that unit\*(Aqs processes won\*(Aqt be scheduled to run on CPU until thawed\&. Note that this command is supported only on systems that use unified cgroup hierarchy\&. Unit is automatically thawed just before we execute a job against the unit, e\&.g\&. before the unit is stopped\&.
+.RE
+.PP
+\fBthaw \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Thaw (unfreeze) one or more units specified on the command line\&.
+.sp
+This is the inverse operation to the
+\fBfreeze\fR
+command and resumes the execution of processes in the unit\*(Aqs cgroup\&.
 .RE
 .PP
 \fBis\-active \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -389,7 +403,7 @@ if the unit has been loaded into memory\&. Other possible values for "Loaded:" i
 "error"
 if there was a problem loading it,
 "not\-found"
-if not unit file was found for this unit,
+if no unit file was found for this unit,
 "bad\-setting"
 if an essential unit file setting could not be parsed and
 "masked"
@@ -426,7 +440,10 @@ map directly to configuration settings of the system and service manager and its
 (which is runtime state), and time settings are always exposed as properties ending in the
 "\&...USec"
 suffix even if a matching configuration options end in
-"\&...Sec", because microseconds is the normalized time unit used by the system and service manager\&.
+"\&...Sec", because microseconds is the normalized time unit used internally by the system and service manager\&.
+.sp
+For details about many of these properties, see the documentation of the D\-Bus interface backing these properties, see
+\fBorg.freedesktop.systemd1\fR(5)\&.
 .RE
 .PP
 \fBcat \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
@@ -513,9 +530,7 @@ List unit files installed on the system, in combination with their enablement st
 .PP
 \fBenable \fR\fB\fIUNIT\fR\fR\fB\&...\fR, \fBenable \fR\fB\fIPATH\fR\fR\fB\&...\fR
 .RS 4
-Enable one or more units or unit instances\&. This will create a set of symlinks, as encoded in the
-"[Install]"
-sections of the indicated unit files\&. After the symlinks have been created, the system manager configuration is reloaded (in a way equivalent to
+Enable one or more units or unit instances\&. This will create a set of symlinks, as encoded in the [Install] sections of the indicated unit files\&. After the symlinks have been created, the system manager configuration is reloaded (in a way equivalent to
 \fBdaemon\-reload\fR), in order to ensure the changes are taken into account immediately\&. Note that this does
 \fInot\fR
 have the effect of also starting any of the units being enabled\&. If this is desired, combine this command with the
@@ -535,9 +550,7 @@ is not allowed, unless those directories are located on the root file system)\&.
 This command will print the file system operations executed\&. This output may be suppressed by passing
 \fB\-\-quiet\fR\&.
 .sp
-Note that this operation creates only the symlinks suggested in the
-"[Install]"
-section of the unit files\&. While this command is the recommended way to manipulate the unit configuration directory, the administrator is free to make additional changes manually by placing or removing symlinks below this directory\&. This is particularly useful to create configurations that deviate from the suggested default installation\&. In this case, the administrator must make sure to invoke
+Note that this operation creates only the symlinks suggested in the [Install] section of the unit files\&. While this command is the recommended way to manipulate the unit configuration directory, the administrator is free to make additional changes manually by placing or removing symlinks below this directory\&. This is particularly useful to create configurations that deviate from the suggested default installation\&. In this case, the administrator must make sure to invoke
 \fBdaemon\-reload\fR
 manually as necessary, in order to ensure the changes are taken into account\&.
 .sp
@@ -580,9 +593,7 @@ This command expects valid unit names only, it does not accept paths to unit fil
 .sp
 In addition to the units specified as arguments, all units are disabled that are listed in the
 \fIAlso=\fR
-setting contained in the
-"[Install]"
-section of any of the unit files being operated on\&.
+setting contained in the [Install] section of any of the unit files being operated on\&.
 .sp
 This command implicitly reloads the system manager configuration after completing the operation\&. Note that this command does not implicitly stop the units that are being disabled\&. If this is desired, either combine this command with the
 \fB\-\-now\fR
@@ -609,9 +620,7 @@ Reenable one or more units, as specified on the command line\&. This is a combin
 \fBdisable\fR
 and
 \fBenable\fR
-and is useful to reset the symlinks a unit file is enabled with to the defaults configured in its
-"[Install]"
-section\&. This command expects a unit name only, it does not accept paths to unit files\&.
+and is useful to reset the symlinks a unit file is enabled with to the defaults configured in its [Install] section\&. This command expects a unit name only, it does not accept paths to unit files\&.
 .RE
 .PP
 \fBpreset \fR\fB\fIUNIT\fR\fR\fB\&...\fR
@@ -672,6 +681,7 @@ l ^ ^
 l l l
 l ^ ^
 l l l
+l l l
 l ^ ^
 l l l
 l l l
@@ -700,6 +710,13 @@ T{
 "linked\-runtime"
 T}::
 T{
+"alias"
+T}:T{
+The name is an alias (symlink to another unit file)\&.
+T}:T{
+0
+T}
+T{
 "masked"
 T}:T{
 Completely disabled, so that any start operation on it fails (permanently in /etc/systemd/system/ or transiently in /run/systemd/systemd/)\&.
@@ -712,21 +729,21 @@ T}::
 T{
 "static"
 T}:T{
-The unit file is not enabled, and has no provisions for enabling in the "[Install]" unit file section\&.
+The unit file is not enabled, and has no provisions for enabling in the [Install] unit file section\&.
 T}:T{
 0
 T}
 T{
 "indirect"
 T}:T{
-The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the "[Install]" unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in \fIAlso=\fR\&. For template unit file, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
+The unit file itself is not enabled, but it has a non\-empty \fIAlso=\fR setting in the [Install] unit file section, listing other unit files that might be enabled, or it has an alias under a different name through a symlink that is not specified in \fIAlso=\fR\&. For template unit files, an instance different than the one specified in \fIDefaultInstance=\fR is enabled\&.
 T}:T{
 0
 T}
 T{
 "disabled"
 T}:T{
-The unit file is not enabled, but contains an "[Install]" section with installation instructions\&.
+The unit file is not enabled, but contains an [Install] section with installation instructions\&.
 T}:T{
 > 0
 T}
@@ -1147,7 +1164,7 @@ is specified twice the power\-off operation is executed by
 itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .RE
 .PP
-\fBreboot\fR [\fIarg\fR]
+\fBreboot\fR
 .RS 4
 Shut down and reboot the system\&. This is mostly equivalent to
 \fBsystemctl start reboot\&.target \-\-job\-mode=replace\-irreversibly \-\-no\-block\fR, but also prints a wall message to all users\&. This command is asynchronous; it will return after the reboot operation is enqueued, without waiting for it to complete\&.
@@ -1161,17 +1178,11 @@ is specified twice the reboot operation is executed by
 \fBsystemctl\fR
 itself, and the system manager is not contacted\&. This means the command should succeed even when the system manager has crashed\&.
 .sp
-If the optional argument
-\fIarg\fR
+If the switch
+\fB\-\-reboot\-argument=\fR
 is given, it will be passed as the optional argument to the
 \fBreboot\fR(2)
-system call\&. The value is architecture and firmware specific\&. As an example,
-"recovery"
-might be used to trigger system recovery, and
-"fota"
-might be used to trigger a
-\(lqfirmware over the air\(rq
-update\&.
+system call\&.
 .RE
 .PP
 \fBkexec\fR
@@ -1402,6 +1413,17 @@ Properties for units vary by unit type, so showing any unit (even a non\-existen
 \fBsystemd.socket\fR(5), etc\&.
 .RE
 .PP
+\fB\-P\fR
+.RS 4
+Equivalent to
+\fB\-\-value\fR
+\fB\-\-property=\fR, i\&.e\&. shows the value of the property without the property name or
+"="\&. Note that using
+\fB\-P\fR
+once will also affect all properties listed with
+\fB\-p\fR/\fB\-\-property=\fR\&.
+.RE
+.PP
 \fB\-a\fR, \fB\-\-all\fR
 .RS 4
 When listing units with
@@ -1505,7 +1527,9 @@ Also, show installation targets in the output of
 .RS 4
 When printing properties with
 \fBshow\fR, only print the value, and skip the property name and
-"="\&.
+"="\&. Also see option
+\fB\-P\fR
+above\&.
 .RE
 .PP
 \fB\-\-show\-types\fR
@@ -1842,7 +1866,7 @@ command, indicate to the system\*(Aqs firmware to reboot into the firmware setup
 .RS 4
 When used with the
 \fBreboot\fR
-command, indicate to the system\*(Aqs boot loader to show the boot loader menu on the following boot\&. Takes a time value as parameter \(em indicating the menu time\-out\&. Pass zero in order to disable the menu time\-out\&. Note that not all boot loaders support this functionality\&.
+command, indicate to the system\*(Aqs boot loader to show the boot loader menu on the following boot\&. Takes a time value as parameter \(em indicating the menu timeout\&. Pass zero in order to disable the menu timeout\&. Note that not all boot loaders support this functionality\&.
 .RE
 .PP
 \fB\-\-boot\-loader\-entry=\fR
@@ -1852,6 +1876,18 @@ When used with the
 command, indicate to the system\*(Aqs boot loader to boot into a specific boot loader entry on the following boot\&. Takes a boot loader entry identifier as argument, or
 "help"
 in order to list available entries\&. Note that not all boot loaders support this functionality\&.
+.RE
+.PP
+\fB\-\-reboot\-argument=\fR
+.RS 4
+This switch is used with
+\fBreboot\fR\&. The value is architecture and firmware specific\&. As an example,
+"recovery"
+might be used to trigger system recovery, and
+"fota"
+might be used to trigger a
+\(lqfirmware over the air\(rq
+update\&.
 .RE
 .PP
 \fB\-\-plain\fR

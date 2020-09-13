@@ -131,6 +131,7 @@ node /org/freedesktop/systemd1 {
       CancelJob(in  u id);
       ClearJobs();
       ResetFailed();
+      SetShowStatus(in  s mode);
       ListUnits(out a(ssssssouso) units);
       ListUnitsFiltered(in  as states,
                         out a(ssssssouso) units);
@@ -475,6 +476,7 @@ node /org/freedesktop/systemd1 {
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -1843,8 +1845,12 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t TimeoutAbortUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
-      readonly t RuntimeMaxUSec = \&.\&.\&.;
+      readonly s TimeoutStartFailureMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s TimeoutStopFailureMode = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t RuntimeMaxUSec = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t WatchdogUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t WatchdogTimestamp = \&.\&.\&.;
@@ -2602,9 +2608,20 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
 
 
 
+
+
 .SS "Properties"
 .PP
 Most properties of the Service interface map directly to the corresponding settings in service unit files\&. For the sake of brevity, here\*(Aqs a list of all exceptions only:
+.PP
+\fITimeoutStartUSec\fR,
+\fITimeoutStopUSec\fR
+and
+\fITimeoutAbortUSec\fR
+contain the start, stop and abort timeouts, in microseconds\&. Note the slight difference in naming when compared to the matching unit file settings (see
+\fBsystemd.service\fR(7)): these bus properties strictly use microseconds (and thus are suffixed
+\fI\&...USec\fR) while the unit file settings default to a time unit of seconds (and thus are suffixed
+\fI\&...Sec\fR), unless a different unit is explicitly specified\&. This reflects that fact that internally the service manager deals in microsecond units only, and the bus properties are a relatively low\-level (binary) concept exposing this\&. The unit file settings on the other hand are relatively high\-level (string\-based) concepts and thus support more user friendly time specifications which default to second time units but allow other units too, if specified\&.
 .PP
 \fIWatchdogTimestamp\fR
 and
@@ -2754,6 +2771,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly b PassCredentials = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PassSecurity = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly b PassPacketInfo = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b RemoveOnStop = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3225,6 +3244,7 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -5427,7 +5447,7 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
 Most properties correspond directly with the matching settings in slice unit files\&.
 .SH "SCOPE UNIT OBJECTS"
 .PP
-All slice unit objects implement the
+All scope unit objects implement the
 org\&.freedesktop\&.systemd1\&.Scope
 interface (described here) in addition to the generic
 org\&.freedesktop\&.systemd1\&.Unit

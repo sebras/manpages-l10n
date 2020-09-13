@@ -63,7 +63,9 @@ for an
 for an
 "s", \&.\&.\&.) which are set based on the values in the message\&. As an exception, in case of array and variant types, the first argument is an "input" argument that further specifies how the message should be read\&. See the table below for a complete list of allowed arguments and their types\&. Note that, if the basic type is a pointer (e\&.g\&.,
 \fBconst char *\fR
-in the case of a string), the argument is a pointer to a pointer, and also the pointer value that is written is only borrowed and the contents must be copied if they are to be used after the end of the messages lifetime\&.
+in the case of a string), the argument is a pointer to a pointer, and also the pointer value that is written is only borrowed and the contents must be copied if they are to be used after the end of the messages lifetime\&. If the type is
+"h"
+(UNIX file descriptor), the descriptor is not duplicated by this call and the returned descriptor remains in possession of the message object, and needs to be duplicated by the caller in order to keep an open reference to it after the message object is freed\&.
 .PP
 Each argument may also be
 \fBNULL\fR, in which case the value is read and ignored\&.
@@ -456,6 +458,22 @@ const char *s, *t, *u;
 
 sd_bus_message_read(m, "a{is}", 3, &i, &s, &j, &t, &k, &u);
      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Read a single file descriptor, and duplicate it in order to keep it open after the message is freed\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+sd_bus_message *m;
+int fd, fd_copy;
+
+sd_bus_message_read(m, "h", &fd);
+fd_copy = fcntl(fd, FD_DUPFD_CLOEXEC, 3);
 .fi
 .if n \{\
 .RE

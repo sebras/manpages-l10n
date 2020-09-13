@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 245" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 246" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -71,7 +71,7 @@ $XDG_RUNTIME_DIR/systemd/generator\&.late/*
 .PP
 A unit file is a plain text ini\-style file that encodes information about a service, a socket, a device, a mount point, an automount point, a swap file or partition, a start\-up target, a watched file system path, a timer controlled and supervised by
 \fBsystemd\fR(1), a resource management slice or a group of externally created processes\&. See
-\fBsystemd.syntax\fR(5)
+\fBsystemd.syntax\fR(7)
 for a general description of the syntax\&.
 .PP
 This man page lists the common configuration options of all the unit types\&. These options need to be configured in the [Unit] or [Install] sections of the unit files\&.
@@ -862,14 +862,18 @@ ensures that the configured unit is started before the listed unit begins starti
 \fIAfter=\fR
 ensures the opposite, that the listed unit is fully started up before the configured unit is started\&.
 .sp
-When two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. i\&.e\&. if a unit is configured with
+When two units with an ordering dependency between them are shut down, the inverse of the start\-up order is applied\&. I\&.e\&. if a unit is configured with
 \fIAfter=\fR
 on another unit, the former is stopped before the latter if both are shut down\&. Given two units with any ordering dependency between them, if one unit is shut down and the other is started up, the shutdown is ordered before the start\-up\&. It doesn\*(Aqt matter if the ordering dependency is
 \fIAfter=\fR
 or
 \fIBefore=\fR, in this case\&. It also doesn\*(Aqt matter which of the two is shut down, as long as one is shut down and the other is started up; the shutdown is ordered before the start\-up in all cases\&. If two units have no ordering dependencies between them, they are shut down or started up simultaneously, and no ordering takes place\&. It depends on the unit type when precisely a unit has finished starting up\&. Most importantly, for service units start\-up is considered completed for the purpose of
 \fIBefore=\fR/\fIAfter=\fR
-when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&. Note that this does includes ExecStartPost (or ExecStopPost for the shutdown case)\&.
+when all its configured start\-up commands have been invoked and they either failed or reported start\-up success\&. Note that this does includes
+\fIExecStartPost=\fR
+(or
+\fIExecStopPost=\fR
+for the shutdown case)\&.
 .sp
 Note that those settings are independent of and orthogonal to the requirement dependencies as configured by
 \fIRequires=\fR,
@@ -951,7 +955,7 @@ will be enqueued\&. See
 \fB\-\-job\-mode=\fR
 option for details on the possible values\&. If this is set to
 "isolate", only a single unit may be listed in
-\fIOnFailure=\fR\&.\&.
+\fIOnFailure=\fR\&.
 .RE
 .PP
 \fIIgnoreOnIsolate=\fR
@@ -959,7 +963,7 @@ option for details on the possible values\&. If this is set to
 Takes a boolean argument\&. If
 \fBtrue\fR, this unit will not be stopped when isolating another unit\&. Defaults to
 \fBfalse\fR
-for service, target, socket, busname, timer, and path units, and
+for service, target, socket, timer, and path units, and
 \fBtrue\fR
 for slice, scope, device, swap, mount, and automount units\&.
 .RE
@@ -1148,11 +1152,11 @@ Configure an additional action to take if the rate limit configured with
 \fIStartLimitIntervalSec=\fR
 and
 \fIStartLimitBurst=\fR
-is hit\&. Takes the same values as the setting
+is hit\&. Takes the same values as the
 \fIFailureAction=\fR/\fISuccessAction=\fR
-settings and executes the same actions\&. If
+settings\&. If
 \fBnone\fR
-is set, hitting the rate limit will trigger no action besides that the start will not be permitted\&. Defaults to
+is set, hitting the rate limit will trigger no action except that the start will not be permitted\&. Defaults to
 \fBnone\fR\&.
 .RE
 .PP
@@ -1270,6 +1274,7 @@ to test against a generic type of virtualization solution, or one of
 "podman",
 "rkt",
 "wsl",
+"proot",
 "acrn"
 to test against a specific implementation, or
 "private\-users"
@@ -1307,6 +1312,15 @@ may be used to check whether the kernel version (as reported by
 a relative version comparison is done, otherwise the specified string is matched with shell\-style globs\&.
 .sp
 Note that using the kernel version string is an unreliable way to determine which features are supported by a kernel, because of the widespread practice of backporting drivers, features, and fixes from newer upstream kernels into older versions provided by distributions\&. Hence, this check is inherently unportable and should not be used for units which may be used on different distributions\&.
+.RE
+.PP
+\fIConditionEnvironment=\fR
+.RS 4
+\fIConditionEnvironment=\fR
+may be used to check whether a specific environment variable is set (or if prefixed with the exclamation mark \(em unset) in the service manager\*(Aqs environment block\&. The argument may be a single word, to check if the variable with this name is defined in the environment block, or an assignment ("\fIname\fR=\fIvalue\fR"), to check if the variable with this exact value is defined\&. Note that the environment block of the service manager itself is checked, i\&.e\&. not any variables defined with
+\fIEnvironment=\fR
+or
+\fIEnvironmentFile=\fR, as described above\&. This is particularly useful when the service manager runs inside a containerized environment or as per\-user service manager, in order to check for variables passed in by the enclosing container manager or PAM\&.
 .RE
 .PP
 \fIConditionSecurity=\fR
@@ -1357,6 +1371,14 @@ or
 /var
 on the next following boot\&. Units making use of this condition should order themselves before
 \fBsystemd-update-done.service\fR(8), to make sure they run before the stamp file\*(Aqs modification time gets reset indicating a completed update\&.
+.sp
+If the
+\fIsystemd\&.condition\-needs\-update=\fR
+option is specified on the kernel command line (taking a boolean), it will override the result of this condition check, taking precedence over any file modification time checks\&. If it is used
+systemd\-update\-done\&.service
+will not have immediate effect on any following
+\fIConditionNeedsUpdate=\fR
+checks, until the system is rebooted where the kernel command line option is not specified anymore\&.
 .RE
 .PP
 \fIConditionFirstBoot=\fR
@@ -1369,6 +1391,12 @@ with no
 /etc/machine\-id)\&. This may be used to populate
 /etc
 on the first boot after factory reset, or when a new system instance boots up for the first time\&.
+.sp
+If the
+\fIsystemd\&.condition\-first\-boot=\fR
+option is specified on the kernel command line (taking a boolean), it will override the result of this condition check, taking precedence over
+/etc/machine\-id
+existence checks\&.
 .RE
 .PP
 \fIConditionPathExists=\fR
@@ -1415,6 +1443,14 @@ but verifies that a certain path exists and is a mount point\&.
 is similar to
 \fIConditionPathExists=\fR
 but verifies that the underlying file system is readable and writable (i\&.e\&. not mounted read\-only)\&.
+.RE
+.PP
+\fIConditionPathIsEncrypted=\fR
+.RS 4
+\fIConditionPathIsEncrypted=\fR
+is similar to
+\fIConditionPathExists=\fR
+but verifies that the underlying file system\*(Aqs backing block device is encrypted using dm\-crypt/LUKS\&. Note that this check does not cover ext4 per\-directory encryption, and only detects block level encryption\&. Moreover, if the specified path resides on a file system on top of a loopback block device, only encryption above the loopback device is detected\&. It is not detected whether the file system backing the loopback block device is encrypted\&.
 .RE
 .PP
 \fIConditionDirectoryNotEmpty=\fR
@@ -1672,9 +1708,7 @@ Note:
 is used to group device aliases and points to the "primary" device unit that systemd is using to track device state, usually corresponding to a sysfs path\&. It does not show up in the "target" unit\&.
 .SH "[INSTALL] SECTION OPTIONS"
 .PP
-Unit files may include an
-"[Install]"
-section, which carries installation information for the unit\&. This section is not interpreted by
+Unit files may include an [Install] section, which carries installation information for the unit\&. This section is not interpreted by
 \fBsystemd\fR(1)
 during runtime; it is used by the
 \fBenable\fR
@@ -1794,13 +1828,33 @@ l l l
 l l l
 l l l
 l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
 l l l.
+T{
+"%a"
+T}:T{
+Architecture
+T}:T{
+A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR above for a full list\&.
+T}
 T{
 "%b"
 T}:T{
 Boot ID
 T}:T{
 The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
+T}
+T{
+"%B"
+T}:T{
+Operating system build ID
+T}:T{
+The operating system build identifier of the running system, as read from the \fIBUILD_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%C"
@@ -1838,6 +1892,13 @@ T}:T{
 Host name
 T}:T{
 The hostname of the running system at the point in time the unit configuration is loaded\&.
+T}
+T{
+"%l"
+T}:T{
+Short host name
+T}:T{
+The hostname of the running system at the point in time the unit configuration is loaded, truncated at the first dot to remove any domain component\&.
 T}
 T{
 "%i"
@@ -1880,6 +1941,13 @@ T}:T{
 Machine ID
 T}:T{
 The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%o"
+T}:T{
+Operating system ID
+T}:T{
+The operating system identifier of the running system, as read from the \fIID=\fR field of /etc/os\-release\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%n"
@@ -1974,7 +2042,7 @@ T{
 T}:T{
 Kernel release
 T}:T{
-Identical to \fBuname \-r\fR output
+Identical to \fBuname \-r\fR output\&.
 T}
 T{
 "%V"
@@ -1982,6 +2050,20 @@ T}:T{
 Directory for larger and persistent temporary files
 T}:T{
 This is either /var/tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&.
+T}
+T{
+"%w"
+T}:T{
+Operating system version ID
+T}:T{
+The operating system version identifier of the running system, as read from the \fIVERSION_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%W"
+T}:T{
+Operating system variant ID
+T}:T{
+The operating system variant identifier of the running system, as read from the \fIVARIANT_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%%"

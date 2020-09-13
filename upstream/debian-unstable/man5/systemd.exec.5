@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 245" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 246" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -200,6 +200,59 @@ or
 below, as it may change the setting of
 \fIDevicePolicy=\fR\&.
 .sp
+Units making use of
+\fIRootImage=\fR
+automatically gain an
+\fIAfter=\fR
+dependency on
+systemd\-udevd\&.service\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fIRootHash=\fR
+.RS 4
+Takes a data integrity (dm\-verity) root hash specified in hexadecimal, or the path to a file containing a root hash in ASCII hexadecimal format\&. This option enables data integrity checks using dm\-verity, if the used image contains the appropriate integrity data (see above) or if
+\fIRootVerity=\fR
+is used\&. The specified hash must match the root hash of integrity data, and is usually at least 256 bits (and hence 64 formatted hexadecimal characters) long (in case of SHA256 for example)\&. If this option is not specified, but the image file carries the
+"user\&.verity\&.roothash"
+extended file attribute (see
+\fBxattr\fR(7)), then the root hash is read from it, also as formatted hexadecimal characters\&. If the extended file attribute is not found (or is not supported by the underlying file system), but a file with the
+\&.roothash
+suffix is found next to the image file, bearing otherwise the same name (except if the image has the
+\&.raw
+suffix, in which case the root hash file must not have it in its name), the root hash is read from it and automatically used, also as formatted hexadecimal characters\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fIRootHashSignature=\fR
+.RS 4
+Takes a PKCS7 formatted binary signature of the
+\fIRootHash=\fR
+option as a path to a DER encoded signature file or as an ASCII base64 string encoding of the DER encoded signature, prefixed by
+"base64:"\&. The dm\-verity volume will only be opened if the signature of the root hash signature is valid and created by a public key present in the kernel keyring\&. If this option is not specified, but a file with the
+\&.roothash\&.p7s
+suffix is found next to the image file, bearing otherwise the same name (except if the image has the
+\&.raw
+suffix, in which case the signature file must not have it in its name), the signature is read from it and automatically used\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fIRootVerity=\fR
+.RS 4
+Takes the path to a data integrity (dm\-verity) file\&. This option enables data integrity checks using dm\-verity, if
+\fIRootImage=\fR
+is used and a root\-hash is passed and if the used image itself does not contains the integrity data\&. The integrity data must be matched by the root hash\&. If this option is not specified, but a file with the
+\&.verity
+suffix is found next to the image file, bearing otherwise the same name (except if the image has the
+\&.raw
+suffix, in which case the verity data file must not have it in its name), the verity data is read from it and automatically used\&.
+.sp
+This option is supported only for disk images that contain a single file system, without an enveloping partition table\&. Images that contain a GPT partition table should instead include both root file system and matching Verity data in the same image, implementing the
+\m[blue]\fBDiscoverable Partition Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+.sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
@@ -325,7 +378,7 @@ are implicitly enabled (and cannot be disabled), to ensure that processes invoke
 \fIProtectSystem=strict\fR
 and
 \fIProtectHome=read\-only\fR
-are implied, thus prohibiting the service to write to arbitrary file system locations\&. In order to allow the service to write to certain directories, they have to be whitelisted using
+are implied, thus prohibiting the service to write to arbitrary file system locations\&. In order to allow the service to write to certain directories, they have to be allow\-listed using
 \fIReadWritePaths=\fR, but care must be taken so that UID/GID recycling doesn\*(Aqt create security issues involving files created by the service\&. Use
 \fIRuntimeDirectory=\fR
 (see below) in order to assign a writable runtime directory to a service, owned by the dynamic user/group and removed automatically when the unit is terminated\&. Use
@@ -500,8 +553,8 @@ for details\&.
 .PP
 \fIAppArmorProfile=\fR
 .RS 4
-Takes a profile name as argument\&. The process executed by the unit will switch to this profile when started\&. Profiles must already be loaded in the kernel, or the unit will fail\&. This result in a non operation if AppArmor is not enabled\&. If prefixed by
-"\-", all errors will be ignored\&. This does not affect commands prefixed with
+Takes a profile name as argument\&. The process executed by the unit will switch to this profile when started\&. Profiles must already be loaded in the kernel, or the unit will fail\&. If prefixed by
+"\-", all errors will be ignored\&. This setting has no effect if AppArmor is not enabled\&. This setting not affect commands prefixed with
 "+"\&.
 .RE
 .PP
@@ -719,6 +772,41 @@ or via a PAM module, will affect the user instance itself and all user units sta
 \fIUMask=\fR\&.
 .RE
 .PP
+\fICoredumpFilter=\fR
+.RS 4
+Controls which types of memory mappings will be saved if the process dumps core (using the
+/proc/\fIpid\fR/coredump_filter
+file)\&. Takes a whitespace\-separated combination of mapping type names or numbers (with the default base 16)\&. Mapping type names are
+\fBprivate\-anonymous\fR,
+\fBshared\-anonymous\fR,
+\fBprivate\-file\-backed\fR,
+\fBshared\-file\-backed\fR,
+\fBelf\-headers\fR,
+\fBprivate\-huge\fR,
+\fBshared\-huge\fR,
+\fBprivate\-dax\fR,
+\fBshared\-dax\fR, and the special values
+\fBall\fR
+(all types) and
+\fBdefault\fR
+(the kernel default of
+"\fBprivate\-anonymous\fR \fBshared\-anonymous\fR \fBelf\-headers\fR \fBprivate\-huge\fR")\&. See
+\fBcore\fR(5)
+for the meaning of the mapping types\&. When specified multiple times, all specified masks are ORed\&. When not set, or if the empty value is assigned, the inherited value is not changed\&.
+.PP
+\fBExample\ \&1.\ \&Add DAX pages to the dump filter\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+CoredumpFilter=default private\-dax shared\-dax
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
 \fIKeyringMode=\fR
 .RS 4
 Controls how the kernel session keyring is set up for the service (see
@@ -852,7 +940,7 @@ and
 \fBlocal\fR\&. A list of NUMA nodes that should be associated with the policy must be specified in
 \fINUMAMask=\fR\&. For more details on each policy please see,
 \fBset_mempolicy\fR(2)\&. For overall overview of NUMA support in Linux see,
-\fBnuma\fR(7)
+\fBnuma\fR(7)\&.
 .RE
 .PP
 \fINUMAMask=\fR
@@ -1088,7 +1176,7 @@ these paths always reside on the host and are mounted from there into the unit\*
 If
 \fIDynamicUser=\fR
 is used in conjunction with
-\fIStateDirectory=\fR,
+\fIStateDirectory=\fR, the logic for
 \fICacheDirectory=\fR
 and
 \fILogsDirectory=\fR
@@ -1212,7 +1300,7 @@ Configures a timeout on the clean\-up operation requested through
 \fBsystemctl clean \&...\fR, see
 \fBsystemctl\fR(1)
 for details\&. Takes the usual time values and defaults to
-\fBinfinity\fR, i\&.e\&. by default no time\-out is applied\&. If a time\-out is configured the clean operation will be aborted forcibly when the time\-out is reached, potentially leaving resources on disk\&.
+\fBinfinity\fR, i\&.e\&. by default no timeout is applied\&. If a timeout is configured the clean operation will be aborted forcibly when the timeout is reached, potentially leaving resources on disk\&.
 .RE
 .PP
 \fIReadWritePaths=\fR, \fIReadOnlyPaths=\fR, \fIInaccessiblePaths=\fR
@@ -1230,7 +1318,7 @@ inside of
 \fIReadOnlyPaths=\fR
 in order to provide writable subdirectories within read\-only directories\&. Use
 \fIReadWritePaths=\fR
-in order to whitelist specific paths for write access if
+in order to allow\-list specific paths for write access if
 \fIProtectSystem=strict\fR
 is used\&.
 .sp
@@ -1321,10 +1409,10 @@ This option is only available for system services and is not supported for servi
 \fIPrivateTmp=\fR
 .RS 4
 Takes a boolean argument\&. If true, sets up a new file system namespace for the executed processes and mounts private
-/tmp
+/tmp/
 and
-/var/tmp
-directories inside it that is not shared by processes outside of the namespace\&. This is useful to secure access to temporary files of the process, but makes sharing between processes via
+/var/tmp/
+directories inside it that are not shared by processes outside of the namespace\&. This is useful to secure access to temporary files of the process, but makes sharing between processes via
 /tmp
 or
 /var/tmp
@@ -1503,7 +1591,7 @@ from the capability bounding set for this unit, installs a system call filter to
 \fIDeviceAllow=char\-rtc r\fR
 is implied\&. This ensures
 /dev/rtc0,
-/dev/rtc1, etc are made read only to the service\&. See
+/dev/rtc1, etc\&. are made read\-only to the service\&. See
 \fBsystemd.resource-control\fR(5)
 for the details about
 \fIDeviceAllow=\fR\&.
@@ -1600,18 +1688,18 @@ This option is only available for system services and is not supported for servi
 .PP
 \fIRestrictAddressFamilies=\fR
 .RS 4
-Restricts the set of socket address families accessible to the processes of this unit\&. Takes a space\-separated list of address family names to whitelist, such as
+Restricts the set of socket address families accessible to the processes of this unit\&. Takes a space\-separated list of address family names to allow\-list, such as
 \fBAF_UNIX\fR,
 \fBAF_INET\fR
 or
 \fBAF_INET6\fR\&. When prefixed with
 \fB~\fR
-the listed address families will be applied as blacklist, otherwise as whitelist\&. Note that this restricts access to the
+the listed address families will be applied as deny list, otherwise as allow list\&. Note that this restricts access to the
 \fBsocket\fR(2)
 system call only\&. Sockets passed into the process by other means (for example, by using socket activation with socket units, see
 \fBsystemd.socket\fR(5)) are unaffected\&. Also, sockets created with
 \fBsocketpair()\fR
-(which creates connected AF_UNIX sockets only) are unaffected\&. Note that this option has no effect on 32\-bit x86, s390, s390x, mips, mips\-le, ppc, ppc\-le, pcc64, ppc64\-le and is ignored (but works correctly on other ABIs, including x86\-64)\&. Note that on systems supporting multiple ABIs (such as x86/x86\-64) it is recommended to turn off alternative ABIs for services, so that they cannot be used to circumvent the restrictions of this option\&. Specifically, it is recommended to combine this option with
+(which creates connected AF_UNIX sockets only) are unaffected\&. Note that this option has no effect on 32\-bit x86, s390, s390x, mips, mips\-le, ppc, ppc\-le, ppc64, ppc64\-le and is ignored (but works correctly on other ABIs, including x86\-64)\&. Note that on systems supporting multiple ABIs (such as x86/x86\-64) it is recommended to turn off alternative ABIs for services, so that they cannot be used to circumvent the restrictions of this option\&. Specifically, it is recommended to combine this option with
 \fISystemCallArchitectures=native\fR
 or similar\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
@@ -1624,7 +1712,7 @@ is implied\&. By default, no restrictions apply, all address families are access
 Use this option to limit exposure of processes to remote access, in particular via exotic and sensitive network protocols, such as
 \fBAF_PACKET\fR\&. Note that in most cases, the local
 \fBAF_UNIX\fR
-address family should be included in the configured whitelist as it is frequently used for local communication, including for
+address family should be included in the configured allow list as it is frequently used for local communication, including for
 \fBsyslog\fR(2)
 logging\&.
 .RE
@@ -1640,7 +1728,7 @@ Restricts access to Linux namespace functionality for the processes of this unit
 \fBpid\fR,
 \fBuser\fR
 and
-\fButs\fR\&. Any namespace type listed is made accessible to the unit\*(Aqs processes, access to namespace types not listed is prohibited (whitelisting)\&. By prepending the list with a single tilde character ("~") the effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted (blacklisting)\&. If the empty string is assigned, the default namespace restrictions are applied, which is equivalent to false\&. This option may appear more than once, in which case the namespace types are merged by
+\fButs\fR\&. Any namespace type listed is made accessible to the unit\*(Aqs processes, access to namespace types not listed is prohibited (allow\-listing)\&. By prepending the list with a single tilde character ("~") the effect may be inverted: only the listed namespace types will be made inaccessible, all unlisted ones are permitted (deny\-listing)\&. If the empty string is assigned, the default namespace restrictions are applied, which is equivalent to false\&. This option may appear more than once, in which case the namespace types are merged by
 \fBOR\fR, or by
 \fBAND\fR
 if the lines are prefixed with
@@ -1839,7 +1927,7 @@ This setting only controls the
 \fIfinal\fR
 propagation setting in effect on all mount points of the file system namespace created for each process of this unit\&. Other file system namespacing unit settings (see the discussion in
 \fIPrivateMounts=\fR
-above) will implicitly disable mount and unmount propagation from the unit\*(Aqs processes towards the host by changing the propagation setting of all mount points in the unit\*(Aqs file system namepace to
+above) will implicitly disable mount and unmount propagation from the unit\*(Aqs processes towards the host by changing the propagation setting of all mount points in the unit\*(Aqs file system namespace to
 \fBslave\fR
 first\&. Setting this option to
 \fBshared\fR
@@ -1851,7 +1939,7 @@ mount propagation is used, but \(em as mentioned \(em as
 \fBslave\fR
 is applied first, propagation from the unit\*(Aqs processes to the host is still turned off\&.
 .sp
-It is not recommended to to use
+It is not recommended to use
 \fBprivate\fR
 mount propagation for units, as this means temporary mounts (such as removable media) of the host will stay mounted and thus indefinitely busy in forked off processes, as unmount propagation events won\*(Aqt be received by the file system namespace of the unit\&.
 .sp
@@ -1866,10 +1954,10 @@ This option is only available for system services and is not supported for servi
 .RS 4
 Takes a space\-separated list of system call names\&. If this setting is used, all system calls executed by the unit processes except for the listed ones will result in immediate process termination with the
 \fBSIGSYS\fR
-signal (whitelisting)\&. (See
+signal (allow\-listing)\&. (See
 \fISystemCallErrorNumber=\fR
 below for changing the default action)\&. If the first character of the list is
-"~", the effect is inverted: only the listed system calls will result in immediate process termination (blacklisting)\&. Blacklisted system calls and system call groups may optionally be suffixed with a colon (":") and
+"~", the effect is inverted: only the listed system calls will result in immediate process termination (deny\-listing)\&. Deny\-listed system calls and system call groups may optionally be suffixed with a colon (":") and
 "errno"
 error number (between 0 and 4095) or errno name such as
 \fBEPERM\fR,
@@ -1878,7 +1966,7 @@ or
 \fBEUCLEAN\fR
 (see
 \fBerrno\fR(3)
-for a full list)\&. This value will be returned when a blacklisted system call is triggered, instead of terminating the processes immediately\&. This value takes precedence over the one given in
+for a full list)\&. This value will be returned when a deny\-listed system call is triggered, instead of terminating the processes immediately\&. This value takes precedence over the one given in
 \fISystemCallErrorNumber=\fR, see below\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
@@ -1891,7 +1979,7 @@ is implied\&. This feature makes use of the Secure Computing Mode 2 interfaces o
 \fBgetrlimit\fR,
 \fBrt_sigreturn\fR,
 \fBsigreturn\fR
-system calls and the system calls for querying time and sleeping are implicitly whitelisted and do not need to be listed explicitly\&. This option may be specified more than once, in which case the filter masks are merged\&. If the empty string is assigned, the filter is reset, all prior assignments will have no effect\&. This does not affect commands prefixed with
+system calls and the system calls for querying time and sleeping are implicitly allow\-listed and do not need to be listed explicitly\&. This option may be specified more than once, in which case the filter masks are merged\&. If the empty string is assigned, the filter is reset, all prior assignments will have no effect\&. This does not affect commands prefixed with
 "+"\&.
 .sp
 Note that on systems supporting multiple ABIs (such as x86/x86\-64) it is recommended to turn off alternative ABIs for services, so that they cannot be used to circumvent the restrictions of this option\&. Specifically, it is recommended to combine this option with
@@ -1902,10 +1990,10 @@ Note that strict system call filters may impact execution and error handling cod
 \fBexecve\fR
 system call is required for the execution of the service binary \(em if it is blocked service invocation will necessarily fail\&. Also, if execution of the service binary fails for some reason (for example: missing service executable), the error handling logic might require access to an additional set of system calls in order to process and log this failure correctly\&. It might be necessary to temporarily disable system call filters in order to simplify debugging of such failures\&.
 .sp
-If you specify both types of this option (i\&.e\&. whitelisting and blacklisting), the first encountered will take precedence and will dictate the default action (termination or approval of a system call)\&. Then the next occurrences of this option will add or delete the listed system calls from the set of the filtered system calls, depending of its type and the default action\&. (For example, if you have started with a whitelisting of
+If you specify both types of this option (i\&.e\&. allow\-listing and deny\-listing), the first encountered will take precedence and will dictate the default action (termination or approval of a system call)\&. Then the next occurrences of this option will add or delete the listed system calls from the set of the filtered system calls, depending of its type and the default action\&. (For example, if you have started with an allow list rule for
 \fBread\fR
 and
-\fBwrite\fR, and right after it add a blacklisting of
+\fBwrite\fR, and right after it add a deny list rule for
 \fBwrite\fR, then
 \fBwrite\fR
 will be removed from the set\&.)
@@ -1987,7 +2075,7 @@ T}
 T{
 @file\-system
 T}:T{
-File system operations: opening, creating files and directories for read and write, renaming and removing them, reading file properties, or creating hard and symbolic links\&.
+File system operations: opening, creating files and directories for read and write, renaming and removing them, reading file properties, or creating hard and symbolic links
 T}
 T{
 @io\-event
@@ -2007,7 +2095,7 @@ T}
 T{
 @memlock
 T}:T{
-Locking of memory into RAM (\fBmlock\fR(2), \fBmlockall\fR(2) and related calls)
+Locking of memory in RAM (\fBmlock\fR(2), \fBmlockall\fR(2) and related calls)
 T}
 T{
 @module
@@ -2037,7 +2125,7 @@ T}
 T{
 @process
 T}:T{
-Process control, execution, namespaceing operations (\fBclone\fR(2), \fBkill\fR(2), \fBnamespaces\fR(7), \&...
+Process control, execution, namespaceing operations (\fBclone\fR(2), \fBkill\fR(2), \fBnamespaces\fR(7), \&...)
 T}
 T{
 @raw\-io
@@ -2072,12 +2160,12 @@ T}
 T{
 @sync
 T}:T{
-Synchronizing files and memory to disk: (\fBfsync\fR(2), \fBmsync\fR(2), and related calls)
+Synchronizing files and memory to disk (\fBfsync\fR(2), \fBmsync\fR(2), and related calls)
 T}
 T{
 @system\-service
 T}:T{
-A reasonable set of system calls used by common system services, excluding any special purpose calls\&. This is the recommended starting point for whitelisting system calls for system services, as it contains what is typically needed by system services, but excludes overly specific interfaces\&. For example, the following APIs are excluded: "@clock", "@mount", "@swap", "@reboot"\&.
+A reasonable set of system calls used by common system services, excluding any special purpose calls\&. This is the recommended starting point for allow\-listing system calls for system services, as it contains what is typically needed by system services, but excludes overly specific interfaces\&. For example, the following APIs are excluded: "@clock", "@mount", "@swap", "@reboot"\&.
 T}
 T{
 @timer
@@ -2090,7 +2178,7 @@ Note, that as new system calls are added to the kernel, additional system calls 
 \fBsystemd\-analyze\ \&syscall\-filter\fR
 to list the actual list of system calls in each filter\&.
 .sp
-Generally, whitelisting system calls (rather than blacklisting) is the safer mode of operation\&. It is recommended to enforce system call whitelists for all long\-running system services\&. Specifically, the following lines are a relatively safe basic choice for the majority of system services:
+Generally, allow\-listing system calls (rather than deny\-listing) is the safer mode of operation\&. It is recommended to enforce system call allow lists for all long\-running system services\&. Specifically, the following lines are a relatively safe basic choice for the majority of system services:
 .sp
 .if n \{\
 .RS 4
@@ -2108,7 +2196,7 @@ Note that various kernel system calls are defined redundantly: there are multipl
 \fBpidfd_send_signal()\fR
 system call may be used to execute operations similar to what can be done with the older
 \fBkill()\fR
-system call, hence blocking the latter without the former only provides weak protection\&. Since new system calls are added regularly to the kernel as development progresses, keeping system call blacklists comprehensive requires constant work\&. It is thus recommended to use whitelisting instead, which offers the benefit that new system calls are by default implicitly blocked until the whitelist is updated\&.
+system call, hence blocking the latter without the former only provides weak protection\&. Since new system calls are added regularly to the kernel as development progresses, keeping system call deny lists comprehensive requires constant work\&. It is thus recommended to use allow\-listing instead, which offers the benefit that new system calls are by default implicitly blocked until the allow list is updated\&.
 .sp
 Also note that a number of system calls are required to be accessible for the dynamic linker to work\&. The dynamic linker is required for running most regular programs (specifically: all dynamic ELF binaries, which is how most distributions build packaged programs)\&. This means that blocking these system calls (which include
 \fBopen()\fR,
@@ -2163,7 +2251,7 @@ implicitly maps to the native architecture of the system (or more precisely: to 
 capability (e\&.g\&. setting
 \fIUser=nobody\fR),
 \fINoNewPrivileges=yes\fR
-is implied\&. By default, this option is set to the empty list, i\&.e\&. no system call architecture filtering is applied\&.
+is implied\&. By default, this option is set to the empty list, i\&.e\&. no filtering is applied\&.
 .sp
 If this setting is used, processes of this unit will only be permitted to call native system calls, and system calls of the specified architectures\&. For the purposes of this option, the x32 architecture is treated as including x86\-64 system calls\&. However, this setting still fulfills its purpose, as explained below, on x32\&.
 .sp
@@ -2376,16 +2464,6 @@ for more details about named file descriptors and their ordering\&.
 .sp
 This setting defaults to
 \fBnull\fR\&.
-.sp
-Note that services which specify
-\fBDefaultDependencies=no\fR
-and use
-\fIStandardInput=\fR
-or
-\fIStandardOutput=\fR
-with
-\fBtty\fR/\fBtty\-force\fR/\fBtty\-fail\fR, should specify
-\fBAfter=systemd\-vconsole\-setup\&.service\fR, to make sure that the tty initialization is finished before they start\&.
 .RE
 .PP
 \fIStandardOutput=\fR
@@ -2440,7 +2518,7 @@ socket in the file system, as in that case only a single stream connection is cr
 .sp
 \fBappend:\fR\fB\fIpath\fR\fR
 is similar to
-\fBfile:\fR\fB\fIpath \fR\fR
+\fBfile:\fR\fB\fIpath\fR\fR
 above, but it opens the file in append mode\&.
 .sp
 \fBsocket\fR
@@ -2626,6 +2704,8 @@ instance so that they are automatically established prior to the unit starting u
 output, unless the
 \fB\-\-namespace=\fR
 option is used\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
 \fISyslogIdentifier=\fR
@@ -2898,7 +2978,7 @@ If the same environment variables are set by multiple of these sources, the late
 \fIUnsetEnvironment=\fR
 are removed again from the compiled environment variable list, immediately before it is passed to the executed process\&.
 .PP
-The following select environment variables are set or propagated by the service manager for each invoked process:
+The following environment variables are set or propagated by the service manager for each invoked process:
 .PP
 \fI$PATH\fR
 .RS 4
@@ -2953,7 +3033,7 @@ for more information\&.
 .PP
 \fI$RUNTIME_DIRECTORY\fR, \fI$STATE_DIRECTORY\fR, \fI$CACHE_DIRECTORY\fR, \fI$LOGS_DIRECTORY\fR, \fI$CONFIGURATION_DIRECTORY\fR
 .RS 4
-Contains and absolute paths to the directories defined with
+Absolute paths to the directories defined with
 \fIRuntimeDirectory=\fR,
 \fIStateDirectory=\fR,
 \fICacheDirectory=\fR,
@@ -3002,6 +3082,13 @@ Terminal type, set only for units connected to a terminal (\fIStandardInput=tty\
 \fIStandardOutput=tty\fR, or
 \fIStandardError=tty\fR)\&. See
 \fBtermcap\fR(5)\&.
+.RE
+.PP
+\fI$LOG_NAMESPACE\fR
+.RS 4
+If the
+\fILogNamespace=\fR
+service setting is used, contains name of the selected logging namespace\&.
 .RE
 .PP
 \fI$JOURNAL_STREAM\fR
@@ -3741,7 +3828,7 @@ T{
 T}:T{
 \fBEXIT_NUMA_POLICY\fR
 T}:T{
-Failed to set up unit\*(Aqs NUMA memory policy\&. See \fINUMAPolicy=\fR and \fINUMAMask=\fRabove\&.
+Failed to set up unit\*(Aqs NUMA memory policy\&. See \fINUMAPolicy=\fR and \fINUMAMask=\fR above\&.
 T}
 .TE
 .sp 1

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 245" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 246" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@ systemd.network \- Network configuration
 .PP
 A plain ini\-style text file that encodes network configuration for matching network interfaces, used by
 \fBsystemd-networkd\fR(8)\&. See
-\fBsystemd.syntax\fR(5)
+\fBsystemd.syntax\fR(7)
 for a general description of the syntax\&.
 .PP
 The main network file must have the extension
@@ -76,17 +76,9 @@ Note that an interface without any static IPv6 addresses configured, and neither
 /proc/sys/net/ipv6/conf/\fIifname\fR/disable_ipv6\&.
 .SH "[MATCH] SECTION OPTIONS"
 .PP
-The network file contains a
-"[Match]"
-section, which determines if a given network file may be applied to a given device; and a
-"[Network]"
-section specifying how the device should be configured\&. The first (in lexical order) of the network files that matches a given device is applied, all later files are ignored, even if they match as well\&.
+The network file contains a [Match] section, which determines if a given network file may be applied to a given device; and a [Network] section specifying how the device should be configured\&. The first (in lexical order) of the network files that matches a given device is applied, all later files are ignored, even if they match as well\&.
 .PP
-A network file is said to match a network interface if all matches specified by the
-"[Match]"
-section are satisfied\&. When a network file does not contain valid settings in
-"[Match]"
-section, then the file will match all interfaces and
+A network file is said to match a network interface if all matches specified by the [Match] section are satisfied\&. When a network file does not contain valid settings in [Match] section, then the file will match all interfaces and
 \fBsystemd\-networkd\fR
 warns about that\&. Hint: to avoid the warning and to make it clear that all interfaces shall be matched, add the following:
 .sp
@@ -198,7 +190,7 @@ A whitespace\-separated list of shell\-style globs matching the SSID of the curr
 \fIBSSID=\fR
 .RS 4
 A whitespace\-separated list of hardware address of the currently connected wireless LAN\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. See the example in
-\fIMACAddress=\fR\&. This option may appear more than one, in which case the lists are merged\&. If the empty string is assigned to this option, the list of BSSID defined prior to this is reset\&.
+\fIMACAddress=\fR\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list is reset\&.
 .RE
 .PP
 \fIHost=\fR
@@ -248,9 +240,7 @@ for details\&. When prefixed with an exclamation mark ("!"), the result is negat
 .RE
 .SH "[LINK] SECTION OPTIONS"
 .PP
-The
-"[Link]"
-section accepts the following keys:
+The [Link] section accepts the following keys:
 .PP
 \fIMACAddress=\fR
 .RS 4
@@ -290,6 +280,11 @@ Takes a boolean\&. When
 This is useful for preventing later matching network files from interfering with certain interfaces that are fully controlled by other applications\&.
 .RE
 .PP
+\fIGroup=\fR
+.RS 4
+Link groups are similar to port ranges found in managed switches\&. When network interfaces are added to a numbered group, operations on all the interfaces from that group can be performed at once\&. An unsigned integer in the range 0\(em4294967294\&. Defaults to unset\&.
+.RE
+.PP
 \fIRequiredForOnline=\fR
 .RS 4
 Takes a boolean or a minimum operational state and an optional maximum operational state\&. Please see
@@ -307,11 +302,67 @@ The network will be brought up normally in all cases, but in the event that ther
 if
 "RequiredForOnline=no"\&.
 .RE
+.SH "[SR\-IOV] SECTION OPTIONS"
+.PP
+The [SR\-IOV] section accepts the following keys\&. Specify several [SR\-IOV] sections to configure several SR\-IOVs\&. SR\-IOV provides the ability to partition a single physical PCI resource into virtual PCI functions which can then be injected into a VM\&. In the case of network VFs, SR\-IOV improves north\-south network performance (that is, traffic with endpoints outside the host machine) by allowing traffic to bypass the host machine\(cqs network stack\&.
+.PP
+\fIVirtualFunction=\fR
+.RS 4
+Specifies a Virtual Function (VF), lightweight PCIe function designed solely to move data in and out\&. Takes an unsigned integer in the range 0\&.\&.2147483646\&. This option is compulsory\&.
+.RE
+.PP
+\fIVLANId=\fR
+.RS 4
+Specifies VLAN ID of the virtual function\&. Takes an unsigned integer in the range 1\&.\&.4095\&.
+.RE
+.PP
+\fIQualityOfService=\fR
+.RS 4
+Specifies quality of service of the virtual function\&. Takes an unsigned integer in the range 1\&.\&.4294967294\&.
+.RE
+.PP
+\fIVLANProtocol=\fR
+.RS 4
+Specifies VLAN protocol of the virtual function\&. Takes
+"802\&.1Q"
+or
+"802\&.1ad"\&.
+.RE
+.PP
+\fIMACSpoofCheck=\fR
+.RS 4
+Takes a boolean\&. Controls the MAC spoof checking\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIQueryReceiveSideScaling=\fR
+.RS 4
+Takes a boolean\&. Toggle the ability of querying the receive side scaling (RSS) configuration of the virtual function (VF)\&. The VF RSS information like RSS hash key may be considered sensitive on some devices where this information is shared between VF and the physical function (PF)\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITrust=\fR
+.RS 4
+Takes a boolean\&. Allows to set trust mode of the virtual function (VF)\&. When set, VF users can set a specific feature which may impact security and/or performance\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fILinkState=\fR
+.RS 4
+Allows to set the link state of the virtual function (VF)\&. Takes a boolean or a special value
+"auto"\&. Setting to
+"auto"
+means a reflection of the physical function (PF) link state,
+"yes"
+lets the VF to communicate with other VFs on this host even if the PF link state is down,
+"no"
+causes the hardware to drop any packets sent by the VF\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIMACAddress=\fR
+.RS 4
+Specifies the MAC address for the virtual function\&.
+.RE
 .SH "[NETWORK] SECTION OPTIONS"
 .PP
-The
-"[Network]"
-section accepts the following keys:
+The [Network] section accepts the following keys:
 .PP
 \fIDescription=\fR
 .RS 4
@@ -334,20 +385,14 @@ Furthermore, note that by default the domain name specified through DHCP is not 
 \fBUseDomains=\fR
 below\&.
 .sp
-See the
-"[DHCPv4]"
-or
-"[DHCPv6]"
-section below for further configuration options for the DHCP client support\&.
+See the [DHCPv4] or [DHCPv6] sections below for further configuration options for the DHCP client support\&.
 .RE
 .PP
 \fIDHCPServer=\fR
 .RS 4
 Takes a boolean\&. If set to
 "yes", DHCPv4 server will be started\&. Defaults to
-"no"\&. Further settings for the DHCP server may be set in the
-"[DHCPServer]"
-section described below\&.
+"no"\&. Further settings for the DHCP server may be set in the [DHCPServer] section described below\&.
 .RE
 .PP
 \fILinkLocalAddressing=\fR
@@ -372,6 +417,22 @@ or
 is set, defaults to
 "no", and if not, defaults to
 "ipv6"\&.
+.RE
+.PP
+\fIIPv6LinkLocalAddressGenerationMode=\fR
+.RS 4
+Specifies how IPv6 link local address is generated\&. Takes one of
+"eui64",
+"none",
+"stable\-privacy"
+and
+"random"\&. When unset, the kernel\*(Aqs default will be used\&. Note that if
+\fILinkLocalAdressing=\fR
+not configured as
+"ipv6"
+then
+\fIIPv6LinkLocalAddressGenerationMode=\fR
+is ignored\&.
 .RE
 .PP
 \fIIPv4LLRoute=\fR
@@ -454,7 +515,7 @@ option\&. Defaults to false\&. This setting is read by
 .PP
 \fIDNSSEC=\fR
 .RS 4
-Takes a boolean\&. or
+Takes a boolean or
 "allow\-downgrade"\&. When true, enables
 \m[blue]\fBDNSSEC\fR\m[]\&\s-2\u[5]\d\s+2
 DNS validation support on the link\&. When set to
@@ -490,7 +551,7 @@ Controls support for Ethernet LLDP packet emission\&. Accepts a boolean paramete
 "nearest\-bridge",
 "non\-tpmr\-bridge"
 and
-"customer\-bridge"\&. Defaults to false, which turns off LLDP packet emission\&. If not false, a short LLDP packet with information about the local system is sent out in regular intervals on the link\&. The LLDP packet will contain information about the local host name, the local machine ID (as stored in
+"customer\-bridge"\&. Defaults to false, which turns off LLDP packet emission\&. If not false, a short LLDP packet with information about the local system is sent out in regular intervals on the link\&. The LLDP packet will contain information about the local hostname, the local machine ID (as stored in
 \fBmachine-id\fR(5)) and the local interface name, as well as the pretty hostname of the system (as set in
 \fBmachine-info\fR(5))\&. LLDP emission is only available on Ethernet links\&. Note that this setting passes data suitable for identification of host to the network and should thus not be enabled on untrusted networks, where such identification data should not be made available\&. Use this option to permit other systems to identify on which interfaces they are connected to this system\&. The three special values control propagation of the LLDP packets\&. The
 "nearest\-bridge"
@@ -533,15 +594,22 @@ The gateway address, which must be in the format described in
 \fIDNS=\fR
 .RS 4
 A DNS server address, which must be in the format described in
-\fBinet_pton\fR(3)\&. This option may be specified more than once\&. This setting is read by
+\fBinet_pton\fR(3)\&. This option may be specified more than once\&. Each address can optionally take a port number separated with
+":", a network interface name or index separated with
+"%", and a Server Name Indication (SNI) separated with
+"#"\&. When IPv6 address is specified with a port number, then the address must be in the square brackets\&. That is, the acceptable full formats are
+"111\&.222\&.333\&.444:9953%ifname#example\&.com"
+for IPv4 and
+"[1111:2222::3333]:9953%ifname#example\&.com"
+for IPv6\&. This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&. This setting is read by
 \fBsystemd-resolved.service\fR(8)\&.
 .RE
 .PP
 \fIDomains=\fR
 .RS 4
-A whitespace\-separated list of domains which should be resolved using the DNS servers on this link\&. Each item in the list should be a domain name, optionally prefixed with a tilde ("~")\&. The domains with the prefix are called "routing\-only domains"\&. The domains without the prefix are called "search domains" and are first used as search suffixes for extending single\-label host names (host names containing no dots) to become fully qualified domain names (FQDNs)\&. If a single\-label host name is resolved on this interface, each of the specified search domains are appended to it in turn, converting it into a fully qualified domain name, until one of them may be successfully resolved\&.
+A whitespace\-separated list of domains which should be resolved using the DNS servers on this link\&. Each item in the list should be a domain name, optionally prefixed with a tilde ("~")\&. The domains with the prefix are called "routing\-only domains"\&. The domains without the prefix are called "search domains" and are first used as search suffixes for extending single\-label hostnames (hostnames containing no dots) to become fully qualified domain names (FQDNs)\&. If a single\-label hostname is resolved on this interface, each of the specified search domains are appended to it in turn, converting it into a fully qualified domain name, until one of them may be successfully resolved\&.
 .sp
-Both "search" and "routing\-only" domains are used for routing of DNS queries: look\-ups for host names ending in those domains (hence also single label names, if any "search domains" are listed), are routed to the DNS servers configured for this interface\&. The domain routing logic is particularly useful on multi\-homed hosts with DNS servers serving particular private DNS zones on each interface\&.
+Both "search" and "routing\-only" domains are used for routing of DNS queries: look\-ups for hostnames ending in those domains (hence also single label names, if any "search domains" are listed), are routed to the DNS servers configured for this interface\&. The domain routing logic is particularly useful on multi\-homed hosts with DNS servers serving particular private DNS zones on each interface\&.
 .sp
 The "routing\-only" domain
 "~\&."
@@ -565,7 +633,7 @@ setting\&. If false, this link\*(Aqs configured DNS servers are never used for s
 .PP
 \fINTP=\fR
 .RS 4
-An NTP server address\&. This option may be specified more than once\&. This setting is read by
+An NTP server address (either an IP address, or a hostname)\&. This option may be specified more than once\&. This setting is read by
 \fBsystemd-timesyncd.service\fR(8)\&.
 .RE
 .PP
@@ -609,11 +677,9 @@ and
 .PP
 \fIIPv6AcceptRA=\fR
 .RS 4
-Takes a boolean\&. Controls IPv6 Router Advertisement (RA) reception support for the interface\&. If true, RAs are accepted; if false, RAs are ignored\&. When RAs are accepted, they may trigger the start of the DHCPv6 client if the relevant flags are set in the RA data, or if no routers are found on the link\&. The default is to disable RA reception for bridge devices or when IP forwarding is enabled, and to enable it otherwise\&. Cannot be enabled on bond devices and when link local adressing is disabled\&.
+Takes a boolean\&. Controls IPv6 Router Advertisement (RA) reception support for the interface\&. If true, RAs are accepted; if false, RAs are ignored\&. When RAs are accepted, they may trigger the start of the DHCPv6 client if the relevant flags are set in the RA data, or if no routers are found on the link\&. The default is to disable RA reception for bridge devices or when IP forwarding is enabled, and to enable it otherwise\&. Cannot be enabled on bond devices and when link local addressing is disabled\&.
 .sp
-Further settings for the IPv6 RA support may be configured in the
-"[IPv6AcceptRA]"
-section, see below\&.
+Further settings for the IPv6 RA support may be configured in the [IPv6AcceptRA] section, see below\&.
 .sp
 Also see
 \m[blue]\fBip\-sysctl\&.txt\fR\m[]\&\s-2\u[7]\d\s+2
@@ -638,9 +704,14 @@ Configures the amount of IPv6 Duplicate Address Detection (DAD) probes to send\&
 Configures IPv6 Hop Limit\&. For each router that forwards the packet, the hop limit is decremented by 1\&. When the hop limit field reaches zero, the packet is discarded\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
+\fIIPv4AcceptLocal=\fR
+.RS 4
+Takes a boolean\&. Accept packets with local source addresses\&. In combination with suitable routing, this can be used to direct packets between two local interfaces over the wire and have them accepted properly\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
 \fIIPv4ProxyARP=\fR
 .RS 4
-Takes a boolean\&. Configures proxy ARP for IPv4\&. Proxy ARP is the technique in which one host, usually a router, answers ARP requests intended for another machine\&. By "faking" its identity, the router accepts responsibility for routing packets to the "real" destination\&. (see
+Takes a boolean\&. Configures proxy ARP for IPv4\&. Proxy ARP is the technique in which one host, usually a router, answers ARP requests intended for another machine\&. By "faking" its identity, the router accepts responsibility for routing packets to the "real" destination\&. See
 \m[blue]\fBRFC 1027\fR\m[]\&\s-2\u[9]\d\s+2\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
@@ -665,24 +736,14 @@ has been set to false\&. When unset, the kernel\*(Aqs default will be used\&.
 .RS 4
 Whether to enable or disable Router Advertisement sending on a link\&. Allowed values are
 "static"
-which distributes prefixes as defined in the
-"[IPv6PrefixDelegation]"
-and any
-"[IPv6Prefix]"
-sections,
+which distributes prefixes as defined in the [IPv6PrefixDelegation] and any [IPv6Prefix] sections,
 "dhcpv6"
-which requests prefixes using a DHCPv6 client configured for another link and any values configured in the
-"[IPv6PrefixDelegation]"
-section while ignoring all static prefix configuration sections,
+which requests prefixes using a DHCPv6 client configured for another link and any values configured in the [IPv6PrefixDelegation] section while ignoring all static prefix configuration sections,
 "yes"
 which uses both static configuration and DHCPv6, and
 "false"
 which turns off IPv6 prefix delegation altogether\&. Defaults to
-"false"\&. See the
-"[IPv6PrefixDelegation]"
-and the
-"[IPv6Prefix]"
-sections for more configuration options\&.
+"false"\&. See the [IPv6PrefixDelegation] and the [IPv6Prefix] sections for more configuration options\&.
 .RE
 .PP
 \fIIPv6MTUBytes=\fR
@@ -768,12 +829,16 @@ and
 .PP
 \fIConfigureWithoutCarrier=\fR
 .RS 4
-Takes a boolean\&. Allows networkd to configure a specific link even if it has no carrier\&. Defaults to false\&.
+Takes a boolean\&. Allows networkd to configure a specific link even if it has no carrier\&. Defaults to false\&. If
+\fBIgnoreCarrierLoss=\fR
+is not explicitly set, it will default to this value\&.
 .RE
 .PP
 \fIIgnoreCarrierLoss=\fR
 .RS 4
-A boolean\&. Allows networkd to retain both the static and dynamic configuration of the interface even if its carrier is lost\&. Defaults to false\&.
+Takes a boolean\&. Allows networkd to retain both the static and dynamic configuration of the interface even if its carrier is lost\&. When unset, the value specified with
+\fBConfigureWithoutCarrier=\fR
+is used\&.
 .RE
 .PP
 \fIXfrm=\fR
@@ -807,19 +872,11 @@ and
 .RE
 .SH "[ADDRESS] SECTION OPTIONS"
 .PP
-An
-"[Address]"
-section accepts the following keys\&. Specify several
-"[Address]"
-sections to configure several addresses\&.
+An [Address] section accepts the following keys\&. Specify several [Address] sections to configure several addresses\&.
 .PP
 \fIAddress=\fR
 .RS 4
-As in the
-"[Network]"
-section\&. This key is mandatory\&. Each
-"[Address]"
-section can contain one
+As in the [Network] section\&. This key is mandatory\&. Each [Address] section can contain one
 \fIAddress=\fR
 setting\&.
 .RE
@@ -862,7 +919,7 @@ The scope of the address, which can be
 "link"
 or
 "host"
-or an unsigned integer ranges 0 to 255\&. Defaults to
+or an unsigned integer in the range 0\(em255\&. Defaults to
 "global"\&.
 .RE
 .PP
@@ -910,11 +967,7 @@ we can get similar functionality for openvswitch (OVS) vxlan interfaces as well 
 .RE
 .SH "[NEIGHBOR] SECTION OPTIONS"
 .PP
-A
-"[Neighbor]"
-section accepts the following keys\&. The neighbor section adds a permanent, static entry to the neighbor table (IPv6) or ARP table (IPv4) for the given hardware address on the links matched for the network\&. Specify several
-"[Neighbor]"
-sections to configure several static neighbors\&.
+A [Neighbor] section accepts the following keys\&. The neighbor section adds a permanent, static entry to the neighbor table (IPv6) or ARP table (IPv4) for the given hardware address on the links matched for the network\&. Specify several [Neighbor] sections to configure several static neighbors\&.
 .PP
 \fIAddress=\fR
 .RS 4
@@ -927,16 +980,12 @@ The link layer address (MAC address or IP address) of the neighbor\&.
 .RE
 .SH "[IPV6ADDRESSLABEL] SECTION OPTIONS"
 .PP
-An
-"[IPv6AddressLabel]"
-section accepts the following keys\&. Specify several
-"[IPv6AddressLabel]"
-sections to configure several address labels\&. IPv6 address labels are used for address selection\&. See
+An [IPv6AddressLabel] section accepts the following keys\&. Specify several [IPv6AddressLabel] sections to configure several address labels\&. IPv6 address labels are used for address selection\&. See
 \m[blue]\fBRFC 3484\fR\m[]\&\s-2\u[14]\d\s+2\&. Precedence is managed by userspace, and only the label itself is stored in the kernel
 .PP
 \fILabel=\fR
 .RS 4
-The label for the prefix (an unsigned integer) ranges 0 to 4294967294\&. 0xffffffff is reserved\&. This key is mandatory\&.
+The label for the prefix, an unsigned integer in the range 0\(en4294967294\&. 0xffffffff is reserved\&. This setting is mandatory\&.
 .RE
 .PP
 \fIPrefix=\fR
@@ -947,15 +996,11 @@ character\&. This key is mandatory\&.
 .RE
 .SH "[ROUTINGPOLICYRULE] SECTION OPTIONS"
 .PP
-An
-"[RoutingPolicyRule]"
-section accepts the following keys\&. Specify several
-"[RoutingPolicyRule]"
-sections to configure several rules\&.
+An [RoutingPolicyRule] section accepts the following keys\&. Specify several [RoutingPolicyRule] sections to configure several rules\&.
 .PP
 \fITypeOfService=\fR
 .RS 4
-Specifies the type of service to match a number between 0 to 255\&.
+Takes a number between 0 and 255 that specifies the type of service to match\&.
 .RE
 .PP
 \fIFrom=\fR
@@ -1061,17 +1106,11 @@ or less\&. Defaults to unset\&.
 .RE
 .SH "[NEXTHOP] SECTION OPTIONS"
 .PP
-The
-"[NextHop]"
-section accepts the following keys\&. Specify several
-"[NextHop]"
-sections to configure several nexthop\&. Nexthop is used to manipulate entries in the kernel\*(Aqs nexthop tables\&.
+The [NextHop] section is used to manipulate entries in the kernel\*(Aqs "nexthop" tables\&. The [NextHop] section accepts the following keys\&. Specify several [NextHop] sections to configure several hops\&.
 .PP
 \fIGateway=\fR
 .RS 4
-As in the
-"[Network]"
-section\&. This is mandatory\&.
+As in the [Network] section\&. This is mandatory\&.
 .RE
 .PP
 \fIId=\fR
@@ -1080,11 +1119,7 @@ The id of the nexthop (an unsigned integer)\&. If unspecified or \*(Aq0\*(Aq the
 .RE
 .SH "[ROUTE] SECTION OPTIONS"
 .PP
-The
-"[Route]"
-section accepts the following keys\&. Specify several
-"[Route]"
-sections to configure several routes\&.
+The [Route] section accepts the following keys\&. Specify several [Route] sections to configure several routes\&.
 .PP
 \fIGateway=\fR
 .RS 4
@@ -1117,7 +1152,7 @@ The metric of the route (an unsigned integer)\&.
 \fIIPv6Preference=\fR
 .RS 4
 Specifies the route preference as defined in
-\m[blue]\fBRFC4191\fR\m[]\&\s-2\u[15]\d\s+2
+\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[15]\d\s+2
 for Router Discovery messages\&. Which can be one of
 "low"
 the route has a lowest priority,
@@ -1258,9 +1293,7 @@ Configures multipath route\&. Multipath routing is the technique of using multip
 .RE
 .SH "[DHCPV4] SECTION OPTIONS"
 .PP
-The
-"[DHCPv4]"
-section configures the DHCPv4 client, if it is enabled with the
+The [DHCPv4] section configures the DHCPv4 client, if it is enabled with the
 \fIDHCP=\fR
 setting described above:
 .PP
@@ -1283,14 +1316,14 @@ is disabled, this setting is ignored\&. Defaults to false\&.
 .PP
 \fIUseNTP=\fR
 .RS 4
-When true (the default), the NTP servers received from the DHCP server will be used by systemd\-timesyncd and take precedence over any statically configured ones\&.
+When true (the default), the NTP servers received from the DHCP server will be used by
+systemd\-timesyncd\&.service
+and take precedence over any statically configured ones\&.
 .RE
 .PP
 \fIUseSIP=\fR
 .RS 4
-When true (the default), the SIP servers received from the DHCP server will be saved at the state files and can be read via
-\fBsd_network_link_get_sip_servers()\fR
-function\&.
+When true (the default), the SIP servers received from the DHCP server will be collected and made available to client programs\&.
 .RE
 .PP
 \fIUseMTU=\fR
@@ -1329,6 +1362,12 @@ With this option enabled DHCP requests will mimic those generated by Microsoft W
 When true (the default), the machine\*(Aqs hostname will be sent to the DHCP server\&. Note that the machine\*(Aqs hostname must consist only of 7\-bit ASCII lower\-case characters and no spaces or dots, and be formatted as a valid DNS domain name\&. Otherwise, the hostname is not sent even if this is set to true\&.
 .RE
 .PP
+\fIMUDURL=\fR
+.RS 4
+When configured, the Manufacturer Usage Descriptions (MUD) URL will be sent to the DHCPv4 server\&. Takes an URL of length up to 255 characters\&. A superficial verification that the string is a valid URL will be performed\&. DHCPv4 clients are intended to have at most one MUD URL associated with them\&. See
+\m[blue]\fBRFC 8520\fR\m[]\&\s-2\u[17]\d\s+2\&.
+.RE
+.PP
 \fIUseHostname=\fR
 .RS 4
 When true (the default), the hostname received from the DHCP server will be set as the transient hostname of the system\&.
@@ -1350,7 +1389,7 @@ setting\&. If set to
 setting when the argument is prefixed with
 "~"\&. Defaults to false\&.
 .sp
-It is recommended to enable this option only on trusted networks, as setting this affects resolution of all host names, in particular of single\-label names\&. It is generally safer to use the supplied domain only as routing domain, rather than as search domain, in order to not have it affect local resolution of single\-label names\&.
+It is recommended to enable this option only on trusted networks, as setting this affects resolution of all hostnames, in particular of single\-label names\&. It is generally safer to use the supplied domain only as routing domain, rather than as search domain, in order to not have it affect local resolution of single\-label names\&.
 .sp
 When set to true, this setting corresponds to the
 \fBdomain\fR
@@ -1436,7 +1475,7 @@ Request the server to use broadcast messages before the IP address has been conf
 .PP
 \fIRouteMetric=\fR
 .RS 4
-Set the routing metric for routes specified by the DHCP server\&.
+Set the routing metric for routes specified by the DHCP server\&. Defaults to 1024\&.
 .RE
 .PP
 \fIRouteTable=\fR\fI\fInum\fR\fR
@@ -1445,8 +1484,7 @@ The table identifier for DHCP routes (a number between 1 and 4294967295, or 0 to
 \fBip route show table \fR\fB\fInum\fR\fR\&.
 .sp
 When used in combination with
-\fIVRF=\fR
-the VRF\*(Aqs routing table is used unless this parameter is specified\&.
+\fIVRF=\fR, the VRF\*(Aqs routing table is used when this parameter is not specified\&.
 .RE
 .PP
 \fIRouteMTUBytes=\fR
@@ -1459,6 +1497,15 @@ Specifies the MTU for the DHCP routes\&. Please see the [Route] section for furt
 Allow setting custom port for the DHCP client to listen on\&.
 .RE
 .PP
+\fIFallbackLeaseLifetimeSec=\fR
+.RS 4
+Allows to set DHCPv4 lease lifetime when DHCPv4 server does not send the lease lifetime\&. Takes one of
+"forever"
+or
+"infinity"
+means that the address never expires\&. Defaults to unset\&.
+.RE
+.PP
 \fISendRelease=\fR
 .RS 4
 When true, the DHCPv4 client sends a DHCP release packet when it stops\&. Defaults to true\&.
@@ -1466,71 +1513,165 @@ When true, the DHCPv4 client sends a DHCP release packet when it stops\&. Defaul
 .PP
 \fISendDecline=\fR
 .RS 4
-A boolen\&. When
-"true", DHCPv4 clients receives IP address from DHCP server\&. After new IP is received, DHCPv4 performs IPv4 Duplicate Address Detection\&. If duplicate use of IP is detected the DHCPv4 client rejects the IP by sending a DHCPDECLINE packet DHCP clients try to obtain an IP address again\&. See
+A boolean\&. When
+"true", the DHCPv4 client receives the IP address from the DHCP server\&. After a new IP is received, the DHCPv4 client performs IPv4 Duplicate Address Detection\&. If duplicate use is detected, the DHCPv4 client rejects the IP by sending a DHCPDECLINE packet and tries to obtain an IP address again\&. See
 \m[blue]\fBRFC 5224\fR\m[]\&\s-2\u[11]\d\s+2\&. Defaults to
 "unset"\&.
 .RE
 .PP
-\fIBlackList=\fR
+\fIDenyList=\fR
 .RS 4
-A whitespace\-separated list of IPv4 addresses\&. DHCP offers from servers in the list are rejected\&.
+A whitespace\-separated list of IPv4 addresses\&. DHCP offers from servers in the list are rejected\&. Note that if
+\fIAllowList=\fR
+is configured then
+\fIDenyList=\fR
+is ignored\&.
+.RE
+.PP
+\fIAllowList=\fR
+.RS 4
+A whitespace\-separated list of IPv4 addresses\&. DHCP offers from servers in the list are accepted\&.
 .RE
 .PP
 \fIRequestOptions=\fR
 .RS 4
-A whitespace\-separated list of integers in the range 1\(en254\&.
+When configured, allows to set arbitrary request options in the DHCPv4 request options list and will be sent to the DHCPV4 server\&. A whitespace\-separated list of integers in the range 1\&.\&.254\&. Defaults to unset\&.
 .RE
 .PP
 \fISendOption=\fR
 .RS 4
-Send an arbitrary option in the DHCPv4 request\&. Takes a DHCP option number, data type and data separated with a colon ("\fIoption\fR:\fItype\fR:\fIvalue\fR")\&. The option number must be an integer in the range 1\&.\&.254\&. The type takes one of
+Send an arbitrary raw option in the DHCPv4 request\&. Takes a DHCP option number, data type and data separated with a colon ("\fIoption\fR:\fItype\fR:\fIvalue\fR")\&. The option number must be an integer in the range 1\&.\&.254\&. The type takes one of
 "uint8",
 "uint16",
 "uint32",
 "ipv4address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+.RE
+.PP
+\fISendVendorOption=\fR
+.RS 4
+Send an arbitrary vendor option in the DHCPv4 request\&. Takes a DHCP option number, data type and data separated with a colon ("\fIoption\fR:\fItype\fR:\fIvalue\fR")\&. The option number must be an integer in the range 1\&.\&.254\&. The type takes one of
+"uint8",
+"uint16",
+"uint32",
+"ipv4address", or
+"string"\&. Special characters in the data string may be escaped using
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .SH "[DHCPV6] SECTION OPTIONS"
 .PP
-The
-"[DHCPv6]"
-section configures the DHCPv6 client, if it is enabled with the
+The [DHCPv6] section configures the DHCPv6 client, if it is enabled with the
 \fIDHCP=\fR
 setting described above, or invoked by the IPv6 Router Advertisement:
 .PP
 \fIUseDNS=\fR, \fIUseNTP=\fR
 .RS 4
-As in the
-"[DHCPv4]"
-section\&.
+As in the [DHCPv4] section\&.
+.RE
+.PP
+\fIRouteMetric=\fR
+.RS 4
+Set the routing metric for routes specified by the DHCP server\&. Defaults to 1024\&.
 .RE
 .PP
 \fIRapidCommit=\fR
 .RS 4
-Takes a boolean\&. The DHCPv6 client can obtain configuration parameters from a DHCPv6 server through a rapid two\-message exchange (solicit and reply)\&. When the rapid commit option is enabled by both the DHCPv6 client and the DHCPv6 server, the two\-message exchange is used, rather than the default four\-method exchange (solicit, advertise, request, and reply)\&. The two\-message exchange provides faster client configuration and is beneficial in environments in which networks are under a heavy load\&. See
-\m[blue]\fBRFC 3315\fR\m[]\&\s-2\u[18]\d\s+2
+Takes a boolean\&. The DHCPv6 client can obtain configuration parameters from a DHCPv6 server through a rapid two\-message exchange (solicit and reply)\&. When the rapid commit option is enabled by both the DHCPv6 client and the DHCPv6 server, the two\-message exchange is used, rather than the default four\-message exchange (solicit, advertise, request, and reply)\&. The two\-message exchange provides faster client configuration and is beneficial in environments in which networks are under a heavy load\&. See
+\m[blue]\fBRFC 3315\fR\m[]\&\s-2\u[19]\d\s+2
 for details\&. Defaults to true\&.
+.RE
+.PP
+\fIMUDURL=\fR
+.RS 4
+When configured, the Manufacturer Usage Descriptions (MUD) URL will be sent to the DHCPV6 server\&. Takes an URL of length up to 255 characters\&. A superficial verification that the string is a valid URL will be performed\&. DHCPv6 clients are intended to have at most one MUD URL associated with them\&. See
+\m[blue]\fBRFC 8520\fR\m[]\&\s-2\u[17]\d\s+2\&.
+.RE
+.PP
+\fIRequestOptions=\fR
+.RS 4
+When configured, allows to set arbitrary request options in the DHCPv6 request options list and will sent to the DHCPV6 server\&. A whitespace\-separated list of integers in the range 1\&.\&.254\&. Defaults to unset\&.
+.RE
+.PP
+\fISendVendorOption=\fR
+.RS 4
+Send an arbitrary vendor option in the DHCPv6 request\&. Takes an enterprise identifier, DHCP option number, data type, and data separated with a colon ("\fIenterprise identifier\fR:\fIoption\fR:\fItype\fR: \fIvalue\fR")\&. Enterprise identifier is an unsigned integer in the range 1\(en4294967294\&. The option number must be an integer in the range 1\(en254\&. Data type takes one of
+"uint8",
+"uint16",
+"uint32",
+"ipv4address",
+"ipv6address", or
+"string"\&. Special characters in the data string may be escaped using
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .PP
 \fIForceDHCPv6PDOtherInformation=\fR
 .RS 4
 Takes a boolean that enforces DHCPv6 stateful mode when the \*(AqOther information\*(Aq bit is set in Router Advertisement messages\&. By default setting only the \*(AqO\*(Aq bit in Router Advertisements makes DHCPv6 request network information in a stateless manner using a two\-message Information Request and Information Reply message exchange\&.
-\m[blue]\fBRFC 7084\fR\m[]\&\s-2\u[19]\d\s+2, requirement WPD\-4, updates this behavior for a Customer Edge router so that stateful DHCPv6 Prefix Delegation is also requested when only the \*(AqO\*(Aq bit is set in Router Advertisements\&. This option enables such a CE behavior as it is impossible to automatically distinguish the intention of the \*(AqO\*(Aq bit otherwise\&. By default this option is set to \*(Aqfalse\*(Aq, enable it if no prefixes are delegated when the device should be acting as a CE router\&.
+\m[blue]\fBRFC 7084\fR\m[]\&\s-2\u[20]\d\s+2, requirement WPD\-4, updates this behavior for a Customer Edge router so that stateful DHCPv6 Prefix Delegation is also requested when only the \*(AqO\*(Aq bit is set in Router Advertisements\&. This option enables such a CE behavior as it is impossible to automatically distinguish the intention of the \*(AqO\*(Aq bit otherwise\&. By default this option is set to \*(Aqfalse\*(Aq, enable it if no prefixes are delegated when the device should be acting as a CE router\&.
 .RE
 .PP
 \fIPrefixDelegationHint=\fR
 .RS 4
-Takes an IPv6 address with prefix length as
+Takes an IPv6 address with prefix length in the same format as the
 \fIAddress=\fR
-in the "[Network]" section\&. Specifies the DHCPv6 client for the requesting router to include a prefix\-hint in the DHCPv6 solicitation\&. Prefix ranges 1\-128\&. Defaults to unset\&.
+in the [Network] section\&. The DHCPv6 client will include a prefix hint in the DHCPv6 solicitation sent to the server\&. The prefix length must be in the range 1\(en128\&. Defaults to unset\&.
+.RE
+.PP
+\fIWithoutRA=\fR
+.RS 4
+Allows DHCPv6 client to start without router advertisements\*(Aqs managed or other address configuration flag\&. Takes one of
+"solicit"
+or
+"information\-request"\&. Defaults to unset\&.
+.RE
+.PP
+\fISendOption=\fR
+.RS 4
+As in the [DHCPv4] section, however because DHCPv6 uses 16\-bit fields to store option numbers, the option number is an integer in the range 1\&.\&.65536\&.
+.RE
+.PP
+\fIUserClass=\fR
+.RS 4
+A DHCPv6 client can use User Class option to identify the type or category of user or applications it represents\&. The information contained in this option is a string that represents the user class of which the client is a member\&. Each class sets an identifying string of information to be used by the DHCP service to classify clients\&. Special characters in the data string may be escaped using
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Takes a whitespace\-separated list of strings\&. Note that currently NUL bytes are not allowed\&.
+.RE
+.PP
+\fIVendorClass=\fR
+.RS 4
+A DHCPv6 client can use VendorClass option to identify the vendor that manufactured the hardware on which the client is running\&. The information contained in the data area of this option is contained in one or more opaque fields that identify details of the hardware configuration\&. Takes a whitespace\-separated list of strings\&.
+.RE
+.SH "[DHCPV6PREFIXDELEGATION] SECTION OPTIONS"
+.PP
+The [DHCPv6PrefixDelegation] section configures delegated prefix assigned by DHCPv6 server\&. The settings in this section are used only when
+\fIIPv6PrefixDelegation=\fR
+setting is enabled, or set to
+"dhcp6"\&.
+.PP
+\fISubnetId=\fR
+.RS 4
+Configure a specific subnet ID on the interface from a (previously) received prefix delegation\&. You can either set "auto" (the default) or a specific subnet ID (as defined in
+\m[blue]\fBRFC 4291\fR\m[]\&\s-2\u[21]\d\s+2, section 2\&.5\&.4), in which case the allowed value is hexadecimal, from 0 to 0x7fffffffffffffff inclusive\&. This option is only effective when used together with
+\fIIPv6PrefixDelegation=\fR
+and the corresponding configuration on the upstream interface\&.
+.RE
+.PP
+\fIAssign=\fR
+.RS 4
+Takes a boolean\&. Specifies whether to add an address from the delegated prefixes which are received from the WAN interface by the
+\fIIPv6PrefixDelegation=\fR\&. When true (on LAN interfce), the EUI\-64 algorithm will be used to form an interface identifier from the delegated prefixes\&. Defaults to true\&.
+.RE
+.PP
+\fIToken=\fR
+.RS 4
+Specifies an optional address generation mode for
+\fIAssign=\fR\&. Takes an IPv6 address\&. When set, the lower bits of the supplied address are combined with the upper bits of a delegatad prefix received from the WAN interface by the
+\fIIPv6PrefixDelegation=\fR
+prefixes to form a complete address\&.
 .RE
 .SH "[IPV6ACCEPTRA] SECTION OPTIONS"
 .PP
-The
-"[IPv6AcceptRA]"
-section configures the IPv6 Router Advertisement (RA) client, if it is enabled with the
+The [IPv6AcceptRA] section configures the IPv6 Router Advertisement (RA) client, if it is enabled with the
 \fIIPv6AcceptRA=\fR
 setting described above:
 .PP
@@ -1555,7 +1696,7 @@ setting\&. If set to
 setting when the argument is prefixed with
 "~"\&. Defaults to false\&.
 .sp
-It is recommended to enable this option only on trusted networks, as setting this affects resolution of all host names, in particular of single\-label names\&. It is generally safer to use the supplied domain only as routing domain, rather than as search domain, in order to not have it affect local resolution of single\-label names\&.
+It is recommended to enable this option only on trusted networks, as setting this affects resolution of all hostnames, in particular of single\-label names\&. It is generally safer to use the supplied domain only as routing domain, rather than as search domain, in order to not have it affect local resolution of single\-label names\&.
 .sp
 When set to true, this setting corresponds to the
 \fBdomain\fR
@@ -1579,15 +1720,20 @@ When true (the default), the autonomous prefix received in the Router Advertisem
 When true (the default), the onlink prefix received in the Router Advertisement will be used and take precedence over any statically configured ones\&.
 .RE
 .PP
-\fIBlackList=\fR
+\fIDenyList=\fR
 .RS 4
 A whitespace\-separated list of IPv6 prefixes\&. IPv6 prefixes supplied via router advertisements in the list are ignored\&.
 .RE
+.PP
+\fIDHCPv6Client=\fR
+.RS 4
+Takes a boolean, or the special value
+"always"\&. When true (the default), the DHCPv6 client will be started when the RA has the managed or other information flag\&. If set to
+"always", the DHCPv6 client will be started even if there is no managed or other information flag in the RA\&.
+.RE
 .SH "[DHCPSERVER] SECTION OPTIONS"
 .PP
-The
-"[DHCPServer]"
-section contains settings for the DHCP server, if enabled via the
+The [DHCPServer] section contains settings for the DHCP server, if enabled via the
 \fIDHCPServer=\fR
 option described above:
 .PP
@@ -1607,37 +1753,26 @@ Control the default and maximum DHCP lease time to pass to clients\&. These sett
 .PP
 \fIEmitDNS=\fR, \fIDNS=\fR
 .RS 4
-Takes a boolean\&. Configures whether the DHCP leases handed out to clients shall contain DNS server information\&. Defaults to
+\fIEmitDNS=\fR
+takes a boolean\&. Configures whether the DHCP leases handed out to clients shall contain DNS server information\&. Defaults to
 "yes"\&. The DNS servers to pass to clients may be configured with the
 \fIDNS=\fR
 option, which takes a list of IPv4 addresses\&. If the
 \fIEmitDNS=\fR
-option is enabled but no servers configured, the servers are automatically propagated from an "uplink" interface that has appropriate servers set\&. The "uplink" interface is determined by the default route of the system with the highest priority\&. Note that this information is acquired at the time the lease is handed out, and does not take uplink interfaces into account that acquire DNS or NTP server information at a later point\&. DNS server propagation does not take
+option is enabled but no servers configured, the servers are automatically propagated from an "uplink" interface that has appropriate servers set\&. The "uplink" interface is determined by the default route of the system with the highest priority\&. Note that this information is acquired at the time the lease is handed out, and does not take uplink interfaces into account that acquire DNS server information at a later point\&. If no suitable uplinkg interface is found the DNS server data from
 /etc/resolv\&.conf
-into account\&. Also, note that the leases are not refreshed if the uplink network configuration changes\&. To ensure clients regularly acquire the most current uplink DNS server information, it is thus advisable to shorten the DHCP lease time via
+is used\&. Also, note that the leases are not refreshed if the uplink network configuration changes\&. To ensure clients regularly acquire the most current uplink DNS server information, it is thus advisable to shorten the DHCP lease time via
 \fIMaxLeaseTimeSec=\fR
 described above\&.
 .RE
 .PP
-\fIEmitNTP=\fR, \fINTP=\fR
+\fIEmitNTP=\fR, \fINTP=\fR, \fIEmitSIP=\fR, \fISIP=\fR, \fIEmitPOP3=\fR, \fIPOP3=\fR, \fIEmitSMTP=\fR, \fISMTP=\fR, \fIEmitLPR=\fR, \fILPR=\fR
 .RS 4
 Similar to the
 \fIEmitDNS=\fR
 and
 \fIDNS=\fR
-settings described above, these settings configure whether and what NTP server information shall be emitted as part of the DHCP lease\&. The same syntax, propagation semantics and defaults apply as for
-\fIEmitDNS=\fR
-and
-\fIDNS=\fR\&.
-.RE
-.PP
-\fIEmitSIP=\fR, \fISIP=\fR
-.RS 4
-Similar to the
-\fIEmitDNS=\fR
-and
-\fIDNS=\fR
-settings described above, these settings configure whether and what SIP server information shall be emitted as part of the DHCP lease\&. The same syntax, propagation semantics and defaults apply as for
+settings described above, these settings configure whether and what server information for the indicate protocol shall be emitted as part of the DHCP lease\&. The same syntax, propagation semantics and defaults apply as for
 \fIEmitDNS=\fR
 and
 \fIDNS=\fR\&.
@@ -1670,19 +1805,27 @@ Send a raw option with value via DHCPv4 server\&. Takes a DHCP option number, da
 "uint8",
 "uint16",
 "uint32",
+"ipv4address",
+"ipv6address", or
+"string"\&. Special characters in the data string may be escaped using
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+.RE
+.PP
+\fISendVendorOption=\fR
+.RS 4
+Send a vendor option with value via DHCPv4 server\&. Takes a DHCP option number, data type and data ("\fIoption\fR:\fItype\fR:\fIvalue\fR")\&. The option number is an integer in the range 1\&.\&.254\&. The type takes one of
+"uint8",
+"uint16",
+"uint32",
 "ipv4address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .SH "[IPV6PREFIXDELEGATION] SECTION OPTIONS"
 .PP
-The
-"[IPv6PrefixDelegation]"
-section contains settings for sending IPv6 Router Advertisements and whether to act as a router, if enabled via the
+The [IPv6PrefixDelegation] section contains settings for sending IPv6 Router Advertisements and whether to act as a router, if enabled via the
 \fIIPv6PrefixDelegation=\fR
-option described above\&. IPv6 network prefixes are defined with one or more
-"[IPv6Prefix]"
-sections\&.
+option described above\&. IPv6 network prefixes are defined with one or more [IPv6Prefix] sections\&.
 .PP
 \fIManaged=\fR, \fIOtherInformation=\fR
 .RS 4
@@ -1732,11 +1875,7 @@ is true\&.
 also takes special value
 "_link_local"; in that case the IPv6 link local address is distributed\&. If
 \fIDNS=\fR
-is empty, DNS servers are read from the
-"[Network]"
-section\&. If the
-"[Network]"
-section does not contain any DNS servers either, DNS servers from the uplink with the highest priority default route are used\&. When
+is empty, DNS servers are read from the [Network] section\&. If the [Network] section does not contain any DNS servers either, DNS servers from the uplink with the highest priority default route are used\&. When
 \fIEmitDNS=\fR
 is false, no DNS server information is sent in Router Advertisement messages\&.
 \fIEmitDNS=\fR
@@ -1749,11 +1888,7 @@ A list of DNS search domains distributed via Router Advertisement messages when
 \fIEmitDomains=\fR
 is true\&. If
 \fIDomains=\fR
-is empty, DNS search domains are read from the
-"[Network]"
-section\&. If the
-"[Network]"
-section does not contain any DNS search domains either, DNS search domains from the uplink with the highest priority default route are used\&. When
+is empty, DNS search domains are read from the [Network] section\&. If the [Network] section does not contain any DNS search domains either, DNS search domains from the uplink with the highest priority default route are used\&. When
 \fIEmitDomains=\fR
 is false, no DNS search domain information is sent in Router Advertisement messages\&.
 \fIEmitDomains=\fR
@@ -1769,10 +1904,8 @@ and search domains listed in
 .RE
 .SH "[IPV6PREFIX] SECTION OPTIONS"
 .PP
-One or more
-"[IPv6Prefix]"
-sections contain the IPv6 prefixes that are announced via Router Advertisements\&. See
-\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[20]\d\s+2
+One or more [IPv6Prefix] sections contain the IPv6 prefixes that are announced via Router Advertisements\&. See
+\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[22]\d\s+2
 for further details\&.
 .PP
 \fIAddressAutoconfiguration=\fR, \fIOnLink=\fR
@@ -1786,9 +1919,7 @@ in order to ease configuration\&.
 .RS 4
 The IPv6 prefix that is to be distributed to hosts\&. Similarly to configuring static IPv6 addresses, the setting is configured as an IPv6 prefix and its prefix length, separated by a
 "/"
-character\&. Use multiple
-"[IPv6Prefix]"
-sections to configure multiple IPv6 prefixes since prefix lifetimes, address autoconfiguration and onlink status may differ from one prefix to another\&.
+character\&. Use multiple [IPv6Prefix] sections to configure multiple IPv6 prefixes since prefix lifetimes, address autoconfiguration and onlink status may differ from one prefix to another\&.
 .RE
 .PP
 \fIPreferredLifetimeSec=\fR, \fIValidLifetimeSec=\fR
@@ -1799,20 +1930,22 @@ defaults to 604800 seconds (one week) and
 \fIValidLifetimeSec=\fR
 defaults to 2592000 seconds (30 days)\&.
 .RE
+.PP
+\fIAssign=\fR
+.RS 4
+Takes a boolean\&. When true, adds an address from the prefix\&. Default to false\&.
+.RE
 .SH "[IPV6ROUTEPREFIX] SECTION OPTIONS"
 .PP
-One or more
-"[IPv6RoutePrefix]"
-sections contain the IPv6 prefix routes that are announced via Router Advertisements\&. See
+One or more [IPv6RoutePrefix] sections contain the IPv6 prefix routes that are announced via Router Advertisements\&. See
 \m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[15]\d\s+2
 for further details\&.
 .PP
 \fIRoute=\fR
 .RS 4
-The IPv6 route that is to be distributed to hosts\&. Similarly to configuring static IPv6 routes, the setting is configured as an IPv6 prefix routes and its prefix route length, separated by a"/"
-character\&. Use multiple
-"[IPv6PrefixRoutes]"
-sections to configure multiple IPv6 prefix routes\&.
+The IPv6 route that is to be distributed to hosts\&. Similarly to configuring static IPv6 routes, the setting is configured as an IPv6 prefix routes and its prefix route length, separated by a
+"/"
+character\&. Use multiple [IPv6PrefixRoutes] sections to configure multiple IPv6 prefix routes\&.
 .RE
 .PP
 \fILifetimeSec=\fR
@@ -1823,9 +1956,7 @@ defaults to 604800 seconds (one week)\&.
 .RE
 .SH "[BRIDGE] SECTION OPTIONS"
 .PP
-The
-"[Bridge]"
-section accepts the following keys\&.
+The [Bridge] section accepts the following keys:
 .PP
 \fIUnicastFlood=\fR
 .RS 4
@@ -1854,7 +1985,7 @@ Takes a boolean\&. Configures whether MAC address learning is enabled for this p
 .PP
 \fIHairPin=\fR
 .RS 4
-Takes a boolean\&. Configures whether traffic may be sent back out of the port on which it was received\&. When this flag is false, and the bridge will not forward traffic back out of the receiving port\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. Configures whether traffic may be sent back out of the port on which it was received\&. When this flag is false, then the bridge will not forward traffic back out of the receiving port\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIUseBPDU=\fR
@@ -1906,17 +2037,11 @@ Sets the "priority" of sending packets on this interface\&. Each port in a bridg
 .RE
 .SH "[BRIDGEFDB] SECTION OPTIONS"
 .PP
-The
-"[BridgeFDB]"
-section manages the forwarding database table of a port and accepts the following keys\&. Specify several
-"[BridgeFDB]"
-sections to configure several static MAC table entries\&.
+The [BridgeFDB] section manages the forwarding database table of a port and accepts the following keys\&. Specify several [BridgeFDB] sections to configure several static MAC table entries\&.
 .PP
 \fIMACAddress=\fR
 .RS 4
-As in the
-"[Network]"
-section\&. This key is mandatory\&.
+As in the [Network] section\&. This key is mandatory\&.
 .RE
 .PP
 \fIDestination=\fR
@@ -1952,15 +2077,25 @@ means the address is associated with master devices fdb\&.
 means the destination address is associated with a router\&. Note that it\*(Aqs valid if the referenced device is a VXLAN type device and has route shortcircuit enabled\&. Defaults to
 "self"\&.
 .RE
+.SH "[LLDP] SECTION OPTIONS"
+.PP
+The [LLDP] section manages the Link Layer Discovery Protocol (LLDP) and accepts the following keys\&.
+.PP
+\fIMUDURL=\fR
+.RS 4
+Controls support for Ethernet LLDP packet\*(Aqs Manufacturer Usage Description (MUD)\&. MUD is an embedded software standard defined by the IETF that allows IoT Device makers to advertise device specifications, including the intended communication patterns for their device when it connects to the network\&. The network can then use this intent to author a context\-specific access policy, so the device functions only within those parameters\&. Takes an URL of length up to 255 characters\&. A superficial verification that the string is a valid URL will be performed\&. See
+\m[blue]\fBRFC 8520\fR\m[]\&\s-2\u[17]\d\s+2
+for details\&. The MUD URL received from the LLDP packets will be saved at the state files and can be read via
+\fBsd_lldp_neighbor_get_mud_url()\fR
+function\&.
+.RE
 .SH "[CAN] SECTION OPTIONS"
 .PP
-The
-"[CAN]"
-section manages the Controller Area Network (CAN bus) and accepts the following keys\&.
+The [CAN] section manages the Controller Area Network (CAN bus) and accepts the following keys:
 .PP
 \fIBitRate=\fR
 .RS 4
-The bitrate of CAN device in bits per second\&. The usual SI prefixes (K, M) with the base of 1000 can be used here\&.
+The bitrate of CAN device in bits per second\&. The usual SI prefixes (K, M) with the base of 1000 can be used here\&. Takes a number in the range 1\&.\&.4294967295\&.
 .RE
 .PP
 \fISamplePoint=\fR
@@ -1969,6 +2104,31 @@ Optional sample point in percent with one decimal (e\&.g\&.
 "75%",
 "87\&.5%") or permille (e\&.g\&.
 "875‰")\&.
+.RE
+.PP
+\fIDataBitRate=\fR, \fIDataSamplePoint=\fR
+.RS 4
+The bitrate and sample point for the data phase, if CAN\-FD is used\&. These settings are analogous to the
+\fIBitRate=\fR
+and
+\fISamplePoint=\fR
+keys\&.
+.RE
+.PP
+\fIFDMode=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", CAN\-FD mode is enabled for the interface\&. Note, that a bitrate and optional sample point should also be set for the CAN\-FD data phase using the
+\fIDataBitRate=\fR
+and
+\fIDataSamplePoint=\fR
+keys\&.
+.RE
+.PP
+\fIFDNonISO=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", non\-ISO CAN\-FD mode is enabled for the interface\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIRestartSec=\fR
@@ -1985,16 +2145,26 @@ or
 will turn the automatic restart off\&. By default automatic restart is disabled\&.
 .RE
 .PP
+\fITermination=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", the termination resistor will be selected for the bias network\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
 \fITripleSampling=\fR
 .RS 4
 Takes a boolean\&. When
 "yes", three samples (instead of one) are used to determine the value of a received bit by majority rule\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
+.PP
+\fIListenOnly=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", listen\-only mode is enabled\&. When the interface is in listen\-only mode, the interface neither transmit CAN frames nor send ACK bit\&. Listen\-only mode is important to debug CAN networks without interfering with the communication or acknowledge the CAN frame\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
 .SH "[QDISC] SECTION OPTIONS"
 .PP
-The
-"[QDisc]"
-section manages the traffic control queueing discipline (qdisc)\&.
+The [QDisc] section manages the traffic control queueing discipline (qdisc)\&.
 .PP
 \fIParent=\fR
 .RS 4
@@ -2006,27 +2176,25 @@ or
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .SH "[NETWORKEMULATOR] SECTION OPTIONS"
 .PP
-The
-"[NetworkEmulator]"
-section manages the queueing discipline (qdisc) of the network emulator\&. It can be used to configure the kernel packet scheduler and simulate packet delay and loss for UDP or TCP applications, or limit the bandwidth usage of a particular service to simulate internet connections\&.
+The [NetworkEmulator] section manages the queueing discipline (qdisc) of the network emulator\&. It can be used to configure the kernel packet scheduler and simulate packet delay and loss for UDP or TCP applications, or limit the bandwidth usage of a particular service to simulate internet connections\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIDelaySec=\fR
@@ -2041,7 +2209,7 @@ Specifies the chosen delay to be added to the packets outgoing to the network in
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the maximum number of packets the qdisc may hold queued at a time\&. An unsigned integer ranges 0 to 4294967294\&. Defaults to 1000\&.
+Specifies the maximum number of packets the qdisc may hold queued at a time\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to 1000\&.
 .RE
 .PP
 \fILossRate=\fR
@@ -2055,23 +2223,21 @@ Specifies that the chosen percent of packets is duplicated before queuing them\&
 .RE
 .SH "[TOKENBUCKETFILTER] SECTION OPTIONS"
 .PP
-The
-"[TokenBucketFilter]"
-section manages the queueing discipline (qdisc) of token bucket filter (tbf)\&.
+The [TokenBucketFilter] section manages the queueing discipline (qdisc) of token bucket filter (tbf)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fILatencySec=\fR
@@ -2079,14 +2245,14 @@ Specifies the major number of unique identifier of the qdisc, known as the handl
 Specifies the latency parameter, which specifies the maximum amount of time a packet can sit in the Token Bucket Filter (TBF)\&. Defaults to unset\&.
 .RE
 .PP
-\fILimitSize=\fR
+\fILimitBytes=\fR
 .RS 4
-Takes the number of bytes that can be queued waiting for tokens to become available\&. When the size is suffixed with K, M, or G, it is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1000\&. Defaults to unset\&.
+Takes the number of bytes that can be queued waiting for tokens to become available\&. When the size is suffixed with K, M, or G, it is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset\&.
 .RE
 .PP
-\fIBurst=\fR
+\fIBurstBytes=\fR
 .RS 4
-Specifies the size of the bucket\&. This is the maximum amount of bytes that tokens can be available for instantaneous transfer\&. When the size is suffixed with K, M, or G, it is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1000\&. Defaults to unset\&.
+Specifies the size of the bucket\&. This is the maximum amount of bytes that tokens can be available for instantaneous transfer\&. When the size is suffixed with K, M, or G, it is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset\&.
 .RE
 .PP
 \fIRate=\fR
@@ -2096,7 +2262,7 @@ Specifies the device specific bandwidth\&. When suffixed with K, M, or G, the sp
 .PP
 \fIMPUBytes=\fR
 .RS 4
-The Minimum Packet Unit (MPU) determines the minimal token usage (specified in bytes) for a packet\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1000\&. Defaults to zero\&.
+The Minimum Packet Unit (MPU) determines the minimal token usage (specified in bytes) for a packet\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to zero\&.
 .RE
 .PP
 \fIPeakRate=\fR
@@ -2106,57 +2272,214 @@ Takes the maximum depletion rate of the bucket\&. When suffixed with K, M, or G,
 .PP
 \fIMTUBytes=\fR
 .RS 4
-Specifies the size of the peakrate bucket\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1000\&. Defaults to unset\&.
+Specifies the size of the peakrate bucket\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset\&.
 .RE
-.SH "[STOCHASTICFAIRNESSQUEUEING] SECTION OPTIONS"
+.SH "[PIE] SECTION OPTIONS"
 .PP
-The
-"[StochasticFairnessQueueing]"
-section manages the queueing discipline (qdisc) of stochastic fairness queueing (sfq)\&.
+The [PIE] section manages the queueing discipline (qdisc) of Proportional Integral controller\-Enhanced (PIE)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIPacketLimit=\fR
+.RS 4
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 1\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[STOCHASTICFAIRBLUE] SECTION OPTIONS"
+.PP
+The [StochasticFairBlue] section manages the queueing discipline (qdisc) of stochastic fair blue (sfb)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIPacketLimit=\fR
+.RS 4
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[STOCHASTICFAIRNESSQUEUEING] SECTION OPTIONS"
+.PP
+The [StochasticFairnessQueueing] section manages the queueing discipline (qdisc) of stochastic fairness queueing (sfq)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIPerturbPeriodSec=\fR
 .RS 4
 Specifies the interval in seconds for queue algorithm perturbation\&. Defaults to unset\&.
 .RE
-.SH "[CONTROLLEDDELAY] SECTION OPTIONS"
+.SH "[BFIFO] SECTION OPTIONS"
 .PP
-The
-"[ControlledDelay]"
-section manages the queueing discipline (qdisc) of controlled delay (CoDel)\&.
+The [BFIFO] section manages the queueing discipline (qdisc) of Byte limited Packet First In First Out (bfifo)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fILimitBytes=\fR
+.RS 4
+Specifies the hard limit on the FIFO size in bytes\&. The size limit (a buffer size) to prevent it from overflowing in case it is unable to dequeue packets as quickly as it receives them\&. When this limit is reached, incoming packets are dropped\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[PFIFO] SECTION OPTIONS"
+.PP
+The [PFIFO] section manages the queueing discipline (qdisc) of Packet First In First Out (pfifo)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer ranges 0 to 4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the hard limit on the FIFO size in number of packets\&. The size limit (a buffer size) to prevent it from overflowing in case it is unable to dequeue packets as quickly as it receives them\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[PFIFOHEADDROP] SECTION OPTIONS"
+.PP
+The [PFIFOHeadDrop] section manages the queueing discipline (qdisc) of Packet First In First Out Head Drop (pfifo_head_drop)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIPacketLimit=\fR
+.RS 4
+As in [PFIFO] section\&.
+.RE
+.SH "[PFIFOFAST] SECTION OPTIONS"
+.PP
+The [PFIFOFast] section manages the queueing discipline (qdisc) of Packet First In First Out Fast (pfifo_fast)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.SH "[CAKE] SECTION OPTIONS"
+.PP
+The [CAKE] section manages the queueing discipline (qdisc) of Common Applications Kept Enhanced (CAKE)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIOverheadBytes=\fR
+.RS 4
+Specifies that bytes to be addeded to the size of each packet\&. Bytes may be negative\&. Takes an integer in the range from \-64 to 256\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIBandwidth=\fR
+.RS 4
+Specifies the shaper bandwidth\&. When suffixed with K, M, or G, the specified size is parsed as Kilobits, Megabits, or Gigabits, respectively, to the base of 1000\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[CONTROLLEDDELAY] SECTION OPTIONS"
+.PP
+The [ControlledDelay] section manages the queueing discipline (qdisc) of controlled delay (CoDel)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIPacketLimit=\fR
+.RS 4
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
 \fITargetSec=\fR
@@ -2178,25 +2501,136 @@ Takes a boolean\&. This can be used to mark packets instead of dropping them\&. 
 .RS 4
 Takes a timespan\&. This sets a threshold above which all packets are marked with ECN Congestion Experienced (CE)\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
-.SH "[FAIRQUEUEINGCONTROLLEDDELAY] SECTION OPTIONS"
+.SH "[DEFICITROUNDROBINSCHEDULER] SECTION OPTIONS"
 .PP
-The
-"[FairQueueingControlledDelay]"
-section manages the queueing discipline (qdisc) of fair queuing controlled delay (FQ\-CoDel)\&.
+The [DeficitRoundRobinScheduler] section manages the queueing discipline (qdisc) of Deficit Round Robin Scheduler (DRR)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.SH "[DEFICITROUNDROBINSCHEDULERCLASS] SECTION OPTIONS"
+.PP
+The [DeficitRoundRobinSchedulerClass] section manages the traffic control class of Deficit Round Robin Scheduler (DRR)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root", or a qdisc identifier\&. The qdisc identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIClassId=\fR
+.RS 4
+Configues the unique identifier of the class\&. It is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to unset\&.
+.RE
+.PP
+\fIQuantumBytes=\fR
+.RS 4
+Specifies the amount of bytes a flow is allowed to dequeue before the scheduler moves to the next class\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to the MTU of the interface\&.
+.RE
+.SH "[ENHANCEDTRANSMISSIONSELECTION] SECTION OPTIONS"
+.PP
+The [EnhancedTransmissionSelection] section manages the queueing discipline (qdisc) of Enhanced Transmission Selection (ETS)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIBands=\fR
+.RS 4
+Specifies the number of bands\&. An unsigned integer in the range 1\(en16\&. This value has to be at least large enough to cover the strict bands specified through the
+\fIStrictBands=\fR
+and bandwidth\-sharing bands specified in
+\fIQuantumBytes=\fR\&.
+.RE
+.PP
+\fIStrictBands=\fR
+.RS 4
+Specifies the number of bands that should be created in strict mode\&. An unsigned integer in the range 1\(en16\&.
+.RE
+.PP
+\fIQuantumBytes=\fR
+.RS 4
+Specifies the white\-space separated list of quantum used in band\-sharing bands\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&.
+.RE
+.PP
+\fIPriorityMap=\fR
+.RS 4
+The priority map maps the priority of a packet to a band\&. The argument is a white\-space separated list of numbers\&. The first number indicates which band the packets with priority 0 should be put to, the second is for priority 1, and so on\&. There can be up to 16 numbers in the list\&. If there are fewer, the default band that traffic with one of the unmentioned priorities goes to is the last one\&. Each band number must be 0\&.\&.255\&. This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&.
+.RE
+.SH "[GENERICRANDOMEARLYDETECTION] SECTION OPTIONS"
+.PP
+The [GenericRandomEarlyDetection] section manages the queueing discipline (qdisc) of Generic Random Early Detection (GRED)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIVirtualQueues=\fR
+.RS 4
+Specifies the number of virtual queues\&. Takes a integer in the range 1\-16\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIDefaultVirtualQueue=\fR
+.RS 4
+Specifies the number of default virtual queue\&. This must be less than
+\fIVirtualQueue=\fR\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIGenericRIO=\fR
+.RS 4
+Takes a boolean\&. It turns on the RIO\-like buffering scheme\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[FAIRQUEUEINGCONTROLLEDDELAY] SECTION OPTIONS"
+.PP
+The [FairQueueingControlledDelay] section manages the queueing discipline (qdisc) of fair queuing controlled delay (FQ\-CoDel)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIPacketLimit=\fR
@@ -2204,7 +2638,7 @@ Specifies the major number of unique identifier of the qdisc, known as the handl
 Specifies the hard limit on the real queue size\&. When this limit is reached, incoming packets are dropped\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
-\fIMemoryLimit=\fR
+\fIMemoryLimitBytes=\fR
 .RS 4
 Specifies the limit on the total number of bytes that can be queued in this FQ\-CoDel instance\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
@@ -2224,9 +2658,9 @@ Takes a timespan\&. Specifies the acceptable minimum standing/persistent queue d
 Takes a timespan\&. This is used to ensure that the measured minimum delay does not become too stale\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
-\fIQuantum=\fR
+\fIQuantumBytes=\fR
 .RS 4
-Specifies the number of bytes used as \*(Aqdeficit\*(Aq in the fair queuing algorithmtimespan\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the number of bytes used as the "deficit" in the fair queuing algorithm timespan\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
 \fIECN=\fR
@@ -2240,23 +2674,21 @@ Takes a timespan\&. This sets a threshold above which all packets are marked wit
 .RE
 .SH "[FAIRQUEUEING] SECTION OPTIONS"
 .PP
-The
-"[FairQueueing]"
-section manages the queueing discipline (qdisc) of fair queue traffic policing (FQ)\&.
+The [FairQueueing] section manages the queueing discipline (qdisc) of fair queue traffic policing (FQ)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIPacketLimit=\fR
@@ -2269,12 +2701,12 @@ Specifies the hard limit on the real queue size\&. When this limit is reached, i
 Specifies the hard limit on the maximum number of packets queued per flow\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
-\fIQuantum=\fR
+\fIQuantumBytes=\fR
 .RS 4
 Specifies the credit per dequeue RR round, i\&.e\&. the amount of bytes a flow is allowed to dequeue at once\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
-\fIInitialQuantum=\fR
+\fIInitialQuantumBytes=\fR
 .RS 4
 Specifies the initial sending rate credit, i\&.e\&. the amount of bytes a new flow is allowed to dequeue initially\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
@@ -2305,23 +2737,21 @@ Takes a timespan\&. This sets a threshold above which all packets are marked wit
 .RE
 .SH "[TRIVIALLINKEQUALIZER] SECTION OPTIONS"
 .PP
-The
-"[TrivialLinkEqualizer]"
-section manages the queueing discipline (qdisc) of trivial link equalizer (teql)\&.
+The [TrivialLinkEqualizer] section manages the queueing discipline (qdisc) of trivial link equalizer (teql)\&.
 .PP
 \fIParent=\fR
 .RS 4
-Specifies the parent Queueing Discipline (qdisc)\&. Takes one of
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
 "root",
-"clsact"
-or
-"ingress"\&. Defaults to
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
 "root"\&.
 .RE
 .PP
 \fIHandle=\fR
 .RS 4
-Specifies the major number of unique identifier of the qdisc, known as the handle\&. Takes a number in hexadecimal ranges 1 to ffff\&. Defaults to unset\&.
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
 \fIId=\fR
@@ -2337,17 +2767,165 @@ option must be loaded before
 \fBsystemd\-networkd\fR
 is started\&.
 .RE
+.SH "[HIERARCHYTOKENBUCKET] SECTION OPTIONS"
+.PP
+The [HierarchyTokenBucket] section manages the queueing discipline (qdisc) of hierarchy token bucket (htb)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIDefaultClass=\fR
+.RS 4
+Takes the minor id in hexadecimal of the default class\&. Unclassified traffic gets sent to the class\&. Defaults to unset\&.
+.RE
+.PP
+\fIRateToQuantum=\fR
+.RS 4
+Takes an unsigned integer\&. The DRR quantums are calculated by dividing the value configured in
+\fIRate=\fR
+by
+\fIRateToQuantum=\fR\&.
+.RE
+.SH "[HIERARCHYTOKENBUCKETCLASS] SECTION OPTIONS"
+.PP
+The [HierarchyTokenBucketClass] section manages the traffic control class of hierarchy token bucket (htb)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root", or a qdisc identifier\&. The qdisc identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIClassId=\fR
+.RS 4
+Configues the unique identifier of the class\&. It is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to unset\&.
+.RE
+.PP
+\fIPriority=\fR
+.RS 4
+Specifies the priority of the class\&. In the round\-robin process, classes with the lowest priority field are tried for packets first\&.
+.RE
+.PP
+\fIQuantumBytes=\fR
+.RS 4
+Specifies how many bytes to serve from leaf at once\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&.
+.RE
+.PP
+\fIMTUBytes=\fR
+.RS 4
+Specifies the maximum packet size we create\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&.
+.RE
+.PP
+\fIOverheadBytes=\fR
+.RS 4
+Takes an unsigned integer which specifies per\-packet size overhead used in rate computations\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&.
+.RE
+.PP
+\fIRate=\fR
+.RS 4
+Specifies the maximum rate this class and all its children are guaranteed\&. When suffixed with K, M, or G, the specified size is parsed as Kilobits, Megabits, or Gigabits, respectively, to the base of 1000\&. This setting is mandatory\&.
+.RE
+.PP
+\fICeilRate=\fR
+.RS 4
+Specifies the maximum rate at which a class can send, if its parent has bandwidth to spare\&. When suffixed with K, M, or G, the specified size is parsed as Kilobits, Megabits, or Gigabits, respectively, to the base of 1000\&. When unset, the value specified with
+\fIRate=\fR
+is used\&.
+.RE
+.PP
+\fIBufferBytes=\fR
+.RS 4
+Specifies the maximum bytes burst which can be accumulated during idle period\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&.
+.RE
+.PP
+\fICeilBufferBytes=\fR
+.RS 4
+Specifies the maximum bytes burst for ceil which can be accumulated during idle period\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&.
+.RE
+.SH "[HEAVYHITTERFILTER] SECTION OPTIONS"
+.PP
+The [HeavyHitterFilter] section manages the queueing discipline (qdisc) of Heavy Hitter Filter (hhf)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.PP
+\fIPacketLimit=\fR
+.RS 4
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.SH "[QUICKFAIRQUEUEING] SECTION OPTIONS"
+.PP
+The [QuickFairQueueing] section manages the queueing discipline (qdisc) of Quick Fair Queueing (QFQ)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root",
+"clsact",
+"ingress"
+or a class identifier\&. The class identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIHandle=\fR
+.RS 4
+Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
+.RE
+.SH "[QUICKFAIRQUEUEINGCLASS] SECTION OPTIONS"
+.PP
+The [QuickFairQueueingClass] section manages the traffic control class of Quick Fair Queueing (qfq)\&.
+.PP
+\fIParent=\fR
+.RS 4
+Configures the parent Queueing Discipline (qdisc)\&. Takes one of
+"root", or a qdisc identifier\&. The qdisc identifier is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to
+"root"\&.
+.RE
+.PP
+\fIClassId=\fR
+.RS 4
+Configues the unique identifier of the class\&. It is specified as the major and minor numbers in hexadecimal in the range 0x1\(enOxffff separated with a colon ("major:minor")\&. Defaults to unset\&.
+.RE
+.PP
+\fIWeight=\fR
+.RS 4
+Specifies the weight of the class\&. Takes an integer in the range 1\&.\&.1023\&. Defaults to unset in which case the kernel default is used\&.
+.RE
+.PP
+\fIMaxPacketBytes=\fR
+.RS 4
+Specifies the maximum packet size in bytes for the class\&. When suffixed with K, M, or G, the specified size is parsed as Kilobytes, Megabytes, or Gigabytes, respectively, to the base of 1024\&. When unset, the kernel default is used\&.
+.RE
 .SH "[BRIDGEVLAN] SECTION OPTIONS"
 .PP
-The
-"[BridgeVLAN]"
-section manages the VLAN ID configuration of a bridge port and accepts the following keys\&. Specify several
-"[BridgeVLAN]"
-sections to configure several VLAN entries\&. The
+The [BridgeVLAN] section manages the VLAN ID configuration of a bridge port and accepts the following keys\&. Specify several [BridgeVLAN] sections to configure several VLAN entries\&. The
 \fIVLANFiltering=\fR
-option has to be enabled, see
-"[Bridge]"
-section in
+option has to be enabled, see the [Bridge] section in
 \fBsystemd.netdev\fR(5)\&.
 .PP
 \fIVLAN=\fR
@@ -2848,7 +3426,7 @@ RFC 3484
 \%https://tools.ietf.org/html/rfc3484
 .RE
 .IP "15." 4
-RFC4191
+RFC 4191
 .RS 4
 \%https://tools.ietf.org/html/rfc4191
 .RE
@@ -2858,21 +3436,31 @@ RFC 7844
 \%https://tools.ietf.org/html/rfc7844
 .RE
 .IP "17." 4
+RFC 8520
+.RS 4
+\%https://tools.ietf.org/html/rfc8520
+.RE
+.IP "18." 4
 C-style escapes
 .RS 4
 \%https://en.wikipedia.org/wiki/Escape_sequences_in_C#Table_of_escape_sequences
 .RE
-.IP "18." 4
+.IP "19." 4
 RFC 3315
 .RS 4
 \%https://tools.ietf.org/html/rfc3315#section-17.2.1
 .RE
-.IP "19." 4
+.IP "20." 4
 RFC 7084
 .RS 4
 \%https://tools.ietf.org/html/rfc7084
 .RE
-.IP "20." 4
+.IP "21." 4
+RFC 4291
+.RS 4
+\%https://tools.ietf.org/html/rfc4291#section-2.5.4
+.RE
+.IP "22." 4
 RFC 4861
 .RS 4
 \%https://tools.ietf.org/html/rfc4861
