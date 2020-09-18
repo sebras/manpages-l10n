@@ -35,10 +35,10 @@ fi
 
 # Determine if an encoding is specified,
 # otherwise fall back to ISO-8859-1
-coding=$(grep "\-\*\- coding:" "$master" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
-if [ -z "$coding" ]; then
-	coding="ISO-8859-1"
-fi
+# coding=$(grep "\-\*\- coding:" "$master" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
+# if [ -z "$coding" ]; then
+# 	coding="ISO-8859-1"
+# fi
 
 # Set up the filename of the translation
 translation="$localized.po"
@@ -66,7 +66,7 @@ po4a-translate \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
 	-m "$master" \
-	-M "$coding" \
+	-M "utf-8" \
 	-p "$pofile" \
 	-a "$addendum" \
 	-a "license.add" \
