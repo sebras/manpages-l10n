@@ -270,6 +270,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Spanish:
 
+* Angel Bueno Pardo <buenpar@teleline.es>
 * Carlos Costa Portela <c.c.portela@ieee.org>
 * Cesar D. Lobejon <cesar@alien.mec.es>
 * Diego Novillo <diego@cs.ualberta.ca>
