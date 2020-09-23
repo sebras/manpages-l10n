@@ -122,6 +122,25 @@ sufficient.
 After adding the file to the compendium, you can write the changes back to all
 .po files with the command po/*your_language_code*/update-translations.sh.
 
+It might happen that you encounter a Gettext message which is ambiguous and
+shouldn't be used for the compendium. In such cases, add the message to the file
+templates/exclude.pot, as follows:
+
+~~~
+msgid "I<source>"
+msgstr ""
+~~~
+
+Don't forget the empty `msgstr ""`, otherwise the update of the templates will
+fail next time! After adding the message, first run the script
+`templates/create-common-templates.sh`. This makes sure that the undesired
+message really vanishes from the compendium. After that, you should also run the
+script `po/*/update-common.sh` (at least for your own language) to prevent other
+scripts like `po/*/create-new-translation.sh` or `po/*/update-po.sh` from
+using this Gettext message again. Although this procedure will be done for all
+supported languages during the next update from upstream packages, in the
+meantime it can happen that the mentioned scripts let the undesired messages
+reappear in your .po files.
 
 ### Formatting \*.po files
 
