@@ -31,7 +31,7 @@ if os.path.exists("downloads/packages.json"):
         package_data = json.loads(input_file.read())
 
 # Get current package information
-download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/noarch/")
+download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/x86_64/")
 contents = download_page.read().decode()
 download_page.close()
 
@@ -52,7 +52,7 @@ with open("packages.txt") as input_file:
         else:
             package_url = package_url[0]
 
-        package_url = "https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/noarch/{}".format(package_url)
+        package_url = "https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/x86_64/{}".format(package_url)
         package_filename = re.split(r"/", package_url)[-1]
 
         # If the latest download is already available, skip this package
