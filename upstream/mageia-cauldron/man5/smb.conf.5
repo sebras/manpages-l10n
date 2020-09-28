@@ -2,12 +2,12 @@
 .\"     Title: smb.conf
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 08/14/2020
+.\"      Date: 09/27/2020
 .\"    Manual: File Formats and Conventions
-.\"    Source: Samba 4.12.6
+.\"    Source: Samba 4.12.7
 .\"  Language: English
 .\"
-.TH "SMB\&.CONF" "5" "08/14/2020" "Samba 4\&.12\&.6" "File Formats and Conventions"
+.TH "SMB\&.CONF" "5" "09/27/2020" "Samba 4\&.12\&.7" "File Formats and Conventions"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -3276,7 +3276,7 @@ dns update command (G)
 This option sets the command that is called when there are DNS updates\&. It should update the local machines DNS names using TSIG\-GSS\&.
 .sp
 Default:
-\fI\fIdns update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.6/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
+\fI\fIdns update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.7/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIdns update command\fR\fR\fI = \fR\fI/usr/local/sbin/dnsupdate\fR\fI \fR
@@ -4182,7 +4182,7 @@ gpo update command (G)
 This option sets the command that is called to apply GPO policies\&. The samba\-gpupdate script applies System Access and Kerberos Policies to the KDC\&. System Access policies set minPwdAge, maxPwdAge, minPwdLength, and pwdProperties in the samdb\&. Kerberos Policies set kdc:service ticket lifetime, kdc:user ticket lifetime, and kdc:renewal lifetime in smb\&.conf\&.
 .sp
 Default:
-\fI\fIgpo update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.6/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
+\fI\fIgpo update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.7/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIgpo update command\fR\fR\fI = \fR\fI/usr/local/sbin/gpoupdate\fR\fI \fR
@@ -10005,7 +10005,7 @@ samba_kcc
 was installed in a non\-default location\&.
 .sp
 Default:
-\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.6/source4/scripting/bin/samba_kcc\fR\fI \fR
+\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.7/source4/scripting/bin/samba_kcc\fR\fI \fR
 .sp
 Example:
 \fI\fIsamba kcc command\fR\fR\fI = \fR\fI/usr/local/bin/kcc\fR\fI \fR
@@ -10427,26 +10427,53 @@ Example:
 server schannel (G)
 .PP
 .RS 4
-This option is deprecated with Samba 4\&.8 and will be removed in future\&. At the same time the default changed to yes, which will be the hardcoded behavior in future\&. If you have the need for the behavior of "auto" to be kept, please file a bug at https://bugzilla\&.samba\&.org\&.
+This option is deprecated and will be removed in future, as it is a security problem if not set to "yes" (which will be the hardcoded behavior in future)\&.
 .sp
-This controls whether the server offers or even demands the use of the netlogon schannel\&.
-\m[blue]\fBserver schannel = no\fR\m[]
-does not offer the schannel,
-\m[blue]\fBserver schannel = auto\fR\m[]
-offers the schannel but does not enforce it, and
-\m[blue]\fBserver schannel = yes\fR\m[]
-denies access if the client is not able to speak netlogon schannel\&. This is only the case for Windows NT4 before SP4\&.
+Samba will complain in the log files at log level 0, about the security problem if the option is not set to "yes"\&.
 .sp
-Please note that with this set to
-no, you will have to apply the WindowsXP
-WinXP_SignOrSeal\&.reg
-registry patch found in the docs/registry subdirectory of the Samba distribution tarball\&.
+See CVE\-2020\-1472(ZeroLogon) https://bugzilla\&.samba\&.org/show_bug\&.cgi?id=14497
+.sp
+If you still have legacy domain members use the
+\m[blue]\fBserver require schannel:COMPUTERACCOUNT\fR\m[]
+option\&.
+.sp
+This option yields precedence to the
+\m[blue]\fBserver require schannel:COMPUTERACCOUNT\fR\m[]
+option\&.
 .sp
 Default:
 \fI\fIserver schannel\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
+server require schannel:COMPUTERACCOUNT (G)
+.PP
+.RS 4
+If you still have legacy domain members, which required "server schannel = auto" before, it is possible to specify explicit expection per computer account by using \*(Aqserver require schannel:COMPUTERACCOUNT = no\*(Aq as option\&. Note that COMPUTERACCOUNT has to be the sAMAccountName value of the computer account (including the trailing \*(Aq$\*(Aq sign)\&.
 .sp
-Example:
-\fI\fIserver schannel\fR\fR\fI = \fR\fIauto\fR\fI \fR
+Samba will complain in the log files at log level 0, about the security problem if the option is not set to "no", but the related computer is actually using the netlogon secure channel (schannel) feature\&.
+.sp
+Samba will warn in the log files at log level 5, if a setting is still needed for the specified computer account\&.
+.sp
+See CVE\-2020\-1472(ZeroLogon) https://bugzilla\&.samba\&.org/show_bug\&.cgi?id=14497
+.sp
+This option takes precedence to the
+\m[blue]\fBserver schannel\fR\m[]
+option\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+	server require schannel:LEGACYCOMPUTER1$ = no
+	server require schannel:NASBOX$ = no
+	server require schannel:LEGACYCOMPUTER2$ = no
+    
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fINo default\fR
 .RE
 
 server services (G)
@@ -11579,7 +11606,7 @@ This option sets the command that for updating servicePrincipalName names from
 spn_update_list\&.
 .sp
 Default:
-\fI\fIspn update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.6/source4/scripting/bin/samba_spnupdate\fR\fI \fR
+\fI\fIspn update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.12\&.7/source4/scripting/bin/samba_spnupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIspn update command\fR\fR\fI = \fR\fI/usr/local/sbin/spnupdate\fR\fI \fR
@@ -13454,7 +13481,7 @@ and
 special sections make life for an administrator easy, but the various combinations of default attributes can be tricky\&. Take extreme care when designing these sections\&. In particular, ensure that the permissions on spool directories are correct\&.
 .SH "VERSION"
 .PP
-This man page is part of version 4\&.12\&.6 of the Samba suite\&.
+This man page is part of version 4\&.12\&.7 of the Samba suite\&.
 .SH "SEE ALSO"
 .PP
 \fBsamba\fR(7),
