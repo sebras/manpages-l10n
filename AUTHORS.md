@@ -254,7 +254,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Rafał Witowski
 * Robert Luberda <robert@debian.org>
 * Szymon Lamkiewicz <s.lam@o2.pl>
-* Szymon Lamkiewicz <szymon@slam.net.pl>
 * Tomasz Kłoczko <kloczek@rudy.mif.pg.gda.pl>
 * Tomasz Wendlandt <juggler@box.cp.com.pl>
 * Wiktor J. Łukasik <wiktorlu@technologist.com>
