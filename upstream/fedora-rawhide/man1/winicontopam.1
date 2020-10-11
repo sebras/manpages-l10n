@@ -3,9 +3,8 @@
 .\" Do not hand-hack it!  If you have bug fixes or improvements, please find
 .\" the corresponding HTML page on the Netpbm website, generate a patch
 .\" against that, and send it to the Netpbm maintainer.
-.TH "Winicontopam User Manual" 0 "12 April 2013" "netpbm documentation"
+.TH "Winicontopam User Manual" 0 "29 August 2020" "netpbm documentation"
 
-.UN name
 .SH NAME
 
 winicontopam - convert a Microsoft Windows icon file into a Netpbm PAM file
@@ -32,12 +31,21 @@ This program is part of
 .BR "Netpbm" (1)\c
 \&.
 .PP
-\fBwinicontopam\fP reads a Microsoft Windows icon file and
-converts it to one or more RGB_ALPHA Netpbm PAM files.
+\fBwinicontopam\fP reads a Microsoft Windows icon file and converts it to
+one or more RGB_ALPHA Netpbm PAM images.
 .PP
-The transparency channel is copied from the 8-bit transparency data from
-the icon, if present.  If no 8-bit transparency data is available, the
-transparency channel is constructed from the so-called "AND mask".
+There are two kinds of transparency information a a Windows icon can have:
+and mask and graded transparency map.  The and mask is older and indicates for
+each pixel whether it is fully opaque or fully transparent.  The graded
+transparency map can indicate translucent values too.  The graded transparency
+map is present in an icon that uses PNG encoding or uses BMP encoding with 32
+bits per pixel.
+.PP
+The transparency plane in the PAM output of \fBwinicontopam\fP comes from
+  the graded transparency map if it exists and the and mask otherwise.
+.PP
+An icon may actually have both forms of transparency information.  See
+\fB-andmasks\fP.
 .PP
 The output goes to Standard Output.
 .PP
@@ -49,14 +57,14 @@ each image, use
 
 .UN options
 .SH OPTIONS
-
-In addition to the options common to all programs based on libnetpbm (most
-notably \fB-quiet\fP, see 
+.PP
+In addition to the options common to all programs based on libnetpbm
+(most notably \fB-quiet\fP, see 
 .UR index.html#commonoptions
-Common Options
+ Common Options
 .UE
-\&), \fBwinicontopam\fP recognizes the following command
-line options:
+\&), \fBwinicontopam\fP recognizes the following
+command line options:
 
 
 
@@ -80,9 +88,11 @@ image (largest, then most bits per pixel).
 
 .TP
 \fB-andmasks\fP
-If the image to be extracted contains both 8-bit transparency
-data and AND mask, write a five-channel Netpbm PAM file with the AND
-mask stored to the fifth plane.
+If the image to be extracted contains both graded transparency data and an
+AND mask, produce five-channel Netpbm PAM images with the AND mask as the
+fifth plane.  An image that formally has graded transparency data, but it
+indicates nothing but opaque pixels is considered not to have graded
+transparency data, so \fB-andmasks\fP would have no effect on it.
 
 .TP
 \fB-verbose\fP
@@ -109,11 +119,11 @@ Print more messages
 \&
 .IP \(bu
 
-.BR "pam" (1)\c
+.BR "\fBpam\fP" (1)\c
 \& 
 .IP \(bu
 
-.BR "winicon" (1)\c
+.BR "\fBwinicon\fP" (1)\c
 \&
 
 .PP
