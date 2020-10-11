@@ -287,6 +287,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Julio González Durán <jugonzalez@mx3.redestb.es>
 * Luis Castrillo <lcastrillo@mad.servicom.es>
 * Luis M. Garcia <luismaria.garcia@hispalinux.es>
+* Marcos Fouces <marcos@debian.org>
 * Miguel Angel Sepulveda <angel@vivaldi.princeton.edu>
 * Miguel Gil <mgilgar@usa.net>
 * Miguel Pérez Ibars <mpi79470@alu.um.es>
