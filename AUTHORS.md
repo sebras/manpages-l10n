@@ -272,6 +272,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Angel Bueno Pardo <buenpar@teleline.es>
 * Carlos Costa Portela <c.c.portela@ieee.org>
 * Cesar D. Lobejon <cesar@alien.mec.es>
+* David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
