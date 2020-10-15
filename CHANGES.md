@@ -1,4 +1,11 @@
-# Changelog for manpages-de
+# Changelog for manpages-l10n
+
+## Version 4.2.0
+*Thu Oct  15 19:13:01 CEST 2020*
+
+* Updated and added many translations
+* Still skip Italian and Spanish, will be included in the next 
+  or any future release
 
 ## Version 4.1.0
 *Wed Jul  1 12:26:57 CEST 2020*
