@@ -188,3 +188,49 @@ cp hooks/pre-commit.conf.template hooks/pre-commit.conf
 Once the file _pre-commit.conf_ exists, just fill it with the required info.
 
 WARNING: this hook requires the curl package to be installed.
+
+## Get involved in the package management
+
+manpages-l10n has a multidistros purpose, thus would need to be released every
+3 months. If you want to help for this administrative tasks, here is what you need to do.
+
+Firt, you need to get the appropriate rights requesting on the salsa repo?
+
+Next:
+* Search with grep for the current version number. You'll get some
+occurrences in 'configure', 'configure.ac', 'CHANGES.md' etc.
+(Don't bother with the version numbers in .po file headers)
+
+~~~
+grep '^AC_INIT' configure.ac | sed 's/.*\[\(.*\)\].*/\1/'
+grep '^##' CHANGES.md | head -n1
+~~~
+
+* Replace the old version number with the new one in configure.ac
+* Write an appropriate entry in CHANGES.md.
+* Run 'autoreconf'
+* Commit and push the changes.
+
+* Create the appropriate tag:
+** In the web interface, click on Tags In the tag overview, click on 'New tag'
+and fill with the new release number, let empty the field "create from master"
+Message: Release XXX
+
+** In commandline:
+~~~
+git tag -a -m 'Release 4.2.0' v4.2.0
+~~~
+
+replace with the appropriate release number
+"-a" for annotation, commonly used for releases
+(https://git-scm.com/docs/git-tag)
+
+"-m " is the message you mentioned
+
+"v4.2.0" is the tag name
+
+That's all. Users and downstream packagers can now download the
+tarball from the known location.
+
+
+
