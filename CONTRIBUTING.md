@@ -231,6 +231,3 @@ replace with the appropriate release number
 
 That's all. Users and downstream packagers can now download the
 tarball from the known location.
-
-
-
