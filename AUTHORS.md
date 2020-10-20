@@ -263,6 +263,7 @@ of Linux manpages. The list is sorted alphabetically.
 ## Romanian:
 
 * Eugen Hoanca <eugenh@urban-grafx.ro>
+* Florentina Mușat <florentina.musat.28@gmail.com>
 * Laurențiu Buzdugan <lbuz@rolix.org>
 * Mihai Cristescu <mihai.cristescu@gmail.com>
 
