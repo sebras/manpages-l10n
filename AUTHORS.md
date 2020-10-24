@@ -86,6 +86,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jade Alglave <jade.alglave@ens-lyon.org>
 * Jean-Baka Domelevo-Entfellner <domelevo@gmail.com>
 * Jean-Baptiste Holcroft <jean-baptiste@holcroft.fr>
+* Jean-Jacques Brioist <jean.brioist@numericable.fr>
 * Jean-Luc Coulon (f5ibh) <jean-luc.coulon@wanadoo.fr>
 * Jean-Marc Chaton <chaton@debian.org>
 * Jean-Paul Guillonneau <debian-l10n-french@lists.debian.org>
