@@ -272,7 +272,9 @@ of Linux manpages. The list is sorted alphabetically.
 ## Spanish:
 
 * Angel Bueno Pardo <buenpar@teleline.es>
+* Antonio Aneiros <aneiros@ctv.es>
 * Carlos Costa Portela <c.c.portela@ieee.org>
+* Carlos Gomez Romero <cgomez@databasedm.es>
 * Cesar D. Lobejon <cesar@alien.mec.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
@@ -297,6 +299,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Nicolás Lichtmaier <nick@debian.org>
 * Paul Slootman <paul@wurtel.demon.nl>
 * Pedro A. Carrasco Ponce <pacp@jet.es>
+* Pedro Pablo Fábrega <pfabrega@arrakis.es>
 * Rafael Godínez <1ragodin@rigel.deusto.es>
 * Rafael Rios <rafarios@arrakis.es>
 * Sebastian Desimone <chipy@argenet.com.ar>
