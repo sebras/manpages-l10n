@@ -2,12 +2,12 @@
 .\"     Title: mkfs.btrfs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/02/2020
+.\"      Date: 07/26/2019
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.7
+.\"    Source: Btrfs v5.2.1
 .\"  Language: English
 .\"
-.TH "MKFS\&.BTRFS" "8" "07/02/2020" "Btrfs v5\&.7" "Btrfs Manual"
+.TH "MKFS\&.BTRFS" "8" "07/26/2019" "Btrfs v5\&.2\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -44,20 +44,6 @@ Before mounting such filesystem, the kernel module must know all the devices eit
 Specify the size of the filesystem\&. If this option is not used, then mkfs\&.btrfs uses the entire device space for the filesystem\&.
 .RE
 .PP
-\fB\-\-csum \fR\fB\fI<type>\fR\fR, \fB\-\-checksum \fR\fB\fI<type>\fR\fR
-.RS 4
-Specify the checksum algorithm\&. Default is
-\fIcrc32c\fR\&. Valid values are
-\fIcrc32c\fR,
-\fIxxhash\fR,
-\fIsha256\fR
-or
-\fIblake2\fR\&. To mount such filesystem kernel must support the checksums as well\&. See
-\fICHECKSUM ALGORITHMS\fR
-in
-\fBbtrfs\fR(5)\&.
-.RE
-.PP
 \fB\-d|\-\-data \fR\fB\fI<profile>\fR\fR
 .RS 4
 Specify the profile for the data block groups\&. Valid values are
@@ -68,13 +54,11 @@ Specify the profile for the data block groups\&. Valid values are
 \fIraid10\fR
 or
 \fIsingle\fR
-or
-\fIdup\fR
-(case does not matter)\&.
+or dup (case does not matter)\&.
 .sp
 See
 \fIDUP PROFILES ON A SINGLE DEVICE\fR
-for more details\&.
+for more\&.
 .RE
 .PP
 \fB\-m|\-\-metadata \fR\fB\fI<profile>\fR\fR
@@ -87,11 +71,10 @@ Specify the profile for the metadata block groups\&. Valid values are
 \fIraid10\fR,
 \fIsingle\fR
 or
-\fIdup\fR
-(case does not matter)\&.
+\fIdup\fR, (case does not matter)\&.
 .sp
 A single device filesystem will default to
-\fIDUP\fR, unless an SSD is detected, in which case it will default to
+\fIDUP\fR, unless a SSD is detected\&. Then it will default to
 \fIsingle\fR\&. The detection is based on the value of
 \fB/sys/block/DEV/queue/rotational\fR, where
 \fIDEV\fR
@@ -246,18 +229,6 @@ for more details\&. To see all available features that mkfs\&.btrfs supports run
 \fBmkfs\&.btrfs \-O list\-all\fR
 .RE
 .PP
-\fB\-R|\-\-runtime\-features \fR\fB\fI<feature1>\fR\fR\fB[,\fR\fB\fI<feature2>\fR\fR\fB\&...]\fR
-.RS 4
-A list of features that be can enabled at mkfs time, otherwise would have to be turned on a mounted filesystem\&. Although no runtime feature is enabled by default, to disable a feature, prefix it with
-\fI^\fR\&.
-.sp
-See section
-\fBRUNTIME FEATURES\fR
-for more details\&. To see all available runtime features that mkfs\&.btrfs supports run:
-.sp
-\fBmkfs\&.btrfs \-R list\-all\fR
-.RE
-.PP
 \fB\-f|\-\-force\fR
 .RS 4
 Forcibly overwrite the block devices when an existing filesystem is detected\&. By default, mkfs\&.btrfs will utilize
@@ -288,6 +259,12 @@ version and exit\&.
 \fB\-\-help\fR
 .RS 4
 Print help\&.
+.RE
+.PP
+\fB\-A|\-\-alloc\-start \fR\fB\fI<offset>\fR\fR
+.RS 4
+\fBdeprecated, will be removed\fR
+(An option to help debugging chunk allocator\&.) Specify the (physical) offset from the start of the device at which allocations start\&. The default value is zero\&.
 .RE
 .SH "SIZE UNITS"
 .sp
@@ -369,18 +346,6 @@ reduced\-size metadata for extent references, saves a few percent of metadata
 .sp
 improved representation of file extents where holes are not explicitly stored as an extent, saves a few percent of metadata if sparse files are used
 .RE
-.SH "RUNTIME FEATURES"
-.sp
-Features that are typically enabled on a mounted filesystem, eg\&. by a mount option or by an ioctl\&. Some of them can be enabled early, at mkfs time\&. This applies to features that need to be enabled once and then the status is permanent, this does not replace mount options\&.
-.PP
-\fBquota\fR
-.RS 4
-(kernel support since 3\&.4)
-.sp
-Enable quota support (qgroups)\&. The qgroup accounting will be consistent, can be used together with
-\fI\-\-rootdir\fR\&. See also
-\fBbtrfs\-quota\fR(8)\&.
-.RE
 .SH "BLOCK GROUPS, CHUNKS, RAID"
 .sp
 The highlevel organizational units of a filesystem are block groups of three types: data, metadata and system\&.
@@ -425,26 +390,21 @@ for more details
 There are the following block group types available:
 .TS
 allbox tab(:);
-ct c s s ct ct
-^ c c ct ^ ^
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct
-lt ct ct ct rt ct.
+ct c s s ct
+^ c c ct ^
+ct ct ct ct ct
+ct ct ct ct ct
+ct ct ct ct ct
+ct ct ct ct ct
+ct ct ct ct ct
+ct ct ct ct ct
+ct ct ct ct ct.
 T{
 .sp
 \fBProfile\fR
 T}:T{
 .sp
 \fBRedundancy\fR
-T}:T{
-.sp
-\fBSpace utilization\fR
 T}:T{
 .sp
 \fBMin/max devices\fR
@@ -458,7 +418,7 @@ T}:T{
 T}:T{
 .sp
 \fBStriping\fR
-T}::
+T}:
 T{
 .sp
 single
@@ -469,9 +429,6 @@ T}:T{
 .sp
 T}:T{
 .sp
-T}:T{
-.sp
-100%
 T}:T{
 .sp
 1/any
@@ -488,9 +445,6 @@ T}:T{
 .sp
 T}:T{
 .sp
-50%
-T}:T{
-.sp
 1/any ^(see note 1)
 T}
 T{
@@ -503,9 +457,6 @@ T}:T{
 T}:T{
 .sp
 1 to N
-T}:T{
-.sp
-100%
 T}:T{
 .sp
 2/any
@@ -522,44 +473,7 @@ T}:T{
 .sp
 T}:T{
 .sp
-50%
-T}:T{
-.sp
 2/any
-T}
-T{
-.sp
-RAID1C3
-T}:T{
-.sp
-3
-T}:T{
-.sp
-T}:T{
-.sp
-T}:T{
-.sp
-33%
-T}:T{
-.sp
-3/any
-T}
-T{
-.sp
-RAID1C4
-T}:T{
-.sp
-4
-T}:T{
-.sp
-T}:T{
-.sp
-T}:T{
-.sp
-25%
-T}:T{
-.sp
-4/any
 T}
 T{
 .sp
@@ -572,9 +486,6 @@ T}:T{
 T}:T{
 .sp
 1 to N
-T}:T{
-.sp
-50%
 T}:T{
 .sp
 4/any
@@ -590,10 +501,7 @@ T}:T{
 1
 T}:T{
 .sp
-2 to N\-1
-T}:T{
-.sp
-(N\-1)/N
+2 to N \- 1
 T}:T{
 .sp
 2/any ^(see note 2)
@@ -609,10 +517,7 @@ T}:T{
 2
 T}:T{
 .sp
-3 to N\-2
-T}:T{
-.sp
-(N\-2)/N
+3 to N \- 2
 T}:T{
 .sp
 3/any ^(see note 3)
@@ -632,373 +537,15 @@ T}
 .ps -1
 .br
 .sp
-It\(cqs not recommended to create filesystems with RAID0/1/10/5/6 profiles on partitions from the same device\&. Neither redundancy nor performance will be improved\&.
+It\(cqs not recommended to build btrfs with RAID0/1/10/5/6 profiles on partitions from the same device\&. Neither redundancy nor performance will be improved\&.
 .sp .5v
 .RE
 .sp
-\fINote 1:\fR DUP may exist on more than 1 device if it starts on a single device and another one is added\&. Since version 4\&.5\&.1, \fBmkfs\&.btrfs\fR will let you create DUP on multiple devices without restrictions\&.
+\fINote 1:\fR DUP may exist on more than 1 device if it starts on a single device and another one is added\&. Since version 4\&.5\&.1, \fBmkfs\&.btrfs\fR will let you create DUP on multiple devices\&.
 .sp
 \fINote 2:\fR It\(cqs not recommended to use 2 devices with RAID5\&. In that case, parity stripe will contain the same data as the data stripe, making RAID5 degraded to RAID1 with more overhead\&.
 .sp
-\fINote 3:\fR It\(cqs also not recommended to use 3 devices with RAID6, unless you want to get effectively 3 copies in a RAID1\-like manner (but not exactly that)\&.
-.sp
-\fINote 4:\fR Since kernel 5\&.5 it\(cqs possible to use RAID1C3 as replacement for RAID6, higher space cost but reliable\&.
-.SS "PROFILE LAYOUT"
-.sp
-For the following examples, assume devices numbered by 1, 2, 3 and 4, data or metadata blocks A, B, C, D, with possible stripes eg\&. A1, A2 that would be logically A, etc\&. For parity profiles PA and QA are parity and syndrom, associated with the given stripe\&. The simple layouts single or DUP are left out\&. Actual physical block placement on devices depends on current state of the free/allocated space and may appear random\&. All devices are assumed to be present at the time of the blocks would have been written\&.
-.sp
-RAID1
-.TS
-allbox tab(:);
-ctB ctB ctB ctB.
-T{
-device 1
-T}:T{
-device 2
-T}:T{
-device 3
-T}:T{
-device 4
-T}
-.T&
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct.
-T{
-.sp
-A
-T}:T{
-.sp
-D
-T}:T{
-.sp
-T}:T{
-.sp
-T}
-T{
-.sp
-B
-T}:T{
-.sp
-T}:T{
-.sp
-T}:T{
-.sp
-C
-T}
-T{
-.sp
-C
-T}:T{
-.sp
-T}:T{
-.sp
-T}:T{
-.sp
-T}
-T{
-.sp
-D
-T}:T{
-.sp
-A
-T}:T{
-.sp
-B
-T}:T{
-.sp
-T}
-.TE
-.sp 1
-.sp
-RAID1C3
-.TS
-allbox tab(:);
-ctB ctB ctB ctB.
-T{
-device 1
-T}:T{
-device 2
-T}:T{
-device 3
-T}:T{
-device 4
-T}
-.T&
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct.
-T{
-.sp
-A
-T}:T{
-.sp
-A
-T}:T{
-.sp
-D
-T}:T{
-.sp
-T}
-T{
-.sp
-B
-T}:T{
-.sp
-T}:T{
-.sp
-B
-T}:T{
-.sp
-T}
-T{
-.sp
-C
-T}:T{
-.sp
-T}:T{
-.sp
-A
-T}:T{
-.sp
-C
-T}
-T{
-.sp
-D
-T}:T{
-.sp
-D
-T}:T{
-.sp
-C
-T}:T{
-.sp
-B
-T}
-.TE
-.sp 1
-.sp
-RAID0
-.TS
-allbox tab(:);
-ctB ctB ctB ctB.
-T{
-device 1
-T}:T{
-device 2
-T}:T{
-device 3
-T}:T{
-device 4
-T}
-.T&
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct.
-T{
-.sp
-A2
-T}:T{
-.sp
-C3
-T}:T{
-.sp
-A3
-T}:T{
-.sp
-C2
-T}
-T{
-.sp
-B1
-T}:T{
-.sp
-A1
-T}:T{
-.sp
-D2
-T}:T{
-.sp
-B3
-T}
-T{
-.sp
-C1
-T}:T{
-.sp
-D3
-T}:T{
-.sp
-B4
-T}:T{
-.sp
-D1
-T}
-T{
-.sp
-D4
-T}:T{
-.sp
-B2
-T}:T{
-.sp
-C4
-T}:T{
-.sp
-A4
-T}
-.TE
-.sp 1
-.sp
-RAID5
-.TS
-allbox tab(:);
-ctB ctB ctB ctB.
-T{
-device 1
-T}:T{
-device 2
-T}:T{
-device 3
-T}:T{
-device 4
-T}
-.T&
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct.
-T{
-.sp
-A2
-T}:T{
-.sp
-C3
-T}:T{
-.sp
-A3
-T}:T{
-.sp
-C2
-T}
-T{
-.sp
-B1
-T}:T{
-.sp
-A1
-T}:T{
-.sp
-D2
-T}:T{
-.sp
-B3
-T}
-T{
-.sp
-C1
-T}:T{
-.sp
-D3
-T}:T{
-.sp
-PB
-T}:T{
-.sp
-D1
-T}
-T{
-.sp
-PD
-T}:T{
-.sp
-B2
-T}:T{
-.sp
-PC
-T}:T{
-.sp
-PA
-T}
-.TE
-.sp 1
-.sp
-RAID6
-.TS
-allbox tab(:);
-ctB ctB ctB ctB.
-T{
-device 1
-T}:T{
-device 2
-T}:T{
-device 3
-T}:T{
-device 4
-T}
-.T&
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct
-ct ct ct ct.
-T{
-.sp
-A2
-T}:T{
-.sp
-QC
-T}:T{
-.sp
-QA
-T}:T{
-.sp
-C2
-T}
-T{
-.sp
-B1
-T}:T{
-.sp
-A1
-T}:T{
-.sp
-D2
-T}:T{
-.sp
-QB
-T}
-T{
-.sp
-C1
-T}:T{
-.sp
-QD
-T}:T{
-.sp
-PB
-T}:T{
-.sp
-D1
-T}
-T{
-.sp
-PD
-T}:T{
-.sp
-B2
-T}:T{
-.sp
-PC
-T}:T{
-.sp
-PA
-T}
-.TE
-.sp 1
+\fINote 3:\fR It\(cqs also not recommended to use 3 devices with RAID6, unless you want to get effectively 3 copies in a RAID1\-like manner (but not exactly that)\&. N\-copies RAID1 is not implemented\&.
 .SH "DUP PROFILES ON A SINGLE DEVICE"
 .sp
 The mkfs utility will let the user create a filesystem with profiles that write the logical blocks to 2 physical locations\&. Whether there are really 2 physical copies highly depends on the underlying device type\&.

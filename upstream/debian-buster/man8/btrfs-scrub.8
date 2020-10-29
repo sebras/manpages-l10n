@@ -2,12 +2,12 @@
 .\"     Title: btrfs-scrub
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 07/02/2020
+.\"      Date: 07/26/2019
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.7
+.\"    Source: Btrfs v5.2.1
 .\"  Language: English
 .\"
-.TH "BTRFS\-SCRUB" "8" "07/02/2020" "Btrfs v5\&.7" "Btrfs Manual"
+.TH "BTRFS\-SCRUB" "8" "07/26/2019" "Btrfs v5\&.2\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,7 +52,7 @@ Scrub is not a filesystem checker (fsck) and does not verify nor repair structur
 .sp .5v
 .RE
 .sp
-The user is supposed to run it manually or via a periodic system service\&. The recommended period is a month but could be less\&. The estimated device bandwidth utilization is about 80% on an idle filesystem\&. The IO priority class is by default \fIidle\fR so background scrub should not significantly interfere with normal filesystem operation\&. The IO scheduler set for the device(s) might not support the priority classes though\&.
+The user is supposed to run it manually or via a periodic system service\&. The recommended period is a month but could be less\&. The estimated device bandwidth utilization is about 80% on an idle filesystem\&. The IO priority class is by default \fIidle\fR so background scrub should not significantly interfere with normal filesystem operation\&.
 .sp
 The scrubbing status is recorded in \fI/var/lib/btrfs/\fR in textual files named \fIscrub\&.status\&.UUID\fR for a filesystem identified by the given UUID\&. (Progress state is communicated through a named pipe in file \fIscrub\&.progress\&.UUID\fR in the same directory\&.) The status file is updated every 5 seconds\&. A resumed scrub will continue from the last saved position\&.
 .SH "SUBCOMMAND"
@@ -61,16 +61,13 @@ The scrubbing status is recorded in \fI/var/lib/btrfs/\fR in textual files named
 .RS 4
 If a scrub is running on the filesystem identified by
 \fIpath\fR
-or
-\fIdevice\fR, cancel it\&.
+cancel it\&.
 .sp
 If a
 \fIdevice\fR
 is specified, the corresponding filesystem is found and
 \fBbtrfs scrub cancel\fR
-behaves as if it was called on that filesystem\&. The progress is saved in the status file so
-\fBbtrfs scrub resume\fR
-can continue from the last position\&.
+behaves as if it was called on that filesystem\&.
 .RE
 .PP
 \fBresume\fR [\-BdqrR] [\-c \fI<ioprio_class>\fR \-n \fI<ioprio_classdata>\fR] \fI<path>\fR|\fI<device>\fR
@@ -78,9 +75,9 @@ can continue from the last position\&.
 Resume a cancelled or interrupted scrub on the filesystem identified by
 \fIpath\fR
 or on a given
-\fIdevice\fR\&. The starting point is read from the status file if it exists\&.
+\fIdevice\fR\&.
 .sp
-This does not start a new scrub if the last scrub finished successfully\&.
+Does not start a new scrub if the last scrub finished successfully\&.
 .sp
 \fBOptions\fR
 .sp
@@ -93,16 +90,16 @@ see
 Start a scrub on all devices of the filesystem identified by
 \fIpath\fR
 or on a single
-\fIdevice\fR\&. If a scrub is already running, the new one will not start\&.
+\fIdevice\fR\&. If a scrub is already running, the new one fails\&.
 .sp
-Without options, scrub is started as a background process\&. The automatic repairs of damaged copies is performed by default for block group profiles with redundancy\&.
+Without options, scrub is started as a background process\&.
 .sp
 The default IO priority of scrub is the idle class\&. The priority can be configured similar to the
 \fBionice\fR(1) syntax using
 \fI\-c\fR
 and
 \fI\-n\fR
-options\&. Note that not all IO schedulers honor the ionice settings\&.
+options\&.
 .sp
 \fBOptions\fR
 .PP
@@ -115,6 +112,11 @@ do not background and print scrub statistics when finished
 .RS 4
 print separate statistics for each device of the filesystem (\fI\-B\fR
 only) at the end
+.RE
+.PP
+\-q
+.RS 4
+be quiet, omit error messages and statistics
 .RE
 .PP
 \-r
@@ -142,13 +144,6 @@ set IO priority classdata (see
 \-f
 .RS 4
 force starting new scrub even if a scrub is already running, this can useful when scrub status file is damaged and reports a running scrub although it is not, but should not normally be necessary
-.RE
-.PP
-\-q
-.RS 4
-(deprecated) alias for global
-\fI\-q\fR
-option
 .RE
 .RE
 .PP

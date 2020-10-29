@@ -2,12 +2,12 @@
 .\"     Title: mkfs.btrfs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/23/2020
+.\"      Date: 07/02/2020
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.9
+.\"    Source: Btrfs v5.7
 .\"  Language: English
 .\"
-.TH "MKFS\&.BTRFS" "8" "10/23/2020" "Btrfs v5\&.9" "Btrfs Manual"
+.TH "MKFS\&.BTRFS" "8" "07/02/2020" "Btrfs v5\&.7" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -37,8 +37,6 @@ mkfs.btrfs \- create a btrfs filesystem
 \fBmkfs\&.btrfs\fR is used to create the btrfs filesystem on a single or multiple devices\&. \fI<device>\fR is typically a block device but can be a file\-backed image as well\&. Multiple devices are grouped by UUID of the filesystem\&.
 .sp
 Before mounting such filesystem, the kernel module must know all the devices either via preceding execution of \fBbtrfs device scan\fR or using the \fBdevice\fR mount option\&. See section \fBMULTIPLE DEVICES\fR for more details\&.
-.sp
-The default block group profiles for data and metadata depend on number of devices and possibly other factors\&. It\(cqs recommended to use specific profiles but the defaults should be OK and allowing future conversions to other profiles\&. Please see options \fI\-d\fR and \fI\-m\fR for further detals and \fBbtrfs\-balance\fR(8) for the profile conversion post mkfs\&.
 .SH "OPTIONS"
 .PP
 \fB\-b|\-\-byte\-count \fR\fB\fI<size>\fR\fR
@@ -65,8 +63,6 @@ in
 Specify the profile for the data block groups\&. Valid values are
 \fIraid0\fR,
 \fIraid1\fR,
-\fIraid1c3\fR,
-\fIraid1c4\fR,
 \fIraid5\fR,
 \fIraid6\fR,
 \fIraid10\fR
@@ -79,12 +75,6 @@ or
 See
 \fIDUP PROFILES ON A SINGLE DEVICE\fR
 for more details\&.
-.sp
-On multiple devices, the default was
-\fIraid0\fR
-until version 5\&.7, while it is
-\fIsingle\fR
-since version 5\&.8\&. You can still select raid0 manually, but it was not suitable as default\&.
 .RE
 .PP
 \fB\-m|\-\-metadata \fR\fB\fI<profile>\fR\fR
@@ -92,33 +82,28 @@ since version 5\&.8\&. You can still select raid0 manually, but it was not suita
 Specify the profile for the metadata block groups\&. Valid values are
 \fIraid0\fR,
 \fIraid1\fR,
-\fIraid1c3\fR,
-\fIraid1c4\fR,
 \fIraid5\fR,
 \fIraid6\fR,
-\fIgaid10\fR,
+\fIraid10\fR,
 \fIsingle\fR
 or
 \fIdup\fR
 (case does not matter)\&.
 .sp
-Default on a single device filesystem is
+A single device filesystem will default to
 \fIDUP\fR, unless an SSD is detected, in which case it will default to
 \fIsingle\fR\&. The detection is based on the value of
 \fB/sys/block/DEV/queue/rotational\fR, where
 \fIDEV\fR
 is the short name of the device\&.
 .sp
-Note that the rotational status can be arbitrarily set by the underlying block device driver and may not reflect the true status (network block device, memory\-backed SCSI devices etc)\&. It\(cqs recommended to options
+Note that the rotational status can be arbitrarily set by the underlying block device driver and may not reflect the true status (network block device, memory\-backed SCSI devices etc)\&. Use the options
 \fI\-\-data/\-\-metadata\fR
 to avoid confusion\&.
 .sp
 See
 \fIDUP PROFILES ON A SINGLE DEVICE\fR
 for more details\&.
-.sp
-On multiple devices the default is
-\fIraid1\fR\&.
 .RE
 .PP
 \fB\-M|\-\-mixed\fR
@@ -182,7 +167,7 @@ versions up to 3\&.11 set the nodesize to 4k\&.
 .RS 4
 Specify the sectorsize, the minimum data block allocation unit\&.
 .sp
-The default value is the page size and is autodetected\&. If the sectorsize differs from the page size, the created filesystem may not be mountable by the running kernel\&. Therefore it is not recommended to use this option unless you are going to mount it on a system with the appropriate page size\&.
+The default value is the page size and is autodetected\&. If the sectorsize differs from the page size, the created filesystem may not be mountable by the kernel\&. Therefore it is not recommended to use this option unless you are going to mount it on a system with the appropriate page size\&.
 .RE
 .PP
 \fB\-L|\-\-label \fR\fB\fI<string>\fR\fR
@@ -230,7 +215,7 @@ Shrink the filesystem to its minimal size, only works with
 \fI\-\-rootdir\fR
 option\&.
 .sp
-If the destination block device is a regular file, this option will also truncate the file to the minimal size\&. Otherwise it will reduce the filesystem available space\&. Extra space will not be usable unless the filesystem is mounted and resized using
+If the destination is a regular file, this option will also truncate the file to the minimal size\&. Otherwise it will reduce the filesystem available space\&. Extra space will not be usable unless the filesystem is mounted and resized using
 \fIbtrfs filesystem resize\fR\&.
 .if n \{\
 .sp
@@ -395,13 +380,6 @@ Features that are typically enabled on a mounted filesystem, eg\&. by a mount op
 Enable quota support (qgroups)\&. The qgroup accounting will be consistent, can be used together with
 \fI\-\-rootdir\fR\&. See also
 \fBbtrfs\-quota\fR(8)\&.
-.RE
-.PP
-\fBfree\-space\-tree\fR
-.RS 4
-(kernel support since 4\&.5)
-.sp
-Enable the free space tree (mount option space_cache=v2) for persisting the free space cache\&.
 .RE
 .SH "BLOCK GROUPS, CHUNKS, RAID"
 .sp
@@ -1098,4 +1076,4 @@ The ENOSPC occurs during the creation of the UUID tree\&. This is caused by larg
 \fBmkfs\&.btrfs\fR is part of btrfs\-progs\&. Please refer to the btrfs wiki \m[blue]\fBhttp://btrfs\&.wiki\&.kernel\&.org\fR\m[] for further details\&.
 .SH "SEE ALSO"
 .sp
-\fBbtrfs\fR(5), \fBbtrfs\fR(8), \fBbtrfs\-balance\fR(8), \fBwipefs\fR(8)
+\fBbtrfs\fR(5), \fBbtrfs\fR(8), \fBwipefs\fR(8)
