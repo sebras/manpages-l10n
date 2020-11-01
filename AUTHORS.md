@@ -47,6 +47,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## French:
 
+* #
 * Alain Portal <aportal@univ-montp2.fr>
 * Alexandre Kuoch <alex.kuoch@gmail.com>
 * Alexandre Normand <aj.normand@free.fr>
@@ -278,6 +279,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Cesar D. Lobejon <cesar@alien.mec.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
+* fmarzoa <fmarzoa@globalnet.es>
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
 * Javi Polo <javipolo@CyberJunkie.com>
