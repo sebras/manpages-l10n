@@ -26,7 +26,7 @@
 .ft
 .fi
 ..
-.TH muttrc 5 "September 2002" Unix "User Manuals"
+.TH muttrc 5 "January 2019" Unix "User Manuals"
 .SH NAME
 muttrc \- Configuration file for the Mutt Mail User Agent
 .SH DESCRIPTION
@@ -221,8 +221,9 @@ This command binds the given \fIsequence\fP of keys to the given
 specify multiple maps, put only a comma between the maps.
 .PP
 .nf
-\fBcolor\fP \fIobject\fP \fIforeground\fP \fIbackground\fP [ \fIregexp\fP ]
-\fBcolor\fP index \fIforeground\fP \fIbackground\fP [ \fIpattern\fP ]
+\fBcolor\fP \fIobject\fP [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP [ \fIregexp\fP ]
+\fBcolor\fP index [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP [ \fIpattern\fP ]
+\fBcolor\fP compose \fIcomposeobject\fP [ \fIattribute\fP ... ] \fIforeground\fP \fIbackground\fP
 \fBuncolor\fP index \fIpattern\fP [ \fIpattern\fP ... ]
 .fi
 .IP
@@ -243,9 +244,17 @@ objects allow you to restrict the colorization to a regular
 expression.  The \fBindex\fP object permits you to select colored
 messages by pattern.
 .IP
+Valid composeobjects include
+.BR header ", " security_encrypt ", " security_sign ", "
+.BR security_both ", " security_none .
+.IP
 Valid colors include:
 .BR white ", " black ", " green ", " magenta ", " blue ", "
 .BR cyan ", " yellow ", " red ", " default ", " color\fIN\fP .
+.IP
+Valid attributes include:
+.BR none ", " bold ", " underline ", "
+.BR reverse ", and " standout .
 .PP
 .nf
 \fBmono\fP \fIobject\fP \fIattribute\fP [ \fIregexp\fP ]
@@ -253,9 +262,7 @@ Valid colors include:
 .fi
 .IP
 For terminals which don't support color, you can still assign
-attributes to objects.  Valid attributes include:
-.BR none ", " bold ", " underline ", " 
-.BR reverse ", and " standout .
+attributes to objects.
 .TP
 [\fBun\fP]\fBignore\fP \fIpattern\fP [ \fIpattern\fP ... ]
 The \fBignore\fP command permits you to specify header fields which
@@ -292,7 +299,7 @@ messages will be moved to that folder when the mail folder is left.
 The first matching \fBmbox-hook\fP applies.
 .PP
 .nf
-\fBmailboxes\fP \fIfilename\fP [ \fIfilename\fP ... ]
+\fBmailboxes\fP [[\fB-poll\fP | \fB-nopoll\fP] [[\fB-label\fP \fIlabel\fP] | \fB-nolabel\fP] \fIfilename\fP] [ ... ]
 \fBunmailboxes\fP [ \fB*\fP | \fIfilename\fP ... ]
 .fi
 .IP
@@ -361,6 +368,16 @@ You may use multiple
 \fBcrypt-hook\fPs with the same \fIregexp\fP; multiple matching
 \fBcrypt-hook\fPs result in the use of multiple \fIkey-id\fPs for
 a recipient.
+.TP
+\fBindex-format-hook\fP \fIname\fP [\fB!\fP]\fIpattern\fP \fIformat-string\fP
+This command is used to inject format strings dynamically into
+$index_format based on pattern matching against the current message.
+.IP
+The $index_format expando \fI%@name@\fP specifies a placeholder for
+the injection. Index-format-hooks with the same \fIname\fP are matched
+using \fIpattern\fP against the current message. Matching is done in
+the order specified in the .muttrc, with the first match being
+used. The hook's \fIformat-string\fP is then substituted and evaluated.
 .PP
 .nf
 \fBopen-hook\fP \fIregexp\fP "\fIcommand\fP"
@@ -464,6 +481,11 @@ These commands allow the user to modify the list of allowed header
 fields in a \fImailto:\fP URL that Mutt will include in the
 the generated message.  By default the list contains only
 \fBsubject\fP and \fBbody\fP, as specified by RFC2368.
+.TP
+\fBecho\fP \fImessage\fP
+Prints \fImessage\fP to the message window. After printing the
+message, echo will pause for the number of seconds specified by
+$sleep_time.
 .SH PATTERNS
 .PP
 In various places with mutt, including some of the above mentioned
@@ -594,10 +616,10 @@ new messages
 old messages
 .TP
 ~p
-messages addressed to you (as defined by \fBalternates\fP)
+messages addressed to you (consults $from, \fBalternates\fP, and local account/hostname information)
 .TP
 ~P
-messages from you (as defined by \fBalternates\fP)
+messages from you (consults $from, \fBalternates\fP, and local account/hostname information)
 .TP
 ~Q
 messages which have been replied to
@@ -695,6 +717,8 @@ greater than or equal to 70 as lying in the 20th century.
 Note that this behavior \fIis\fP Y2K compliant, but that mutt
 \fIdoes\fP have a Y2.07K problem.
 .PP
+Alternatively, you may use \fIYYYYMMDD\fP to specify a date.
+.PP
 If a date range consists of a single date, the operator in question
 will match that precise date.  If the date range consists of a dash
 (\(lq\fB-\fP\(rq), followed by a date, this range will match any
@@ -734,8 +758,11 @@ followed by a positive number, followed by one of the unit
 characters
 .BR y ,
 .BR m ,
-.BR w ", or"
-.BR d .
+.BR w ,
+.BR d ,
+.BR H ,
+.BR M ", or"
+.BR S .
 .B >
 matches dates which are older than the specified amount of time, an
 offset which begins with the character
@@ -1033,7 +1060,7 @@ attachment number
 \(lqQ\(rq, if MIME part qualifies for attachment counting
 .TP
 %s  
-size
+size (see formatstrings-size)
 .TP
 %t  
 tagged flag
@@ -1117,6 +1144,20 @@ this except to override that default.
 
 
 .TP
+.B auto_subscribe
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt assumes the presence of a List\-Post header
+means the recipient is subscribed to the list.  Unless the mailing list
+is in the \(lqunsubscribe\(rq or \(lqunlist\(rq lists, it will be added
+to the \(lqsubscribe\(rq list.  Parsing and checking these things slows
+header reading down, so this option is disabled by default.
+
+
+.TP
 .B auto_tag
 .nf
 Type: boolean
@@ -1127,6 +1168,77 @@ When \fIset\fP, functions in the \fIindex\fP menu which affect a message
 will be applied to all tagged messages (if there are any).  When
 unset, you must first use the \fC<tag\-prefix>\fP function (bound to \(lq;\(rq
 by default) to make the next function apply to all tagged messages.
+
+
+.TP
+.B autocrypt
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, enables autocrypt, which provides
+passive encryption protection with keys exchanged via headers.
+See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_acct_format
+.nf
+Type: string
+Default: \(lq%4n %\-30a %20p %10s\(rq
+.fi
+.IP
+This variable describes the format of the \(lqautocrypt account\(rq menu.
+The following \fCprintf(3)\fP\-style sequences are understood
+.RS
+.PD 0
+.TP
+%a  
+email address
+.TP
+%k  
+gpg keyid
+.TP
+%n  
+current entry number
+.TP
+%p  
+prefer\-encrypt flag
+.TP
+%s  
+status flag (active/inactive)
+.RE
+.PD 1
+.IP
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_dir
+.nf
+Type: path
+Default: \(lq~/.mutt/autocrypt\(rq
+.fi
+.IP
+This variable sets where autocrypt files are stored, including the GPG
+keyring and sqlite database.  See \(lqautocryptdoc\(rq for more details.
+(Autocrypt only)
+
+
+.TP
+.B autocrypt_reply
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When \fIset\fP, replying to an autocrypt email automatically
+enables autocrypt in the reply.  You may want to unset this if you're using
+the same key for autocrypt as normal web\-of\-trust, so that autocrypt
+isn't forced on for all encrypted replies.
+(Autocrypt only)
 
 
 .TP
@@ -1148,6 +1260,76 @@ list of recipients is empty.
 .IP
 Also see $fast_reply.
 
+
+.TP
+.B background_edit
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt will run $editor in the background during
+message composition.  A landing page will display, waiting for
+the $editor to exit.  The landing page may be exited, allowing
+perusal of the mailbox, or even for other messages to be
+composed.  Backgrounded sessions may be returned to via the
+\fC<background\-compose\-menu>\fP function.
+.IP
+For background editing to work properly, $editor must be set to
+an editor that does not try to use the Mutt terminal: for example
+a graphical editor, or a script launching (and waiting for) the
+editor in another Gnu Screen window.
+.IP
+For more details, see \(lqbgedit\(rq (\(rqBackground Editing\(rq in the manual).
+
+
+.TP
+.B background_confirm_quit
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When \fIset\fP, if there are any background edit sessions, you
+will be prompted to confirm exiting Mutt, in addition to the
+$quit prompt.
+
+
+.TP
+.B background_format
+.nf
+Type: string
+Default: \(lq%10S %7p %s\(rq
+.fi
+.IP
+This variable describes the format of the \(lqbackground compose\(rq
+menu.  The following \fCprintf(3)\fP\-style sequences are
+understood:
+.RS
+.PD 0
+.TP
+%i 
+parent message id (for replies and forwarded messages)
+.TP
+%n 
+the running number on the menu
+.TP
+%p 
+pid of the $editor process
+.TP
+%r 
+comma separated list of \(lqTo:\(rq recipients
+.TP
+%R 
+comma separated list of \(lqCc:\(rq recipients
+.TP
+%s 
+subject of the message
+.TP
+%S 
+status of the $editor process: running/finished
+.RE
+.PD 1
 
 .TP
 .B beep
@@ -1225,6 +1407,20 @@ locale\-based sorting (using \fCstrcoll(3)\fP), which ignores some
 punctuation.  This can lead to some situations where the order
 doesn't make intuitive sense.  In those cases, it may be
 desirable to \fIunset\fP this variable.
+
+
+.TP
+.B browser_sticky_cursor
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When this variable is \fIset\fP, the browser will attempt to keep
+the cursor on the same mailbox when performing various functions.
+These include moving up a directory, toggling between mailboxes
+and directory listing, creating/renaming a mailbox, toggling
+subscribed mailboxes, and entering a new mask.
 
 
 .TP
@@ -1351,7 +1547,7 @@ total number of attachments
 local hostname
 .TP
 %l 
-approximate size (in bytes) of the current message
+approximate size (in bytes) of the current message (see formatstrings-size)
 .TP
 %v 
 Mutt version string
@@ -1435,6 +1631,24 @@ Default: yes
 This variable controls whether or not copies of your outgoing messages
 will be saved for later references.  Also see $record,
 $save_name, $force_name and \(lqfcc-hook\(rq.
+
+
+.TP
+.B count_alternatives
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, Mutt will recurse inside multipart/alternatives while
+performing attachment searching and counting (see attachments).
+.IP
+Traditionally, multipart/alternative parts have simply represented
+different encodings of the main content of the email.  Unfortunately,
+some mail clients have started to place email attachments inside
+one of alternatives.  Setting this will allow Mutt to find
+and count matching attachments hidden there, and include them
+in the index via %X or through ~X pattern matching.
 
 
 .TP
@@ -1532,6 +1746,108 @@ this option for the current message.
 If $crypt_autoencrypt or $crypt_replyencrypt enable encryption for
 a message, this option will be disabled for that message.  It can
 be manually re\-enabled in the pgp or smime menus.
+(Crypto only)
+
+
+.TP
+.B crypt_opportunistic_encrypt_strong_keys
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, this modifies the behavior of $crypt_opportunistic_encrypt
+to only search for \(rqstrong keys\(rq, that is, keys with full validity
+according to the web\-of\-trust algorithm.  A key with marginal or no
+validity will not enable opportunistic encryption.
+.IP
+For S/MIME, the behavior depends on the backend.  Classic S/MIME will
+filter for certificates with the 't' (trusted) flag in the .index file.
+The GPGME backend will use the same filters as with OpenPGP, and depends
+on GPGME's logic for assigning the GPGME_VALIDITY_FULL and
+GPGME_VALIDITY_ULTIMATE validity flag.
+
+
+.TP
+.B crypt_protected_headers_read
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+When set, Mutt will display protected headers (\(rqMemory Hole\(rq) in the pager,
+and will update the index and header cache with revised headers.
+Protected headers are stored inside the encrypted or signed part of an
+an email, to prevent disclosure or tampering.
+For more information see https://github.com/autocrypt/memoryhole.
+Currently Mutt only supports the Subject header.
+.IP
+Encrypted messages using protected headers often substitute the exposed
+Subject header with a dummy value (see $crypt_protected_headers_subject).
+Mutt will update its concept of the correct subject \fBafter\fP the
+message is opened, i.e. via the \fC<display\-message>\fP function.
+If you reply to a message before opening it, Mutt will end up using
+the dummy Subject header, so be sure to open such a message first.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_save
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When $crypt_protected_headers_read is set, and a message with a
+protected Subject is opened, Mutt will save the updated Subject
+into the header cache by default.  This allows searching/limiting
+based on the protected Subject header if the mailbox is
+re\-opened, without having to re\-open the message each time.
+However, for mbox/mh mailbox types, or if header caching is not
+set up, you would need to re\-open the message each time the
+mailbox was reopened before you could see or search/limit on the
+protected subject again.
+.IP
+When this variable is set, Mutt additionally saves the protected
+Subject back \fBin the clear\-text message headers\fP.  This
+provides better usability, but with the tradeoff of reduced
+security.  The protected Subject header, which may have
+previously been encrypted, is now stored in clear\-text in the
+message headers.  Copying the message elsewhere, via Mutt or
+external tools, could expose this previously encrypted data.
+Please make sure you understand the consequences of this before
+you enable this variable.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_subject
+.nf
+Type: string
+Default: \(lqEncrypted subject\(rq
+.fi
+.IP
+When $crypt_protected_headers_write is set, and the message is marked
+for encryption, this will be substituted into the Subject field in the
+message headers.
+To prevent a subject from being substituted, unset this variable, or set it
+to the empty string.
+(Crypto only)
+
+
+.TP
+.B crypt_protected_headers_write
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, Mutt will generate protected headers (\(rqMemory Hole\(rq) for
+signed and encrypted emails.
+Protected headers are stored inside the encrypted or signed part of an
+an email, to prevent disclosure or tampering.
+For more information see https://github.com/autocrypt/memoryhole.
+Currently Mutt only supports the Subject header.
 (Crypto only)
 
 
@@ -1934,6 +2250,25 @@ are saved along with the main body of your message.
 
 
 .TP
+.B fcc_before_send
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When this variable is \fIset\fP, FCCs will occur before sending
+the message.  Before sending, the message cannot be manipulated,
+so it will be stored the exact same as sent:
+$fcc_attach and $fcc_clear will be ignored (using their default
+values).
+.IP
+When \fIunset\fP, the default, FCCs will occur after sending.
+Variables $fcc_attach and $fcc_clear will be respected, allowing
+it to be stored without attachments or encryption/signing if
+desired.
+
+
+.TP
 .B fcc_clear
 .nf
 Type: boolean
@@ -1944,6 +2279,20 @@ When this variable is \fIset\fP, FCCs will be stored unencrypted and
 unsigned, even when the actual message is encrypted and/or
 signed.
 (PGP only)
+
+
+.TP
+.B fcc_delimiter
+.nf
+Type: string
+Default: \(lq\(rq
+.fi
+.IP
+When specified, this allows the ability to Fcc to more than one
+mailbox.  The fcc value will be split by this delimiter and Mutt
+will evaluate each part as a mailbox separately.
+.IP
+See $record, \(lqfcc-hook\(rq, and \(lqfcc-save-hook\(rq.
 
 
 .TP
@@ -2017,7 +2366,7 @@ number of unread messages in the mailbox *
 N if mailbox has new mail, blank otherwise
 .TP
 %s  
-size in bytes
+size in bytes (see formatstrings-size)
 .TP
 %t  
 \(lq*\(rq if the file is tagged, blank otherwise
@@ -2083,6 +2432,20 @@ store a copy of your outgoing message by the username of the address
 you are sending to even if that mailbox does not exist.
 .IP
 Also see the $record variable.
+
+
+.TP
+.B forward_attachments
+.nf
+Type: quadoption
+Default: ask\-yes
+.fi
+.IP
+When forwarding inline (i.e. $mime_forward \fIunset\fP or
+answered with \(lqno\(rq and $forward_decode \fIset\fP), attachments
+which cannot be decoded in a reasonable manner will be attached
+to the newly composed message if this quadoption is \fIset\fP or
+answered with \(lqyes\(rq.
 
 
 .TP
@@ -2267,8 +2630,8 @@ much faster than opening non header cached folders.
 .TP
 .B header_cache_pagesize
 .nf
-Type: string
-Default: \(lq16384\(rq
+Type: number (long)
+Default: 16384
 .fi
 .IP
 When mutt is compiled with either gdbm or bdb4 as the header cache backend,
@@ -2563,6 +2926,37 @@ commands.
 
 
 .TP
+.B imap_condstore
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, mutt will use the CONDSTORE extension (RFC 7162)
+if advertised by the server.  Mutt's current implementation is basic,
+used only for initial message fetching and flag updates.
+.IP
+For some IMAP servers, enabling this will slightly speed up
+downloading initial messages.  Unfortunately, Gmail is not one
+those, and displays worse performance when enabled.  Your
+mileage may vary.
+
+
+.TP
+.B imap_deflate
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, mutt will use the COMPRESS=DEFLATE extension (RFC
+4978) if advertised by the server.
+.IP
+In general a good compression efficiency can be achieved, which
+speeds up reading large mailboxes also on fairly good connections.
+
+
+.TP
 .B imap_delim_chars
 .nf
 Type: string
@@ -2575,6 +2969,21 @@ helps in using the \(lq=\(rq shortcut for your \fIfolder\fP variable.
 
 
 .TP
+.B imap_fetch_chunk_size
+.nf
+Type: number (long)
+Default: 0
+.fi
+.IP
+When set to a value greater than 0, new headers will be
+downloaded in groups of this many headers per request.  If you
+have a very large mailbox, this might prevent a timeout and
+disconnect when opening the mailbox, by sending a FETCH per set
+of this many headers, instead of a single FETCH for all new
+headers.
+
+
+.TP
 .B imap_headers
 .nf
 Type: string
@@ -2582,7 +2991,7 @@ Default: \(lq\(rq
 .fi
 .IP
 Mutt requests these header fields in addition to the default headers
-(\(lqDate:\(rq, \(lqFrom:\(rq, \(lqSubject:\(rq, \(lqTo:\(rq, \(lqCc:\(rq, \(lqMessage\-Id:\(rq,
+(\(lqDate:\(rq, \(lqFrom:\(rq, \(lqSender:\(rq, \(lqSubject:\(rq, \(lqTo:\(rq, \(lqCc:\(rq, \(lqMessage\-Id:\(rq,
 \(lqReferences:\(rq, \(lqContent\-Type:\(rq, \(lqContent\-Description:\(rq, \(lqIn\-Reply\-To:\(rq,
 \(lqReply\-To:\(rq, \(lqLines:\(rq, \(lqList\-Post:\(rq, \(lqX\-Label:\(rq) from IMAP
 servers before displaying the index menu. You may want to add more
@@ -2657,7 +3066,7 @@ Default: \(lq\(rq
 The command to run to generate an OAUTH refresh token for
 authorizing your connection to your IMAP server.  This command will be
 run on every connection attempt that uses the OAUTHBEARER authentication
-mechanism.
+mechanism.  See \(lqoauth\(rq for details.
 
 
 .TP
@@ -2685,7 +3094,7 @@ Default: yes
 .IP
 When \fIset\fP, mutt will not open new IMAP connections to check for new
 mail.  Mutt will only check for new mail over existing IMAP
-connections.  This is useful if you don't want to be prompted to
+connections.  This is useful if you don't want to be prompted for
 user/password pairs on mutt invocation, or if opening the connection
 is slow.
 
@@ -2730,6 +3139,22 @@ This variable specifies the maximum amount of time in seconds
 that mutt will wait for a response when polling IMAP connections
 for new mail, before timing out and closing the connection.  Set
 to 0 to disable timing out.
+
+
+.TP
+.B imap_qresync
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When \fIset\fP, mutt will use the QRESYNC extension (RFC 7162)
+if advertised by the server.  Mutt's current implementation is basic,
+used only for initial message fetching and flag updates.
+.IP
+Note: this feature is currently experimental.  If you experience
+strange behavior, such as duplicate or missing messages please
+file a bug report to let us know.
 
 
 .TP
@@ -2782,6 +3207,22 @@ Default: ask\-yes
 .IP
 Controls whether or not a copy of the message(s) you are replying to
 is included in your reply.
+
+
+.TP
+.B include_encrypted
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+Controls whether or not Mutt includes separately encrypted attachment
+contents when replying.
+.IP
+This variable was added to prevent accidental exposure of encrypted
+contents when replying to an attacker.  If a previously encrypted message
+were attached by the attacker, they could trick an unwary recipient into
+decrypting and including the message in their reply.
 
 
 .TP
@@ -2843,7 +3284,7 @@ filename of the original message folder (think mailbox)
 the list to which the letter was sent, or else the folder name (%b).
 .TP
 %c 
-number of characters (bytes) in the message
+number of characters (bytes) in the message (see formatstrings-size)
 .TP
 %C 
 current message number
@@ -2875,8 +3316,8 @@ spam attribute(s) of this message
 message\-id of the current message
 .TP
 %l 
-number of lines in the message (does not work with maildir,
-mh, and possibly IMAP folders)
+number of lines in the unprocessed message (may not work with
+maildir, mh, and IMAP folders)
 .TP
 %L 
 If an address in the \(lqTo:\(rq or \(lqCc:\(rq header field matches an address
@@ -2946,6 +3387,10 @@ the second is deleted or encryption flags (\(lqD\(rq/\(lqd\(rq/\(lqS\(rq/\(lqP\(
 the third is either tagged/flagged (\(lq*\(rq/\(lq!\(rq), or one of the characters
 listed in $to_chars.
 .TP
+%@name@ 
+insert and evaluate format\-string from the matching
+\(lqindex-format-hook\(rq command
+.TP
 %{fmt} 
 the date and time of the message is converted to sender's
 time zone, and \(lqfmt\(rq is expanded by the library function
@@ -2976,6 +3421,12 @@ soft\-fill with character \(lqX\(rq as pad
 .RE
 .PD 1
 .IP
+Note that for mbox/mmdf, \(lq%l\(rq applies to the unprocessed message, and
+for maildir/mh, the value comes from the \(lqLines:\(rq header field when
+present (the meaning is normally the same). Thus the value depends on
+the encodings used in the different parts of the message and has little
+meaning in practice.
+.IP
 \(lqSoft\-fill\(rq deserves some explanation: Normal right\-justification
 will print everything to the left of the \(lq%>\(rq, displaying padding and
 whatever lies to the right only if there's room. By contrast,
@@ -2985,14 +3436,20 @@ necessary, soft\-fill will eat text leftwards to make room for
 rightward text.
 .IP
 Note that these expandos are supported in
-\(lqsave-hook\(rq, \(lqfcc-hook\(rq and \(lqfcc-save-hook\(rq, too.
+\(lqsave-hook\(rq, \(lqfcc-hook\(rq, \(lqfcc-save-hook\(rq, and
+\(lqindex-format-hook\(rq.
+.IP
+They are also supported in the configuration variables $attribution,
+$forward_attribution_intro, $forward_attribution_trailer,
+$forward_format, $indent_string, $message_format, $pager_format,
+and $post_indent_string.
 
 
 .TP
 .B ispell
 .nf
 Type: path
-Default: \(lqispell\(rq
+Default: \(lq/usr/bin/ispell\(rq
 .fi
 .IP
 How to invoke ispell (GNU's spell\-checking software).
@@ -3050,6 +3507,10 @@ check for unread, flagged, and total message counts.  Because
 this operation is more performance intensive, it defaults to
 \fIunset\fP, and has a separate option, $mail_check_stats_interval, to
 control how often to update these counts.
+.IP
+Message statistics can also be explicitly calculated by invoking the
+\fC<check\-stats>\fP
+function.
 
 
 .TP
@@ -3071,7 +3532,8 @@ Default: \(lq\(rq
 .fi
 .IP
 This variable specifies which files to consult when attempting to
-display MIME bodies not directly supported by Mutt.
+display MIME bodies not directly supported by Mutt.  The default value
+is generated during startup: see the \(lqmailcap\(rq section of the manual.
 
 
 .TP
@@ -3540,6 +4002,9 @@ Using an external pager may have some disadvantages: Additional
 keystrokes are necessary because you can't call mutt functions
 directly from the pager, and screen resizes cause lines longer than
 the screen width to be badly formatted in the help menu.
+.IP
+When using an external pager, also see $prompt_after which defaults
+\fIset\fP.
 
 
 .TP
@@ -3944,7 +4409,7 @@ gpg \-\-list\-keys \-\-with\-colons \-\-with\-fingerprint
 
 .EE
 .IP
-This format is also generated by the \fCpgpring\fP utility which comes
+This format is also generated by the \fCmutt_pgpring\fP utility which comes
 with mutt.
 .IP
 Note: gpg's \fCfixed\-list\-mode\fP option should not be used.  It
@@ -3953,6 +4418,8 @@ incorrect key generation dates.
 .IP
 This is a format string, see the $pgp_decode_command command for
 possible \fCprintf(3)\fP\-like sequences.
+Note that in this case, %r expands to the search string, which is a list of
+one or more quoted values such as email address, name, or keyid.
 (PGP only)
 
 
@@ -3972,7 +4439,7 @@ gpg \-\-list\-keys \-\-with\-colons \-\-with\-fingerprint
 
 .EE
 .IP
-This format is also generated by the \fCpgpring\fP utility which comes
+This format is also generated by the \fCmutt_pgpring\fP utility which comes
 with mutt.
 .IP
 Note: gpg's \fCfixed\-list\-mode\fP option should not be used.  It
@@ -3981,6 +4448,8 @@ incorrect key generation dates.
 .IP
 This is a format string, see the $pgp_decode_command command for
 possible \fCprintf(3)\fP\-like sequences.
+Note that in this case, %r expands to the search string, which is a list of
+one or more quoted values such as email address, name, or keyid.
 (PGP only)
 
 
@@ -4159,7 +4628,7 @@ this if you know what you are doing.
 .TP
 .B pgp_timeout
 .nf
-Type: number
+Type: number (long)
 Default: 300
 .fi
 .IP
@@ -4172,12 +4641,24 @@ not used.
 .B pgp_use_gpg_agent
 .nf
 Type: boolean
-Default: no
+Default: yes
 .fi
 .IP
-If \fIset\fP, mutt will use a possibly\-running \fCgpg\-agent(1)\fP process.
-Note that as of version 2.1, GnuPG no longer exports GPG_AGENT_INFO, so
-mutt no longer verifies if the agent is running.
+If \fIset\fP, mutt expects a \fCgpg\-agent(1)\fP process will handle
+private key passphrase prompts.  If \fIunset\fP, mutt will prompt
+for the passphrase and pass it via stdin to the pgp command.
+.IP
+Note that as of version 2.1, GnuPG automatically spawns an agent
+and requires the agent be used for passphrase management.  Since
+that version is increasingly prevalent, this variable now
+defaults \fIset\fP.
+.IP
+Mutt works with a GUI or curses pinentry program.  A TTY pinentry
+should not be used.
+.IP
+If you are using an older version of GnuPG without an agent running,
+or another encryption program without an agent, you will need to
+\fIunset\fP this variable.
 (PGP only)
 
 
@@ -4350,7 +4831,7 @@ Default: \(lq\(rq
 The command to run to generate an OAUTH refresh token for
 authorizing your connection to your POP server.  This command will be
 run on every connection attempt that uses the OAUTHBEARER authentication
-mechanism.
+mechanism.  See \(lqoauth\(rq for details.
 
 
 .TP
@@ -4400,6 +4881,8 @@ Default: \(lq\(rq
 .IP
 Similar to the $attribution variable, Mutt will append this
 string after the inclusion of a message which is being replied to.
+For a full listing of defined \fCprintf(3)\fP\-like sequences see
+the section on $index_format.
 
 
 .TP
@@ -4718,7 +5201,11 @@ your messages, but another way to do this is using the \(lqmy_hdr\(rq
 command to create a \(lqBcc:\(rq field with your email address in it.)
 .IP
 The value of \fI$record\fP is overridden by the $force_name and
-$save_name variables, and the \(lqfcc-hook\(rq command.
+$save_name variables, and the \(lqfcc-hook\(rq command.  Also see $copy
+and $write_bcc.
+.IP
+Multiple mailboxes may be specified if $fcc_delimiter is
+set to a string delimiter.
 
 
 .TP
@@ -4903,7 +5390,7 @@ messages you are replying to \fBif\fP that address matches your
 used doesn't match your \(lqalternates\(rq, the \fIFrom:\fP line will use
 your address on the current machine.
 .IP
-Also see the \(lqalternates\(rq command.
+Also see the \(lqalternates\(rq command and $reverse_realname.
 
 
 .TP
@@ -4914,9 +5401,16 @@ Default: yes
 .fi
 .IP
 This variable fine\-tunes the behavior of the $reverse_name feature.
-When it is \fIset\fP, mutt will use the address from incoming messages as\-is,
-possibly including eventual real names.  When it is \fIunset\fP, mutt will
-override any such real names with the setting of the $realname variable.
+.IP
+When it is \fIunset\fP, Mutt will remove the real name part of a
+matching address.  This allows the use of the email address
+without having to also use what the sender put in the real name
+field.
+.IP
+When it is \fIset\fP, Mutt will use the matching address as\-is.
+.IP
+In either case, a missing real name will be filled in afterwards
+using the value of $realname.
 
 
 .TP
@@ -5084,6 +5578,37 @@ mutt uses $charset as a fallback.
 
 
 .TP
+.B send_multipart_alternative
+.nf
+Type: quadoption
+Default: no
+.fi
+.IP
+If \fIset\fP, Mutt will generate a multipart/alternative
+container and an alternative part using the filter script specified in
+$send_multipart_alternative_filter.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+.IP
+Note that enabling multipart/alternative is not compatible with inline
+PGP encryption.  Mutt will prompt to use PGP/MIME in that case.
+
+
+.TP
+.B send_multipart_alternative_filter
+.nf
+Type: path
+Default: \(lq\(rq
+.fi
+.IP
+This specifies a filter script, which will convert the main
+(composed) message of the email to an alternative format.  The
+message will be piped to the filter's stdin.  The expected output
+of the filter is the generated mime type, e.g. text/html,
+followed by a blank line, and then the converted content.
+See the section \(lqMIME Multipart/Alternative\(rq (alternative-order).
+
+
+.TP
 .B sendmail
 .nf
 Type: path
@@ -5096,6 +5621,8 @@ arguments as recipient addresses.  Mutt appends all recipients after
 adding a \fC\-\-\fP delimiter (if not already present).  Additional
 flags, such as for $use_8bitmime, $use_envelope_from,
 $dsn_notify, or $dsn_return will be added before the delimiter.
+.IP
+\fBSee also:\fP $write_bcc.
 
 
 .TP
@@ -5294,6 +5821,53 @@ the end of the list.
 
 
 .TP
+.B sidebar_relative_shortpath_indent
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, this option changes how $sidebar_short_path and
+$sidebar_folder_indent perform shortening and indentation: both
+will look at the previous sidebar entries and shorten/indent
+relative to the most recent parent.
+.IP
+An example of this option set/unset for mailboxes listed in this
+order, with $sidebar_short_path=yes,
+$sidebar_folder_indent=yes, and $sidebar_indent_string=\(rq→\(rq:
+.RS
+.PD 0
+.TP
+\fBmailbox\fP  
+\fBset\fP   
+\fBunset\fP
+.TP
+\fC=a.b\fP     
+\fC=a.b\fP  
+\fC→b\fP
+.TP
+\fC=a.b.c.d\fP 
+\fC→c.d\fP  
+\fC→→→d\fP
+.TP
+\fC=a.b.e\fP   
+\fC→e\fP    
+\fC→→e\fP
+.RE
+.PD 1
+.IP
+The second line illustrates most clearly.  With this option set,
+\fC=a.b.c.d\fP is shortened relative to \fC=a.b\fP, becoming
+\fCc.d\fP; it is also indented one place relative to \fC=a.b\fP.
+With this option unset \fC=a.b.c.d\fP is always shortened to the
+last part of the mailbox, \fCd\fP and is indented three places,
+with respect to $folder (represented by '=').
+.IP
+When set, the third line will also be indented and shortened
+relative to the first line.
+
+
+.TP
 .B sidebar_short_path
 .nf
 Type: boolean
@@ -5363,6 +5937,20 @@ entries are sorted alphabetically.  Valid values:
 .IP
 You may optionally use the \(lqreverse\-\(rq prefix to specify reverse sorting
 order (example: \(lq\fCset sort_browser=reverse\-date\fP\(rq).
+
+
+.TP
+.B sidebar_use_mailbox_shortcuts
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+When set, sidebar mailboxes will be displayed with mailbox shortcut prefixes
+\(rq=\(rq or \(rq~\(rq.
+.IP
+When unset, the sidebar will trim off a matching $folder prefix
+but otherwise not use mailbox shortcuts.
 
 
 .TP
@@ -5446,6 +6034,51 @@ For example, if you simply type \(lqjoe\(rq at a search or limit prompt, Mutt
 will automatically expand it to the value specified by this variable by
 replacing \(lq%s\(rq with the supplied string.
 For the default value, \(lqjoe\(rq would be expanded to: \(lq~f joe | ~s joe\(rq.
+
+
+.TP
+.B size_show_bytes
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes will display bytes for values less than
+1 kilobyte.  See formatstrings-size.
+
+
+.TP
+.B size_show_fractions
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will be displayed with a single decimal value
+for sizes from 0 to 10 kilobytes and 1 to 10 megabytes.
+See formatstrings-size.
+
+
+.TP
+.B size_show_mb
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, message sizes will display megabytes for values greater than
+or equal to 1 megabyte.  See formatstrings-size.
+
+
+.TP
+.B size_units_on_left
+.nf
+Type: boolean
+Default: no
+.fi
+.IP
+If \fIset\fP, message sizes units will be displayed to the left of the number.
+See formatstrings-size.
 
 
 .TP
@@ -5815,7 +6448,7 @@ possible \fCprintf(3)\fP\-like sequences.
 .TP
 .B smime_timeout
 .nf
-Type: number
+Type: number (long)
 Default: 300
 .fi
 .IP
@@ -5887,7 +6520,7 @@ Default: \(lq\(rq
 The command to run to generate an OAUTH refresh token for
 authorizing your connection to your SMTP server.  This command will be
 run on every connection attempt that uses the OAUTHBEARER authentication
-mechanism.
+mechanism.  See \(lqoauth\(rq for details.
 
 
 .TP
@@ -5925,6 +6558,8 @@ smtp[s]://[user[:pass]@]host[:port]
 where \(lq[...]\(rq denotes an optional part.
 Setting this variable overrides the value of the $sendmail
 variable.
+.IP
+Also see $write_bcc.
 
 
 .TP
@@ -5992,6 +6627,9 @@ Type: sort order
 Default: date
 .fi
 .IP
+This provides a secondary sort for messages in the \(lqindex\(rq menu, used
+when the $sort value is equal for two messages.
+.IP
 When sorting by threads, this variable controls how threads are sorted
 in relation to other threads, and how the branches of the thread trees
 are sorted.  This can be set to any value that $sort can, except
@@ -6011,8 +6649,8 @@ would mean that if a new message is received in a
 thread, that thread becomes the last one displayed (or the first, if
 you have \(lq\fCset sort=reverse\-threads\fP\(rq.)
 .IP
-Note: For reversed $sort
-order $sort_aux is reversed again (which is not the right thing to do,
+Note: For reversed\-threads $sort
+order, $sort_aux is reversed again (which is not the right thing to do,
 but kept to not break any existing configuration setting).
 
 
@@ -6166,9 +6804,9 @@ Type: boolean
 Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use SSLv2 in the
-SSL authentication process. Note that SSLv2 and SSLv3 are now
-considered fundamentally insecure and are no longer recommended.
+If \fIset\fP , Mutt will use SSLv2 when communicating with servers that
+request it. \fBN.B. As of 2011, SSLv2 is considered insecure, and using
+is inadvisable. See https://tools.ietf.org/html/rfc6176 .\fP
 (OpenSSL only)
 
 
@@ -6179,31 +6817,33 @@ Type: boolean
 Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use SSLv3 in the
-SSL authentication process. Note that SSLv2 and SSLv3 are now
-considered fundamentally insecure and are no longer recommended.
+If \fIset\fP , Mutt will use SSLv3 when communicating with servers that
+request it. \fBN.B. As of 2015, SSLv3 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
 .B ssl_use_tlsv1
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.0 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.0 when communicating with servers that
+request it. \fBN.B. As of 2015, TLSv1.0 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
 .B ssl_use_tlsv1_1
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.1 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.1 when communicating with servers that
+request it. \fBN.B. As of 2015, TLSv1.1 is considered insecure, and using
+it is inadvisable. See https://tools.ietf.org/html/rfc7525 .\fP
 
 
 .TP
@@ -6213,8 +6853,19 @@ Type: boolean
 Default: yes
 .fi
 .IP
-This variable specifies whether to attempt to use TLSv1.2 in the
-SSL authentication process.
+If \fIset\fP , Mutt will use TLSv1.2 when communicating with servers that
+request it.
+
+
+.TP
+.B ssl_use_tlsv1_3
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP , Mutt will use TLSv1.3 when communicating with servers that
+request it.
 
 
 .TP
@@ -6313,7 +6964,7 @@ forwarding, etc. are not permitted in this mode).
 .B status_format
 .nf
 Type: string
-Default: \(lq\-%r\-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]\-\-\-(%s/%S)\-%>\-(%P)\-\-\-\(rq
+Default: \(lq\-%r\-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?B? Back:%B?%?l? %l?]\-\-\-(%s/%S)\-%>\-(%P)\-\-\-\(rq
 .fi
 .IP
 Controls the format of the status line displayed in the \(lqindex\(rq
@@ -6324,6 +6975,9 @@ set of \fCprintf(3)\fP\-like sequences:
 .TP
 %b  
 number of mailboxes with new mail *
+.TP
+%B  
+number of backgrounded editing sessions *
 .TP
 %d  
 number of deleted messages *
@@ -6338,11 +6992,11 @@ number of flagged messages *
 local hostname
 .TP
 %l  
-size (in bytes) of the current mailbox *
+size (in bytes) of the current mailbox (see formatstrings-size) *
 .TP
 %L  
 size (in bytes) of the messages shown
-(i.e., which match the current limit) *
+(i.e., which match the current limit) (see formatstrings-size) *
 .TP
 %m  
 the number of messages in the mailbox *
@@ -6492,6 +7146,10 @@ This format is easier to handle for some mailing software, and generally
 just looks like ordinary text.  To actually make use of this format's
 features, you'll need support in your editor.
 .IP
+The option only controls newly composed messages.  Postponed messages,
+resent messages, and draft messages (via \-H on the command line) will
+use the content\-type of the source message.
+.IP
 Note that $indent_string is ignored when this option is \fIset\fP.
 
 
@@ -6582,7 +7240,7 @@ Default: \(lq\(rq
 This variable allows you to specify where Mutt will place its
 temporary files needed for displaying and composing messages.  If
 this variable is not set, the environment variable \fC$TMPDIR\fP is
-used.  If \fC$TMPDIR\fP is not set then \(lq\fC/tmp\fP\(rq is used.
+used.  If \fC$TMPDIR\fP is not set then \(lq\fC/var/tmp\fP\(rq is used.
 
 
 .TP
@@ -6777,7 +7435,7 @@ Normally, the default should work.
 .B user_agent
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
 When \fIset\fP, mutt will add a \(lqUser\-Agent:\(rq header to outgoing
@@ -6885,14 +7543,22 @@ Default: 0
 .B write_bcc
 .nf
 Type: boolean
-Default: yes
+Default: no
 .fi
 .IP
-Controls whether mutt writes out the \(lqBcc:\(rq header when preparing
-messages to be sent.  Exim users may wish to unset this. If mutt
-is set to deliver directly via SMTP (see $smtp_url), this
-option does nothing: mutt will never write out the \(lqBcc:\(rq header
-in this case.
+Controls whether mutt writes out the \(lqBcc:\(rq header when
+preparing messages to be sent.  Some MTAs, such as Exim and
+Courier, do not strip the \(lqBcc:\(rq header; so it is advisable to
+leave this unset unless you have a particular need for the header
+to be in the sent message.
+.IP
+If mutt is set to deliver directly via SMTP (see $smtp_url),
+this option does nothing: mutt will never write out the \(lqBcc:\(rq
+header in this case.
+.IP
+Note this option only affects the sending of messages.  Fcc'ed
+copies of a message will always contain the \(lqBcc:\(rq header if
+one exists.
 
 
 .TP

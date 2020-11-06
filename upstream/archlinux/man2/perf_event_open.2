@@ -24,7 +24,7 @@
 .\" This document is based on the perf_event.h header file, the
 .\" tools/perf/design.txt file, and a lot of bitter experience.
 .\"
-.TH PERF_EVENT_OPEN 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH PERF_EVENT_OPEN 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 perf_event_open \- set up performance monitoring
 .SH SYNOPSIS
@@ -97,6 +97,8 @@ when running on the specified CPU.
 .BR "pid == \-1" " and " "cpu >= 0"
 This measures all processes/threads on the specified CPU.
 This requires
+.B CAP_PERFMON
+(since Linux 5.8) or
 .B CAP_SYS_ADMIN
 capability or a
 .I /proc/sys/kernel/perf_event_paranoid
@@ -108,9 +110,11 @@ This setting is invalid and will return an error.
 When
 .I pid
 is greater than zero, permission to perform this system call
-is governed by a ptrace access mode
+is governed by
+.B CAP_PERFMON
+(since Linux 5.9) and a ptrace access mode
 .B PTRACE_MODE_READ_REALCREDS
-check; see
+check on older Linux versions; see
 .BR ptrace (2).
 .PP
 The
@@ -218,10 +222,10 @@ struct perf_event_attr {
           inherit        : 1,   /* children inherit it */
           pinned         : 1,   /* must always be on PMU */
           exclusive      : 1,   /* only group on PMU */
-          exclude_user   : 1,   /* don't count user */
-          exclude_kernel : 1,   /* don't count kernel */
-          exclude_hv     : 1,   /* don't count hypervisor */
-          exclude_idle   : 1,   /* don't count when idle */
+          exclude_user   : 1,   /* don\(aqt count user */
+          exclude_kernel : 1,   /* don\(aqt count kernel */
+          exclude_hv     : 1,   /* don\(aqt count hypervisor */
+          exclude_idle   : 1,   /* don\(aqt count when idle */
           mmap           : 1,   /* include mmap data */
           comm           : 1,   /* include comm data */
           freq           : 1,   /* use freq, not period */
@@ -232,8 +236,8 @@ struct perf_event_attr {
           precise_ip     : 2,   /* skid constraint */
           mmap_data      : 1,   /* non-exec mmap data */
           sample_id_all  : 1,   /* sample_type all events */
-          exclude_host   : 1,   /* don't count in host */
-          exclude_guest  : 1,   /* don't count in guest */
+          exclude_host   : 1,   /* don\(aqt count in host */
+          exclude_guest  : 1,   /* don\(aqt count in guest */
           exclude_callchain_kernel : 1,
                                 /* exclude kernel callchains */
           exclude_callchain_user   : 1,
@@ -1760,7 +1764,9 @@ the mmap buffer.
 .TP
 .IR aux_head ", " aux_tail ", " aux_offset ", " aux_size " (since Linux 4.1)"
 .\" commit 45bfb2e50471abbbfd83d40d28c986078b0d24ff
-The AUX region allows mmaping a separate sample buffer for
+The AUX region allows
+.BR mmap (2)-ing
+a separate sample buffer for
 high-bandwidth data streams (separate from the main perf sample buffer).
 An example of a high-bandwidth stream is instruction tracing support,
 as is found in newer Intel processors.
@@ -2114,6 +2120,7 @@ struct {
                         /* if PERF_SAMPLE_REGS_INTR */
 };
 .EE
+.in
 .RS 4
 .TP 4
 .I sample_id
@@ -2561,6 +2568,7 @@ struct {
     struct sample_id sample_id;
 };
 .EE
+.in
 .RS
 .TP
 .I pid
@@ -2615,6 +2623,7 @@ struct {
     struct sample_id sample_id;
 };
 .EE
+.in
 .RS
 .TP
 .I aux_offset
@@ -2651,6 +2660,7 @@ struct {
     u32    tid;
 };
 .EE
+.in
 .RS
 .TP
 .I pid
@@ -2673,6 +2683,7 @@ struct {
     struct sample_id sample_id;
 };
 .EE
+.in
 .RS
 .TP
 .I lost
@@ -2696,6 +2707,7 @@ struct {
     struct sample_id sample_id;
 };
 .EE
+.in
 .TP
 .BR PERF_RECORD_SWITCH_CPU_WIDE " (since Linux 4.3)"
 .\" commit 45ac1403f564f411c6a383a2448688ba8dd705a4
@@ -2721,6 +2733,7 @@ struct {
     struct sample_id sample_id;
 };
 .EE
+.in
 .RS
 .TP
 .I next_prev_pid
@@ -2918,6 +2931,8 @@ to hold the result.
 This allows attaching a Berkeley Packet Filter (BPF)
 program to an existing kprobe tracepoint event.
 You need
+.B CAP_PERFMON
+(since Linux 5.8) or
 .B CAP_SYS_ADMIN
 privileges to use this ioctl.
 .IP
@@ -2960,6 +2975,8 @@ have multiple events attached to a tracepoint.
 Querying this value on one tracepoint event returns the id
 of all BPF programs in all events attached to the tracepoint.
 You need
+.B CAP_PERFMON
+(since Linux 5.8) or
 .B CAP_SYS_ADMIN
 privileges to use this ioctl.
 .IP
@@ -2972,6 +2989,7 @@ struct perf_event_query_bpf {
     __u32    ids[0];
 };
 .EE
+.in
 .IP
 The
 .I ids_len
@@ -3167,6 +3185,8 @@ it was expecting.
 .TP
 .B EACCES
 Returned when the requested event requires
+.B CAP_PERFMON
+(since Linux 5.8) or
 .B CAP_SYS_ADMIN
 permissions (or a more permissive perf_event paranoid setting).
 Some common cases where an unprivileged process
@@ -3288,6 +3308,8 @@ setting is specified.
 It can also happen, as with
 .BR EACCES ,
 when the requested event requires
+.B CAP_PERFMON
+(since Linux 5.8) or
 .B CAP_SYS_ADMIN
 permissions (or a more permissive perf_event paranoid setting).
 This includes setting a breakpoint on a kernel address,
@@ -3318,6 +3340,22 @@ The official way of knowing if
 support is enabled is checking
 for the existence of the file
 .IR /proc/sys/kernel/perf_event_paranoid .
+.PP
+.B CAP_PERFMON
+capability (since Linux 5.8) provides secure approach to
+performance monitoring and observability operations in a system
+according to the principal of least privilege (POSIX IEEE 1003.1e).
+Accessing system performance monitoring and observability operations
+using
+.B CAP_PERFMON
+rather than the much more powerful
+.B CAP_SYS_ADMIN
+excludes chances to misuse credentials and makes operations more secure.
+.B CAP_SYS_ADMIN
+usage for secure system performance monitoring and observability
+is discouraged in favor of the
+.B CAP_PERFMON
+capability.
 .SH BUGS
 The
 .B F_SETOWN_EX
@@ -3419,9 +3457,9 @@ main(int argc, char **argv)
     long long count;
     int fd;
 
-    memset(&pe, 0, sizeof(struct perf_event_attr));
+    memset(&pe, 0, sizeof(pe));
     pe.type = PERF_TYPE_HARDWARE;
-    pe.size = sizeof(struct perf_event_attr);
+    pe.size = sizeof(pe);
     pe.config = PERF_COUNT_HW_INSTRUCTIONS;
     pe.disabled = 1;
     pe.exclude_kernel = 1;
@@ -3439,7 +3477,7 @@ main(int argc, char **argv)
     printf("Measuring instruction count for this printf\en");
 
     ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
-    read(fd, &count, sizeof(long long));
+    read(fd, &count, sizeof(count));
 
     printf("Used %lld instructions\en", count);
 
@@ -3457,7 +3495,7 @@ main(int argc, char **argv)
 .IR Documentation/admin-guide/perf-security.rst
 in the kernel source tree
 .SH COLOPHON
-This page is part of release 5.08 of the Linux
+This page is part of release 5.09 of the Linux
 .I man-pages
 project.
 A description of the project,

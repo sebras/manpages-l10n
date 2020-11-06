@@ -114,7 +114,7 @@ specific program
 (so long as the program doesn't otherwise reveal itself by its behavior).
 .\" As an additional bonus, since
 .\" .IR /proc/[pid]/cmdline
-.\" is unaccessible for other users,
+.\" is inaccessible for other users,
 .\" poorly written programs passing sensitive information via
 .\" program arguments are now protected against local eavesdroppers.
 .TP
@@ -1261,9 +1261,16 @@ Until kernel version 4.3,
 this directory appeared only if the
 .B CONFIG_CHECKPOINT_RESTORE
 kernel configuration option was enabled.
-Additionally, in those kernel versions, privilege
-.RB ( CAP_SYS_ADMIN )
-was required to view the contents of this directory.
+.IP
+Capabilities are required to read the contents of the symbolic links in
+this directory: before Linux 5.9, the reading process requires
+.BR CAP_SYS_ADMIN
+in the initial user namespace;
+since Linux 5.9, the reading process must have either
+.BR CAP_SYS_ADMIN
+or
+.BR CAP_CHECKPOINT_RESTORE
+in the user namespace where it resides.
 .TP
 .I /proc/[pid]/maps
 A file containing the currently mapped memory regions and their access
@@ -1311,7 +1318,7 @@ The
 .I perms
 field is a set of permissions:
 .IP
-.in +4
+.in +4n
 .EX
 r = read
 w = write
@@ -1423,12 +1430,10 @@ failure to distinguish per-mount versus per-superblock options).
 .IP
 The file contains lines of the form:
 .IP
-.in 0n
 .EX
 36 35 98:0 /mnt1 /mnt2 rw,noatime master:1 \- ext3 /dev/root rw,errors=continue
 (1)(2)(3)   (4)   (5)      (6)      (7)   (8) (9)   (10)         (11)
 .EE
-.in
 .IP
 The numbers in parentheses are labels for the descriptions below:
 .RS 7
@@ -1829,7 +1834,7 @@ and in that shell we create some new mount points:
 .IP
 .in +4n
 .EX
-$ \fBPS1='sh1# ' unshare \-Urnm\fP
+$ \fBPS1=\(aqsh1# \(aq unshare \-Urnm\fP
 sh1# \fBmount \-t tmpfs tmpfs /etc\fP  # Mount empty tmpfs at /etc
 sh1# \fBmount \-\-bind /usr /dev\fP     # Mount /usr at /dev
 sh1# \fBecho $$\fP
@@ -1843,7 +1848,7 @@ the initial and new namespaces:
 .IP
 .in +4n
 .EX
-$ \fBPS1='sh2# ' sudo sh\fP
+$ \fBPS1=\(aqsh2# \(aq sudo sh\fP
 sh2# \fBls /etc | wc \-l\fP                  # In initial NS
 309
 sh2# \fBls /proc/27123/root/etc | wc \-l\fP  # /etc in other NS
@@ -1989,7 +1994,7 @@ contains the memory protection key (see
 associated with the virtual memory area.
 This entry is present only if the kernel was built with the
 .B CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
-configuration option.
+configuration option (since Linux 4.6).
 .IP
 The "VmFlags" line (available since Linux 3.8)
 represents the kernel flags associated with the virtual memory area,
@@ -2028,13 +2033,6 @@ encoded using the following two-letter codes:
     um  - userfaultfd missing pages tracking (since Linux 4.3)
     uw  - userfaultfd wprotect pages tracking (since Linux 4.3)
 .IP
-"ProtectionKey" field contains the memory protection key (see
-.BR pkeys (7))
-associated with the virtual memory area.
-Present only if the kernel was built with the
-.B CONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS
-configuration option. (since Linux 4.6)
-.IP
 The
 .IR /proc/[pid]/smaps
 file is present only if the
@@ -2072,7 +2070,7 @@ check (refer to
 If the check denies access, then the field value is displayed as 0.
 The affected fields are indicated with the marking [PT].
 .RS
-.TP 10
+.TP
 (1) \fIpid\fP \ %d
 .br
 The process ID.
@@ -2267,6 +2265,9 @@ This is just the pages which
 count toward text, data, or stack space.
 This does not include pages
 which have not been demand-loaded in, or which are swapped out.
+This value is inaccurate; see
+.I /proc/[pid]/statm
+below.
 .TP
 (25) \fIrsslim\fP \ %lu
 Current soft limit in bytes on the rss of the process;
@@ -2411,9 +2412,11 @@ The columns are:
 size       (1) total program size
            (same as VmSize in \fI/proc/[pid]/status\fP)
 resident   (2) resident set size
-           (same as VmRSS in \fI/proc/[pid]/status\fP)
-shared     (3) number of resident shared pages (i.e., backed by a file)
-           (same as RssFile+RssShmem in \fI/proc/[pid]/status\fP)
+           (inaccurate; same as VmRSS in \fI/proc/[pid]/status\fP)
+shared     (3) number of resident shared pages
+           (i.e., backed by a file)
+           (inaccurate; same as RssFile+RssShmem in
+           \fI/proc/[pid]/status\fP)
 text       (4) text (code)
 .\" (not including libs; broken, includes data segment)
 lib        (5) library (unused since Linux 2.6; always 0)
@@ -2422,6 +2425,16 @@ data       (6) data + stack
 dt         (7) dirty pages (unused since Linux 2.6; always 0)
 .EE
 .in
+.IP
+.\" See SPLIT_RSS_COUNTING in the kernel.
+.\" Inaccuracy is bounded by TASK_RSS_EVENTS_THRESH.
+Some of these values are inaccurate because
+of a kernel-internal scalability optimization.
+If accurate values are required, use
+.I /proc/[pid]/smaps
+or
+.I /proc/[pid]/smaps_rollup
+instead, which are much slower but provide accurate, detailed information.
 .TP
 .I /proc/[pid]/status
 Provides much of the information in
@@ -2494,19 +2507,19 @@ nonvoluntary_ctxt_switches:     545
 .IP
 The fields are as follows:
 .RS
-.IP * 2
-.IR Name :
+.TP
+.IR Name
 Command run by this process.
 Strings longer than
 .B TASK_COMM_LEN
 (16) characters (including the terminating null byte) are silently truncated.
-.IP *
-.IR Umask :
+.TP
+.IR Umask
 Process umask, expressed in octal with a leading zero; see
 .BR umask (2).
 (Since Linux 4.7.)
-.IP *
-.IR State :
+.TP
+.IR State
 Current state of the process.
 One of
 "R (running)",
@@ -2517,33 +2530,33 @@ One of
 "Z (zombie)",
 or
 "X (dead)".
-.IP *
-.IR Tgid :
+.TP
+.IR Tgid
 Thread group ID (i.e., Process ID).
-.IP *
-.IR Ngid :
+.TP
+.IR Ngid
 NUMA group ID (0 if none; since Linux 3.13).
-.IP *
-.IR Pid :
+.TP
+.IR Pid
 Thread ID (see
 .BR gettid (2)).
-.IP *
-.IR PPid :
+.TP
+.IR PPid
 PID of parent process.
-.IP *
-.IR TracerPid :
+.TP
+.IR TracerPid
 PID of process tracing this process (0 if not being traced).
-.IP *
-.IR Uid ", " Gid :
+.TP
+.IR Uid ", " Gid
 Real, effective, saved set, and filesystem UIDs (GIDs).
-.IP *
-.IR FDSize :
+.TP
+.IR FDSize
 Number of file descriptor slots currently allocated.
-.IP *
-.IR Groups :
+.TP
+.IR Groups
 Supplementary group list.
-.IP *
-.IR NStgid :
+.TP
+.IR NStgid
 Thread group ID (i.e., PID) in each of the PID namespaces of which
 .I [pid]
 is a member.
@@ -2553,24 +2566,24 @@ if mounted by the kernel),
 followed by the value in successively nested inner namespaces.
 .\" commit e4bc33245124db69b74a6d853ac76c2976f472d5
 (Since Linux 4.1.)
-.IP *
-.IR NSpid :
+.TP
+.IR NSpid
 Thread ID in each of the PID namespaces of which
 .I [pid]
 is a member.
 The fields are ordered as for
 .IR NStgid .
 (Since Linux 4.1.)
-.IP *
-.IR NSpgid :
+.TP
+.IR NSpgid
 Process group ID in each of the PID namespaces of which
 .I [pid]
 is a member.
 The fields are ordered as for
 .IR NStgid .
 (Since Linux 4.1.)
-.IP *
-.IR NSsid :
+.TP
+.IR NSsid
 descendant namespace session ID hierarchy
 Session ID in each of the PID namespaces of which
 .I [pid]
@@ -2578,77 +2591,95 @@ is a member.
 The fields are ordered as for
 .IR NStgid .
 (Since Linux 4.1.)
-.IP *
-.IR VmPeak :
+.TP
+.IR VmPeak
 Peak virtual memory size.
-.IP *
-.IR VmSize :
+.TP
+.IR VmSize
 Virtual memory size.
-.IP *
-.IR VmLck :
+.TP
+.IR VmLck
 Locked memory size (see
 .BR mlock (2)).
-.IP *
-.IR VmPin :
+.TP
+.IR VmPin
 Pinned memory size
 .\" commit bc3e53f682d93df677dbd5006a404722b3adfe18
 (since Linux 3.2).
 These are pages that can't be moved because something needs to
 directly access physical memory.
-.IP *
-.IR VmHWM :
+.TP
+.IR VmHWM
 Peak resident set size ("high water mark").
-.IP *
-.IR VmRSS :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR VmRSS
 Resident set size.
 Note that the value here is the sum of
 .IR RssAnon ,
 .IR RssFile ,
 and
 .IR RssShmem .
-.IP *
-.IR RssAnon :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR RssAnon
 Size of resident anonymous memory.
 .\" commit bf9683d6990589390b5178dafe8fd06808869293
 (since Linux 4.5).
-.IP *
-.IR RssFile :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR RssFile
 Size of resident file mappings.
 .\" commit bf9683d6990589390b5178dafe8fd06808869293
 (since Linux 4.5).
-.IP *
-.IR RssShmem :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR RssShmem
 Size of resident shared memory (includes System V shared memory,
 mappings from
 .BR tmpfs (5),
 and shared anonymous mappings).
 .\" commit bf9683d6990589390b5178dafe8fd06808869293
 (since Linux 4.5).
-.IP *
-.IR VmData ", " VmStk ", " VmExe :
+.TP
+.IR VmData ", " VmStk ", " VmExe
 Size of data, stack, and text segments.
-.IP *
-.IR VmLib :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR VmLib
 Shared library code size.
-.IP *
-.IR VmPTE :
+.TP
+.IR VmPTE
 Page table entries size (since Linux 2.6.10).
-.IP *
-.IR VmPMD :
+.TP
+.IR VmPMD
 .\" commit dc6c9a35b66b520cf67e05d8ca60ebecad3b0479
 Size of second-level page tables (added in Linux 4.0; removed in Linux 4.15).
-.IP *
-.IR VmSwap :
+.TP
+.IR VmSwap
 .\" commit b084d4353ff99d824d3bc5a5c2c22c70b1fba722
 Swapped-out virtual memory size by anonymous private pages;
 shmem swap usage is not included (since Linux 2.6.34).
-.IP *
-.IR HugetlbPages :
+This value is inaccurate; see
+.I /proc/[pid]/statm
+above.
+.TP
+.IR HugetlbPages
 Size of hugetlb memory portions
 .\" commit 5d317b2b6536592a9b51fe65faed43d65ca9158e
 (since Linux 4.4).
-.IP *
-.IR CoreDumping :
+.TP
+.IR CoreDumping
 Contains the value 1 if the process is currently dumping core,
 and 0 if it is not
 .\" commit c643401218be0f4ab3522e0c0a63016596d6e9ca
@@ -2656,11 +2687,11 @@ and 0 if it is not
 This information can be used by a monitoring process to avoid killing
 a process that is currently dumping core,
 which could result in a corrupted core dump file.
-.IP *
-.IR Threads :
+.TP
+.IR Threads
 Number of threads in process containing this thread.
-.IP *
-.IR SigQ :
+.TP
+.IR SigQ
 This field contains two slash-separated numbers that relate to
 queued signals for the real user ID of this process.
 The first of these is the number of currently queued
@@ -2670,44 +2701,44 @@ resource limit on the number of queued signals for this process
 .BR RLIMIT_SIGPENDING
 in
 .BR getrlimit (2)).
-.IP *
-.IR SigPnd ", " ShdPnd :
+.TP
+.IR SigPnd ", " ShdPnd
 Mask (expressed in hexadecimal)
 of signals pending for thread and for process as a whole (see
 .BR pthreads (7)
 and
 .BR signal (7)).
-.IP *
-.IR SigBlk ", " SigIgn ", " SigCgt :
+.TP
+.IR SigBlk ", " SigIgn ", " SigCgt
 Masks (expressed in hexadecimal)
 indicating signals being blocked, ignored, and caught (see
 .BR signal (7)).
-.IP *
-.IR CapInh ", " CapPrm ", " CapEff :
+.TP
+.IR CapInh ", " CapPrm ", " CapEff
 Masks (expressed in hexadecimal)
 of capabilities enabled in inheritable, permitted, and effective sets
 (see
 .BR capabilities (7)).
-.IP *
-.IR CapBnd :
+.TP
+.IR CapBnd
 Capability bounding set, expressed in hexadecimal
 (since Linux 2.6.26, see
 .BR capabilities (7)).
-.IP *
-.IR CapAmb :
+.TP
+.IR CapAmb
 Ambient capability set, expressed in hexadecimal
 (since Linux 4.3, see
 .BR capabilities (7)).
-.IP *
-.IR NoNewPrivs :
+.TP
+.IR NoNewPrivs
 .\" commit af884cd4a5ae62fcf5e321fecf0ec1014730353d
 Value of the
 .I no_new_privs
 bit
 (since Linux 4.10, see
 .BR prctl (2)).
-.IP *
-.IR Seccomp :
+.TP
+.IR Seccomp
 .\" commit 2f4b3bf6b2318cfaa177ec5a802f4d8d6afbd816
 Seccomp mode of the process
 (since Linux 3.8, see
@@ -2721,34 +2752,34 @@ Seccomp mode of the process
 This field is provided only if the kernel was built with the
 .BR CONFIG_SECCOMP
 kernel configuration option enabled.
-.IP *
-.IR Speculation_Store_Bypass :
+.TP
+.IR Speculation_Store_Bypass
 .\" commit fae1fa0fc6cca8beee3ab8ed71d54f9a78fa3f64
 Speculation flaw mitigation state
 (since Linux 4.17, see
 .BR prctl (2)).
-.IP *
-.IR Cpus_allowed :
+.TP
+.IR Cpus_allowed
 Hexadecimal mask of CPUs on which this process may run
 (since Linux 2.6.24, see
 .BR cpuset (7)).
-.IP *
-.IR Cpus_allowed_list :
+.TP
+.IR Cpus_allowed_list
 Same as previous, but in "list format"
 (since Linux 2.6.26, see
 .BR cpuset (7)).
-.IP *
-.IR Mems_allowed :
+.TP
+.IR Mems_allowed
 Mask of memory nodes allowed to this process
 (since Linux 2.6.24, see
 .BR cpuset (7)).
-.IP *
-.IR Mems_allowed_list :
+.TP
+.IR Mems_allowed_list
 Same as previous, but in "list format"
 (since Linux 2.6.26, see
 .BR cpuset (7)).
-.IP *
-.IR voluntary_ctxt_switches ", " nonvoluntary_ctxt_switches :
+.TP
+.IR voluntary_ctxt_switches ", " nonvoluntary_ctxt_switches
 Number of voluntary and involuntary context switches (since Linux 2.6.23).
 .RE
 .TP
@@ -3009,14 +3040,13 @@ requests and to counter memory fragmentation.
 The order matches the column number, when starting to count at zero.
 .IP
 For example on an x86-64 system:
-.IP
-.in -12n
+.RS -12
 .EX
 Node 0, zone     DMA     1    1    1    0    2    1    1    0    1    1    3
 Node 0, zone   DMA32    65   47    4   81   52   28   13   10    5    1  404
 Node 0, zone  Normal   216   55  189  101   84   38   37   27    5    3  587
 .EE
-.in
+.RE
 .IP
 In this example, there is one node containing three zones and there
 are 11 different chunk sizes.
@@ -3182,7 +3212,7 @@ driver             driver version
 geometry           physical and logical geometry
 identify           in hexadecimal
 media              media type
-model              manufacturer's model number
+model              manufacturer\(aqs model number
 settings           drive settings
 smart_thresholds   IDE disk management thresholds (in hex)
 smart_values       IDE disk management values (in hex)
@@ -3834,7 +3864,7 @@ address resolutions.
 It will show both dynamically learned and preprogrammed ARP entries.
 The format is:
 .IP
-.in 7n
+.in +4n
 .EX
 IP address     HW type   Flags     HW address          Mask   Device
 192.168.0.50   0x1       0x2       00:50:BF:25:68:F3   *      eth0
@@ -3862,7 +3892,6 @@ These are used by the
 program to report device status.
 The format is:
 .IP
-.in 1n
 .EX
 Inter\-|   Receive                                                |  Transmit
  face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
@@ -3871,7 +3900,6 @@ Inter\-|   Receive                                                |  Transmit
   ppp0: 1622270    5552    1    0    0     0          0         0   354130    5669    0    0    0     0       0          0
   tap0:    7714      81    0    0    0     0          0         0     7714      81    0    0    0     0       0          0
 .EE
-.in
 .\" .TP
 .\" .I /proc/net/ipx
 .\" No information.
@@ -3883,7 +3911,7 @@ Inter\-|   Receive                                                |  Transmit
 Defined in
 .IR /usr/src/linux/net/core/dev_mcast.c :
 .IP
-.in +4
+.in +4n
 .EX
 indx interface_name  dmi_u dmi_g dmi_address
 2    eth0            1     0     01005e000001
@@ -3965,27 +3993,23 @@ The "uid"
 field holds the effective UID of the creator of the socket.
 The format is:
 .IP
-.in 1n
 .EX
 sl  local_address rem_address   st tx_queue rx_queue tr rexmits  tm\->when uid
  1: 01642C89:0201 0C642C89:03FF 01 00000000:00000001 01:000071BA 00000000 0
  1: 00000000:0801 00000000:0000 0A 00000000:00000000 00:00000000 6F000100 0
  1: 00000000:0201 00000000:0000 0A 00000000:00000000 00:00000000 00000000 0
 .EE
-.in
 .TP
 .I /proc/net/unix
 Lists the UNIX domain sockets present within the system and their
 status.
 The format is:
 .IP
-.in 1n
 .EX
 Num RefCount Protocol Flags    Type St Inode Path
  0: 00000002 00000000 00000000 0001 03    42
  1: 00000001 00000000 00010000 0001 01  1948 /dev/printer
 .EE
-.in
 .IP
 The fields are as follows:
 .RS
@@ -4087,7 +4111,7 @@ full; that is, user space is not able to read messages fast enough.
 (8)
 sequence number.
 Every queued packet is associated with a (32-bit)
-monotonically-increasing sequence number.
+monotonically increasing sequence number.
 This shows the ID of the most recent packet queued.
 .RE
 .IP
@@ -4459,6 +4483,7 @@ which can be used by a process to set the per-process limit,
 on the number of files it may open.)
 If you get lots
 of error messages in the kernel log about running out of file handles
+(open file descriptions)
 (look for "VFS: file\-max limit <number> reached"),
 try increasing this value:
 .IP
@@ -4477,7 +4502,8 @@ limit.
 .I /proc/sys/fs/file\-nr
 This (read-only) file contains three numbers:
 the number of allocated file handles
-(i.e., the number of files presently opened);
+(i.e., the number of open file descriptions; see
+.BR open (2));
 the number of free file handles;
 and the maximum number of file handles (i.e., the same value as
 .IR /proc/sys/fs/file\-max ).
@@ -5987,7 +6013,7 @@ This allows multiple readouts.
 Sample output from
 .IR /proc/timer_stats :
 .IP
-.in 4n
+.in +4n
 .EX
 .RB $ " cat /proc/timer_stats"
 Timer Stats Version: v0.3
@@ -6047,7 +6073,7 @@ and
 .IR /proc/sys/kernel/version .
 For example:
 .IP
-.in 8n
+.in +4n
 .EX
 Linux version 1.0.9 (quinlan@phaze) #1 Sat May 14 01:51:54 EDT 1994
 .EE
@@ -6809,7 +6835,7 @@ The Linux kernel source files:
 and
 .IR Documentation/sysctl/vm.txt .
 .SH COLOPHON
-This page is part of release 5.08 of the Linux
+This page is part of release 5.09 of the Linux
 .I man-pages
 project.
 A description of the project,
