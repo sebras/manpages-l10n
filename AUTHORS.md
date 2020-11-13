@@ -40,6 +40,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Czech:
 
+* Jiří Pavlovský <pavlovsk@ff.cuni.cz>
 * Jirka Santolik <jiri.santolik@st.ms.mff.cuni.cz>
 * Karel Dušek <kargee.dusek@seznam.cz>
 * Pavel Heimlich <tropikhajma@gmail.com>
