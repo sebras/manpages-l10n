@@ -49,6 +49,34 @@ done
 sort translators_pt_BR.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_pt_BR.list
 cat tmp_pt_BR.list >> AUTHORS.md
 
+# Generate Czech authors list
+echo >> AUTHORS.md
+echo >> AUTHORS.md
+echo "## Czech:" >> AUTHORS.md
+echo >> AUTHORS.md
+
+# Extract all Dutch translators from the copyright headers
+files=$(find po/cs/man? -name "*po" | sort)
+# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
+for translation in $files; do
+	# Use the header up until the first msgid
+	# and remove the comment character
+	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
+	# Throw away the common (non translator) lines
+	grep -v "Czech translation of manpages" |
+	grep -v "This file is distributed under the same license as the manpages-l10n package" |
+	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
+	grep -v "msgid" |
+	# Split lines to extract the name (and e-mail address)
+	cut -f1 -d",")
+	# Save a list of all translators in a temporary file for copyright determination
+	echo "$translators" >> translators_cs.list
+done
+# Sort, unique, remove blank lines from file, and indent with an asterisk
+sort translators_cs.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_cs.list
+cat tmp_cs.list >> AUTHORS.md
+
 # Generate Dutch authors list
 echo >> AUTHORS.md
 echo >> AUTHORS.md
