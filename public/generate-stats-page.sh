@@ -88,7 +88,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in de es fr it nl pl pt_BR ro; do
+for tlang in cs de es fr it nl pl pt_BR ro; do
     echo $tlang
 
 # Determine manpage section names
