@@ -38,6 +38,15 @@ of Linux manpages. The list is sorted alphabetically.
 * Walter Rodrigo de Sá Cruz <keytech@bol.com.br>
 
 
+## Czech:
+
+* Jirka Santolik <jiri.santolik@st.ms.mff.cuni.cz>
+* Karel Dušek <kargee.dusek@seznam.cz>
+* Pavel Heimlich <tropikhajma@gmail.com>
+* Petr Sykora <petrsykora@jabber.tecka.cz>
+* Václav Doubek <vaclav.doubek@pslib.cz>
+
+
 ## Dutch:
 
 * Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>
