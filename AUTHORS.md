@@ -57,7 +57,6 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## French:
 
-* #
 * Alain Portal <aportal@univ-montp2.fr>
 * Alexandre Kuoch <alex.kuoch@gmail.com>
 * Alexandre Normand <aj.normand@free.fr>
