@@ -54,6 +54,7 @@ cat > index.html <<-END_OF_HEADER
   Currently, the following languages are integrated:
   </p>
       <ul>
+        <li><a href="index-cs.html">The Czech translation</a></li>
         <li><a href="index-nl.html">The Dutch translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
