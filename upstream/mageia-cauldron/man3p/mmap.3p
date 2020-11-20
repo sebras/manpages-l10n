@@ -1,11 +1,12 @@
 '\" et
-.TH MMAP "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH MMAP "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 mmap
 \(em map pages of memory
@@ -39,9 +40,9 @@ The format of the call is as follows:
 .sp
 .RS 4
 .nf
-\fB
+
 \fIpa\fR=\fImmap\fR(\fIaddr\fP, \fIlen\fP, \fIprot\fP, \fIflags\fP, \fIfildes\fP, \fIoff\fP);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -252,10 +253,13 @@ may return MAP_FAILED and set
 .IR errno
 to
 .BR [EINVAL] .
-If a MAP_FIXED request is successful, the mapping established by
-\fImmap\fR()
-replaces any previous mappings for the pages in the range
-[\fIpa\fP,\fIpa\fP+\fIlen\fR) of the process.
+If a MAP_FIXED request is successful, then any previous mappings
+or memory locks
+for those whole pages containing any part of the address range
+[\fIpa\fP,\fIpa\fP+\fIlen\fR) shall be removed, as if by an
+appropriate call to
+\fImunmap\fR(),
+before the new mapping is established.
 .P
 When MAP_FIXED is not set, the implementation uses
 .IR addr
@@ -540,12 +544,12 @@ the following:
 .sp
 .RS 4
 .nf
-\fB
+
 fildes = open(...)
 lseek(fildes, some_offset)
 read(fildes, buf, len)
 /* Use data in buf. */
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -553,11 +557,11 @@ becomes:
 .sp
 .RS 4
 .nf
-\fB
+
 fildes = open(...)
 address = mmap(0, len, PROT_READ, MAP_PRIVATE, fildes, some_offset)
 /* Use data at address. */
-.fi \fR
+.fi
 .P
 .RE
 .SH RATIONALE
@@ -585,24 +589,26 @@ address of it; such implementations probably do not allocate any more
 than is necessary. References past the end of the requested area are
 unspecified.
 .P
-If an application requests a mapping that would overlay existing
-mappings in the process, it might be desirable that an implementation
-detect this and inform the application. However, the default, portable
-(not MAP_FIXED)
-operation does not overlay existing mappings. On the other hand, if the
-program specifies a fixed address mapping (which requires some
-implementation knowledge to determine a suitable address, if the
-function is supported at all), then the program is presumed to be
-successfully managing its own address space and should be trusted when
-it asks to map over existing data structures. Furthermore, it is also
-desirable to make as few system calls as possible, and it might be
-considered onerous to require an
+If an application requests a mapping that overlaps existing mappings
+in the process, it might be desirable that an implementation detect
+this and inform the application. However, if the program specifies a
+fixed address mapping (which requires some implementation knowledge to
+determine a suitable address, if the function is supported at all),
+then the program is presumed to be successfully managing its own
+address space and should be trusted when it asks to map over existing
+data structures. Furthermore, it is also desirable to make as few
+system calls as possible, and it might be considered onerous to
+require an
 \fImunmap\fR()
 before an
 \fImmap\fR()
-to the same address range. This volume of POSIX.1\(hy2008 specifies that the new mappings
-replace any existing mappings, following existing practice in this
-regard.
+to the same address range. This volume of POSIX.1\(hy2017 specifies that the new mapping
+replaces any existing mappings (implying an automatic
+\fImunmap\fR()
+on the address range), following existing practice in this regard.
+The standard developers also considered whether there should be a way
+for new mappings to overlay existing mappings, but found no existing
+practice for this.
 .P
 It is not expected that all hardware implementations are able to
 support all combinations of permissions at all addresses.
@@ -680,18 +686,18 @@ memory hardware. Instead, the size can be directly manipulated by
 \fIftruncate\fR().
 .P
 Process memory locking does apply to shared memory regions, and the
-MEMLOCK_FUTURE argument to
+MCL_FUTURE argument to
 \fImlockall\fR()
 can be relied upon to cause new shared memory regions to be
 automatically locked.
 .P
 Existing implementations of
 \fImmap\fR()
-return the value \(mi1 when unsuccessful. Since the casting of this
+return the value \-1 when unsuccessful. Since the casting of this
 value to type
 .BR "void *"
 cannot be guaranteed by the ISO\ C standard to be distinct from a successful
-value, this volume of POSIX.1\(hy2008 defines the symbol MAP_FAILED,
+value, this volume of POSIX.1\(hy2017 defines the symbol MAP_FAILED,
 which a conforming implementation does not return as the result of a
 successful call.
 .SH "FUTURE DIRECTIONS"
@@ -708,20 +714,21 @@ None.
 .IR "\fIshmat\fR\^(\|)",
 .IR "\fIsysconf\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<sys_mman.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

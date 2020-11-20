@@ -1,17 +1,18 @@
 '\" et
-.TH M4 "1P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH M4 "1P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 m4 \(em macro processor
 .SH SYNOPSIS
 .LP
 .nf
-m4 \fB[\fR\(mis\fB] [\fR\(miD \fIname\fB[\fR=\fIval\fB]]\fR...\fB [\fR\(miU \fIname\fB]\fR... \fIfile\fR...
+m4 \fB[\fR-s\fB] [\fR-D \fIname\fB[\fR=\fIval\fB]]\fR...\fB [\fR-U \fIname\fB]\fR... \fIfile\fR...
 .fi
 .SH DESCRIPTION
 The
@@ -22,23 +23,23 @@ the results to standard output.
 .SH OPTIONS
 The
 .IR m4
-utility shall conform to the Base Definitions volume of POSIX.1\(hy2008,
+utility shall conform to the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines",
 except that the order of the
-.BR \(miD
+.BR \-D
 and
-.BR \(miU
+.BR \-U
 options shall be significant, and options can be interspersed with
 operands.
 .P
 The following options shall be supported:
-.IP "\fB\(mis\fP" 10
+.IP "\fB\-s\fP" 10
 Enable line synchronization output for the
 .IR c99
 preprocessor phase (that is,
 .BR #line
 directives).
-.IP "\fB\(miD\ \fIname\fB[\fR=\fIval\fB]\fR" 10
+.IP "\fB\-D\ \fIname\fB[\fR=\fIval\fB]\fR" 10
 .br
 Define
 .IR name
@@ -47,7 +48,7 @@ to
 or to null if =\c
 .IR val
 is omitted.
-.IP "\fB\(miU\ \fIname\fR" 10
+.IP "\fB\-U\ \fIname\fR" 10
 Undefine
 .IR name .
 .SH OPERANDS
@@ -56,13 +57,13 @@ The following operand shall be supported:
 A pathname of a text file to be processed. If no
 .IR file
 is given, or if it is
-.BR '\(mi' ,
+.BR '\-' ,
 the standard input shall be read.
 .SH STDIN
 The standard input shall be a text file that is used if no
 .IR file
 operand is given, or if it is
-.BR '\(mi' .
+.BR '\-' .
 .SH "INPUT FILES"
 The input file named by the
 .IR file
@@ -72,7 +73,7 @@ The following environment variables shall affect the execution of
 .IR m4 :
 .IP "\fILANG\fP" 10
 Provide a default value for the internationalization variables that are
-unset or null. (See the Base Definitions volume of POSIX.1\(hy2008,
+unset or null. (See the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 8.2" ", " "Internationalization Variables"
 for the precedence of internationalization variables used to determine
 the values of locale categories.)
@@ -120,9 +121,9 @@ Macro calls have the form:
 .sp
 .RS 4
 .nf
-\fB
+
 \fIname\fR(\fIarg1\fR, \fIarg2\fR, ..., \fIargn\fR)
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -325,18 +326,18 @@ associativity, and behavior as described in
 .sp
 .RS 4
 .nf
-\fB
+
 ()
 unary +
-unary \(mi
-\&~
+unary -
+\&\(ti
 .P
 \&!
 binary *
 /
 %
 binary +
-binary \(mi
+binary -
 <<
 >>
 <
@@ -346,11 +347,11 @@ binary \(mi
 =\|=
 !=
 binary &
-\&^
+\&\(ha
 |
 &&
 ||
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -413,7 +414,7 @@ The defining text of the
 .BR index
 macro shall be the first character position (as a string) in the first
 argument where a string matching the second argument begins (zero
-origin), or \(mi1 if the second argument does not occur.
+origin), or \-1 if the second argument does not occur.
 The behavior is unspecified if
 .BR index
 is not immediately followed by a
@@ -429,9 +430,14 @@ is not immediately followed by a
 .IP "\fBm4exit\fR" 10
 Exit from the
 .IR m4
-utility. If the first argument is specified, it is the exit code. The
-default is zero. It shall be an error to specify an argument containing
-any non-numeric characters.
+utility. If the first argument is specified, it shall be the exit
+code. If no argument is specified, the exit code shall be zero. It
+shall be an error to specify an argument containing any non-numeric
+characters. If the first argument is zero or no argument is specified,
+and an error has previously occurred (for example, a
+.IR file
+operand that could not be opened), it is unspecified whether the exit
+status is zero or non-zero.
 .IP "\fBm4wrap\fR" 10
 The first argument shall be processed when EOF is reached. If the
 .BR m4wrap
@@ -451,24 +457,17 @@ The behavior is unspecified if
 is not immediately followed by a
 <left-parenthesis>.
 .IP "\fBmkstemp\fR" 10
-The first argument shall be taken as a template for creating an
-empty file, with trailing
-.BR 'X' 
-characters replaced with characters from the portable filename
-character set. The behavior is unspecified if the first argument
-does not end in at least six
-.BR 'X' 
-characters. If a temporary file is successfully created, then the
-defining text of the macro shall be the name of the new file.
-The user ID of the file shall be set to the effective user ID
-of the process. The group ID of the file shall be set to the group ID
-of the file's parent directory or to the effective group ID of the
-process. The file access permission bits are set such that
-only the owner can both read and write the file, regardless of
-the current
-.IR umask
-of the process. If a file could not be created, the defining text
-of the macro shall be the empty string. The behavior is unspecified if
+The defining text shall be as if it were the resulting pathname after
+a successful call to the
+\fImkstemp\fR()
+function defined in the System Interfaces volume of POSIX.1\(hy2017 called with the first argument to the
+macro invocation. If a file is created, that file shall be closed.
+If a file could not be created, the
+.IR m4
+utility shall write a diagnostic message to standard error and shall
+continue processing input but its final exit status shall be non-zero;
+the defining text of the macro shall be the empty string. The behavior
+is unspecified if
 .BR mkstemp
 is not immediately followed by a
 <left-parenthesis>.
@@ -569,7 +568,7 @@ source character because the second argument is longer than the third
 argument, that character shall be deleted from the first argument in
 .BR translit 's
 defining text. The behavior is unspecified if the
-.BR '\(mi' 
+.BR '\-' 
 character appears within the second or third argument anywhere besides
 the first or last character. The behavior is unspecified if the same
 character appears more than once in the second argument. The behavior
@@ -629,7 +628,7 @@ operators with a shift amount that is not positive and smaller
 than the precision is undefined, as is shifting a negative number to
 the right. Historically, not all implementations obeyed C-language
 precedence rules:
-.BR '~' 
+.BR '\(ti' 
 and
 .BR '!' 
 were lower than
@@ -642,12 +641,12 @@ were not lower than
 and
 .BR '|' 
 was not lower than
-.BR '^' ;
+.BR '\(ha' ;
 the liberal use of
 .BR \(dq()\(dq 
 can force the desired precedence even with these non-compliant
 implementations. Furthermore, some traditional implementations treated
-.BR '^' 
+.BR '\(ha' 
 as an exponentiation operator, although most implementations now use
 .BR \(dq**\(dq 
 as an extension for this purpose.
@@ -681,13 +680,13 @@ contains the lines:
 .sp
 .RS 4
 .nf
-\fB
-The value of `VER' is "VER".
-ifdef(`VER', ``VER'' is defined to be VER., VER is not defined.)
-ifelse(VER, 1, ``VER'' is `VER'.)
-ifelse(VER, 2, ``VER'' is `VER'., ``VER'' is not 2.)
+
+The value of `VER\(aq is "VER".
+ifdef(`VER\(aq, ``VER\(aq\(aq is defined to be VER., VER is not defined.)
+ifelse(VER, 1, ``VER\(aq\(aq is `VER\(aq.)
+ifelse(VER, 2, ``VER\(aq\(aq is `VER\(aq., ``VER\(aq\(aq is not 2.)
 end
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -695,9 +694,9 @@ then the command
 .sp
 .RS 4
 .nf
-\fB
+
 m4 m4src
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -705,9 +704,9 @@ or the command:
 .sp
 .RS 4
 .nf
-\fB
-m4 \(miU VER m4src
-.fi \fR
+
+m4 -U VER m4src
+.fi
 .P
 .RE
 .P
@@ -715,13 +714,13 @@ produces the output:
 .sp
 .RS 4
 .nf
-\fB
+
 The value of VER is "VER".
 VER is not defined.
 .P
 VER is not 2.
 end
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -729,9 +728,9 @@ The command:
 .sp
 .RS 4
 .nf
-\fB
-m4 \(miD VER m4src
-.fi \fR
+
+m4 -D VER m4src
+.fi
 .P
 .RE
 .P
@@ -739,13 +738,13 @@ produces the output:
 .sp
 .RS 4
 .nf
-\fB
+
 The value of VER is "".
 VER is defined to be .
 .P
 VER is not 2.
 end
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -753,9 +752,9 @@ The command:
 .sp
 .RS 4
 .nf
-\fB
-m4 \(miD VER=1 m4src
-.fi \fR
+
+m4 -D VER=1 m4src
+.fi
 .P
 .RE
 .P
@@ -763,13 +762,13 @@ produces the output:
 .sp
 .RS 4
 .nf
-\fB
+
 The value of VER is "1".
 VER is defined to be 1.
 VER is 1.
 VER is not 2.
 end
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -777,9 +776,9 @@ The command:
 .sp
 .RS 4
 .nf
-\fB
-m4 \(miD VER=2 m4src
-.fi \fR
+
+m4 -D VER=2 m4src
+.fi
 .P
 .RE
 .P
@@ -787,13 +786,13 @@ produces the output:
 .sp
 .RS 4
 .nf
-\fB
+
 The value of VER is "2".
 VER is defined to be 2.
 .P
 VER is 2.
 end
-.fi \fR
+.fi
 .P
 .RE
 .SH RATIONALE
@@ -811,7 +810,7 @@ in the output after rescanning removes the nested quotes.
 In the
 .BR translit
 built-in, historic System V-based behavior treated
-.BR '\(mi' 
+.BR '\-' 
 as a literal; GNU behavior treats it as a range. This version of
 the standard allows either behavior.
 .SH "FUTURE DIRECTIONS"
@@ -819,21 +818,22 @@ None.
 .SH "SEE ALSO"
 .IR "\fIc99\fR\^"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Chapter 8" ", " "Environment Variables",
 .IR "Section 12.2" ", " "Utility Syntax Guidelines"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

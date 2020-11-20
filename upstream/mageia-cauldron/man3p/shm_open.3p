@@ -1,11 +1,12 @@
 '\" et
-.TH SHM_OPEN "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH SHM_OPEN "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 shm_open
 \(em open a shared memory object
@@ -23,8 +24,11 @@ The
 function shall establish a connection between a shared memory object
 and a file descriptor. It shall create an open file description that
 refers to the shared memory object and a file descriptor that refers to
-that open file description. The file descriptor is used by other
-functions to refer to that shared memory object. The
+that open file description. The file descriptor shall be allocated as
+described in
+.IR "Section 2.14" ", " "File Descriptor Allocation",
+and can be used by other functions to refer to that shared memory object.
+The
 .IR name
 argument points to a string naming a shared memory object. It is
 unspecified whether the name appears in the file system and is visible
@@ -61,8 +65,7 @@ character, the effect is implementation-defined.
 .P
 If successful,
 \fIshm_open\fR()
-shall return a file descriptor for the shared memory object that is the
-lowest numbered file descriptor not currently open for that process.
+shall return a file descriptor for the shared memory object.
 The open file description is new, and therefore the file descriptor
 does not share it with any other processes. It is unspecified whether
 the file offset is set. The FD_CLOEXEC
@@ -129,8 +132,8 @@ memory object state remain valid after a system reboot.
 .SH "RETURN VALUE"
 Upon successful completion, the
 \fIshm_open\fR()
-function shall return a non-negative integer representing the lowest
-numbered unused file descriptor. Otherwise, it shall return \(mi1 and
+function shall return a non-negative integer representing the
+file descriptor. Otherwise, it shall return \-1 and
 set
 .IR errno
 to indicate the error.
@@ -207,7 +210,7 @@ before being mapped into the process address space using
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 #include <sys/mman.h>
 \&...
@@ -223,10 +226,10 @@ int fd;
 /* Create shared memory object and set its size */
 .P
 fd = shm_open("/myregion", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-if (fd == \(mi1)
+if (fd == -1)
     /* Handle error */;
 .P
-if (ftruncate(fd, sizeof(struct region)) == \(mi1)
+if (ftruncate(fd, sizeof(struct region)) == -1)
     /* Handle error */;
 .P
 /* Map shared memory object */
@@ -239,7 +242,7 @@ if (rptr == MAP_FAILED)
 /* Now we can refer to mapped region using fields of rptr;
    for example, rptr->len */
 \&...
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -311,7 +314,7 @@ The set of valid open flags to
 \fIshm_open\fR()
 was restricted to O_RDONLY, O_RDWR, O_CREAT, and O_TRUNC
 because these could be easily implemented on most memory mapping
-systems. This volume of POSIX.1\(hy2008 is silent on the results if the implementation
+systems. This volume of POSIX.1\(hy2017 is silent on the results if the implementation
 cannot supply the requested file access because of
 implementation-defined reasons, including hardware ones.
 .P
@@ -351,7 +354,7 @@ is from the environment via
 \fIgetenv\fR().
 Another would be from a configuration file.
 .P
-This volume of POSIX.1\(hy2008 specifies that memory objects have initial contents of
+This volume of POSIX.1\(hy2017 specifies that memory objects have initial contents of
 zero when created. This is consistent with current behavior for both
 files and newly allocated memory. For those implementations that use
 physical memory, it would be possible that such implementations could
@@ -367,6 +370,7 @@ and
 \fIshm_unlink\fR()
 functions to have semantics similar to normal file system operations.
 .SH "SEE ALSO"
+.IR "Section 2.14" ", " "File Descriptor Allocation",
 .IR "\fIclose\fR\^(\|)",
 .IR "\fIdup\fR\^(\|)",
 .IR "\fIexec\fR\^",
@@ -378,21 +382,22 @@ functions to have semantics similar to normal file system operations.
 .IR "\fIshm_unlink\fR\^(\|)",
 .IR "\fIumask\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<sys_mman.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

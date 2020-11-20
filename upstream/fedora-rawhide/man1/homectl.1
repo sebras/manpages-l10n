@@ -1,5 +1,5 @@
 '\" t
-.TH "HOMECTL" "1" "" "systemd 246" "homectl"
+.TH "HOMECTL" "1" "" "systemd 247" "homectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -155,7 +155,7 @@ are documented further down):
 .RS 4
 Read the user\*(Aqs JSON record from the specified file\&. If passed as
 "\-"
-read the user record from standard input\&. The supplied JSON object must follow the structure documented on
+read the user record from standard input\&. The supplied JSON object must follow the structure documented in
 \m[blue]\fBJSON User Records\fR\m[]\&\s-2\u[1]\d\s+2\&. This option may be used in conjunction with the
 \fBcreate\fR
 and
@@ -266,7 +266,7 @@ The real name for the user\&. This corresponds with the GECOS field on classic U
 .PP
 \fB\-\-realm=\fR\fIREALM\fR
 .RS 4
-The realm for the user\&. The realm associates a user with a specific organization or installation, and allows distuingishing users of the same name defined in different contexts\&. The realm can be any string that also qualifies as valid DNS domain name, and it is recommended to use the organization\*(Aqs or installation\*(Aqs domain name for this purpose, but this is not enforced nor required\&. On each system only a single user of the same name may exist, and if a user with the same name and realm is seen it is assumed to refer to the same user while a user with the same name but different realm is considered a different user\&. Note that this means that two users sharing the same name but with distinct realms are not allowed on the same system\&. Assigning a realm to a user is optional\&.
+The realm for the user\&. The realm associates a user with a specific organization or installation, and allows distinguishing users of the same name defined in different contexts\&. The realm can be any string that also qualifies as valid DNS domain name, and it is recommended to use the organization\*(Aqs or installation\*(Aqs domain name for this purpose, but this is not enforced nor required\&. On each system only a single user of the same name may exist, and if a user with the same name and realm is seen it is assumed to refer to the same user while a user with the same name but different realm is considered a different user\&. Note that this means that two users sharing the same name but with distinct realms are not allowed on the same system\&. Assigning a realm to a user is optional\&.
 .RE
 .PP
 \fB\-\-email\-address=\fR\fIEMAIL\fR
@@ -342,12 +342,14 @@ and
 .PP
 \fB\-\-timezone=\fR\fITIMEZONE\fR
 .RS 4
-Takes a timezone specification as string that sets the timezone for the specified user\&. Expects a `tzdata` location string\&. When the user logs in the
+Takes a time zone location name that sets the timezone for the specified user\&. When the user logs in the
 \fI$TZ\fR
 environment variable is initialized from this setting\&. Example:
 \fB\-\-timezone=Europe/Amsterdam\fR
 will result in the environment variable
-"TZ=:Europe/Amsterdam"\&.
+"TZ=:Europe/Amsterdam"\&. (":"
+is used intentionally as part of the timezone specification, see
+\fBtzset\fR(3)\&.)
 .RE
 .PP
 \fB\-\-language=\fR\fILANG\fR
@@ -393,7 +395,7 @@ Takes a path to a Linux
 device (e\&.g\&.
 /dev/hidraw1), referring to a FIDO2 security token implementing the
 "hmac\-secret"
-extension, that shall be able to unlock the user account\&. If used, a random salt value is generated on the host, which is passed to the FIDO2 device, which calculates a HMAC hash of it, keyed by its internal secret key\&. The result is then used as key for unlocking the user account\&. The random salt is included in the user record, so that whenever authentication is needed it can be passed again to the FIDO2 token, to retrieve the actual key\&.
+extension that shall be able to unlock the user account\&. A random salt value is generated on the host and passed to the FIDO2 device, which calculates a HMAC hash of the salt using an internal secret key\&. The result is then used as the key to unlock the user account\&. The random salt is included in the user record, so that whenever authentication is needed it can be passed to the FIDO2 token again\&.
 .sp
 Instead of a valid path to a FIDO2
 "hidraw"
@@ -417,6 +419,11 @@ or
 \fB\-\-pkcs11\-token\-uri=\fR), for a discussion see above\&.
 .RE
 .PP
+\fB\-\-recovery\-key=\fR\fIBOOL\fR
+.RS 4
+Accepts a boolean argument\&. If enabled a recovery key is configured for the account\&. A recovery key is a computer generated access key that may be used to regain access to an account if the password has been forgotten or the authentication token lost\&. The key is generated and shown on screen, and should be printed or otherwise transferred to a secure location\&. A recovery key may be entered instead of a regular password to unlock the account\&.
+.RE
+.PP
 \fB\-\-locked=\fR\fIBOOLEAN\fR
 .RS 4
 Takes a boolean argument\&. Specifies whether this user account shall be locked\&. If true logins into this account are prohibited, if false (the default) they are permitted (of course, only if authorization otherwise succeeds)\&.
@@ -437,7 +444,7 @@ Configures a rate limit on authentication attempts for this user\&. If the user 
 \fB\-\-password\-hint=\fR\fITEXT\fR
 .RS 4
 Takes a password hint to store alongside the user record\&. This string is stored accessible only to privileged users and the user itself and may not be queried by other users\&. Example:
-\fB\-\-password\-hint="My first pet\*(Aqs name"\fR
+\fB\-\-password\-hint="My first pet\*(Aqs name"\fR\&.
 .RE
 .PP
 \fB\-\-enforce\-password\-policy=\fR\fIBOOL\fR, \fB\-P\fR
@@ -565,9 +572,9 @@ storage mechanism\&. To use LUKS2 storage on a regular block device (for example
 \fB\-\-fs\-type=\fR\fITYPE\fR
 .RS 4
 When LUKS2 storage is used configures the file system type to use inside the home directory LUKS2 container\&. One of
+"btrfs",
 "ext4",
-"xfs",
-"btrfs"\&. If not specified
+"xfs"\&. If not specified
 \fBhomed.conf\fR(5)
 defines which default file system type to use\&. Note that
 "xfs"
@@ -747,6 +754,17 @@ command on all suitable home directories at once\&. This operation is generally 
 and related commands), to ensure all active user\*(Aqs cryptographic keys for accessing their home directories are removed from memory\&.
 .RE
 .PP
+\fBdeactivate\-all\fR
+.RS 4
+Execute the
+\fBdeactivate\fR
+command on all active home directories at once\&. This operation is generally executed on system shut down (i\&.e\&. by
+\fBsystemctl poweroff\fR
+and related commands), to ensure all active user\*(Aqs home directories are fully deactivated before
+/home/
+and related file systems are unmounted\&.
+.RE
+.PP
 \fBwith\fR \fIUSER\fR \fICOMMAND\&...\fR
 .RS 4
 Activate the specified user\*(Aqs home directory, run the specified command (under the caller\*(Aqs identity, not the specified user\*(Aqs) and deactivate the home directory afterwards again (unless the user is logged in otherwise)\&. This command is useful for running privileged backup scripts and such, but requires authentication with the user\*(Aqs credentials in order to be able to unlock the user\*(Aqs home directory\&.
@@ -818,6 +836,37 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_PAGERSECURE\fR
+.RS 4
+Takes a boolean argument\&. When true, the "secure" mode of the pager is enabled; if false, disabled\&. If
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, secure mode is enabled if the effective UID is not the same as the owner of the login session, see
+\fBgeteuid\fR(2)
+and
+\fBsd_pid_get_owner_uid\fR(3)\&. In secure mode,
+\fBLESSSECURE=1\fR
+will be set when invoking the pager, and the pager shall disable commands that open or create new files or start new subprocesses\&. When
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, pagers which are not known to implement secure mode will not be used\&. (Currently only
+\fBless\fR(1)
+implements secure mode\&.)
+.sp
+Note: when commands are invoked with elevated privileges, for example under
+\fBsudo\fR(8)
+or
+\fBpkexec\fR(1), care must be taken to ensure that unintended interactive features are not enabled\&. "Secure" mode for the pager may be enabled automatically as describe above\&. Setting
+\fISYSTEMD_PAGERSECURE=0\fR
+or not removing it from the inherited environment allows the user to invoke arbitrary commands\&. Note that if the
+\fI$SYSTEMD_PAGER\fR
+or
+\fI$PAGER\fR
+variables are to be honoured,
+\fI$SYSTEMD_PAGERSECURE\fR
+must be set too\&. It might be reasonable to completely disable the pager using
+\fB\-\-no\-pager\fR
+instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR

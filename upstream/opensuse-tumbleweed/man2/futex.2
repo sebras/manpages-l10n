@@ -19,19 +19,20 @@
 .\" FIXME Do we need to add some text regarding Torvald Riegel's 2015-01-24 mail
 .\"       http://thread.gmane.org/gmane.linux.kernel/1703405/focus=1873242
 .\"
-.TH FUTEX 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH FUTEX 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 futex \- fast user-space locking
 .SH SYNOPSIS
 .nf
 .PP
-.B "#include <linux/futex.h>"
-.B "#include <sys/time.h>"
+.B #include <linux/futex.h>
+.B #include <stdint.h>
+.B #include <sys/time.h>
 .PP
-.BI "int futex(int *" uaddr ", int " futex_op ", int " val ,
+.BI "long futex(uint32_t *" uaddr ", int " futex_op ", uint32_t " val ,
 .BI "          const struct timespec *" timeout , \
 " \fR  /* or: \fBuint32_t \fIval2\fP */"
-.BI "          int *" uaddr2 ", int " val3 );
+.BI "          uint32_t *" uaddr2 ", uint32_t " val3 );
 .fi
 .PP
 .IR Note :
@@ -199,7 +200,7 @@ The
 .I futex_op
 argument consists of two parts:
 a command that specifies the operation to be performed,
-bit-wise ORed with zero or more options that
+bitwise ORed with zero or more options that
 modify the behaviour of the operation.
 The options that may be included in
 .I futex_op
@@ -581,8 +582,8 @@ any of the two supplied futex words:
 .IP
 .in +4n
 .EX
-int oldval = *(int *) uaddr2;
-*(int *) uaddr2 = oldval \fIop\fP \fIoparg\fP;
+uint32_t oldval = *(uint32_t *) uaddr2;
+*(uint32_t *) uaddr2 = oldval \fIop\fP \fIoparg\fP;
 futex(uaddr, FUTEX_WAKE, val, 0, 0, 0);
 if (oldval \fIcmp\fP \fIcmparg\fP)
     futex(uaddr2, FUTEX_WAKE, val2, 0, 0, 0);
@@ -621,7 +622,7 @@ in the bits of the argument
 .IR val3 .
 Pictorially, the encoding is:
 .IP
-.in +8n
+.in +4n
 .EX
 +---+---+-----------+-----------+
 |op |cmp|   oparg   |  cmparg   |
@@ -667,7 +668,7 @@ FUTEX_OP_XOR        4  /* uaddr2 \(ha= oparg; */
 .EE
 .in
 .IP
-In addition, bit-wise ORing the following value into
+In addition, bitwise ORing the following value into
 .I op
 causes
 .IR "(1\ <<\ oparg)"
@@ -741,7 +742,7 @@ except that the
 argument is used to provide a 32-bit bit mask to the kernel.
 This bit mask, in which at least one bit must be set,
 is used to select which waiters should be woken up.
-The selection is done by a bit-wise AND of the "wake" bit mask
+The selection is done by a bitwise AND of the "wake" bit mask
 (i.e., the value in
 .IR val3 )
 and the bit mask which is stored in the kernel-internal
@@ -1753,6 +1754,7 @@ Child  (18535) 4
 #include <stdio.h>
 #include <errno.h>
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -1764,11 +1766,11 @@ Child  (18535) 4
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
                         } while (0)
 
-static int *futex1, *futex2, *iaddr;
+static uint32_t *futex1, *futex2, *iaddr;
 
 static int
-futex(int *uaddr, int futex_op, int val,
-      const struct timespec *timeout, int *uaddr2, int val3)
+futex(uint32_t *uaddr, int futex_op, uint32_t val,
+      const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
 {
     return syscall(SYS_futex, uaddr, futex_op, val,
                    timeout, uaddr2, val3);
@@ -1778,9 +1780,9 @@ futex(int *uaddr, int futex_op, int val,
    become 1, and then set the value to 0. */
 
 static void
-fwait(int *futexp)
+fwait(uint32_t *futexp)
 {
-    int s;
+    long s;
 
     /* atomic_compare_exchange_strong(ptr, oldval, newval)
        atomically performs the equivalent of:
@@ -1793,7 +1795,7 @@ fwait(int *futexp)
     while (1) {
 
         /* Is the futex available? */
-        const int one = 1;
+        const uint32_t one = 1;
         if (atomic_compare_exchange_strong(futexp, &one, 0))
             break;      /* Yes */
 
@@ -1810,13 +1812,14 @@ fwait(int *futexp)
    so that if the peer is blocked in fpost(), it can proceed. */
 
 static void
-fpost(int *futexp)
+fpost(uint32_t *futexp)
 {
-    int s;
+    long s;
 
-    /* atomic_compare_exchange_strong() was described in comments above */
+    /* atomic_compare_exchange_strong() was described
+       in comments above */
 
-    const int zero = 0;
+    const uint32_t zero = 0;
     if (atomic_compare_exchange_strong(futexp, &zero, 1)) {
         s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);
         if (s  == \-1)
@@ -1828,7 +1831,7 @@ int
 main(int argc, char *argv[])
 {
     pid_t childPid;
-    int j, nloops;
+    int nloops;
 
     setbuf(stdout, NULL);
 
@@ -1839,7 +1842,7 @@ main(int argc, char *argv[])
        subsequently use the "shared" futex operations (i.e., not the
        ones suffixed "_PRIVATE") */
 
-    iaddr = mmap(NULL, sizeof(int) * 2, PROT_READ | PROT_WRITE,
+    iaddr = mmap(NULL, sizeof(*iaddr) * 2, PROT_READ | PROT_WRITE,
                 MAP_ANONYMOUS | MAP_SHARED, \-1, 0);
     if (iaddr == MAP_FAILED)
         errExit("mmap");
@@ -1858,9 +1861,9 @@ main(int argc, char *argv[])
         errExit("fork");
 
     if (childPid == 0) {        /* Child */
-        for (j = 0; j < nloops; j++) {
+        for (int j = 0; j < nloops; j++) {
             fwait(futex1);
-            printf("Child  (%ld) %d\en", (long) getpid(), j);
+            printf("Child  (%jd) %d\en", (intmax_t) getpid(), j);
             fpost(futex2);
         }
 
@@ -1869,9 +1872,9 @@ main(int argc, char *argv[])
 
     /* Parent falls through to here */
 
-    for (j = 0; j < nloops; j++) {
+    for (int j = 0; j < nloops; j++) {
         fwait(futex2);
-        printf("Parent (%ld) %d\en", (long) getpid(), j);
+        printf("Parent (%jd) %d\en", (intmax_t) getpid(), j);
         fpost(futex1);
     }
 

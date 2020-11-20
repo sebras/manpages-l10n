@@ -1,11 +1,12 @@
 '\" et
-.TH FMEMOPEN "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH FMEMOPEN "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 fmemopen
 \(em open a memory buffer stream
@@ -112,10 +113,19 @@ the initial size shall be zero and for modes
 .IR a
 and
 .IR a+
-the initial size shall be either the position of the first null byte in
-the buffer or the value of the
+the initial size shall be:
+.IP " *" 4
+Zero, if
+.IR buf
+is a null pointer
+.IP " *" 4
+The position of the first null byte in the buffer, if one is found
+.IP " *" 4
+The value of the
 .IR size
-argument if no null byte is found.
+argument, if
+.IR buf
+is not a null pointer and no null byte is found
 .P
 A read operation on the stream shall not advance the current buffer
 position beyond the current buffer size. Reaching the buffer size in a
@@ -161,10 +171,9 @@ The
 \fIfmemopen\fR()
 function shall fail if:
 .TP
-.BR EINVAL
-The
-.IR size
-argument specifies a buffer size of zero.
+.BR EMFILE
+{STREAM_MAX}
+streams are currently open in the calling process.
 .P
 The
 \fIfmemopen\fR()
@@ -184,6 +193,12 @@ argument does not include a
 .BR '+' 
 character.
 .TP
+.BR EINVAL
+The
+.IR size
+argument specifies a buffer size of zero and the implementation
+does not support this.
+.TP
 .BR ENOMEM
 The
 .IR buf
@@ -200,7 +215,7 @@ streams are currently open in the calling process.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <stdio.h>
 #include <string.h>
 .P
@@ -222,7 +237,7 @@ main (void)
     fclose(stream);
     return (0);
 }
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -230,14 +245,14 @@ This program produces the following output:
 .sp
 .RS 4
 .nf
-\fB
+
 Got f
 Got o
 Got o
 Got b
 Got a
 Got r
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -247,10 +262,13 @@ This interface has been introduced to eliminate many of the errors
 encountered in the construction of strings, notably overflowing of
 strings. This interface prevents overflow.
 .SH "FUTURE DIRECTIONS"
-A future revision of this standard may mandate specific behavior when the
+A future version of this standard may mandate specific behavior when the
 .IR mode
 argument includes
 .BR 'b' .
+.P
+A future version of this standard may require support of zero-length
+buffer streams explicitly.
 .SH "SEE ALSO"
 .IR "\fIfdopen\fR\^(\|)",
 .IR "\fIfopen\fR\^(\|)",
@@ -259,20 +277,21 @@ argument includes
 .IR "\fImalloc\fR\^(\|)",
 .IR "\fIopen_memstream\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<stdio.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,18 +1,19 @@
 '\" et
-.TH UNIQ "1P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH UNIQ "1P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 uniq
 \(em report or filter out repeated lines in a file
 .SH SYNOPSIS
 .LP
 .nf
-uniq \fB[\fR\(mic|\(mid|\(miu\fB] [\fR\(mif \fIfields\fB] [\fR\(mis \fIchar\fB] [\fIinput_file \fB[\fIoutput_file\fB]]\fR
+uniq \fB[\fR-c|-d|-u\fB] [\fR-f \fIfields\fB] [\fR-s \fIchar\fB] [\fIinput_file \fB[\fIoutput_file\fB]]\fR
 .fi
 .SH DESCRIPTION
 The
@@ -29,20 +30,20 @@ adjacent.
 .SH OPTIONS
 The
 .IR uniq
-utility shall conform to the Base Definitions volume of POSIX.1\(hy2008,
+utility shall conform to the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines",
 except that
 .BR '\(pl' 
 may be recognized as an option delimiter as well as
-.BR '\(mi' .
+.BR '\-' .
 .P
 The following options shall be supported:
-.IP "\fB\(mic\fP" 10
+.IP "\fB\-c\fP" 10
 Precede each output line with a count of the number of times the line
 occurred in the input.
-.IP "\fB\(mid\fP" 10
+.IP "\fB\-d\fP" 10
 Suppress the writing of lines that are not repeated in the input.
-.IP "\fB\(mif\ \fIfields\fR" 10
+.IP "\fB\-f\ \fIfields\fR" 10
 Ignore the first
 .IR fields
 fields on each input line when doing comparisons, where
@@ -53,9 +54,9 @@ by the basic regular expression:
 .sp
 .RS 4
 .nf
-\fB
-[[:blank:]]*[^[:blank:]]*
-.fi \fR
+
+[[:blank:]]*[\(ha[:blank:]]*
+.fi
 .P
 .RE
 .P
@@ -64,14 +65,14 @@ If the
 option-argument specifies more fields than appear on an input line, a
 null string shall be used for comparison.
 .RE
-.IP "\fB\(mis\ \fIchars\fR" 10
+.IP "\fB\-s\ \fIchars\fR" 10
 Ignore the first
 .IR chars
 characters when doing comparisons, where
 .IR chars
 shall be a positive decimal integer. If specified in conjunction with
 the
-.BR \(mif
+.BR \-f
 option, the first
 .IR chars
 characters after the first
@@ -80,7 +81,7 @@ fields shall be ignored. If the
 .IR chars
 option-argument specifies more characters than remain on an input line,
 a null string shall be used for comparison.
-.IP "\fB\(miu\fP" 10
+.IP "\fB\-u\fP" 10
 Suppress the writing of lines that are repeated in the input.
 .SH OPERANDS
 The following operands shall be supported:
@@ -90,7 +91,7 @@ A pathname of the input file. If the
 operand is not specified, or if the
 .IR input_file
 is
-.BR '\(mi' ,
+.BR '\-' ,
 the standard input shall be used.
 .IP "\fIoutput_file\fR" 10
 A pathname of the output file. If the
@@ -106,7 +107,7 @@ The standard input shall be used only if no
 operand is specified or if
 .IR input_file
 is
-.BR '\(mi' .
+.BR '\-' .
 See the INPUT FILES section.
 .SH "INPUT FILES"
 The input file shall be a text file.
@@ -115,16 +116,13 @@ The following environment variables shall affect the execution of
 .IR uniq :
 .IP "\fILANG\fP" 10
 Provide a default value for the internationalization variables that are
-unset or null. (See the Base Definitions volume of POSIX.1\(hy2008,
+unset or null. (See the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 8.2" ", " "Internationalization Variables"
 for the precedence of internationalization variables used to determine
 the values of locale categories.)
 .IP "\fILC_ALL\fP" 10
 If set to a non-empty string value, override the values of all the
 other internationalization variables.
-.IP "\fILC_COLLATE\fP" 10
-.br
-Determine the locale for ordering rules.
 .IP "\fILC_CTYPE\fP" 10
 Determine the locale for the interpretation of sequences of bytes of
 text data as characters (for example, single-byte as opposed to
@@ -147,9 +145,9 @@ The standard output shall be used if no
 operand is specified, and shall be used if the
 .IR output_file
 operand is
-.BR '\(mi' 
+.BR '\-' 
 and the implementation treats the
-.BR '\(mi' 
+.BR '\-' 
 as meaning standard output. Otherwise, the standard output shall
 not be used.
 See the OUTPUT FILES section.
@@ -157,15 +155,15 @@ See the OUTPUT FILES section.
 The standard error shall be used only for diagnostic messages.
 .SH "OUTPUT FILES"
 If the
-.BR \(mic
+.BR \-c
 option is specified, the output file shall be empty or each line
 shall be of the form:
 .sp
 .RS 4
 .nf
-\fB
+
 "%d %s", <\fInumber of duplicates\fR>, <\fIline\fR>
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -174,9 +172,9 @@ of the form:
 .sp
 .RS 4
 .nf
-\fB
+
 "%s", <\fIline\fR>
-.fi \fR
+.fi
 .P
 .RE
 .SH "EXTENDED DESCRIPTION"
@@ -192,10 +190,64 @@ Default.
 .LP
 .IR "The following sections are informative."
 .SH "APPLICATION USAGE"
-The
+If the collating sequence of the current locale has a total ordering
+of all characters, the
 .IR sort
 utility can be used to cause repeated lines to be adjacent in the input
-file.
+file. If the collating sequence does not have a total ordering of all
+characters, the
+.IR sort
+utility should still do this but it might not. To ensure that all
+duplicate lines are eliminated, and have the output sorted according
+the collating sequence of the current locale, applications should use:
+.sp
+.RS 4
+.nf
+
+LC_ALL=C sort -u | sort
+.fi
+.P
+.RE
+.P
+instead of:
+.sp
+.RS 4
+.nf
+
+sort | uniq
+.fi
+.P
+.RE
+.P
+To remove duplicate lines based on whether they collate equally
+instead of whether they are identical, applications should use:
+.sp
+.RS 4
+.nf
+
+sort -u
+.fi
+.P
+.RE
+.P
+instead of:
+.sp
+.RS 4
+.nf
+
+sort | uniq
+.fi
+.P
+.RE
+.P
+When using
+.IR uniq
+to process pathnames, it is recommended that LC_ALL, or at least
+LC_CTYPE and LC_COLLATE, are set to POSIX or C in the environment,
+since pathnames can contain byte sequences that do not form valid
+characters in some locales, in which case the utility's behavior would
+be undefined. In the POSIX locale each byte is a valid single-byte
+character, and therefore this problem is avoided.
 .SH EXAMPLES
 The following input file data (but flushed left) was used for a test
 series on
@@ -203,7 +255,7 @@ series on
 .sp
 .RS 4
 .nf
-\fB
+
 #01 foo0 bar0 foo1 bar1
 #02 bar0 foo1 bar1 foo1
 #03 foo0 bar0 foo1 bar1
@@ -211,7 +263,7 @@ series on
 #05 foo0 bar0 foo1 bar1
 #06 foo0 bar0 foo1 bar1
 #07 bar0 foo1 bar1 foo0
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -239,15 +291,15 @@ of the input file data starting from the second field:
 .sp
 .RS 4
 .nf
-\fB
-uniq \(mic \(mif 1 uniq_0I.t
+
+uniq -c -f 1 uniq_0I.t
     1 #01 foo0 bar0 foo1 bar1
     1 #02 bar0 foo1 bar1 foo1
     1 #03 foo0 bar0 foo1 bar1
     1 #04
     2 #05 foo0 bar0 foo1 bar1
     1 #07 bar0 foo1 bar1 foo0
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -259,7 +311,7 @@ utility detected a pair of repeated lines. Given the input data, this
 can only be true when
 .IR uniq
 is run using the
-.BR "\(mif\ 1"
+.BR "\-f\ 1"
 option (which shall cause
 .IR uniq
 to ignore the first field on each input line).
@@ -271,10 +323,10 @@ each line of the input file data starting from the second field:
 .sp
 .RS 4
 .nf
-\fB
-uniq \(mid \(mif 1 uniq_0I.t
+
+uniq -d -f 1 uniq_0I.t
 #05 foo0 bar0 foo1 bar1
-.fi \fR
+.fi
 .P
 .RE
 .RE
@@ -285,14 +337,14 @@ file data starting from the second field:
 .sp
 .RS 4
 .nf
-\fB
-uniq \(miu \(mif 1 uniq_0I.t
+
+uniq -u -f 1 uniq_0I.t
 #01 foo0 bar0 foo1 bar1
 #02 bar0 foo1 bar1 foo1
 #03 foo0 bar0 foo1 bar1
 #04
 #07 bar0 foo1 bar1 foo0
-.fi \fR
+.fi
 .P
 .RE
 .RE
@@ -303,9 +355,9 @@ data starting from the third character:
 .sp
 .RS 4
 .nf
-\fB
-uniq \(mid \(mis 2 uniq_0I.t
-.fi \fR
+
+uniq -d -s 2 uniq_0I.t
+.fi
 .P
 .RE
 .P
@@ -320,7 +372,7 @@ in length, which does not meet the implied
 limit.
 .P
 Earlier versions of this standard allowed the
-.BR \(mi \c
+.BR \- \c
 .IR number
 and
 .BR \(pl \c
@@ -333,21 +385,22 @@ None.
 .IR "\fIcomm\fR\^",
 .IR "\fIsort\fR\^"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Chapter 8" ", " "Environment Variables",
 .IR "Section 12.2" ", " "Utility Syntax Guidelines"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

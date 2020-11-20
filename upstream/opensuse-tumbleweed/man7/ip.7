@@ -17,11 +17,6 @@
 .\" 	IP_IPSEC_POLICY (2.5.47)
 .\"	    Needs CAP_NET_ADMIN
 .\"
-.\" 	IP_PASSSEC (2.6.17)
-.\" 	    Boolean
-.\"	    commit 2c7946a7bf45ae86736ab3b43d0085e43947945c
-.\"	    Author: Catherine Zhang <cxzhang@watson.ibm.com>
-.\"
 .\"	IP_MINTTL (2.6.34)
 .\"	    commit d218d11133d888f9745802146a50255a4781d37a
 .\"	    Author: Stephen Hemminger <shemminger@vyatta.com>
@@ -44,7 +39,7 @@
 .\"	    commit 76e21053b5bf33a07c76f99d27a74238310e3c71
 .\"	    Author: Erich E. Hoover <ehoover@mines.edu>
 .\"
-.TH IP  7 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH IP  7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 ip \- Linux IPv4 protocol implementation
 .SH SYNOPSIS
@@ -657,12 +652,51 @@ is disabled by default and can be enabled by using the
 .I /proc
 interface.
 Other options like timestamps are still handled.
-For datagram sockets, IP options can be only set by the local user.
+For datagram sockets, IP options can be set only by the local user.
 Calling
 .BR getsockopt (2)
 with
 .B IP_OPTIONS
 puts the current IP options used for sending into the supplied buffer.
+.TP
+.BR IP_PASSSEC " (since Linux 2.6.17)"
+.\" commit 2c7946a7bf45ae86736ab3b43d0085e43947945c
+If labeled IPSEC or NetLabel is configured on the sending and receiving
+hosts, this option enables receiving of the security context of the peer
+socket in an ancillary message of type
+.B SCM_SECURITY
+retrieved using
+.BR recvmsg (2).
+This option is supported only for UDP sockets; for TCP or SCTP sockets,
+see the description of the
+.B SO_PEERSEC
+option below.
+.IP
+The value given as an argument to
+.BR setsockopt (2)
+and returned as the result of
+.BR getsockopt (2)
+is an integer boolean flag.
+.IP
+The security context returned in the
+.B SCM_SECURITY
+ancillary message
+is of the same format as the one described under the
+.B SO_PEERSEC
+option below.
+.IP
+Note: the reuse of the
+.B SCM_SECURITY
+message type for the
+.B IP_PASSSEC
+socket option was likely a mistake, since other IP control messages use
+their own numbering scheme in the IP namespace and often use the
+socket option value as the message type.
+There is no conflict currently since the IP option with the same value as
+.B SCM_SECURITY
+is
+.B IP_HDRINCL
+and this is never used for a control message type.
 .TP
 .BR IP_PKTINFO " (since Linux 2.2)"
 .\" Precisely: 2.1.68
@@ -671,12 +705,12 @@ Pass an
 ancillary message that contains a
 .I pktinfo
 structure that supplies some information about the incoming packet.
-This only works for datagram oriented sockets.
+This works only for datagram oriented sockets.
 The argument is a flag that tells the socket whether the
 .B IP_PKTINFO
 message should be passed or not.
-The message itself can only be sent/retrieved
-as control message with a packet using
+The message itself can be sent/retrieved
+only as a control message with a packet using
 .BR recvmsg (2)
 or
 .BR sendmsg (2).
@@ -847,7 +881,7 @@ only.
 For raw sockets,
 .B IP_RECVERR
 enables passing of all received ICMP errors to the
-application, otherwise errors are only reported on connected sockets
+application, otherwise errors are reported only on connected sockets
 .IP
 It sets or retrieves an integer boolean flag.
 .B IP_RECVERR
@@ -910,7 +944,7 @@ This is useful, for instance, for user-space RSVP daemons.
 The tapped packets are not forwarded by the kernel; it is
 the user's responsibility to send them out again.
 Socket binding is ignored,
-such packets are only filtered by protocol.
+such packets are filtered only by protocol.
 Expects an integer flag.
 .TP
 .BR IP_TOS " (since Linux 1.0)"
@@ -979,6 +1013,63 @@ Argument is an
 .I ip_mreq_source
 structure as described under
 .BR IP_ADD_SOURCE_MEMBERSHIP .
+.TP
+.BR SO_PEERSEC " (since Linux 2.6.17)"
+If labeled IPSEC or NetLabel is configured on both the sending and
+receiving hosts, this read-only socket option returns the security
+context of the peer socket connected to this socket.
+By default,
+this will be the same as the security context of the process that created
+the peer socket unless overridden by the policy or by a process with
+the required permissions.
+.IP
+The argument to
+.BR getsockopt (2)
+is a pointer to a buffer of the specified length in bytes
+into which the security context string will be copied.
+If the buffer length is less than the length of the security
+context string, then
+.BR getsockopt (2)
+returns \-1, sets
+.I errno
+to
+.BR ERANGE ,
+and returns the required length via
+.IR optlen .
+The caller should allocate at least
+.BR NAME_MAX
+bytes for the buffer initially, although this is not guaranteed
+to be sufficient.
+Resizing the buffer to the returned length
+and retrying may be necessary.
+.IP
+The security context string may include a terminating null character
+in the returned length, but is not guaranteed to do so: a security
+context "foo" might be represented as either {'f','o','o'} of length 3
+or {'f','o','o','\\0'} of length 4, which are considered to be
+interchangeable.
+The string is printable, does not contain non-terminating null characters,
+and is in an unspecified encoding (in particular, it
+is not guaranteed to be ASCII or UTF-8).
+.IP
+The use of this option for sockets in the
+.B AF_INET
+address family is supported since Linux 2.6.17
+.\" commit 2c7946a7bf45ae86736ab3b43d0085e43947945c
+for TCP sockets, and since Linux 4.17
+.\" commit d452930fd3b9031e59abfeddb2fa383f1403d61a
+for SCTP sockets.
+.IP
+For SELinux, NetLabel conveys only the MLS portion of the security
+context of the peer across the wire, defaulting the rest of the
+security context to the values defined in the policy for the
+netmsg initial security identifier (SID).
+However, NetLabel can
+be configured to pass full security contexts over loopback.
+Labeled IPSEC always passes full security contexts as part of establishing
+the security association (SA) and looks them up based on the association
+for each packet.
+.\"
 .SS /proc interfaces
 The IP protocol
 supports a set of
@@ -1234,13 +1325,13 @@ and
 .BR IP_MTU ,
 .BR IP_MTU_DISCOVER ,
 .BR IP_RECVORIGDSTADDR ,
+.BR IP_PASSSEC ,
 .BR IP_PKTINFO ,
 .BR IP_RECVERR ,
 .BR IP_ROUTER_ALERT ,
 and
 .BR IP_TRANSPARENT
 are Linux-specific.
-.\" IP_PASSSEC is Linux-specific
 .\" IP_XFRM_POLICY is Linux-specific
 .\" IP_IPSEC_POLICY is a nonstandard extension, also present on some BSDs
 .PP

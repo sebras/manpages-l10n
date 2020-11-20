@@ -1,21 +1,24 @@
 '\" et
-.TH CHOWN "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH CHOWN "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 chown, fchownat
-\(em change owner and group of a file relative to directory
-file descriptor
+\(em change owner and group of a file
 .SH SYNOPSIS
 .LP
 .nf
 #include <unistd.h>
 .P
 int chown(const char *\fIpath\fP, uid_t \fIowner\fP, gid_t \fIgroup\fP);
+.P
+#include <fcntl.h>
+.P
 int fchownat(int \fIfd\fP, const char *\fIpath\fP, uid_t \fIowner\fP, gid_t \fIgroup\fP,
     int \fIflag\fP);
 .fi
@@ -46,7 +49,7 @@ ID equal to the user ID of the file, but without appropriate
 privileges, if and only if
 .IR owner
 is equal to the file's user ID or (\c
-.BR uid_t )\(mi1
+.BR uid_t )\-1
 and
 .IR group
 is equal either to the calling process' effective group ID or to one of
@@ -72,15 +75,23 @@ If
 or
 .IR group
 is specified as (\c
-.BR uid_t )\(mi1
+.BR uid_t )\-1
 or (\c
-.BR gid_t )\(mi1,
+.BR gid_t )\-1,
 respectively, the corresponding ID of the file shall not be changed.
-If both owner and group are \(mi1, the times need not be updated.
 .P
 Upon successful completion,
 \fIchown\fR()
-shall mark for update the last file status change timestamp of the file.
+shall mark for update the last file status change timestamp of the
+file, except that if
+.IR owner
+is (\c
+.BR uid_t )\-1
+and
+.IR group
+is (\c
+.BR gid_t )\-1,
+the file status change timestamp need not be marked for update.
 .P
 The
 \fIfchownat\fR()
@@ -94,11 +105,12 @@ specifies a relative path. In this case the file to be changed is
 determined relative to the directory associated with the file
 descriptor
 .IR fd
-instead of the current working directory. If the file descriptor was
-opened without O_SEARCH, the function shall check whether directory
-searches are permitted using the current permissions of the directory
-underlying the file descriptor. If the file descriptor was opened with
-O_SEARCH, the function shall not perform the check.
+instead of the current working directory. If the access mode of
+the open file description associated with the file descriptor is not
+O_SEARCH, the function shall check whether directory searches are
+permitted using the current permissions of the directory underlying
+the file descriptor. If the access mode is O_SEARCH, the function
+shall not perform the check.
 .P
 Values for
 .IR flag
@@ -126,9 +138,9 @@ is set in the
 argument.
 .SH "RETURN VALUE"
 Upon successful completion, these functions shall return 0.
-Otherwise, these functions shall return \(mi1 and set
+Otherwise, these functions shall return \-1 and set
 .IR errno
-to indicate the error. If \(mi1 is returned, no changes are
+to indicate the error. If \-1 is returned, no changes are
 made in the user ID and group ID of the file.
 .SH ERRORS
 These functions shall fail if:
@@ -177,9 +189,9 @@ The
 function shall fail if:
 .TP
 .BR EACCES
+The access mode of the open file description associated with
 .IR fd
-was not opened with O_SEARCH and the permissions of the directory
-underlying
+is not O_SEARCH and the permissions of the directory underlying
 .IR fd
 do not permit directory searches.
 .TP
@@ -255,7 +267,7 @@ government security regulations.
 Version 7 and 4.3 BSD permit only the superuser
 to change the user ID of a file. Some government agencies (usually not
 ones concerned directly with security) find this limitation too
-confining. This volume of POSIX.1\(hy2008 uses \fImay\fP to permit secure implementations
+confining. This volume of POSIX.1\(hy2017 uses \fImay\fP to permit secure implementations
 while not disallowing System V.
 .P
 System III and System V allow the owner of a file to change the
@@ -300,22 +312,23 @@ None.
 .IR "\fIfpathconf\fR\^(\|)",
 .IR "\fIlchown\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<sys_types.h>\fP",
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

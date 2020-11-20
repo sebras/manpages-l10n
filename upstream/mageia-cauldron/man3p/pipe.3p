@@ -1,11 +1,12 @@
 '\" et
-.TH PIPE "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH PIPE "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 pipe
 \(em create an interprocess channel
@@ -25,10 +26,9 @@ each into the arguments
 and
 .IR fildes [1],
 that refer to the open file descriptions for the read and write ends of
-the pipe. Their integer values shall be the two lowest available at the
-time of the
-\fIpipe\fR()
-call. The O_NONBLOCK and FD_CLOEXEC flags shall be clear on both file
+the pipe. The file descriptors shall be allocated as described in
+.IR "Section 2.14" ", " "File Descriptor Allocation".
+The O_NONBLOCK and FD_CLOEXEC flags shall be clear on both file
 descriptors. (The
 \fIfcntl\fR()
 function can be used to set both these flags.)
@@ -64,10 +64,13 @@ Upon successful completion,
 shall mark for update the last data access, last data modification,
 and last file status change timestamps of the pipe.
 .SH "RETURN VALUE"
-Upon successful completion, 0 shall be returned; otherwise, \(mi1 shall
+Upon successful completion, 0 shall be returned; otherwise, \-1 shall
 be returned and
 .IR errno
-set to indicate the error.
+set to indicate the error, no file descriptors shall be allocated and
+the contents of
+.IR fildes
+shall be left unmodified.
 .SH ERRORS
 The
 \fIpipe\fR()
@@ -95,7 +98,7 @@ commence transferring data.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <stdlib.h>
 #include <unistd.h>
 \&...
@@ -107,19 +110,19 @@ ssize_t nbytes;
 int status;
 .P
 status = pipe(fildes);
-if (status == \(mi1 ) {
+if (status == -1 ) {
     /* an error occurred */
     ...
 }
 .P
 switch (fork()) {
-case \(mi1: /* Handle error */
+case -1: /* Handle error */
     break;
 .P
 case 0:  /* Child - reads from pipe */
     close(fildes[1]);                       /* Write end is unused */
     nbytes = read(fildes[0], buf, BSIZE);   /* Get data from pipe */
-    /* At this point, a further read would see end of file ... */
+    /* At this point, a further read would see end-of-file ... */
     close(fildes[0]);                       /* Finished with pipe */
     exit(EXIT_SUCCESS);
 .P
@@ -129,7 +132,7 @@ default:  /* Parent - writes to pipe */
     close(fildes[1]);                       /* Child will see EOF */
     exit(EXIT_SUCCESS);
 }
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -143,25 +146,27 @@ see also
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
+.IR "Section 2.14" ", " "File Descriptor Allocation",
 .IR "\fIfcntl\fR\^(\|)",
 .IR "\fIread\fR\^(\|)",
 .IR "\fIwrite\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,11 +1,12 @@
 '\" et
-.TH PTHREAD_MUTEX_DESTROY "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH PTHREAD_MUTEX_DESTROY "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 pthread_mutex_destroy,
 pthread_mutex_init
@@ -38,12 +39,12 @@ the results of otherwise referencing the object after it has been
 destroyed are undefined.
 .P
 It shall be safe to destroy an initialized mutex that is unlocked.
-Attempting to destroy a locked mutex or a mutex that is referenced
-(for example, while being used in a
+Attempting to destroy a locked mutex, or a mutex that another thread
+is attempting to lock, or a mutex that is being used in a
 \fIpthread_cond_timedwait\fR()
 or
-\fIpthread_cond_wait\fR())
-by another thread results in undefined behavior.
+\fIpthread_cond_wait\fR()
+call by another thread, results in undefined behavior.
 .P
 The
 \fIpthread_mutex_init\fR()
@@ -58,18 +59,9 @@ same as passing the address of a default mutex attributes object. Upon
 successful initialization, the state of the mutex becomes initialized
 and unlocked.
 .P
-Only
-.IR mutex
-itself may be used for performing synchronization. The result of
-referring to copies of
-.IR mutex
-in calls to
-\fIpthread_mutex_lock\fR(),
-\fIpthread_mutex_trylock\fR(),
-\fIpthread_mutex_unlock\fR(),
-and
-\fIpthread_mutex_destroy\fR()
-is undefined.
+See
+.IR "Section 2.9.9" ", " "Synchronization Object Copies and Alternative Mappings"
+for further requirements.
 .P
 Attempting to initialize an already initialized mutex results in
 undefined behavior.
@@ -174,14 +166,14 @@ recommended that the function should fail and report an
 error.
 .SS "Alternate Implementations Possible"
 .P
-This volume of POSIX.1\(hy2008 supports several alternative implementations of mutexes.
+This volume of POSIX.1\(hy2017 supports several alternative implementations of mutexes.
 An implementation may store the lock directly in the object of type
 .BR pthread_mutex_t .
 Alternatively, an implementation may store the lock in the heap and
 merely store a pointer, handle, or unique ID in the mutex object.
 Either implementation has advantages or may be required on certain
 hardware configurations. So that portable code can be written that is
-invariant to this choice, this volume of POSIX.1\(hy2008 does not define assignment or
+invariant to this choice, this volume of POSIX.1\(hy2017 does not define assignment or
 equality for this type, and it uses the term ``initialize'' to
 reinforce the (more restrictive) notion that the lock may actually
 reside in the mutex object itself.
@@ -218,7 +210,7 @@ be a disservice to users.
 .P
 By carefully limiting the use of ``undefined behavior'' only to things
 that an erroneous (badly coded) application might do, and by defining
-that resource-not-available errors are mandatory, this volume of POSIX.1\(hy2008 ensures that
+that resource-not-available errors are mandatory, this volume of POSIX.1\(hy2017 ensures that
 a fully-conforming application is portable across the full range of
 implementations, while not forcing all implementations to add overhead
 to check for numerous things that a correct program never does. When the
@@ -254,7 +246,7 @@ might look as follows:
 .sp
 .RS 4
 .nf
-\fB
+
 static pthread_once_t foo_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t foo_mutex;
 .P
@@ -270,7 +262,7 @@ void foo()
    /* Do work. */
     pthread_mutex_unlock(&foo_mutex);
 }
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -279,7 +271,7 @@ follows:
 .sp
 .RS 4
 .nf
-\fB
+
 static pthread_mutex_t foo_mutex = PTHREAD_MUTEX_INITIALIZER;
 .P
 void foo()
@@ -288,7 +280,7 @@ void foo()
    /* Do work. */
     pthread_mutex_unlock(&foo_mutex);
 }
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -382,40 +374,14 @@ initialization technique is more efficient for that particular
 implementation.
 .SS "Destroying Mutexes"
 .P
-A mutex can be destroyed immediately after it is unlocked. For
-example, consider the following code:
-.sp
-.RS 4
-.nf
-\fB
-struct obj {
-pthread_mutex_t om;
-    int refcnt;
-    ...
-};
-.P
-obj_done(struct obj *op)
-{
-    pthread_mutex_lock(&op->om);
-    if (-\|-op->refcnt == 0) {
-        pthread_mutex_unlock(&op->om);
-(A)     pthread_mutex_destroy(&op->om);
-(B)     free(op);
-    } else
-(C)     pthread_mutex_unlock(&op->om);
-}
-.fi \fR
-.P
-.RE
-.P
-In this case
-.IR obj
-is reference counted and
-\fIobj_done\fR()
-is called whenever a reference to the object is dropped.
-Implementations are required to allow an object to be destroyed and
-freed and potentially unmapped (for example, lines A and B) immediately
-after the object is unlocked (line C).
+A mutex can be destroyed immediately after it is unlocked. However,
+since attempting to destroy a locked mutex, or a mutex that another
+thread is attempting to lock, or a mutex that is being used in a
+\fIpthread_cond_timedwait\fR()
+or
+\fIpthread_cond_wait\fR()
+call by another thread, results in undefined behavior, care must be
+taken to ensure that no other thread may be referencing the mutex.
 .SS "Robust Mutexes"
 .P
 Implementations are required to provide robust mutexes
@@ -434,20 +400,21 @@ None.
 .IR "\fIpthread_mutexattr_getpshared\fR\^(\|)"
 .ad b
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<pthread.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

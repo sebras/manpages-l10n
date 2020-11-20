@@ -1,11 +1,12 @@
 '\" et
-.TH WORDEXP "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH WORDEXP "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 wordexp,
 wordfree
@@ -22,9 +23,9 @@ void wordfree(wordexp_t *\fIpwordexp\fP);
 .SH DESCRIPTION
 The
 \fIwordexp\fR()
-function shall perform word expansions as described in the Shell and Utilities volume of POSIX.1\(hy2008,
+function shall perform word expansions as described in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6" ", " "Word Expansions",
-subject to quoting as described in the Shell and Utilities volume of POSIX.1\(hy2008,
+subject to quoting as described in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.2" ", " "Quoting",
 and place the list of expanded words into the structure pointed to by
 .IR pwordexp .
@@ -46,7 +47,7 @@ character or any of the unquoted shell special characters
 .BR ';' ,
 .BR '<' ,
 .BR '>' 
-except in the context of command substitution as specified in the Shell and Utilities volume of POSIX.1\(hy2008,
+except in the context of command substitution as specified in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6.3" ", " "Command Substitution".
 It also shall not contain unquoted parentheses or braces, except
 in the context of command or variable substitution. The application
@@ -91,15 +92,15 @@ The
 function shall store the number of generated words into
 \fIpwordexp\fP\->\fIwe_wordc\fP and a pointer to a list of pointers to
 words in \fIpwordexp\fP\->\fIwe_wordv\fP. Each individual field created
-during field splitting (see the Shell and Utilities volume of POSIX.1\(hy2008,
+during field splitting (see the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6.5" ", " "Field Splitting")
-or pathname expansion (see the Shell and Utilities volume of POSIX.1\(hy2008,
+or pathname expansion (see the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6.6" ", " "Pathname Expansion")
 shall be a separate word in the \fIpwordexp\fP\->\fIwe_wordv\fP
-list. The words shall be in order as described in the Shell and Utilities volume of POSIX.1\(hy2008,
+list. The words shall be in order as described in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6" ", " "Word Expansions".
 The first pointer after the last word pointer shall be a null pointer.
-The expansion of special parameters described in the Shell and Utilities volume of POSIX.1\(hy2008,
+The expansion of special parameters described in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.5.2" ", " "Special Parameters"
 is unspecified.
 .P
@@ -136,8 +137,8 @@ In other words, \fIpwordexp\fP\->\fIwe_wordv\fP shall point to
 \fIpwordexp\fP\->\fIwe_wordc\fP word pointers, followed by a null
 pointer.
 .IP WRDE_NOCMD 14
-If the implementation supports the utilities defined in the Shell and Utilities volume of POSIX.1\(hy2008,
-fail if command substitution, as specified in the Shell and Utilities volume of POSIX.1\(hy2008,
+If the implementation supports the utilities defined in the Shell and Utilities volume of POSIX.1\(hy2017,
+fail if command substitution, as specified in the Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Section 2.6.3" ", " "Command Substitution",
 is requested.
 .IP WRDE_REUSE 14
@@ -204,7 +205,7 @@ or
 \fIwordexp\fR()
 with the WRDE_APPEND or WRDE_REUSE flag.
 .P
-If the implementation supports the utilities defined in the Shell and Utilities volume of POSIX.1\(hy2008,
+If the implementation supports the utilities defined in the Shell and Utilities volume of POSIX.1\(hy2017,
 and
 .IR words
 contains an unquoted character\(em\c
@@ -237,8 +238,11 @@ If WRDE_SHOWERR is set,
 may write messages to
 .IR stderr
 if syntax errors are detected while expanding
-.IR words ;
-however, it is unspecified whether any write errors encountered while
+.IR words ,
+unless the
+.IR stderr
+stream has wide orientation in which case the behavior is undefined.
+It is unspecified whether any write errors encountered while
 outputting such messages will affect the
 .IR stderr
 error indicator or the value of
@@ -251,6 +255,9 @@ call and
 \fIwordfree\fR()
 call using a given
 .IR pwordexp .
+.P
+The results are unspecified if WRDE_APPEND and WRDE_REUSE are
+both specified.
 .br
 .P
 The following constants are defined as error return values:
@@ -289,8 +296,9 @@ shall be returned to indicate an error. If
 \fIwordexp\fR()
 returns the value WRDE_NOSPACE, then \fIpwordexp\fP\->\fIwe_wordc\fP
 and \fIpwordexp\fP\->\fIwe_wordv\fP shall be updated to reflect any
-words that were successfully expanded. In other cases, they shall not
-be modified.
+words that were successfully expanded. In other error cases, if the
+WRDE_APPEND flag was specified, \fIpwordexp\fP->\fIwe_wordc\fP and
+\fIpwordexp\fP->\fIwe_wordv\fP shall not be modified.
 .P
 The
 \fIwordfree\fR()
@@ -330,6 +338,14 @@ messages to
 during command substitution or syntax errors, this standard does not
 provide any way to detect write failures during the output of such
 messages.
+.P
+Applications which use wide-character output functions with
+.IR stderr
+should ensure that any calls to
+\fIwordexp\fR()
+do not write to
+.IR stderr ,
+by avoiding use of the WRDE_SHOWERR flag.
 .SH RATIONALE
 This function was included as an alternative to
 \fIglob\fR().
@@ -357,7 +373,7 @@ They are presented here as examples.
 One proposal is to extend the
 .IR echo
 utility by adding a
-.BR \(miq
+.BR \-q
 option. This option would cause
 .IR echo
 to add a
@@ -372,13 +388,13 @@ function could then invoke the shell as follows:
 .sp
 .RS 4
 .nf
-\fB
+
 (void) strcpy(buffer, "echo -q");
 (void) strcat(buffer, \fIwords\fP);
 if ((flags & WRDE_SHOWERR) == 0)
     (void) strcat(buffer, "2>/dev/null");
 f = popen(buffer, "r");
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -399,7 +415,7 @@ for unquoted special characters.
 .P
 Another proposal is to add the following options to
 .IR sh :
-.IP "\fB\(miw\fP\ \fIwordlist\fR" 6
+.IP "\fB\-w\fP\ \fIwordlist\fR" 6
 .br
 This option provides a wordlist expansion service to applications. The
 words in
@@ -420,9 +436,9 @@ If an error is encountered during word expansion,
 exits with a non-zero status after writing the former to report any
 words successfully expanded
 .RE
-.IP "\fB\(miP\fP" 6
+.IP "\fB\-P\fP" 6
 Run in ``protected'' mode. If specified with the
-.BR \(miw
+.BR \-w
 option, no command substitution shall be performed.
 .P
 With these options,
@@ -435,9 +451,9 @@ using the line:
 .sp
 .RS 4
 .nf
-\fB
+
 execl(<\fIshell path\fP>, "sh", "-P", "-w", \fIwords\fP, (char *)0);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -465,23 +481,24 @@ None.
 .IR "\fIfnmatch\fR\^(\|)",
 .IR "\fIglob\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<wordexp.h>\fP"
 .P
-The Shell and Utilities volume of POSIX.1\(hy2008,
+The Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "Chapter 2" ", " "Shell Command Language"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

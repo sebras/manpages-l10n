@@ -1,11 +1,12 @@
 '\" et
-.TH GETOPT "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH GETOPT "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 getopt,
 optarg,
@@ -26,7 +27,7 @@ extern int opterr, optind, optopt;
 The
 \fIgetopt\fR()
 function is a command-line parser that shall follow Utility Syntax
-Guidelines 3, 4, 5, 6, 7, 9, and 10 in the Base Definitions volume of POSIX.1\(hy2008,
+Guidelines 3, 4, 5, 6, 7, 9, and 10 in the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines".
 .P
 The parameters
@@ -109,29 +110,29 @@ is called:
 .sp
 .RS 4
 .nf
-\fB
+
  \fIargv\fP[optind]  \fRis a null pointer\fP
-*\fIargv\fP[optind]  \fRis not the character\fP \(mi
- \fIargv\fP[optind]  \fRpoints to the string\fP "\(mi"
-.fi \fR
+*\fIargv\fP[optind]  \fRis not the character\fP \-
+ \fIargv\fP[optind]  \fRpoints to the string\fP "\-"
+.fi
 .P
 .RE
 .P
 \fIgetopt\fR()
-shall return \(mi1 without changing
+shall return \-1 without changing
 .IR optind .
 If:
 .sp
 .RS 4
 .nf
-\fB
-\fIargv\fP[optind]   \fRpoints to the string\fP "\(mi\|\(mi"
-.fi \fR
+
+\fIargv\fP[optind]   \fRpoints to the string\fP "\-\|\-"
+.fi
 .P
 .RE
 .P
 \fIgetopt\fR()
-shall return \(mi1 after incrementing
+shall return \-1 after incrementing
 .IR optind .
 .P
 If
@@ -170,7 +171,9 @@ shall also print a diagnostic message to
 .IR stderr
 in the format specified for the
 .IR getopts
-utility.
+utility, unless the
+.IR stderr
+stream has wide orientation, in which case the behavior is undefined.
 .P
 The
 \fIgetopt\fR()
@@ -211,7 +214,7 @@ was not a
 .P
 Otherwise,
 \fIgetopt\fR()
-shall return \(mi1 when all command line options are parsed.
+shall return \-1 when all command line options are parsed.
 .SH ERRORS
 If the application has not set the variable
 .IR opterr
@@ -250,7 +253,7 @@ both of which require arguments:
 .sp
 .RS 4
 .nf
-\fB
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -265,32 +268,32 @@ main(int argc, char *argv[ ])
     . . .
     while ((c = getopt(argc, argv, ":abf:o:")) != -1) {
         switch(c) {
-        case 'a':
+        case \(aqa\(aq:
             if (bflg)
                 errflg++;
             else
                 aflg++;
             break;
-        case 'b':
+        case \(aqb\(aq:
             if (aflg)
                 errflg++;
             else
                 bflg++;
             break;
-        case 'f':
+        case \(aqf\(aq:
             ifile = optarg;
             break;
-        case 'o':
+        case \(aqo\(aq:
             ofile = optarg;
             break;
-        case ':':       /* -f or -o without operand */
+        case \(aq:\(aq:       /* -f or -o without operand */
             fprintf(stderr,
                 "Option -%c requires an operand\en", optopt);
             errflg++;
             break;
-        case '?':
+        case \(aq?\(aq:
             fprintf(stderr,
-                "Unrecognized option: '-%c'\en", optopt);
+                "Unrecognized option: \(aq-%c\(aq\en", optopt);
             errflg++;
         }
     }
@@ -302,7 +305,7 @@ main(int argc, char *argv[ ])
         if (access(argv[optind], R_OK)) {
     . . .
 }
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -310,14 +313,14 @@ This code accepts any of the following as equivalent:
 .sp
 .RS 4
 .nf
-\fB
-cmd \(miao arg path path
-cmd \(mia \(mio arg path path
-cmd \(mio arg \(mia path path
-cmd \(mia \(mio arg \(mi\|\(mi path path
-cmd \(mia \(mioarg path path
-cmd \(miaoarg path path
-.fi \fR
+
+cmd -ao arg path path
+cmd -a -o arg path path
+cmd -o arg -a path path
+cmd -a -o arg -- path path
+cmd -a -oarg path path
+cmd -aoarg path path
+.fi
 .P
 .RE
 .SS "Selecting Options from the Command Line"
@@ -329,7 +332,7 @@ argument.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 #include <string.h>
 \&...
@@ -339,13 +342,13 @@ int dbtype, c;
 char *st;
 \&...
 dbtype = 0;
-while ((c = getopt(argc, argv, Options)) != \(mi1) {
+while ((c = getopt(argc, argv, Options)) != -1) {
     if ((st = strchr(Options, c)) != NULL) {
         dbtype = st - Options;
         break;
     }
 }
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -359,6 +362,19 @@ applications that use extensions are not maximally portable. Note that
 support for multi-byte option characters is only possible when such
 characters can be represented as type
 .BR int .
+.P
+Applications which use wide-character output functions with
+.IR stderr
+should ensure that any calls to
+\fIgetopt\fR()
+do not write to
+.IR stderr ,
+either by setting
+.IR opterr
+to 0 or by ensuring the first character of
+.IR optstring
+is always a
+<colon>.
 .P
 While
 .IR ferror ( stderr )
@@ -399,7 +415,7 @@ are more stringent than the Utility Syntax Guidelines.
 .P
 The
 \fIgetopt\fR()
-function shall return \(mi1, rather than EOF, so that
+function shall return \-1, rather than EOF, so that
 .IR <stdio.h> 
 is not required.
 .P
@@ -420,24 +436,25 @@ None.
 .SH "SEE ALSO"
 .IR "\fIexec\fR\^"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines",
 .IR "\fB<unistd.h>\fP"
 .P
-The Shell and Utilities volume of POSIX.1\(hy2008,
+The Shell and Utilities volume of POSIX.1\(hy2017,
 .IR "\fIgetopts\fR\^"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

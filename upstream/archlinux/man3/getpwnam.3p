@@ -1,11 +1,12 @@
 '\" et
-.TH GETPWNAM "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH GETPWNAM "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 getpwnam,
 getpwnam_r
@@ -57,7 +58,7 @@ parameter, which is
 .IR bufsize
 bytes in size. A call to
 .IR sysconf (_SC_GETPW_R_SIZE_MAX)
-returns either \(mi1 without changing
+returns either \-1 without changing
 .IR errno
 or an initial value suggested for the size of this buffer.
 A null pointer shall be returned at the location pointed to by
@@ -71,7 +72,10 @@ function shall return a pointer to a
 with the structure as defined in
 .IR <pwd.h> 
 with a matching entry if found. A null pointer shall be returned if the
-requested entry is not found, or an error occurs. On error,
+requested entry is not found, or an error occurs. If the requested
+entry was not found,
+.IR errno
+shall not be changed. On error,
 .IR errno
 shall be set to indicate the error.
 .P
@@ -84,6 +88,8 @@ overwritten by a subsequent call to
 \fIgetpwnam\fR(),
 or
 \fIgetpwuid\fR().
+The returned pointer, and pointers within the structure, might
+also be invalidated if the calling thread is terminated.
 .P
 The
 \fIgetpwnam_r\fR()
@@ -123,17 +129,17 @@ structure.
 .SH EXAMPLES
 Note that
 .IR sysconf (_SC_GETPW_R_SIZE_MAX)
-may return \(mi1 if there is no hard limit on the size of the buffer
+may return \-1 if there is no hard limit on the size of the buffer
 needed to store all the groups returned. This example shows how an
 application can allocate a buffer of sufficient size to work with
 \fIgetpwnam_r\fR().
 .sp
 .RS 4
 .nf
-\fB
+
 long int initlen = sysconf(_SC_GETPW_R_SIZE_MAX);
 size_t len;
-if (initlen =\|= \(mi1)
+if (initlen =\|= -1)
     /* Default initial length. */
     len = 1024;
 else
@@ -159,7 +165,7 @@ while ((e = getpwnam_r("someuser", &result, buffer, len, &resultp))
 if (e != 0)
     ...handle error...
 free (buffer);
-.fi \fR
+.fi
 .P
 .RE
 .SS "Getting an Entry for the Login Name"
@@ -173,7 +179,7 @@ function to get the user database entry for that user.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <sys/types.h>
 #include <pwd.h>
 #include <unistd.h>
@@ -187,7 +193,7 @@ if ((lgn = getlogin()) == NULL || (pw = getpwnam(lgn)) == NULL) {
     fprintf(stderr, "Get of user information failed.\en"); exit(1);
 }
 \&...
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -208,7 +214,7 @@ instead of possibly using a static data area that may be overwritten by
 each call.
 .P
 Portable applications should take into account that it is usual
-for an implementation to return \(mi1 from
+for an implementation to return \-1 from
 \fIsysconf\fR()
 indicating that there is no maximum for _SC_GETPW_R_SIZE_MAX.
 .SH RATIONALE
@@ -219,21 +225,22 @@ None.
 .IR "\fIgetpwuid\fR\^(\|)",
 .IR "\fIsysconf\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<pwd.h>\fP",
 .IR "\fB<sys_types.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

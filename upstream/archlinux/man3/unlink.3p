@@ -1,20 +1,24 @@
 '\" et
-.TH UNLINK "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH UNLINK "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 unlink, unlinkat
-\(em remove a directory entry relative to directory file descriptor
+\(em remove a directory entry
 .SH SYNOPSIS
 .LP
 .nf
 #include <unistd.h>
 .P
 int unlink(const char *\fIpath\fP);
+.P
+#include <fcntl.h>
+.P
 int unlinkat(int \fIfd\fP, const char *\fIpath\fP, int \fIflag\fP);
 .fi
 .SH DESCRIPTION
@@ -67,11 +71,12 @@ specifies a relative path. In this case the directory entry to be
 removed is determined relative to the directory associated with the
 file descriptor
 .IR fd
-instead of the current working directory. If the file descriptor was
-opened without O_SEARCH, the function shall check whether directory
-searches are permitted using the current permissions of the directory
-underlying the file descriptor. If the file descriptor was opened with
-O_SEARCH, the function shall not perform the check.
+instead of the current working directory. If the access mode of the
+open file description associated with the file descriptor is not
+O_SEARCH, the function shall check whether directory searches are
+permitted using the current permissions of the directory underlying
+the file descriptor. If the access mode is O_SEARCH, the function
+shall not perform the check.
 .P
 Values for
 .IR flag
@@ -99,9 +104,9 @@ respectively, depending on whether or not the AT_REMOVEDIR bit is set in
 .IR flag .
 .SH "RETURN VALUE"
 Upon successful completion, these functions shall return 0. Otherwise,
-these functions shall return \(mi1 and set
+these functions shall return \-1 and set
 .IR errno
-to indicate the error. If \(mi1 is returned, the named file shall not
+to indicate the error. If \-1 is returned, the named file shall not
 be changed.
 .SH ERRORS
 These functions shall fail and shall not unlink the file if:
@@ -158,8 +163,8 @@ on directories.
 The S_ISVTX flag is set on the directory containing the file referred
 to by the
 .IR path
-argument and the process does not satisfy the criteria specified in the Base Definitions volume of POSIX.1\(hy2008,
-.IR "Section 4.2" ", " "Directory Protection".
+argument and the process does not satisfy the criteria specified in the Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 4.3" ", " "Directory Protection".
 .TP
 .BR EROFS
 The directory entry to be unlinked is part of a read-only file system.
@@ -169,9 +174,9 @@ The
 function shall fail if:
 .TP
 .BR EACCES
+The access mode of the open file description associated with
 .IR fd
-was not opened with O_SEARCH and the permissions of the directory
-underlying
+is not O_SEARCH and the permissions of the directory underlying
 .IR fd
 do not permit directory searches.
 .TP
@@ -253,14 +258,14 @@ by removing the entry named
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 .P
 char *path = "/modules/pass1";
 int   status;
 \&...
 status = unlink(path);
-.fi \fR
+.fi
 .P
 .RE
 .SS "Checking for an Error"
@@ -278,7 +283,7 @@ is used to remove the link between the file descriptor and
 .sp
 .RS 4
 .nf
-\fB
+
 #include <sys/types.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -306,7 +311,7 @@ if ((fpfd = fdopen(pfd, "w")) == NULL) {
     unlink(LOCKFILE);
     exit(1);
 }
-.fi \fR
+.fi
 .P
 .RE
 .SS "Replacing Files"
@@ -326,7 +331,7 @@ when it is no longer needed.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <sys/types.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -364,7 +369,7 @@ link(LOCKFILE,PASSWDFILE);
 unlink(LOCKFILE);
 .P
 exit(0);
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -380,7 +385,7 @@ in many historical implementations for reasons given in
 .P
 The meaning of
 .BR [EBUSY] 
-in historical implementations is ``mount point busy''. Since this volume of POSIX.1\(hy2008 does
+in historical implementations is ``mount point busy''. Since this volume of POSIX.1\(hy2017 does
 not cover the system administration concepts of mounting and unmounting,
 the description of the error was changed to ``resource busy''. (This
 meaning is used by some device drivers when a second process tries to
@@ -426,22 +431,23 @@ None.
 .IR "\fIrmdir\fR\^(\|)",
 .IR "\fIsymlink\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
-.IR "Section 4.2" ", " "Directory Protection",
+The Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 4.3" ", " "Directory Protection",
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

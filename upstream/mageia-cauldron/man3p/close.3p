@@ -1,11 +1,12 @@
 '\" et
-.TH CLOSE "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH CLOSE "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 close
 \(em close a file descriptor
@@ -31,7 +32,7 @@ descriptor shall be removed (that is, unlocked).
 If
 \fIclose\fR()
 is interrupted by a signal that is to be caught, it shall return
-\(mi1 with
+\-1 with
 .IR errno
 set to
 .BR [EINTR] 
@@ -40,7 +41,7 @@ and the state of
 is unspecified. If an I/O error occurred while reading from or writing
 to the file system during
 \fIclose\fR(),
-it may return \(mi1 with
+it may return \-1 with
 .IR errno
 set to
 .BR [EIO] ;
@@ -151,7 +152,7 @@ non-zero linger time, and the socket has untransmitted data, then
 shall block for up to the current linger interval until all data is
 transmitted.
 .SH "RETURN VALUE"
-Upon successful completion, 0 shall be returned; otherwise, \(mi1
+Upon successful completion, 0 shall be returned; otherwise, \-1
 shall be returned and
 .IR errno
 set to indicate the error.
@@ -189,7 +190,7 @@ descriptor for standard input) is not closed.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 \&...
 int pfd;
@@ -198,7 +199,7 @@ close(1);
 dup(pfd);
 close(pfd);
 \&...
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -206,10 +207,10 @@ Incidentally, this is exactly what could be achieved using:
 .sp
 .RS 4
 .nf
-\fB
+
 dup2(pfd, 1);
 close(pfd);
-.fi \fR
+.fi
 .P
 .RE
 .SS "Closing a File Descriptor"
@@ -222,7 +223,7 @@ file descriptor with a stream.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -238,7 +239,7 @@ if ((fpfd = fdopen (pfd, "w")) == NULL) {
     exit(1);
 }
 \&...
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -273,13 +274,34 @@ descriptor into a child process, is therefore unsafe, and the race should
 instead be combatted by opening all file descriptors with the FD_CLOEXEC
 bit set unless the file descriptor is intended to be inherited across
 .IR exec .
+.P
+Usage of
+\fIclose\fR()
+on file descriptors STDIN_FILENO, STDOUT_FILENO, or STDERR_FILENO
+should immediately be followed by an operation to reopen these file
+descriptors. Unexpected behavior will result if any of these file
+descriptors is left in a closed state (for example, an
+.BR [EBADF] 
+error from
+\fIperror\fR())
+or if an unrelated
+\fIopen\fR()
+or similar call later in the application accidentally allocates
+a file to one of these well-known file descriptors. Furthermore, a
+\fIclose\fR()
+followed by a reopen operation (e.g.,
+\fIopen\fR(),
+\fIdup\fR(),
+etc.) is not atomic;
+\fIdup2\fR()
+should be used to change standard file descriptors.
 .SH RATIONALE
 The use of interruptible device close routines should be discouraged to
 avoid problems with the implicit closes of file descriptors by
 .IR exec
 and
 \fIexit\fR().
-This volume of POSIX.1\(hy2008 only intends to permit such behavior by specifying the
+This volume of POSIX.1\(hy2017 only intends to permit such behavior by specifying the
 .BR [EINTR] 
 error condition.
 .P
@@ -299,29 +321,34 @@ while still guaranteeing a conforming environment.
 None.
 .SH "SEE ALSO"
 .IR "Section 2.6" ", " "STREAMS",
+.IR "\fIdup\fR\^(\|)",
 .IR "\fIexec\fR\^",
+.IR "\fIexit\fR\^(\|)",
 .IR "\fIfattach\fR\^(\|)",
 .IR "\fIfclose\fR\^(\|)",
 .IR "\fIfdetach\fR\^(\|)",
 .IR "\fIfopen\fR\^(\|)",
+.IR "\fIfork\fR\^(\|)",
 .IR "\fIioctl\fR\^(\|)",
 .IR "\fIopen\fR\^(\|)",
+.IR "\fIperror\fR\^(\|)",
 .IR "\fIunlink\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

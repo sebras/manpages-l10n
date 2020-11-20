@@ -1,11 +1,12 @@
 '\" et
-.TH TDELETE "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH TDELETE "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 tdelete,
 tfind,
@@ -85,7 +86,11 @@ are the same as for
 \fItsearch\fR().
 The variable pointed to by
 .IR rootp
-shall be changed if the deleted node was the root of the tree. The
+shall be changed if the deleted node was the root of the tree.
+If the deleted node was the root of the tree and had no children, the
+variable pointed to by
+.IR rootp
+shall be set to a null pointer. The
 \fItdelete\fR()
 function shall return a pointer to the parent of the deleted node, or
 an unspecified non-null pointer if the deleted node was the root node,
@@ -121,9 +126,9 @@ The second argument shall be a value from an enumeration data type:
 .sp
 .RS 4
 .nf
-\fB
+
 typedef enum { preorder, postorder, endorder, leaf } VISIT;
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -191,42 +196,63 @@ order.
 .sp
 .RS 4
 .nf
-\fB
+
+#include <limits.h>
 #include <search.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 .P
-#define STRSZ    10000
-#define NODSZ    500
-.P
-struct node {      /* Pointers to these are stored in the tree. */
-    char    *string;
-    int     length;
+struct element {      /* Pointers to these are stored in the tree. */
+    int     count;
+    char    string[];
 };
 .P
-char   string_space[STRSZ];  /* Space to store strings. */
-struct node nodes[NODSZ];    /* Nodes to store. */
 void  *root = NULL;          /* This points to the root. */
 .P
-int main(int argc, char *argv[])
+int main(void)
 {
-    char   *strptr = string_space;
-    struct node    *nodeptr = nodes;
+    char   str[_POSIX2_LINE_MAX+1];
+    int    length = 0;
+    struct element *elementptr;
+    void   *node;
     void   print_node(const void *, VISIT, int);
-    int    i = 0, node_compare(const void *, const void *);
+    int    node_compare(const void *, const void *),
+           delete_root(const void *, const void *);
 .P
-    while (gets(strptr) != NULL && i++ < NODSZ)  {
-        /* Set node. */
-        nodeptr\(mi>string = strptr;
-        nodeptr\(mi>length = strlen(strptr);
-        /* Put node into the tree. */
-        (void) tsearch((void *)nodeptr, (void **)&root,
-            node_compare);
-        /* Adjust pointers, so we do not overwrite tree. */
-        strptr += nodeptr\(mi>length + 1;
-        nodeptr++;
+    while (fgets(str, sizeof(str), stdin))  {
+        /* Set element. */
+        length = strlen(str);
+        if (str[length-1] == \(aq\en\(aq)
+            str[--length] = \(aq\e0\(aq;
+        elementptr = malloc(sizeof(struct element) + length + 1);
+        strcpy(elementptr->string, str);
+        elementptr->count = 1;
+        /* Put element into the tree. */
+        node = tsearch((void *)elementptr, &root, node_compare);
+        if (node == NULL) {
+            fprintf(stderr,
+                    "tsearch: Not enough space available\en");
+            exit(EXIT_FAILURE);
+        }
+        else if (*(struct element **)node != elementptr) {
+            /* A node containing the element already exists */
+            (*(struct element **)node)->count++;
+            free(elementptr);
+        }
     }
     twalk(root, print_node);
+.P
+    /* Delete all nodes in the tree */
+    while (root != NULL) {
+        elementptr = *(struct element **)root;
+        printf("deleting node: string = %s,  count = %d\en",
+               elementptr->string,
+               elementptr->count);
+        tdelete((void *)elementptr, &root, delete_root);
+        free(elementptr);
+    }
+.P
     return 0;
 }
 .P
@@ -237,8 +263,19 @@ int main(int argc, char *argv[])
 int
 node_compare(const void *node1, const void *node2)
 {
-    return strcmp(((const struct node *) node1)\(mi>string,
-        ((const struct node *) node2)\(mi>string);
+    return strcmp(((const struct element *) node1)->string,
+        ((const struct element *) node2)->string);
+}
+.P
+/*
+ *  This comparison routine can be used with tdelete()
+ *  when explicitly deleting a root node, as no comparison
+ *  is necessary.
+ */
+int
+delete_root(const void *node1, const void *node2)
+{
+    return 0;
 }
 .P
 /*
@@ -248,14 +285,14 @@ node_compare(const void *node1, const void *node2)
 void
 print_node(const void *ptr, VISIT order, int level)
 {
-    const struct node *p = *(const struct node **) ptr;
+    const struct element *p = *(const struct element **) ptr;
 .P
-    if (order == postorder \(or\(or order == leaf)  {
-        (void) printf("string = %s,  length = %d\en",
-            p->string, p->length);
+    if (order == postorder || order == leaf)  {
+        (void) printf("string = %s,  count = %d\en",
+            p->string, p->count);
     }
 }
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -272,7 +309,7 @@ and
 .P
 There are two nomenclatures used to refer to the order in which tree
 nodes are visited. The
-\fItsearch\fR()
+\fItwalk\fR()
 function uses \fBpreorder\fP, \fBpostorder\fP, and \fBendorder\fP to
 refer respectively to visiting a node before any of its children, after
 its left child and before its right, and after both its children. The
@@ -298,20 +335,21 @@ None.
 .IR "\fIhcreate\fR\^(\|)",
 .IR "\fIlsearch\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<search.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

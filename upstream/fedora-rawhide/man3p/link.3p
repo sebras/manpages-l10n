@@ -1,21 +1,24 @@
 '\" et
-.TH LINK "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH LINK "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 link, linkat
-\(em link one file to another file relative to two directory
-file descriptors
+\(em link one file to another file
 .SH SYNOPSIS
 .LP
 .nf
 #include <unistd.h>
 .P
 int link(const char *\fIpath1\fP, const char *\fIpath2\fP);
+.P
+#include <fcntl.h>
+.P
 int linkat(int \fIfd1\fP, const char *\fIpath1\fP, int \fIfd2\fP,
     const char *\fIpath2\fP, int \fIflag\fP);
 .fi
@@ -86,11 +89,11 @@ instead of the current working directory and similarly for
 .IR path2
 and the file descriptor
 .IR fd2 .
-If the file descriptor was opened without O_SEARCH, the function
-shall check whether directory searches are permitted using the current
-permissions of the directory underlying the file descriptor. If the
-file descriptor was opened with O_SEARCH, the function shall not perform
-the check.
+If the access mode of the open file description associated with the
+file descriptor is not O_SEARCH, the function shall check whether
+directory searches are permitted using the current permissions of
+the directory underlying the file descriptor. If the access mode is
+O_SEARCH, the function shall not perform the check.
 .P
 Values for
 .IR flag
@@ -131,7 +134,7 @@ link
 and not its target.
 .SH "RETURN VALUE"
 Upon successful completion, these functions shall return 0. Otherwise,
-these functions shall return \(mi1 and set
+these functions shall return \-1 and set
 .IR errno
 to indicate the error.
 .br
@@ -176,6 +179,24 @@ does not exist; or
 or
 .IR path2
 points to an empty string.
+.TP
+.BR ENOENT " or " ENOTDIR
+.br
+The
+.IR path1
+argument names an existing non-directory file, and the
+.IR path2
+argument contains at least one non-\c
+<slash>
+character and ends with one or more trailing
+<slash>
+characters. If
+.IR path2
+without the trailing
+<slash>
+characters would name an existing file, an
+.BR [ENOENT] 
+error shall not occur.
 .TP
 .BR ENOSPC
 The directory to contain the link cannot be extended.
@@ -226,6 +247,17 @@ refers to a named STREAM.
 The
 \fIlinkat\fR()
 function shall fail if:
+.TP
+.BR EACCES
+The access mode of the open file description associated with
+.IR fd1
+or
+.IR fd2
+is not O_SEARCH and the permissions of the directory underlying
+.IR fd1
+or
+.IR fd2 ,
+respectively, do not permit directory searches.
 .TP
 .BR EBADF
 The
@@ -290,7 +322,7 @@ by creating a new directory entry named
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 .P
 char *path1 = "/home/cnd/mod1";
@@ -298,7 +330,7 @@ char *path2 = "/modules/pass1";
 int   status;
 \&...
 status = link (path1, path2);
-.fi \fR
+.fi
 .P
 .RE
 .SS "Creating a Link to a File Within a Program"
@@ -322,7 +354,7 @@ function again.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 .P
 #define LOCKFILE "/etc/ptmp"
@@ -337,7 +369,7 @@ unlink (PASSWDFILE);
 .P
 /* Save new password file as current password file. */
 link (LOCKFILE,PASSWDFILE);
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -352,7 +384,7 @@ be resolved.
 .SH RATIONALE
 Linking to a directory is restricted to the superuser
 in most historical implementations because this capability may produce
-loops in the file hierarchy or otherwise corrupt the file system. This volume of POSIX.1\(hy2008
+loops in the file hierarchy or otherwise corrupt the file system. This volume of POSIX.1\(hy2017
 continues that philosophy by prohibiting
 \fIlink\fR()
 and
@@ -415,21 +447,22 @@ None.
 .IR "\fIsymlink\fR\^(\|)",
 .IR "\fIunlink\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

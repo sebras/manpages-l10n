@@ -1,11 +1,12 @@
 '\" et
-.TH FWPRINTF "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH FWPRINTF "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 fwprintf,
 swprintf,
@@ -25,7 +26,7 @@ int wprintf(const wchar_t *restrict \fIformat\fP, ...);
 .SH DESCRIPTION
 The functionality described on this reference page is aligned with the
 ISO\ C standard. Any conflict between the requirements described here and the
-ISO\ C standard is unintentional. This volume of POSIX.1\(hy2008 defers to the ISO\ C standard.
+ISO\ C standard is unintentional. This volume of POSIX.1\(hy2017 defers to the ISO\ C standard.
 .P
 The
 \fIfwprintf\fR()
@@ -98,7 +99,7 @@ wide-character string are undefined. When numbered argument
 specifications are used, specifying the
 .IR N th
 argument requires that all the leading arguments, from the first to the
-(\fIN\fP\(mi1)th, are specified in the
+(\fIN\fP\-1)th, are specified in the
 .IR format
 wide-character string.
 .P
@@ -115,7 +116,13 @@ In
 wide-character strings containing the
 .BR %
 form of conversion specification, each argument in the argument list
-shall be used exactly once.
+shall be used exactly once. It is unspecified whether an encoding
+error occurs if the format string contains
+.BR wchar_t
+values that do not correspond to members of the character
+set of the current locale and the specified semantics do not
+require that value to be processed by
+\fIwcrtomb\fR().
 .P
 All forms of the
 \fIfwprintf\fR()
@@ -148,7 +155,7 @@ it shall be padded with
 <space>
 characters by default on the left; it shall be padded on the right,
 if the left-adjustment flag (\c
-.BR '\(mi' ),
+.BR '\-' ),
 described below, is given to the field width. The field width takes the
 form of an
 <asterisk>
@@ -210,7 +217,7 @@ supplies the field width or precision. Applications shall ensure that
 arguments specifying field width, or precision, or both appear in that
 order before the argument, if any, to be converted. A negative field
 width is taken as a
-.BR '\(mi' 
+.BR '\-' 
 flag followed by a positive field width. A negative precision is taken
 as if the precision were omitted.
 In
@@ -227,14 +234,14 @@ precision, for example:
 .sp
 .RS 4
 .nf
-\fB
+
 wprintf(L"%1$d:%2$.*3$d:%4$.*3$d\en", hour, min, precision, sec); \*?
-.fi \fR
+.fi
 .P
 .RE
 .P
 The flag wide characters and their meanings are:
-.IP "\fR'\fR" 8
+.IP "\fR\(aq\fR" 8
 (The
 <apostrophe>.)
 The integer portion of the result of a decimal conversion (\c
@@ -249,14 +256,14 @@ or
 shall be formatted with thousands' grouping wide characters. For other
 conversions, the behavior is undefined. The numeric grouping wide
 character is used.
-.IP "\fR\(mi\fR" 8
+.IP "\fR\-\fR" 8
 The result of the conversion shall be left-justified within the field.
 The conversion shall be right-justified if this flag is not specified.
 .IP "\fR+\fR" 8
 The result of a signed conversion shall always begin with a sign (\c
 .BR '+' 
 or
-.BR '\(mi' ).
+.BR '\-' ).
 The conversion shall begin with a sign only when a negative value is
 converted if this flag is not specified.
 .IP <space> 8
@@ -274,8 +281,9 @@ flag shall be ignored.
 Specifies that the value is to be converted to an alternative form.
 For
 .BR o
-conversion, it increases the precision (if necessary) to force the
-first digit of the result to be 0. For
+conversion, it shall increase the precision, if and only if necessary,
+to force the first digit of the result to be zero (if the value
+and precision are both 0, a single 0 is printed). For
 .BR x
 or
 .BR X
@@ -323,7 +331,7 @@ or base) are used to pad to the field width rather than performing
 space padding, except when converting an infinity or NaN. If the
 .BR '0' 
 and
-.BR '\(mi' 
+.BR '\-' 
 flags both appear, the
 .BR '0' 
 flag shall be ignored. For
@@ -523,7 +531,7 @@ The conversion specifiers and their meanings are:
 The
 .BR int
 argument shall be converted to a signed decimal in the style
-\fR"[\(mi]\fIdddd"\fR. The precision specifies the minimum number of
+\fR"[\-]\fIdddd"\fR. The precision specifies the minimum number of
 digits to appear; if the value being converted can be represented in
 fewer digits, it shall be expanded with leading zeros. The default
 precision shall be 1. The result of converting zero with an explicit
@@ -571,7 +579,7 @@ are used instead of
 The
 .BR double
 argument shall be converted to decimal notation in the style
-\fR"[\(mi]\fIddd.ddd"\fR, where the number of digits after the radix
+\fR"[\-]\fIddd.ddd"\fR, where the number of digits after the radix
 character shall be equal to the precision specification. If the
 precision is missing, it shall be taken as 6; if the precision is
 explicitly zero and no
@@ -586,14 +594,14 @@ A
 .BR double
 argument representing an infinity shall be converted in one of the
 styles
-.BR \(dq[\(mi]inf\(dq 
+.BR \(dq[-]inf\(dq 
 or
-.BR \(dq[\(mi]infinity\(dq ;
+.BR \(dq[-]infinity\(dq ;
 which style is implementation-defined. A
 .BR double
 argument representing a NaN shall be converted in one of the styles
-.BR \(dq[\(mi]nan\(dq 
-or \fR"[\(mi]nan(\fIn-char-sequence\fR)"\fR; which style, and the
+.BR \(dq[-]nan\(dq 
+or \fR"[\-]nan(\fIn-char-sequence\fR)"\fR; which style, and the
 meaning of any \fIn-char-sequence\fR, is implementation-defined. The
 .BR F
 conversion specifier produces
@@ -612,7 +620,7 @@ respectively.
 The
 .BR double
 argument shall be converted in the style
-\fR"[\(mi]\fId.ddd\fRe\fR\(+-dd"\fR, where there shall be one digit
+\fR"[\-]\fId.ddd\fRe\fR\(+-dd"\fR, where there shall be one digit
 before the radix character (which is non-zero if the argument is
 non-zero) and the number of digits after it shall be equal to the
 precision; if the precision is missing, it shall be taken as 6; if the
@@ -665,13 +673,13 @@ would have an exponent of
 .IP -- 4
 If
 .BR P >\c
-.IR X \(>=\(mi4,
+.IR X \(>=\-4,
 the conversion shall be with style
 .BR f
 (or
 .BR F )
 and precision
-.BR P \(mi(\c
+.BR P \-(\c
 .IR X +1).
 .IP -- 4
 Otherwise, the conversion shall be with style
@@ -679,7 +687,7 @@ Otherwise, the conversion shall be with style
 (or
 .BR E )
 and precision
-.BR P \(mi1.
+.BR P \-1.
 .P
 Finally, unless the
 .BR '#' 
@@ -700,7 +708,7 @@ conversion specifier.
 A
 .BR double
 argument representing a floating-point number shall be converted in
-the style \fR"[\(mi]0x\fIh\fR.\fIhhhh\fRp\(+-\fId\fR"\fR, where there
+the style \fR"[\-]0x\fIh\fR.\fIhhhh\fRp\(+-\fId\fR"\fR, where there
 shall be one hexadecimal digit (which is non-zero if the argument is a
 normalized floating-point number and is otherwise unspecified) before
 the decimal-point wide character and the number of hexadecimal digits
@@ -915,15 +923,6 @@ shall fail if:
 .BR EILSEQ
 A wide-character code that does not correspond to a valid character has
 been detected.
-.br
-.P
-In addition, all forms of
-\fIfwprintf\fR()
-may fail if:
-.TP
-.BR EINVAL
-There are insufficient arguments.
-.br
 .P
 In addition,
 \fIfwprintf\fR()
@@ -954,9 +953,9 @@ statement could be used:
 .sp
 .RS 4
 .nf
-\fB
+
 wprintf(format, weekday, month, day, hour, min);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -966,9 +965,9 @@ could be a pointer to the wide-character string:
 .sp
 .RS 4
 .nf
-\fB
+
 L"%s, %s %d, %d:%.2d\en"
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -976,9 +975,9 @@ producing the message:
 .sp
 .RS 4
 .nf
-\fB
+
 Sunday, July 3, 10:02
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -988,9 +987,9 @@ could be a pointer to the wide-character string:
 .sp
 .RS 4
 .nf
-\fB
+
 L"%1$s, %3$d. %2$s, %4$d:%5$.2d\en"
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -998,15 +997,19 @@ producing the message:
 .sp
 .RS 4
 .nf
-\fB
+
 Sonntag, 3. Juli, 10:02
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
 None.
 .SH RATIONALE
-None.
+If an implementation detects that there are insufficient
+arguments for the format, it is recommended that the function
+should fail and report an
+.BR [EINVAL] 
+error.
 .SH "FUTURE DIRECTIONS"
 None.
 .SH "SEE ALSO"
@@ -1017,22 +1020,24 @@ None.
 .IR "\fImbrtowc\fR\^(\|)",
 .IR "\fIsetlocale\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Chapter 7" ", " "Locale",
+.IR "\fB<inttypes.h>\fP",
 .IR "\fB<stdio.h>\fP",
 .IR "\fB<wchar.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

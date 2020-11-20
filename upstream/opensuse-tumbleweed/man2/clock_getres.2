@@ -42,10 +42,10 @@ clock_getres, clock_gettime, clock_settime \- clock and time functions
 .PP
 Link with \fI\-lrt\fP (only for glibc versions before 2.17).
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .ad l
 .BR clock_getres (),
@@ -251,13 +251,13 @@ dynamic clock ID.
 #define FD_TO_CLOCKID(fd)   ((\(ti(clockid_t) (fd) << 3) | CLOCKFD)
 #define CLOCKID_TO_FD(clk)  ((unsigned int) \(ti((clk) >> 3))
 
-struct timeval tv;
+struct timespec ts;
 clockid_t clkid;
 int fd;
 
 fd = open("/dev/ptp0", O_RDWR);
 clkid = FD_TO_CLOCKID(fd);
-clock_gettime(clkid, &tv);
+clock_gettime(clkid, &ts);
 .EE
 .in
 .SH RETURN VALUE
@@ -467,6 +467,7 @@ CLOCK_BOOTTIME :      72691.019 (20h 11m 31s)
 */
 #define _XOPEN_SOURCE 600
 #include <time.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -475,7 +476,7 @@ CLOCK_BOOTTIME :      72691.019 (20h 11m 31s)
 #define SECS_IN_DAY (24 * 60 * 60)
 
 static void
-displayClock(clockid_t clock, char *name, bool showRes)
+displayClock(clockid_t clock, const char *name, bool showRes)
 {
     struct timespec ts;
 
@@ -484,15 +485,17 @@ displayClock(clockid_t clock, char *name, bool showRes)
         exit(EXIT_FAILURE);
     }
 
-    printf("%\-15s: %10ld.%03ld (", name,
-            (long) ts.tv_sec, ts.tv_nsec / 1000000);
+    printf("%\-15s: %10jd.%03ld (", name,
+            (intmax_t) ts.tv_sec, ts.tv_nsec / 1000000);
 
     long days = ts.tv_sec / SECS_IN_DAY;
     if (days > 0)
         printf("%ld days + ", days);
 
-    printf("%2ldh %2ldm %2lds", (ts.tv_sec % SECS_IN_DAY) / 3600,
-            (ts.tv_sec % 3600) / 60, ts.tv_sec % 60);
+    printf("%2dh %2dm %2ds",
+            (int) (ts.tv_sec % SECS_IN_DAY) / 3600,
+            (int) (ts.tv_sec % 3600) / 60,
+            (int) ts.tv_sec % 60);
     printf(")\en");
 
     if (clock_getres(clock, &ts) == \-1) {
@@ -501,8 +504,8 @@ displayClock(clockid_t clock, char *name, bool showRes)
     }
 
     if (showRes)
-        printf("     resolution: %10ld.%09ld\en",
-                (long) ts.tv_sec, ts.tv_nsec);
+        printf("     resolution: %10jd.%09ld\en",
+                (intmax_t) ts.tv_sec, ts.tv_nsec);
 }
 
 int

@@ -1,11 +1,12 @@
 '\" et
-.TH EXPR "1P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH EXPR "1P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 expr
 \(em evaluate arguments as an expression
@@ -31,9 +32,9 @@ application shall ensure that each of the expression operator symbols:
 .sp
 .RS 4
 .nf
-\fB
-(  )  |  &  =  >  >=  <  <=  !=  +  \(mi  *  /  %  :
-.fi \fR
+
+(  )  |  &  =  >  >=  <  <=  !=  +  -  *  /  %  :
+.fi
 .P
 .RE
 .P
@@ -52,7 +53,7 @@ The following environment variables shall affect the execution of
 .IR expr :
 .IP "\fILANG\fP" 10
 Provide a default value for the internationalization variables that are
-unset or null. (See the Base Definitions volume of POSIX.1\(hy2008,
+unset or null. (See the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 8.2" ", " "Internationalization Variables"
 for the precedence of internationalization variables used to determine
 the values of locale categories.)
@@ -102,7 +103,7 @@ and
 .IR string
 symbols and the expression operator symbols (all separate arguments) by
 recursive application of the constructs described in the table. The
-expressions are listed in order of increasing precedence, with
+expressions are listed in order of decreasing precedence, with
 equal-precedence operators grouped between horizontal lines. All of
 the operators shall be left-associative.
 .TS
@@ -111,18 +112,40 @@ cB | cB
 l | lw(4i).
 Expression@Description
 _
-\fIexpr1\fP\ |\ \fIexpr2\fP@T{
-Returns the evaluation of
-.IR expr1
-if it is neither null nor zero; otherwise, returns the evaluation of
-.IR expr2
-if it is not null; otherwise, zero.
+\fIinteger\fP@T{
+An argument consisting only of an (optional) unary minus followed
+by digits.
+T}
+\fIstring\fP@T{
+A string argument; see below.
 T}
 _
-\fIexpr1\fP\ &\ \fIexpr2\fP@T{
-Returns the evaluation of
-.IR expr1
-if neither expression evaluates to null or zero; otherwise, returns zero.
+(\ \fIexpr\fR\ )@T{
+Grouping symbols. Any expression can be placed within parentheses.
+Parentheses can be nested to a depth of
+{EXPR_NEST_MAX}.
+T}
+_
+\fIexpr1\fP\ :\ \fIexpr2\fP@T{
+Matching expression; see below.
+T}
+_
+\fIexpr1\fP\ *\ \fIexpr2\fP@T{
+Multiplication of decimal integer-valued arguments.
+T}
+\fIexpr1\fP\ /\ \fIexpr2\fP@T{
+Integer division of decimal integer-valued arguments, producing
+an integer result.
+T}
+\fIexpr1\fP\ %\ \fIexpr2\fP@T{
+Remainder of integer division of decimal integer-valued arguments.
+T}
+_
+\fIexpr1\fP\ +\ \fIexpr2\fP@T{
+Addition of decimal integer-valued arguments.
+T}
+\fIexpr1\fP\ \-\ \fIexpr2\fP@T{
+Subtraction of decimal integer-valued arguments.
 T}
 _
 @T{
@@ -139,40 +162,18 @@ T}
 \fIexpr1\fP\ <=\ \fIexpr2\fR@Less than or equal.
 \fIexpr1\fP\ !=\ \fIexpr2\fR@Not equal.
 _
-\fIexpr1\fP\ +\ \fIexpr2\fP@T{
-Addition of decimal integer-valued arguments.
-T}
-\fIexpr1\fP\ \(mi\ \fIexpr2\fP@T{
-Subtraction of decimal integer-valued arguments.
-T}
-_
-\fIexpr1\fP\ *\ \fIexpr2\fP@T{
-Multiplication of decimal integer-valued arguments.
-T}
-\fIexpr1\fP\ /\ \fIexpr2\fP@T{
-Integer division of decimal integer-valued arguments, producing
-an integer result.
-T}
-\fIexpr1\fP\ %\ \fIexpr2\fP@T{
-Remainder of integer division of decimal integer-valued arguments.
+\fIexpr1\fP\ &\ \fIexpr2\fP@T{
+Returns the evaluation of
+.IR expr1
+if neither expression evaluates to null or zero; otherwise, returns zero.
 T}
 _
-\fIexpr1\fP\ :\ \fIexpr2\fP@T{
-Matching expression; see below.
-T}
-_
-(\ \fIexpr\fR\ )@T{
-Grouping symbols. Any expression can be placed within parentheses.
-Parentheses can be nested to a depth of
-{EXPR_NEST_MAX}.
-T}
-_
-\fIinteger\fP@T{
-An argument consisting only of an (optional) unary minus followed
-by digits.
-T}
-\fIstring\fP@T{
-A string argument; see below.
+\fIexpr1\fP\ |\ \fIexpr2\fP@T{
+Returns the evaluation of
+.IR expr1
+if it is neither null nor zero; otherwise, returns the evaluation of
+.IR expr2
+if it is not null; otherwise, zero.
 T}
 .TE
 .SS "Matching Expression"
@@ -184,12 +185,12 @@ evaluation of
 .IR expr1
 with the regular expression pattern resulting from the evaluation of
 .IR expr2 .
-Regular expression syntax shall be that defined in the Base Definitions volume of POSIX.1\(hy2008,
+Regular expression syntax shall be that defined in the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 9.3" ", " "Basic Regular Expressions",
 except that all patterns are anchored to the beginning of the string (that
 is, only sequences starting at the first character of a string are matched
 by the regular expression) and, therefore, it is unspecified whether
-.BR '^' 
+.BR '\(ha' 
 is a special character in that context. Usually, the matching operator
 shall return a string representing the number of characters matched (\c
 .BR '0' 
@@ -201,12 +202,15 @@ the string matched by the back-reference expression
 shall be returned. If the back-reference expression
 .BR \(dq\e1\(dq 
 does not match, then the null string shall be returned.
-.SS "String Operand"
+.SS "Identification as Integer or String"
 .P
-A string argument is an argument that cannot be identified as an
-.IR integer
-argument or as one of the expression operator symbols shown in the
-OPERANDS section.
+An argument or the value of a subexpression that consists only of an
+optional unary minus followed by digits is a candidate for treatment
+as an integer if it is used as the left argument to the
+.IR |
+operator or as either argument to any of the following operators:
+.IR "& = > >= < <= != + - * / %" .
+Otherwise, the argument or subexpression value shall be treated as a string.
 .P
 The use of string arguments
 .BR length ,
@@ -235,59 +239,6 @@ Default.
 .LP
 .IR "The following sections are informative."
 .SH "APPLICATION USAGE"
-After argument processing by the shell,
-.IR expr
-is not required to be able to tell the difference between an operator
-and an operand except by the value. If
-.BR \(dq$a\(dq 
-is
-.BR '=' ,
-the command:
-.sp
-.RS 4
-.nf
-\fB
-expr $a = '='
-.fi \fR
-.P
-.RE
-.P
-looks like:
-.sp
-.RS 4
-.nf
-\fB
-expr = = =
-.fi \fR
-.P
-.RE
-.P
-as the arguments are passed to
-.IR expr
-(and they all may be taken as the
-.BR '=' 
-operator). The following works reliably:
-.sp
-.RS 4
-.nf
-\fB
-expr X$a = X=
-.fi \fR
-.P
-.RE
-.P
-Also note that this volume of POSIX.1\(hy2008 permits implementations to extend utilities. The
-.IR expr
-utility permits the integer arguments to be preceded with a unary
-minus. This means that an integer argument could look like an option.
-Therefore, the conforming application must employ the
-.BR \(dq\(mi\|\(mi\(dq 
-construct of Guideline 10 of the Base Definitions volume of POSIX.1\(hy2008,
-.IR "Section 12.2" ", " "Utility Syntax Guidelines"
-to protect its operands if there is any chance the first operand might
-be a negative integer (or any string with a leading minus).
-.br
-.SH EXAMPLES
 The
 .IR expr
 utility has a rather difficult syntax:
@@ -305,9 +256,9 @@ cB | cB
 lf5 | lf5.
 Invalid@Valid
 _
-\fIexpr\fP 1+2@\fIexpr\fP 1 + 2
-\fIexpr\fP "1 + 2"@\fIexpr\fP 1 + 2
-\fIexpr\fP 1 + (2 * 3)@\fIexpr\fP 1 + \e( 2 \e* 3 \e)
+\fIexpr\fR 1+2@\fIexpr\fR 1 + 2
+\fIexpr\fR "1 + 2"@\fIexpr\fR 1 + 2
+\fIexpr\fR 1 + (2 * 3)@\fIexpr\fR 1 + \e( 2 \e* 3 \e)\fR
 .TE
 .P
 In many cases, the arithmetic and string features provided as part of
@@ -320,13 +271,83 @@ in favor of the new features within the shell; see
 and
 .IR "Section 2.6.4" ", " "Arithmetic Expansion".
 .P
+After argument processing by the shell,
+.IR expr
+is not required to be able to tell the difference between an operator
+and an operand except by the value. If
+.BR \(dq$a\(dq 
+is
+.BR '=' ,
+the command:
+.sp
+.RS 4
+.nf
+
+expr "$a" = \(aq=\(aq
+.fi
+.P
+.RE
+.P
+looks like:
+.sp
+.RS 4
+.nf
+
+expr = = =
+.fi
+.P
+.RE
+.P
+as the arguments are passed to
+.IR expr
+(and they all may be taken as the
+.BR '=' 
+operator). The following works reliably:
+.sp
+.RS 4
+.nf
+
+expr "X$a" = X=
+.fi
+.P
+.RE
+.P
+Also note that this volume of POSIX.1\(hy2017 permits implementations to extend utilities. The
+.IR expr
+utility permits the integer arguments to be preceded with a unary
+minus. This means that an integer argument could look like an option.
+Therefore, the conforming application must employ the
+.BR \(dq--\(dq 
+construct of Guideline 10 of the Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 12.2" ", " "Utility Syntax Guidelines"
+to protect its operands if there is any chance the first operand might
+be a negative integer (or any string with a leading minus).
+.P
+For testing string equality the
+.IR test
+utility is preferred over
+.IR expr ,
+as it is usually implemented as a shell built-in. However, the
+functionality is not quite the same because the
+.IR expr
+.IR =
+and
+.IR !=
+operators check whether strings collate equally, whereas
+.IR test
+checks whether they are identical. Therefore, they can produce
+different results in locales where the collation sequence does not
+have a total ordering of all characters (see the Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 7.3.2" ", " "LC_COLLATE").
+.br
+.SH EXAMPLES
 The following command:
 .sp
 .RS 4
 .nf
-\fB
-a=$(expr $a + 1)
-.fi \fR
+
+a=$(expr "$a" + 1)
+.fi
 .P
 .RE
 .P
@@ -342,9 +363,9 @@ or just
 .sp
 .RS 4
 .nf
-\fB
-expr $a : '.*/\e(.*\e)' \e| $a
-.fi \fR
+
+expr $a : \(aq.*/\e(.*\e)\(aq \e| $a
+.fi
 .P
 .RE
 .P
@@ -360,9 +381,9 @@ The following command:
 .sp
 .RS 4
 .nf
-\fB
-expr "//$a" : '.*/\e(.*\e)'
-.fi \fR
+
+expr "//$a" : \(aq.*/\e(.*\e)\(aq
+.fi
 .P
 .RE
 .P
@@ -381,9 +402,9 @@ The following command:
 .sp
 .RS 4
 .nf
-\fB
-expr "$VAR" : '.*'
-.fi \fR
+
+expr "X$VAR" : \(aq.*\(aq - 1
+.fi
 .P
 .RE
 .P
@@ -401,9 +422,9 @@ example:
 .sp
 .RS 4
 .nf
-\fB
-expr foo : ^foo     expr ^foo : ^foo
-.fi \fR
+
+expr foo : \(hafoo     expr \(hafoo : \(hafoo
+.fi
 .P
 .RE
 .P
@@ -417,22 +438,24 @@ None.
 .IR "Section 2.5" ", " "Parameters and Variables",
 .IR "Section 2.6.4" ", " "Arithmetic Expansion"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 7.3.2" ", " "LC_COLLATE",
 .IR "Chapter 8" ", " "Environment Variables",
 .IR "Section 9.3" ", " "Basic Regular Expressions",
 .IR "Section 12.2" ", " "Utility Syntax Guidelines"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

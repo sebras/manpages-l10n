@@ -1,18 +1,19 @@
 '\" et
-.TH CAT "1P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH CAT "1P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 cat
 \(em concatenate and print files
 .SH SYNOPSIS
 .LP
 .nf
-cat \fB[\fR\(miu\fB] [\fIfile\fR...\fB]\fR
+cat \fB[\fR-u\fB] [\fIfile\fR...\fB]\fR
 .fi
 .SH DESCRIPTION
 The
@@ -22,11 +23,11 @@ to the standard output in the same sequence.
 .SH OPTIONS
 The
 .IR cat
-utility shall conform to the Base Definitions volume of POSIX.1\(hy2008,
+utility shall conform to the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines".
 .P
 The following option shall be supported:
-.IP "\fB\(miu\fP" 10
+.IP "\fB\-u\fP" 10
 Write bytes from the input file to the standard output without delay as
 each is read.
 .SH OPERANDS
@@ -37,7 +38,7 @@ A pathname of an input file. If no
 operands are specified, the standard input shall be used. If a
 .IR file
 is
-.BR '\(mi' ,
+.BR '\-' ,
 the
 .IR cat
 utility shall read from the standard input at that point in the
@@ -45,7 +46,7 @@ sequence. The
 .IR cat
 utility shall not close and reopen standard input when it is referenced
 in this way, but shall accept multiple occurrences of
-.BR '\(mi' 
+.BR '\-' 
 as a
 .IR file
 operand.
@@ -55,7 +56,7 @@ The standard input shall be used only if no
 operands are specified, or if a
 .IR file
 operand is
-.BR '\(mi' .
+.BR '\-' .
 See the INPUT FILES section.
 .SH "INPUT FILES"
 The input files can be any file type.
@@ -64,7 +65,7 @@ The following environment variables shall affect the execution of
 .IR cat :
 .IP "\fILANG\fP" 10
 Provide a default value for the internationalization variables that are
-unset or null. (See the Base Definitions volume of POSIX.1\(hy2008,
+unset or null. (See the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 8.2" ", " "Internationalization Variables"
 for the precedence of internationalization variables used to determine
 the values of locale categories.)
@@ -87,6 +88,8 @@ Default.
 .SH STDOUT
 The standard output shall contain the sequence of bytes read from the
 input files. Nothing else shall be written to the standard output.
+If the standard output is a regular file, and is the same file as any
+of the input file operands, the implementation may treat this as an error.
 .SH STDERR
 The standard error shall be used only for diagnostic messages.
 .SH "OUTPUT FILES"
@@ -105,17 +108,17 @@ Default.
 .IR "The following sections are informative."
 .SH "APPLICATION USAGE"
 The
-.BR \(miu
+.BR \-u
 option has value in prototyping non-blocking reads from FIFOs. The
 intent is to support the following sequence:
 .sp
 .RS 4
 .nf
-\fB
+
 mkfifo foo
-cat \(miu foo > /dev/tty13 &
-cat \(miu > foo
-.fi \fR
+cat -u foo > /dev/tty13 &
+cat -u > foo
+.fi
 .P
 .RE
 .P
@@ -123,25 +126,25 @@ It is unspecified whether standard output is or is not buffered in the
 default case. This is sometimes of interest when standard output is
 associated with a terminal, since buffering may delay the output. The
 presence of the
-.BR \(miu
+.BR \-u
 option guarantees that unbuffered I/O is available. It is
 implementation-defined whether the
 .IR cat
 utility buffers output if the
-.BR \(miu
+.BR \-u
 option is not specified. Traditionally, the
-.BR \(miu
+.BR \-u
 option is implemented using the equivalent of the
 \fIsetvbuf\fR()
-function defined in the System Interfaces volume of POSIX.1\(hy2008.
+function defined in the System Interfaces volume of POSIX.1\(hy2017.
 .SH EXAMPLES
 The following command:
 .sp
 .RS 4
 .nf
-\fB
+
 cat myfile
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -153,9 +156,9 @@ The following command:
 .sp
 .RS 4
 .nf
-\fB
+
 cat doc1 doc2 > doc.all
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -171,23 +174,40 @@ redirection, a command such as this:
 .sp
 .RS 4
 .nf
-\fB
+
 cat doc doc.end > doc
-.fi \fR
+.fi
 .P
 .RE
 .P
 causes the original data in
 .BR doc
-to be lost.
+to be lost before
+.IR cat
+even begins execution. This is true whether the
+.IR cat
+command fails with an error or silently succeeds (the specification
+allows both behaviors). In order to append the contents of
+.BR doc.end
+without losing the original contents of
+.BR doc ,
+this command should be used instead:
+.sp
+.RS 4
+.nf
+
+cat doc.end >> doc
+.fi
+.P
+.RE
 .P
 The command:
 .sp
 .RS 4
 .nf
-\fB
-cat start \(mi middle \(mi end > file
-.fi \fR
+
+cat start - middle - end > file
+.fi
 .P
 .RE
 .P
@@ -199,29 +219,29 @@ equivalent to the command:
 .sp
 .RS 4
 .nf
-\fB
-cat start \(mi middle /dev/null end > file
-.fi \fR
+
+cat start - middle /dev/null end > file
+.fi
 .P
 .RE
 .P
 because the entire contents of the file would be consumed by
 .IR cat
 the first time
-.BR '\(mi' 
+.BR '\-' 
 was used as a
 .IR file
 operand and an end-of-file condition would be detected immediately when
-.BR '\(mi' 
+.BR '\-' 
 was referenced the second time.
 .SH RATIONALE
 Historical versions of the
 .IR cat
 utility include the
-.BR \(mie ,
-.BR \(mit ,
+.BR \-e ,
+.BR \-t ,
 and
-.BR \(miv ,
+.BR \-v ,
 options which permit the ends of lines,
 <tab>
 characters, and invisible characters, respectively, to be rendered visible
@@ -231,41 +251,41 @@ and similar output can be obtained using a command such as:
 .sp
 .RS 4
 .nf
-\fB
-sed \(min l pathname
-.fi \fR
+
+sed -n l pathname
+.fi
 .P
 .RE
 .P
 The latter also has the advantage that its output is unambiguous,
 whereas the output of historical
 .IR cat
-.BR \(mietv
+.BR \-etv
 is not.
 .P
 The
-.BR \(mis
+.BR \-s
 option was omitted because it corresponds to different functions in BSD
 and System V-based systems. The BSD
-.BR \(mis
+.BR \-s
 option to squeeze blank lines can be accomplished by the shell script
 shown in the following example:
 .sp
 .RS 4
 .nf
-\fB
-sed \(min '
+
+sed -n \(aq
 # Write non-empty lines.
 /./   {
       p
       d
       }
 # Write a single empty line, then look for more empty lines.
-/^$/  p
+/\(ha$/  p
 # Get next line, discard the held <newline> (empty line),
 # and look for more empty lines.
 :Empty
-/^$/  {
+/\(ha$/  {
       N
       s/.//
       b Empty
@@ -273,13 +293,13 @@ sed \(min '
 # Write the non-empty line before going back to search
 # for the first in a set of empty lines.
       p
-\&'
-.fi \fR
+\&\(aq
+.fi
 .P
 .RE
 .P
 The System V
-.BR \(mis
+.BR \-s
 option to silence error messages can be accomplished by redirecting the
 standard error. Note that the BSD documentation for
 .IR cat
@@ -288,10 +308,10 @@ line'': a line consisting only of a
 <newline>.
 .P
 The BSD
-.BR \(min
+.BR \-n
 option was omitted because similar functionality can be obtained from
 the
-.BR \(min
+.BR \-n
 option of the
 .IR pr
 utility.
@@ -300,24 +320,25 @@ None.
 .SH "SEE ALSO"
 .IR "\fImore\fR\^"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Chapter 8" ", " "Environment Variables",
 .IR "Section 12.2" ", " "Utility Syntax Guidelines"
 .P
-The System Interfaces volume of POSIX.1\(hy2008,
+The System Interfaces volume of POSIX.1\(hy2017,
 .IR "\fIsetvbuf\fR\^(\|)"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,11 +1,12 @@
 '\" et
-.TH FCNTL "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH FCNTL "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 fcntl
 \(em file control
@@ -29,9 +30,10 @@ are defined in
 .IR <fcntl.h> 
 and are as follows:
 .IP F_DUPFD 14
-Return a new file descriptor which shall be the lowest numbered
-available (that is, not already open) file descriptor greater than or
-equal to the third argument,
+Return a new file descriptor which shall be allocated as described in
+.IR "Section 2.14" ", " "File Descriptor Allocation",
+except that it shall be the lowest numbered available file
+descriptor greater than or equal to the third argument,
 .IR arg ,
 taken as an integer of type
 .BR int .
@@ -106,23 +108,52 @@ O_NONBLOCK flag will be ignored.
 .IP F_GETOWN 14
 If
 .IR fildes
-refers to a socket, get the process or process group ID specified to
+refers to a socket, get the process ID or process group ID specified to
 receive SIGURG signals when out-of-band data is available. Positive
-values indicate a process ID; negative values, other than \(mi1,
-indicate a process group ID. If
+values shall indicate a process ID; negative values, other than \-1,
+shall indicate a process group ID; the value zero shall indicate
+that no SIGURG signals are to be sent. If
 .IR fildes
 does not refer to a socket, the results are unspecified.
 .IP F_SETOWN 14
 If
 .IR fildes
-refers to a socket, set the process or process group ID specified to
+refers to a socket, set the process ID or process group ID specified to
 receive SIGURG signals when out-of-band data is available, using the
 value of the third argument,
 .IR arg ,
 taken as type
 .BR int .
-Positive values indicate a process ID; negative values, other than
-\(mi1, indicate a process group ID. If
+Positive values shall indicate a process ID; negative values,
+other than \-1, shall indicate a process group ID; the value zero
+shall indicate that no SIGURG signals are to be sent. Each time a
+SIGURG signal is sent to the specified process or process group,
+permission checks equivalent to those performed by
+\fIkill\fR()
+shall be performed, as if
+\fIkill\fR()
+were called by a process with the same real user ID, effective
+user ID, and privileges that the process calling
+\fIfcntl\fR()
+has at the time of the call; if the
+\fIkill\fR()
+call would fail, no signal shall be sent. These permission checks may
+also be performed by the
+\fIfcntl\fR()
+call. If the process specified by
+.IR arg
+later terminates, or the process group specified by
+.IR arg
+later becomes empty, while still being specified to receive
+SIGURG signals when out-of-band data is available from
+.IR fildes ,
+then no signals shall be sent to any subsequently created process
+that has the same process ID or process group ID, regardless of
+permission; it is unspecified whether this is achieved by the
+equivalent of a
+.IR fcntl ( fildes ", F_SETOWN, 0)"
+call at the time the process terminates or is waited for or the
+process group becomes empty, or by other means. If
 .IR fildes
 does not refer to a socket, the results are unspecified.
 .P
@@ -131,7 +162,7 @@ The following values for
 are available for advisory record locking. Record locking shall be
 supported for regular files, and may be supported for other files.
 .IP F_GETLK 14
-Get the first lock which blocks the lock description pointed to by the
+Get any lock which blocks the lock description pointed to by the
 third argument,
 .IR arg ,
 taken as a pointer to type
@@ -159,7 +190,7 @@ of lock (F_UNLCK). F_RDLCK, F_WRLCK, and F_UNLCK are defined in
 .IR <fcntl.h> .
 If a shared or exclusive lock cannot be set,
 \fIfcntl\fR()
-shall return immediately with a return value of \(mi1.
+shall return immediately with a return value of \-1.
 .IP F_SETLKW 14
 This command shall be equivalent to F_SETLK except that if a shared or
 exclusive lock is blocked by other locks, the thread shall wait until
@@ -170,7 +201,7 @@ is waiting for a region,
 \fIfcntl\fR()
 shall be interrupted. Upon return from the signal handler,
 \fIfcntl\fR()
-shall return \(mi1 with
+shall return \-1 with
 .IR errno
 set to
 .BR [EINTR] ,
@@ -254,14 +285,14 @@ is positive, the area affected shall start at
 .IR l_start
 and end at
 .IR l_start +\c
-.IR l_len \(mi1.
+.IR l_len \-1.
 If
 .IR l_len
 is negative, the area affected shall start at
 .IR l_start +\c
 .IR l_len
 and end at
-.IR l_start \(mi1.
+.IR l_start \-1.
 Locks may start and extend beyond the current end of a file, but shall
 not extend before the beginning of the file. A lock shall be set to
 extend to the largest possible value of the file offset for that file
@@ -340,25 +371,25 @@ Value of flags defined in
 .IR <fcntl.h> .
 The return value shall not be negative.
 .IP F_SETFD 12
-Value other than \(mi1.
+Value other than \-1.
 .IP F_GETFL 12
 Value of file status flags and access modes. The return value is not
 negative.
 .IP F_SETFL 12
-Value other than \(mi1.
+Value other than \-1.
 .IP F_GETLK 12
-Value other than \(mi1.
+Value other than \-1.
 .IP F_SETLK 12
-Value other than \(mi1.
+Value other than \-1.
 .IP F_SETLKW 12
-Value other than \(mi1.
+Value other than \-1.
 .IP F_GETOWN 12
 Value of the socket owner process or process group; this will not be
-\(mi1.
+\-1.
 .IP F_SETOWN 12
-Value other than \(mi1.
+Value other than \-1.
 .P
-Otherwise, \(mi1 shall be returned and
+Otherwise, \-1 shall be returned and
 .IR errno
 set to indicate the error.
 .SH ERRORS
@@ -441,6 +472,13 @@ argument is F_GETLK, F_SETLK, or F_SETLKW and the smallest or, if
 is non-zero, the largest offset of any byte in the requested segment
 cannot be represented correctly in an object of type
 .BR off_t .
+.TP
+.BR ESRCH
+The
+.IR cmd
+argument is F_SETOWN and no process or process group can be found
+corresponding to that specified by
+.IR arg .
 .br
 .P
 The
@@ -453,6 +491,19 @@ The
 argument is F_SETLKW, the lock is blocked by a lock from another
 process, and putting the calling process to sleep to wait for that lock
 to become free would cause a deadlock.
+.TP
+.BR EINVAL
+The
+.IR cmd
+argument is F_SETOWN and the value of the argument is not valid as a
+process or process group identifier.
+.TP
+.BR EPERM
+The
+.IR cmd
+argument is F_SETOWN and the calling process does not have
+permission to send a SIGURG signal to any process specified by
+.IR arg .
 .LP
 .IR "The following sections are informative."
 .SH EXAMPLES
@@ -466,7 +517,7 @@ can take some other action.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -491,11 +542,11 @@ main(int argc, char *argv[])
     fl.l_start = 100;
     fl.l_len = 10;
 .P
-    if (fcntl(fd, F_SETLK, &fl) == \(mi1) {
+    if (fcntl(fd, F_SETLK, &fl) == -1) {
         if (errno == EACCES || errno == EAGAIN) {
             printf("Already locked by another process\en");
 .P
-            /* We can't get the lock at the moment */
+            /* We cannot get the lock at the moment */
 .P
         } else {
             /* Handle unexpected error */;
@@ -510,12 +561,12 @@ main(int argc, char *argv[])
         fl.l_whence = SEEK_SET;
         fl.l_start = 100;
         fl.l_len = 10;
-        if (fcntl(fd, F_SETLK, &fl) == \(mi1)
+        if (fcntl(fd, F_SETLK, &fl) == -1)
             /* Handle error */;
     }
     exit(EXIT_SUCCESS);
 } /* main */
-.fi \fR
+.fi
 .P
 .RE
 .SS "Setting the Close-on-Exec Flag"
@@ -526,19 +577,19 @@ for the file descriptor
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 #include <fcntl.h>
 \&...
     int flags;
 .P
     flags = fcntl(fd, F_GETFD);
-    if (flags == \(mi1)
+    if (flags == -1)
         /* Handle error */;
     flags |= FD_CLOEXEC;
-    if (fcntl(fd, F_SETFD, flags) == \(mi1)
+    if (fcntl(fd, F_SETFD, flags) == -1)
         /* Handle error */;"
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -547,16 +598,29 @@ The
 values to F_GETFD, F_SETFD, F_GETFL, and F_SETFL all represent flag
 values to allow for future growth. Applications using these functions
 should do a read-modify-write operation on them, rather than assuming
-that only the values defined by this volume of POSIX.1\(hy2008 are valid. It is a common error to
+that only the values defined by this volume of POSIX.1\(hy2017 are valid. It is a common error to
 forget this, particularly in the case of F_SETFD. Some implementations
 set additional file status flags to advise the application of default
 behavior, even though the application did not request these flags.
+.P
+On systems which do not perform permission checks at the time of an
+\fIfcntl\fR()
+call with F_SETOWN, if the permission checks performed at the time
+the signal is sent disallow sending the signal to any process,
+the process that called
+\fIfcntl\fR()
+has no way of discovering that this has happened. A call to
+\fIkill\fR()
+with signal 0 can be used as a prior check of permissions, although
+this is no guarantee that permission will be granted at the time
+a signal is sent, since the target process(es) could change
+user IDs or privileges in the meantime.
 .SH RATIONALE
 The ellipsis in the SYNOPSIS is the syntax specified by the ISO\ C standard
 for a variable number of arguments. It is used because System V uses
 pointers for the implementation of file locking functions.
 .P
-This volume of POSIX.1\(hy2008 permits concurrent read and write access to file data using the
+This volume of POSIX.1\(hy2017 permits concurrent read and write access to file data using the
 \fIfcntl\fR()
 function; this is a change from the 1984 /usr/group standard and early proposals. Without
 concurrency controls, this feature may not be fully utilized without
@@ -591,7 +655,7 @@ open.
 The use of the open file description to identify what to lock requires
 extra calls and presents problems if several processes are sharing an
 open file description, but there are too many implementations of the
-existing mechanism for this volume of POSIX.1\(hy2008 to use different specifications.
+existing mechanism for this volume of POSIX.1\(hy2017 to use different specifications.
 .P
 Another consequence of this model is that closing any file descriptor
 for a given file (whether or not it is the same open file description
@@ -607,7 +671,7 @@ Yet locks may be inherited through one of the
 functions.
 .P
 The identification of a machine in a network environment is outside
-the scope of this volume of POSIX.1\(hy2008. Thus, an
+the scope of this volume of POSIX.1\(hy2017. Thus, an
 .IR l_sysid
 member, such as found in System V, is not included in the locking
 structure.
@@ -665,24 +729,26 @@ None.
 .IR "\fIalarm\fR\^(\|)",
 .IR "\fIclose\fR\^(\|)",
 .IR "\fIexec\fR\^",
+.IR "\fIkill\fR\^(\|)",
 .IR "\fIopen\fR\^(\|)",
 .IR "\fIsigaction\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<signal.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,20 +1,24 @@
 '\" et
-.TH MKFIFO "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH MKFIFO "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 mkfifo, mkfifoat
-\(em make a FIFO special file relative to directory file descriptor
+\(em make a FIFO special file
 .SH SYNOPSIS
 .LP
 .nf
 #include <sys/stat.h>
 .P
 int mkfifo(const char *\fIpath\fP, mode_t \fImode\fP);
+.P
+#include <fcntl.h>
+.P
 int mkfifoat(int \fIfd\fP, const char *\fIpath\fP, mode_t \fImode\fP);
 .fi
 .SH DESCRIPTION
@@ -67,11 +71,12 @@ function except in the case where
 specifies a relative path. In this case the newly created FIFO is
 created relative to the directory associated with the file descriptor
 .IR fd
-instead of the current working directory. If the file descriptor was
-opened without O_SEARCH, the function shall check whether directory
-searches are permitted using the current permissions of the directory
-underlying the file descriptor. If the file descriptor was opened with
-O_SEARCH, the function shall not perform the check.
+instead of the current working directory. If the access mode of the
+open file description associated with the file descriptor is not
+O_SEARCH, the function shall check whether directory searches are
+permitted using the current permissions of the directory underlying
+the file descriptor. If the access mode is O_SEARCH, the function
+shall not perform the check.
 .P
 If
 \fImkfifoat\fR()
@@ -82,9 +87,9 @@ shall be identical to a call to
 \fImkfifo\fR().
 .SH "RETURN VALUE"
 Upon successful completion, these functions shall return 0.
-Otherwise, these functions shall return \(mi1 and set
+Otherwise, these functions shall return \-1 and set
 .IR errno
-to indicate the error. If \(mi1 is returned, no FIFO shall be created.
+to indicate the error. If \-1 is returned, no FIFO shall be created.
 .SH ERRORS
 These functions shall fail if:
 .TP
@@ -123,7 +128,9 @@ character and ends with one or more trailing
 <slash>
 characters. If
 .IR path
-names an existing file, an
+without the trailing
+<slash>
+characters would name an existing file, an
 .BR [ENOENT] 
 error shall not occur.
 .TP
@@ -143,9 +150,9 @@ The
 function shall fail if:
 .TP
 .BR EACCES
+The access mode of the open file description associated with
 .IR fd
-was not opened with O_SEARCH and the permissions of the directory
-underlying
+is not O_SEARCH and the permissions of the directory underlying
 .IR fd
 do not permit directory searches.
 .TP
@@ -192,7 +199,7 @@ group and others.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <sys/types.h>
 #include <sys/stat.h>
 .P
@@ -200,7 +207,7 @@ int status;
 \&...
 status = mkfifo("/home/cnd/mod_done", S_IWUSR | S_IRUSR |
     S_IRGRP | S_IROTH);
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -251,21 +258,23 @@ None.
 .IR "\fImknod\fR\^(\|)",
 .IR "\fIumask\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
+.IR "\fB<fcntl.h>\fP",
 .IR "\fB<sys_stat.h>\fP",
 .IR "\fB<sys_types.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

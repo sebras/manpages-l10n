@@ -1,11 +1,12 @@
 '\" et
-.TH PTHREAD_CLEANUP_POP "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH PTHREAD_CLEANUP_POP "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 pthread_cleanup_pop,
 pthread_cleanup_push
@@ -47,9 +48,15 @@ with a non-zero
 .IR execute
 argument.
 .P
-These functions may be implemented as macros. The application shall
-ensure that they appear as statements, and in pairs within the same
-lexical scope (that is, the
+It is unspecified whether
+\fIpthread_cleanup_push\fR()
+and
+\fIpthread_cleanup_pop\fR()
+are macros or functions. If a macro definition is suppressed in order
+to access an actual function, or a program defines an external
+identifier with any of these names, the behavior is undefined.
+The application shall ensure that they appear as statements,
+and in pairs within the same lexical scope (that is, the
 \fIpthread_cleanup_push\fR()
 macro may be thought to expand to a token list whose first token is
 .BR '{' 
@@ -104,7 +111,7 @@ cancelable, writers-priority read-write lock:
 .sp
 .RS 4
 .nf
-\fB
+
 typedef struct {
     pthread_mutex_t lock;
     pthread_cond_t rcond,
@@ -143,7 +150,7 @@ void
 release_read_lock(rwlock *l)
 {
     pthread_mutex_lock(&l->lock);
-    if (-\|-l->lock_count == 0)
+    if (--l->lock_count == 0)
         pthread_cond_signal(&l->wcond);
     pthread_mutex_unlock(&l->lock);
 }
@@ -154,7 +161,7 @@ waiting_writer_cleanup(void *arg)
     rwlock *l;
 .P
     l = (rwlock *) arg;
-    if ((-\|-l->waiting_writers == 0) && (l->lock_count >= 0)) {
+    if ((--l->waiting_writers == 0) && (l->lock_count >= 0)) {
        /*
         * This only happens if we have been canceled. If the
         * lock is not held by a writer, there may be readers who
@@ -174,7 +181,7 @@ lock_for_write(rwlock *l)
     pthread_cleanup_push(waiting_writer_cleanup, l);
     while (l->lock_count != 0)
         pthread_cond_wait(&l->wcond, &l->lock);
-    l->lock_count = \(mi1;
+    l->lock_count = -1;
    /*
     * Note the pthread_cleanup_pop executes
     * waiting_writer_cleanup.
@@ -226,7 +233,7 @@ writer_thread()
     */
 pthread_cleanup_pop(1);
 }
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -248,7 +255,7 @@ implementation of these routines as macros might look like this:
 .sp
 .RS 4
 .nf
-\fB
+
 #define pthread_cleanup_push(rtn,arg) { \e
     struct _pthread_handler_rec __cleanup_handler, **__head; \e
     __cleanup_handler.rtn = rtn; \e
@@ -261,7 +268,7 @@ implementation of these routines as macros might look like this:
     *__head = __cleanup_handler.next; \e
     if (ex) (*__cleanup_handler.rtn)(__cleanup_handler.arg); \e
 }
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -269,7 +276,7 @@ A more ambitious implementation of these routines might do even better
 by allowing the compiler to note that the
 cancellation cleanup handler is a constant and can be expanded inline.
 .P
-This volume of POSIX.1\(hy2008 currently leaves unspecified the effect of calling
+This volume of POSIX.1\(hy2017 currently leaves unspecified the effect of calling
 \fIlongjmp\fR()
 from a signal handler executing in a POSIX System Interfaces function.
 If an implementation wants to allow this and give the programmer
@@ -314,20 +321,21 @@ None.
 .IR "\fIpthread_cancel\fR\^(\|)",
 .IR "\fIpthread_setcancelstate\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<pthread.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

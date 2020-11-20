@@ -1,14 +1,15 @@
 '\" et
-.TH ACCESS "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH ACCESS "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 access, faccessat
-\(em determine accessibility of a file relative to directory file
+\(em determine accessibility of a file
 descriptor
 .SH SYNOPSIS
 .LP
@@ -16,6 +17,9 @@ descriptor
 #include <unistd.h>
 .P
 int access(const char *\fIpath\fP, int \fIamode\fP);
+.P
+#include <fcntl.h>
+.P
 int faccessat(int \fIfd\fP, const char *\fIpath\fP, int \fIamode\fP, int \fIflag\fP);
 .fi
 .SH DESCRIPTION
@@ -24,9 +28,11 @@ The
 function shall check the file named by the pathname pointed to by the
 .IR path
 argument for accessibility according to the bit pattern contained in
-.IR amode ,
-using the real user ID in place of the effective user ID and the real
-group ID in place of the effective group ID.
+.IR amode .
+The checks for accessibility (including directory permissions
+checked during pathname resolution) shall be performed using the
+real user ID in place of the effective user ID and the real group
+ID in place of the effective group ID.
 .P
 The value of
 .IR amode
@@ -34,15 +40,17 @@ is either the bitwise-inclusive OR of the access permissions to be
 checked (R_OK, W_OK, X_OK) or the existence test (F_OK).
 .P
 If any access permissions are checked, each shall be checked
-individually, as described in the Base Definitions volume of POSIX.1\(hy2008,
-.IR "Section 4.4" ", " "File Access Permissions",
+individually, as described in the Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 4.5" ", " "File Access Permissions",
 except that where that description refers to execute permission for
 a process with appropriate privileges, an implementation may indicate
 success for X_OK even if execute permission is not granted to any user.
 .P
 The
 \fIfaccessat\fR()
-function shall be equivalent to the
+function, when called with a
+.IR flag
+value of zero, shall be equivalent to the
 \fIaccess\fR()
 function, except in the case where
 .IR path
@@ -50,18 +58,19 @@ specifies a relative path. In this case the file whose accessibility is
 to be determined shall be located relative to the directory associated
 with the file descriptor
 .IR fd
-instead of the current working directory. If the file descriptor was
-opened without O_SEARCH, the function shall check whether directory
-searches are permitted using the current permissions of the directory
-underlying the file descriptor. If the file descriptor was opened with
-O_SEARCH, the function shall not perform the check.
+instead of the current working directory.
+If the access mode of the open file description associated with
+the file descriptor is not O_SEARCH, the function shall check
+whether directory searches are permitted using the current
+permissions of the directory underlying the file descriptor.
+If the access mode is O_SEARCH, the function shall not perform the check.
 .P
 If
 \fIfaccessat\fR()
 is passed the special value AT_FDCWD in the
 .IR fd
-parameter, the current working directory shall be used and the behavior
-shall be identical to a call to
+parameter, the current working directory shall be used and, if flag is
+zero, the behavior shall be identical to a call to
 \fIaccess\fR().
 .P
 Values for
@@ -70,13 +79,14 @@ are constructed by a bitwise-inclusive OR of flags from the following
 list, defined in
 .IR <fcntl.h> :
 .IP AT_EACCESS 12
-The checks for accessibility are performed using the effective user and
-group IDs instead of the real user and group ID as required in a call
-to
+The checks for accessibility (including directory permissions
+checked during pathname resolution) shall be performed using the
+effective user ID and group ID instead of the real user ID and group ID
+as required in a call to
 \fIaccess\fR().
 .SH "RETURN VALUE"
 Upon successful completion, these functions shall return 0. Otherwise,
-these functions shall return \(mi1 and set
+these functions shall return \-1 and set
 .IR errno
 to indicate the error.
 .SH ERRORS
@@ -122,9 +132,9 @@ The
 function shall fail if:
 .TP
 .BR EACCES
+The access mode of the open file description associated with
 .IR fd
-was not opened with O_SEARCH and the permissions of the directory
-underlying
+is not O_SEARCH and the permissions of the directory underlying
 .IR fd
 do not permit directory searches.
 .TP
@@ -188,17 +198,80 @@ directory.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <unistd.h>
 \&...
 int result;
 const char *pathname = "/tmp/myfile";
 .P
 result = access (pathname, F_OK);
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
+Use of these functions is discouraged since by the time the
+returned information is acted upon, it is out-of-date. (That is,
+acting upon the information always leads to a time-of-check-to-time-of-use
+race condition.) An application should instead attempt the action
+itself and handle the
+.BR [EACCES] 
+error that occurs if the file is not accessible (with a change of
+effective user and group IDs beforehand, and perhaps a change back
+afterwards, in the case where
+\fIaccess\fR()
+or
+\fIfaccessat\fR()
+without AT_EACCES would have been used.)
+.P
+Historically, one of the uses of
+\fIaccess\fR()
+was in set-user-ID root programs to check whether the user running
+the program had access to a file. This relied on ``super-user''
+privileges which were granted based on the effective user ID being
+zero, so that when
+\fIaccess\fR()
+used the real user ID to check accessibility those privileges
+were not taken into account. On newer systems where privileges
+can be assigned which have no association with user or group IDs,
+if a program with such privileges calls
+\fIaccess\fR(),
+the change of IDs has no effect on the privileges and therefore
+they are taken into account in the accessibility checks. Thus,
+\fIaccess\fR()
+(and
+\fIfaccessat\fR()
+with flag zero) cannot be used for this historical purpose in
+such programs. Likewise, if a system provides any additional or
+alternate file access control mechanisms that are not user ID-based,
+they will still be taken into account.
+.P
+If a relative pathname is used, no account is taken of whether
+the current directory (or the directory associated with the
+file descriptor
+.IR fd )
+is accessible via any absolute pathname. Applications using
+\fIaccess\fR(),
+or
+\fIfaccessat\fR()
+without AT_EACCES, may consequently act as if the file would be
+accessible to a user with the real user ID and group ID of the
+process when such a user would not in practice be able to access the file
+because access would be denied at some point above the current directory
+(or the directory associated with the file descriptor
+.IR fd )
+in the file hierarchy.
+.P
+If
+\fIaccess\fR()
+or
+\fIfaccessat\fR()
+is used with W_OK to check for write access to a directory which has
+the S_ISVTX bit set, a return value indicating the directory is
+writable can be misleading since some operations on files in the
+directory would not be permitted based on the ownership of those files
+(see the Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 4.3" ", " "Directory Protection").
+.P
 Additional values of
 .IR amode
 other than the set defined in the description may be valid; for
@@ -231,7 +304,7 @@ to test their file access permissions.
 .P
 However, the historical model of
 \fIeaccess\fR()
-does not resolve problem (1), so this volume of POSIX.1\(hy2008 now allows
+does not resolve problem (1), so this volume of POSIX.1\(hy2017 now allows
 \fIaccess\fR()
 to behave in the desired way because several implementations have
 corrected the problem. It was also argued that problem (2) is more
@@ -243,7 +316,7 @@ or one of the
 functions as appropriate and responding to the error, rather than
 creating a new function that would not be as reliable. Therefore,
 \fIeaccess\fR()
-is not included in this volume of POSIX.1\(hy2008.
+is not included in this volume of POSIX.1\(hy2017.
 .P
 The sentence concerning appropriate privileges and execute permission
 bits
@@ -266,27 +339,29 @@ the target directory and using the
 function it can be guaranteed that the file tested for accessibility is
 located relative to the desired directory.
 .SH "FUTURE DIRECTIONS"
-None.
+These functions may be formally deprecated (for example, by shading
+them OB) in a future version of this standard.
 .SH "SEE ALSO"
 .IR "\fIchmod\fR\^(\|)",
 .IR "\fIfstatat\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
-.IR "Section 4.4" ", " "File Access Permissions",
+The Base Definitions volume of POSIX.1\(hy2017,
+.IR "Section 4.5" ", " "File Access Permissions",
 .IR "\fB<fcntl.h>\fP",
 .IR "\fB<unistd.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,11 +1,12 @@
 '\" et
-.TH SIGACTION "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH SIGACTION "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 sigaction
 \(em examine and change a signal action
@@ -167,9 +168,9 @@ shall be entered as:
 .sp
 .RS 4
 .nf
-\fB
+
 void func(int \fIsigno\fP);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -188,9 +189,9 @@ function shall be entered as:
 .sp
 .RS 4
 .nf
-\fB
+
 void func(int \fIsigno\fP, siginfo_t *\fIinfo\fP, void *\fIcontext\fP);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -225,23 +226,11 @@ described in
 .IR "Section 2.4.3" ", " "Signal Actions".
 .RE
 .IP SA_NOCLDWAIT 14
-If set, and
+If
 .IR sig
-equals SIGCHLD, child processes of the calling processes shall not
-be transformed into zombie processes when they terminate. If the calling
-process subsequently waits for its children, and the process has no
-unwaited-for children that were transformed into zombie processes, it
-shall block until all of its children terminate, and
-\fIwait\fR(),
-\fIwaitid\fR(),
-and
-\fIwaitpid\fR()
-shall fail and set
-.IR errno
-to
-.BR [ECHILD] .
-Otherwise, terminating child processes shall be transformed into zombie
-processes, unless SIGCHLD is set to SIG_IGN.
+does not equal SIGCHLD, the behavior is unspecified. Otherwise, the
+behavior of the SA_NOCLDWAIT flag is as specified in
+.IR "Consequences of Process Termination".
 .IP SA_NODEFER 14
 If set and
 .IR sig
@@ -343,7 +332,7 @@ unspecified.
 .SH "RETURN VALUE"
 Upon successful completion,
 \fIsigaction\fR()
-shall return 0; otherwise, \(mi1 shall be returned,
+shall return 0; otherwise, \-1 shall be returned,
 .IR errno
 shall be set to indicate the error, and no new signal-catching function
 shall be installed.
@@ -358,13 +347,6 @@ The
 .IR sig
 argument is not a valid signal number or an attempt is made to catch a
 signal that cannot be caught or ignore a signal that cannot be ignored.
-.TP
-.BR ENOTSUP
-The SA_SIGINFO bit flag is set in the
-.IR sa_flags
-field of the
-.BR sigaction
-structure.
 .P
 The
 \fIsigaction\fR()
@@ -374,7 +356,7 @@ function may fail if:
 An attempt was made to set the action to SIG_DFL for a signal that
 cannot be caught or ignored (or both).
 .P
-In addition, the
+In addition, on systems that do not support the XSI option, the
 \fIsigaction\fR()
 function may fail if the SA_SIGINFO flag is set in the
 .IR sa_flags
@@ -392,7 +374,7 @@ to establish a handler for the SIGINT signal.
 .sp
 .RS 4
 .nf
-\fB
+
 #include <signal.h>
 .P
 static void handler(int signum)
@@ -408,12 +390,12 @@ int main()
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART; /* Restart functions if
                                  interrupted by handler */
-    if (sigaction(SIGINT, &sa, NULL) == \(mi1)
+    if (sigaction(SIGINT, &sa, NULL) == -1)
         /* Handle error */;
 .P
     /* Further code */
 }
-.fi \fR
+.fi
 .P
 .RE
 .SH "APPLICATION USAGE"
@@ -427,7 +409,7 @@ and
 \fIsignal\fR()
 should not be used in the same process to control the same signal.
 The behavior of async-signal-safe functions, as defined in their
-respective DESCRIPTION sections, is as specified by this volume of POSIX.1\(hy2008, regardless
+respective DESCRIPTION sections, is as specified by this volume of POSIX.1\(hy2017, regardless
 of invocation from a signal-catching function. This is the only intended
 meaning of the statement that async-signal-safe functions may be used in
 signal-catching functions without restrictions. Applications must still
@@ -484,7 +466,7 @@ or
 functions or the standard I/O library, both of which traditionally
 use data structures in a non-async-signal-safe manner. Since any
 combination of different functions using a common data structure can
-cause async-signal-safety problems, this volume of POSIX.1\(hy2008 does not define the behavior
+cause async-signal-safety problems, this volume of POSIX.1\(hy2017 does not define the behavior
 when any unsafe function is called in a signal handler that interrupts
 an unsafe function.
 .P
@@ -501,7 +483,7 @@ or
 is used to leave the signal handler, then the signal mask must be
 explicitly restored.
 .P
-This volume of POSIX.1\(hy2008 defines the third argument of a signal handling function when
+This volume of POSIX.1\(hy2017 defines the third argument of a signal handling function when
 SA_SIGINFO is set as a
 .BR "void *"
 instead of a
@@ -511,14 +493,14 @@ explicitly cast the third argument of the signal handling function to
 .BR "ucontext_t *" .
 .P
 The BSD optional four argument signal handling function is not
-supported by this volume of POSIX.1\(hy2008. The BSD declaration would be:
+supported by this volume of POSIX.1\(hy2017. The BSD declaration would be:
 .sp
 .RS 4
 .nf
-\fB
+
 void handler(int \fIsig\fP, int \fIcode\fP, struct sigcontext *\fIscp\fP,
     char *\fIaddr\fP);
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -545,10 +527,10 @@ always explicitly set SA_NODEFER when they set SA_RESETHAND in order to
 be portable.
 .P
 See also the rationale for Realtime Signal Generation and Delivery in
-the Rationale (Informative) volume of POSIX.1\(hy2008,
+the Rationale (Informative) volume of POSIX.1\(hy2017,
 .IR "Section B.2.4.2" ", " "Signal Generation and Delivery".
 .SH RATIONALE
-Although this volume of POSIX.1\(hy2008 requires that signals that cannot be ignored
+Although this volume of POSIX.1\(hy2017 requires that signals that cannot be ignored
 shall not be added to the signal mask when a signal-catching function
 is entered, there is no explicit requirement that subsequent calls to
 \fIsigaction\fR()
@@ -589,9 +571,9 @@ stopping processes, such as the
 \fIptrace\fR()
 function. These implementations usually do not generate a SIGCHLD
 signal when processes stop due to this mechanism; however, that is
-beyond the scope of this volume of POSIX.1\(hy2008.
+beyond the scope of this volume of POSIX.1\(hy2017.
 .P
-This volume of POSIX.1\(hy2008 requires that calls to
+This volume of POSIX.1\(hy2017 requires that calls to
 \fIsigaction\fR()
 that supply a NULL
 .IR act
@@ -607,7 +589,7 @@ functions return
 in these cases and, in this respect, their behavior varies from
 \fIsigaction\fR().
 .P
-This volume of POSIX.1\(hy2008 requires that
+This volume of POSIX.1\(hy2017 requires that
 \fIsigaction\fR()
 properly save and restore a signal action set up by the ISO\ C standard
 \fIsignal\fR()
@@ -636,6 +618,7 @@ None.
 .SH "SEE ALSO"
 .IR "Section 2.4" ", " "Signal Concepts",
 .IR "\fIexec\fR\^",
+.IR "\fI_Exit\fR\^(\|)",
 .IR "\fIkill\fR\^(\|)",
 .IR "\fI_longjmp\fR\^(\|)",
 .IR "\fIlongjmp\fR\^(\|)",
@@ -655,20 +638,21 @@ None.
 .IR "\fIwait\fR\^(\|)",
 .IR "\fIwaitid\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<signal.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -1,18 +1,19 @@
 '\" et
-.TH CMP "1P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH CMP "1P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 cmp
 \(em compare two files
 .SH SYNOPSIS
 .LP
 .nf
-cmp \fB[\fR\(mil|\(mis\fB] \fIfile1 file2\fR
+cmp \fB[\fR-l|-s\fB] \fIfile1 file2\fR
 .fi
 .SH DESCRIPTION
 The
@@ -26,28 +27,32 @@ shall be numbered beginning with 1.
 .SH OPTIONS
 The
 .IR cmp
-utility shall conform to the Base Definitions volume of POSIX.1\(hy2008,
+utility shall conform to the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 12.2" ", " "Utility Syntax Guidelines".
 .P
 The following options shall be supported:
-.IP "\fB\(mil\fP" 10
+.IP "\fB\-l\fP" 10
 (Lowercase ell.) Write the byte number (decimal) and the differing
 bytes (octal) for each difference.
-.IP "\fB\(mis\fP" 10
-Write nothing for differing files; return exit status only.
+.IP "\fB\-s\fP" 10
+Write nothing to standard output or standard error when files
+differ; indicate differing files through exit status only.
+It is unspecified whether a diagnostic message is written to
+standard error when an error is encountered; if a message is
+not written, the error is indicated through exit status only.
 .SH OPERANDS
 The following operands shall be supported:
 .IP "\fIfile1\fR" 10
 A pathname of the first file to be compared. If
 .IR file1
 is
-.BR '\(mi' ,
+.BR '\-' ,
 the standard input shall be used.
 .IP "\fIfile2\fR" 10
 A pathname of the second file to be compared. If
 .IR file2
 is
-.BR '\(mi' ,
+.BR '\-' ,
 the standard input shall be used.
 .P
 If both
@@ -69,7 +74,7 @@ The following environment variables shall affect the execution of
 .IR cmp :
 .IP "\fILANG\fP" 10
 Provide a default value for the internationalization variables that are
-unset or null. (See the Base Definitions volume of POSIX.1\(hy2008,
+unset or null. (See the Base Definitions volume of POSIX.1\(hy2017,
 .IR "Section 8.2" ", " "Internationalization Variables"
 for the precedence of internationalization variables used to determine
 the values of locale categories.)
@@ -96,23 +101,23 @@ standard output. When no options are used, the format shall be:
 .sp
 .RS 4
 .nf
-\fB
+
 "%s %s differ: char %d, line %d\en", \fIfile1\fR, \fIfile2\fR,
     <\fIbyte number\fR>, <\fIline number\fR>
-.fi \fR
+.fi
 .P
 .RE
 .P
 When the
-.BR \(mil
+.BR \-l
 option is used, the format shall be:
 .sp
 .RS 4
 .nf
-\fB
+
 "%d %o %o\en", <\fIbyte number\fR>, <\fIdiffering byte\fR>,
     <\fIdiffering byte\fR>
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -125,17 +130,17 @@ In both cases, <\fIbyte\ number\fP> shall be relative to the beginning
 of the file, beginning with 1.
 .P
 No output shall be written to standard output when the
-.BR \(mis
+.BR \-s
 option is used.
 .SH STDERR
 The standard error shall be used only for diagnostic messages. If the
-.BR \(mil
+.BR \-l
 option is used and
 .IR file1
 and
 .IR file2
 differ in length, or if the
-.BR \(mis
+.BR \-s
 option is not used and
 .IR file1
 and
@@ -145,9 +150,9 @@ locale the following diagnostic message shall be written:
 .sp
 .RS 4
 .nf
-\fB
+
 "cmp: EOF on %s%s\en", <\fIname of shorter file\fR>, <\fIadditional info\fR>
-.fi \fR
+.fi
 .P
 .RE
 .P
@@ -158,6 +163,11 @@ and contains no
 <newline>
 characters. Some implementations report on the number of lines in
 this case.
+.P
+If the
+.BR \-s
+option is used and an error occurs, it is unspecified whether a
+diagnostic message is written to standard error.
 .SH "OUTPUT FILES"
 None.
 .SH "EXTENDED DESCRIPTION"
@@ -180,7 +190,7 @@ Although input files to
 .IR cmp
 can be any type, the results might not be what would be expected on
 character special device files or on file types not described by the
-System Interfaces volume of POSIX.1\(hy2008. Since this volume of POSIX.1\(hy2008 does not specify the block size used when doing
+System Interfaces volume of POSIX.1\(hy2017. Since this volume of POSIX.1\(hy2017 does not specify the block size used when doing
 input, comparisons of character special files need not compare all of
 the data in those files.
 .P
@@ -188,6 +198,40 @@ For files which are not text files, line numbers simply reflect the
 presence of a
 <newline>,
 without any implication that the file is organized into lines.
+.P
+Since the behavior of
+.BR \-s
+differs between implementations as to whether error messages are
+written, the only way to ensure consistent behavior of
+.IR cmp
+when
+.BR \-s
+is used is to redirect standard error to
+.BR /dev/null .
+.P
+If error messages are wanted, instead of using
+.BR \-s
+standard output should be redirected to
+.BR /dev/null ,
+and anything written to standard error should be discarded if the exit
+status is 1. For example:
+.sp
+.RS 4
+.nf
+
+silent_cmp() {
+    # compare files with no output except error messages
+    message=$(cmp "$@" 2>&1 >/dev/null)
+    status=$?
+    case $status in
+    (0|1) ;;
+    (*) printf \(aq%s\en\(aq "$message" ;;
+    esac
+    return $status
+}
+.fi
+.P
+.RE
 .SH EXAMPLES
 None.
 .SH RATIONALE
@@ -199,9 +243,9 @@ usage:
 .sp
 .RS 4
 .nf
-\fB
-cmp \(mil \(mis ...
-.fi \fR
+
+cmp -l -s ...
+.fi
 .P
 .RE
 .P
@@ -209,9 +253,9 @@ to be an error. They also treat:
 .sp
 .RS 4
 .nf
-\fB
-cmp \(mis \(mil ...
-.fi \fR
+
+cmp -s -l ...
+.fi
 .P
 .RE
 .P
@@ -242,26 +286,30 @@ that some filenames containing white-space characters make parsing
 difficult anyway, but the restriction does aid programs used on systems
 where the names are predominantly well behaved.
 .SH "FUTURE DIRECTIONS"
-None.
+Future versions of this standard may require that diagnostic messages
+are written to standard error when the
+.BR \-s
+option is specified.
 .SH "SEE ALSO"
 .IR "\fIcomm\fR\^",
 .IR "\fIdiff\fR\^"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "Chapter 8" ", " "Environment Variables",
 .IR "Section 12.2" ", " "Utility Syntax Guidelines"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to

@@ -101,6 +101,35 @@ BPF functionality from the overloaded
 .BR CAP_SYS_ADMIN
 capability.
 .TP
+.BR CAP_CHECKPOINT_RESTORE " (since Linux 5.9)"
+.\" commit 124ea650d3072b005457faed69909221c2905a1f
+.PD 0
+.RS
+.IP * 2
+Update
+.I /proc/sys/kernel/ns_last_pid
+(see
+.BR pid_namespaces (7));
+.IP *
+employ the
+.I set_tid
+feature of
+.BR clone3 (2);
+.\" FIXME There is also some use case relating to
+.\" prctl_set_mm_exe_file(); in the 5.9 sources, see
+.\" prctl_set_mm_map().
+.IP *
+read the contents of the symbolic links in
+.IR /proc/[pid]/map_files
+for other processes.
+.RE
+.PD
+.IP
+This capability was added in Linux 5.9 to separate out
+checkpoint/restore functionality from the overloaded
+.BR CAP_SYS_ADMIN
+capability.
+.TP
 .B CAP_CHOWN
 Make arbitrary changes to file UIDs and GIDs (see
 .BR chown (2)).
@@ -278,9 +307,9 @@ bind to any address for transparent proxying.
 .TP
 .BR CAP_PERFMON " (since Linux 5.8)"
 Employ various performance-monitoring mechanisms, including:
-.PD 0
 .RS
-.IP *2
+.IP * 2
+.PD 0
 call
 .BR perf_event_open (2);
 .IP *
@@ -292,6 +321,8 @@ This capability was added in Linux 5.8 to separate out
 performance monitoring functionality from the overloaded
 .BR CAP_SYS_ADMIN
 capability.
+See also the kernel source file
+.IR Documentation/admin-guide/perf-security.rst .
 .TP
 .B CAP_SETGID
 .RS
@@ -379,6 +410,21 @@ perform
 .BR vm86 (2)
 command;
 .IP *
+access the same checkpoint/restore functionality that is governed by
+.BR CAP_CHECKPOINT_RESTORE
+(but the latter, weaker capability is preferred for accessing
+that functionality).
+.IP *
+perform the same BPF operations as are governed by
+.BR CAP_BPF
+(but the latter, weaker capability is preferred for accessing
+that functionality).
+.IP *
+employ the same performance monitoring mechanisms as are governed by
+.BR CAP_PERFMON
+(but the latter, weaker capability is preferred for accessing
+that functionality).
+.IP *
 perform
 .B IPC_SET
 and
@@ -427,9 +473,6 @@ and
 (but, since Linux 3.8,
 creating user namespaces does not require any capability);
 .IP *
-employ various performance monitoring mechanisms (as for
-.BR CAP_PERFMON );
-.IP *
 access privileged
 .I perf
 event information;
@@ -444,10 +487,6 @@ namespace);
 .IP *
 call
 .BR fanotify_init (2);
-.IP *
-perform various BPF operations;
-see
-.BR CAP_BPF ;
 .IP *
 perform privileged
 .B KEYCTL_CHOWN
@@ -510,9 +549,9 @@ operation to suspend the tracee's seccomp protections (i.e., the
 .B PTRACE_O_SUSPEND_SECCOMP
 flag);
 .IP *
-perform administrative operations on many device drivers.
+perform administrative operations on many device drivers;
 .IP *
-Modify autogroup nice values by writing to
+modify autogroup nice values by writing to
 .IR /proc/[pid]/autogroup
 (see
 .BR sched (7)).

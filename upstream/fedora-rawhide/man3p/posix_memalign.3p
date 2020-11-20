@@ -1,11 +1,12 @@
 '\" et
-.TH POSIX_MEMALIGN "3P" 2013 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.TH POSIX_MEMALIGN "3P" 2017 "IEEE/The Open Group" "POSIX Programmer's Manual"
+.\"
 .SH PROLOG
 This manual page is part of the POSIX Programmer's Manual.
 The Linux implementation of this interface may differ (consult
 the corresponding Linux manual page for details of Linux behavior),
 or the interface may not be implemented on Linux.
-
+.\"
 .SH NAME
 posix_memalign
 \(em aligned memory allocation
@@ -38,9 +39,12 @@ shall be a multiple of
 .IR alignment .
 .P
 If the size of the space requested is 0, the behavior is
-implementation-defined; the value returned in
+implementation-defined: either a null pointer shall be returned in
+.IR memptr ,
+or the behavior shall be as if the size were some non-zero value,
+except that the behavior is undefined if the the value returned in
 .IR memptr
-shall be either a null pointer or a unique pointer.
+is used to access an object.
 .P
 The
 \fIfree\fR()
@@ -50,7 +54,28 @@ function shall deallocate memory that has previously been allocated by
 Upon successful completion,
 \fIposix_memalign\fR()
 shall return zero; otherwise, an error number shall be returned to
-indicate the error.
+indicate the error and the contents of
+.IR memptr
+shall either be left unmodified or be set to a null pointer.
+.P
+If
+.IR size
+is 0, either:
+.IP " *" 4
+\fIposix_memalign\fR()
+shall not attempt to allocate any space, in which case either an
+implementation-defined error number shall be returned, or zero shall
+be returned with a null pointer returned in
+.IR memptr ,
+or
+.IP " *" 4
+\fIposix_memalign\fR()
+shall attempt to allocate some space and, if the allocation succeeds,
+zero shall be returned and a pointer to the allocated space shall be
+returned in
+.IR memptr .
+The application shall ensure that the pointer is not used to access
+an object.
 .SH ERRORS
 The
 \fIposix_memalign\fR()
@@ -66,7 +91,29 @@ There is insufficient memory available with the requested alignment.
 .LP
 .IR "The following sections are informative."
 .SH EXAMPLES
-None.
+The following example shows how applications can obtain consistent
+behavior on error by setting *\c
+.IR memptr
+to be a null pointer before calling
+\fIposix_memalign\fR().
+.sp
+.RS 4
+.nf
+
+void *ptr = NULL;
+\&...
+//do some work, which might goto error
+if (posix_memalign(&ptr, align, size))
+    goto error;
+.P
+//do some more work, which might goto error
+\&...
+error:
+    free(ptr);
+    //more cleanup;
+.fi
+.P
+.RE
 .SH "APPLICATION USAGE"
 The
 \fIposix_memalign\fR()
@@ -80,20 +127,21 @@ None.
 .IR "\fIfree\fR\^(\|)",
 .IR "\fImalloc\fR\^(\|)"
 .P
-The Base Definitions volume of POSIX.1\(hy2008,
+The Base Definitions volume of POSIX.1\(hy2017,
 .IR "\fB<stdlib.h>\fP"
+.\"
 .SH COPYRIGHT
 Portions of this text are reprinted and reproduced in electronic form
-from IEEE Std 1003.1, 2013 Edition, Standard for Information Technology
+from IEEE Std 1003.1-2017, Standard for Information Technology
 -- Portable Operating System Interface (POSIX), The Open Group Base
-Specifications Issue 7, Copyright (C) 2013 by the Institute of
+Specifications Issue 7, 2018 Edition,
+Copyright (C) 2018 by the Institute of
 Electrical and Electronics Engineers, Inc and The Open Group.
-(This is POSIX.1-2008 with the 2013 Technical Corrigendum 1 applied.) In the
-event of any discrepancy between this version and the original IEEE and
+In the event of any discrepancy between this version and the original IEEE and
 The Open Group Standard, the original IEEE and The Open Group Standard
 is the referee document. The original Standard can be obtained online at
-http://www.unix.org/online.html .
-
+http://www.opengroup.org/unix/online.html .
+.PP
 Any typographical or formatting errors that appear
 in this page are most likely
 to have been introduced during the conversion of the source files to
