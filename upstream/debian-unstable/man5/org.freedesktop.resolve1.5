@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.RESOLVE1" "5" "" "systemd 246" "org.freedesktop.resolve1"
+.TH "ORG\&.FREEDESKTOP\&.RESOLVE1" "5" "" "systemd 247" "org.freedesktop.resolve1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -138,6 +138,8 @@ node /org/freedesktop/resolve1 {
       readonly as DNSSECNegativeTrustAnchors = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s DNSStubListener = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ResolvConfMode = \*(Aq\&.\&.\&.\*(Aq;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -148,6 +150,7 @@ node /org/freedesktop/resolve1 {
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -326,12 +329,17 @@ or
 \fBSetDNS()\fR
 method (see below) on it\&.
 .PP
-Network management software integrating with
-systemd\-resolved
-should call this method (and the five below) after the interface appeared in the kernel (and thus after a network interface index has been assigned), but before the network interfaces is activated (\fBIFF_UP\fR
-set) so that all settings take effect during the full time the network interface is up\&. It is safe to alter settings while the interface is up, however\&. Use
-\fBRevertLink()\fR
-(described below) to reset all per\-interface settings\&.
+\fBSetLinkDNSEx()\fR
+is similar to
+\fBSetLinkDNS()\fR, but allows an IP port (instead of the default 53) and DNS name to be specified for each DNS server\&. The server name is used for Server Name Indication (SNI), which is useful when DNS\-over\-TLS is used\&. C\&.f\&.
+\fIDNS=\fR
+in
+\fBresolved.conf\fR(5)\&.
+.PP
+\fBSetLinkDefaultRoute()\fR
+specifies whether the link shall be used as the default route for name queries\&. See the description of name routing in
+\fBsystemd-resolved.service\fR(8)
+for details\&.
 .PP
 The
 \fBSetLinkDomains()\fR
@@ -369,8 +377,29 @@ The
 method may be used to configure DNSSEC Negative Trust Anchors (NTAs) for a specific network interface\&. It takes a network interface index and a list of domains as arguments\&.
 .PP
 The
+\fBSetLinkDNSOverTLS()\fR
+method enables or disables DNS\-over\-TLS\&. C\&.f\&.
+\fIDNSOverTLS=\fR
+in
+\fBsystemd-resolved.service\fR(8)
+for details\&.
+.PP
+Network management software integrating with
+systemd\-resolved
+should call
+\fBSetLinkDNS()\fR
+or
+\fBSetLinkDNSEx()\fR,
+\fBSetLinkDefaultRoute()\fR,
+\fBSetLinkDomains()\fR
+and others after the interface appeared in the kernel (and thus after a network interface index has been assigned), but before the network interfaces is activated (\fBIFF_UP\fR
+set) so that all settings take effect during the full time the network interface is up\&. It is safe to alter settings while the interface is up, however\&. Use
 \fBRevertLink()\fR
-method may be used to revert all per\-link settings done with the six methods described above to the defaults again\&.
+(described below) to reset all per\-interface settings\&.
+.PP
+The
+\fBRevertLink()\fR
+method may be used to revert all per\-link settings described above to the defaults\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -430,13 +459,33 @@ will never return invalidated data, hence this flag simply allows to discern the
 .RE
 .SS "Properties"
 .PP
+The
+\fILLMNR\fR
+and
+\fIMulticastDNS\fR
+properties report whether LLMNR and MulticastDNS are (globally) enabled\&. Each may be one of
+"yes",
+"no", and
+"resolve"\&. See
+\fBSetLinkLLMNR()\fR
+and
+\fBSetLinkMulticastDNS()\fR
+above\&.
+.PP
 \fILLMNRHostname\fR
 contains the hostname currently exposed on the network via LLMNR\&. It usually follows the system hostname as may be queried via
 \fBgethostname\fR(3), but may differ if a conflict is detected on the network\&.
 .PP
 \fIDNS\fR
-contains an array of all DNS servers currently used by
-systemd\-resolved\&. It contains similar information as the DNS server data written to /run/systemd/resolve/resolv\&.conf\&. Each structure in the array consists of a numeric network interface index, an address family, and a byte array containing the DNS server address (either 4 bytes in length for IPv4 or 16 bytes in lengths for IPv6)\&. The array contains DNS servers configured system\-wide, including those possibly read from a foreign
+and
+\fIDNSEx\fR
+contain arrays of all DNS servers currently used by
+systemd\-resolved\&.
+\fIDNS\fR
+contains information similar to the DNS server data in
+/run/systemd/resolve/resolv\&.conf\&. Each structure in the array consists of a numeric network interface index, an address family, and a byte array containing the DNS server address (either 4 bytes in length for IPv4 or 16 bytes in lengths for IPv6)\&.
+\fIDNSEx\fR
+is similar, but additionally contains the IP port and server name (used for Server Name Indication, SNI)\&. Both arrays contain DNS servers configured system\-wide, including those possibly read from a foreign
 /etc/resolv\&.conf
 or the
 \fIDNS=\fR
@@ -444,7 +493,31 @@ setting in
 /etc/systemd/resolved\&.conf, as well as per\-interface DNS server information either retrieved from
 \fBsystemd-networkd\fR(8), or configured by external software via
 \fBSetLinkDNS()\fR
+or
+\fBSetLinkDNSEx()\fR
 (see above)\&. The network interface index will be 0 for the system\-wide configured services and non\-zero for the per\-link servers\&.
+.PP
+\fIFallbackDNS\fR
+and
+\fIFallbackDNSEx\fR
+contain arrays of all DNS servers configured as fallback servers, if any, using the same format as
+\fIDNS\fR
+and
+\fIDNSEx\fR
+described above\&. See the description of
+\fIFallbackDNS=\fR
+in
+\fBresolved.conf\fR(5)
+for the description of when those servers are used\&.
+.PP
+\fICurrentDNSServer\fR
+and
+\fICurrentDNSServerEx\fR
+specify the server that is currently used for query resolution, in the same format as a single entry in the
+\fIDNS\fR
+and
+\fIDNSEx\fR
+arrays described above\&.
 .PP
 Similarly, the
 \fIDomains\fR
@@ -468,6 +541,19 @@ property contains information about the executed cache operations so far\&. It e
 (see above)\&.
 .PP
 The
+\fIDNSSEC\fR
+property specifies current status of DNSSEC validation\&. It is one of
+"yes"
+(validation is enforced),
+"no"
+(no validation is done),
+"allow\-downgrade"
+(validation is done if the current DNS server supports it)\&. See the description of
+\fIDNSSEC=\fR
+in
+\fBresolved.conf\fR(5)\&.
+.PP
+The
 \fIDNSSECStatistics\fR
 property contains information about the DNSSEC validations executed so far\&. It contains four 64\-bit counters: the number of secure, insecure, bogus, and indeterminate DNSSEC validations so far\&. The counters are increased for each validated RRset, and each non\-existance proof\&. The secure counter is increased for each operation that successfully verified a signed reply, the insecure counter is increased for each operation that successfully verified that an unsigned reply is rightfully unsigned\&. The bogus counter is increased for each operation where the validation did not check out and the data is likely to have been tempered with\&. Finally the indeterminate counter is increased for each operation which did not complete because the necessary keys could not be acquired or the cryptographic algorithms were unknown\&.
 .PP
@@ -478,11 +564,39 @@ systemd\-resolved
 assumes DNSSEC is supported by DNS servers until it verifies that this is not the case\&. Thus, the reported value may initially be true, until the first transactions are executed\&.
 .PP
 The
-\fILogLevel\fR
-property shows the (maximum) log level of the manager, with the same values as the
-\fB\-\-log\-level=\fR
-option described in
-\fBsystemd\fR(1)\&.
+\fIDNSOverTLS\fR
+boolean property reports whether DNS\-over\-TLS is enabled\&.
+.PP
+The
+\fIResolvConfMode\fR
+property exposes how
+/etc/resolv\&.conf
+is managed on the host\&. Currently, the values
+"uplink",
+"stub",
+"static"
+(these three correspond to the three different files
+systemd\-resolved\&.service
+provides),
+"foreign"
+(the file is managed by admin or another service,
+systemd\-resolved\&.service
+just consumes it),
+"missing"
+(/etc/resolv\&.conf
+is missing)\&.
+.PP
+The
+\fIDNSStubListener\fR
+property reports whether the stub listener on port 53 is enabled\&. Possible values are
+"yes"
+(enabled),
+"no"
+(disabled),
+"udp"
+(only the UDP listener is enabled), and
+"tcp"
+(only the TCP listener is enabled)\&.
 .SH "LINK OBJECT"
 .sp
 .if n \{\
@@ -576,7 +690,16 @@ on the Link object maps to
 \fBSetLinkDNS()\fR
 on the Manager object, the main difference being that the later expects an interface index to be specified\&. Invoking the methods on the Manager interface has the benefit of reducing roundtrips, as it is not necessary to first request the Link object path via
 \fBGetLink()\fR
-before invoking the methods\&. For further details on these methods see the
+before invoking the methods\&. The same relationship holds for
+\fBSetDNSEx()\fR,
+\fBSetDomains()\fR,
+\fBSetDefaultRoute()\fR,
+\fBSetLLMNR()\fR,
+\fBSetMulticastDNS()\fR,
+\fBSetDNSOverTLS()\fR,
+\fBSetDNSSEC()\fR,
+\fBSetDNSSECNegativeTrustAnchors()\fR, and
+\fBRevert()\fR\&. For further details on these methods see the
 Manager
 documentation above\&.
 .SS "Properties"
@@ -587,7 +710,15 @@ defines which resolver scopes are currently active on this interface\&. This 64\
 \fIDNSSECSupported\fR
 exposes a boolean field that indicates whether DNSSEC is currently configured and in use on the interface\&. Note that if DNSSEC is enabled on an interface, it is assumed available until it is detected that the configured server does not actually support it\&. Thus, this property may initially report that DNSSEC is supported on an interface\&.
 .PP
-The other properties reflect the state of the various configuration settings for the link which may be set with the various methods calls such as SetDNS() or SetLLMNR()\&.
+\fIDefaultRoute\fR
+exposes a boolean field that indicates whether the interface will be used as default route for name queries\&. See
+\fBSetLinkDefaultRoute()\fR
+above\&.
+.PP
+The other properties reflect the state of the various configuration settings for the link which may be set with the various methods calls such as
+\fBSetDNS()\fR
+or
+\fBSetLLMNR()\fR\&.
 .SH "COMMON ERRORS"
 .PP
 Many bus methods

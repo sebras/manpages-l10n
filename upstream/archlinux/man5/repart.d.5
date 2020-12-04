@@ -1,5 +1,5 @@
 '\" t
-.TH "REPART\&.D" "5" "" "systemd 246" "repart.d"
+.TH "REPART\&.D" "5" "" "systemd 247" "repart.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,11 +42,9 @@ Currently, support for partition definition files is only implemented for GPT pa
 .PP
 Partition files are generally matched against any partitions already existing on disk in a simple algorithm: the partition files are sorted by their filename (ignoring the directory prefix), and then compared in order against existing partitions matching the same partition type UUID\&. Specifically, the first existing partition with a specific partition type UUID is assigned the first definition file with the same partition type UUID, and the second existing partition with a specific type UUID the second partition file with the same type UUID, and so on\&. Any left\-over partition files that have no matching existing partition are assumed to define new partition that shall be created\&. Such partitions are appended to the end of the partition table, in the order defined by their names utilizing the first partition slot greater than the highest slot number currently in use\&. Any existing partitions that have no matching partition file are left as they are\&.
 .PP
-Note that these partition definition files do not describe the contents of the partitions, such as the file system used\&. Separate mechanisms, such as
+Note that these definitions may only be used to created and initialize new partitions or grow existing ones\&. In the latter case it will not grow the contained files systems however; separate mechanisms, such as
 \fBsystemd-growfs\fR(8)
-and
-\fBsystemd\-makefs\fR
-maybe be used to initialize or grow the file systems inside of these partitions\&.
+may be used to grow the file systems inside of these partitions\&.
 .SH "[PARTITION] SECTION OPTIONS"
 .PP
 \fIType=\fR
@@ -68,6 +66,28 @@ T}:T{
 Explanation
 T}
 .T&
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
 l l
 l l
 l l
@@ -200,6 +220,116 @@ T{
 T}:T{
 Verity data for the ia64 root file system partition
 T}
+T{
+\fBroot\-riscv32\fR
+T}:T{
+Root file system partition for the RISC\-V 32\-bit architecture
+T}
+T{
+\fBroot\-riscv32\-verity\fR
+T}:T{
+Verity data for the RISC\-V 32\-bit root file system partition
+T}
+T{
+\fBroot\-riscv64\fR
+T}:T{
+Root file system partition for the RISC\-V 64\-bit architecture
+T}
+T{
+\fBroot\-riscv64\-verity\fR
+T}:T{
+Verity data for the RISC\-V 64\-bit root file system partition
+T}
+T{
+\fBusr\fR
+T}:T{
+/usr/ file system partition type appropriate for the local architecture (an alias for an architecture /usr/ file system partition type listed below, e\&.g\&. \fBusr\-x86\-64\fR)
+T}
+T{
+\fBusr\-verity\fR
+T}:T{
+Verity data for the /usr/ file system partition for the local architecture
+T}
+T{
+\fBusr\-secondary\fR
+T}:T{
+/usr/ file system partition of the secondary architecture of the local architecture (usually the matching 32bit architecture for the local 64bit architecture)
+T}
+T{
+\fBusr\-secondary\-verity\fR
+T}:T{
+Verity data for the /usr/ file system partition of the secondary architecture
+T}
+T{
+\fBusr\-x86\fR
+T}:T{
+/usr/ file system partition for the x86 (32bit, aka i386) architecture
+T}
+T{
+\fBusr\-x86\-verity\fR
+T}:T{
+Verity data for the x86 (32bit) /usr/ file system partition
+T}
+T{
+\fBusr\-x86\-64\fR
+T}:T{
+/usr/ file system partition for the x86_64 (64bit, aka amd64) architecture
+T}
+T{
+\fBusr\-x86\-64\-verity\fR
+T}:T{
+Verity data for the x86_64 (64bit) /usr/ file system partition
+T}
+T{
+\fBusr\-arm\fR
+T}:T{
+/usr/ file system partition for the ARM (32bit) architecture
+T}
+T{
+\fBusr\-arm\-verity\fR
+T}:T{
+Verity data for the ARM (32bit) /usr/ file system partition
+T}
+T{
+\fBusr\-arm64\fR
+T}:T{
+/usr/ file system partition for the ARM (64bit, aka aarch64) architecture
+T}
+T{
+\fBusr\-arm64\-verity\fR
+T}:T{
+Verity data for the ARM (64bit, aka aarch64) /usr/ file system partition
+T}
+T{
+\fBusr\-ia64\fR
+T}:T{
+/usr/ file system partition for the ia64 architecture
+T}
+T{
+\fBusr\-ia64\-verity\fR
+T}:T{
+Verity data for the ia64 /usr/ file system partition
+T}
+T{
+\fBusr\-riscv32\fR
+T}:T{
+/usr/ file system partition for the RISC\-V 32\-bit architecture
+T}
+T{
+\fBusr\-riscv32\-verity\fR
+T}:T{
+Verity data for the RISC\-V 32\-bit /usr/ file system partition
+T}
+T{
+\fBusr\-riscv64\fR
+T}:T{
+/usr/ file system partition for the RISC\-V 64\-bit architecture
+T}
+T{
+\fBusr\-riscv64\-verity\fR
+T}:T{
+Verity data for the RISC\-V 64\-bit /usr/ file system partition
+T}
 .TE
 .sp 1
 This setting defaults to
@@ -285,6 +415,74 @@ The file specified here must have a size that is a multiple of the basic block s
 value configured above\&.
 .sp
 This option has no effect if the partition it is declared for already exists, i\&.e\&. existing data is never overwritten\&. Note that the data is copied in before the partition table is updated, i\&.e\&. before the partition actually is persistently created\&. This provides robustness: it is guaranteed that the partition either doesn\*(Aqt exist or exists fully populated; it is not possible that the partition exists but is not or only partially populated\&.
+.sp
+This option cannot be combined with
+\fIFormat=\fR
+or
+\fICopyFiles=\fR\&.
+.RE
+.PP
+\fIFormat=\fR
+.RS 4
+Takes a file system name, such as
+"ext4",
+"btrfs",
+"xfs"
+or
+"vfat", or the special value
+"swap"\&. If specified and the partition is newly created it is formatted with the specified file system (or as swap device)\&. The file system UUID and label are automatically derived from the partition UUID and label\&. If this option is used, the size allocation algorithm is slightly altered: the partition is created as least as big as required for the minimal file system of the specified type (or 4KiB if the minimal size is not known)\&.
+.sp
+This option has no effect if the partition already exists\&.
+.sp
+Similar to the behaviour of
+\fICopyBlocks=\fR
+the file system is formatted before the partition is created, ensuring that the partition only ever exists with a fully initialized file system\&.
+.sp
+This option cannot be combined with
+\fICopyBlocks=\fR\&.
+.RE
+.PP
+\fICopyFiles=\fR
+.RS 4
+Takes a pair of colon separated absolute file system paths\&. The first path refers to a source file or directory on the host, the second path refers to a target in the file system of the newly created partition and formatted file system\&. This setting may be used to copy files or directories from the host into the file system that is created due to the
+\fIFormat=\fR
+option\&. If
+\fICopyFiles=\fR
+is used without
+\fIFormat=\fR
+specified explicitly,
+"Format="
+with a suitable default is implied (currently
+"ext4", but this may change in the future)\&. This option may be used multiple times to copy multiple files or directories from host into the newly formatted file system\&. The colon and second path may be omitted in which case the source path is also used as the target path (relative to the root of the newly created file system)\&. If the source path refers to a directory it is copied recursively\&.
+.sp
+This option has no effect if the partition already exists: it cannot be used to copy additional files into an existing partition, it may only be used to populate a file system created anew\&.
+.sp
+The copy operation is executed before the file system is registered in the partition table, thus ensuring that a file system populated this way only ever exists fully initialized\&.
+.sp
+This option cannot be combined with
+\fICopyBlocks=\fR\&.
+.RE
+.PP
+\fIEncrypt=\fR
+.RS 4
+Takes a boolean parameter, defaulting to false\&. If true the partition will be formatted with a LUKS2 superblock, before the blocks configured with
+\fICopyBlocks=\fR
+are copied in or the file system configured with
+\fIFormat=\fR
+is created\&.
+.sp
+The LUKS2 UUID is automatically derived from the partition UUID in a stable fashion\&. A single key is added to the LUKS2 superblock, configurable with the
+\fB\-\-key\-file=\fR
+switch to
+\fBsystemd\-repart\fR\&.
+.sp
+When used this slightly alters the size allocation logic as the implicit, minimal size limits of
+\fIFormat=\fR
+and
+\fICopyBlocks=\fR
+are increased by the space necessary for the LUKS2 superblock (see above)\&.
+.sp
+This option has no effect if the partition already exists\&.
 .RE
 .PP
 \fIFactoryReset=\fR
