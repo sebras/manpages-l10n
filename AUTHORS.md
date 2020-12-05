@@ -43,13 +43,17 @@ of Linux manpages. The list is sorted alphabetically.
 * Jindřich Vavruška <netplus@comp.cz>
 * Jiří Pavlovský <pavlovsk@ff.cuni.cz>
 * Jirka Santolik <jiri.santolik@st.ms.mff.cuni.cz>
+* Kamil Dudka <kdudka@redhat.com>
 * Karel Dušek <kargee.dusek@seznam.cz>
 * Luděk Brukner <Ludek.Brukner@barco.com>
 * Marek Kubita <Kubitovi@mbox.lantanet.cz>
 * Martin Kačena <martin.kacena@pslib.cz>
 * Pavel Heimlich <tropikhajma@gmail.com>
 * Petr Bláha <pet@penguin.vscht.cz>
+* Petr Kolář <Petr.Kolar@vslib.cz>
 * Petr Sykora <petrsykora@jabber.tecka.cz>
+* Stinovlas <stinovlas@gmail.com>
+* Tomáš Andrle <tomas.andrle@pslib.cz>
 * Václav Doubek <vaclav.doubek@pslib.cz>
 
 
@@ -135,6 +139,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Thomas Blein <tblein@tblein.eu>
 * Thomas Huriaux <thomas.huriaux@gmail.com>
 * Thomas Vincent <thomas@vinc-net.fr>
+* Thomas Vincent <tvincent@debian.org>
 * Valéry Perrin <valery.perrin.debian@free.fr>
 * Yves Rütschlé <l10n@rutschle.net>
 
