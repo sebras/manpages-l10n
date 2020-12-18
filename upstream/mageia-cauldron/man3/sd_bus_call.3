@@ -96,6 +96,14 @@ output parameter is not empty when the callback finishes, no further processing 
 sd_bus_error
 parameter is an output parameter of the callback function, not an input parameter; it can be used to propagate errors from the callback handler, it will not receive any error that was received as method reply\&.)
 .PP
+The message
+\fIm\fR
+passed to the callback is only borrowed, that is, the callback should not call
+\fBsd_bus_message_unref\fR(3)
+on it\&. If the callback wants to hold on to the message beyond the lifetime of the callback, it needs to call
+\fBsd_bus_message_ref\fR(3)
+to create a new reference\&.
+.PP
 If
 \fIusec\fR
 is zero, the default D\-Bus method call timeout is used\&. See
@@ -105,7 +113,13 @@ is zero, the default D\-Bus method call timeout is used\&. See
 On success, these functions return a non\-negative integer\&. On failure, they return a negative errno\-style error code\&.
 .SS "Errors"
 .PP
-Returned errors may indicate the following problems:
+Returned errors may indicate the following problems\&. When
+\fBsd_bus_call()\fR
+internally receives a D\-Bus error reply, it will set
+\fIret_error\fR
+if it is not
+\fBNULL\fR, and will return a negative value mapped from the error reply\&. See
+\fBsd_bus_error_get_errno\fR(3)\&.
 .PP
 \fB\-EINVAL\fR
 .RS 4
@@ -177,4 +191,5 @@ file\&.
 \fBsd_bus_call_method\fR(3),
 \fBsd_bus_call_method_async\fR(3),
 \fBsd_bus_message_new_method_call\fR(3),
-\fBsd_bus_message_append\fR(3)
+\fBsd_bus_message_append\fR(3),
+\fBsd_bus_error\fR(3)
