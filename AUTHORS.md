@@ -48,6 +48,8 @@ of Linux manpages. The list is sorted alphabetically.
 * Luděk Brukner <Ludek.Brukner@barco.com>
 * Marek Kubita <Kubitovi@mbox.lantanet.cz>
 * Martin Kačena <martin.kacena@pslib.cz>
+* Milan Keršláger <kerslage@linux.cz>
+* Ondřej Zvolský <ondrej.zvolsky@pslib.cz>
 * Pavel Heimlich <tropikhajma@gmail.com>
 * Petr Bláha <pet@penguin.vscht.cz>
 * Petr Kolář <Petr.Kolar@vslib.cz>
