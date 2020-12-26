@@ -1,5 +1,5 @@
 .\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
-.\" and Copyright (c) 2002, 2006 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (c) 2002, 2006, 2020 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\" and Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
@@ -42,7 +42,7 @@
 .\"     Added section on stop/cont signals interrupting syscalls.
 .\" 2008-10-05, mtk: various additions
 .\"
-.TH SIGNAL 7  2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH SIGNAL 7  2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 signal \- overview of signals
 .SH DESCRIPTION
@@ -105,7 +105,7 @@ the dispositions of ignored signals are left unchanged.
 .SS Sending a signal
 The following system calls and library functions allow
 the caller to send a signal:
-.TP 16
+.TP
 .BR raise (3)
 Sends a signal to the calling thread.
 .TP
@@ -113,6 +113,9 @@ Sends a signal to the calling thread.
 Sends a signal to a specified process,
 to all members of a specified process group,
 or to all processes on the system.
+.TP
+.BR pidfd_send_signal (2)
+Sends a signal to a process identified by a PID file descriptor.
 .TP
 .BR killpg (3)
 Sends a signal to all of the members of a specified process group.
@@ -132,13 +135,14 @@ Sends a real-time signal with accompanying data to a specified process.
 The following system calls suspend execution of the calling
 thread until a signal is caught
 (or an unhandled signal terminates the process):
-.TP 16
+.TP
 .BR pause (2)
 Suspends execution until any signal is caught.
 .TP
 .BR sigsuspend (2)
 Temporarily changes the signal mask (see below) and suspends
 execution until one of the unmasked signals is caught.
+.\"
 .SS Synchronously accepting a signal
 Rather than asynchronously catching a signal via a signal handler,
 it is possible to synchronously accept the signal, that is,
@@ -248,6 +252,117 @@ A child created via
 initially has an empty pending signal set;
 the pending signal set is preserved across an
 .BR execve (2).
+.\"
+.SS Execution of signal handlers
+Whenever there is a transition from kernel-mode to user-mode execution
+(e.g., on return from a system call or scheduling of a thread onto the CPU),
+the kernel checks whether there is a pending unblocked signal
+for which the process has established a signal handler.
+If there is such a pending signal, the following steps occur:
+.IP 1. 3
+The kernel performs the necessary preparatory steps for execution of
+the signal handler:
+.RS
+.IP a) 3
+The signal is removed from the set of pending signals.
+.IP b)
+If the signal handler was installed by a call to
+.BR sigaction (2)
+that specified the
+.BR SA_ONSTACK
+flag and the thread has defined an alternate signal stack (using
+.BR sigaltstack (2)),
+then that stack is installed.
+.IP c)
+Various pieces of signal-related context are saved
+into a special frame that is created on the stack.
+The saved information includes:
+.RS
+.IP + 2
+the program counter register
+(i.e., the address of the next instruction in the main program that
+should be executed when the signal handler returns);
+.IP +
+architecture-specific register state required for resuming the
+interrupted program;
+.IP +
+the thread's current signal mask;
+.IP +
+the thread's alternate signal stack settings.
+.RE
+.IP
+(If the signal handler was installed using the
+.BR sigaction (2)
+.B SA_SIGINFO
+flag, then the above information is accessible via the
+.I ucontext_t
+object that is pointed to by the third argument of the signal handler.)
+.IP d)
+Any signals specified in
+.I act\->sa_mask
+when registering the handler with
+.BR sigprocmask (2)
+are added to the thread's signal mask.
+The signal being delivered is also
+added to the signal mask, unless
+.B SA_NODEFER
+was specified when registering the handler.
+These signals are thus blocked while the handler executes.
+.RE
+.IP 2.
+The kernel constructs a frame for the signal handler on the stack.
+The kernel sets the program counter for the thread to point to the first
+instruction of the signal handler function,
+and configures the return address for that function to point to a piece
+of user-space code known as the signal trampoline (described in
+.BR sigreturn (2)).
+.IP 3.
+The kernel passes control back to user-space, where execution
+commences at the start of the signal handler function.
+.IP 4.
+When the signal handler returns, control passes to the signal trampoline code.
+.IP 5.
+The signal trampoline calls
+.BR sigreturn (2),
+a system call that uses the information in the stack frame created in step 1
+to restore the thread to its state before the signal handler was
+called.
+The thread's signal mask and alternate signal stack settings
+are restored as part of this procedure.
+Upon completion of the call to
+.BR sigreturn (2),
+the kernel transfers control back to user space,
+and the thread recommences execution at the point where it was
+interrupted by the signal handler.
+.PP
+Note that if the signal handler does not return
+(e.g., control is transferred out of the handler using
+.BR siglongjmp (3),
+or the handler executes a new program with
+.BR execve (2)),
+then the final step is not performed.
+In particular, in such scenarios it is the programmer's responsibility
+to restore the state of the signal mask (using
+.BR sigprocmask (2)),
+if it is desired to unblock the signals that were blocked on entry
+to the signal handler.
+(Note that
+.BR siglongjmp (3)
+may or may not restore the signal mask, depending on the
+.I savesigs
+value that was specified in the corresponding call to
+.BR sigsetjmp (3).)
+.PP
+From the kernel's point of view,
+execution of the signal handler code is exactly the same as the execution
+of any other user-space code.
+That is to say, the kernel does not record any special state information
+indicating that the thread is currently excuting inside a signal handler.
+All necessary state information is maintained in user-space registers
+and the user-space stack.
+The depth to which nested signal handlers may be invoked is thus
+limited only by the user-space stack (and sensible software design!).
+.\"
 .SS Standard signals
 Linux supports the standard signals listed below.
 The second column of the table indicates which standard (if any)
@@ -900,6 +1015,7 @@ because of how the CPU reports the forbidden operation to the kernel.
 .BR sigvec (3),
 .BR sigwait (3),
 .BR strsignal (3),
+.BR swapcontext (3),
 .BR sysv_signal (3),
 .BR core (5),
 .BR proc (5),
@@ -907,7 +1023,7 @@ because of how the CPU reports the forbidden operation to the kernel.
 .BR pthreads (7),
 .BR sigevent (7)
 .SH COLOPHON
-This page is part of release 5.09 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

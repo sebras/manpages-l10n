@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD" "1" "" "systemd 246" "systemd"
+.TH "SYSTEMD" "1" "" "systemd 247" "systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -313,15 +313,15 @@ systemd has a minimal transaction system: if a unit is requested to start up or 
 Note that transactions are generated independently of a unit\*(Aqs state at runtime, hence, for example, if a start job is requested on an already started unit, it will still generate a transaction and wake up any inactive dependencies (and cause propagation of other jobs as per the defined relationships)\&. This is because the enqueued job is at the time of execution compared to the target unit\*(Aqs state and is marked successful and complete when both satisfy\&. However, this job also pulls in other dependencies due to the defined relationships and thus leads to, in our example, start jobs for any of those inactive units getting queued as well\&.
 .PP
 systemd contains native implementations of various tasks that need to be executed as part of the boot process\&. For example, it sets the hostname or configures the loopback network device\&. It also sets up and mounts various API file systems, such as
-/sys
+/sys/
 or
-/proc\&.
+/proc/\&.
 .PP
 For more information about the concepts and ideas behind systemd, please refer to the
 \m[blue]\fBOriginal Design Document\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .PP
 Note that some but not all interfaces provided by systemd are covered by the
-\m[blue]\fBInterface Stability Promise\fR\m[]\&\s-2\u[3]\d\s+2\&.
+\m[blue]\fBInterface Portability and Stability Promise\fR\m[]\&\s-2\u[3]\d\s+2\&.
 .PP
 Units may be generated dynamically at boot and system manager reload time, for example based on other configuration files or parameters passed on the kernel command line\&. For details, see
 \fBsystemd.generator\fR(7)\&.
@@ -591,7 +591,7 @@ on
 \fI$SYSTEMD_LOG_COLOR\fR
 .RS 4
 Controls whether systemd highlights important log messages\&. This can be overridden with
-\fB\-\-log\-color\fR\&.
+\fB\-\-log\-color=\fR\&.
 .RE
 .PP
 \fI$SYSTEMD_LOG_LEVEL\fR
@@ -603,7 +603,7 @@ systemd reads the log level from this environment variable\&. This can be overri
 \fI$SYSTEMD_LOG_LOCATION\fR
 .RS 4
 Controls whether systemd prints the code location along with log messages\&. This can be overridden with
-\fB\-\-log\-location\fR\&.
+\fB\-\-log\-location=\fR\&.
 .RE
 .PP
 \fI$SYSTEMD_LOG_TARGET\fR
@@ -618,6 +618,11 @@ Controls whether systemd prefixes log messages with the current time\&. This can
 \fB\-\-log\-time=\fR\&.
 .RE
 .PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+Controls whether systemd prefixes log messages with the current thread ID (TID)\&.
+.RE
+.PP
 \fI$XDG_CONFIG_HOME\fR, \fI$XDG_CONFIG_DIRS\fR, \fI$XDG_DATA_HOME\fR, \fI$XDG_DATA_DIRS\fR
 .RS 4
 The systemd user manager uses these variables in accordance to the
@@ -629,7 +634,7 @@ to find its configuration\&.
 .RS 4
 Controls where systemd looks for unit files and generators\&.
 .sp
-These variables may contain a list of paths, separated by colons (":")\&. When set, if the list ends with an empty component ("\&.\&.\&.:"), this list is prepended to the usual set of of paths\&. Otherwise, the specified list replaces the usual set of paths\&.
+These variables may contain a list of paths, separated by colons (":")\&. When set, if the list ends with an empty component ("\&.\&.\&.:"), this list is prepended to the usual set of paths\&. Otherwise, the specified list replaces the usual set of paths\&.
 .RE
 .PP
 \fI$SYSTEMD_SYSVINIT_PATH\fR
@@ -704,6 +709,37 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_PAGERSECURE\fR
+.RS 4
+Takes a boolean argument\&. When true, the "secure" mode of the pager is enabled; if false, disabled\&. If
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, secure mode is enabled if the effective UID is not the same as the owner of the login session, see
+\fBgeteuid\fR(2)
+and
+\fBsd_pid_get_owner_uid\fR(3)\&. In secure mode,
+\fBLESSSECURE=1\fR
+will be set when invoking the pager, and the pager shall disable commands that open or create new files or start new subprocesses\&. When
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, pagers which are not known to implement secure mode will not be used\&. (Currently only
+\fBless\fR(1)
+implements secure mode\&.)
+.sp
+Note: when commands are invoked with elevated privileges, for example under
+\fBsudo\fR(8)
+or
+\fBpkexec\fR(1), care must be taken to ensure that unintended interactive features are not enabled\&. "Secure" mode for the pager may be enabled automatically as describe above\&. Setting
+\fISYSTEMD_PAGERSECURE=0\fR
+or not removing it from the inherited environment allows the user to invoke arbitrary commands\&. Note that if the
+\fI$SYSTEMD_PAGER\fR
+or
+\fI$PAGER\fR
+variables are to be honoured,
+\fI$SYSTEMD_PAGERSECURE\fR
+must be set too\&. It might be reasonable to completely disable the pager using
+\fB\-\-no\-pager\fR
+instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR
@@ -826,17 +862,20 @@ as the value\&. If
 \fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
-\fIsystemd\&.log_color\fR, \fIsystemd\&.log_level=\fR, \fIsystemd\&.log_location\fR, \fIsystemd\&.log_target=\fR, \fIsystemd\&.log_time\fR
+\fIsystemd\&.log_color\fR, \fIsystemd\&.log_level=\fR, \fIsystemd\&.log_location\fR, \fIsystemd\&.log_target=\fR, \fIsystemd\&.log_time\fR, \fIsystemd\&.log_tid\fR
 .RS 4
 Controls log output, with the same effect as the
 \fI$SYSTEMD_LOG_COLOR\fR,
 \fI$SYSTEMD_LOG_LEVEL\fR,
 \fI$SYSTEMD_LOG_LOCATION\fR,
 \fI$SYSTEMD_LOG_TARGET\fR,
-\fI$SYSTEMD_LOG_TIME\fR, environment variables described above\&.
+\fI$SYSTEMD_LOG_TIME\fR, and
+\fI$SYSTEMD_LOG_TID\fR
+environment variables described above\&.
 \fIsystemd\&.log_color\fR,
-\fIsystemd\&.log_location\fR, and
-\fIsystemd\&.log_time\fR
+\fIsystemd\&.log_location\fR,
+\fIsystemd\&.log_time\fR, and
+\fIsystemd\&.log_tid=\fR
 can be specified without an argument, with the same effect as a positive boolean\&.
 .RE
 .PP
@@ -998,17 +1037,21 @@ Print a short version string and exit\&.
 .RE
 .SS "Options that duplicate kernel command line settings"
 .PP
-Those options correspond directly to options listed above in "Kernel Command Line"\&. Both forms may be used equivalently for the system manager, but it is recommended to use the forms listed above in this context, because they are properly namespaced\&. When an option is specified both on the kernel command line, and as a normal command line argument, the latter has higher precedence\&.
+Those options correspond directly to options listed above in "Kernel Command Line"\&. Both forms may be used equivalently for the system manager, but it is recommended to use the forms listed above in this context, because they are properly namespaced\&. When an option is specified both on the kernel command line and as a normal command line argument, the latter has higher precedence\&.
 .PP
 When
 \fBsystemd\fR
-is used as a user manager, the kernel command line is ignored and the options described are understood\&. Nevertheless,
+is used as a user manager, the kernel command line is ignored and only the options described below are understood\&. Nevertheless,
 \fBsystemd\fR
 is usually started in this mode through the
 \fBuser@.service\fR(5)
-service, which is shared between all users, and it may be more convenient to use configuration files to modify settings, see
-\fBsystemd-user.conf\fR(5), or a drop\-in that specifies one of the environment variables listed above in the Environment section, see
-\fBsystemd.unit\fR(5)\&.
+service, which is shared between all users, and it may be more convenient to use configuration files to modify settings (see
+\fBsystemd-user.conf\fR(5)), or a drop\-in that specifies one of the environment variables listed above in the Environment section (see the discussion of
+\fIEnvironment=\fR
+and
+\fIEnvironmentFile=\fR
+in
+\fBsystemd.exec\fR(5))\&.
 .PP
 \fB\-\-unit=\fR
 .RS 4
@@ -1172,9 +1215,9 @@ Original Design Document
 \%http://0pointer.de/blog/projects/systemd.html
 .RE
 .IP " 3." 4
-Interface Stability Promise
+Interface Portability and Stability Promise
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/InterfaceStabilityPromise
+\%https://systemd.io/PORTABILITY_AND_STABILITY/
 .RE
 .IP " 4." 4
 Container Interface
@@ -1184,7 +1227,7 @@ Container Interface
 .IP " 5." 4
 initrd Interface
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/InitrdInterface
+\%https://systemd.io/INITRD_INTERFACE/
 .RE
 .IP " 6." 4
 XDG Base Directory specification
