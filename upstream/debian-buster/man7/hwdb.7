@@ -1,5 +1,5 @@
 '\" t
-.TH "HWDB" "7" "" "systemd 246" "hwdb"
+.TH "HWDB" "7" "" "systemd 247" "hwdb"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,16 +30,64 @@ The hwdb files are read from the files located in the system hwdb directory
 /lib/udev/hwdb\&.d
 and the local administration directory
 /etc/udev/hwdb\&.d\&. All hwdb files are collectively sorted and processed in lexical order, regardless of the directories in which they live\&. However, files with identical filenames replace each other\&. Files in
-/etc
+/etc/
 have the highest priority and take precedence over files with the same name in
-/lib\&. This can be used to override a system\-supplied hwdb file with a local file if needed; a symlink in
-/etc
+/lib/\&. This can be used to override a system\-supplied hwdb file with a local file if needed; a symlink in
+/etc/
 with the same name as a hwdb file in
-/lib, pointing to
+/lib/, pointing to
 /dev/null, disables that hwdb file entirely\&. hwdb files must have the extension
 \&.hwdb; other extensions are ignored\&.
 .PP
 Each hwdb file contains data records consisting of matches and associated key\-value pairs\&. Every record in the hwdb starts with one or more match strings, specifying a shell glob to compare the lookup string against\&. Multiple match lines are specified in consecutive lines\&. Every match line is compared individually, and they are combined by OR\&. Every match line must start at the first character of the line\&.
+.PP
+Match patterns consist of literal characters, and shell\-style wildcards:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Asterisk
+"*"
+matches any number of characters
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Question mark
+"?"
+matches a single character
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Character list
+"[\fIchars\fR]"
+matches one of the characters
+\fIchars\fR
+listed between
+"["
+and
+"]"\&. A range may be specified as with a dash as
+"[\fIfirst\fR\-\fIlast\fR]"\&. The match may be inverted with a caret
+"[^\&...]"\&.
+.RE
 .PP
 The match lines are followed by one or more key\-value pair lines, which are recognized by a leading space character\&. The key name and value are separated by
 "="\&. An empty line signifies the end of a record\&. Lines beginning with
@@ -68,13 +116,18 @@ if you want ship the compiled database in an immutable image\&. During runtime, 
 # it defines, and the ordering convention\&.
 
 # A record with three matches and one property
-mouse:*:name:*Trackball*:
-mouse:*:name:*trackball*:
-mouse:*:name:*TrackBall*:
+mouse:*:name:*Trackball*:*
+mouse:*:name:*trackball*:*
+mouse:*:name:*TrackBall*:*
+ ID_INPUT_TRACKBALL=1
+
+# The rule above could be also be written in a form that
+# matches Tb, tb, TB, tB:
+mouse:*:name:*[tT]rack[bB]all*:*
  ID_INPUT_TRACKBALL=1
 
 # A record with a single match and five properties
-mouse:usb:v046dp4041:name:Logitech MX Master:
+mouse:usb:v046dp4041:name:Logitech MX Master:*
  MOUSE_DPI=1000@166
  MOUSE_WHEEL_CLICK_ANGLE=15
  MOUSE_WHEEL_CLICK_ANGLE_HORIZONTAL=26
@@ -92,25 +145,27 @@ mouse:usb:v046dp4041:name:Logitech MX Master:
 .\}
 .nf
 # /lib/udev/hwdb\&.d/60\-keyboard\&.hwdb
-evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pn*
+evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pn*:*
  KEYBOARD_KEY_a1=help
  KEYBOARD_KEY_a2=setup
  KEYBOARD_KEY_a3=battery
 
-evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pn123*
+# Match vendor name "Acer" and any product name starting with "X123"
+evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer:pnX123*:*
  KEYBOARD_KEY_a2=wlan
 
 # /etc/udev/hwdb\&.d/70\-keyboard\&.hwdb
 # disable wlan key on all at keyboards
 evdev:atkbd:*
  KEYBOARD_KEY_a2=reserved
+ PROPERTY_WITH_SPACES=some string
 .fi
 .if n \{\
 .RE
 .\}
 .PP
 If the hwdb consists of those two files, a keyboard with the lookup string
-"evdev:atkbd:dmi:bvnAcer:bdXXXXX:bd08/05/2010:svnAcer:pn123"
+"evdev:atkbd:dmi:bvnAcer:bdXXXXX:bd08/05/2010:svnAcer:pnX123"
 will match all three records, and end up with the following properties:
 .sp
 .if n \{\
@@ -120,6 +175,7 @@ will match all three records, and end up with the following properties:
 KEYBOARD_KEY_a1=help
 KEYBOARD_KEY_a2=reserved
 KEYBOARD_KEY_a3=battery
+PROPERTY_WITH_SPACES=some string
 .fi
 .if n \{\
 .RE
