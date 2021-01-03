@@ -247,6 +247,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Vieri Giugni <v.giugni@gmail.com>
 
 
+## Macedonian:
+
+* Kristijan Velkovski <me@krisfremen.com>
+
+
 ## Polish:
 
 * Adam Byrtek <alpha@irc.pl>
