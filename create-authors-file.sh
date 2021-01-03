@@ -191,6 +191,35 @@ done
 sort translators_it.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_it.list
 cat tmp_it.list >> AUTHORS.md
 
+# Generate Macedonian authors list
+echo >> AUTHORS.md
+echo >> AUTHORS.md
+echo "## Macedonian:" >> AUTHORS.md
+echo >> AUTHORS.md
+
+# Extract all Italian translators from the copyright headers
+files=$(find po/mk/man? -name "*po" | sort)
+# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
+for translation in $files; do
+	# Use the header up until the first msgid
+	# and remove the comment character
+	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
+	# Throw away the common (non translator) lines
+	grep -v "Macedonian translation of manpages" |
+	grep -v "This file is distributed under the same license as the manpages-l10n package" |
+    grep -v "This file is distributed under the same license as the manpages-de package" |
+	grep -v "Copyright © of this file:" |
+	grep -v "FIXME:" |
+	grep -v "msgid" |
+	# Split lines to extract the name (and e-mail address)
+	cut -f1 -d",")
+	# Save a list of all translators in a temporary file for copyright determination
+	echo "$translators" >> translators_mk.list
+done
+# Sort, unique, remove blank lines from file, and indent with an asterisk
+sort translators_mk.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_mk.list
+cat tmp_mk.list >> AUTHORS.md
+
 # Generate Polish authors list
 echo >> AUTHORS.md
 echo >> AUTHORS.md
