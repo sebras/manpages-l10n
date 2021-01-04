@@ -6,6 +6,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Brazilian Portuguese:
 
+* #
 * Ademar de Souza Reis Jr. <ademar@ademar.org>
 * André L. Fassone Canova <lonelywolf@blv.com.br>
 * André Luiz Fassone <lonely_wolf@ig.com.br>
@@ -71,6 +72,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 * Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>
 * Jos Boersema <joshb@xs4all.nl>
+* Luc Castermans <luc.castermans@gmail.com>
 * Mario Blättermann <mario.blaettermann@gmail.com>
 
 
