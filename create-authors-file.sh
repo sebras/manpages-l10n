@@ -40,6 +40,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -68,6 +69,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -96,6 +98,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -124,6 +127,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -153,6 +157,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -182,6 +187,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -211,6 +217,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -239,6 +246,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -267,6 +275,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
@@ -295,6 +304,7 @@ for translation in $files; do
 	grep -v "Copyright © of this file:" |
 	grep -v "FIXME:" |
 	grep -v "msgid" |
+	grep -a -v '^#[[:space:]]*$' |
 	# Split lines to extract the name (and e-mail address)
 	cut -f1 -d",")
 	# Save a list of all translators in a temporary file for copyright determination
