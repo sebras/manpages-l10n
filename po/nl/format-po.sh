@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #

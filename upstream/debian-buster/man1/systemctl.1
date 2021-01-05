@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 246" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 247" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,7 +35,7 @@ for an introduction into the basic concepts and functionality this tool manages\
 .SH "COMMANDS"
 .PP
 The following commands are understood:
-.SS "Unit Commands"
+.SS "Unit Commands (Introspection and Modification)"
 .PP
 \fBlist\-units\fR [\fIPATTERN\fR\&...]
 .RS 4
@@ -180,142 +180,6 @@ and
 \fB\-\-state=\fR\&.
 .RE
 .PP
-\fBstart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Start (activate) one or more units specified on the command line\&.
-.sp
-Note that unit glob patterns expand to names of units currently in memory\&. Units which are not active and are not in a failed state usually are not in memory, and will not be matched by any pattern\&. In addition, in case of instantiated units, systemd is often unaware of the instance name until the instance has been started\&. Therefore, using glob patterns with
-\fBstart\fR
-has limited usefulness\&. Also, secondary alias names of units are not considered\&.
-.sp
-Option
-\fB\-\-all\fR
-may be used to also operate on inactive units which are referenced by other loaded units\&. Note that this is not the same as operating on "all" possible units, because as the previous paragraph describes, such a list is ill\-defined\&. Nevertheless,
-\fBsystemctl start \-\-all \fR\fB\fIGLOB\fR\fR
-may be useful if all the units that should match the pattern are pulled in by some target which is known to be loaded\&.
-.RE
-.PP
-\fBstop \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Stop (deactivate) one or more units specified on the command line\&.
-.sp
-This command will fail if the unit does not exist or if stopping of the unit is prohibited (see
-\fIRefuseManualStop=\fR
-in
-\fBsystemd.unit\fR(5))\&. It will
-\fInot\fR
-fail if any of the commands configured to stop the unit (\fIExecStop=\fR, etc\&.) fail, because the manager will still forcibly terminate the unit\&.
-.RE
-.PP
-\fBreload \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Asks all units listed on the command line to reload their configuration\&. Note that this will reload the service\-specific configuration, not the unit configuration file of systemd\&. If you want systemd to reload the configuration file of a unit, use the
-\fBdaemon\-reload\fR
-command\&. In other words: for the example case of Apache, this will reload Apache\*(Aqs
-httpd\&.conf
-in the web server, not the
-apache\&.service
-systemd unit file\&.
-.sp
-This command should not be confused with the
-\fBdaemon\-reload\fR
-command\&.
-.RE
-.PP
-\fBrestart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Stop and then start one or more units specified on the command line\&. If the units are not running yet, they will be started\&.
-.sp
-Note that restarting a unit with this command does not necessarily flush out all of the unit\*(Aqs resources before it is started again\&. For example, the per\-service file descriptor storage facility (see
-\fIFileDescriptorStoreMax=\fR
-in
-\fBsystemd.service\fR(5)) will remain intact as long as the unit has a job pending, and is only cleared when the unit is fully stopped and no jobs are pending anymore\&. If it is intended that the file descriptor store is flushed out, too, during a restart operation an explicit
-\fBsystemctl stop\fR
-command followed by
-\fBsystemctl start\fR
-should be issued\&.
-.RE
-.PP
-\fBtry\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Stop and then start one or more units specified on the command line if the units are running\&. This does nothing if units are not running\&.
-.RE
-.PP
-\fBreload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Reload one or more units if they support it\&. If not, stop and then start them instead\&. If the units are not running yet, they will be started\&.
-.RE
-.PP
-\fBtry\-reload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Reload one or more units if they support it\&. If not, stop and then start them instead\&. This does nothing if the units are not running\&.
-.RE
-.PP
-\fBisolate \fR\fB\fIUNIT\fR\fR
-.RS 4
-Start the unit specified on the command line and its dependencies and stop all others, unless they have
-\fBIgnoreOnIsolate=yes\fR
-(see
-\fBsystemd.unit\fR(5))\&. If a unit name with no extension is given, an extension of
-"\&.target"
-will be assumed\&.
-.sp
-This command is dangerous, since it will immediately stop processes that are not enabled in the new target, possibly including the graphical environment or terminal you are currently using\&.
-.sp
-Note that this is allowed only on units where
-\fBAllowIsolate=\fR
-is enabled\&. See
-\fBsystemd.unit\fR(5)
-for details\&.
-.RE
-.PP
-\fBkill \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Send a signal to one or more processes of the unit\&. Use
-\fB\-\-kill\-who=\fR
-to select which process to kill\&. Use
-\fB\-\-signal=\fR
-to select the signal to send\&.
-.RE
-.PP
-\fBclean \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Remove the configuration, state, cache, logs or runtime data of the specified units\&. Use
-\fB\-\-what=\fR
-to select which kind of resource to remove\&. For service units this may be used to remove the directories configured with
-\fIConfigurationDirectory=\fR,
-\fIStateDirectory=\fR,
-\fICacheDirectory=\fR,
-\fILogsDirectory=\fR
-and
-\fIRuntimeDirectory=\fR, see
-\fBsystemd.exec\fR(5)
-for details\&. For timer units this may be used to clear out the persistent timestamp data if
-\fIPersistent=\fR
-is used and
-\fB\-\-what=state\fR
-is selected, see
-\fBsystemd.timer\fR(5)\&. This command only applies to units that use either of these settings\&. If
-\fB\-\-what=\fR
-is not specified, both the cache and runtime data are removed (as these two types of data are generally redundant and reproducible on the next invocation of the unit)\&.
-.RE
-.PP
-\fBfreeze \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Freeze one or more units specified on the command line using cgroup freezer
-.sp
-Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended\&. Being suspended means that unit\*(Aqs processes won\*(Aqt be scheduled to run on CPU until thawed\&. Note that this command is supported only on systems that use unified cgroup hierarchy\&. Unit is automatically thawed just before we execute a job against the unit, e\&.g\&. before the unit is stopped\&.
-.RE
-.PP
-\fBthaw \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
-.RS 4
-Thaw (unfreeze) one or more units specified on the command line\&.
-.sp
-This is the inverse operation to the
-\fBfreeze\fR
-command and resumes the execution of processes in the unit\*(Aqs cgroup\&.
-.RE
-.PP
 \fBis\-active \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
 .RS 4
 Check whether any of the specified units are active (i\&.e\&. running)\&. Returns an exit code
@@ -453,46 +317,9 @@ Show backing files of one or more units\&. Prints the "fragment" and "drop\-ins"
 command wasn\*(Aqt issued since\&.
 .RE
 .PP
-\fBset\-property \fR\fB\fIUNIT\fR\fR\fB \fR\fB\fIPROPERTY\fR\fR\fB=\fR\fB\fIVALUE\fR\fR\fB\&...\fR
-.RS 4
-Set the specified unit properties at runtime where this is supported\&. This allows changing configuration parameter properties such as resource control settings at runtime\&. Not all properties may be changed at runtime, but many resource control settings (primarily those in
-\fBsystemd.resource-control\fR(5)) may\&. The changes are applied immediately, and stored on disk for future boots, unless
-\fB\-\-runtime\fR
-is passed, in which case the settings only apply until the next reboot\&. The syntax of the property assignment follows closely the syntax of assignments in unit files\&.
-.sp
-Example:
-\fBsystemctl set\-property foobar\&.service CPUWeight=200\fR
-.sp
-If the specified unit appears to be inactive, the changes will be only stored on disk as described previously hence they will be effective when the unit will be started\&.
-.sp
-Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&.
-.sp
-Example:
-\fBsystemctl set\-property foobar\&.service CPUWeight=200 MemoryMax=2G IPAccounting=yes\fR
-.sp
-Like with unit file configuration settings, assigning an empty setting usually resets a property to its defaults\&.
-.sp
-Example:
-\fBsystemctl set\-property avahi\-daemon\&.service IPAddressDeny=\fR
-.RE
-.PP
 \fBhelp \fR\fB\fIPATTERN\fR\fR\fB\&...|\fR\fB\fIPID\fR\fR\fB\&...\fR
 .RS 4
 Show manual pages for one or more units, if available\&. If a PID is given, the manual pages for the unit the process belongs to are shown\&.
-.RE
-.PP
-\fBreset\-failed [\fR\fB\fIPATTERN\fR\fR\fB\&...]\fR
-.RS 4
-Reset the
-"failed"
-state of the specified units, or if no unit name is passed, reset the state of all units\&. When a unit fails in some way (i\&.e\&. process exiting with non\-zero error code, terminating abnormally or timing out), it will automatically enter the
-"failed"
-state and its exit code and status is recorded for introspection by the administrator until the service is stopped/re\-started or reset with this command\&.
-.sp
-In addition to resetting the
-"failed"
-state of a unit it also resets various other per\-unit properties: the start rate limit counter of all unit types is reset to zero, as is the restart counter of service units\&. Thus, if a unit\*(Aqs start limit (as configured with
-\fIStartLimitIntervalSec=\fR/\fIStartLimitBurst=\fR) is hit and the unit refuses to be started again, use this command to make it startable again\&.
 .RE
 .PP
 \fBlist\-dependencies\fR [\fIUNIT\fR\&.\&.\&.]
@@ -519,6 +346,261 @@ may be used to change what types of dependencies are shown\&.
 .sp
 Note that this command only lists units currently loaded into memory by the service manager\&. In particular, this command is not suitable to get a comprehensive list at all reverse dependencies on a specific unit, as it won\*(Aqt list the dependencies declared by units currently not loaded\&.
 .RE
+.PP
+\fBstart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Start (activate) one or more units specified on the command line\&.
+.sp
+Note that unit glob patterns expand to names of units currently in memory\&. Units which are not active and are not in a failed state usually are not in memory, and will not be matched by any pattern\&. In addition, in case of instantiated units, systemd is often unaware of the instance name until the instance has been started\&. Therefore, using glob patterns with
+\fBstart\fR
+has limited usefulness\&. Also, secondary alias names of units are not considered\&.
+.sp
+Option
+\fB\-\-all\fR
+may be used to also operate on inactive units which are referenced by other loaded units\&. Note that this is not the same as operating on "all" possible units, because as the previous paragraph describes, such a list is ill\-defined\&. Nevertheless,
+\fBsystemctl start \-\-all \fR\fB\fIGLOB\fR\fR
+may be useful if all the units that should match the pattern are pulled in by some target which is known to be loaded\&.
+.RE
+.PP
+\fBstop \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Stop (deactivate) one or more units specified on the command line\&.
+.sp
+This command will fail if the unit does not exist or if stopping of the unit is prohibited (see
+\fIRefuseManualStop=\fR
+in
+\fBsystemd.unit\fR(5))\&. It will
+\fInot\fR
+fail if any of the commands configured to stop the unit (\fIExecStop=\fR, etc\&.) fail, because the manager will still forcibly terminate the unit\&.
+.RE
+.PP
+\fBreload \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Asks all units listed on the command line to reload their configuration\&. Note that this will reload the service\-specific configuration, not the unit configuration file of systemd\&. If you want systemd to reload the configuration file of a unit, use the
+\fBdaemon\-reload\fR
+command\&. In other words: for the example case of Apache, this will reload Apache\*(Aqs
+httpd\&.conf
+in the web server, not the
+apache\&.service
+systemd unit file\&.
+.sp
+This command should not be confused with the
+\fBdaemon\-reload\fR
+command\&.
+.RE
+.PP
+\fBrestart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Stop and then start one or more units specified on the command line\&. If the units are not running yet, they will be started\&.
+.sp
+Note that restarting a unit with this command does not necessarily flush out all of the unit\*(Aqs resources before it is started again\&. For example, the per\-service file descriptor storage facility (see
+\fIFileDescriptorStoreMax=\fR
+in
+\fBsystemd.service\fR(5)) will remain intact as long as the unit has a job pending, and is only cleared when the unit is fully stopped and no jobs are pending anymore\&. If it is intended that the file descriptor store is flushed out, too, during a restart operation an explicit
+\fBsystemctl stop\fR
+command followed by
+\fBsystemctl start\fR
+should be issued\&.
+.RE
+.PP
+\fBtry\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Stop and then start one or more units specified on the command line if the units are running\&. This does nothing if units are not running\&.
+.RE
+.PP
+\fBreload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. If the units are not running yet, they will be started\&.
+.RE
+.PP
+\fBtry\-reload\-or\-restart \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Reload one or more units if they support it\&. If not, stop and then start them instead\&. This does nothing if the units are not running\&.
+.RE
+.PP
+\fBisolate \fR\fB\fIUNIT\fR\fR
+.RS 4
+Start the unit specified on the command line and its dependencies and stop all others, unless they have
+\fBIgnoreOnIsolate=yes\fR
+(see
+\fBsystemd.unit\fR(5))\&. If a unit name with no extension is given, an extension of
+"\&.target"
+will be assumed\&.
+.sp
+This command is dangerous, since it will immediately stop processes that are not enabled in the new target, possibly including the graphical environment or terminal you are currently using\&.
+.sp
+Note that this is allowed only on units where
+\fBAllowIsolate=\fR
+is enabled\&. See
+\fBsystemd.unit\fR(5)
+for details\&.
+.RE
+.PP
+\fBkill \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Send a signal to one or more processes of the unit\&. Use
+\fB\-\-kill\-who=\fR
+to select which process to kill\&. Use
+\fB\-\-signal=\fR
+to select the signal to send\&.
+.RE
+.PP
+\fBclean \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Remove the configuration, state, cache, logs or runtime data of the specified units\&. Use
+\fB\-\-what=\fR
+to select which kind of resource to remove\&. For service units this may be used to remove the directories configured with
+\fIConfigurationDirectory=\fR,
+\fIStateDirectory=\fR,
+\fICacheDirectory=\fR,
+\fILogsDirectory=\fR
+and
+\fIRuntimeDirectory=\fR, see
+\fBsystemd.exec\fR(5)
+for details\&. For timer units this may be used to clear out the persistent timestamp data if
+\fIPersistent=\fR
+is used and
+\fB\-\-what=state\fR
+is selected, see
+\fBsystemd.timer\fR(5)\&. This command only applies to units that use either of these settings\&. If
+\fB\-\-what=\fR
+is not specified, both the cache and runtime data are removed (as these two types of data are generally redundant and reproducible on the next invocation of the unit)\&.
+.RE
+.PP
+\fBfreeze \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Freeze one or more units specified on the command line using cgroup freezer
+.sp
+Freezing the unit will cause all processes contained within the cgroup corresponding to the unit to be suspended\&. Being suspended means that unit\*(Aqs processes won\*(Aqt be scheduled to run on CPU until thawed\&. Note that this command is supported only on systems that use unified cgroup hierarchy\&. Unit is automatically thawed just before we execute a job against the unit, e\&.g\&. before the unit is stopped\&.
+.RE
+.PP
+\fBthaw \fR\fB\fIPATTERN\fR\fR\fB\&...\fR
+.RS 4
+Thaw (unfreeze) one or more units specified on the command line\&.
+.sp
+This is the inverse operation to the
+\fBfreeze\fR
+command and resumes the execution of processes in the unit\*(Aqs cgroup\&.
+.RE
+.PP
+\fBset\-property \fR\fB\fIUNIT\fR\fR\fB \fR\fB\fIPROPERTY\fR\fR\fB=\fR\fB\fIVALUE\fR\fR\fB\&...\fR
+.RS 4
+Set the specified unit properties at runtime where this is supported\&. This allows changing configuration parameter properties such as resource control settings at runtime\&. Not all properties may be changed at runtime, but many resource control settings (primarily those in
+\fBsystemd.resource-control\fR(5)) may\&. The changes are applied immediately, and stored on disk for future boots, unless
+\fB\-\-runtime\fR
+is passed, in which case the settings only apply until the next reboot\&. The syntax of the property assignment follows closely the syntax of assignments in unit files\&.
+.sp
+Example:
+\fBsystemctl set\-property foobar\&.service CPUWeight=200\fR
+.sp
+If the specified unit appears to be inactive, the changes will be only stored on disk as described previously hence they will be effective when the unit will be started\&.
+.sp
+Note that this command allows changing multiple properties at the same time, which is preferable over setting them individually\&.
+.sp
+Example:
+\fBsystemctl set\-property foobar\&.service CPUWeight=200 MemoryMax=2G IPAccounting=yes\fR
+.sp
+Like with unit file configuration settings, assigning an empty setting usually resets a property to its defaults\&.
+.sp
+Example:
+\fBsystemctl set\-property avahi\-daemon\&.service IPAddressDeny=\fR
+.RE
+.PP
+\fBservice\-log\-level\fR \fISERVICE\fR [\fILEVEL\fR]
+.RS 4
+If the
+\fILEVEL\fR
+argument is not given, print the current log level as reported by service
+\fISERVICE\fR\&.
+.sp
+If the optional argument
+\fILEVEL\fR
+is provided, then change the current log level of the service to
+\fILEVEL\fR\&. The log level should be a typical syslog log level, i\&.e\&. a value in the range 0\&...7 or one of the strings
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR; see
+\fBsyslog\fR(3)
+for details\&.
+.sp
+The service must have the appropriate
+\fIBusName=\fR\fI\fIdestination\fR\fR
+property and also implement the generic
+\fBorg.freedesktop.LogControl1\fR(5)
+interface\&. (systemctl
+will use the generic D\-Bus protocol to access the
+org\&.freedesktop\&.LogControl1\&.LogLevel
+interface for the D\-Bus name
+\fIdestination\fR\&.)
+.RE
+.PP
+\fBservice\-log\-target\fR \fISERVICE\fR [\fITARGET\fR]
+.RS 4
+If the
+\fITARGET\fR
+argument is not given, print the current log target as reported by service
+\fISERVICE\fR\&.
+.sp
+If the optional argument
+\fITARGET\fR
+is provided, then change the current log target of the service to
+\fITARGET\fR\&. The log target should be one of the strings
+\fBconsole\fR
+(for log output to the service\*(Aqs standard error stream),
+\fBkmsg\fR
+(for log output to the kernel log buffer),
+\fBjournal\fR
+(for log output to
+\fBsystemd-journald.service\fR(8)
+using the native journal protocol),
+\fBsyslog\fR
+(for log output to the classic syslog socket
+/dev/log),
+\fBnull\fR
+(for no log output whatsoever) or
+\fBauto\fR
+(for an automatically determined choice, typically equivalent to
+\fBconsole\fR
+if the service is invoked interactively, and
+\fBjournal\fR
+or
+\fBsyslog\fR
+otherwise)\&.
+.sp
+For most services, only a small subset of log targets make sense\&. In particular, most "normal" services should only implement
+\fBconsole\fR,
+\fBjournal\fR, and
+\fBnull\fR\&. Anything else is only appropriate for low\-level services that are active in very early boot before proper logging is established\&.
+.sp
+The service must have the appropriate
+\fIBusName=\fR\fI\fIdestination\fR\fR
+property and also implement the generic
+\fBorg.freedesktop.LogControl1\fR(5)
+interface\&. (systemctl
+will use the generic D\-Bus protocol to access the
+org\&.freedesktop\&.LogControl1\&.LogLevel
+interface for the D\-Bus name
+\fIdestination\fR\&.)
+.RE
+.PP
+\fBreset\-failed [\fR\fB\fIPATTERN\fR\fR\fB\&...]\fR
+.RS 4
+Reset the
+"failed"
+state of the specified units, or if no unit name is passed, reset the state of all units\&. When a unit fails in some way (i\&.e\&. process exiting with non\-zero error code, terminating abnormally or timing out), it will automatically enter the
+"failed"
+state and its exit code and status is recorded for introspection by the administrator until the service is stopped/re\-started or reset with this command\&.
+.sp
+In addition to resetting the
+"failed"
+state of a unit it also resets various other per\-unit properties: the start rate limit counter of all unit types is reset to zero, as is the restart counter of service units\&. Thus, if a unit\*(Aqs start limit (as configured with
+\fIStartLimitIntervalSec=\fR/\fIStartLimitBurst=\fR) is hit and the unit refuses to be started again, use this command to make it startable again\&.
+.RE
 .SS "Unit File Commands"
 .PP
 \fBlist\-unit\-files\fR [\fIPATTERN\&...\fR]
@@ -542,9 +624,9 @@ foo@bar\&.service), symlinks named the same as instances are created in the unit
 .sp
 This command expects either valid unit names (in which case various unit file directories are automatically searched for unit files with appropriate names), or absolute paths to unit files (in which case these files are read directly)\&. If a specified unit file is located outside of the usual unit file directories, an additional symlink is created, linking it into the unit configuration path, thus ensuring it is found when requested by commands such as
 \fBstart\fR\&. The file system where the linked unit files are located must be accessible when systemd is started (e\&.g\&. anything underneath
-/home
+/home/
 or
-/var
+/var/
 is not allowed, unless those directories are located on the root file system)\&.
 .sp
 This command will print the file system operations executed\&. This output may be suppressed by passing
@@ -794,9 +876,9 @@ Unmask one or more unit files, as specified on the command line\&. This will und
 Link a unit file that is not in the unit file search paths into the unit file search path\&. This command expects an absolute path to a unit file\&. The effect of this may be undone with
 \fBdisable\fR\&. The effect of this command is that a unit file is made available for commands such as
 \fBstart\fR, even though it is not installed directly in the unit search path\&. The file system where the linked unit files are located must be accessible when systemd is started (e\&.g\&. anything underneath
-/home
+/home/
 or
-/var
+/var/
 is not allowed, unless those directories are located on the root file system)\&.
 .RE
 .PP
@@ -810,11 +892,11 @@ with all their contained files are removed, both below the persistent and runtim
 /etc/systemd/system
 and
 /run/systemd/system); if the unit file has a vendor\-supplied version (i\&.e\&. a unit file located below
-/usr) any matching persistent or runtime unit file that overrides it is removed, too\&. Note that if a unit file has no vendor\-supplied version (i\&.e\&. is only defined below
+/usr/) any matching persistent or runtime unit file that overrides it is removed, too\&. Note that if a unit file has no vendor\-supplied version (i\&.e\&. is only defined below
 /etc/systemd/system
 or
 /run/systemd/system, but not in a unit file stored below
-/usr), then it is not removed\&. Also, if a unit is masked, it is unmasked\&.
+/usr/), then it is not removed\&. Also, if a unit is masked, it is unmasked\&.
 .sp
 Effectively, this command may be used to undo all changes made with
 \fBsystemctl edit\fR,
@@ -868,7 +950,7 @@ is specified and any units do not already exist, new unit files will be opened f
 If
 \fB\-\-runtime\fR
 is specified, the changes will be made temporarily in
-/run
+/run/
 and they will be lost on the next reboot\&.
 .sp
 If the temporary file is empty upon exit, the modification of the related unit is canceled\&.
@@ -877,8 +959,8 @@ After the units have been edited, systemd configuration is reloaded (in a way th
 \fBdaemon\-reload\fR)\&.
 .sp
 Note that this command cannot be used to remotely edit units and that you cannot temporarily edit units which are in
-/etc, since they take precedence over
-/run\&.
+/etc/, since they take precedence over
+/run/\&.
 .RE
 .PP
 \fBget\-default\fR
@@ -921,6 +1003,12 @@ Cancel one or more jobs specified on the command line by their numeric job IDs\&
 .RE
 .SS "Environment Commands"
 .PP
+\fBsystemd\fR
+supports an environment block that is passed to processes the manager spawns\&. The names of the variables can contain ASCII letters, digits, and the underscore character\&. Variable names cannot be empty or start with a digit\&. In variable values, most characters are allowed, but non\-printable characters are currently rejected\&. The total length of the environment block is limited to
+\fB_SC_ARG_MAX\fR
+value defined by
+\fBsysconf\fR(3)\&.
+.PP
 \fBshow\-environment\fR
 .RS 4
 Dump the systemd manager environment block\&. This is the environment block that is passed to all processes the manager spawns\&. The environment block will be dumped in straight\-forward form suitable for sourcing into most shells\&. If no special characters or whitespace is present in the variable values, no escaping is performed, and the assignments have the form
@@ -938,7 +1026,7 @@ or
 .PP
 \fBset\-environment \fR\fB\fIVARIABLE=VALUE\fR\fR\fB\&...\fR
 .RS 4
-Set one or more systemd manager environment variables, as specified on the command line\&.
+Set one or more systemd manager environment variables, as specified on the command line\&. This command will fail if variable names and values do not conform to the rules listed above\&.
 .RE
 .PP
 \fBunset\-environment \fR\fB\fIVARIABLE\fR\fR\fB\&...\fR
@@ -948,7 +1036,7 @@ Unset one or more systemd manager environment variables\&. If only a variable na
 .PP
 \fBimport\-environment\fR [\fIVARIABLE\&...\fR]
 .RS 4
-Import all, one or more environment variables set on the client into the systemd manager environment block\&. If no arguments are passed, the entire environment block is imported\&. Otherwise, a list of one or more environment variable names should be passed, whose client\-side values are then imported into the manager\*(Aqs environment block\&.
+Import all, one or more environment variables set on the client into the systemd manager environment block\&. If no arguments are passed, the entire environment block is imported\&. Otherwise, a list of one or more environment variable names should be passed, whose client\-side values are then imported into the manager\*(Aqs environment block\&. This command will silently ignore any assignments which do not conform to the rules listed above\&.
 .RE
 .SS "Manager State Commands"
 .PP
@@ -1820,9 +1908,9 @@ When used with
 \fBenable\fR,
 \fBdisable\fR,
 \fBedit\fR, (and related commands), make changes only temporarily, so that they are lost on the next reboot\&. This will have the effect that changes are not made in subdirectories of
-/etc
+/etc/
 but in
-/run, with identical immediate effects, however, since the latter is lost on reboot, the changes are lost too\&.
+/run/, with identical immediate effects, however, since the latter is lost on reboot, the changes are lost too\&.
 .sp
 Similarly, when used with
 \fBset\-property\fR, make changes only temporarily, so that they are lost on the next reboot\&.
@@ -1898,6 +1986,24 @@ When used with
 or
 \fBlist\-machines\fR, the output is printed as a list instead of a tree, and the bullet circles are omitted\&.
 .RE
+.PP
+\fB\-\-timestamp=\fR
+.RS 4
+Takes one of
+"pretty"
+(the default),
+"us",
+"\(mcs",
+"utc"\&. Changes the format of printed timestamps\&.
+"pretty":
+"Day YYYY\-MM\-DD HH:MM:SS TZ"
+"us"
+or
+"\(mcs":
+"Day YYYY\-MM\-DD HH:MM:SS\&.UUUUUU TZ"
+"utc":
+"Day YYYY\-MM\-DD HH:MM:SS UTC"
+"us+utc" or "\(mcs+utc": "Day YYYY\-MM\-DD HH:MM:SS\&.UUUUUU UTC".RE
 .PP
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
@@ -2082,6 +2188,37 @@ Override the charset passed to
 \fBless\fR
 (by default
 "utf\-8", if the invoking terminal is determined to be UTF\-8 compatible)\&.
+.RE
+.PP
+\fI$SYSTEMD_PAGERSECURE\fR
+.RS 4
+Takes a boolean argument\&. When true, the "secure" mode of the pager is enabled; if false, disabled\&. If
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, secure mode is enabled if the effective UID is not the same as the owner of the login session, see
+\fBgeteuid\fR(2)
+and
+\fBsd_pid_get_owner_uid\fR(3)\&. In secure mode,
+\fBLESSSECURE=1\fR
+will be set when invoking the pager, and the pager shall disable commands that open or create new files or start new subprocesses\&. When
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set at all, pagers which are not known to implement secure mode will not be used\&. (Currently only
+\fBless\fR(1)
+implements secure mode\&.)
+.sp
+Note: when commands are invoked with elevated privileges, for example under
+\fBsudo\fR(8)
+or
+\fBpkexec\fR(1), care must be taken to ensure that unintended interactive features are not enabled\&. "Secure" mode for the pager may be enabled automatically as describe above\&. Setting
+\fISYSTEMD_PAGERSECURE=0\fR
+or not removing it from the inherited environment allows the user to invoke arbitrary commands\&. Note that if the
+\fI$SYSTEMD_PAGER\fR
+or
+\fI$PAGER\fR
+variables are to be honoured,
+\fI$SYSTEMD_PAGERSECURE\fR
+must be set too\&. It might be reasonable to completely disable the pager using
+\fB\-\-no\-pager\fR
+instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR

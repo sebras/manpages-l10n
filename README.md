@@ -7,6 +7,7 @@ languages. Currently we support the following languages:
 *  es - Spanish
 *  fr - French
 *  it - Italian
+*  mk - Macedonian
 *  nl - Dutch *
 *  pl - Polish
 *  pt_BR - Brazilian Portuguese

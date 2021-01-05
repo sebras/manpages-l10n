@@ -47,8 +47,14 @@ of Linux manpages. The list is sorted alphabetically.
 * Karel Dušek <kargee.dusek@seznam.cz>
 * Luděk Brukner <Ludek.Brukner@barco.com>
 * Marek Kubita <Kubitovi@mbox.lantanet.cz>
+* Martin Dostál <martin.dostal@pslib.cz>
 * Martin Kačena <martin.kacena@pslib.cz>
+* Martin Wollmann <martin.wollmann@pslib.cz>
+* Michal Ambrož <Michal.Ambroz@post.cz>
 * Milan Keršláger <kerslage@linux.cz>
+* Milan Kopačka <mkop5230@ss1000.ms.mff.cuni.cz>
+* Ondřej Kavka <ondrej.kavka@pslib.cz>
+* Ondřej Pavlíček <mox@post.cz>
 * Ondřej Zvolský <ondrej.zvolsky@pslib.cz>
 * Pavel Heimlich <tropikhajma@gmail.com>
 * Petr Bláha <pet@penguin.vscht.cz>
@@ -56,13 +62,16 @@ of Linux manpages. The list is sorted alphabetically.
 * Petr Sykora <petrsykora@jabber.tecka.cz>
 * Stinovlas <stinovlas@gmail.com>
 * Tomáš Andrle <tomas.andrle@pslib.cz>
+* Tomáš Řezáč <tomas.rezac@pslib.cz>
 * Václav Doubek <vaclav.doubek@pslib.cz>
+* Zdeněk Pytela <letty@mrakoplas.phil.muni.cz>
 
 
 ## Dutch:
 
 * Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>
 * Jos Boersema <joshb@xs4all.nl>
+* Luc Castermans <luc.castermans@gmail.com>
 * Mario Blättermann <mario.blaettermann@gmail.com>
 
 
@@ -237,6 +246,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Silvano Sallese <silvano@pluto.it>
 * Valerio Dodet <dodetvalerio@tiscali.it>
 * Vieri Giugni <v.giugni@gmail.com>
+
+
+## Macedonian:
+
+* Kristijan Velkovski <me@krisfremen.com>
 
 
 ## Polish:
