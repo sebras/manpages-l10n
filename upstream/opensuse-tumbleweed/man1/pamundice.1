@@ -3,10 +3,9 @@
 .\" Do not hand-hack it!  If you have bug fixes or improvements, please find
 .\" the corresponding HTML page on the Netpbm website, generate a patch
 .\" against that, and send it to the Netpbm maintainer.
-.TH "Pamundice User Manual" 0 "1 April 2007" "netpbm documentation"
+.TH "Pamundice User Manual" 0 "26 April 2020" "netpbm documentation"
 
 .SH NAME
-
 pamundice - combine grid of images (tiles) into one
 
 .UN example
@@ -37,7 +36,8 @@ pamundice - combine grid of images (tiles) into one
 
 [\fB-verbose\fP]
 
-\fIinput_filename_pattern\fP
+{\fIinput_filename_pattern\fP,
+\fB-listfile=\fP\fIfilename\fP}
 .PP
 You can use the minimum unique abbreviation of the options.  You can use
 two hyphens instead of one.  You can separate an option name from its value
@@ -56,8 +56,10 @@ Output.
 .PP
 You can optionally make the pieces overlap.
 .PP
-See the \fIinput_filename_pattern\fP argument for information on
-naming of the input files.
+The images can either be in files whose names indicate where they go in the
+  output (e.g. 'myimage_part_03_04' could be the image for Row 3,
+  Column 4 - see the \fIinput_filename_pattern\fP argument) or listed in a
+  file, with a \fB-listfile\fP option.
 .PP
 The input images must all have the same format (PAM, PPM, etc.)
 and maxval and for PAM must have the same depth and tuple type.
@@ -69,16 +71,21 @@ have the same height or every file have the same width.
 \fBpamdice\fP is the inverse of \fBpamundice\fP.  You can use
 \fBpamundice\fP to reassemble an image sliced up by \fBpamdice\fP.
 You can use \fBpamdice\fP to recreate the tiles of an image created
-by \fBpamundice\fP, but to do this the original ranks must all have
+by \fBpamundice\fP, but to do this, the original ranks must all have
 been the same height except for the bottom one and the original files
 must all have been the same width except the right one.
 .PP
-One use for this is to make pieces that take less computer
-resources than the whole image to process.  For example, you might
-have an image so large that an image editor can't read it all into
-memory or processes it very slowly.  You can split it into smaller
-pieces with \fBpamdice\fP, edit one at a time, and then reassemble them
-with \fBpamundice\fP.
+One use for this is to process an image in pieces when the whole image is
+too large to process.  For example, you might have an image so large that an
+image editor can't read it all into memory or processes it very slowly.  You
+can split it into smaller pieces with \fBpamdice\fP, edit one at a time, and
+then reassemble them with \fBpamundice\fP.
+.PP
+Of course, you can also use \fBpamundice\fP to compose various kinds of
+checkerboard images, for example, you could write a program to render a
+chessboard by computing an image of each square, then using \fBpamundice\fP
+to assemble them into a board.
+  
 .PP
 An alternative to join images in a single direction (i.e. a single
 rank or a single file) is \fBpnmcat\fP.  \fBpnmcat\fP gives you more
@@ -98,12 +105,13 @@ combines a bunch of small images in a grid into a big one.  But its
 purpose is to produce a an index image of the input images.  So it
 leaves space between them and has labels for them, for example.
 
+
 .UN arguments
 .SH ARGUMENTS
 .PP
-There is one non-option argument, and it is mandatory:
-\fIinput_filename_pattern\fP.  This tells \fBpamundice\fP what files
-contain the input tiles.
+Unless you use a \fB-listfile\fP option,, there is one non-option
+argument, and it is mandatory: \fIinput_filename_pattern\fP.  This
+tells \fBpamundice\fP what files contain the input tiles.
 .PP
 \fBpamundice\fP reads the input images from files which are named
 with a pattern that indicates their positions in the combined image.
@@ -163,6 +171,14 @@ numbered image).
 
 .UN options
 .SH OPTIONS
+.PP
+In addition to the options common to all programs based on libnetpbm
+(most notably \fB-quiet\fP, see 
+.UR index.html#commonoptions
+ Common Options
+.UE
+\&), \fBpamundice\fP recognizes the following
+command line options:
 
 
 .TP
@@ -198,6 +214,23 @@ Default is zero -- no overlap.
 \fB-voverlap=\fP\fIpixels\fP
 This is analogous to \fB-hoverlap\fP, but \fBpamundice\fP
 clips the bottom edge of each image before joining it to the one below.
+
+.TP
+\fB-listfile=\fP\fIfilename\fP
+This option names a file that contains the names of all the input files.
+This is an alternative to specifying a file name pattern as an argument.
+.sp
+The named file contains file name, one per line.  Each file contains the
+  image for one tile, in row-major order, top to bottom, left to right.  So
+  the first file is the upper left tile, the second is the one to right of
+  that, etc.  The number of lines in the file must be equal to the number of
+  tiles in the output, the product of the \fB-across\fP and \fB-down\fP
+  values.
+.sp
+The file names have no meaning to \fBpamundice\fP.  You can use the same
+  file multiple times to have identical tiles in the output.
+.sp
+This option was new in Netpbm 10.90 (March 2020).
 
 .TP
 \fB-verbose\fP

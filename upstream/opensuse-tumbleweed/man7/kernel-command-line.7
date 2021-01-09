@@ -1,5 +1,5 @@
 '\" t
-.TH "KERNEL\-COMMAND\-LINE" "7" "" "systemd 245" "kernel-command-line"
+.TH "KERNEL\-COMMAND\-LINE" "7" "" "systemd 246" "kernel-command-line"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -148,7 +148,7 @@ Parameters understood by the virtual console setup logic\&. For details, see
 \fBvconsole.conf\fR(5)\&.
 .RE
 .PP
-\fIudev\&.log_priority=\fR, \fIrd\&.udev\&.log_priority=\fR, \fIudev\&.children_max=\fR, \fIrd\&.udev\&.children_max=\fR, \fIudev\&.exec_delay=\fR, \fIrd\&.udev\&.exec_delay=\fR, \fIudev\&.event_timeout=\fR, \fIrd\&.udev\&.event_timeout=\fR, \fInet\&.ifnames=\fR, \fInet\&.naming\-scheme=\fR
+\fIudev\&.log_level=\fR, \fIrd\&.udev\&.log_level=\fR, \fIudev\&.children_max=\fR, \fIrd\&.udev\&.children_max=\fR, \fIudev\&.exec_delay=\fR, \fIrd\&.udev\&.exec_delay=\fR, \fIudev\&.event_timeout=\fR, \fIrd\&.udev\&.event_timeout=\fR, \fIudev\&.timeout_signal=\fR, \fIrd\&.udev\&.timeout_signal=\fR, \fIudev\&.blockdev_read_only\fR, \fIrd\&.udev\&.blockdev_read_only\fR, \fInet\&.ifnames=\fR, \fInet\&.naming\-scheme=\fR
 .RS 4
 Parameters understood by the device event managing daemon\&. For details, see
 \fBsystemd-udevd.service\fR(8)\&.
@@ -238,7 +238,68 @@ Enables resume from hibernation using the specified device and mount options\&. 
 .RS 4
 Takes a boolean argument, defaults to on\&. If off,
 \fBsystemd-firstboot.service\fR(8)
-will not query the user for basic system settings, even if the system boots up for the first time and the relevant settings are not initialized yet\&.
+will not query the user for basic system settings, even if the system boots up for the first time and the relevant settings are not initialized yet\&. Not to be confused with
+\fIsystemd\&.condition\-first\-boot=\fR
+(see below), which overrides the result of the
+\fIConditionFirstBoot=\fR
+unit file condition, and thus controls more than just
+systemd\-firstboot\&.service
+behaviour\&.
+.RE
+.PP
+\fIsystemd\&.condition\-needs\-update=\fR
+.RS 4
+Takes a boolean argument\&. If specified, overrides the result of
+\fIConditionNeedsUpdate=\fR
+unit condition checks\&. See
+\fBsystemd.unit\fR(5)
+for details\&.
+.RE
+.PP
+\fIsystemd\&.condition\-first\-boot=\fR
+.RS 4
+Takes a boolean argument\&. If specified, overrides the result of
+\fIConditionFirstBoot=\fR
+unit condition checks\&. See
+\fBsystemd.unit\fR(5)
+for details\&. Not to be confused with
+\fIsystemd\&.firstboot=\fR
+which only controls behaviour of the
+systemd\-firstboot\&.service
+system service but has no effect on the condition check (see above)\&.
+.RE
+.PP
+\fIsystemd\&.clock\-usec=\fR
+.RS 4
+Takes a decimal, numeric timestamp in \(mcs since January 1st 1970, 00:00am, to set the system clock to\&. The system time is set to the specified timestamp early during boot\&. It is not propagated to the hardware clock (RTC)\&.
+.RE
+.PP
+\fIsystemd\&.random\-seed=\fR
+.RS 4
+Takes a base64 encoded random seed value to credit with full entropy to the kernel\*(Aqs random pool during early service manager initialization\&. This option is useful in testing environments where delays due to random pool initialization in entropy starved virtual machines shall be avoided\&.
+.sp
+Note that if this option is used the seed is accessible to unprivileged programs from
+/proc/cmdline\&. This option is hence a security risk when used outside of test systems, since the (possibly) only seed used for initialization of the kernel\*(Aqs entropy pool might be easily acquired by unprivileged programs\&.
+.sp
+It is recommended to pass 512 bytes of randomized data (as that matches the Linux kernel pool size), which may be generated with a command like the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+dd if=/dev/urandom bs=512 count=1 status=none | base64 \-w 0
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Again: do not use this option outside of testing environments, it\*(Aqs a security risk elsewhere, as secret key material derived from the entropy pool can possibly be reconstructed by unprivileged programs\&.
+.RE
+.PP
+\fIsystemd\&.hostname=\fR
+.RS 4
+Accepts a hostname to set during early boot\&. If specified takes precedence over what is set in
+/etc/hostname\&. Note that this does not bar later runtime changes to the hostname, it simply controls the initial hostname set during early boot\&.
 .RE
 .SH "SEE ALSO"
 .PP

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-CRYPTSETUP@\&.SERVICE" "8" "" "systemd 245" "systemd-cryptsetup@.service"
+.TH "SYSTEMD\-CRYPTSETUP@\&.SERVICE" "8" "" "systemd 246" "systemd-cryptsetup@.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -41,6 +41,75 @@ is translated into
 systemd\-cryptsetup@\&.service
 units by
 \fBsystemd-cryptsetup-generator\fR(8)\&.
+.PP
+In order to unlock a volume a password or binary key is required\&.
+systemd\-cryptsetup@\&.service
+tries to acquire a suitable password or binary key via the following mechanisms, tried in order:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+If a key file is explicitly configured (via the third column in
+/etc/crypttab), a key read from it is used\&. If a PKCS#11 token is configured (using the
+\fIpkcs11\-uri=\fR
+option) the key is decrypted before use\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+If no key file is configured explicitly this way, a key file is automatically loaded from
+/etc/cryptsetup\-keys\&.d/\fIvolume\fR\&.key
+and
+/run/cryptsetup\-keys\&.d/\fIvolume\fR\&.key, if present\&. Here too, if a PKCS#11 token is configured, any key found this way is decrypted before use\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+If the
+\fItry\-empty\-password\fR
+option is specified it is then attempted to unlock the volume with an empty password\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+The kernel keyring is then checked for a suitable cached password from previous attempts\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  5." 4.2
+.\}
+Finally, the user is queried for a password, possibly multiple times\&.
+.RE
+.PP
+If no suitable key may be acquired via any of the mechanisms describes above, volume activation fails\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
@@ -51,5 +120,5 @@ units by
 .IP " 1." 4
 password agent logic
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/PasswordAgents
+\%https://systemd.io/PASSWORD_AGENTS/
 .RE
