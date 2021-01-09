@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-pl\n"
 "POT-Creation-Date: 2020-12-26 21:20+01:00\n"
-"PO-Revision-Date: 2016-09-22 22:26+0200\n"
+"PO-Revision-Date: 2021-01-08 12:18+0100\n"
 "Last-Translator: Michał Kułach <michal.kulach@gmail.com>\n"
 "Language-Team: Polish <manpages-pl-list@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -121,23 +121,15 @@ msgstr ""
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
-#| msgid ""
-#| "The B<semget>()  system call returns the System\\ V semaphore set "
-#| "identifier associated with the argument I<key>.  A new set of I<nsems> "
-#| "semaphores is created if I<key> has the value B<IPC_PRIVATE> or if no "
-#| "existing semaphore set is associated with I<key> and B<IPC_CREAT> is "
-#| "specified in I<semflg>."
 msgid ""
 "A new set of I<nsems> semaphores is created if I<key> has the value "
 "B<IPC_PRIVATE> or if no existing semaphore set is associated with I<key> and "
 "B<IPC_CREAT> is specified in I<semflg>."
 msgstr ""
-"Wywołanie systemowe B<semget>() zwraca identyfikator zestawu semaforów "
-"Systemu\\ V skojarzonego z parametrem I<key>. Nowy zestaw składający się z "
-"I<nsems> semaforów  zostanie utworzony, jeśli parametr I<key> będzie mieć "
-"wartość B<IPC_PRIVATE> lub gdy zestaw semaforów skojarzony z I<key> nie "
-"istnieje, a w parametrze I<semflg> zostanie przekazany znacznik B<IPC_CREAT>."
+"Nowy zestaw składający się z I<nsems> semaforów  zostanie utworzony, jeśli "
+"parametr I<key> będzie mieć wartość B<IPC_PRIVATE> lub gdy zestaw semaforów "
+"skojarzony z I<key> nie istnieje, a w parametrze I<semflg> zostanie "
+"przekazany znacznik B<IPC_CREAT>."
 
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
@@ -659,6 +651,10 @@ msgid ""
 "0x7004136d 9          mtk        600        1\n"
 "0x70041368 10         mtk        600        2\n"
 msgstr ""
+"------ Semaphore Arrays --------\n"
+"key        semid      owner      perms      nsems\n"
+"0x7004136d 9          mtk        600        1\n"
+"0x70041368 10         mtk        600        2\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -706,7 +702,7 @@ msgstr "Kod źródłowy programu"
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
 #, no-wrap
 msgid "/* t_semget.c\n"
-msgstr ""
+msgstr "/* t_semget.c\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -747,12 +743,7 @@ msgstr ""
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
-#, fuzzy, no-wrap
-#| msgid ""
-#| "int\n"
-#| "main(int argc, char *argv[])\n"
-#| "{\n"
-#| "    int j;\n"
+#, no-wrap
 msgid ""
 "int\n"
 "main(int argc, char *argv[])\n"
@@ -763,7 +754,8 @@ msgstr ""
 "int\n"
 "main(int argc, char *argv[])\n"
 "{\n"
-"    int j;\n"
+"    int semid, nsems, flags, opt;\n"
+"    key_t key;\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -778,6 +770,14 @@ msgid ""
 "        }\n"
 "    }\n"
 msgstr ""
+"    flags = 0;\n"
+"    while ((opt = getopt(argc, argv, \"cx\")) != -1) {\n"
+"        switch (opt) {\n"
+"        case \\(aqc\\(aq: flags |= IPC_CREAT;   break;\n"
+"        case \\(aqx\\(aq: flags |= IPC_EXCL;    break;\n"
+"        default:  usage(argv[0]);\n"
+"        }\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -786,6 +786,8 @@ msgid ""
 "    if (argc != optind + 3)\n"
 "        usage(argv[0]);\n"
 msgstr ""
+"    if (argc != optind + 3)\n"
+"        usage(argv[0]);\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -797,12 +799,17 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    key = ftok(argv[optind], argv[optind + 1][0]);\n"
+"    if (key == -1) {\n"
+"        perror(\"ftok\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
 #, no-wrap
 msgid "    nsems = atoi(argv[optind + 2]);\n"
-msgstr ""
+msgstr "    nsems = atoi(argv[optind + 2]);\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -814,12 +821,17 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    semid = semget(key, nsems, flags | 0600);\n"
+"    if (semid == -1) {\n"
+"        perror(\"semget\");\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
 #, no-wrap
 msgid "    printf(\"ID = %d\\en\", semid);\n"
-msgstr ""
+msgstr "    printf(\"ID = %d\\en\", semid);\n"
 
 #. type: Plain text
 #: archlinux debian-unstable fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -841,16 +853,12 @@ msgstr "ZOBACZ TAKŻE"
 #. type: Plain text
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
-#, fuzzy
-#| msgid ""
-#| "B<semctl>(2), B<semop>(2), B<ftok>(3), B<capabilities>(7), "
-#| "B<sem_overview>(7), B<svipc>(7)"
 msgid ""
 "B<semctl>(2), B<semop>(2), B<ftok>(3), B<capabilities>(7), "
 "B<sem_overview>(7), B<sysvipc>(7)"
 msgstr ""
 "B<semctl>(2), B<semop>(2), B<ftok>(3), B<capabilities>(7), "
-"B<sem_overview>(7), B<svipc>(7)"
+"B<sem_overview>(7), B<sysvipc>(7)"
 
 #. type: SH
 #: archlinux debian-buster debian-unstable fedora-rawhide mageia-cauldron
