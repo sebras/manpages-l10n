@@ -49,12 +49,12 @@ with open("packages.txt") as input_file:
         print("Checking package '{}' ... ".format(package), end="")
 
         # Match package names from x86_64, excluding 32-bit ones
-        package_url = re.findall(r"\"({}-(?!32bit-)(?:[0-9a-z.]+)-(?:[0-9]+)\.(?:[0-9]+)\.x86_64.rpm)\"".format(package), contents)
+        package_url = re.findall(r"\"({}-(?!32bit-)(?:[0-9a-z.%B]+)-(?:[0-9]+)\.(?:[0-9]+)\.x86_64.rpm)\"".format(package), contents)
         arch = 'x86_64'
 
         # Fall back to noarch, place of packages without ELF binary
         if len(package_url) == 0:
-            package_url = re.findall(r"\"({}-(?:[0-9a-z.]+)-(?:[0-9]+)\.(?:[0-9]+)\.noarch.rpm)\"".format(package), contents_fallback)
+            package_url = re.findall(r"\"({}-(?:[0-9a-z.%B]+)-(?:[0-9]+)\.(?:[0-9]+)\.noarch.rpm)\"".format(package), contents_fallback)
             arch = 'noarch'
 
         if len(package_url) != 1:
