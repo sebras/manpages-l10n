@@ -35,6 +35,11 @@ download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/tumblew
 contents = download_page.read().decode()
 download_page.close()
 
+# Also get noarch package information as a fallback
+download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/noarch/")
+contents_fallback = download_page.read().decode()
+download_page.close()
+
 # Read all packages names
 with open("packages.txt") as input_file:
     for line in input_file:
@@ -43,7 +48,15 @@ with open("packages.txt") as input_file:
         # Download HTML page and discover the correct link
         print("Checking package '{}' ... ".format(package), end="")
 
-        package_url = re.findall(r"\"({}-[0-9].*?\.rpm)\"".format(package), contents)
+        # Match package names from x86_64, excluding 32-bit ones
+        package_url = re.findall(r"\"({}-(?!32bit-)(?:[0-9a-z.%B]+)-(?:[0-9]+)\.(?:[0-9]+)\.x86_64.rpm)\"".format(package), contents)
+        arch = 'x86_64'
+
+        # Fall back to noarch, place of packages without ELF binary
+        if len(package_url) == 0:
+            package_url = re.findall(r"\"({}-(?:[0-9a-z.%B]+)-(?:[0-9]+)\.(?:[0-9]+)\.noarch.rpm)\"".format(package), contents_fallback)
+            arch = 'noarch'
+
         if len(package_url) != 1:
             print()
             print("Error: Could not find URL for '{}'.".format(package), file=sys.stderr)
@@ -52,7 +65,7 @@ with open("packages.txt") as input_file:
         else:
             package_url = package_url[0]
 
-        package_url = "https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/x86_64/{}".format(package_url)
+        package_url = "https://ftp.gwdg.de/pub/opensuse/tumbleweed/repo/oss/{}/{}".format(arch, package_url)
         package_filename = re.split(r"/", package_url)[-1]
 
         # If the latest download is already available, skip this package
