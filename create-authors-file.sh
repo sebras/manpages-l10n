@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2012-2018 Dr. Tobias Quathamer <toddy@debian.org>
 #
@@ -15,304 +15,60 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# List of languages sorted by language name, which must be double-quoted
+language_list=(
+    '"Brazilian Portuguese" pt_BR'
+    '"Czech"      cs'
+    '"Dutch"      nl'
+    '"French"     fr'
+    '"German"     de'
+    '"Italian"    it'
+    '"Macedonian" mk'
+    '"Polish"     pl'
+    '"Romanian"   ro'
+    '"Spanish"    es'
+)
+
 # Generate AUTHORS file
-echo "# Authors" > AUTHORS.md
-echo >> AUTHORS.md
-echo "The following people have contributed to the translation" >> AUTHORS.md
-echo "of Linux manpages. The list is sorted alphabetically." >> AUTHORS.md
+echo "# Authors
 
-# Generate Brazilian Portuguese authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Brazilian Portuguese:" >> AUTHORS.md
-echo >> AUTHORS.md
+The following people have contributed to the translation
+of Linux manpages. The list is sorted alphabetically." > AUTHORS.md
 
-# Extract all Brazilian Portuguese translators from the copyright headers
-files=$(find po/pt_BR/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Brazilian Portuguese translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_pt_BR.list
+# Loop through the language list to get translators and then populate AUTHORS
+for language in "${language_list[@]}"; do
+
+    lang_name=$(echo $language | cut -d\" -f2)
+    lang_code=${language##* }
+    
+    # Generate authors list for the given language
+    echo -e "\n\n## ${lang_name}:\n" >> AUTHORS.md
+
+    # Extract all translators from the copyright headers for the given language
+    files=$(find po/${lang_code}/man? -name "*po" | sort)
+    # files="$files $(find po/secondary-*/man? -name "*po" | sort)"
+    for translation in $files; do
+	    # Use the header up until the first msgid
+	    # and remove the comment character
+	    translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
+	    # Throw away the common (non translator) lines
+	    grep -v "${lang_name} translation of manpages" |
+	    grep -v "This file is distributed under the same license as the manpages-l10n package" |
+        grep -v "This file is distributed under the same license as the manpages-de package" |
+	    grep -v "Copyright © of this file:" |
+	    grep -v "FIXME:" |
+	    grep -v "msgid" |
+	    grep -a -v '^#[[:space:]]*$' |
+	    # Split lines to extract the name (and e-mail address)
+	    cut -f1 -d",")
+	    # Save a list of all translators in a temporary file for copyright determination
+	    echo "$translators" >> translators_${lang_code}.list
+    done
+    # Sort, unique, remove blank lines from file, and indent with an asterisk
+    sort -u translators_${lang_code}.list | sed -e "/^$/d; s/^/* /" > tmp_${lang_code}.list
+    cat tmp_${lang_code}.list >> AUTHORS.md
+
 done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_pt_BR.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_pt_BR.list
-cat tmp_pt_BR.list >> AUTHORS.md
-
-# Generate Czech authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Czech:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Dutch translators from the copyright headers
-files=$(find po/cs/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Czech translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_cs.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_cs.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_cs.list
-cat tmp_cs.list >> AUTHORS.md
-
-# Generate Dutch authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Dutch:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Dutch translators from the copyright headers
-files=$(find po/nl/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Dutch translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_nl.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_nl.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_nl.list
-cat tmp_nl.list >> AUTHORS.md
-
-# Generate French authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## French:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all French translators from the copyright headers
-files=$(find po/fr/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "French translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_fr.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_fr.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_fr.list
-cat tmp_fr.list >> AUTHORS.md
-
-# Generate German authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## German:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all German translators from the copyright headers
-files=$(find po/de/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "German translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-    grep -v "This file is distributed under the same license as the manpages-de package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_de.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_de.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_de.list
-cat tmp_de.list >> AUTHORS.md
-
-# Generate Italian authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Italian:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Italian translators from the copyright headers
-files=$(find po/it/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Italian translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-    grep -v "This file is distributed under the same license as the manpages-de package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_it.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_it.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_it.list
-cat tmp_it.list >> AUTHORS.md
-
-# Generate Macedonian authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Macedonian:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Italian translators from the copyright headers
-files=$(find po/mk/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Macedonian translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-    grep -v "This file is distributed under the same license as the manpages-de package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_mk.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_mk.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_mk.list
-cat tmp_mk.list >> AUTHORS.md
-
-# Generate Polish authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Polish:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Polish translators from the copyright headers
-files=$(find po/pl/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Polish translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_pl.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_pl.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_pl.list
-cat tmp_pl.list >> AUTHORS.md
-
-# Generate Romanian authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Romanian:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Romanian translators from the copyright headers
-files=$(find po/ro/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Romanian translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_ro.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_ro.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_ro.list
-cat tmp_ro.list >> AUTHORS.md
-
-# Generate Spanish authors list
-echo >> AUTHORS.md
-echo >> AUTHORS.md
-echo "## Spanish:" >> AUTHORS.md
-echo >> AUTHORS.md
-
-# Extract all Spanish translators from the copyright headers
-files=$(find po/es/man? -name "*po" | sort)
-# files="$files $(find po/secondary-*/man? -name "*po" | sort)"
-for translation in $files; do
-	# Use the header up until the first msgid
-	# and remove the comment character
-	translators=$(sed '/msgid/q;s/^#\s\+//' "$translation" |
-	# Throw away the common (non translator) lines
-	grep -v "Spanish translation of manpages" |
-	grep -v "This file is distributed under the same license as the manpages-l10n package" |
-	grep -v "Copyright © of this file:" |
-	grep -v "FIXME:" |
-	grep -v "msgid" |
-	grep -a -v '^#[[:space:]]*$' |
-	# Split lines to extract the name (and e-mail address)
-	cut -f1 -d",")
-	# Save a list of all translators in a temporary file for copyright determination
-	echo "$translators" >> translators_es.list
-done
-# Sort, unique, remove blank lines from file, and indent with an asterisk
-sort translators_es.list | uniq | sed -e "/^$/d; s/^/* /" > tmp_es.list
-cat tmp_es.list >> AUTHORS.md
 
 # Finally, delete all temporary lists
 rm tmp*.list translators*.list
