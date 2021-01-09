@@ -54,7 +54,6 @@ for language in "${language_list[@]}"; do
 	    # Throw away the common (non translator) lines
 	    grep -v "${lang_name} translation of manpages" |
 	    grep -v "This file is distributed under the same license as the manpages-l10n package" |
-        grep -v "This file is distributed under the same license as the manpages-de package" |
 	    grep -v "Copyright © of this file:" |
 	    grep -v "FIXME:" |
 	    grep -v "msgid" |
