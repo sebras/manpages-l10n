@@ -45,7 +45,8 @@ with open("packages.txt") as input_file:
             download_page.close()
         contents = page_buffer[repo]
 
-        package_url = re.findall(r"\"({}-[0-9].*?\.pkg\.tar\.[^.\"]+)".format(package), contents)
+        # search for <pkgname>-[<epoch>:]<version>-<release>-<architecture>.pkg.tar.<compression>
+        package_url = re.findall(r"\"({}-(?:[0-9]*%3A)?(?:[0-9a-z._%B]+)-(?:[0-9]+)-(?:any|x86_64)\.pkg\.tar\.[^.\"]+)".format(package), contents)
         # Ensure unique values and use the latest version (sort alphabetically)
         package_url = list(set(package_url))
         package_url.sort()
