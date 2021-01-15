@@ -3,6 +3,7 @@
 This project provides an infrastructure for translating manpages to different
 languages. Currently we support the following languages:
 
+*  cs - Czech
 *  de - German
 *  es - Spanish
 *  fr - French
