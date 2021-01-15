@@ -114,6 +114,7 @@ AC_CONFIG_FILES([
     po/es/Makefile
     po/fr/Makefile
     po/it/Makefile
+    po/mk/Makefile
     po/nl/Makefile
     po/pl/Makefile
     po/pt_BR/Makefile
