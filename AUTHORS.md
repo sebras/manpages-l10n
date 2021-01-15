@@ -50,6 +50,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Martin Dostál <martin.dostal@pslib.cz>
 * Martin Kačena <martin.kacena@pslib.cz>
 * Martin Wollmann <martin.wollmann@pslib.cz>
+* Matěj Pokorný <matej.pokorny98@gmail.com>
 * Michal Ambrož <Michal.Ambroz@post.cz>
 * Milan Keršláger <kerslage@linux.cz>
 * Milan Kopačka <mkop5230@ss1000.ms.mff.cuni.cz>
