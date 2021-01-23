@@ -1,5 +1,12 @@
 # Changelog for manpages-l10n
 
+## Version 4.9.0pre1
+*Sat Jan  23 21:39:01 CET 2021*
+
+* Updated and added many translations
+* Enable Italian, Spanish and Macedonian
+* Still skip Czech, it's a very early state
+
 ## Version 4.2.0
 *Thu Oct  15 19:13:01 CEST 2020*
 
