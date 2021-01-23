@@ -58,7 +58,7 @@ rpm \- RPM Package Manager
 
  [\fB\fIPACKAGE_NAME\fB\fR]
  [\fB-a,--all [\fISELECTOR\fR]\fR] [\fB-f,--file \fIFILE\fB\fR]
- [\fB-g,--group \fIGROUP\fB\fR] {\fB-p,--package \fIPACKAGE_FILE\fB\fR]
+ [\fB-g,--group \fIGROUP\fB\fR] [\fB-p,--package \fIPACKAGE_FILE\fB\fR]
  [\fB--hdrid \fISHA1\fB\fR] [\fB--pkgid \fIMD5\fB\fR] [\fB--tid \fITID\fB\fR]
  [\fB--querybynumber \fIHDRNUM\fB\fR] [\fB--triggeredby \fIPACKAGE_NAME\fB\fR]
  [\fB--whatprovides \fICAPABILITY\fB\fR] [\fB--whatrequires \fICAPABILITY\fB\fR]
@@ -80,7 +80,7 @@ Files:
  [\fB-c,--configfiles\fR] [\fB-d,--docfiles\fR] [\fB--dump\fR] [\fB--fileclass\fR]
  [\fB--filecolor\fR] [\fB--fileprovide\fR][\fB--filerequire\fR] [\fB--filecaps\fR]
  [\fB--filesbypkg\fR] [\fB-l,--list\fR] [\fB-s,--state\fR]
- [\fB--noartifact\fR] [\fB--noghost\fR] [\fB--noconfig\fR
+ [\fB--noartifact\fR] [\fB--noghost\fR] [\fB--noconfig\fR]
 .PP
 Scripts and triggers:
  [\fB--filetriggers\fR] [\fB--scripts\fR] [\fB--triggers,--triggerscripts\fR]
@@ -104,7 +104,7 @@ Scripts and triggers:
  [\fB--ignoresize\fR] [\fB--ignorearch\fR] [\fB--ignoreos\fR]
  [\fB--includedocs\fR] [\fB--justdb\fR]
  [\fB--nodeps\fR] [\fB--nodigest\fR] [\fB--noplugins\fR]
- [\fB--nocaps\fR] [\fB--noorder\fR]
+ [\fB--nocaps\fR] [\fB--noorder\fR] [\fB--noverify\fR]
  [\fB--nosignature\fR] [\fB--noscripts\fR] [\fB--notriggers\fR]
  [\fB--oldpackage\fR] [\fB--percent\fR] [\fB--prefix \fINEWPATH\fB\fR]
  [\fB--relocate \fIOLDPATH\fB=\fINEWPATH\fB\fR]
@@ -166,6 +166,10 @@ The default \fIFILELIST\fR is
 \fI/usr/\:lib/\:rpm/\:rpmrc\fR:\:\fI/usr/\:lib/\:rpm/\:redhat/\:rpmrc\fR:\:\fI/etc/\:rpmrc\fR:\:\fI~/.rpmrc\fR.
 
 .TP
+\fB--load \fIFILE\fB\fR
+Load an individual macro file.
+
+.TP
 \fB--macros \fIFILELIST\fB\fR
 Replace the list of macro files to be loaded. Each of the files in the colon separated
 \fIFILELIST\fR
@@ -213,7 +217,7 @@ may be specified as an
 \fBhttp\fR URL,
 in which case the package will be downloaded before being
 installed. See \fBFTP/HTTP OPTIONS\fR
-for information on \fBrpm\fR's internal
+for information on \fBrpm\fR's
 \fBftp\fR and
 \fBhttp\fR
 client support.
@@ -258,6 +262,10 @@ included in the binary package relocation hint(s).
 \fB--excludepath \fIOLDPATH\fB\fR
 Don't install files whose name begins with
 \fIOLDPATH\fR.
+.TP
+\fB--excludeartifacts\fR
+Don't install any files which are marked as artifacts,
+such as build-id links.
 .TP
 \fB--excludedocs\fR
 Don't install any files which are marked as documentation
@@ -310,6 +318,9 @@ Don't set file capabilities.
 \fB--noorder\fR
 Don't reorder the packages for an install. The list of
 packages would normally be reordered to satisfy dependencies.
+.TP
+\fB--noverify\fR
+Don't perform verify package files prior to installation.
 .TP
 \fB--noplugins\fR
 Do not load and execute plugins.
@@ -518,6 +529,9 @@ Display signature fingerprint and time.
 \fB:shescape\fR
 Escape single quotes for use in a script.
 .TP
+\fB:string\fR
+Display string format. (default)
+.TP
 \fB:triggertype\fR
 Display trigger suffix.
 .TP
@@ -534,8 +548,8 @@ two columns, you could use \fB%-30{NAME}%{DISTRIBUTION}\fR.
 \fBrpm\fR will print a list of all of the tags it knows about when it
 is invoked with the \fB--querytags\fR argument.
 .PP
-There are two subsets of options for querying: package selection,
-and information selection.
+There are three subsets of options for querying: package selection,
+file selection and information selection.
 .SS "PACKAGE SELECTION OPTIONS:"
 .PP
 .TP
@@ -585,7 +599,7 @@ The \fIPACKAGE_FILE\fR may be specified
 as an \fBftp\fR or \fBhttp\fR style URL, in
 which case the package header will be downloaded and queried.
 See \fBFTP/HTTP OPTIONS\fR for information on
-\fBrpm\fR's internal
+\fBrpm\fR's
 \fBftp\fR and
 \fBhttp\fR
 client support. The \fIPACKAGE_FILE\fR argument(s),
@@ -650,23 +664,14 @@ Query all packages that enhance \fICAPABILITY\fR.
 .SS "PACKAGE QUERY OPTIONS:"
 .PP
 .TP
-\fB-d, --artifactfiles\fR
-List only artifact files (implies \fB-l\fR).
-.TP
 \fB--changelog\fR
 Display change information for the package.
 .TP
 \fB--changes\fR
 Display change information for the package with full time stamps.
 .TP
-\fB-c, --configfiles\fR
-List only configuration files (implies \fB-l\fR).
-.TP
 \fB--conflicts\fR
 List capabilities this package conflicts with.
-.TP
-\fB-d, --docfiles\fR
-List only documentation files (implies \fB-l\fR).
 .TP
 \fB--dump\fR
 Dump file information as follows (implies \fB-l\fR):
@@ -695,9 +700,6 @@ This uses the \fB--queryformat\fR if one was specified.
 \fB--last\fR
 Orders the package listing by install time such that the latest
 packages are at the top.
-.TP
-\fB-L, --licensefiles\fR
-List only license files (implies \fB-l\fR).
 .TP
 \fB-l, --list\fR
 List files in package.
@@ -734,17 +736,32 @@ Display the \fIstates\fR of files in the package
 \fB--triggers, --triggerscripts\fR
 Display the trigger scripts, if any, which are contained in
 the package.
-.TP
-\fB--noartifact\fR
-Don't display artifact files.
-\fB--noghost\fR
-Don't display ghost files. Useful in combination with option --list.
-.TP
-\fB--noconfig\fR
-Don't display config files.
-.TP
 \fB--xml\fR
 Format package headers as XML.
+
+.SS "FILE SELECTION OPTIONS:"
+.PP
+.TP
+\fB-A, --artifactfiles\fR
+Only include artifact files (implies \fB-l\fR).
+.TP
+\fB-c, --configfiles\fR
+Only include configuration files (implies \fB-l\fR).
+.TP
+\fB-d, --docfiles\fR
+Only include documentation files (implies \fB-l\fR).
+.TP
+\fB-L, --licensefiles\fR
+Only include license files (implies \fB-l\fR).
+.TP
+\fB--noartifact\fR
+Exclude artifact files.
+.TP
+\fB--noconfig\fR
+Exclude config files.
+.TP
+\fB--noghost\fR
+Exclude ghost files.
 
 .SS "VERIFY OPTIONS"
 .PP
@@ -764,7 +781,7 @@ documentation files excluded on installation using the
 "\fB--excludedocs\fR" option,
 will be silently ignored.
 .PP
-The package selection options are the same as for package
+The package and file selection options are the same as for package
 querying (including package manifest files as arguments).
 Other options unique to verify mode are:
 .TP
@@ -776,12 +793,6 @@ Don't verify package or header digests when reading.
 .TP
 \fB--nofiles\fR
 Don't verify any attributes of package files.
-.TP
-\fB--noghost\fR
-Don't verify ghost files.
-.TP
-\fB--noconfig\fR
-Don't verify config files.
 .TP
 \fB--noscripts\fR
 Don't execute the \fB%verifyscript\fR scriptlet (if any).
@@ -884,35 +895,21 @@ specified as an
 \fBhttp\fR
 style URL:  
 .PP
-ftp://USER:PASSWORD@HOST:PORT/path/to/package.rpm
+http://HOST[:PORT]/path/to/package.rpm
 .PP
-If the \fB:PASSWORD\fR portion is omitted, the password will be
-prompted for (once per user/hostname pair). If both the user and
-password are omitted, anonymous \fBftp\fR is used.
-In all cases, passive (PASV) \fBftp\fR transfers are
-performed.
+ftp://[USER:PASSWORD]@HOST[:PORT]/path/to/package.rpm
+.PP
+If both the user and password are omitted, anonymous \fBftp\fR is used.
 .PP
 \fBrpm\fR allows the following options to be used with
 ftp URLs:
 .TP
-\fB--ftpproxy \fIHOST\fB\fR
-The host \fIHOST\fR will be used as a proxy server
-for all ftp transfers, which allows users to ftp through firewall
-machines which use proxy systems. This option may also be specified
-by configuring the macro \fB%_ftpproxy\fR.
-.TP
-\fB--ftpport \fIPORT\fB\fR
-The TCP \fIPORT\fR number to use for
-the ftp connection on the proxy ftp server instead of the default
-port. This option may also be specified by configuring the macro
-\fB%_ftpport\fR.
-.PP
 \fBrpm\fR allows the following options to be used with
-\fBhttp\fR URLs:
+\fBhttp\fR and \fBftp\fR URLs:
 .TP
 \fB--httpproxy \fIHOST\fB\fR
 The host \fIHOST\fR will be used as
-a proxy server for all \fBhttp\fR transfers. This
+a proxy server for all \fBhttp\fR and \fBftp\fR transfers. This
 option may also be specified by configuring the macro
 \fB%_httpproxy\fR.
 .TP
@@ -933,7 +930,7 @@ Install the package containing \fBrpmbuild\fR (usually \fBrpm-build\fR) and see
 .PP
 .nf
 \fI/usr/lib/rpm/rpmrc\fR
-\fI/usr/lib/rpm/redhat/rpmrc\fR
+\fI/usr/lib/rpm/<vendor>/rpmrc\fR
 \fI/etc/rpmrc\fR
 \fI~/.rpmrc\fR
 .fi
@@ -941,7 +938,7 @@ Install the package containing \fBrpmbuild\fR (usually \fBrpm-build\fR) and see
 .PP
 .nf
 \fI/usr/lib/rpm/macros\fR
-\fI/usr/lib/rpm/redhat/macros\fR
+\fI/usr/lib/rpm/<vendor>/macros\fR
 \fI/etc/rpm/macros\fR
 \fI~/.rpmmacros\fR
 .fi
@@ -968,7 +965,7 @@ Install the package containing \fBrpmbuild\fR (usually \fBrpm-build\fR) and see
 .SH "SEE ALSO"
 
 .nf
-\fBrpm-misc(8)\fR(3),
+\fBrpm-misc(8),
 \fBpopt\fR(3),
 \fBrpm2cpio\fR(8),
 \fBrpmbuild\fR(8),
