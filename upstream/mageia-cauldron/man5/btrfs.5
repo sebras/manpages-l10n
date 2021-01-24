@@ -2,12 +2,12 @@
 .\"     Title: btrfs-man5
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/28/2020
+.\"      Date: 01/19/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.9
+.\"    Source: Btrfs v5.10
 .\"  Language: English
 .\"
-.TH "BTRFS\-MAN5" "5" "10/28/2020" "Btrfs v5\&.9" "Btrfs Manual"
+.TH "BTRFS\-MAN5" "5" "01/19/2021" "Btrfs v5\&.10" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -74,7 +74,7 @@ checksum algorithms
 .sp -1
 .IP "  4." 4.2
 .\}
-filesystem limits
+filesystem exclusive operations
 .RE
 .sp
 .RS 4
@@ -85,7 +85,7 @@ filesystem limits
 .sp -1
 .IP "  5." 4.2
 .\}
-bootloader support
+filesystem limits
 .RE
 .sp
 .RS 4
@@ -96,7 +96,7 @@ bootloader support
 .sp -1
 .IP "  6." 4.2
 .\}
-file attributes
+bootloader support
 .RE
 .sp
 .RS 4
@@ -107,7 +107,7 @@ file attributes
 .sp -1
 .IP "  7." 4.2
 .\}
-control device
+file attributes
 .RE
 .sp
 .RS 4
@@ -117,6 +117,17 @@ control device
 .el \{\
 .sp -1
 .IP "  8." 4.2
+.\}
+control device
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 9.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  9." 4.2
 .\}
 filesystems with multiple block group profiles
 .RE
@@ -140,7 +151,7 @@ most mount options apply to the whole filesystem and only options in the first m
 .sp .5v
 .RE
 .sp
-Mount options are processed in order, only the last occurence of an option takes effect and may disable other options due to constraints (see eg\&. \fInodatacow\fR and \fIcompress\fR)\&. The output of \fImount\fR command shows which options have been applied\&.
+Mount options are processed in order, only the last occurrence of an option takes effect and may disable other options due to constraints (see eg\&. \fInodatacow\fR and \fIcompress\fR)\&. The output of \fImount\fR command shows which options have been applied\&.
 .PP
 \fBacl\fR, \fBnoacl\fR
 .RS 4
@@ -1023,6 +1034,19 @@ filesystem \- must be only single device
 .sp -1
 .IP \(bu 2.3
 .\}
+filesystem \- must have only
+\fIsingle\fR
+data profile
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 swapfile \- the containing subvolume cannot be snapshotted
 .RE
 .sp
@@ -1231,6 +1255,90 @@ T}:T{
 T}
 .TE
 .sp 1
+.SH "FILESYSTEM EXCLUSIVE OPERATIONS"
+.sp
+There are several operations that affect the whole filesystem and cannot be run in parallel\&. Attempt to start one while another is running will fail\&.
+.sp
+Since kernel 5\&.10 the currently running operation can be obtained from \fB/sys/fs/UUID/exclusive_operation\fR with following values and operations:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+balance
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+device add
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+device delete
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+device replace
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+resize
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+swapfile activate
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+none
+.RE
+.sp
+Enqueuing is supported for several btrfs subcommands so they can be started at once and then serialized\&.
 .SH "FILESYSTEM LIMITS"
 .PP
 maximum file name length
@@ -1413,7 +1521,7 @@ There\(cqs overlap of letters assigned to the bits with the attributes, this lis
 .PP
 \fBs\fR
 .RS 4
-\fIsynchronous updates\fR, same as the atribute
+\fIsynchronous updates\fR, same as the attribute
 \fIS\fR
 .RE
 .PP
@@ -1483,7 +1591,7 @@ The device is usually created by a system device node manager (eg\&. udev), but 
 .RS 4
 .\}
 .nf
-# mknod \-\-mode=600 c 10 234 /dev/btrfs\-control
+# mknod \-\-mode=600 /dev/btrfs\-control c 10 234
 .fi
 .if n \{\
 .RE
