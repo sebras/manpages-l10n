@@ -40,6 +40,8 @@ in environments where a stable output is required.
 calls the BLKRRPART ioctl when it has erased a partition-table signature
 to inform the kernel about the change. The ioctl is called as the last step
 and when all specified signatures from all specified devices are already erased.
+This feature can be used to wipe content on partitions devices as well as partition
+table on a disk device, for example by \fBwipefs \-a /dev/sdc1 /dev/sdc2 /dev/sdc\fR.
 
 Note that some filesystems and some partition tables store more magic strings on
 the device (e.g., FAT, ZFS, GPT).  The
@@ -65,7 +67,7 @@ restricted with the \fB\-t\fR option.
 .TP
 .BR \-b , " \-\-backup"
 Create a signature backup to the file $HOME/wipefs-<devname>-<offset>.bak.
-For more details see the \fBEXAMPLES\fR section.
+For more details see the \fBEXAMPLE\fR section.
 .TP
 .BR \-f , " \-\-force"
 Force erasure, even if the filesystem is mounted.  This is required in
@@ -77,7 +79,15 @@ Display help text and exit.
 .BR \-J , " \-\-json"
 Use JSON output format.
 .TP
-.BR \-n , " \-\-noheadings"
+\fB\-\-lock\fR[=\fImode\fR]
+Use exclusive BSD lock for device or file it operates.  The optional argument
+\fImode\fP can be \fByes\fR, \fBno\fR (or 1 and 0) or \fBnonblock\fR.  If the \fImode\fR
+argument is omitted, it defaults to \fB"yes"\fR.  This option overwrites
+environment variable \fB$LOCK_BLOCK_DEVICE\fR.  The default is not to use any
+lock at all, but it's recommended to avoid collisions with udevd or other
+tools.
+.TP
+.BR \-i , " \-\-noheadings"
 Do not print a header line.
 .TP
 .BR \-O , " \-\-output " \fIlist\fP
@@ -112,7 +122,12 @@ taken.  For more details see mount(8).
 .TP
 .BR \-V , " \-\-version"
 Display version information and exit.
-.SH EXAMPLES
+.SH ENVIRONMENT
+.IP LIBBLKID_DEBUG=all
+enables libblkid debug output.
+.IP LOCK_BLOCK_DEVICE=<mode>
+use exclusive BSD lock.  The mode is "1" or "0".  See \fB\-\-lock\fR for more details.
+.SH EXAMPLE
 .TP
 .B wipefs /dev/sda*
 Prints information about sda and all partitions on sda.
@@ -123,11 +138,8 @@ file ~/wipefs-sdb-<offset>.bak for each signature.
 .TP
 .B dd if=~/wipefs-sdb-0x00000438.bak of=/dev/sdb seek=$((0x00000438)) bs=1 conv=notrunc
 Restores an ext2 signature from the backup file  ~/wipefs-sdb-0x00000438.bak.
-.SH AUTHOR
+.SH AUTHORS
 Karel Zak <kzak@redhat.com>
-.SH ENVIRONMENT
-.IP LIBBLKID_DEBUG=all
-enables libblkid debug output.
 .SH SEE ALSO
 .BR blkid (8),
 .BR findfs (8)
