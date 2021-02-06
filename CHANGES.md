@@ -1,5 +1,12 @@
 # Changelog for manpages-l10n
 
+## Version 4.9.1
+*Sat Feb  06 21:38:01 CET 2021*
+
+* Updated and added many translations
+
+# Changelog for manpages-l10n
+
 ## Version 4.9.0pre1
 *Sat Jan  23 21:39:01 CET 2021*
 
