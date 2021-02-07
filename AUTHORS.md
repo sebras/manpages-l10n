@@ -314,9 +314,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Cesar D. Lobejon <cesar@alien.mec.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
+* Fidel García <fidelgq@dinamic.net>
 * fmarzoa <fmarzoa@globalnet.es>
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
+* Javi Diaz <javid@si.upc.es>
 * Javi Polo <javipolo@CyberJunkie.com>
 * Jordi Gili <jordi@enterprise.udg.es>
 * Jorge Gonzalez <jorgegv@arrakis.es>
