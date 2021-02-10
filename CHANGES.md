@@ -1,5 +1,12 @@
 # Changelog for manpages-l10n
 
+## Version 4.9.2
+*Wed Feb  10 14:40:36 CET 2021*
+
+* Remove man pages of procps/procps-ng, now maintained upstream;
+  only Debian Buster keeps the files for possible backports
+* Updated and added many translations
+
 ## Version 4.9.1
 *Sat Feb  06 21:38:01 CET 2021*
 
