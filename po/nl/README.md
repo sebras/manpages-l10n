@@ -11,3 +11,9 @@ all man pages from the »coreutils« package are already present.
 
 The tarball of the latest release is still available from:
 https://www.win.tue.nl/~aeb/ftpdocs/linux-local/manpages/translations/man-pages-nl-0.13.3.tar.gz
+
+The translation of tar.1 is based on the work of Erwin Poeze, Elros Cyriatan
+and Benno Schulenberg, available at the GNU Translation Project:
+https://translationproject.org/latest/tar/nl.po
+Because this man page is generated with help2man, it was easier to import from
+the UI translation than to write a new translation from scratch.
