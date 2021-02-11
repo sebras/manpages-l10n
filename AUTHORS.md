@@ -307,32 +307,41 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Spanish:
 
+* Adrián Pérez Jorge <alu1415@csi.ull.es>
 * Angel Bueno Pardo <buenpar@teleline.es>
 * Antonio Aneiros <aneiros@ctv.es>
+* Antonio Flores Gil <aflores@ditec.um.es>
 * Carlos Costa Portela <c.c.portela@ieee.org>
 * Carlos Gomez Romero <cgomez@databasedm.es>
 * Cesar D. Lobejon <cesar@alien.mec.es>
 * Claudio S. Suárez <csuarez@ctv.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
+* Diego Sevilla Ruiz <dsevilla@ditec.um.es>
+* Enrique Ferrero Puchades <enferpuc@olemail.com>
 * Fidel García <fidelgq@dinamic.net>
 * fmarzoa <fmarzoa@globalnet.es>
 * Gerardo Aburruzaga García <gerardo.aburruzaga@uca.es>
 * Ignacio Arenaza <Ignacio.Arenaza@studi.epfl.ch>
 * Javi Diaz <javid@si.upc.es>
-* Javi Polo <javipolo@CyberJunkie.com>
+* Javi Polo <javipolo@cyberjunkie.com>
 * Jordi Gili <jordi@enterprise.udg.es>
 * Jorge Gonzalez <jorgegv@arrakis.es>
 * Jorge Rodriguez (A.K.A. Tiriel) <tiriel@users.sourceforge.net>
+* José López Mellado <laveneno@hotmail.com>
 * José Miguel Gurpegui <jmgurpe@unav.es>
+* J. Ramón Palacios <jotarp@iname.com>
 * Juan José López Mellado <laveneno@hotmail.com>
 * juanma <imontalvoo@medynet.com>
 * Juan Pablo Puerta <jppuerta@full-moon.com>
 * Juan Piernas <piernas@ditec.um.es>
 * Julio González Durán <jugonzalez@mx3.redestb.es>
 * Luis Castrillo <lcastrillo@mad.servicom.es>
+* Luis Manuel Villaverde Gómez <luismanuel@pobox.com>
 * Luis M. Garcia <luismaria.garcia@hispalinux.es>
 * Marcos Fouces <marcos@debian.org>
+* Marcos Sánchez Provencio <rapto@arrakis.es>
+* Miguel Ángel Rojas Aquino <mrojas_aquino@mail.flashmail.com>
 * Miguel Angel Sepulveda <angel@vivaldi.princeton.edu>
 * Miguel Gil <mgilgar@usa.net>
 * Miguel Pérez Ibars <mpi79470@alu.um.es>
@@ -342,7 +351,10 @@ of Linux manpages. The list is sorted alphabetically.
 * Pedro Pablo Fábrega <pfabrega@arrakis.es>
 * Rafael Godínez <1ragodin@rigel.deusto.es>
 * Rafael Rios <rafarios@arrakis.es>
+* Roberto Rodríguez Fernández <rrf@apdo.com>
 * Román Ramírez <rramirez@encomix.es>
+* Salvador Gimeno Zanón <salgiza@jet.es>
 * Sebastian Desimone <chipy@argenet.com.ar>
 * Urko Lusa <ulusa@lacueva.ddns.org>
 * Vicente Pastor Gómez <vpastorg@santandersupernet.com>
+* Victor Moral <victor@venexma.es>
