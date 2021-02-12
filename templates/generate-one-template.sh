@@ -35,7 +35,8 @@ tmp2=$(mktemp)
 
 # Get the current time to ensure that all potfiles
 # have the exact same date and time of creation in the header.
-datetime=$(date --iso-8601=minutes | sed -e "s/T/ /")
+# datetime=$(date --iso-8601=minutes | sed -e "s/T/ /")
+datetime=$(date "+%Y-%m-%d %H:%M%z")
 
 # Find all upstream manpages with a matching name
 potfiles=""
