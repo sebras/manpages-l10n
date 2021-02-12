@@ -68,6 +68,13 @@ of Linux manpages. The list is sorted alphabetically.
 * Zdeněk Pytela <letty@mrakoplas.phil.muni.cz>
 
 
+## Danish:
+
+* Byrial Ole Jensen <byrial@vip.cybercity.dk>
+* Kenneth Rohde Christiansen <kenneth@gnu.org>
+* Peter Makholm <peter@makholm.net>
+
+
 ## Dutch:
 
 * Joost van Baal <joostv-manpages-nl-2398@mdcc.cx>

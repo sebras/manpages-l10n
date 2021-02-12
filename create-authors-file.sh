@@ -19,6 +19,7 @@
 language_list=(
     '"Brazilian Portuguese" pt_BR'
     '"Czech"      cs'
+    '"Danish"     da'
     '"Dutch"      nl'
     '"French"     fr'
     '"German"     de'
