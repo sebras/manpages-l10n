@@ -55,6 +55,7 @@ cat > index.html <<-END_OF_HEADER
   </p>
       <ul>
         <li><a href="index-cs.html">The Czech translation</a></li>
+        <li><a href="index-da.html">The Danish translation</a></li>
         <li><a href="index-nl.html">The Dutch translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
@@ -76,21 +77,19 @@ cat > index.html <<-END_OF_HEADER
      <ul>
        <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
        <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, integration in manpages-l10n is in progress</li>
-       <li><a href="https://web.archive.org/web/20111129063144/http://www.sslug.dk/locale/man-sider/">Danish (archived website)</a>, appears inactive, last release 2000, contains only 7 man pages, no license declaration</li>
        <li><a href="https://web.archive.org/web/20050403211946/http://lme.linux.hu/forditas/index.html">Hungarian (archived website)</a>, appears inactive, last release 2001, license situation unclear</li>
        <li>Indonesian (no web page), last release 1999, appears inactive, license situation unclear</li>
        <li><a href="https://linuxjm.osdn.jp/">Japanese</a>, active, but not current (e.g. partially on the state of 2011/2016)</li>
        <li><a href="https://web.archive.org/web/20060205162241/http://man.kldp.org/wiki">Korean (archived website)</a>, appears inactive, last release 2005, license situation unclear</li>
        <li>Portuguese (no web page), last release 2004</li>
        <li><a href="https://www.transifex.com/kruvalig/man-pages/">Russian</a>, active and current, only man-pages itself (e.g. no coreutils)</li>
-       <li><a href="http://es.tldp.org/htmls/pameli.html">Spanish</a> (»extra« files), appears inactive, last known release 1999, integration in manpages-l10n will be started soon</li>
-       <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008, focused on <q>exotic</q> man pages</li>
+       <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008</li>
      </ul>
    </body>
   </html>
 END_OF_HEADER
 
-for tlang in cs de es fr it nl mk pl pt_BR ro; do
+for tlang in cs da de es fr it nl mk pl pt_BR ro; do
     echo $tlang
 
 # Determine manpage section names
