@@ -47,7 +47,7 @@ if [ ! -f $mandir/$manpage.po ]; then
 	tmppo1=$(mktemp)
 	tmppo2=$(mktemp)
 	sed -e "1,/^msgid/d" "$pofile" > "$tmppo1"
-	echo "# Czech translation of manpages" > "$pofile"
+	echo "# Danish translation of manpages" > "$pofile"
 	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$pofile"
 	echo "# Copyright © of this file:" >> "$pofile"
 	echo "msgid \"\"" >> "$pofile"
