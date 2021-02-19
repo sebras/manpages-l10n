@@ -202,7 +202,7 @@ This setting is supported only with the unified control group hierarchy\&.
 .PP
 \fIAllowedMemoryNodes=\fR
 .RS 4
-Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper CPU indices separated by a dash\&.
+Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper NUMA nodes indices separated by a dash\&.
 .sp
 Setting
 \fIAllowedMemoryNodes=\fR
@@ -799,13 +799,51 @@ can still be an eligible candidate for
 to act on\&.
 .RE
 .PP
-\fIManagedOOMMemoryPressureLimitPercent=\fR
+\fIManagedOOMMemoryPressureLimit=\fR
 .RS 4
 Overrides the default memory pressure limit set by
 \fBoomd.conf\fR(5)
 for this unit (cgroup)\&. Takes a percentage value between 0% and 100%, inclusive\&. This property is ignored unless
 \fIManagedOOMMemoryPressure=\fR\fBkill\fR\&. Defaults to 0%, which means use the default set by
 \fBoomd.conf\fR(5)\&.
+.RE
+.PP
+\fIManagedOOMPreference=none|avoid|omit\fR
+.RS 4
+Allows deprioritizing or omitting this unit\*(Aqs cgroup as a candidate when
+\fBsystemd\-oomd\fR
+needs to act\&. Requires support for extended attributes (see
+\fBxattr\fR(7)) in order to use
+\fBavoid\fR
+or
+\fBomit\fR\&. Additionally,
+\fBsystemd\-oomd\fR
+will ignore these extended attributes if the unit\*(Aqs cgroup is not owned by the root user and group\&.
+.sp
+If this property is set to
+\fBavoid\fR, the service manager will set the "user\&.oomd_avoid" extended attribute on the unit\*(Aqs cgroup to "1"\&. If
+\fBsystemd\-oomd\fR
+sees this extended attribute on a cgroup set to "1" when choosing between candidates, it will only select the cgroup with "user\&.oomd_avoid" if there are no other viable candidates\&.
+.sp
+If this property is set to
+\fBomit\fR, the service manager will set the "user\&.oomd_omit" extended attribute on the unit\*(Aqs cgroup to "1"\&. If
+\fBsystemd\-oomd\fR
+sees the this extended attribute on the cgroup set to "1", it will ignore the cgroup as a candidate and will not perform any actions on the cgroup\&.
+.sp
+It is recommended to use
+\fBavoid\fR
+and
+\fBomit\fR
+sparingly as it can adversely affect
+\fBsystemd\-oomd\fR\*(Aqs kill behavior\&. Also note that these extended attributes are not applied recursively to cgroups under this unit\*(Aqs cgroup\&.
+.sp
+Defaults to
+\fBnone\fR
+which means no extended attributes will be set and systemd\-oomd will sort this unit\*(Aqs cgroup as defined in
+\fBsystemd-oomd.service\fR(8)
+and
+\fBoomd.conf\fR(5)
+(if this unit\*(Aqs cgroup becomes a candidate)\&.
 .RE
 .SH "DEPRECATED OPTIONS"
 .PP

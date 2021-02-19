@@ -2630,9 +2630,9 @@ and such), or set by a PAM module (in case
 \fIPAMName=\fR
 is used)\&.
 .sp
-See
+See "Environment Variables in Spawned Processes" below for a description of how those settings combine to form the inherited environment\&. See
 \fBenviron\fR(7)
-for details about environment variables\&.
+for general information about environment variables\&.
 .RE
 .SH "LOGGING AND STANDARD INPUT/OUTPUT"
 .PP
@@ -3227,11 +3227,11 @@ Variables globally configured for the service manager, using the
 setting in
 \fBsystemd-system.conf\fR(5), the kernel command line option
 \fIsystemd\&.setenv=\fR
-(see
-\fBsystemd\fR(1)) or via
-\fBsystemctl set\-environment\fR
-(see
-\fBsystemctl\fR(1))\&.
+understood by
+\fBsystemd\fR(1), or via
+\fBsystemctl\fR(1)
+\fBset\-environment\fR
+verb\&.
 .RE
 .sp
 .RS 4
@@ -3242,7 +3242,7 @@ setting in
 .sp -1
 .IP \(bu 2.3
 .\}
-Variables defined by the service manager itself (see the list below)
+Variables defined by the service manager itself (see the list below)\&.
 .RE
 .sp
 .RS 4
@@ -3255,7 +3255,7 @@ Variables defined by the service manager itself (see the list below)
 .\}
 Variables set in the service manager\*(Aqs own environment variable block (subject to
 \fIPassEnvironment=\fR
-for the system service manager)
+for the system service manager)\&.
 .RE
 .sp
 .RS 4
@@ -3268,7 +3268,7 @@ for the system service manager)
 .\}
 Variables set via
 \fIEnvironment=\fR
-in the unit file
+in the unit file\&.
 .RE
 .sp
 .RS 4
@@ -3281,7 +3281,7 @@ in the unit file
 .\}
 Variables read from files specified via
 \fIEnvironmentFile=\fR
-in the unit file
+in the unit file\&.
 .RE
 .sp
 .RS 4
@@ -3294,14 +3294,23 @@ in the unit file
 .\}
 Variables set by any PAM modules in case
 \fIPAMName=\fR
-is in effect, cf\&.\ \&\fBpam_env\fR(8)
+is in effect, cf\&.\ \&\fBpam_env\fR(8)\&.
 .RE
 .PP
-If the same environment variables are set by multiple of these sources, the later source \(em according to the order of the list above \(em wins\&. Note that as final step all variables listed in
+If the same environment variable is set by multiple of these sources, the later source \(em according to the order of the list above \(em wins\&. Note that as the final step all variables listed in
 \fIUnsetEnvironment=\fR
-are removed again from the compiled environment variable list, immediately before it is passed to the executed process\&.
+are removed from the compiled environment variable list, immediately before it is passed to the executed process\&.
 .PP
-The following environment variables are set or propagated by the service manager for each invoked process:
+The general philosophy is to expose a small curated list of environment variables to processes\&. Services started by the system manager (PID 1) will be started, without additional service\-specific configuration, with just a few environment variables\&. The user manager inherits environment variables as any other system service, but in addition may receive additional environment variables from PAM, and, typically, additional imported variables when the user starts a graphical session\&. It is recommended to keep the environment blocks in both the system and user managers managers lean\&.
+.PP
+Hint:
+\fBsystemd\-run \-P env\fR
+and
+\fBsystemd\-run \-\-user \-P env\fR
+print the effective system and user service environment blocks\&.
+.SS "Environment Variables Set or Propagated by the Service Manager"
+.PP
+The following environment variables are propagated by the service manager or generated internally for each invoked process:
 .PP
 \fI$PATH\fR
 .RS 4
@@ -3309,7 +3318,8 @@ Colon\-separated list of directories to use when launching executables\&.
 \fBsystemd\fR
 uses a fixed value of
 "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
-in the system manager\&. When compiled for systems with "unmerged /usr" (/bin
+in the system manager\&. When compiled for systems with "unmerged
+/usr/" (/bin
 is not a symlink to
 /usr/bin),
 ":/sbin:/bin"
