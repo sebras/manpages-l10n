@@ -58,4 +58,10 @@ for directory in $directories; do
 	if [ -f $directory/man7/man.7 ]; then
 	  sed -i -e "/^\.B \\\&\.UE \\\c/{N; s/.*/\\\fB\\\\\&.UE\\\fP [ \\\fItrailer\\\fP ]/}" $directory/man7/man.7
 	fi
+
+	# Special case for grub-mknetdir.1. This file contains an unprintable
+	# character (detected as "\v") which po4a can't handle.
+	# See https://savannah.gnu.org/bugs/?58936
+	  sed -i -e "s|^KPrepares|Prepares|" $directory/man1/grub-mknetdir.1
+
 done
