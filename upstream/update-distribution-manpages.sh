@@ -62,6 +62,8 @@ for directory in $directories; do
 	# Special case for grub-mknetdir.1. This file contains an unprintable
 	# character (detected as "\v") which po4a can't handle.
 	# See https://savannah.gnu.org/bugs/?58936
+	if [ -f $directory/man1/grub-mknetdir.1 ]; then
 	  sed -i -e "s|^KPrepares|Prepares|" $directory/man1/grub-mknetdir.1
+	fi
 
 done
