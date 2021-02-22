@@ -3,13 +3,14 @@
 This project provides an infrastructure for translating manpages to different
 languages. Currently we support the following languages:
 
-*  cs - Czech
+*  cs - Czech *
+*  da - Danish *
 *  de - German
 *  es - Spanish
 *  fr - French
 *  it - Italian
 *  mk - Macedonian
-*  nl - Dutch *
+*  nl - Dutch
 *  pl - Polish
 *  pt_BR - Brazilian Portuguese
 *  ro - Romanian *
@@ -18,7 +19,7 @@ languages. Currently we support the following languages:
 feel free to pick up the maintenance)
 
 The project is open for adding more languages. For inclusion of a new one,
-please contact Mario Blättermann <mario.blaettermann@gmail.com> 
+please contact [Mario Blättermann](mailto:mario.blaettermann@gmail.com).
 
 The current status is available here:
 
