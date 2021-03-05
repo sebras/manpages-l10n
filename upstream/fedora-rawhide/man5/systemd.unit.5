@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 247" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 248" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,9 +42,9 @@ systemd.unit \- Unit configuration
 /run/systemd/transient/*
 /run/systemd/generator\&.early/*
 /etc/systemd/system/*
-/etc/systemd/systemd\&.attached/*
+/etc/systemd/system\&.attached/*
 /run/systemd/system/*
-/run/systemd/systemd\&.attached/*
+/run/systemd/system\&.attached/*
 /run/systemd/generator/*
 \&...
 /usr/lib/systemd/system/*
@@ -57,7 +57,7 @@ systemd.unit \- Unit configuration
 $XDG_RUNTIME_DIR/systemd/user\&.control/*
 $XDG_RUNTIME_DIR/systemd/transient/*
 $XDG_RUNTIME_DIR/systemd/generator\&.early/*
-$XDG_CONFIG_HOME/systemd/user/*
+~/\&.config/systemd/user/*
 $XDG_CONFIG_DIRS/systemd/user/*
 /etc/systemd/user/*
 $XDG_RUNTIME_DIR/systemd/user/*
@@ -717,7 +717,7 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 .PP
 \fIWants=\fR
 .RS 4
-Configures requirement dependencies on other units\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case dependencies for all listed names will be created\&. Dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
+Configures (weak) requirement dependencies on other units\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case dependencies for all listed names will be created\&. Dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
 \&.wants/
 directory accompanying the unit file\&. For details, see above\&.
 .sp
@@ -744,7 +744,7 @@ is activated\&.
 \fIRequires=\fR
 .RS 4
 Similar to
-\fIWants=\fR, but declares a stronger dependency\&. Dependencies of this type may also be configured by adding a symlink to a
+\fIWants=\fR, but declares a stronger requirement dependency\&. Dependencies of this type may also be configured by adding a symlink to a
 \&.requires/
 directory accompanying the unit file\&.
 .sp
@@ -1198,15 +1198,17 @@ Unit files may also include a number of
 \fICondition\&...=\fR
 and
 \fIAssert\&...=\fR
-settings\&. Before the unit is started, systemd will verify that the specified conditions are true\&. If not, the starting of the unit will be (mostly silently) skipped\&. Failing conditions will not result in the unit being moved into the
+settings\&. Before the unit is started, systemd will verify that the specified conditions and asserts are true\&. If not, the starting of the unit will be (mostly silently) skipped (in case of conditions), or aborted with an error message (in case of asserts)\&. Failing conditions or asserts will not result in the unit being moved into the
 "failed"
-state\&. The conditions are checked at the time the queued start job is to be executed\&. The ordering dependencies are still respected, so other units are still pulled in and ordered as if this unit was successfully activated\&. Use condition expressions in order to skip units that do not apply to the local system, for example because the kernel or runtime environment doesn\*(Aqt require their functionality\&.
+state\&. The conditions and asserts are checked at the time the queued start job is to be executed\&. The ordering dependencies are still respected, so other units are still pulled in and ordered as if this unit was successfully activated, and the conditions and asserts are executed the precise moment the unit would normally start and thus can validate system state after the units ordered before completed initialization\&. Use condition expressions for skipping units that do not apply to the local system, for example because the kernel or runtime environment doesn\*(Aqt require their functionality\&.
 .PP
-If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can use a pipe symbol ("|") after the equals sign ("Condition\&...=|\&..."), which causes the condition becomes a triggering condition\&. If at least one triggering condition is defined for a unit, then the unit will be executed if at least one of the triggering conditions apply and all of the non\-triggering conditions\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
+If multiple conditions are specified, the unit will be executed if all of them apply (i\&.e\&. a logical AND is applied)\&. Condition checks can use a pipe symbol ("|") after the equals sign ("Condition\&...=|\&..."), which causes the condition to become a
+\fItriggering\fR
+condition\&. If at least one triggering condition is defined for a unit, then the unit will be started if at least one of the triggering conditions of the unit applies and all of the regular (i\&.e\&. non\-triggering) conditions apply\&. If you prefix an argument with the pipe symbol and an exclamation mark, the pipe symbol must be passed first, the exclamation second\&. If any of these options is assigned the empty string, the list of conditions is reset completely, all previous condition settings (of any kind) will have no effect\&.
 .PP
 The
 \fIAssertArchitecture=\fR,
-\fIAssertVirtualization=\fR, \&... options provide a similar mechanism that causes the job to fail (instead of being skipped)\&. The failed check is logged\&. Units with failed conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means that when queried, the condition failure may or may not show up in the state of the unit\&.
+\fIAssertVirtualization=\fR, \&... options are similar to conditions but cause the start job to fail (instead of being skipped)\&. The failed check is logged\&. Units with failed conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means that when queried, the condition failure may or may not show up in the state of the unit\&.
 .PP
 Note that neither assertion nor condition expressions result in unit state changes\&. Also note that both are checked at the time the job is to be executed, i\&.e\&. long after depending jobs and it itself were queued\&. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies\&.
 .PP
@@ -1353,9 +1355,10 @@ may be used to check whether the given security technology is enabled on the sys
 "tomoyo",
 "ima",
 "smack",
-"audit"
+"audit",
+"uefi\-secureboot"
 and
-"uefi\-secureboot"\&. The test may be negated by prepending an exclamation mark\&.
+"tpm2"\&. The test may be negated by prepending an exclamation mark\&.
 .RE
 .PP
 \fIConditionCapability=\fR
@@ -1524,16 +1527,34 @@ but verifies that the service manager\*(Aqs real or effective group, or any of i
 .PP
 \fIConditionControlGroupController=\fR
 .RS 4
-Verify that the given cgroup controller (eg\&.
-"cpu") is available for use on the system\&. For example, a particular controller may not be available if it was disabled on the kernel command line with
-\fIcgroup_disable=controller\fR\&. Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
+Check whether given cgroup controllers (eg\&.
+"cpu") are available for use on the system or whether the legacy v1 cgroup or the modern v2 cgroup hierarchy is used\&.
+.sp
+Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
 "cpu",
 "cpuacct",
 "io",
 "blkio",
 "memory",
 "devices", and
-"pids"\&.
+"pids"\&. Even if available in the kernel, a particular controller may not be available if it was disabled on the kernel command line with
+\fIcgroup_disable=controller\fR\&.
+.sp
+Alternatively, two special strings
+"v1"
+and
+"v2"
+may be specified (without any controller names)\&.
+"v2"
+will pass if the unified v2 cgroup hierachy is used, and
+"v1"
+will pass if the legacy v1 hierarchy or the hybrid hierarchy are used (see the discussion of
+\fIsystemd\&.unified_cgroup_hierarchy\fR
+and
+\fIsystemd\&.legacy_systemd_cgroup_controller\fR
+in
+\fBsystemd.service\fR(5)
+for more information)\&.
 .RE
 .PP
 \fIConditionMemory=\fR
@@ -1558,7 +1579,69 @@ Verify that the specified number of CPUs is available to the current system\&. T
 ">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparison operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR
+\fIConditionCPUFeature=\fR
+.RS 4
+Verify that a given CPU feature is available via the
+"CPUID"
+instruction\&. This condition only does something on i386 and x86\-64 processors\&. On other processors it is assumed that the CPU does not support the given feature\&. It checks the leaves
+"1",
+"7",
+"0x80000001", and
+"0x80000007"\&. Valid values are:
+"fpu",
+"vme",
+"de",
+"pse",
+"tsc",
+"msr",
+"pae",
+"mce",
+"cx8",
+"apic",
+"sep",
+"mtrr",
+"pge",
+"mca",
+"cmov",
+"pat",
+"pse36",
+"clflush",
+"mmx",
+"fxsr",
+"sse",
+"sse2",
+"ht",
+"pni",
+"pclmul",
+"monitor",
+"ssse3",
+"fma3",
+"cx16",
+"sse4_1",
+"sse4_2",
+"movbe",
+"popcnt",
+"aes",
+"xsave",
+"osxsave",
+"avx",
+"f16c",
+"rdrand",
+"bmi1",
+"avx2",
+"bmi2",
+"rdseed",
+"adx",
+"sha_ni",
+"syscall",
+"rdtscp",
+"lm",
+"lahf_lm",
+"abm",
+"constant_tsc"\&.
+.RE
+.PP
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
