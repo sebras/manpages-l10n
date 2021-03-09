@@ -1,5 +1,11 @@
 # Changelog for manpages-l10n
 
+## Version 4.9.3
+*Tue Mar  09 20:22:17 CET 2021*
+
+* Final release for Debian Bullseye
+* Updated many translations
+
 ## Version 4.9.2
 *Wed Feb  10 14:40:36 CET 2021*
 
