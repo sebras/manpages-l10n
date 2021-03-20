@@ -425,7 +425,11 @@ is not, except when at least one unit requires it\&. Also see
 \m[blue]\fBRunning Services After the Network is up\fR\m[]\&\s-2\u[1]\d\s+2
 for more information\&.
 .sp
-All mount units for remote network file systems automatically pull in this unit, and order themselves after it\&. Note that networking daemons that simply provide functionality to other hosts generally do not need to pull this in\&.
+All mount units for remote network file systems automatically pull in this unit, and order themselves after it\&. Note that networking daemons that simply
+\fIprovide\fR
+functionality to other hosts (as opposed to
+\fIconsume\fR
+functionality of other hosts) generally do not need to pull this in\&.
 .sp
 systemd automatically adds dependencies of type
 \fIWants=\fR
@@ -777,13 +781,39 @@ This target unit is automatically ordered before all local mount points marked w
 .PP
 network\&.target
 .RS 4
-This unit is supposed to indicate when network functionality is available, but it is only very weakly defined what that is supposed to mean, with one exception: at shutdown, a unit that is ordered after
+This unit is supposed to indicate when network functionality is available, but it is only very weakly defined what that is supposed to mean\&. However, the following should apply at minimum:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+At start\-up, any configured synthetic network devices (i\&.e\&. not physical ones that require hardware to show up and be probed, but virtual ones like bridge devices and similar which are created programmatically) that do not depend on any underlying hardware should be allocated by the time this target is reached\&. It is not necessary for these interfaces to also have completed IP level configuration by the time
 network\&.target
-will be stopped before the network \(em to whatever level it might be set up then \(em is shut down\&. It is hence useful when writing service files that require network access on shutdown, which should order themselves after this target, but not pull it in\&. Also see
+is reached\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+At shutdown, a unit that is ordered after
+network\&.target
+will be stopped before the network \(em to whatever level it might be set up by then \(em is shut down\&. It is hence useful when writing service files that require network access on shutdown, which should order themselves after this target, but not pull it in\&. Also see
 \m[blue]\fBRunning Services After the Network is up\fR\m[]\&\s-2\u[1]\d\s+2
-for more information\&. Also see
+for more information\&.
+.RE
+.sp
+It must emphasized that at start\-up there\*(Aqs no guarantee that hardware\-based devices have shown up by the time this target is reached, or even acquired complete IP configuration\&. For that purpose use
 network\-online\&.target
-described above\&.
+as described above\&.
 .RE
 .PP
 network\-pre\&.target
@@ -1015,9 +1045,9 @@ pulls in Nautilus as top\-level service:
 .\}
 .nf
 [Unit]
-  Description=User systemd services for GNOME graphical session
-  Wants=nautilus\&.service
-  BindsTo=graphical\-session\&.target
+Description=User systemd services for GNOME graphical session
+Wants=nautilus\&.service
+BindsTo=graphical\-session\&.target
 .fi
 .if n \{\
 .RE
@@ -1031,11 +1061,11 @@ gets stopped when the session stops:
 .\}
 .nf
 [Unit]
-  Description=Render the desktop icons with Nautilus
-  PartOf=graphical\-session\&.target
+Description=Render the desktop icons with Nautilus
+PartOf=graphical\-session\&.target
 
-  [Service]
-  \&...
+[Service]
+\&...
 .fi
 .if n \{\
 .RE

@@ -1,5 +1,5 @@
 '\" t
-.TH "CRYPTTAB" "5" "" "systemd 246" "crypttab"
+.TH "CRYPTTAB" "5" "" "systemd 247" "crypttab"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -59,11 +59,11 @@ The second field contains a path to the underlying block device or file, or a sp
 "UUID="
 followed by the UUID\&.
 .PP
-The third field specifies an absolute path to a file to read the encryption key from\&. Optionally, the path may be followed by
+The third field specifies an absolute path to a file with the encryption key\&. Optionally, the path may be followed by
 ":"
 and an fstab device specification (e\&.g\&. starting with
 "LABEL="
-or similar); in which case, the path is relative to the device file system root\&. If the field is not present or set to
+or similar); in which case the path is taken relative to the device file system root\&. If the field is not present or is
 "none"
 or
 "\-", a key file named after the volume to unlock (i\&.e\&. the first column of the line), suffixed with
@@ -83,7 +83,7 @@ The fourth field, if present, is a comma\-delimited list of options\&. The follo
 Specifies the cipher to use\&. See
 \fBcryptsetup\fR(8)
 for possible values and the default value of this option\&. A cipher with unpredictable IV values, such as
-"aes\-cbc\-essiv:sha256", is recommended\&.
+"aes\-cbc\-essiv:sha256", is recommended\&. Embedded commas in the cipher specification need to be escaped by preceding them with a backslash, see example below\&.
 .RE
 .PP
 \fBdiscard\fR
@@ -103,6 +103,12 @@ for possible values and the default value of this option\&.
 Use a detached (separated) metadata device or file where the LUKS header is stored\&. This option is only relevant for LUKS devices\&. See
 \fBcryptsetup\fR(8)
 for possible values and the default value of this option\&.
+.sp
+Optionally, the path may be followed by
+":"
+and an fstab device specification (e\&.g\&. starting with
+"UUID="
+or similar); in which case, the path is relative to the device file system root\&. The device gets mounted automatically for LUKS device activation duration only\&.
 .RE
 .PP
 \fBkeyfile\-offset=\fR
@@ -217,6 +223,20 @@ This requires kernel 4\&.0 or newer\&.
 Disable offloading writes to a separate thread after encryption\&. There are some situations where offloading write requests from the encryption threads to a dedicated thread degrades performance significantly\&. The default is to offload write requests to a dedicated thread because it benefits the CFQ scheduler to have writes submitted using the same context\&.
 .sp
 This requires kernel 4\&.0 or newer\&.
+.RE
+.PP
+\fBno\-read\-workqueue\fR
+.RS 4
+Bypass dm\-crypt internal workqueue and process read requests synchronously\&. The default is to queue these requests and process them asynchronously\&.
+.sp
+This requires kernel 5\&.9 or newer\&.
+.RE
+.PP
+\fBno\-write\-workqueue\fR
+.RS 4
+Bypass dm\-crypt internal workqueue and process write requests synchronously\&. The default is to queue these requests and process them asynchronously\&.
+.sp
+This requires kernel 5\&.9 or newer\&.
 .RE
 .PP
 \fBskip=\fR
@@ -389,7 +409,9 @@ At early boot and when the system manager configuration is reloaded, this file i
 .PP
 \fBExample\ \&1.\ \&/etc/crypttab example\fR
 .PP
-Set up four encrypted block devices\&. One using LUKS for normal storage, another one for usage as a swap device and two TrueCrypt volumes\&.
+Set up four encrypted block devices\&. One using LUKS for normal storage, another one for usage as a swap device and two TrueCrypt volumes\&. For the fourth device, the option string is interpreted as two options
+"cipher=xchacha12,aes\-adiantum\-plain64",
+"keyfile\-timeout=10s"\&.
 .sp
 .if n \{\
 .RS 4
@@ -399,7 +421,7 @@ luks       UUID=2505567a\-9e27\-4efe\-a4d5\-15ad146c258b
 swap       /dev/sda7       /dev/urandom       swap
 truecrypt  /dev/sda2       /etc/container_password  tcrypt
 hidden     /mnt/tc_hidden  /dev/null    tcrypt\-hidden,tcrypt\-keyfile=/etc/keyfile
-external   /dev/sda3       keyfile:LABEL=keydev keyfile\-timeout=10s
+external   /dev/sda3       keyfile:LABEL=keydev keyfile\-timeout=10s,cipher=xchacha12\e,aes\-adiantum\-plain64
 .fi
 .if n \{\
 .RE

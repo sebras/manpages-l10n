@@ -165,7 +165,9 @@ may be disabled with
 .RE
 .SH "PROTOCOLS AND ROUTING"
 .PP
-Lookup requests are routed to the available DNS servers, LLMNR, and MulticastDNS interfaces according to the following rules:
+The lookup requests that
+systemd\-resolved\&.service
+receives are routed to the available DNS servers, LLMNR, and MulticastDNS interfaces according to the following rules:
 .sp
 .RS 4
 .ie n \{\
@@ -262,7 +264,8 @@ in
 \fBresolved.conf\fR(5)
 for a description of globally configured DNS settings\&.
 .PP
-The following query routing logic applies for unicast DNS traffic:
+The following query routing logic applies for unicast DNS lookups initiated by
+systemd\-resolved\&.service:
 .sp
 .RS 4
 .ie n \{\
@@ -356,8 +359,13 @@ nss\-dns\&.
 .IP \(bu 2.3
 .\}
 Some names are always resolved internally (see Synthetic Records above)\&. Traditionally they would be resolved by
-nss\-files, and only if provided in
-/etc/hosts\&.
+nss\-files
+if provided in
+/etc/hosts\&. But note that the details of how a query is constructed are under the control of the client library\&.
+nss\-dns
+will first try to resolve names using search domains and even if those queries are routed to
+systemd\-resolved, it will send them out over the network using the usual rules for multi\-label name routing
+\&\s-2\u[3]\d\s+2\&.
 .RE
 .sp
 .RS 4
@@ -393,7 +401,7 @@ would resolve names both as relative (using search domains) and absolute FQDN na
 \fIndots\fR
 option in
 /etc/resolv\&.conf
-was used to control how many dots the name needs to have to be resolved as relative first\&. This stub resolver does not implement this at all: multi\-label names are only resolved as FQDNs\&. (There are currently more than 1500 top\-level domain names defined, and new ones are added regularly, often using "attractive" names that are also likely to be used locally\&. Not looking up multi\-label names in this fashion avoids fragility in both directions: a valid global name could be obscured by a local name, and resolution of a relative local name could suddenly break when a new top\-level domain is created, or when a new subdomain of a top\-level domain in registered\&. Resolving any given name as either relative or absolute avoids this ambiguity\&.)
+was used to control how many dots the name needs to have to be resolved as relative first\&. This stub resolver does not implement this at all: multi\-label names are only resolved as FQDNs\&.\&\s-2\u[4]\d\s+2
 .RE
 .sp
 .RS 4
@@ -608,3 +616,44 @@ RFC6762
 .RS 4
 \%https://tools.ietf.org/html/rfc6762
 .RE
+.IP " 3." 4
+For example, if
+/etc/nsswitch.conf
+has
+.sp
+.RS 4
+.if n \{\
+.RS 4
+.\}
+.nf
+nameserver 127.0.0.53
+search foobar.com barbar.com
+      
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and we look up
+"localhost",
+nss-dns
+will send the following queries to
+systemd-resolved
+listening on 127.0.0.53:53: first
+"localhost.foobar.com", then
+"localhost.barbar.com", and finally
+"localhost". If (hopefully) the first two queries fail,
+systemd-resolved
+will synthesize an answer for the third query.
+.RE
+.sp
+.RS 4n
+When using
+nss-dns
+with any search domains, it is thus crucial to always configure
+nss-files
+with higher priority and provide mappings for names that should not be resolved using search domains.
+.RE
+.IP " 4." 4
+There are currently more than 1500 top-level domain names defined, and new ones are added regularly, often using "attractive" names that are also likely to be used locally. Not looking up multi-label names in this fashion avoids fragility in both directions: a valid global name could be obscured by a local name, and resolution of a relative local name could suddenly break when a new top-level domain is created, or when a new subdomain of a top-level domain in registered. Resolving any given name as either relative or absolute avoids this ambiguity.)
+

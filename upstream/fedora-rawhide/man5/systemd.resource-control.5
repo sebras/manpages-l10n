@@ -52,6 +52,18 @@ by systemd are listed in
 See the
 \m[blue]\fBNew Control Group Interfaces\fR\m[]\&\s-2\u[1]\d\s+2
 for an introduction on how to make use of resource control APIs from programs\&.
+.SS "Setting resource controls for a group of related units"
+.PP
+As described in
+\fBsystemd.unit\fR(5), the settings listed here may be set through the main file of a unit and drop\-in snippets in
+*\&.d/
+directories\&. The list of directories searched for drop\-ins includes names formed by repeatedly truncating the unit name after all dashes\&. This is particularly convenient to set resource limits for a group of units with similar names\&.
+.PP
+For example, every user gets their own slice
+user\-\fInnn\fR\&.slice\&. Drop\-ins with local configuration that affect user 1000 may be placed in
+/etc/systemd/system/user\-1000\&.slice,
+/etc/systemd/system/user\-1000\&.slice\&.d/*\&.conf, but also
+/etc/systemd/system/user\-\&.slice\&.d/*\&.conf\&. This last directory applies to all user slices\&.
 .SH "IMPLICIT DEPENDENCIES"
 .PP
 The following dependencies are implicitly added:
@@ -821,29 +833,28 @@ or
 will ignore these extended attributes if the unit\*(Aqs cgroup is not owned by the root user\&.
 .sp
 If this property is set to
-\fBavoid\fR, the service manager will set the "user\&.oomd_avoid" extended attribute on the unit\*(Aqs cgroup to "1"\&. If
-\fBsystemd\-oomd\fR
-sees this extended attribute on a cgroup set to "1" when choosing between candidates, it will only select the cgroup with "user\&.oomd_avoid" if there are no other viable candidates\&.
+\fBavoid\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will only select this cgroup if there are no other viable candidates\&.
 .sp
 If this property is set to
-\fBomit\fR, the service manager will set the "user\&.oomd_omit" extended attribute on the unit\*(Aqs cgroup to "1"\&. If
-\fBsystemd\-oomd\fR
-sees the this extended attribute on the cgroup set to "1", it will ignore the cgroup as a candidate and will not perform any actions on the cgroup\&.
+\fBomit\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will ignore this cgroup as a candidate and will not perform any actions on it\&.
 .sp
 It is recommended to use
 \fBavoid\fR
 and
 \fBomit\fR
-sparingly as it can adversely affect
+sparingly, as it can adversely affect
 \fBsystemd\-oomd\fR\*(Aqs kill behavior\&. Also note that these extended attributes are not applied recursively to cgroups under this unit\*(Aqs cgroup\&.
 .sp
 Defaults to
 \fBnone\fR
-which means no extended attributes will be set and systemd\-oomd will sort this unit\*(Aqs cgroup as defined in
+which means
+\fBsystemd\-oomd\fR
+will rank this unit\*(Aqs cgroup as defined in
 \fBsystemd-oomd.service\fR(8)
 and
-\fBoomd.conf\fR(5)
-(if this unit\*(Aqs cgroup becomes a candidate)\&.
+\fBoomd.conf\fR(5)\&.
 .RE
 .SH "DEPRECATED OPTIONS"
 .PP

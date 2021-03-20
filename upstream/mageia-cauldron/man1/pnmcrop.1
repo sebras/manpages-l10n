@@ -3,10 +3,9 @@
 .\" Do not hand-hack it!  If you have bug fixes or improvements, please find
 .\" the corresponding HTML page on the Netpbm website, generate a patch
 .\" against that, and send it to the Netpbm maintainer.
-.TH "Pnmcrop User Manual" 0 "14 April 2019" "netpbm documentation"
+.TH "Pnmcrop User Manual" 0 "16 August 2020" "netpbm documentation"
 
 .SH NAME
-
 pnmcrop - crop a Netpbm image
 
 .UN synopsis
@@ -105,6 +104,14 @@ ones, use \fBpnmcat\fP or \fBpamcomp\fP.
 
 .UN options
 .SH OPTIONS
+.PP
+In addition to the options common to all programs based on libnetpbm
+(most notably \fB-quiet\fP, see 
+.UR index.html#commonoptions
+ Common Options
+.UE
+\&), \fBpnmcrop\fP recognizes the following
+command line options:
 
 
 .TP
@@ -194,7 +201,6 @@ This option was new in Netpbm 10.29 (August 2005).
 
 .TP
 \fB-closeness=\fP\fIcloseness_percent\fP
-.sp
 Any color in the image that is at least this close to the operative
 background color is considered to be background.
 .sp
@@ -265,13 +271,37 @@ program fails, with explanatory message (default)
 
 .TP
 pass
-  
-no modification to image
+    
+Output image is the same as the input image.
+      \fB-margin\fP has no effect.
 
 .TP
 minimize
-  
-output is a single pixel (of the background color)
+    
+output is a single row, column, or pixel (of the background color).
+      If you crop both vertically and horizontally (the default), it is a
+      single pixel.  If you crop only vertically, a single row, of the
+      original width.  If you crop only horizontally, it is a single column,
+      of the original height.
+.sp
+This is a somewhat incongruous result; the mathematically consistent
+        result of cropping the background from an image that is entirely
+        background would be an image with no pixels at all.  But such a thing
+        does not exist in the Netpbm formats (and you probably wouldn't want
+        it anyway, because whoever processes this output may not tolerate
+        that).
+.sp
+The background can be more than one color when you specify
+      \fB-closeness\fP, so it matters which row, column, or pixel remains.
+      If you crop on the top and not bottom, it is the last row that remains.
+      If you crop on both the top and bottom, it is the middle row that
+      remains.  The other cases follow similarly.
+.sp
+If you specify a margin (\fB-margin\fP), the output image consists
+        entirely of the margins; there is no single row, column, or pixel
+        between the margins.  So with \fB-margin\fP, the incongruity
+        mentioned above does not exist.  But before Netpbm 10.92 (September
+        2020), \fB-margin\fP was ignored with \fB-blank-image=minimize\fP.
 
 .TP
 maxcrop
@@ -291,12 +321,12 @@ This odd function selects a hypothetical cropping which is not even
 .sp
       This is actually useful if you are trying to find a single set of
       cropping parameters to crop a stream of images.  To do this, you could
-      do a pass with \fB-reportsize\fP and \fB-blank-image=maxcrop\fP and
-      compute the maximum crop for each edge, and then use that in a second
-      pass without \fB-reportsize\fP to do the crop.  In this scenario, any
-      all-background (blank) images would have no effect on the cropping
-      parameters you compute.  If you do this, you must make special
-      consideration of a stream with nothing but blank images.
+      do a pass with \fB-reportsize\fP and \fB-blank-image=maxcrop\fP to
+      compute the maximum crop for each edge, and then use those numbers in
+      \fB-crop\fIxxx\fP\fP options on a \fBpamcut\fP pass to do the crop.
+      In this scenario, any all-background (blank) images would have no effect
+      on the cropping parameters you compute.  If you do this, you must give
+      special consideration to a stream with nothing but blank images.
 
 
 .sp
@@ -311,9 +341,9 @@ just prints to Standard Output parameters of the cropping it would have done.
 The output is a single line per image, like in this example:
 
 .nf
-  \f(CW
+  <span style="font-family: monospace;">
      0 +7 -20 -10 200 300 rgb-255:10/0/255 0.0
-  \fP
+  </span>
 .fi
 .sp
 The line is composed of the following blank-delimited tokens:

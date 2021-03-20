@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_EVENT_ADD_TIME" "3" "" "systemd 246" "sd_event_add_time"
+.TH "SD_EVENT_ADD_TIME" "3" "" "systemd 247" "sd_event_add_time"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_event_add_time, sd_event_source_get_time, sd_event_source_set_time, sd_event_source_get_time_accuracy, sd_event_source_set_time_accuracy, sd_event_source_get_time_clock, sd_event_time_handler_t \- Add a timer event source to an event loop
+sd_event_add_time, sd_event_add_time_relative, sd_event_source_get_time, sd_event_source_set_time, sd_event_source_set_time_relative, sd_event_source_get_time_accuracy, sd_event_source_set_time_accuracy, sd_event_source_get_time_clock, sd_event_time_handler_t \- Add a timer event source to an event loop
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -38,10 +38,14 @@ typedef struct sd_event_source sd_event_source;
 .BI "typedef int (*sd_event_time_handler_t)(sd_event_source\ *" "s" ", uint64_t\ " "usec" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_add_time('u
 .BI "int sd_event_add_time(sd_event\ *" "event" ", sd_event_source\ **" "source" ", clockid_t\ " "clock" ", uint64_t\ " "usec" ", uint64_t\ " "accuracy" ", sd_event_time_handler_t\ " "handler" ", void\ *" "userdata" ");"
+.HP \w'int\ sd_event_add_time_relative('u
+.BI "int sd_event_add_time_relative(sd_event\ *" "event" ", sd_event_source\ **" "source" ", clockid_t\ " "clock" ", uint64_t\ " "usec" ", uint64_t\ " "accuracy" ", sd_event_time_handler_t\ " "handler" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_source_get_time('u
 .BI "int sd_event_source_get_time(sd_event_source\ *" "source" ", uint64_t\ *" "usec" ");"
 .HP \w'int\ sd_event_source_set_time('u
 .BI "int sd_event_source_set_time(sd_event_source\ *" "source" ", uint64_t\ " "usec" ");"
+.HP \w'int\ sd_event_source_set_time_relative('u
+.BI "int sd_event_source_set_time_relative(sd_event_source\ *" "source" ", uint64_t\ " "usec" ");"
 .HP \w'int\ sd_event_source_get_time_accuracy('u
 .BI "int sd_event_source_get_time_accuracy(sd_event_source\ *" "source" ", uint64_t\ *" "usec" ");"
 .HP \w'int\ sd_event_source_set_time_accuracy('u
@@ -90,6 +94,11 @@ mode was requested before\&. Note that a timer event set to
 will fire continuously unless its configured time is updated using
 \fBsd_event_source_set_time()\fR\&.
 .PP
+\fBsd_event_add_time_relative()\fR
+is like
+\fBsd_event_add_time()\fR, but takes a relative time specification\&. It\*(Aqs relative to the current time of the event loop iteration, as returned by
+\fBsd_event_now\fR(3)\&.
+.PP
 To destroy an event source object use
 \fBsd_event_source_unref\fR(3), but note that the event source is only removed from the event loop when all references to the event source are dropped\&. To make sure an event source does not fire anymore, even if it is still referenced, disable the event source using
 \fBsd_event_source_set_enabled\fR(3)
@@ -104,12 +113,12 @@ no reference to the event source object is returned\&. In this case the event so
 .PP
 If the
 \fIhandler\fR
-to
+parameter to
 \fBsd_event_add_time()\fR
 is
 \fBNULL\fR, and the event source fires, this will be considered a request to exit the event loop\&. In this case, the
 \fIuserdata\fR
-parameter, cast to an integer, is used for the exit code passed to
+parameter, cast to an integer, is passed as the exit code parameter to
 \fBsd_event_exit\fR(3)\&.
 .PP
 Use
@@ -135,11 +144,21 @@ parameter passed to the timer callback, or the timestamp returned by
 .PP
 \fBsd_event_source_get_time()\fR
 retrieves the configured time value of an event source created previously with
-\fBsd_event_add_time()\fR\&. It takes the event source object and a pointer to a variable to store the time in, relative to the selected clock\*(Aqs epoch, in \(mcs\&.
+\fBsd_event_add_time()\fR
+or
+\fBsd_event_add_time_relative()\fR\&. It takes the event source object and a pointer to a variable to store the time in, relative to the selected clock\*(Aqs epoch, in \(mcs\&. The returned value is relative to the epoch, even if the event source was created with a relative time via
+\fBsd_event_add_time_relative()\fR\&.
 .PP
 \fBsd_event_source_set_time()\fR
 changes the time of an event source created previously with
-\fBsd_event_add_time()\fR\&. It takes the event source object and a time relative to the selected clock\*(Aqs epoch, in \(mcs\&.
+\fBsd_event_add_time()\fR
+or
+\fBsd_event_add_time_relative()\fR\&. It takes the event source object and a time relative to the selected clock\*(Aqs epoch, in \(mcs\&.
+.PP
+\fBsd_event_source_set_time_relative()\fR
+is similar to
+\fBsd_event_source_set_time()\fR, but takes a time relative to the current time of the event loop iteration, as returned by
+\fBsd_event_now()\fR\&.
 .PP
 \fBsd_event_source_get_time_accuracy()\fR
 retrieves the configured accuracy value of an event source created previously with
@@ -187,6 +206,11 @@ The selected clock is not supported by the event loop implementation\&.
 \fB\-EDOM\fR
 .RS 4
 The passed event source is not a timer event source\&.
+.RE
+.PP
+\fB\-EOVERFLOW\fR
+.RS 4
+The passed relative time is outside of the allowed range for time values (i\&.e\&. the specified value added to the current time is outside the 64 bit unsigned integer range)\&.
 .RE
 .SH "NOTES"
 .PP

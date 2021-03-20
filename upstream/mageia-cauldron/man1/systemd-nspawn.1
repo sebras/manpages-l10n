@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 246" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 247" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,7 +38,7 @@ may be invoked on any directory tree containing an operating system tree, using 
 command line option\&. By using the
 \fB\-\-machine=\fR
 option an OS tree is automatically searched for in a couple of locations, most importantly in
-/var/lib/machines, the suggested directory to place OS container images installed on the system\&.
+/var/lib/machines/, the suggested directory to place OS container images installed on the system\&.
 .PP
 In contrast to
 \fBchroot\fR(1)\ \&\fBsystemd\-nspawn\fR
@@ -46,10 +46,10 @@ may be used to boot full Linux\-based operating systems in a container\&.
 .PP
 \fBsystemd\-nspawn\fR
 limits access to various kernel interfaces in the container to read\-only, such as
-/sys,
-/proc/sys
+/sys/,
+/proc/sys/
 or
-/sys/fs/selinux\&. The host\*(Aqs network interfaces and the system clock may not be changed from within the container\&. Device nodes may not be created\&. The host system cannot be rebooted and kernel modules may not be loaded from within the container\&.
+/sys/fs/selinux/\&. The host\*(Aqs network interfaces and the system clock may not be changed from within the container\&. Device nodes may not be created\&. The host system cannot be rebooted and kernel modules may not be loaded from within the container\&.
 .PP
 Use a tool like
 \fBdnf\fR(8),
@@ -96,8 +96,8 @@ template unit file, making it usually unnecessary to alter this template file di
 Note that
 \fBsystemd\-nspawn\fR
 will mount file systems private to the container to
-/dev,
-/run
+/dev/,
+/run/
 and similar\&. These will not be visible outside of the container, and their contents will be lost when the container exits\&.
 .PP
 Note that running two
@@ -367,7 +367,7 @@ is used the hypothetical file
 is potentially writable if
 \fB\-\-bind=/etc/foobar\fR
 if used to mount it from outside the read\-only container
-/etc
+/etc/
 directory\&.
 .sp
 The
@@ -422,18 +422,31 @@ extended file attribute (see
 suffix is found next to the image file, bearing otherwise the same name (except if the image has the
 \&.raw
 suffix, in which case the root hash file must not have it in its name), the root hash is read from it and automatically used, also as formatted hexadecimal characters\&.
+.sp
+Note that this configures the root hash for the root file system\&. Disk images may also contain separate file systems for the
+/usr/
+hierarchy, which may be Verity protected as well\&. The root hash for this protection may be configured via the
+"user\&.verity\&.usrhash"
+extended file attribute or via a
+\&.usrhash
+file adjacent to the disk image, following the same format and logic as for the root hash for the root file system described here\&. Note that there\*(Aqs currently no switch to configure the root hash for the
+/usr/
+from the command line\&.
+.sp
+Also see the
+\fIRootHash=\fR
+option in
+\fBsystemd.exec\fR(5)\&.
 .RE
 .PP
 \fB\-\-root\-hash\-sig=\fR
 .RS 4
-Takes a PKCS7 formatted binary signature of the
+Takes a PKCS7 signature of the
 \fB\-\-root\-hash=\fR
-option as a path to a DER encoded signature file or as an ASCII base64 string encoding of the DER encoded signature, prefixed by
-"base64:"\&. The dm\-verity volume will only be opened if the signature of the root hash hex string is valid and done by a public key present in the kernel keyring\&. If this option is not specified, but a file with the
-\&.roothash\&.p7s
-suffix is found next to the image file, bearing otherwise the same name (except if the image has the
-\&.raw
-suffix, in which case the signature file must not have it in its name), the signature is read from it and automatically used\&.
+option\&. The semantics are the same as for the
+\fIRootHashSignature=\fR
+option, see
+\fBsystemd.exec\fR(5)\&.
 .RE
 .PP
 \fB\-\-verity\-data=\fR
@@ -707,7 +720,7 @@ If the parameter is false, user namespacing is turned off\&. This is the default
 .\}
 The special value
 "pick"
-turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner of the root directory of the container\*(Aqs directory tree is read, and it is checked that it is currently not used by the system otherwise (in particular, that no other container is using it)\&. If this check is successful, the UID/GID range determined this way is used, similar to the behavior if "yes" is specified\&. If the check is not successful (and thus the UID/GID range indicated in the root directory\*(Aqs file owner is already used elsewhere) a new \(en currently unused \(en UID/GID range of 65536 UIDs/GIDs is randomly chosen between the host UID/GIDs of 524288 and 1878982656, always starting at a multiple of 65536\&. This setting implies
+turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner of the root directory of the container\*(Aqs directory tree is read, and it is checked that it is currently not used by the system otherwise (in particular, that no other container is using it)\&. If this check is successful, the UID/GID range determined this way is used, similar to the behavior if "yes" is specified\&. If the check is not successful (and thus the UID/GID range indicated in the root directory\*(Aqs file owner is already used elsewhere) a new \(en currently unused \(en UID/GID range of 65536 UIDs/GIDs is randomly chosen between the host UID/GIDs of 524288 and 1878982656, always starting at a multiple of 65536, and, if possible, consistently hashed from the machine name\&. This setting implies
 \fB\-\-private\-users\-chown\fR
 (see below), which has the effect that the files and directories in the container\*(Aqs directory tree will be owned by the appropriate users of the range picked\&. Using this option makes user namespace behavior fully automatic\&. Note that the first invocation of a previously unused container image might result in picking a new UID/GID range for it, and thus in the (possibly expensive) file ownership adjustment operation\&. However, subsequent invocations of the container will be cheap (unless of course the picked UID/GID range is assigned to a different use by then)\&.
 .RE
@@ -1252,7 +1265,7 @@ Equivalent to
 Bind mount a file or directory from the host into the container\&. Takes one of: a path argument\ \&\(em in which case the specified path will be mounted from the host to the same path in the container, or a colon\-separated pair of paths\ \&\(em in which case the first specified path is the source in the host, and the second path is the destination in the container, or a colon\-separated triple of source path, destination path and mount options\&. The source path may optionally be prefixed with a
 "+"
 character\&. If so, the source path is taken relative to the image\*(Aqs root directory\&. This permits setting up bind mounts within the container image\&. The source path may be specified as empty string, in which case a temporary directory below the host\*(Aqs
-/var/tmp
+/var/tmp/
 directory is used\&. It is automatically removed when the container is shut down\&. Mount options are comma\-separated and currently, only
 \fBrbind\fR
 and
@@ -1303,12 +1316,12 @@ If only two paths are specified, then the second specified path is used both as 
 .sp
 The source paths may optionally be prefixed with
 "+"
-character\&. If so they are taken relative to the image\*(Aqs root directory\&. The uppermost source path may also be specified as empty string, in which case a temporary directory below the host\*(Aqs
-/var/tmp
-is used\&. The directory is removed automatically when the container is shut down\&. This behaviour is useful in order to make read\-only container directories writable while the container is running\&. For example, use the
+character\&. If so they are taken relative to the image\*(Aqs root directory\&. The uppermost source path may also be specified as an empty string, in which case a temporary directory below the host\*(Aqs
+/var/tmp/
+is used\&. The directory is removed automatically when the container is shut down\&. This behaviour is useful in order to make read\-only container directories writable while the container is running\&. For example, use
 "\-\-overlay=+/var::/var"
-option in order to automatically overlay a writable temporary directory on a read\-only
-/var
+in order to automatically overlay a writable temporary directory on a read\-only
+/var/
 directory\&.
 .sp
 For details about overlay file systems, see
@@ -1331,19 +1344,29 @@ Configures how to set up standard input, output and error output for the contain
 device for the container\&. Takes one of
 \fBinteractive\fR,
 \fBread\-only\fR,
-\fBpassive\fR, or
-\fBpipe\fR\&. If
+\fBpassive\fR,
+\fBpipe\fR
+or
+\fBautopipe\fR\&. If
 \fBinteractive\fR, a pseudo\-TTY is allocated and made available as
 /dev/console
 in the container\&. It is then bi\-directionally connected to the standard input and output passed to
 \fBsystemd\-nspawn\fR\&.
 \fBread\-only\fR
 is similar but only the output of the container is propagated and no input from the caller is read\&. If
-\fBpassive\fR, a pseudo TTY is allocated, but it is not connected anywhere\&. Finally, in
+\fBpassive\fR, a pseudo TTY is allocated, but it is not connected anywhere\&. In
 \fBpipe\fR
 mode no pseudo TTY is allocated, but the standard input, output and error output file descriptors passed to
 \fBsystemd\-nspawn\fR
-are passed on \(em as they are \(em to the container payload, see the following paragraph\&. Defaults to
+are passed on \(em as they are \(em to the container payload, see the following paragraph\&. Finally,
+\fBautopipe\fR
+mode operates like
+\fBinteractive\fR
+when
+\fBsystemd\-nspawn\fR
+is invoked on a terminal, and like
+\fBpipe\fR
+otherwise\&. Defaults to
 \fBinteractive\fR
 if
 \fBsystemd\-nspawn\fR
@@ -1370,6 +1393,35 @@ mode should only be used if the payload is sufficiently trusted or when the stan
 Equivalent to
 \fB\-\-console=pipe\fR\&.
 .RE
+.SS "Credentials"
+.PP
+\fB\-\-load\-credential=\fR\fIID\fR:\fIPATH\fR, \fB\-\-set\-credential=\fR\fIID\fR:\fIVALUE\fR
+.RS 4
+Pass a credential to the container\&. These two options correspond to the
+\fILoadCredential=\fR
+and
+\fISetCredential=\fR
+settings in unit files\&. See
+\fBsystemd.exec\fR(5)
+for details about these concepts, as well as the syntax of the option\*(Aqs arguments\&.
+.sp
+Note: when
+\fBsystemd\-nspawn\fR
+runs as systemd system service it can propagate the credentials it received via
+\fILoadCredential=\fR/\fISetCredential=\fR
+to the container payload\&. A systemd service manager running as PID 1 in the container can further propagate them to the services it itself starts\&. It is thus possible to easily propagate credentials from a parent service manager to a container manager service and from there into its payload\&. This can even be done recursively\&.
+.sp
+In order to embed binary data into the credential data for
+\fB\-\-set\-credential=\fR
+use C\-style escaping (i\&.e\&.
+"\en"
+to embed a newline, or
+"\ex00"
+to embed a
+\fBNUL\fR
+byte\&. Note that the invoking shell might already apply unescaping once, hence this might require double escaping!)\&.
+.RE
+.SS "Other"
 .PP
 \fB\-\-no\-pager\fR
 .RS 4
@@ -1477,7 +1529,7 @@ or
 \fI$PAGER\fR
 variables are to be honoured,
 \fI$SYSTEMD_PAGERSECURE\fR
-must be set too\&. It might be reasonable to completly disable the pager using
+must be set too\&. It might be reasonable to completely disable the pager using
 \fB\-\-no\-pager\fR
 instead\&.
 .RE

@@ -3,7 +3,7 @@
 .\" Do not hand-hack it!  If you have bug fixes or improvements, please find
 .\" the corresponding HTML page on the Netpbm website, generate a patch
 .\" against that, and send it to the Netpbm maintainer.
-.TH "Pamarith User Manual" 0 "03 January 2015" "netpbm documentation"
+.TH "Pamarith User Manual" 0 "24 October 2020" "netpbm documentation"
 
 .SH NAME
 pamarith - perform arithmetic on two Netpbm images
@@ -14,10 +14,12 @@ pamarith - perform arithmetic on two Netpbm images
 \fBpamarith\fP
 \fB-add\fP | \fB-subtract\fP | \fB-multiply\fP | \fB-divide\fP |
 \fB-difference\fP |
-\fB-minimum\fP | \fB-maximum\fP | \fB-mean\fP | \fB-compare\fP |
+\fB-minimum\fP | \fB-maximum\fP | \fB-mean\fP |
+\fB-equal\fP | \fB-compare\fP |
 \fB-and\fP | \fB-or\fP | \fB-nand\fP | \fB-nor\fP | \fB-xor\fP |
 \fB-shiftleft\fP | \fB-shiftright\fP
-\fIpamfile1\fP \fIpamfile2\fP
+[\fB-closeness=\fP\fIN\fP]
+\fIpamfile1\fP \fIpamfile2\fP ...
 .PP
 All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one.  You may separate an option
@@ -30,13 +32,31 @@ This program is part of
 .BR "Netpbm" (1)\c
 \&.
 .PP
-\fBpamarith\fP reads two PBM, PGM, PPM, or PAM images as input.
+\fBpamarith\fP reads two or more PBM, PGM, PPM, or PAM images as input.
 It performs the specified binary arithmetic operation on their sample
 values and produces an output of a format which is the more general of
 the two input formats.  The two input images must be of the same width
 and height.  The arithmetic is performed on each pair of identically
 located tuples to generate the identically located tuple of the
 output.
+.PP
+For functions that are commutative and associative, \fBpamarith\fP applies
+  the binary function repetitively on as many input images as you supply.  For
+  example, for \fB-add\fP , the output is the sum of all the inputs.  For
+  other functions (e.g. \fB-subtract\fP), the program fails if you supply
+  more than two input images.  (Before Netpbm 10.93 (December 2020), the
+  program always failed with more than two input images).
+.PP
+For some other functions, \fBpamarith\fP could theoretically compute a
+  meaningful result for multiple arguments, but it fails nonetheless if you
+  give more than two input images.  \fB-mean\fP and \fB-equal\fP are in that
+  category.
+  
+.PP
+Most of what \fBpamarith\fP does is not meaningful for visual images.  It
+  works toward Netpbm's secondary purpose of just manipulating arbitrary
+  matrices of numbers.
+  
 .PP
 For the purpose of the calculation, it assumes any PBM, PGM, or PPM
 input image is the equivalent PAM image of tuple type
@@ -75,6 +95,20 @@ contains the tuple (s) and the right input image contains the tuple
 (t1,t2,...tN), and the function is f, then the output image contains
 the tuple (f(s,t1),f(s,t2),...,f(s,tN)).
 
+
+.UN pbmoddness
+.SS PBM Oddness
+.PP
+If you're familiar with the PBM format, you may find \fBpamarith\fP's
+operation on PBM images to be nonintuitive.  Because in PBM black is
+represented as 1 and white as 0, you might be expecting black minus black
+to be white.
+.PP
+But the PBM format is irrelevant, because \fBpamarith\fP operates on the
+numbers found in the PAM equivalent (see above).  In a PAM black and white
+image, black is 0 and white is 1.  So black minus black is black.
+
+  
 .UN maxval
 .SS Maxval
 .PP
@@ -92,6 +126,7 @@ For \fBpamarith\fP, this interpretation applies to the regular
 arithmetic functions: \fB-add\fP, \fB-subtract\fP, \fB-multiply\fP,
 \fB-divide\fP,
 \fB-difference\fP, \fB-minimum\fP, \fB-maximum\fP, \fB-mean\fP,
+\fB-equal\fP,
 and \fB-compare\fP.  For those, you should think of the arguments and
 result as numbers in the range [0,1).  For example, if the maxval of
 the left argument image is 100 and the maxval of the right argument
@@ -102,11 +137,11 @@ the output sample value is 160.
 .PP
 For these functions, \fBpamarith\fP makes the output image's
 maxval the maximum of the two input maxvals, except with
-\fB-compare\fP, where \fBpamarith\fP uses an output maxval of 2.
-(Before Netpbm 10.14 (February 2003), there was no exception for
-\fB-compare\fP; in 10.14, the exception was just that the maxval
-was \fIat least\fP 2, and sometime between 10.18 and 10.26 (January
-2005), it changed to being exactly 2).
+\fB-equal \fP and \fB-compare\fP.  For \fB-equal\fP, the output maxval is
+always 1.  For \fB-compare\fP, it is always 2.  (Before Netpbm 10.14
+(February 2003), there was no exception for \fB-compare\fP; in 10.14, the
+exception was just that the maxval was \fIat least\fP 2, and sometime
+between 10.18 and 10.26 (January 2005), it changed to being exactly 2).
 .PP
 If the result of a calculation falls outside the range [0, 1),
 \fBpamarith\fP clips it -- i.e.  considers it to be zero or 1-.
@@ -147,64 +182,128 @@ interpretation of the samples.  The sample value is the actual shift
 count.  But it's still required that no sample value exceed the
 maxval.
 
-.UN operations
-.SS The Operations
+
+.UN note
+.SH NOTE: UNARY FUNCTIONS
 .PP
-Most of the operations are obvious from the option name.  The following
-paragraphs cover those that aren't.
+\fBpamarith\fP applies only binary functions.  If you want to apply a
+unary function, e.g. "halve", to a single image, use \fBpamfunc\fP.
+
+
+.UN options
+.SH OPTIONS
 .PP
-\fB-subtract\fP subtracts a value in the right input image from a
-value in the left input image.
+In addition to the options common to all programs based on libnetpbm
+(most notably \fB-quiet\fP, see 
+.UR index.html#commonoptions
+ Common Options
+.UE
+\&), \fBpamarith\fP recognizes the following
+command line options:
+
+.UN function
+.SS The Function
 .PP
-\fB-difference\fP calculates the absolute value of
-the difference.
+These options select the function that \fBpamarith\fP applies.
 .PP
-\fB-multiply\fP does an ordinary arithmetic multiplication, but
-tends to produce nonobvious results because of the way \fBpamarith\fP
-interprets sample values.  See 
+You must specify one of these, and cannot specify more than one.
+  
+
+
+.TP
+\fB-add\fP
+Adds the two values.  If the result is larger than maxval, it is
+clipped.
+
+.TP
+\fB-subtract\fP
+Subtracts a value in the right input image from a value in the left input
+image.
+
+.TP
+\fB-minimum\fP
+Chooses the smaller value of the two.
+
+.TP
+\fB-maximum\fP
+Chooses the larger value of the two.
+
+.TP
+\fB-difference\fP
+Calculates the absolute value of the difference.
+
+.TP
+\fB-multiply\fP
+Does an ordinary arithmetic multiplication, but tends to produce
+nonobvious results because of the way \fBpamarith\fP interprets
+sample values.  See 
 .UR #maxval
 Maxval
 .UE
 \&.
-.PP
-\fB-divide\fP divides a value in the left input image by the value
-in the right input image.  But like \fB-multiply\fP, it tends to
-produce nonobvious results.  Note that \fBpamarith\fP clipping
-behavior makes this of little use when the left argument (dividend) is
-greater than the right argument (divisor) -- the result in that case
-is always the maxval.  If the divisor is 0, the result is the maxval.
-This option was new in Netpbm 10.30 (October 2005).
-.PP
-\fB-compare\fP produces the value \fB0\fP when the value in the
-left input image is less than the value in the right input image,
-\fB1\fP when the values are equal, and \fB2\fP when the left is
-greater than the right.
-.PP
+
+.TP
+\fB-divide\fP
+Divides a value in the left input image by the value in the right
+input image.  But like \fB-multiply\fP, it tends to produce nonobvious
+results.  Note that \fBpamarith\fP clipping behavior makes this of
+little use when the left argument (dividend) is greater than the right
+argument (divisor) -- the result in that case is always the maxval.
+If the divisor is 0, the result is the maxval.
+.sp
+\fB-divide\fP was new in Netpbm 10.30 (October 2005).
+
+.TP
+\fB-equal\fP
+Produces maxval when the values in the two images are equal and
+zero when they are not.  Note that the output maxval is always 1 for
+\fB-equal\fP.
+.sp
 If the maxvals of the input images are not identical, \fBpamarith\fP
 may claim two values are not equal when in fact they are, because of
 the precision with which it does the arithmetic.  However, it will never
 say A is greater than B if A is less than B.
-.PP
+.sp
+You can make the equality test approximate with the \fB-closeness\fP
+option.  This gives the percentage of maxval by which the samples can
+differ and still be considered equal.
+.sp
+\fB-equal\fP was new in Netpbm 10.93 (December 2020).
+
+.TP
+\fB-compare\fP
+Produces the value \fB0\fP when the value in the
+left input image is less than the value in the right input image,
+\fB1\fP when the values are equal, and \fB2\fP when the left is
+greater than the right.
+.sp
+If the maxvals of the input images are not identical, \fBpamarith\fP
+may claim two values are not equal when in fact they are, because of
+the precision with which it does the arithmetic.  However, it will never
+say A is greater than B if A is less than B.
+.sp
 \fB-compare\fP was new in Netpbm 10.13 (December 2002).
-.PP
-\fB-and\fP, \fB-nand\fP, \fB-or\fP, \fB-nor\fP, and \fB-xor\fP
-consider the input and output images to contain bit strings; they
-compute bitwise logic operations.  Note that if the maxval is 1, you
-can also look at these as logic operations on boolean input values.
+
+.TP
+\fB-and\fP, \fB-nand\fP, \fB-or\fP, \fB-nor\fP, \fB-xor\fP
+These consider the input and output images to contain bit strings;
+they compute bitwise logic operations.  Note that if the maxval is 1,
+you can also look at these as logic operations on boolean input values.
 See section 
 .UR #maxval
 Maxval
 .UE
 \& for the special meaning of
 maxval with respect to bit string operations such as these.
-.PP
-\fB-shiftleft\fP and \fB-shiftright\fP consider the left input
-image and output image to contain bit strings.  They compute a bit
-shift operation, with bits falling off the left or right end and
-zeroes shifting in, as opposed to bits off one end to the other.  The
-right input image sample value is the number of bit positions to
-shift.
-.PP
+
+.TP
+\fB-shiftleft\fP, \fB-shiftright\fP
+These consider the left input image and output image to contain
+bit strings.  They compute a bit shift operation, with bits falling
+off the left or right end and zeroes shifting in, as opposed to bits
+off one end to the other.  The right input image sample value is the
+number of bit positions to shift.
+.sp
 Note that the maxval (see 
 .UR #maxval
 Maxval
@@ -212,11 +311,19 @@ Maxval
 \&) determines
 the width of the frame within which you are shifting.
 
-.UN notes
-.SS Notes
-.PP
-If you want to apply a unary function, e.g. "halve", to a single
-image, use \fBpamfunc\fP.
+
+  
+.UN otheroptions
+.SS Other
+  
+
+
+.TP
+\fB-closeness\fP
+This changes the meaning of \fB-equal\fP.  It is not valid with any
+other function.  See the description of \fB-equal\fP.
+
+
 
 .UN seealso
 .SH SEE ALSO
@@ -238,9 +345,9 @@ image, use \fBpamfunc\fP.
 \&,
 .BR "\fBpnmpsnr\fP" (1)\c
 \&,
-.BR "pnm" (1)\c
+.BR "\fBpnm\fP" (1)\c
 \&,
-.BR "pam" (1)\c
+.BR "\fBpam\fP" (1)\c
 \&
 
 
@@ -267,6 +374,11 @@ The \fB-compare\fP option was added in Netpbm 10.13 (December 2002).
 The bit string operations were added in Netpbm 10.27 (March 2005).
 .PP
 The \fB-divide\fP option was added in Netpbm 10.30 (October 2005).
+.PP
+The ability to have more than one input (operand) was added in Netpbm
+10.93 (December 2020).
+.PP
+The \fB-equal\fP option was added in Netpbm 10.93 (December 2020).
 .SH DOCUMENT SOURCE
 This manual page was generated by the Netpbm tool 'makeman' from HTML
 source.  The master documentation is at

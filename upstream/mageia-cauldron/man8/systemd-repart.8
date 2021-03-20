@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-REPART" "8" "" "systemd 246" "systemd-repart"
+.TH "SYSTEMD\-REPART" "8" "" "systemd 247" "systemd-repart"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -276,9 +276,20 @@ I/O control command on the space taken up by any added partitions or on the spac
 .PP
 \fB\-\-size=\fR
 .RS 4
-Takes a size in bytes, using the usual K, M, G, T suffixes\&. If used the specified device node path must refer to a regular file, which is then grown to the specified size if smaller, before any change is made to the partition table\&. This is not supported if the specified node is a block device\&. This switch has no effect if the file is already as large as the specified size or larger\&. The specified size is implicitly rounded up to multiples of 4096\&. When used with
+Takes a size in bytes, using the usual K, M, G, T suffixes, or the special value
+"auto"\&. If used the specified device node path must refer to a regular file, which is then grown to the specified size if smaller, before any change is made to the partition table\&. If specified as
+"auto"
+the minimal size for the disk image is automatically determined (i\&.e\&. the minimal sizes of all partitions are summed up, taking space for additional metadata into account)\&. This switch is not supported if the specified node is a block device\&. This switch has no effect if the file is already as large as the specified size or larger\&. The specified size is implicitly rounded up to multiples of 4096\&. When used with
 \fB\-\-empty=create\fR
 this specifies the initial size of the loopback file to create\&.
+.sp
+The
+\fB\-\-size=auto\fR
+option takes the sizes of pre\-existing partitions into account\&. However, it does not accommodate for partition tables that are not tightly packed: the configured partitions might still not fit into the backing device if empty space exists between pre\-existing partitions (or before the first partition) that cannot be fully filled by partitions to grow or create\&.
+.sp
+Also note that the automatic size determination does not take files or directories specified with
+\fBCopyFiles=\fR
+into account: operation might fail if the specified files or directories require more disk space then the configured per\-partition minimal size limit\&.
 .RE
 .PP
 \fB\-\-factory\-reset=\fR
@@ -322,6 +333,17 @@ to force a randomized seed\&. Explicitly specifying the seed may be used to gene
 Takes a boolean argument\&. If this switch is not specified, it defaults to on when called from an interactive terminal and off otherwise\&. Controls whether to show a user friendly table and graphic illustrating the changes applied\&.
 .RE
 .PP
+\fB\-\-json=\fR\fIMODE\fR
+.RS 4
+Shows output formatted as JSON\&. Expects one of
+"short"
+(for the shortest possible output without any redundant whitespace or line breaks),
+"pretty"
+(for a pretty version of the same, with indentation and line breaks) or
+"off"
+(to turn off json output)\&.
+.RE
+.PP
 \fB\-\-definitions=\fR
 .RS 4
 Takes a file system path\&. If specified the
@@ -330,6 +352,15 @@ files are read from the specified directory instead of searching in
 /usr/lib/repart\&.d/*\&.conf,
 /etc/repart\&.d/*\&.conf,
 /run/repart\&.d/*\&.conf\&.
+.RE
+.PP
+\fB\-\-key\-file=\fR
+.RS 4
+Takes a file system path\&. Configures the encryption key to use when setting up LUKS2 volumes configured with the
+\fIEncrypt=\fR
+setting in partition files\&. Should refer to a regular file containing the key, or an
+\fBAF_UNIX\fR
+stream socket in the file system\&. In the latter case a connection is made to it and the key read from it\&. If this switch is not specified the empty key (i\&.e\&. zero length key) is used\&. This behaviour is useful for setting up encrypted partitions during early first boot that receive their user\-supplied password only in a later setup step\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
