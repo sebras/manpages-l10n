@@ -63,7 +63,14 @@ for directory in $directories; do
 	# character (detected as "\v") which po4a can't handle.
 	# See https://savannah.gnu.org/bugs/?58936
 	if [ -f $directory/man1/grub-mknetdir.1 ]; then
-	  sed -i -e "s|^KPrepares|Prepares|" $directory/man1/grub-mknetdir.1
+	  sed -i -e "s|Prepares|Prepares|" $directory/man1/grub-mknetdir.1
+	fi
+
+	# The same for grub2-mknetdir.1. This file contains an unprintable
+	# character (detected as "\v") which po4a can't handle.
+	# See https://savannah.gnu.org/bugs/?58936
+	if [ -f $directory/man1/grub2-mknetdir.1 ]; then
+	  sed -i -e "s|Prepares|Prepares|" $directory/man1/grub2-mknetdir.1
 	fi
 
 done
