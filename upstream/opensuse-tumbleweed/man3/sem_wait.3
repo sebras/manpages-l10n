@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SEM_WAIT 3 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH SEM_WAIT 3 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sem_wait, sem_timedwait, sem_trywait \- lock a semaphore
 .SH SYNOPSIS
@@ -30,10 +30,9 @@ sem_wait, sem_timedwait, sem_trywait \- lock a semaphore
 .B #include <semaphore.h>
 .PP
 .BI "int sem_wait(sem_t *" sem );
-.PP
 .BI "int sem_trywait(sem_t *" sem );
-.PP
-.BI "int sem_timedwait(sem_t *" sem ", const struct timespec *" abs_timeout );
+.BI "int sem_timedwait(sem_t *restrict " sem ,
+.BI "                  const struct timespec *restrict " abs_timeout );
 .fi
 .PP
 Link with \fI\-pthread\fP.
@@ -44,7 +43,9 @@ Feature Test Macro Requirements for glibc (see
 .RE
 .PP
 .BR sem_timedwait ():
-_POSIX_C_SOURCE\ >=\ 200112L
+.nf
+    _POSIX_C_SOURCE >= 200112L
+.fi
 .SH DESCRIPTION
 .BR sem_wait ()
 decrements (locks) the semaphore pointed to by
@@ -142,9 +143,11 @@ The call timed out before the semaphore could be locked.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw26 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
@@ -153,6 +156,9 @@ T{
 .BR sem_timedwait ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
+.ad
+.sp 1
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008.
 .SH EXAMPLES
@@ -228,7 +234,7 @@ main(int argc, char *argv[])
     if (sem_init(&sem, 0, 0) == \-1)
         handle_error("sem_init");
 
-    /* Establish SIGALRM handler; set alarm timer using argv[1] */
+    /* Establish SIGALRM handler; set alarm timer using argv[1]. */
 
     sa.sa_handler = handler;
     sigemptyset(&sa.sa_mask);
@@ -239,7 +245,7 @@ main(int argc, char *argv[])
     alarm(atoi(argv[1]));
 
     /* Calculate relative interval as current time plus
-       number of seconds given argv[2] */
+       number of seconds given argv[2]. */
 
     if (clock_gettime(CLOCK_REALTIME, &ts) == \-1)
         handle_error("clock_gettime");
@@ -248,9 +254,9 @@ main(int argc, char *argv[])
 
     printf("main() about to call sem_timedwait()\en");
     while ((s = sem_timedwait(&sem, &ts)) == \-1 && errno == EINTR)
-        continue;       /* Restart if interrupted by handler */
+        continue;       /* Restart if interrupted by handler. */
 
-    /* Check what happened */
+    /* Check what happened. */
 
     if (s == \-1) {
         if (errno == ETIMEDOUT)

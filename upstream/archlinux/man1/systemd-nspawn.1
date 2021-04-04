@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 247" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 248" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -794,10 +794,31 @@ capability will be added to the set of capabilities the container retains\&. The
 .PP
 \fB\-\-network\-interface=\fR
 .RS 4
-Assign the specified network interface to the container\&. This will remove the specified interface from the calling namespace and place it in the container\&. When the container terminates, it is moved back to the host namespace\&. Note that
+Assign the specified network interface to the container\&. This will remove the specified interface from the calling namespace and place it in the container\&. When the container terminates, it is moved back to the calling namespace\&. Note that
 \fB\-\-network\-interface=\fR
 implies
 \fB\-\-private\-network\fR\&. This option may be used more than once to add multiple network interfaces to the container\&.
+.sp
+Note that any network interface specified this way must already exist at the time the container is started\&. If the container shall be started automatically at boot via a
+systemd\-nspawn@\&.service
+unit file instance, it might hence make sense to add a unit file drop\-in to the service instance (e\&.g\&.
+/etc/systemd/system/systemd\-nspawn@foobar\&.service\&.d/50\-network\&.conf) with contents like the following:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Unit]
+Wants=sys\-subsystem\-net\-devices\-ens1\&.device
+After=sys\-subsystem\-net\-devices\-ens1\&.device
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This will make sure that activation of the container service will be delayed until the
+"ens1"
+network interface has shown up\&. This is required since hardware probing is fully asynchronous, and network interfaces might be discovered only later during the boot process, after the container would normally be started without these explicit dependencies\&.
 .RE
 .PP
 \fB\-\-network\-macvlan=\fR
@@ -811,6 +832,9 @@ interface is a virtual interface that adds a second MAC address to an existing p
 \fB\-\-network\-macvlan=\fR
 implies
 \fB\-\-private\-network\fR\&. This option may be used more than once to add multiple network interfaces to the container\&.
+.sp
+As with
+\fB\-\-network\-interface=\fR, the underlying Ethernet network interface must already exist at the time the container is started, and thus similar unit file drop\-ins as described above might be useful\&.
 .RE
 .PP
 \fB\-\-network\-ipvlan=\fR
@@ -826,6 +850,9 @@ interface, which uses the same MAC address as the underlying interface\&. The in
 \fB\-\-network\-ipvlan=\fR
 implies
 \fB\-\-private\-network\fR\&. This option may be used more than once to add multiple network interfaces to the container\&.
+.sp
+As with
+\fB\-\-network\-interface=\fR, the underlying Ethernet network interface must already exist at the time the container is started, and thus similar unit file drop\-ins as described above might be useful\&.
 .RE
 .PP
 \fB\-n\fR, \fB\-\-network\-veth\fR
@@ -885,6 +912,9 @@ implies
 "vb\-"
 prefix instead of
 "ve\-"\&. Regardless of the used naming prefix the same network interface name length limits imposed by Linux apply, along with the complications this creates (for details see above)\&.
+.sp
+As with
+\fB\-\-network\-interface=\fR, the underlying bridge network interface must already exist at the time the container is started, and thus similar unit file drop\-ins as described above might be useful\&.
 .RE
 .PP
 \fB\-\-network\-zone=\fR
@@ -975,11 +1005,37 @@ is passed, all capabilities are retained\&.
 If the special value of
 "help"
 is passed, the program will print known capability names and exit\&.
+.sp
+This option sets the bounding set of capabilities which also limits the ambient capabilities as given with the
+\fB\-\-ambient\-capability=\fR\&.
 .RE
 .PP
 \fB\-\-drop\-capability=\fR
 .RS 4
 Specify one or more additional capabilities to drop for the container\&. This allows running the container with fewer capabilities than the default (see above)\&.
+.sp
+If the special value of
+"help"
+is passed, the program will print known capability names and exit\&.
+.sp
+This option sets the bounding set of capabilities which also limits the ambient capabilities as given with the
+\fB\-\-ambient\-capability=\fR\&.
+.RE
+.PP
+\fB\-\-ambient\-capability=\fR
+.RS 4
+Specify one or more additional capabilities to pass in the inheritable and ambient set to the program started within the container\&. The value
+"all"
+is not supported for this setting\&.
+.sp
+All capabilities specified here must be in the set allowed with the
+\fB\-\-capability=\fR
+and
+\fB\-\-drop\-capability=\fR
+options\&. Otherwise, an error message will be shown\&.
+.sp
+This option cannot be combined with the boot mode of the container (as requested via
+\fB\-\-boot\fR)\&.
 .sp
 If the special value of
 "help"
@@ -1439,6 +1495,73 @@ Print a short version string and exit\&.
 .RE
 .SH "ENVIRONMENT"
 .PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
+.PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
 Pager to use when
@@ -1536,9 +1659,12 @@ instead\&.
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
