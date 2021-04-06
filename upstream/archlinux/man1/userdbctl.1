@@ -1,5 +1,5 @@
 '\" t
-.TH "USERDBCTL" "1" "" "systemd 247" "userdbctl"
+.TH "USERDBCTL" "1" "" "systemd 248" "userdbctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,9 +28,9 @@ userdbctl \- Inspect users, groups and group memberships
 .PP
 \fBuserdbctl\fR
 may be used to inspect user and groups (as well as group memberships) of the system\&. This client utility inquires user/group information provided by various system services, both operating on JSON user/group records (as defined by the
-\m[blue]\fBJSON User Record\fR\m[]\&\s-2\u[1]\d\s+2
+\m[blue]\fBJSON User Records\fR\m[]\&\s-2\u[1]\d\s+2
 and
-\m[blue]\fBJSON Group Record\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBJSON Group Records\fR\m[]\&\s-2\u[2]\d\s+2
 definitions), and classic UNIX NSS/glibc user and group records\&. This tool is primarily a client to the
 \m[blue]\fBUser/Group Record Lookup API via Varlink\fR\m[]\&\s-2\u[3]\d\s+2\&.
 .SH "OPTIONS"
@@ -247,6 +247,73 @@ AuthorizedKeysCommandUser root
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "ENVIRONMENT"
 .PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
+.PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
 Pager to use when
@@ -344,9 +411,12 @@ instead\&.
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
@@ -368,12 +438,12 @@ and other conditions\&.
 \fBgetent\fR(1)
 .SH "NOTES"
 .IP " 1." 4
-JSON User Record
+JSON User Records
 .RS 4
 \%https://systemd.io/USER_RECORD
 .RE
 .IP " 2." 4
-JSON Group Record
+JSON Group Records
 .RS 4
 \%https://systemd.io/GROUP_RECORD
 .RE

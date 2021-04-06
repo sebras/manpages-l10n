@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH USER_NAMESPACES 7 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH USER_NAMESPACES 7 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 user_namespaces \- overview of Linux user namespaces
 .SH DESCRIPTION
@@ -276,6 +276,11 @@ and mount the following types of filesystems:
 .IR bpf
 .\" commit b2197755b2633e164a439682fb05a9b5ea48f706
 (since Linux 4.4)
+.IP *
+.IR overlayfs
+.\" commit 92dbc9dedccb9759c7f9f2f0ae6242396376988f
+.\" commit 4cb2c00c43b3fe88b32f29df4f76da1b92c33224
+(since Linux 5.11)
 .PD
 .RE
 .PP
@@ -495,7 +500,6 @@ confusion when using these interfaces.
 .\" ============================================================
 .\"
 .SS Defining user and group ID mappings: writing to uid_map and gid_map
-.PP
 After the creation of a new user namespace, the
 .I uid_map
 file of
@@ -812,7 +816,6 @@ by denying any pathway for an unprivileged process to drop groups with
 .\" ============================================================
 .\"
 .SS Unmapped user and group IDs
-.PP
 There are various places where an unmapped user ID (group ID)
 may be exposed to user space.
 For example, the first process in a new user namespace may call
@@ -872,7 +875,6 @@ that field is displayed as 4294967295 (\-1 as an unsigned integer).
 .\" ============================================================
 .\"
 .SS Accessing files
-.PP
 In order to determine permissions when an unprivileged process accesses a file,
 the process credentials (UID, GID) and the file credentials
 are in effect mapped back to what they would be in
@@ -884,7 +886,6 @@ permissions mask accessibility model, such as System V IPC objects
 .\" ============================================================
 .\"
 .SS Operation of file-related capabilities
-.PP
 Certain capabilities allow a process to bypass various
 kernel-enforced restrictions when performing operations on
 files owned by other users or groups.
@@ -920,7 +921,6 @@ at least the file's user ID has a mapping in the user namespace
 .\" ============================================================
 .\"
 .SS Set-user-ID and set-group-ID programs
-.PP
 When a process inside a user namespace executes
 a set-user-ID (set-group-ID) program,
 the process's effective user (group) ID inside the namespace is changed
@@ -940,7 +940,6 @@ flag, as described in
 .\" ============================================================
 .\"
 .SS Miscellaneous
-.PP
 When a process's user and group IDs are passed over a UNIX domain socket
 to a process in a different user namespace (see the description of
 .B SCM_CREDENTIALS
@@ -1087,7 +1086,7 @@ CapEff:	0000001fffffffff
 #include <errno.h>
 
 /* A simple error\-handling function: print an error message based
-   on the value in \(aqerrno\(aq and terminate the calling process */
+   on the value in \(aqerrno\(aq and terminate the calling process. */
 
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
                         } while (0)
@@ -1153,7 +1152,7 @@ update_map(char *mapping, char *map_file)
     int fd;
     size_t map_len;     /* Length of \(aqmapping\(aq */
 
-    /* Replace commas in mapping string with newlines */
+    /* Replace commas in mapping string with newlines. */
 
     map_len = strlen(mapping);
     for (int j = 0; j < map_len; j++)
@@ -1233,7 +1232,7 @@ childFunc(void *arg)
 
     close(args\->pipe_fd[1]);    /* Close our descriptor for the write
                                    end of the pipe so that we see EOF
-                                   when parent closes its descriptor */
+                                   when parent closes its descriptor. */
     if (read(args\->pipe_fd[0], &ch, 1) != 0) {
         fprintf(stderr,
                 "Failure in child: read from pipe returned != 0\en");
@@ -1242,7 +1241,7 @@ childFunc(void *arg)
 
     close(args\->pipe_fd[0]);
 
-    /* Execute a shell command */
+    /* Execute a shell command. */
 
     printf("About to exec %s\en", args\->argv[0]);
     execvp(args\->argv[0], args\->argv);
@@ -1314,20 +1313,20 @@ main(int argc, char *argv[])
     if (pipe(args.pipe_fd) == \-1)
         errExit("pipe");
 
-    /* Create the child in new namespace(s) */
+    /* Create the child in new namespace(s). */
 
     child_pid = clone(childFunc, child_stack + STACK_SIZE,
                       flags | SIGCHLD, &args);
     if (child_pid == \-1)
         errExit("clone");
 
-    /* Parent falls through to here */
+    /* Parent falls through to here. */
 
     if (verbose)
         printf("%s: PID of child created by clone() is %jd\en",
                 argv[0], (intmax_t) child_pid);
 
-    /* Update the UID and GID maps in the child */
+    /* Update the UID and GID maps in the child. */
 
     if (uid_map != NULL || map_zero) {
         snprintf(map_path, PATH_MAX, "/proc/%jd/uid_map",
@@ -1354,7 +1353,7 @@ main(int argc, char *argv[])
     }
 
     /* Close the write end of the pipe, to signal to the child that we
-       have updated the UID and GID maps */
+       have updated the UID and GID maps. */
 
     close(args.pipe_fd[1]);
 
@@ -1384,4 +1383,4 @@ main(int argc, char *argv[])
 .BR pid_namespaces (7)
 .PP
 The kernel source file
-.IR Documentation/namespaces/resource-control.txt .
+.IR Documentation/namespaces/resource\-control.txt .
