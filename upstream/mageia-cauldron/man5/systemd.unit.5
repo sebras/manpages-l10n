@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 247" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 248" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -57,7 +57,7 @@ systemd.unit \- Unit configuration
 $XDG_RUNTIME_DIR/systemd/user\&.control/*
 $XDG_RUNTIME_DIR/systemd/transient/*
 $XDG_RUNTIME_DIR/systemd/generator\&.early/*
-$XDG_CONFIG_HOME/systemd/user/*
+~/\&.config/systemd/user/*
 $XDG_CONFIG_DIRS/systemd/user/*
 /etc/systemd/user/*
 $XDG_RUNTIME_DIR/systemd/user/*
@@ -717,7 +717,7 @@ A space\-separated list of URIs referencing documentation for this unit or its c
 .PP
 \fIWants=\fR
 .RS 4
-Configures requirement dependencies on other units\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case dependencies for all listed names will be created\&. Dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
+Configures (weak) requirement dependencies on other units\&. This option may be specified more than once or multiple space\-separated units may be specified in one option in which case dependencies for all listed names will be created\&. Dependencies of this type may also be configured outside of the unit configuration file by adding a symlink to a
 \&.wants/
 directory accompanying the unit file\&. For details, see above\&.
 .sp
@@ -744,7 +744,7 @@ is activated\&.
 \fIRequires=\fR
 .RS 4
 Similar to
-\fIWants=\fR, but declares a stronger dependency\&. Dependencies of this type may also be configured by adding a symlink to a
+\fIWants=\fR, but declares a stronger requirement dependency\&. Dependencies of this type may also be configured by adding a symlink to a
 \&.requires/
 directory accompanying the unit file\&.
 .sp
@@ -923,16 +923,17 @@ A space\-separated list of one or more units where reload requests on this unit 
 .RS 4
 For units that start processes (such as service units), lists one or more other units whose network and/or temporary file namespace to join\&. This only applies to unit types which support the
 \fIPrivateNetwork=\fR,
-\fINetworkNamespacePath=\fR
-and
+\fINetworkNamespacePath=\fR,
+\fIPrivateIPC=\fR,
+\fIIPCNamespacePath=\fR, and
 \fIPrivateTmp=\fR
 directives (see
 \fBsystemd.exec\fR(5)
 for details)\&. If a unit that has this setting set is started, its processes will see the same
 /tmp/,
-/var/tmp/
-and network namespace as one listed unit that is started\&. If multiple listed units are already started, it is not defined which namespace is joined\&. Note that this setting only has an effect if
-\fIPrivateNetwork=\fR/\fINetworkNamespacePath=\fR
+/var/tmp/, IPC namespace and network namespace as one listed unit that is started\&. If multiple listed units are already started, it is not defined which namespace is joined\&. Note that this setting only has an effect if
+\fIPrivateNetwork=\fR/\fINetworkNamespacePath=\fR,
+\fIPrivateIPC=\fR/\fIIPCNamespacePath=\fR
 and/or
 \fIPrivateTmp=\fR
 is enabled for both the unit that joins the namespace and the unit whose namespace is joined\&.
@@ -1100,19 +1101,24 @@ and the action is triggered\&. By default the exit status of the main process of
 .PP
 \fIJobTimeoutSec=\fR, \fIJobRunningTimeoutSec=\fR
 .RS 4
-When a job for this unit is queued, a timeout
 \fIJobTimeoutSec=\fR
-may be configured\&. Similarly,
+specifies a timeout for the whole job that starts running when the job is queued\&.
 \fIJobRunningTimeoutSec=\fR
-starts counting when the queued job is actually started\&. If either time limit is reached, the job will be cancelled, the unit however will not change state or even enter the
+specifies a timeout that starts running when the queued job is actually started\&. If either limit is reached, the job will be cancelled, the unit however will not change state or even enter the
 "failed"
-mode\&. This value defaults to
+mode\&.
+.sp
+Both settings take a time span with the default unit of seconds, but other units may be specified, see
+\fBsystemd.time\fR(5)\&. The default is
 "infinity"
-(job timeouts disabled), except for device units (\fIJobRunningTimeoutSec=\fR
+(job timeouts disabled), except for device units where
+\fIJobRunningTimeoutSec=\fR
 defaults to
-\fIDefaultTimeoutStartSec=\fR)\&. NB: this timeout is independent from any unit\-specific timeout (for example, the timeout set with
+\fIDefaultTimeoutStartSec=\fR\&.
+.sp
+Note: these timeouts are independent from any unit\-specific timeouts (for example, the timeout set with
 \fITimeoutStartSec=\fR
-in service units) as the job timeout has no effect on the unit itself, only on the job that might be pending for it\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
+in service units)\&. The job timeout has no effect on the unit itself\&. Or in other words: unit\-specific timeouts are useful to abort unit state changes, and revert them\&. The job timeout set with this option however is useful to abort only the job waiting for the unit state to change\&.
 .RE
 .PP
 \fIJobTimeoutAction=\fR, \fIJobTimeoutRebootArgument=\fR
@@ -1125,6 +1131,7 @@ and
 above\&. It takes the same values as
 \fIStartLimitAction=\fR\&. Defaults to
 \fBnone\fR\&.
+.sp
 \fIJobTimeoutRebootArgument=\fR
 configures an optional reboot string to pass to the
 \fBreboot\fR(2)
@@ -1137,28 +1144,39 @@ Configure unit start rate limiting\&. Units which are started more than
 \fIburst\fR
 times within an
 \fIinterval\fR
-time interval are not permitted to start any more\&. Use
+time span are not permitted to start any more\&. Use
 \fIStartLimitIntervalSec=\fR
-to configure the checking interval (defaults to
-\fIDefaultStartLimitIntervalSec=\fR
-in manager configuration file, set it to 0 to disable any kind of rate limiting)\&. Use
+to configure the checking interval and
 \fIStartLimitBurst=\fR
-to configure how many starts per interval are allowed (defaults to
+to configure how many starts per interval are allowed\&.
+.sp
+\fIinterval\fR
+is a time span with the default unit of seconds, but other units may be specified, see
+\fBsystemd.time\fR(5)\&. Defaults to
+\fIDefaultStartLimitIntervalSec=\fR
+in manager configuration file, and may be set to 0 to disable any kind of rate limiting\&.
+\fIburst\fR
+is a number and defaults to
 \fIDefaultStartLimitBurst=\fR
-in manager configuration file)\&. These configuration options are particularly useful in conjunction with the service setting
+in manager configuration file\&.
+.sp
+These configuration options are particularly useful in conjunction with the service setting
 \fIRestart=\fR
 (see
 \fBsystemd.service\fR(5)); however, they apply to all kinds of starts (including manual), not just those triggered by the
 \fIRestart=\fR
-logic\&. Note that units which are configured for
-\fIRestart=\fR
-and which reach the start limit are not attempted to be restarted anymore; however, they may still be restarted manually at a later point, after the
+logic\&.
+.sp
+Note that units which are configured for
+\fIRestart=\fR, and which reach the start limit are not attempted to be restarted anymore; however, they may still be restarted manually or from a timer or socket at a later point, after the
 \fIinterval\fR
-has passed\&. From this point on, the restart logic is activated again\&. Note that
+has passed\&. From that point on, the restart logic is activated again\&.
 \fBsystemctl reset\-failed\fR
-will cause the restart rate counter for a service to be flushed, which is useful if the administrator wants to manually start a unit and the start limit interferes with that\&. Note that this rate\-limiting is enforced after any unit condition checks are executed, and hence unit activations with failing conditions do not count towards this rate limit\&. This setting does not apply to slice, target, device, and scope units, since they are unit types whose activation may either never fail, or may succeed only a single time\&.
+will cause the restart rate counter for a service to be flushed, which is useful if the administrator wants to manually start a unit and the start limit interferes with that\&. Rate\-limiting is enforced after any unit condition checks are executed, and hence unit activations with failing conditions do not count towards the rate limit\&.
 .sp
 When a unit is unloaded due to the garbage collection logic (see above) its rate limit counters are flushed out too\&. This means that configuring start rate limiting for a unit that is not referenced continuously has no effect\&.
+.sp
+This setting does not apply to slice, target, device, and scope units, since they are unit types whose activation may either never fail, or may succeed only a single time\&.
 .RE
 .PP
 \fIStartLimitAction=\fR
@@ -1355,9 +1373,10 @@ may be used to check whether the given security technology is enabled on the sys
 "tomoyo",
 "ima",
 "smack",
-"audit"
+"audit",
+"uefi\-secureboot"
 and
-"uefi\-secureboot"\&. The test may be negated by prepending an exclamation mark\&.
+"tpm2"\&. The test may be negated by prepending an exclamation mark\&.
 .RE
 .PP
 \fIConditionCapability=\fR
@@ -1526,16 +1545,34 @@ but verifies that the service manager\*(Aqs real or effective group, or any of i
 .PP
 \fIConditionControlGroupController=\fR
 .RS 4
-Verify that the given cgroup controller (eg\&.
-"cpu") is available for use on the system\&. For example, a particular controller may not be available if it was disabled on the kernel command line with
-\fIcgroup_disable=controller\fR\&. Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
+Check whether given cgroup controllers (eg\&.
+"cpu") are available for use on the system or whether the legacy v1 cgroup or the modern v2 cgroup hierarchy is used\&.
+.sp
+Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
 "cpu",
 "cpuacct",
 "io",
 "blkio",
 "memory",
 "devices", and
-"pids"\&.
+"pids"\&. Even if available in the kernel, a particular controller may not be available if it was disabled on the kernel command line with
+\fIcgroup_disable=controller\fR\&.
+.sp
+Alternatively, two special strings
+"v1"
+and
+"v2"
+may be specified (without any controller names)\&.
+"v2"
+will pass if the unified v2 cgroup hierarchy is used, and
+"v1"
+will pass if the legacy v1 hierarchy or the hybrid hierarchy are used (see the discussion of
+\fIsystemd\&.unified_cgroup_hierarchy\fR
+and
+\fIsystemd\&.legacy_systemd_cgroup_controller\fR
+in
+\fBsystemd.service\fR(5)
+for more information)\&.
 .RE
 .PP
 \fIConditionMemory=\fR
@@ -1560,7 +1597,69 @@ Verify that the specified number of CPUs is available to the current system\&. T
 ">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparison operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR
+\fIConditionCPUFeature=\fR
+.RS 4
+Verify that a given CPU feature is available via the
+"CPUID"
+instruction\&. This condition only does something on i386 and x86\-64 processors\&. On other processors it is assumed that the CPU does not support the given feature\&. It checks the leaves
+"1",
+"7",
+"0x80000001", and
+"0x80000007"\&. Valid values are:
+"fpu",
+"vme",
+"de",
+"pse",
+"tsc",
+"msr",
+"pae",
+"mce",
+"cx8",
+"apic",
+"sep",
+"mtrr",
+"pge",
+"mca",
+"cmov",
+"pat",
+"pse36",
+"clflush",
+"mmx",
+"fxsr",
+"sse",
+"sse2",
+"ht",
+"pni",
+"pclmul",
+"monitor",
+"ssse3",
+"fma3",
+"cx16",
+"sse4_1",
+"sse4_2",
+"movbe",
+"popcnt",
+"aes",
+"xsave",
+"osxsave",
+"avx",
+"f16c",
+"rdrand",
+"bmi1",
+"avx2",
+"bmi2",
+"rdseed",
+"adx",
+"sha_ni",
+"syscall",
+"rdtscp",
+"lm",
+"lahf_lm",
+"abm",
+"constant_tsc"\&.
+.RE
+.PP
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,

@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_DEFAULT" "3" "" "systemd 247" "sd_bus_default"
+.TH "SD_BUS_DEFAULT" "3" "" "systemd 248" "sd_bus_default"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_bus_default, sd_bus_default_user, sd_bus_default_system, sd_bus_open, sd_bus_open_with_description, sd_bus_open_user, sd_bus_open_user_with_description, sd_bus_open_system, sd_bus_open_system_with_description, sd_bus_open_system_remote, sd_bus_open_system_machine \- Acquire a connection to a system or user bus
+sd_bus_default, sd_bus_default_user, sd_bus_default_system, sd_bus_open, sd_bus_open_with_description, sd_bus_open_user, sd_bus_open_user_with_description, sd_bus_open_user_machine, sd_bus_open_system, sd_bus_open_system_with_description, sd_bus_open_system_remote, sd_bus_open_system_machine \- Acquire a connection to a system or user bus
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -42,6 +42,8 @@ sd_bus_default, sd_bus_default_user, sd_bus_default_system, sd_bus_open, sd_bus_
 .BI "int sd_bus_open_user(sd_bus\ **" "bus" ");"
 .HP \w'int\ sd_bus_open_user_with_description('u
 .BI "int sd_bus_open_user_with_description(sd_bus\ **" "bus" ", const\ char\ *" "description" ");"
+.HP \w'int\ sd_bus_open_user_machine('u
+.BI "int sd_bus_open_user_machine(sd_bus\ **" "bus" ", const\ char\ *" "machine" ");"
 .HP \w'int\ sd_bus_open_system('u
 .BI "int sd_bus_open_system(sd_bus\ **" "bus" ");"
 .HP \w'int\ sd_bus_open_system_with_description('u
@@ -122,11 +124,29 @@ Note that entering a container is a privileged operation, and will likely only w
 connects to the system bus in the specified
 \fImachine\fR, where
 \fImachine\fR
-is the name of a local container\&. See
+is the name of a local container, possibly prefixed by a user name and a separating
+"@"\&. If the container name is specified as the special string
+"\&.host"
+the connection is made to the local system\&. This is useful to connect to the local system bus as specific user, e\&.g\&.
+"foobar@\&.host"
+to connect to the local system bus as local user
+"foobar"\&. If the
+"@"
+syntax is used either the left\-hand side or the right\-hand side may be omitted (but not both) in which case the local user name or
+"\&.host"
+is implied\&. If the
+"@"
+syntax is not used the connection is always made as root user\&. See
 \fBsd_bus_set_address\fR(3)
 for a description of the address syntax, and
 \fBmachinectl\fR(1)
 for more information about the "machine" concept\&. Note that connections into local containers are only available to privileged processes at this time\&.
+.PP
+\fBsd_bus_open_user_machine()\fR
+is similar to
+\fBsd_bus_open_system_machine()\fR, but connects to the user bus of the root user, or if the
+"@"
+syntax is used, of the specified user\&.
 .PP
 These calls allocate a bus connection object and initiate the connection to a well\-known bus of some form\&. An alternative to using these high\-level calls is to create an unconnected bus object with
 \fBsd_bus_new\fR(3)
@@ -137,6 +157,7 @@ and to connect it with
 The functions
 \fBsd_bus_open()\fR,
 \fBsd_bus_open_user()\fR,
+\fBsd_bus_open_user_machine()\fR,
 \fBsd_bus_open_system()\fR,
 \fBsd_bus_open_system_remote()\fR, and
 \fBsd_bus_open_system_machine()\fR

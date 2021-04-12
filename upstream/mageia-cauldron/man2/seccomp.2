@@ -25,7 +25,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SECCOMP 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH SECCOMP 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 seccomp \- operate on Secure Computing state of the process
 .SH SYNOPSIS
@@ -41,6 +41,9 @@ seccomp \- operate on Secure Computing state of the process
 .BI "int seccomp(unsigned int " operation ", unsigned int " flags \
 ", void *" args );
 .fi
+.PP
+.IR Note :
+There is no glibc wrapper for this system call; see NOTES.
 .SH DESCRIPTION
 The
 .BR seccomp ()
@@ -724,7 +727,7 @@ and
 .BR gettid (2).)
 On other errors, \-1 is returned, and
 .IR errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .SH ERRORS
 .BR seccomp ()
 can fail for the following reasons:
@@ -855,6 +858,9 @@ Tile (since Linux 4.3)
 PA-RISC (since Linux 4.6)
 .\" User mode Linux since Linux 4.6
 .PD
+.PP
+Glibc does not provide a wrapper for this system call; call it using
+.BR syscall (2).
 .\"
 .SS Caveats
 There are various subtleties to consider when applying seccomp filters
@@ -1062,46 +1068,46 @@ install_filter(int syscall_nr, int t_arch, int f_errno)
 {
     unsigned int upper_nr_limit = 0xffffffff;
 
-    /* Assume that AUDIT_ARCH_X86_64 means the normal x86-64 ABI
+    /* Assume that AUDIT_ARCH_X86_64 means the normal x86\-64 ABI
        (in the x32 ABI, all system calls have bit 30 set in the
-       \(aqnr\(aq field, meaning the numbers are >= X32_SYSCALL_BIT) */
+       \(aqnr\(aq field, meaning the numbers are >= X32_SYSCALL_BIT). */
     if (t_arch == AUDIT_ARCH_X86_64)
-        upper_nr_limit = X32_SYSCALL_BIT - 1;
+        upper_nr_limit = X32_SYSCALL_BIT \- 1;
 
     struct sock_filter filter[] = {
         /* [0] Load architecture from \(aqseccomp_data\(aq buffer into
-               accumulator */
+               accumulator. */
         BPF_STMT(BPF_LD | BPF_W | BPF_ABS,
                  (offsetof(struct seccomp_data, arch))),
 
         /* [1] Jump forward 5 instructions if architecture does not
-               match \(aqt_arch\(aq */
+               match \(aqt_arch\(aq. */
         BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, t_arch, 0, 5),
 
         /* [2] Load system call number from \(aqseccomp_data\(aq buffer into
-               accumulator */
+               accumulator. */
         BPF_STMT(BPF_LD | BPF_W | BPF_ABS,
                  (offsetof(struct seccomp_data, nr))),
 
-        /* [3] Check ABI - only needed for x86-64 in deny-list use
+        /* [3] Check ABI \- only needed for x86\-64 in deny\-list use
                cases.  Use BPF_JGT instead of checking against the bit
                mask to avoid having to reload the syscall number. */
         BPF_JUMP(BPF_JMP | BPF_JGT | BPF_K, upper_nr_limit, 3, 0),
 
         /* [4] Jump forward 1 instruction if system call number
-               does not match \(aqsyscall_nr\(aq */
+               does not match \(aqsyscall_nr\(aq. */
         BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, syscall_nr, 0, 1),
 
         /* [5] Matching architecture and system call: don\(aqt execute
-           the system call, and return \(aqf_errno\(aq in \(aqerrno\(aq */
+           the system call, and return \(aqf_errno\(aq in \(aqerrno\(aq. */
         BPF_STMT(BPF_RET | BPF_K,
                  SECCOMP_RET_ERRNO | (f_errno & SECCOMP_RET_DATA)),
 
         /* [6] Destination of system call number mismatch: allow other
-               system calls */
+               system calls. */
         BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
 
-        /* [7] Destination of architecture mismatch: kill process */
+        /* [7] Destination of architecture mismatch: kill process. */
         BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL_PROCESS),
     };
 
@@ -1181,7 +1187,7 @@ Proceedings of the USENIX Winter 1993 Conference
 .UR http://www.tcpdump.org/papers/bpf\-usenix93.pdf
 .UE
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.11 of the Linux
 .I man-pages
 project.
 A description of the project,

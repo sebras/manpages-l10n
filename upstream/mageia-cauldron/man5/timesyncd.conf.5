@@ -1,5 +1,5 @@
 '\" t
-.TH "TIMESYNCD\&.CONF" "5" "" "systemd 247" "timesyncd.conf"
+.TH "TIMESYNCD\&.CONF" "5" "" "systemd 248" "timesyncd.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -64,7 +64,9 @@ The following settings are configured in the [Time] section:
 \fINTP=\fR
 .RS 4
 A space\-separated list of NTP server host names or IP addresses\&. During runtime this list is combined with any per\-interface NTP servers acquired from
-\fBsystemd-networkd.service\fR(8)\&. systemd\-timesyncd will contact all configured system or per\-interface servers in turn until one is found that responds\&. When the empty string is assigned, the list of NTP servers is reset, and all assignments prior to this one will have no effect\&. This setting defaults to an empty list\&.
+\fBsystemd-networkd.service\fR(8)\&.
+\fBsystemd\-timesyncd\fR
+will contact all configured system or per\-interface servers in turn, until one responds\&. When the empty string is assigned, the list of NTP servers is reset, and all prior assignments will have no effect\&. This setting defaults to an empty list\&.
 .RE
 .PP
 \fIFallbackNTP=\fR
@@ -73,26 +75,38 @@ A space\-separated list of NTP server host names or IP addresses to be used as t
 \fBsystemd-networkd.service\fR(8)
 take precedence over this setting, as do any servers set via
 \fINTP=\fR
-above\&. This setting is hence only used if no other NTP server information is known\&. When the empty string is assigned, the list of NTP servers is reset, and all assignments prior to this one will have no effect\&. If this option is not given, a compiled\-in list of NTP servers is used instead\&.
+above\&. This setting is hence only relevant if no other NTP server information is known\&. When the empty string is assigned, the list of NTP servers is reset, and all prior assignments will have no effect\&. If this option is not given, a compiled\-in list of NTP servers is used\&.
 .RE
 .PP
 \fIRootDistanceMaxSec=\fR
 .RS 4
-Maximum acceptable root distance\&. Takes a time value (in seconds)\&. Defaults to 5 seconds\&.
+Maximum acceptable root distance, i\&.e\&. the maximum estimated time required for a packet to travel to the server we are connected to from the server with the reference clock\&. If the current server does not satisfy this limit,
+\fBsystemd\-timesyncd\fR
+will switch to a different server\&.
+.sp
+Takes a time span value\&. The default unit is seconds, but other units may be specified, see
+\fBsystemd.time\fR(5)\&. Defaults to 5 seconds\&.
 .RE
 .PP
 \fIPollIntervalMinSec=\fR, \fIPollIntervalMaxSec=\fR
 .RS 4
-The minimum and maximum poll intervals for NTP messages\&. Each setting takes a time value (in seconds)\&.
+The minimum and maximum poll intervals for NTP messages\&. Polling starts at the minimum poll interval, and is adjusted within the specified limits in response to received packets\&.
+.sp
+Each setting takes a time span value\&. The default unit is seconds, but other units may be specified, see
+\fBsystemd.time\fR(5)\&.
 \fIPollIntervalMinSec=\fR
-must not be smaller than 16 seconds\&.
+defaults to 32 seconds and must not be smaller than 16\ \&seconds\&.
 \fIPollIntervalMaxSec=\fR
-must be larger than
+defaults to 34\ \&min\ \&8\ \&s (2048\ \&seconds) and must be larger than
 \fIPollIntervalMinSec=\fR\&.
-\fIPollIntervalMinSec=\fR
-defaults to 32 seconds, and
-\fIPollIntervalMaxSec=\fR
-defaults to 2048 seconds\&.
+.RE
+.PP
+\fIConnectionRetrySec=\fR
+.RS 4
+Specifies the minimum delay before subsequent attempts to contact a new NTP server are made\&.
+.sp
+Takes a time span value\&. The default unit is seconds, but other units may be specified, see
+\fBsystemd.time\fR(5)\&. Defaults to 30 seconds and must not be smaller than 1 second\&.
 .RE
 .SH "SEE ALSO"
 .PP
