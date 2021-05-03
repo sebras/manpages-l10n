@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ICESH 1"
-.TH ICESH 1 "2021-04-04" "icewm 2.3.1" "User Commands"
+.TH ICESH 1 "2021-04-28" "icewm 2.3.3" "User Commands"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -320,6 +320,9 @@ Print the program version to \fIstdout\fR and exit.
 .IP "\fB\-C\fR, \fB\-\-copying\fR" 4
 .IX Item "-C, --copying"
 Print copying permissions to \fIstdout\fR for the program and exit.
+.IP "\fB\-q\fR, \fB\-\-quiet\fR" 4
+.IX Item "-q, --quiet"
+Don't complain if no matching windows could be found.
 .SH "ACTIONS"
 .IX Header "ACTIONS"
 \&\fBicesh\fR expects one or more action arguments.  There are two kinds of
@@ -464,7 +467,9 @@ If \fI\s-1STATE\s0\fR is omitted then it shows the \fI\s-1EWMH\s0 window state\f
 If \fI\s-1STATE\s0\fR starts with a \f(CW\*(C`+\*(C'\fR then flags in \fI\s-1STATE\s0\fR are appended to
 the existing \fI\s-1EWMH\s0 window state\fR.  If \fI\s-1STATE\s0\fR starts with a \f(CW\*(C`\-\*(C'\fR
 then flags in \fI\s-1STATE\s0\fR are removed from the existing \fI\s-1EWMH\s0 window
-state\fR.  If \fI\s-1STATE\s0\fR starts with a \f(CW\*(C`=\*(C'\fR then the \fI\s-1EWMH\s0 window state\fR
+state\fR.  If \fI\s-1STATE\s0\fR starts with a \f(CW\*(C`^\*(C'\fR then flags in \fI\s-1STATE\s0\fR are
+toggled with respect to the existing \fI\s-1EWMH\s0 window state\fR.
+If \fI\s-1STATE\s0\fR starts with a \f(CW\*(C`=\*(C'\fR then the \fI\s-1EWMH\s0 window state\fR
 is set to \fI\s-1STATE\s0\fR. See \s-1EXPRESSIONS\s0 below. A list of \fI\s-1EWMH\s0 flags\fR
 can be found in the output of \f(CW\*(C`icesh symbols\*(C'\fR.
 .IP "\fBsetLayer\fR \fI\s-1LAYER\s0\fR" 4
@@ -668,6 +673,30 @@ process all previous actions.
 .IP "\fBsymbols\fR" 4
 .IX Item "symbols"
 List all named symbols.
+.SS "\s-1CONDITIONALS\s0"
+.IX Subsection "CONDITIONALS"
+Icesh supports \f(CW\*(C`if\-then\-else\*(C'\fR expressions. The full syntax is:
+.PP
+.Vb 9
+\&    if selection
+\&    then
+\&        actions
+\&    elif selection
+\&    then
+\&        actions
+\&    else
+\&        actions
+\&    end
+.Ve
+.PP
+Where \f(CW\*(C`selection\*(C'\fR is a sequence of selection and filtering options,
+which evaluates to true when it is non-empty. That is, if one or more
+windows fulfilled the condition. If it is empty, then its \f(CW\*(C`actions\*(C'\fR
+clause is ignored and the subsequent \f(CW\*(C`elif\*(C'\fR or \f(CW\*(C`else\*(C'\fR clause is tried
+or taken. Each clause is optional. Even the \f(CW\*(C`then\*(C'\fR clause may be omitted.
+Whenever a selection condition evaluates to false, the window selection
+that existed before the \f(CW\*(C`if\*(C'\fR clause is immediately restored.  Note that
+the use of conditionals is seldom needed.
 .SS "\s-1EXPRESSIONS\s0"
 .IX Subsection "EXPRESSIONS"
 Some of the window actions require one or two \fI\s-1EXPRESSION\s0\fR arguments.
@@ -822,11 +851,34 @@ Toggle the frame border of the focused window.
 \&    if icesh \-f motif | grep \-q \*(Aqdecor:$\*(Aq; then \e
 \&        icesh \-f motif decor All; else icesh \-f motif decor ""; fi
 .Ve
+.PP
+Here is a different solution using conditionals.
+.PP
+.Vb 1
+\&    icesh \-f if \-P _NET_FRAME_EXTENTS=0 then bordered else borderless
+.Ve
 .SH "ENVIRONMENT"
 .IX Header "ENVIRONMENT"
 .IP "\fB\s-1DISPLAY\s0\fR" 4
 .IX Item "DISPLAY"
 The default display.
+.SH "EXIT STATUS"
+.IX Header "EXIT STATUS"
+.IP "\fB0\fR" 4
+.IX Item "0"
+The last action completed successfully.
+.IP "\fB1\fR" 4
+.IX Item "1"
+The last action completed unsuccessfully, or no window met the condition.
+.IP "\fB2\fR" 4
+.IX Item "2"
+A conditional has invalid syntax.
+.IP "\fB3\fR" 4
+.IX Item "3"
+The display could not be opened.
+.IP "\fB4\fR" 4
+.IX Item "4"
+The X server reports an error while processing a request.
 .SH "COMPLIANCE"
 .IX Header "COMPLIANCE"
 \&\fBicesh\fR is largely compliant with the \s-1EWMH\s0 and \s-1ICCCM\s0 specifications.
