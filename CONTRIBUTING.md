@@ -194,7 +194,7 @@ WARNING: this hook requires the curl package to be installed.
 manpages-l10n has a multidistros purpose, thus would need to be released every
 3 months. If you want to help for this administrative tasks, here is what you need to do.
 
-Firt, you need to get the appropriate rights requesting on the salsa repo?
+First, you need to get the appropriate rights on the salsa repo.
 
 Next:
 * Search with grep for the current version number. You'll get some
