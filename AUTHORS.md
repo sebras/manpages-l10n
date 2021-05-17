@@ -231,6 +231,16 @@ of Linux manpages. The list is sorted alphabetically.
 * Wolfgang Jung <woju@keep.in-berlin.de>
 
 
+## Hungarian:
+
+* Ámon Tamás <sajt@erba.hu>
+* Horváth András <horvatha@rs1.szif.hu>
+* Magyari Miklós <magyari@freemail.hu>
+* Mezõ Tamás <tomfield@vm.hu>
+* Tevesz Tamás <ice@rulez.org>
+* Tímár András <timar_a@freemail.hu>
+
+
 ## Italian:
 
 * Alessandro Rubini <rubini@linux.it>
