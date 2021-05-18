@@ -59,6 +59,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-nl.html">The Dutch translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
+        <li><a href="index-hu.html">The Hungarian translation</a></li>
         <li><a href="index-it.html">The Italian translation</a></li>
         <li><a href="index-mk.html">The Macedonian translation</a></li>
         <li><a href="index-pl.html">The Polish translation</a></li>
@@ -77,7 +78,7 @@ cat > index.html <<-END_OF_HEADER
      <ul>
        <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
        <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, integration in manpages-l10n is in progress</li>
-       <li><a href="https://web.archive.org/web/20050403211946/http://lme.linux.hu/forditas/index.html">Hungarian (archived website)</a>, appears inactive, last release 2001, license situation unclear</li>
+       <li><a href="https://web.archive.org/web/20050403211946/http://lme.linux.hu/forditas/index.html">Hungarian (archived website)</a>, appears inactive, last release 2001, integration in manpages-l10n is in progress</li>
        <li>Indonesian (no web page), last release 1999, appears inactive, license situation unclear</li>
        <li><a href="https://linuxjm.osdn.jp/">Japanese</a>, active, but not current (e.g. partially on the state of 2011/2016)</li>
        <li><a href="https://web.archive.org/web/20060205162241/http://man.kldp.org/wiki">Korean (archived website)</a>, appears inactive, last release 2005, license situation unclear</li>
@@ -89,7 +90,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in cs da de es fr it nl mk pl pt_BR ro; do
+for tlang in cs da de es fr hu it nl mk pl pt_BR ro; do
     echo $tlang
 
 # Determine manpage section names
