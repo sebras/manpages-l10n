@@ -237,6 +237,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Horváth András <horvatha@rs1.szif.hu>
 * Magyari Miklós <magyari@freemail.hu>
 * Mezõ Tamás <tomfield@vm.hu>
+* Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
 
