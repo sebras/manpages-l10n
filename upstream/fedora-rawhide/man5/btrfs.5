@@ -2,12 +2,12 @@
 .\"     Title: btrfs-man5
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/28/2021
+.\"      Date: 05/13/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.11.1
+.\"    Source: Btrfs v5.12.1
 .\"  Language: English
 .\"
-.TH "BTRFS\-MAN5" "5" "03/28/2021" "Btrfs v5\&.11\&.1" "Btrfs Manual"
+.TH "BTRFS\-MAN5" "5" "05/13/2021" "Btrfs v5\&.12\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -491,31 +491,6 @@ or
 is not enabled\&.
 .RE
 .PP
-\fBinode_cache\fR, \fBnoinode_cache\fR
-.RS 4
-(since: 3\&.0, default: off)
-.sp
-Enable free inode number caching\&. Not recommended to use unless files on your filesystem get assigned inode numbers that are approaching 2^64\&. Normally, new files in each subvolume get assigned incrementally (plus one from the last time) and are not reused\&. The mount option turns on caching of the existing inode numbers and reuse of inode numbers of deleted files\&.
-.sp
-This option may slow down your system at first run, or after mounting without the option\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-Defaults to off due to a potential overflow problem when the free space checksums don\(cqt fit inside a single page\&.
-.sp .5v
-.RE
-Don\(cqt use this option unless you really need it\&. The inode number limit on 64bit system is 2^64, which is practically enough for the whole filesystem lifetime\&. Due to implementation of linux VFS layer, the inode numbers on 32bit systems are only 32 bits wide\&. This lowers the limit significantly and makes it possible to reach it\&. In such case, this mount option will help\&. Alternatively, files with high inode numbers can be copied to a new subvolume which will effectively start the inode numbers from the beginning again\&.
-.RE
-.PP
 \fBnologreplay\fR
 .RS 4
 (default: off, even read\-only)
@@ -612,6 +587,77 @@ is used for skipping log replay\&. BTRFS does the same and in general will try t
 (since: 3\&.12, default: off)
 .sp
 Force check and rebuild procedure of the UUID tree\&. This should not normally be needed\&.
+.RE
+.PP
+\fBrescue\fR
+.RS 4
+(since: 5\&.9)
+.sp
+Modes allowing mount with damaged filesystem structures\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIusebackuproot\fR
+(since: 5\&.9, replaces standalone option
+\fIusebackuproot\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fInologreplay\fR
+(since: 5\&.9, replaces standalone option
+\fInologreplay\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIignorebadroots\fR,
+\fIibadroots\fR
+(since: 5\&.11)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIignoredatacsums\fR,
+\fIidatacsums\fR
+(since: 5\&.11)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIall\fR
+(since: 5\&.9)
+.RE
 .RE
 .PP
 \fBskip_balance\fR
@@ -855,6 +901,29 @@ and should not be used but will work on 4\&.5+ kernels\&.
 .sp .5v
 .RE
 .RE
+.PP
+\fBinode_cache\fR, \fBnoinode_cache\fR
+.RS 4
+(removed in: 5\&.11, since: 3\&.0, default: off)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+the functionality has been removed in 5\&.11, any stale data created by previous use of the
+\fIinode_cache\fR
+option can be removed by
+\fBbtrfs check \-\-clear\-ino\-cache\fR\&.
+.sp .5v
+.RE
+.RE
 .SS "NOTES ON GENERIC MOUNT OPTIONS"
 .sp
 Some of the general mount options from \fBmount\fR(8) that affect BTRFS and are worth mentioning\&.
@@ -1027,11 +1096,43 @@ indicate that
 reduced\-size metadata for extent references, saves a few percent of metadata
 .RE
 .PP
+\fBsend_stream_version\fR
+.RS 4
+(since: 5\&.10)
+.sp
+number of the highest supported send stream version
+.RE
+.PP
 \fBsupported_checksums\fR
 .RS 4
 (since: 5\&.5)
 .sp
-list of checksum algorithms supported by the kernel module, the respective modules or built\-in implementing the algorithms need to be present to mount the filesystem
+list of checksum algorithms supported by the kernel module, the respective modules or built\-in implementing the algorithms need to be present to mount the filesystem, see
+\fICHECKSUM ALGORITHMS\fR
+.RE
+.PP
+\fBsupported_sectorsizes\fR
+.RS 4
+(since: 5\&.13)
+.sp
+list of values that are accepted as sector sizes (\fBmkfs\&.btrfs \-\-sectorsize\fR) by the running kernel
+.RE
+.PP
+\fBsupported_rescue_options\fR
+.RS 4
+(since: 5\&.11)
+.sp
+list of values for the mount option
+\fIrescue\fR
+that are supported by the running kernel, see
+\fBbtrfs\fR(5)
+.RE
+.PP
+\fBzoned\fR
+.RS 4
+(since: 5\&.12)
+.sp
+zoned mode is allocation/write friendly to host\-managed devices, allocation space is split into fixed\-size zones that must be updated sequentially
 .RE
 .SS "SWAPFILE SUPPORT"
 .sp
@@ -1177,6 +1278,8 @@ device replace \- ditto
 .sp
 When there are no active swapfiles and a whole\-filesystem exclusive operation is running (ie\&. balance, device delete, shrink), the swapfiles cannot be temporarily activated\&. The operation must finish first\&.
 .sp
+To create and activate a swapfile run the following commands:
+.sp
 .if n \{\
 .RS 4
 .\}
@@ -1187,6 +1290,34 @@ When there are no active swapfiles and a whole\-filesystem exclusive operation i
 # chmod 0600 swapfile
 # mkswap swapfile
 # swapon swapfile
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Please note that the UUID returned by the \fImkswap\fR utility identifies the swap "filesystem" and because it\(cqs stored in a file, it\(cqs not generally visible and usable as an identifier unlike if it was on a block device\&.
+.sp
+The file will appear in \fI/proc/swaps\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# cat /proc/swaps
+Filename          Type          Size           Used      Priority
+/path/swapfile    file          2097152        0         \-2
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The swapfile can be created as one\-time operation or, once properly created, activated on each boot by the \fIswapon \-a\fR command (usually started by the service manager)\&. Add the following entry to \fI/etc/fstab\fR, assuming the filesystem that provides the \fI/path\fR has been already mounted at this point\&. Additional mount options relevant for the swapfile can be set too (like priority, not the btrfs mount options)\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/path/swapfile        none        swap        defaults      0 0
 .fi
 .if n \{\
 .RE
@@ -1465,7 +1596,9 @@ The btrfs filesystem supports setting file attributes or flags\&. Note there are
 .RS 4
 \fIcompress data\fR, all data written after this attribute is set will be compressed\&. Please note that compression is also affected by the mount options or the parent directory attributes\&.
 .sp
-When set on a directory, all newly created files will inherit this attribute\&.
+When set on a directory, all newly created files will inherit this attribute\&. This attribute cannot be set with
+\fIm\fR
+at the same time\&.
 .RE
 .PP
 \fBC\fR
@@ -1510,6 +1643,16 @@ and
 \fIimmutable\fR, no file data and metadata changes allowed even to the root user as long as this attribute is set (obviously the exception is unsetting the attribute)
 .RE
 .PP
+\fBm\fR
+.RS 4
+\fIno compression\fR, permanently turn off compression on the given file\&. Any compression mount options will not affect this file\&. (\fBchattr\fR
+support added in 1\&.46\&.2)
+.sp
+When set on a directory, all newly created files will inherit this attribute\&. This attribute cannot be set with
+\fIc\fR
+at the same time\&.
+.RE
+.PP
 \fBS\fR
 .RS 4
 \fIsynchronous updates\fR, for more details search
@@ -1517,13 +1660,6 @@ and
 \fIO_SYNC\fR
 and
 \fIO_DSYNC\fR
-.RE
-.PP
-\fBX\fR
-.RS 4
-\fIno compression\fR, permanently turn off compression on the given file\&. Any compression mount options will not affect this file\&.
-.sp
-When set on a directory, all newly created files will inherit this attribute\&.
 .RE
 .sp
 No other attributes are supported\&. For the complete list please refer to the \fBchattr\fR(1) manual page\&.
