@@ -23,6 +23,7 @@ language_list=(
     '"Dutch"      nl'
     '"French"     fr'
     '"German"     de'
+    '"Hungarian"  hu'
     '"Italian"    it'
     '"Macedonian" mk'
     '"Polish"     pl'

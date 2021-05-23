@@ -8,6 +8,7 @@ languages. Currently we support the following languages:
 *  de - German
 *  es - Spanish
 *  fr - French
+*  hu - Hungarian *
 *  it - Italian
 *  mk - Macedonian
 *  nl - Dutch
