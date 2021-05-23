@@ -240,6 +240,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
+* Váraljai Nándor <vnandor@elender.hu>
 
 
 ## Italian:
