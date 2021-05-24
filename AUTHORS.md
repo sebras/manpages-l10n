@@ -7,7 +7,6 @@ of Linux manpages. The list is sorted alphabetically.
 ## Brazilian Portuguese:
 
 * Ademar de Souza Reis Jr. <ademar@ademar.org>
-* André L. Fassone Canova <lonelywolf@blv.com.br>
 * André Luiz Fassone <lonely_wolf@ig.com.br>
 * Antonio Belloni <abelloni@ig.com.br>
 * Carlos Augusto Horylka <horylka@conectiva.com.br>
@@ -157,7 +156,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Thierry Vignaud <tvignaud@mandriva.com>
 * Thomas Blein <tblein@tblein.eu>
 * Thomas Huriaux <thomas.huriaux@gmail.com>
-* Thomas Vincent <thomas@vinc-net.fr>
 * Thomas Vincent <tvincent@debian.org>
 * Valéry Perrin <valery.perrin.debian@free.fr>
 * Yves Rütschlé <l10n@rutschle.net>
@@ -236,7 +234,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Ámon Tamás <sajt@erba.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * Magyari Miklós <magyari@freemail.hu>
-* Mezõ Tamás <tomfield@vm.hu>
+* Mező Tamás <tomfield@vm.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
@@ -246,7 +244,6 @@ of Linux manpages. The list is sorted alphabetically.
 ## Italian:
 
 * Alessandro Rubini <rubini@linux.it>
-* Antonio Colombo <azc100@gmail.com>
 * Antonio Giovanni Colombo <azc100@gmail.com>
 * Augusto Lenardi <augusto@comune.modena.it>
 * Beatrice Torracca <beatricet@libero.it>
