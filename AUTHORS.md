@@ -172,7 +172,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Daniel Kobras <kobras@linux.de>
 * David Thamm <dthamm@bfs.de>
 * Dennis Stampfer <kontakt@dstampfer.de>
-* Dr. Helge Kreutzmann <debian@helgefjell.de>
 * Dr. Tobias Quathamer <toddy@debian.org>
 * Eduard Bloch <blade@debian.org>
 * Elmar Jansen <ej@pumuckel.gun.de>
@@ -232,6 +231,8 @@ of Linux manpages. The list is sorted alphabetically.
 ## Hungarian:
 
 * Ámon Tamás <sajt@erba.hu>
+* Böszörményi Zoltán <zboszor@mail.externet.hu>
+* Csehi András <acsehi@merlin.flexum.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
@@ -241,7 +242,9 @@ of Linux manpages. The list is sorted alphabetically.
 * Magyari Miklós <magyari@freemail.hu>
 * Mező Tamás <tomfield@vm.hu>
 * Molnár Attila <attila.molnar@hu.appaloosacorp.com>
+* Nagy Ernő <ned@elte.hu>
 * Nagy Viktor <chaos@inf.elte.hu>
+* Szalay Attila <sasa@sophia.jpte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
