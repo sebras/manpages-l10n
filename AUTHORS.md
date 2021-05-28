@@ -245,11 +245,13 @@ of Linux manpages. The list is sorted alphabetically.
 * Molnár Attila <attila.molnar@hu.appaloosacorp.com>
 * Nagy Ernő <ned@elte.hu>
 * Nagy Viktor <chaos@inf.elte.hu>
+* Németh Péter <qgenpete@gold.uni-miskolc.hu>
 * Szalay Attila <sasa@sophia.jpte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
 * Váraljai Nándor <vnandor@elender.hu>
+* Zelena Endre <ezelena@lme.linux.hu>
 
 
 ## Italian:
