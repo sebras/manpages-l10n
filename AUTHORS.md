@@ -233,6 +233,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Ámon Tamás <sajt@erba.hu>
 * Böszörményi Zoltán <zboszor@mail.externet.hu>
 * Csehi András <acsehi@merlin.flexum.hu>
+* Daczi László <dacas@freemail.hu>
 * Dyekiss Emil <emil2@cds.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
