@@ -1,5 +1,12 @@
 # Changelog for manpages-l10n
 
+## Version 4.10.0
+*Mon Jun 13 18:49:01 CET 2021*
+
+* Enable Czech and Danish translations
+* Hungarian is still disabled; still not completely imported
+* Updated and added many translations
+
 ## Version 4.9.3
 *Tue Mar  09 20:22:17 CET 2021*
 
