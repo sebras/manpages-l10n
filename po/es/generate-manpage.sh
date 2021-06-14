@@ -71,7 +71,7 @@ po4a-translate \
 	-a "$addendum" \
 	-a "license.add" \
 	-L UTF-8 \
-	-l "$localized";
+    -l "$localized";
 
 # Ensure a proper encoding if the generation has been successful
 if [ -f "$localized" ]; then
