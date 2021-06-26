@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 248" "systemd-system.conf"
+.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 249" "systemd-system.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -291,6 +291,9 @@ Configures environment variables passed to all executed processes\&. Takes a spa
 \fBenviron\fR(7)
 for details about environment variables\&.
 .sp
+Simple
+"%"\-specifier expansion is supported, see below for a list of supported specifiers\&.
+.sp
 Example:
 .sp
 .if n \{\
@@ -312,7 +315,7 @@ Sets three variables
 \fIManagerEnvironment=\fR
 .RS 4
 Takes the same arguments as
-\fIDefaultEnvironment=\fR, see above\&. Sets environment variables just for the manager process itself\&. These variables are not inherited by processes spawned by the service manager, use
+\fIDefaultEnvironment=\fR, see above\&. Sets environment variables just for the manager process itself\&. In contrast to user managers, these variables are not inherited by processes spawned by the system manager, use
 \fIDefaultEnvironment=\fR
 for that\&. Note that these variables are merged into the existing environment block\&. In particular, in case of the system manager, this includes variables set by the kernel based on the kernel command line\&.
 .sp
@@ -320,6 +323,9 @@ Setting environment variables for the manager process may be useful to modify it
 \m[blue]\fBENVIRONMENT\fR\m[]\&\s-2\u[2]\d\s+2
 for a descriptions of some variables understood by
 \fBsystemd\fR\&.
+.sp
+Simple
+"%"\-specifier expansion is supported, see below for a list of supported specifiers\&.
 .RE
 .PP
 \fIDefaultCPUAccounting=\fR, \fIDefaultBlockIOAccounting=\fR, \fIDefaultMemoryAccounting=\fR, \fIDefaultTasksAccounting=\fR, \fIDefaultIOAccounting=\fR, \fIDefaultIPAccounting=\fR
@@ -369,6 +375,50 @@ for details\&. These settings may be overridden in individual units using the co
 directives and they accept the same parameter syntax, see
 \fBsystemd.exec\fR(5)
 for details\&. Note that these resource limits are only defaults for units, they are not applied to the service manager process (i\&.e\&. PID 1) itself\&.
+.sp
+Most of these settings are unset, which means the resource limits are inherited from the kernel or, if invoked in a container, from the container manager\&. However, the following have defaults:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDefaultLimitNOFILE=\fR
+defaults to
+"1024:524288"\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDefaultLimitCORE=\fR
+does not have a default but it is worth mentioning that
+\fIRLIMIT_CORE\fR
+is set to
+"infinity"
+by PID 1 which is inherited by its children\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Note that the service manager internally increases
+\fIRLIMIT_MEMLOCK\fR
+for itself, however the limit is reverted to the original value for child processes forked off\&.
+.RE
 .RE
 .PP
 \fIDefaultOOMPolicy=\fR
@@ -381,6 +431,152 @@ for details\&. Note that this default is not used for services that have
 \fIDelegate=\fR
 turned on\&.
 .RE
+.SH "SPECIFIERS"
+.PP
+Specifiers may be used in the
+\fIDefaultEnvironment=\fR
+and
+\fIManagerEnvironment=\fR
+settings\&. The following expansions are understood:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&1.\ \&Specifiers available
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Specifier
+T}:T{
+Meaning
+T}:T{
+Details
+T}
+.T&
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+"%a"
+T}:T{
+Architecture
+T}:T{
+A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR in \fBsystemd.unit\fR(5) for a full list\&.
+T}
+T{
+"%A"
+T}:T{
+Operating system image version
+T}:T{
+The operating system image version identifier of the running system, as read from the \fIIMAGE_VERSION=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%b"
+T}:T{
+Boot ID
+T}:T{
+The boot ID of the running system, formatted as string\&. See \fBrandom\fR(4) for more information\&.
+T}
+T{
+"%B"
+T}:T{
+Operating system build ID
+T}:T{
+The operating system build identifier of the running system, as read from the \fIBUILD_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%H"
+T}:T{
+Host name
+T}:T{
+The hostname of the running system\&.
+T}
+T{
+"%l"
+T}:T{
+Short host name
+T}:T{
+The hostname of the running system, truncated at the first dot to remove any domain component\&.
+T}
+T{
+"%m"
+T}:T{
+Machine ID
+T}:T{
+The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%M"
+T}:T{
+Operating system image identifier
+T}:T{
+The operating system image identifier of the running system, as read from the \fIIMAGE_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%o"
+T}:T{
+Operating system ID
+T}:T{
+The operating system identifier of the running system, as read from the \fIID=\fR field of /etc/os\-release\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%v"
+T}:T{
+Kernel release
+T}:T{
+Identical to \fBuname \-r\fR output\&.
+T}
+T{
+"%w"
+T}:T{
+Operating system version ID
+T}:T{
+The operating system version identifier of the running system, as read from the \fIVERSION_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%W"
+T}:T{
+Operating system variant ID
+T}:T{
+The operating system variant identifier of the running system, as read from the \fIVARIANT_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%T"
+T}:T{
+Directory for temporary files
+T}:T{
+This is either /tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
+T}
+T{
+"%V"
+T}:T{
+Directory for larger and persistent temporary files
+T}:T{
+This is either /var/tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
+T}
+T{
+"%%"
+T}:T{
+Single percent sign
+T}:T{
+Use "%%" in place of "%" to specify a single percent sign\&.
+T}
+.TE
+.sp 1
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),

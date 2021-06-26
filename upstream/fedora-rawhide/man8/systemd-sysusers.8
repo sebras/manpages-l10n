@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SYSUSERS" "8" "" "systemd 248" "systemd-sysusers"
+.TH "SYSTEMD\-SYSUSERS" "8" "" "systemd 249" "systemd-sysusers"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -117,6 +117,64 @@ Print a short help text and exit\&.
 .RS 4
 Print a short version string and exit\&.
 .RE
+.SH "CREDENTIALS"
+.PP
+\fBsystemd\-sysusers\fR
+supports the service credentials logic as implemented by
+\fILoadCredential=\fR/\fISetCredential=\fR
+(see
+\fBsystemd.exec\fR(1)
+for details)\&. The following credentials are used when passed in:
+.PP
+"passwd\&.hashed\-password\&.\fIuser\fR"
+.RS 4
+A UNIX hashed password string to use for the specified user, when creating an entry for it\&. This is particularly useful for the
+"root"
+user as it allows provisioning the default root password to use via a unit file drop\-in or from a container manager passing in this credential\&. Note that setting this credential has no effect if the specified user account already exists\&. This credential is hence primarily useful in first boot scenarios or systems that are fully stateless and come up with an empty
+/etc/
+on every boot\&.
+.RE
+.PP
+"passwd\&.plaintext\-password\&.\fIuser\fR"
+.RS 4
+Similar to
+"passwd\&.hashed\-password\&.\fIuser\fR"
+but expect a literal, plaintext password, which is then automatically hashed before used for the user account\&. If both the hashed and the plaintext credential are specified for the same user the former takes precedence\&. It\*(Aqs generally recommended to specify the hashed version; however in test environments with weaker requirements on security it might be easier to pass passwords in plaintext instead\&.
+.RE
+.PP
+"passwd\&.shell\&.\fIuser\fR"
+.RS 4
+Specifies the shell binary to use for the the specified account when creating it\&.
+.RE
+.PP
+Note that by default the
+systemd\-sysusers\&.service
+unit file is set up to inherit the
+"passwd\&.hashed\-password\&.root",
+"passwd\&.plaintext\-password\&.root"
+and
+"passwd\&.shell\&.root"
+credentials from the service manager\&. Thus, when invoking a container with an unpopulated
+/etc/
+for the first time it is possible to configure the root user\*(Aqs password to be
+"systemd"
+like this:
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-nspawn \-\-image=\&... \-\-set\-credential=password\&.hashed\-password\&.root:\*(Aq$y$j9T$yAuRJu1o5HioZAGDYPU5d\&.$F64ni6J2y2nNQve90M/p0ZP0ECP/qqzipNyaY9fjGpC\*(Aq \&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Note again that the data specified in these credentials is consulted only when creating an account for the first time, it may not be used for changing the password or shell of an account that already exists\&.
+.PP
+Use
+\fBmkpasswd\fR(1)
+for generating UNIX password hashes from the command line\&.
 .SH "EXIT STATUS"
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.
@@ -124,7 +182,9 @@ On success, 0 is returned, a non\-zero failure code otherwise\&.
 .PP
 \fBsystemd\fR(1),
 \fBsysusers.d\fR(5),
-\m[blue]\fBUsers, Groups, UIDs and GIDs on systemd systems\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBUsers, Groups, UIDs and GIDs on systemd systems\fR\m[]\&\s-2\u[2]\d\s+2,
+\fBsystemd.exec\fR(1),
+\fBmkpasswd\fR(1)
 .SH "NOTES"
 .IP " 1." 4
 Discoverable Partitions Specification
