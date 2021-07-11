@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 248" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 249" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -696,7 +696,8 @@ If one or two colon\-separated numbers are specified, user namespacing is turned
 .sp -1
 .IP "  2." 4.2
 .\}
-If the parameter is omitted, or true, user namespacing is turned on\&. The UID/GID range to use is determined automatically from the file ownership of the root directory of the container\*(Aqs directory tree\&. To use this option, make sure to prepare the directory tree in advance, and ensure that all files and directories in it are owned by UIDs/GIDs in the range you\*(Aqd like to use\&. Also, make sure that used file ACLs exclusively reference UIDs/GIDs in the appropriate range\&. If this mode is used the number of UIDs/GIDs assigned to the container for use is 65536, and the UID/GID of the root directory must be a multiple of 65536\&.
+If the parameter is
+"yes", user namespacing is turned on\&. The UID/GID range to use is determined automatically from the file ownership of the root directory of the container\*(Aqs directory tree\&. To use this option, make sure to prepare the directory tree in advance, and ensure that all files and directories in it are owned by UIDs/GIDs in the range you\*(Aqd like to use\&. Also, make sure that used file ACLs exclusively reference UIDs/GIDs in the appropriate range\&. In this mode, the number of UIDs/GIDs assigned to the container is 65536, and the owner UID/GID of the root directory must be a multiple of 65536\&.
 .RE
 .sp
 .RS 4
@@ -707,7 +708,8 @@ If the parameter is omitted, or true, user namespacing is turned on\&. The UID/G
 .sp -1
 .IP "  3." 4.2
 .\}
-If the parameter is false, user namespacing is turned off\&. This is the default\&.
+If the parameter is
+"no", user namespacing is turned off\&. This is the default\&.
 .RE
 .sp
 .RS 4
@@ -718,11 +720,26 @@ If the parameter is false, user namespacing is turned off\&. This is the default
 .sp -1
 .IP "  4." 4.2
 .\}
+If the parameter is
+"identity", user namespacing is employed with an identity mapping for the first 65536 UIDs/GIDs\&. This is mostly equivalent to
+\fB\-\-private\-users=0:65536\fR\&. While it does not provide UID/GID isolation, since all host and container UIDs/GIDs are chosen identically it does provide process capability isolation, and hence is often a good choice if proper user namespacing with distinct UID maps is not appropriate\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  5." 4.2
+.\}
 The special value
 "pick"
-turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner of the root directory of the container\*(Aqs directory tree is read, and it is checked that it is currently not used by the system otherwise (in particular, that no other container is using it)\&. If this check is successful, the UID/GID range determined this way is used, similar to the behavior if "yes" is specified\&. If the check is not successful (and thus the UID/GID range indicated in the root directory\*(Aqs file owner is already used elsewhere) a new \(en currently unused \(en UID/GID range of 65536 UIDs/GIDs is randomly chosen between the host UID/GIDs of 524288 and 1878982656, always starting at a multiple of 65536, and, if possible, consistently hashed from the machine name\&. This setting implies
-\fB\-\-private\-users\-chown\fR
-(see below), which has the effect that the files and directories in the container\*(Aqs directory tree will be owned by the appropriate users of the range picked\&. Using this option makes user namespace behavior fully automatic\&. Note that the first invocation of a previously unused container image might result in picking a new UID/GID range for it, and thus in the (possibly expensive) file ownership adjustment operation\&. However, subsequent invocations of the container will be cheap (unless of course the picked UID/GID range is assigned to a different use by then)\&.
+turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner UID/GID of the root directory of the container\*(Aqs directory tree is read, and it is checked that no other container is currently using it\&. If this check is successful, the UID/GID range determined this way is used, similar to the behavior if
+"yes"
+is specified\&. If the check is not successful (and thus the UID/GID range indicated in the root directory\*(Aqs file owner is already used elsewhere) a new \(en currently unused \(en UID/GID range of 65536 UIDs/GIDs is randomly chosen between the host UID/GIDs of 524288 and 1878982656, always starting at a multiple of 65536, and, if possible, consistently hashed from the machine name\&. This setting implies
+\fB\-\-private\-users\-ownership=auto\fR
+(see below), which possibly has the effect that the files and directories in the container\*(Aqs directory tree will be owned by the appropriate users of the range picked\&. Using this option makes user namespace behavior fully automatic\&. Note that the first invocation of a previously unused container image might result in picking a new UID/GID range for it, and thus in the (possibly expensive) file ownership adjustment operation\&. However, subsequent invocations of the container will be cheap (unless of course the picked UID/GID range is assigned to a different use by then)\&.
 .RE
 .sp
 It is recommended to assign at least 65536 UIDs/GIDs to each container, so that the usable UID/GID range in the container covers 16 bit\&. For best security, do not assign overlapping UID/GID ranges to multiple containers\&. It is hence a good idea to use the upper 16 bit of the host 32\-bit UIDs/GIDs as container identifier, while the lower 16 bit encode the container UID/GID used\&. This is in fact the behavior enforced by the
@@ -743,11 +760,36 @@ or
 Note that when user namespacing is used file ownership on disk reflects this, and all of the container\*(Aqs files and directories are owned by the container\*(Aqs effective user and group IDs\&. This means that copying files from and to the container image requires correction of the numeric UID/GID values, according to the UID/GID shift applied\&.
 .RE
 .PP
-\fB\-\-private\-users\-chown\fR
+\fB\-\-private\-users\-ownership=\fR
 .RS 4
-If specified, all files and directories in the container\*(Aqs directory tree will be adjusted so that they are owned by the appropriate UIDs/GIDs selected for the container (see above)\&. This operation is potentially expensive, as it involves iterating through the full directory tree of the container\&. Besides actual file ownership, file ACLs are adjusted as well\&.
+Controls how to adjust the container image\*(Aqs UIDs and GIDs to match the UID/GID range chosen with
+\fB\-\-private\-users=\fR, see above\&. Takes one of
+"off"
+(to leave the image as is),
+"chown"
+(to recursively
+\fBchown()\fR
+the container\*(Aqs directory tree as needed),
+"map"
+(in order to use transparent ID mapping mounts) or
+"auto"
+for automatically using
+"map"
+where available and
+"chown"
+where not\&.
 .sp
-This option is implied if
+If
+"chown"
+is selected, all files and directories in the container\*(Aqs directory tree will be adjusted so that they are owned by the appropriate UIDs/GIDs selected for the container (see above)\&. This operation is potentially expensive, as it involves iterating through the full directory tree of the container\&. Besides actual file ownership, file ACLs are adjusted as well\&.
+.sp
+Typically
+"map"
+is the best choice, since it transparently maps UIDs/GIDs in memory as needed without modifying the image, and without requiring an expensive recursive adjustment operation\&. However, it is not available for all file systems, currently\&.
+.sp
+The
+\fB\-\-private\-users\-ownership=auto\fR
+option is implied if
 \fB\-\-private\-users=pick\fR
 is used\&. This option has no effect if user namespacing is not used\&.
 .RE
@@ -755,7 +797,7 @@ is used\&. This option has no effect if user namespacing is not used\&.
 \fB\-U\fR
 .RS 4
 If the kernel supports the user namespaces feature, equivalent to
-\fB\-\-private\-users=pick \-\-private\-users\-chown\fR, otherwise equivalent to
+\fB\-\-private\-users=pick \-\-private\-users\-ownership=auto\fR, otherwise equivalent to
 \fB\-\-private\-users=no\fR\&.
 .sp
 Note that
@@ -765,7 +807,7 @@ systemd\-nspawn@\&.service
 template unit file is used\&.
 .sp
 Note: it is possible to undo the effect of
-\fB\-\-private\-users\-chown\fR
+\fB\-\-private\-users\-ownership=chown\fR
 (or
 \fB\-U\fR) on the file system by redoing the operation with the first UID of 0:
 .sp
@@ -773,7 +815,7 @@ Note: it is possible to undo the effect of
 .RS 4
 .\}
 .nf
-systemd\-nspawn \&... \-\-private\-users=0 \-\-private\-users\-chown
+systemd\-nspawn \&... \-\-private\-users=0 \-\-private\-users\-ownership=chown
 .fi
 .if n \{\
 .RE
@@ -1339,6 +1381,72 @@ user\&. That\*(Aqs because the mount and its files and directories continue to b
 \fB\-\-bind\-ro=\fR\&.
 .RE
 .PP
+\fB\-\-bind\-user=\fR
+.RS 4
+Binds the home directory of the specified user on the host into the container\&. Takes the name of an existing user on the host as argument\&. May be used multiple times to bind multiple users into the container\&. This does three things:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+The user\*(Aqs home directory is bind mounted from the host into
+/run/hosts/home/\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+An additional UID/GID mapping is added that maps the host user\*(Aqs UID/GID to a container UID/GID, allocated from the 60514\&...60577 range\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+A JSON user and group record is generated in
+/run/userdb/
+that describes the mapped user\&. It contains a minimized representation of the host\*(Aqs user record, adjusted to the UID/GID and home directory path assigned to the user in the container\&. The
+\fBnss-systemd\fR(8)
+glibc NSS module will pick up these records from there and make them available in the container\*(Aqs user/group databases\&.
+.RE
+.sp
+The combination of the three operations above ensures that it is possible to log into the host\*(Aqs user account inside the container as if it was local to the container\&. The user is only mapped transiently, while the container is running and the mapping itself does not result in persistent changes to the container (except maybe for generated log messages at login time, and similar)\&. Note that in particular the UID/GID assignment in the container is not made persistently\&. If the user is mapped transiently, it is best to not allow the user to make persistent changes to the container\&. If the user leaves files or directories owned by the user, and those UIDs/GIDs are recycled during later container invocations (possibly with a different
+\fB\-\-bind\-user=\fR
+mapping), those files and directories will be accessible to the "new" user\&.
+.sp
+The user/group record mapping only works if the container contains systemd 249 or newer, with
+\fBnss\-systemd\fR
+properly configured in
+nsswitch\&.conf\&. See
+\fBnss-systemd\fR(8)
+for details\&.
+.sp
+Note that the user record propagated from the host into the container will contain the UNIX password hash of the user, so that seamless logins in the container are possible\&. If the container is less trusted than the host it\*(Aqs hence important to use a strong UNIX password hash function (e\&.g\&. yescrypt or similar, with the
+"$y$"
+hash prefix)\&.
+.sp
+When binding a user from the host into the container checks are executed to ensure that the username is not yet known in the container\&. Moreover, it is checked that the UID/GID allocated for it is not currently defined in the user/group databases of the container\&. Both checks directly access the container\*(Aqs
+/etc/passwd
+and
+/etc/group, and thus might not detect existing accounts in other databases\&.
+.sp
+This operation is only supported in combination with
+\fB\-\-private\-users=\fR/\fB\-U\fR\&.
+.RE
+.PP
 \fB\-\-inaccessible=\fR
 .RS 4
 Make the specified path inaccessible in the container\&. This over\-mounts the specified path (which must exist in the container) with a file node of the same type that is empty and has the most restrictive access mode supported\&. This is an effective way to mask files, directories and other file system objects from the container payload\&. This option may be used more than once in case all specified paths are masked\&.
@@ -1476,6 +1584,38 @@ to embed a newline, or
 to embed a
 \fBNUL\fR
 byte\&. Note that the invoking shell might already apply unescaping once, hence this might require double escaping!)\&.
+.sp
+The
+\fBsystemd-sysusers.service\fR(8)
+and
+\fBsystemd-firstboot\fR(1)
+services read credentials configured this way for the purpose of configuring the container\*(Aqs root user\*(Aqs password and shell, as well as system locale, keymap and timezone during the first boot process of the container\&. This is particularly useful in combination with
+\fB\-\-volatile=yes\fR
+where every single boot appears as first boot, since configuration applied to
+/etc/
+is lost on container reboot cycles\&. See the respective man pages for details\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-nspawn \-i image\&.raw \e
+        \-\-volatile=yes \e
+        \-\-set\-credential=firstboot\&.locale:de_DE\&.UTF\-8 \e
+        \-\-set\-credential=passwd\&.hashed\-password\&.root:\*(Aq$y$j9T$yAuRJu1o5HioZAGDYPU5d\&.$F64ni6J2y2nNQve90M/p0ZP0ECP/qqzipNyaY9fjGpC\*(Aq \e
+        \-b
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The above command line will invoke the specified image file
+image\&.raw
+in volatile mode, i\&.e with an empty
+/etc/
+and
+/var/, so that the container\*(Aqs payload recognizes this as first boot condition, and will invoke
+systemd\-firstboot\&.service, which then read the two passed credentials to configure the system\*(Aqs initial locale and root password\&.
 .RE
 .SS "Other"
 .PP
@@ -1521,7 +1661,7 @@ and other tools that display logs will color messages based on the log level on 
 .PP
 \fI$SYSTEMD_LOG_TIME\fR
 .RS 4
-A boolean\&. If true, log messages will be prefixed with a timestamp\&.
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
 .sp
 This setting is only useful when messages are written directly to the terminal or a file, because
 \fBjournalctl\fR(1)
@@ -1686,9 +1826,9 @@ and other conditions\&.
 .\}
 .nf
 # machinectl pull\-raw \-\-verify=no \e
-      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/Fedora\-Cloud\-Base\-33\-1\&.2\&.x86_64\&.raw\&.xz \e
-      Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
-# systemd\-nspawn \-M Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
+      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora\-Cloud\-Base\-34\-1\&.2\&.x86_64\&.raw\&.xz \e
+      Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
+# systemd\-nspawn \-M Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
 .fi
 .if n \{\
 .RE
@@ -1704,21 +1844,21 @@ and opens a shell in it\&.
 .RS 4
 .\}
 .nf
-# dnf \-y \-\-releasever=33 \-\-installroot=/var/lib/machines/f33 \e
+# dnf \-y \-\-releasever=34 \-\-installroot=/var/lib/machines/f34 \e
       \-\-disablerepo=\*(Aq*\*(Aq \-\-enablerepo=fedora \-\-enablerepo=updates install \e
       systemd passwd dnf fedora\-release vim\-minimal glibc\-minimal\-langpack
-# systemd\-nspawn \-bD /var/lib/machines/f33
+# systemd\-nspawn \-bD /var/lib/machines/f34
 .fi
 .if n \{\
 .RE
 .\}
 .PP
 This installs a minimal Fedora distribution into the directory
-/var/lib/machines/f33
+/var/lib/machines/f34
 and then boots that OS in a namespace container\&. Because the installation is located underneath the standard
 /var/lib/machines/
 directory, it is also possible to start the machine using
-\fBsystemd\-nspawn \-M f33\fR\&.
+\fBsystemd\-nspawn \-M f34\fR\&.
 .PP
 \fBExample\ \&3.\ \&Spawn a shell in a container of a minimal Debian unstable distribution\fR
 .sp

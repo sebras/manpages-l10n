@@ -722,12 +722,15 @@ and applying a corresponding action if there is a match\&.
 .sp
 \fIbind\-rule\fR
 describes socket properties such as
-\fIaddress\-family\fR
+\fIaddress\-family\fR,
+\fItransport\-protocol\fR
 and
 \fIip\-ports\fR\&.
 .sp
 \fIbind\-rule\fR
-:= [\fIaddress\-family\fR\fB:\fR]\fIip\-ports\fR
+:= { [\fIaddress\-family\fR\fB:\fR][\fItransport\-protocol\fR\fB:\fR][\fIip\-ports\fR] |
+\fBany\fR
+}
 .sp
 \fIaddress\-family\fR
 := {
@@ -736,24 +739,39 @@ and
 \fBipv6\fR
 }
 .sp
+\fItransport\-protocol\fR
+:= {
+\fBtcp\fR
+|
+\fBudp\fR
+}
+.sp
 \fIip\-ports\fR
 := {
 \fIip\-port\fR
 |
 \fIip\-port\-range\fR
-|
-\fBany\fR
 }
 .sp
 An optional
 \fIaddress\-family\fR
 expects
-\fBIPv4\fR
+\fBipv4\fR
 or
-\fBIPv6\fR
+\fBipv6\fR
 values\&. If not specified, a rule will be matched for both IPv4 and IPv6 addresses and applied depending on other socket fields, e\&.g\&.
+\fItransport\-protocol\fR,
 \fIip\-port\fR\&.
 .sp
+An optional
+\fItransport\-protocol\fR
+expects
+\fBtcp\fR
+or
+\fBudp\fR
+transport protocol names\&. If not specified, a rule will be matched for any transport protocol\&.
+.sp
+An optional
 \fIip\-port\fR
 value must lie within 1\&...65535 interval inclusively, i\&.e\&. dynamic port
 \fB0\fR
@@ -764,9 +782,11 @@ is not allowed\&. A range of sequential ports is described by
 \fIip\-port\-low\fR
 is smaller than or equal to
 \fIip\-port\-high\fR
-and both are within 1\&...65535 inclusively\&. A special value
+and both are within 1\&...65535 inclusively\&.
+.sp
+A special value
 \fBany\fR
-should be used to apply a rule to any port with a positive value\&.
+can be used to apply a rule to any address family, transport protocol and any port with a positive value\&.
 .sp
 To allow multiple rules assign
 \fISocketBindAllow=\fR
@@ -847,10 +867,25 @@ SocketBindDeny=any
 \&...
 # Deny binding IPv6 socket addresses\&.
 [Service]
-SocketBindDeny=ipv6:any
+SocketBindDeny=ipv6
 \&...
 # Deny binding IPv4 and IPv6 socket addresses\&.
 [Service]
+SocketBindDeny=any
+\&...
+# Allow binding only over TCP
+[Service]
+SocketBindAllow=tcp
+SocketBindDeny=any
+\&...
+# Allow binding only over IPv6/TCP
+[Service]
+SocketBindAllow=ipv6:tcp
+SocketBindDeny=any
+\&...
+# Allow binding ports within 10000\-65535 range over IPv4/UDP\&.
+[Service]
+SocketBindAllow=ipv4:udp:10000\-65535
 SocketBindDeny=any
 \&...
 .fi

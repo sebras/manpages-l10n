@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 248" "systemd.special"
+.TH "SYSTEMD\&.SPECIAL" "7" "" "systemd 249" "systemd.special"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,6 +48,7 @@ initrd\&.target,
 initrd\-fs\&.target,
 initrd\-root\-device\&.target,
 initrd\-root\-fs\&.target,
+initrd\-usr\-fs\&.target,
 kbrequest\&.target,
 kexec\&.target,
 local\-fs\-pre\&.target,
@@ -328,11 +329,14 @@ to
 sysroot\-usr\&.mount
 and all mount points found in
 /etc/fstab
-that have
+that have the
 \fBx\-initrd\&.mount\fR
-and not have
+mount option set and do not have the
 \fBnoauto\fR
-mount options set\&.
+mount option set\&. It is also indirectly ordered after
+sysroot\&.mount\&. Thus, once this target is reached the
+/sysroot/
+hierarchy is fully set up, in preparation for the transition to the host OS\&.
 .RE
 .PP
 initrd\-root\-device\&.target
@@ -351,7 +355,36 @@ automatically adds dependencies of type
 \fIBefore=\fR
 to the
 sysroot\&.mount
-unit, which is generated from the kernel command line\&.
+unit, which is generated from the kernel command line\*(Aqs
+\fIroot=\fR
+setting (or equivalent)\&.
+.RE
+.PP
+initrd\-usr\-fs\&.target
+.RS 4
+\fBsystemd-fstab-generator\fR(3)
+automatically adds dependencies of type
+\fIBefore=\fR
+to the
+sysusr\-usr\&.mount
+unit, which is generated from the kernel command line\*(Aqs
+\fIusr=\fR
+switch\&. Services may order themselves after this target unit in order to run once the
+/sysusr/
+hierarchy becomes available, on systems that come up initially without a root file system, but with an initialized
+/usr/
+and need to access that before setting up the root file system to ultimately switch to\&. On systems where
+\fIusr=\fR
+is not used this target is ordered after
+sysroot\&.mount
+and thus mostly equivalent to
+initrd\-root\-fs\&.target\&. In effect on any system once this target is reached the file system backing
+/usr/
+is mounted, though possibly at two different locations, either below the
+/sysusr/
+or the
+/sysroot/
+hierarchies\&.
 .RE
 .PP
 kbrequest\&.target

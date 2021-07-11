@@ -1,4 +1,4 @@
-.TH LOGROTATE 8 "3.17.0" "Linux" "System Administrator's Manual"
+.TH LOGROTATE 8 "3.18.1" "Linux" "System Administrator's Manual"
 .\" Per groff_man(7), the TQ macro should be copied from an-ext.tmac when
 .\" not running under groff.  That's not quite right; not all groff
 .\" installations include this macro.  So bring it in with another name
@@ -154,6 +154,7 @@ compress
     rotate 2
     olddir /var/log/news/old
     missingok
+    sharedscripts
     postrotate
         kill \-HUP $(cat /var/run/inn.pid)
     endscript
@@ -192,9 +193,7 @@ Normal shell quoting rules apply, with \fB'\fR, \fB"\fR, and \fB\e\fR
 characters supported.
 
 The next section defines the parameters for all of the files in
-\fI/var/log/news\fR. Each file is rotated on a monthly basis.  This is
-considered a single rotation directive and if errors occur for more than
-one file, the log files are not compressed.
+\fI/var/log/news\fR. Each file is rotated on a monthly basis.
 
 The last section uses tilde expansion to rotate log files in the home
 directory of the current user.  This is only available, if your glob
@@ -238,8 +237,9 @@ overrides the \fBolddir\fR option).
 .TP
 \fBsu \fIuser\fR \fIgroup\fR
 Rotate log files set under this user and group instead of using default
-user/group (usually root).  \fIuser\fR specifies the user name used for
-rotation and \fIgroup\fR specifies the group used for rotation.  If the
+user/group (usually root).  \fIuser\fR specifies the user used for
+rotation and \fIgroup\fR specifies the group used for rotation (see the
+section \fBUSER AND GROUP\fR for details).  If the
 user/group you specify here does not have sufficient privilege to make
 files with the ownership you've specified in a \fBcreate\fR directive,
 it will cause an error.  If \fBlogrotate\fR runs with root privileges, it is
@@ -378,9 +378,10 @@ is replaced.  At startup, the taboo pattern list is empty.
 Immediately after rotation (before the \fBpostrotate\fR script is run)
 the log file is created (with the same name as the log file just rotated).
 \fImode\fR specifies the mode for the log file in octal (the same
-as \fBchmod\fR(2)), \fIowner\fR specifies the user name who will own the
+as \fBchmod\fR(2)), \fIowner\fR specifies the user who will own the
 log file, and \fIgroup\fR specifies the group the log file will belong
-to.  Any of the log file attributes may be omitted, in which case those
+to (see the section \fBUSER AND GROUP\fR for details).
+Any of the log file attributes may be omitted, in which case those
 attributes for the new file will use the same values as the original log
 file for the omitted attributes.  This option can be disabled using the
 \fBnocreate\fR option.
@@ -393,9 +394,10 @@ New log files are not created (this overrides the \fBcreate\fR option).
 \fBcreateolddir \fImode\fR \fIowner\fR \fIgroup\fR
 If the directory specified by \fBolddir\fR directive does not exist, it is
 created. \fImode\fR specifies the mode for the \fBolddir\fR directory
-in octal (the same as \fBchmod\fR(2)), \fIowner\fR specifies the user name
+in octal (the same as \fBchmod\fR(2)), \fIowner\fR specifies the user
 who will own the \fBolddir\fR directory, and \fIgroup\fR specifies the group
-the \fBolddir\fR directory will belong to.  This option can be disabled using
+the \fBolddir\fR directory will belong to (see the section \fBUSER AND GROUP
+\fR for details).  This option can be disabled using
 the \fBnocreateolddir\fR option.
 
 .TP
@@ -408,7 +410,8 @@ Make a copy of the log file, but don't change the original at all.
 This option can be used, for instance, to make a snapshot of the current
 log file, or when some other utility needs to truncate or parse the file.
 When this option is used, the \fBcreate\fR option will have no effect,
-as the old log file stays in place.
+as the old log file stays in place.  The \fBcopy\fR option allows storing
+rotated log files on the different devices using \fBolddir\fR directive.
 
 .TP
 \fBnocopy\fR
@@ -424,7 +427,9 @@ and thus might continue writing (appending) to the previous log file forever.
 Note that there is a very small time slice between copying the file and
 truncating it, so some logging data might be lost.
 When this option is used, the \fBcreate\fR option will have no effect,
-as the old log file stays in place.
+as the old log file stays in place.  The \fBcopytruncate\fR option allows
+storing rotated log files on the different devices using \fBolddir\fR
+directive.  The \fBcopytruncate\fR option implies \fBnorenamecopy\fR.
 
 .TP
 \fBnocopytruncate\fR
@@ -435,9 +440,15 @@ Do not truncate the original log file in place after creating a copy
 \fBrenamecopy\fR
 Log file is renamed to temporary filename in the same directory by adding
 ".tmp" extension to it.  After that, \fBpostrotate\fR script is run
-and log file is copied from temporary filename to final filename.  This allows
-storing rotated log files on the different devices using \fBolddir\fR
-directive. In the end, temporary filename is removed.
+and log file is copied from temporary filename to final filename.  In the end,
+temporary filename is removed.  The \fBrenamecopy\fR option allows storing
+rotated log files on the different devices using \fBolddir\fR directive.
+The \fBrenamecopy\fR option implies \fBnocopytruncate\fR.
+
+.TP
+\fBnorenamecopy\fR
+Do not rename and copy the original log file
+(this overrides the \fBrenamecopy\fR option).
 
 .TP
 \fBshred\fR
@@ -711,6 +722,11 @@ stderr, stdout, the current directory, the environment, and the umask.
 Scripts are run as the invoking user and group, irrespective of any \fBsu\fR
 directive.  If the \fB\-\-log\fR flag was specified, file descriptor 3 is the
 log file.
+
+.SH USER AND GROUP
+
+User and group identifiers are resolved first by trying the textual
+representation and, in case it fails, afterwards by the numeric value.
 
 .SH FILES
 

@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_ERROR" "3" "" "systemd 248" "sd_bus_error"
+.TH "SD_BUS_ERROR" "3" "" "systemd 249" "sd_bus_error"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -74,50 +74,91 @@ typedef struct {
 .PP
 The
 sd_bus_error
-structure carries information about a D\-Bus error condition\&. The functions described below may be used to set and query fields in this structure\&. The
+structure carries information about a D\-Bus error condition, or lack thereof\&. The functions described below may be used to set and query fields in this structure\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
 \fIname\fR
 field contains a short identifier of an error\&. It should follow the rules for error names described in the D\-Bus specification, subsection
 \m[blue]\fBValid Names\fR\m[]\&\s-2\u[1]\d\s+2\&. A number of common, standardized error names are described in
-\fBsd-bus-errors\fR(3), but additional domain\-specific errors may be defined by applications\&. The
+\fBsd-bus-errors\fR(3), but additional domain\-specific errors may be defined by applications\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The
 \fImessage\fR
 field usually contains a human\-readable string describing the details, but might be
-\fBNULL\fR\&. An unset
+\fBNULL\fR\&.
+.RE
+.sp
+An unset
 sd_bus_error
 structure should have both fields initialized to
-\fBNULL\fR\&. Set an error structure to
+\fBNULL\fR, and signifies lack of an error, i\&.e\&. success\&. Assign
 \fBSD_BUS_ERROR_NULL\fR
-in order to reset both fields to
+to the structure in order to initialize both fields to
 \fBNULL\fR\&. When no longer necessary, resources held by the
 sd_bus_error
 structure should be destroyed with
 \fBsd_bus_error_free()\fR\&.
 .PP
 \fBsd_bus_error_set()\fR
-sets an error structure to the specified name and message strings\&. The strings will be copied into internal, newly allocated memory\&. It is essential to free the error structure again when it is not required anymore (see above)\&. The function will return an
-\fIerrno\fR\-like negative value (see
-\fBerrno\fR(3)) determined from the specified error name\&. Various well\-known D\-Bus errors are converted to well\-known
+sets an error structure to the specified name and message strings\&. The strings will be copied into internal, newly allocated memory\&. It is essential to free the contents again when they are not required anymore (see above)\&. Do not use this call on error structures that have already been set\&. If you intend to reuse an error structure, free the old data stored in it with
+\fBsd_bus_error_free()\fR
+first\&.
+.PP
+\fBsd_bus_error_set()\fR
+will return an
+\fIerrno\fR\-like value (see
+\fBerrno\fR(3)) determined from the specified error name
+\fIname\fR\&. If
+\fIname\fR
+is
+\fBNULL\fR, it is assumed that no error occurred, and
+\fB0\fR
+is returned\&. If
+\fIname\fR
+is nonnull, a negative value is always returned\&. If
+\fIe\fR
+is
+\fBNULL\fR, no error structure is initialized, but
+\fIname\fR
+is still converted into an
+\fIerrno\fR\-style value\&.
+.PP
+Various well\-known D\-Bus errors are converted to well\-known
 \fIerrno\fR
 counterparts, and the other ones to
 \fB\-EIO\fR\&. See
 \fBsd-bus-errors\fR(3)
 for a list of well\-known error names\&. Additional error mappings may be defined with
-\fBsd_bus_error_add_map\fR(3)\&. If
-\fIe\fR
-is
-\fBNULL\fR, no error structure is initialized, but the error is still converted into an
-\fIerrno\fR\-style error\&. If
-\fIname\fR
-is
-\fBNULL\fR, it is assumed that no error occurred, and 0 is returned\&. This means that this function may be conveniently used in a
+\fBsd_bus_error_add_map\fR(3)\&.
+.PP
+\fBsd_bus_error_set()\fR
+is designed to be conveniently used in a
 \fBreturn\fR
 statement\&. If
 \fImessage\fR
 is
 \fBNULL\fR, no message is set\&. This call can fail if no memory may be allocated for the name and message strings, in which case an
 \fBSD_BUS_ERROR_NO_MEMORY\fR
-error might be set instead and \-ENOMEM be returned\&. Do not use this call on error structures that are already initialized\&. If you intend to reuse an error structure, free the old data stored in it with
-\fBsd_bus_error_free()\fR
-first\&.
+error will be set instead and
+\fB\-ENOMEM\fR
+returned\&.
 .PP
 \fBsd_bus_error_setf()\fR
 is similar to
@@ -132,12 +173,17 @@ is similar to
 \fBsd_bus_error_set()\fR, but the string parameters are not copied internally, and must hence remain constant and valid for the lifetime of
 \fIe\fR\&. Use this call to avoid memory allocations when setting error structures\&. Since this call does not allocate memory, it will not fail with an out\-of\-memory condition as
 \fBsd_bus_error_set()\fR
-can, as described above\&. Alternatively, the
+may, as described above\&. Alternatively, the
 \fBSD_BUS_ERROR_MAKE_CONST()\fR
 macro may be used to generate a literal, constant bus error structure on\-the\-fly\&.
 .PP
 \fBsd_bus_error_set_errno()\fR
-will set
+will immediately return
+\fB0\fR
+if the specified error parameter
+\fIerror\fR
+is
+\fB0\fR\&. Otherwise, it will set
 \fIname\fR
 from an
 \fIerrno\fR\-like value that is converted to a D\-Bus error\&.
@@ -147,11 +193,15 @@ will be used to set
 \fIname\fR
 if applicable, otherwise a name in the
 "System\&.Error\&."
-namespace will be generated\&. The sign of the specified error number is ignored\&. The absolute value is used implicitly\&. The call always returns a negative value, for convenient usage in
+namespace will be generated\&. The sign of the specified error number is ignored and the absolute value is used implicitly\&. If the specified error
+\fIerror\fR
+is non\-zero, the call always returns a negative value, for convenient usage in
 \fBreturn\fR
 statements\&. This call might fail due to lack of memory, in which case an
 \fBSD_BUS_ERROR_NO_MEMORY\fR
-error is set instead, and \-ENOMEM is returned\&.
+error is set instead, and
+\fB\-ENOMEM\fR
+is returned\&.
 .PP
 \fBsd_bus_error_set_errnof()\fR
 is similar to
@@ -178,17 +228,27 @@ field of an error structure to an
 \fBsd_bus_error_set()\fR\&. If
 \fIe\fR
 is
-\fBNULL\fR, 0 will be returned\&.
+\fBNULL\fR,
+\fB0\fR
+will be returned\&.
 .PP
 \fBsd_bus_error_copy()\fR
 will initialize
 \fIdst\fR
 using the values in
-\fIe\fR\&. If the strings in
+\fIe\fR, if
+\fIe\fR
+has been set with an error value before\&. Otherwise, it will return immediately\&. If the strings in
 \fIe\fR
 were set using
 \fBsd_bus_error_set_const()\fR, they will be shared\&. Otherwise, they will be copied\&. Returns a converted
-\fIerrno\fR\-like, negative error code\&.
+\fIerrno\fR\-like, negative error code or
+\fB0\fR\&. Before this call,
+\fIdst\fR
+must be unset, i\&.e\&. either freshly initialized with
+\fBNULL\fR
+or reset using
+\fBsd_bus_error_free()\fR\&.
 .PP
 \fBsd_bus_error_move()\fR
 is similar to
@@ -197,10 +257,9 @@ is similar to
 into
 \fIdst\fR, resetting the former\&. This function cannot fail, as no new memory is allocated\&. Note that if
 \fIe\fR
-is not set (or
-\fBNULL\fR)
+is not set,
 \fIdst\fR
-is initializated to
+is initialized to
 \fBSD_BUS_ERROR_NULL\fR\&. Moreover, if
 \fIdst\fR
 is
@@ -208,7 +267,7 @@ is
 no operation is executed on it and resources held by
 \fIe\fR
 are freed and reset\&. Returns a converted
-\fIerrno\fR\-like, negative error code\&.
+\fIerrno\fR\-like, non\-positive error value\&.
 .PP
 \fBsd_bus_error_is_set()\fR
 will return a non\-zero value if
@@ -250,15 +309,22 @@ will destroy resources held by
 The functions
 \fBsd_bus_error_set()\fR,
 \fBsd_bus_error_setf()\fR, and
-\fBsd_bus_error_set_const()\fR, when successful, return the negative errno value corresponding to the
+\fBsd_bus_error_set_const()\fR
+always return
+\fB0\fR
+when the specified error value is
+\fBNULL\fR, and a negative errno\-like value corresponding to the
 \fIname\fR
-parameter\&. The functions
+parameter otherwise\&. The functions
 \fBsd_bus_error_set_errno()\fR,
 \fBsd_bus_error_set_errnof()\fR
 and
-\fBsd_bus_error_set_errnofv()\fR, when successful, return the negative value of the
+\fBsd_bus_error_set_errnofv()\fR, return
+\fB0\fR
+when the specified error value is
+\fB0\fR, and a negative errno\-like value corresponding to the
 \fIerror\fR
-parameter\&. If an error occurs, one of the negative error values listed below will be returned\&.
+parameter otherwise\&. If an error occurs internally, one of the negative error values listed below will be returned\&.
 .PP
 \fBsd_bus_error_get_errno()\fR
 returns
@@ -273,7 +339,7 @@ otherwise\&.
 \fBsd_bus_error_copy()\fR
 and
 \fBsd_bus_error_move()\fR
-return 0 or a positive integer on success, and a negative error value converted from the error name otherwise\&.
+return a negative error value converted from the source error, and zero if the error has not been set\&.
 .PP
 \fBsd_bus_error_is_set()\fR
 returns a non\-zero value when

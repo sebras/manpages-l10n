@@ -45,7 +45,7 @@ dup, dup2, dup3 \- duplicate a file descriptor
 .BI "int dup2(int " oldfd ", int " newfd );
 .PP
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
-.BR "#include <fcntl.h>" "              /* Obtain O_* constant definitions */"
+.BR "#include <fcntl.h>" "              /* Definition of " O_* " constants */"
 .B #include <unistd.h>
 .PP
 .BI "int dup3(int " oldfd ", int " newfd ", int " flags );
@@ -53,18 +53,22 @@ dup, dup2, dup3 \- duplicate a file descriptor
 .SH DESCRIPTION
 The
 .BR dup ()
-system call creates a copy of the file descriptor
-.IR oldfd ,
-using the lowest-numbered unused file descriptor for the new descriptor.
+system call allocates a new file descriptor that refers to the same
+open file description as the descriptor
+.IR oldfd .
+(For an explanation of open file descriptions, see
+.BR open (2).)
+The new file descriptor number is guaranteed to be the lowest-numbered
+file descriptor that was unused in the calling process.
 .PP
 After a successful return,
 the old and new file descriptors may be used interchangeably.
-They refer to the same open file description (see
-.BR open (2))
-and thus share file offset and file status flags;
+Since the two file descriptors refer to the same open file description,
+they share file offset and file status flags;
 for example, if the file offset is modified by using
 .BR lseek (2)
-on one of the file descriptors, the offset is also changed for the other.
+on one of the file descriptors,
+the offset is also changed for the other file descriptor.
 .PP
 The two file descriptors do not share file descriptor flags
 (the close-on-exec flag).
@@ -82,9 +86,18 @@ system call performs the same task as
 but instead of using the lowest-numbered unused file descriptor,
 it uses the file descriptor number specified in
 .IR newfd .
+In other words,
+the file descriptor
+.I newfd
+is adjusted so that it now refers to the same open file description as
+.IR oldfd .
+.PP
 If the file descriptor
 .IR newfd
-was previously open, it is silently closed before being reused.
+was previously open, it is closed before being reused;
+the close is performed silently
+(i.e., any errors during the close are not reported by
+.BR dup2 ()).
 .PP
 The steps of closing and reusing the file descriptor
 .IR newfd
