@@ -62,6 +62,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-hu.html">The Hungarian translation</a></li>
         <li><a href="index-it.html">The Italian translation</a></li>
         <li><a href="index-mk.html">The Macedonian translation</a></li>
+        <li><a href="index-fa.html">The Persian translation</a></li>
         <li><a href="index-pl.html">The Polish translation</a></li>
         <li><a href="index-pt_BR.html">The Brazilian Portuguese translation</a></li>
         <li><a href="index-ro.html">The Romanian translation</a></li>
@@ -90,7 +91,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in cs da de es fr hu it nl mk pl pt_BR ro; do
+for tlang in cs da de es fa fr hu it nl mk pl pt_BR ro; do
     echo $tlang
 
 # Determine manpage section names
