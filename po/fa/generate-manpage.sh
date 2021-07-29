@@ -47,8 +47,8 @@ translation="$localized.po"
 localized="$distribution/$localized"
 
 # Create the addendum for this manpage
-addendum=$(mktemp)
-./generate-addendum.sh "$translation" "$addendum"
+#addendum=$(mktemp)
+#./generate-addendum.sh "$translation" "$addendum"
 
 # Create a separate .po file for this distribution,
 # otherwise po4a will emit really a lot of warnings
@@ -68,8 +68,6 @@ po4a-translate \
 	-m "$master" \
 	-M "utf-8" \
 	-p "$pofile" \
-	-a "$addendum" \
-	-a "license.add" \
 	-L UTF-8 \
 	-l "$localized";
 
