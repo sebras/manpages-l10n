@@ -26,6 +26,7 @@ language_list=(
     '"Hungarian"  hu'
     '"Italian"    it'
     '"Macedonian" mk'
+    '"Persian"    fa'
     '"Polish"     pl'
     '"Romanian"   ro'
     '"Spanish"    es'

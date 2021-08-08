@@ -135,6 +135,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Julien Cristau <jcristau@debian.org>
 * Julien Rosal <albator.deb@gmail.com>
 * Luc Froidefond <luc.froidefond@free.fr>
+* Lucien Gentis <lucien.gentis@waika9.com>
 * Lyes Zemmouche <iliaas@hotmail.fr>
 * Marc Poiroud <marci1@archlinux.fr>
 * Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
@@ -234,6 +235,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Böszörményi Zoltán <zboszor@mail.externet.hu>
 * Csehi András <acsehi@merlin.flexum.hu>
 * Daczi László <dacas@freemail.hu>
+* Domokos Péter <pdomokos@freemail.c3.hu>
 * Dyekiss Emil <emil2@cds.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
@@ -286,6 +288,11 @@ of Linux manpages. The list is sorted alphabetically.
 ## Macedonian:
 
 * Kristijan Velkovski <me@krisfremen.com>
+
+
+## Persian:
+
+* Mk Safavi <mksafavi@gmail.com>
 
 
 ## Polish:
