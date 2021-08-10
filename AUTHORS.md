@@ -259,6 +259,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
 * Váraljai Nándor <vnandor@elender.hu>
+* Vizi Szilárd <vizisz@freemail.hu>
 * Zelena Endre <ezelena@lme.linux.hu>
 
 
