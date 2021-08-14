@@ -2,12 +2,12 @@
 .\"     Title: smb.conf
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 04/29/2021
+.\"      Date: 07/19/2021
 .\"    Manual: File Formats and Conventions
-.\"    Source: Samba 4.14.4
+.\"    Source: Samba 4.15.0rc1
 .\"  Language: English
 .\"
-.TH "SMB\&.CONF" "5" "04/29/2021" "Samba 4\&.14\&.4" "File Formats and Conventions"
+.TH "SMB\&.CONF" "5" "07/19/2021" "Samba 4\&.15\&.0rc1" "File Formats and Conventions"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -492,7 +492,7 @@ the Internet name of the client machine\&.
 .PP
 %R
 .RS 4
-the selected protocol level after protocol negotiation\&. It can be one of CORE, COREPLUS, LANMAN1, LANMAN2, NT1, SMB2_02, SMB2_10, SMB2_22, SMB2_24, SMB3_00, SMB3_02, SMB3_10, SMB3_11 or SMB2_FF\&.
+the selected protocol level after protocol negotiation\&. It can be one of CORE, COREPLUS, LANMAN1, LANMAN2, NT1, SMB2_02, SMB2_10, SMB3_00, SMB3_02, SMB3_11 or SMB2_FF\&.
 .RE
 .PP
 %d
@@ -585,15 +585,7 @@ the home directory of the user given by %u\&.
 .PP
 %N
 .RS 4
-the name of your NIS home directory server\&. This is obtained from your NIS auto\&.map entry\&. If you have not compiled Samba with the
-\fI\-\-with\-automount\fR
-option, this value will be the same as %L\&.
-.RE
-.PP
-%p
-.RS 4
-the path of the service\*(Aqs home directory, obtained from your NIS auto\&.map entry\&. The NIS auto\&.map entry is split up as
-%N:%p\&.
+This value is the same as %L\&.
 .RE
 .PP
 There are some quite creative things that can be done with these substitutions and other
@@ -819,6 +811,20 @@ If this parameter is set to "false" Samba doesn\*(Aqt check permissions on "open
 .sp
 Default:
 \fI\fIacl check permissions\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
+acl flag inherited canonicalization (S)
+.PP
+.RS 4
+This option controls the way Samba handles client requests setting the Security Descriptor of files and directories and the effect the operation has on the Security Descriptor flag "DACL auto\-inherited" (DI)\&. Generally, this flag is set on a file (or directory) upon creation if the parent directory has DI set and also has inheritable ACEs\&.
+.sp
+On the other hand when a Security Descriptor is explicitly set on a file, the DI flag is cleared, unless the flag "DACL Inheritance Required" (DR) is also set in the new Security Descriptor (fwiw, DR is never stored on disk)\&.
+.sp
+This is the default behaviour when this option is enabled (the default)\&. When setting this option to
+no, the resulting value of the DI flag on\-disk is directly taken from the DI value of the to\-be\-set Security Descriptor\&. This can be used so dump tools like rsync that copy data blobs from xattrs that represent ACLs created by the acl_xattr VFS module will result in copies of the ACL that are identical to the source\&. Without this option, the copied ACLs would all loose the DI flag if set on the source\&.
+.sp
+Default:
+\fI\fIacl flag inherited canonicalization\fR\fR\fI = \fR\fIyes\fR\fI \fR
 .RE
 
 acl group control (S)
@@ -1536,11 +1542,17 @@ auth event notification (G)
 When enabled, this option causes Samba (acting as an Active Directory Domain Controller) to stream authentication events across the internal message bus\&. Scripts built using Samba\*(Aqs python bindings can listen to these events by registering as the service
 auth_event\&.
 .sp
-This should be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&. Additionally Samba must be compiled with the jansson support for this option to be effective\&.
+This is
+\fInot\fR
+needed for the audit logging described in
+\m[blue]\fBlog level\fR\m[]\&.
+.sp
+Instead, this should instead be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
 .sp
 The authentication events are also logged via the normal logging methods when the
 \m[blue]\fBlog level\fR\m[]
-is set appropriately\&.
+is set appropriately, say to
+auth_json_audit:3\&.
 .sp
 Default:
 \fI\fIauth event notification\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -2022,14 +2034,14 @@ client ipc signing (G)
 .PP
 .RS 4
 This controls whether the client is allowed or required to use SMB signing for IPC$ connections as DCERPC transport\&. Possible values are
-\fIauto\fR,
-\fImandatory\fR
+\fIdesired\fR,
+\fIrequired\fR
 and
 \fIdisabled\fR\&.
 .sp
-When set to mandatory or default, SMB signing is required\&.
+When set to required or default, SMB signing is mandatory\&.
 .sp
-When set to auto, SMB signing is offered, but not enforced and if set to disabled, SMB signing is not offered either\&.
+When set to desired, SMB signing is offered, but not enforced and if set to disabled, SMB signing is not offered either\&.
 .sp
 Connections from winbindd to Active Directory Domain Controllers always enforce signing\&.
 .sp
@@ -2195,28 +2207,6 @@ version of the protocol\&. Long filename support\&.
 \fBSMB2_10\fR: Windows 7 SMB2 version\&.
 .RE
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB2_22\fR: Early Windows 8 SMB2 version\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB2_24\fR: Windows 8 beta SMB2 version\&.
-.RE
-.sp
 .RE
 By default SMB2 selects the SMB2_10 variant\&.
 .RE
@@ -2240,7 +2230,7 @@ By default SMB2 selects the SMB2_10 variant\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBSMB3_00\fR: Windows 8 SMB3 version\&. (mostly the same as SMB2_24)
+\fBSMB3_00\fR: Windows 8 SMB3 version\&.
 .RE
 .sp
 .RS 4
@@ -2262,18 +2252,7 @@ By default SMB2 selects the SMB2_10 variant\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBSMB3_10\fR: early Windows 10 technical preview SMB3 version\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB3_11\fR: Windows 10 technical preview SMB3 version (maybe final)\&.
+\fBSMB3_11\fR: Windows 10 SMB3 version\&.
 .RE
 .sp
 .RE
@@ -2374,6 +2353,92 @@ Default:
 \fI\fIclient plaintext auth\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
+client protection (G)
+.PP
+.RS 4
+This parameter defines which protection Samba client tools should use by default\&.
+.sp
+Possible client settings are:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdefault\fR
+\- Use the individual default values of the options:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIclient signing\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIclient smb encrypt\fR
+.RE
+.sp
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIplain\fR
+\- This will send everything just as plaintext, signing or encryption are turned off\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIsign\fR
+\- This will enable integrity checking\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIencrypt\fR
+\- This will enable integrity checks and force encryption for privacy\&.
+.RE
+.sp
+.RE
+Default:
+\fI\fIclient protection\fR\fR\fI = \fR\fIdefault\fR\fI \fR
+.RE
+
 client schannel (G)
 .PP
 .RS 4
@@ -2405,14 +2470,14 @@ client signing (G)
 .PP
 .RS 4
 This controls whether the client is allowed or required to use SMB signing\&. Possible values are
-\fIauto\fR,
-\fImandatory\fR
+\fIdesired\fR,
+\fIrequired\fR
 and
 \fIdisabled\fR\&.
 .sp
-When set to auto or default, SMB signing is offered, but not enforced\&.
+When set to desired or default, SMB signing is offered, but not enforced\&.
 .sp
-When set to mandatory, SMB signing is required and if set to disabled, SMB signing is not offered either\&.
+When set to required, SMB signing is mandatory and if set to disabled, SMB signing is not offered either\&.
 .sp
 IPC$ connections for DCERPC e\&.g\&. in winbindd, are handled by the
 \m[blue]\fBclient ipc signing\fR\m[]
@@ -2538,6 +2603,96 @@ globally will completely disable the encryption feature for all connections\&.
 .sp
 Default:
 \fI\fIclient smb encrypt\fR\fR\fI = \fR\fIdefault\fR\fI \fR
+.RE
+
+client smb3 encryption algorithms (G)
+.PP
+.RS 4
+This parameter specifies the availability and order of encryption algorithms which are available for negotiation in the SMB3_11 dialect\&.
+.sp
+It is also possible to remove individual algorithms from the default list, by prefixing them with \*(Aq\-\*(Aq\&. This can avoid having to specify a hardcoded list\&.
+.sp
+Note: that the removal of aes\-128\-ccm from the list will result in SMB3_00 and SMB3_02 being unavailable, as it is the default and only available algorithm for these dialects\&.
+.sp
+Default:
+\fI\fIclient smb3 encryption algorithms\fR\fR\fI = \fR\fIaes\-128\-gcm, aes\-128\-ccm, aes\-256\-gcm, aes\-256\-ccm\fR\fI \fR
+.sp
+Example:
+\fI\fIclient smb3 encryption algorithms\fR\fR\fI = \fR\fIaes\-256\-gcm\fR\fI \fR
+.sp
+Example:
+\fI\fIclient smb3 encryption algorithms\fR\fR\fI = \fR\fI\-aes\-128\-gcm \-aes\-128\-ccm\fR\fI \fR
+.RE
+
+client smb3 signing algorithms (G)
+.PP
+.RS 4
+This parameter specifies the availability and order of signing algorithms which are available for negotiation in the SMB3_11 dialect\&.
+.sp
+It is also possible to remove individual algorithms from the default list, by prefixing them with \*(Aq\-\*(Aq\&. This can avoid having to specify a hardcoded list\&.
+.sp
+Note: that the removal of aes\-128\-cmac from the list will result in SMB3_00 and SMB3_02 being unavailable, and the removal od hmac\-sha\-256 will result in SMB2_02 and SMB2_10 being unavailable, as these are the default and only available algorithms for these dialects\&.
+.sp
+Default:
+\fI\fIclient smb3 signing algorithms\fR\fR\fI = \fR\fIaes\-128\-gmac, aes\-128\-cmac, hmac\-sha\-256\fR\fI \fR
+.sp
+Example:
+\fI\fIclient smb3 signing algorithms\fR\fR\fI = \fR\fIaes\-128\-cmac, hmac\-sha\-256\fR\fI \fR
+.sp
+Example:
+\fI\fIclient smb3 signing algorithms\fR\fR\fI = \fR\fI\-aes\-128\-cmac\fR\fI \fR
+.RE
+
+client use kerberos (G)
+.PP
+.RS 4
+This parameter determines whether Samba client tools will try to authenticate using Kerberos\&. For Kerberos authentication you need to use dns names instead of IP addresses when connnecting to a service\&.
+.sp
+Possible option settings are:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdesired\fR
+\- Kerberos authentication will be tried first and if it fails it automatically fallback to NTLM\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIrequired\fR
+\- Kerberos authentication will be required\&. There will be no falllback to NTLM or a different alternative\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIoff\fR
+\- Don\*(Aqt use Kerberos, use NTLM instead or another alternative\&.
+.RE
+.sp
+.RE
+In case that weak cryptography is not allowed (e\&.g\&. FIPS mode) the default will be forced to
+\fIrequired\fR\&.
+.sp
+Default:
+\fI\fIclient use kerberos\fR\fR\fI = \fR\fIdesired\fR\fI \fR
 .RE
 
 client use spnego principal (G)
@@ -3470,7 +3625,7 @@ dns update command (G)
 This option sets the command that is called when there are DNS updates\&. It should update the local machines DNS names using TSIG\-GSS\&.
 .sp
 Default:
-\fI\fIdns update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.14\&.4/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
+\fI\fIdns update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.15\&.0rc1/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIdns update command\fR\fR\fI = \fR\fI/usr/local/sbin/dnsupdate\fR\fI \fR
@@ -3512,6 +3667,46 @@ If one record for a DNS name is static (non\-aging) then no other record for tha
 .RE
 Default:
 \fI\fIdns zone scavenging\fR\fR\fI = \fR\fIno\fR\fI \fR
+.RE
+
+dns zone transfer clients allow (G)
+.PP
+.RS 4
+This option specifies the list of IPs authorized to ask for dns zone transfer from bind DLZ module\&.
+.sp
+The IP list is comma and space separated and specified in the same syntax as used in
+\m[blue]\fBhosts allow\fR\m[], specifically including IP address, IP prefixes and IP address masks\&.
+.sp
+As this is a DNS server option, hostnames are naturally not permitted\&.
+.sp
+The default behaviour is to deny any request\&. A request will be authorized only if the emitting client is identified in this list, and not in
+\m[blue]\fBdns zone transfer clients deny\fR\m[]
+.sp
+Default:
+\fI\fIdns zone transfer clients allow\fR\fR\fI = \fR\fI\fR\fI \fR
+.sp
+Example:
+\fI\fIdns zone transfer clients allow\fR\fR\fI = \fR\fI192\&.168\&.0\&.1\fR\fI \fR
+.RE
+
+dns zone transfer clients deny (G)
+.PP
+.RS 4
+This option specifies the list of IPs denied to ask for dns zone transfer from bind DLZ module\&.
+.sp
+The IP list is comma and space separated and specified in the same syntax as used in
+\m[blue]\fBhosts allow\fR\m[], specifically including IP address, IP prefixes and IP address masks\&.
+.sp
+As this is a DNS server option, hostnames are naturally not permitted\&.
+.sp
+If a client identified in this list sends a zone transfer request, it will always be denied, even if they are in
+\m[blue]\fBdns zone transfer clients allow\fR\m[]\&. This allows the definition of specific denied clients within an authorized subnet\&.
+.sp
+Default:
+\fI\fIdns zone transfer clients deny\fR\fR\fI = \fR\fI\fR\fI \fR
+.sp
+Example:
+\fI\fIdns zone transfer clients deny\fR\fR\fI = \fR\fI192\&.168\&.0\&.1\fR\fI \fR
 .RE
 
 domain logons (G)
@@ -3645,11 +3840,17 @@ dsdb event notification (G)
 When enabled, this option causes Samba (acting as an Active Directory Domain Controller) to stream Samba database events across the internal message bus\&. Scripts built using Samba\*(Aqs python bindings can listen to these events by registering as the service
 dsdb_event\&.
 .sp
-This should be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
+This is
+\fInot\fR
+needed for the audit logging described in
+\m[blue]\fBlog level\fR\m[]\&.
+.sp
+Instead, this should instead be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
 .sp
 The Samba database events are also logged via the normal logging methods when the
 \m[blue]\fBlog level\fR\m[]
-is set appropriately\&.
+is set appropriately, say to
+dsdb_json_audit:5\&.
 .sp
 Default:
 \fI\fIdsdb event notification\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -3661,11 +3862,17 @@ dsdb group change notification (G)
 When enabled, this option causes Samba (acting as an Active Directory Domain Controller) to stream group membership change events across the internal message bus\&. Scripts built using Samba\*(Aqs python bindings can listen to these events by registering as the service
 dsdb_group_event\&.
 .sp
-This should be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
+This is
+\fInot\fR
+needed for the audit logging described in
+\m[blue]\fBlog level\fR\m[]\&.
 .sp
-The group events are also logged via the normal logging methods when the
+Instead, this should instead be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
+.sp
+The Samba database events are also logged via the normal logging methods when the
 \m[blue]\fBlog level\fR\m[]
-is set appropriately\&.
+is set appropriately, say to
+dsdb_group_json_audit:5\&.
 .sp
 Default:
 \fI\fIdsdb group change notification\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -3677,11 +3884,17 @@ dsdb password event notification (G)
 When enabled, this option causes Samba (acting as an Active Directory Domain Controller) to stream password change and reset events across the internal message bus\&. Scripts built using Samba\*(Aqs python bindings can listen to these events by registering as the service
 password_event\&.
 .sp
-This should be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
+This is
+\fInot\fR
+needed for the audit logging described in
+\m[blue]\fBlog level\fR\m[]\&.
 .sp
-The password events are also logged via the normal logging methods when the
+Instead, this should instead be considered a developer option (it assists in the Samba testsuite) rather than a facility for external auditing, as message delivery is not guaranteed (a feature that the testsuite works around)\&.
+.sp
+The Samba database events are also logged via the normal logging methods when the
 \m[blue]\fBlog level\fR\m[]
-is set appropriately\&.
+is set appropriately, say to
+dsdb_password_json_audit:5\&.
 .sp
 Default:
 \fI\fIdsdb password event notification\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -4395,7 +4608,7 @@ gpo update command (G)
 This option sets the command that is called to apply GPO policies\&. The samba\-gpupdate script applies System Access and Kerberos Policies to the KDC\&. System Access policies set minPwdAge, maxPwdAge, minPwdLength, and pwdProperties in the samdb\&. Kerberos Policies set kdc:service ticket lifetime, kdc:user ticket lifetime, and kdc:renewal lifetime in smb\&.conf\&.
 .sp
 Default:
-\fI\fIgpo update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.14\&.4/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
+\fI\fIgpo update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.15\&.0rc1/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIgpo update command\fR\fR\fI = \fR\fI/usr/local/sbin/gpoupdate\fR\fI \fR
@@ -4558,51 +4771,6 @@ Default:
 \fI\fIhide unwriteable files\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
-homedir map (G)
-.PP
-.RS 4
-If
-\m[blue]\fBnis homedir\fR\m[]
-is
-\fByes\fR, and
-\fBsmbd\fR(8)
-is also acting as a Win95/98
-\fIlogon server\fR
-then this parameter specifies the NIS (or YP) map from which the server for the user\*(Aqs home directory should be extracted\&. At present, only the Sun auto\&.home map format is understood\&. The form of the map is:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-username server:/some/file/system
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-and the program will extract the servername from before the first \*(Aq:\*(Aq\&. There should probably be a better parsing system that copes with different map formats and also Amd (another automounter) maps\&.
-.if n \{\
-.sp
-.\}
-.RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-A working NIS client is required on the system for this option to work\&.
-.sp .5v
-.RE
-Default:
-\fI\fIhomedir map\fR\fR\fI = \fR\fI\fR\fI \fR
-.sp
-Example:
-\fI\fIhomedir map\fR\fR\fI = \fR\fIamd\&.homedir\fR\fI \fR
-.RE
-
 honor change notify privilege (S)
 .PP
 .RS 4
@@ -4683,12 +4851,6 @@ hosts allow = 150\&.203\&.15\&.0/255\&.255\&.255\&.0
 Example 3: allow a couple of hosts
 .sp
 hosts allow = lapland, arvidsjaur
-.sp
-Example 4: allow only hosts in NIS netgroup "foonet", but deny access from one particular host
-.sp
-hosts allow = @foonet
-.sp
-hosts deny = pirate
 .if n \{\
 .sp
 .\}
@@ -5149,13 +5311,7 @@ This is a list of users that should not be allowed to login to this service\&. T
 \fIparanoid\fR
 check to absolutely ensure an improper setting does not breach your security\&.
 .sp
-A name starting with a \*(Aq@\*(Aq is interpreted as an NIS netgroup first (if your system supports NIS), and then as a UNIX group if the name was not found in the NIS netgroup database\&.
-.sp
-A name starting with \*(Aq+\*(Aq is interpreted only by looking in the UNIX group database via the NSS getgrnam() interface\&. A name starting with \*(Aq&\*(Aq is interpreted only by looking in the NIS netgroup database (this requires NIS to be working on your system)\&. The characters \*(Aq+\*(Aq and \*(Aq&\*(Aq may be used at the start of the name in either order so the value
-\fI+&group\fR
-means check the UNIX group database, followed by the NIS netgroup database, and the value
-\fI&+group\fR
-means check the NIS netgroup database, followed by the UNIX group database (the same as the \*(Aq@\*(Aq prefix)\&.
+A name starting with a \*(Aq@\*(Aq is interpreted UNIX group\&.
 .sp
 The current servicename is substituted for
 \fI%S\fR\&. This is useful in the [homes] section\&.
@@ -6308,28 +6464,6 @@ This parameter has been extended since the 2\&.2\&.x series, now it allows one t
 .sp -1
 .IP \(bu 2.3
 .\}
-\fIsmb2\fR
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fIsmb2_credits\fR
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
 \fIrpc_parse\fR
 .RE
 .sp
@@ -6572,6 +6706,39 @@ This parameter has been extended since the 2\&.2\&.x series, now it allows one t
 .sp -1
 .IP \(bu 2.3
 .\}
+\fIdrs_repl\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIsmb2\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIsmb2_credits\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 \fIdsdb_audit\fR
 .RE
 .sp
@@ -6630,6 +6797,175 @@ This parameter has been extended since the 2\&.2\&.x series, now it allows one t
 \fIdsdb_transaction_json_audit\fR
 .RE
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdsdb_group_audit\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdsdb_group_json_audit\fR
+.RE
+.sp
+.RE
+Various modules register dynamic debug classes at first usage:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcatia\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdfs_samba4\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIextd_audit\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfileid\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfruit\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfull_audit\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fImedia_harmony\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIpreopen\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIrecycle\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIshadow_copy\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIshadow_copy\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIunityed_media\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIvirusfilter\fR
+.RE
+.sp
 .RE
 To configure the logging for specific classes to go into a different file then
 \m[blue]\fBlog file\fR\m[], you can append
@@ -6637,11 +6973,17 @@ To configure the logging for specific classes to go into a different file then
 to the class, eg
 \fIlog level = 1 full_audit:1@/var/log/audit\&.log\fR\&.
 .sp
-Authentication and authorization audit information is logged under the auth_audit, and if Samba was not compiled with \-\-without\-json, a JSON representation is logged under auth_json_audit\&.
+Authentication and authorization audit information is logged under the
+\fIauth_audit\fR, and if Samba was not compiled with \-\-without\-json, a JSON representation is logged under
+\fIauth_json_audit\fR\&.
 .sp
 Support is comprehensive for all authentication and authorisation of user accounts in the Samba Active Directory Domain Controller, as well as the implicit authentication in password changes\&. In the file server, NTLM authentication, SMB and RPC authorization is covered\&.
 .sp
-Log levels for auth_audit and auth_audit_json are:
+Log levels for
+\fIauth_audit\fR
+and
+\fIauth_audit_json\fR
+are:
 .RS
 .sp
 .RS 4
@@ -6689,12 +7031,137 @@ Log levels for auth_audit and auth_audit_json are:
 .RE
 .sp
 .RE
-Changes to the sam\&.ldb database are logged under the dsdb_audit and a JSON representation is logged under dsdb_json_audit\&.
+Changes to the AD DC
+sam\&.ldb
+database are logged under the
+\fIdsdb_audit\fR
+and a JSON representation is logged under
+\fIdsdb_json_audit\fR\&.
 .sp
-Password changes and Password resets are logged under dsdb_password_audit and a JSON representation is logged under the dsdb_password_json_audit\&.
+Group membership changes to the AD DC
+sam\&.ldb
+database are logged under the
+\fIdsdb_group_audit\fR
+and a JSON representation is logged under
+\fIdsdb_group_json_audit\fR\&.
 .sp
-Transaction rollbacks and prepare commit failures are logged under the dsdb_transaction_audit and a JSON representation is logged under the password_json_audit\&. Logging the transaction details allows the identification of password and sam\&.ldb operations that have been rolled back\&.
+Log levels for
+\fIdsdb_audit\fR,
+\fIdsdb_json_audit\fR,
+\fIdsdb_group_audit\fR,
+\fIdsdb_group_json_audit\fR
+and
+\fIdsdb_json_audit\fR
+are:
+.RS
 .sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+5: Database modifications
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+5: Replicated updates from another DC
+.RE
+.sp
+.RE
+Password changes and Password resets in the AD DC are logged under
+\fIdsdb_password_audit\fR
+and a JSON representation is logged under the
+\fIdsdb_password_json_audit\fR\&. Password changes will also appears as authentication events via
+\fIauth_audit\fR
+and
+\fIauth_audit_json\fR\&.
+.sp
+Log levels for
+\fIdsdb_password_audit\fR
+and
+\fIdsdb_password_json_audit\fR
+are:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+5: Successful password changes and resets
+.RE
+.sp
+.RE
+Transaction rollbacks and prepare commit failures are logged under the
+\fIdsdb_transaction_audit\fR
+and a JSON representation is logged under the
+\fIdsdb_transaction_json_audit\fR\&.
+.sp
+Log levels for
+\fIdsdb_transaction_audit\fR
+and
+\fIdsdb_transaction_json\fR
+are:
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+5: Transaction failure (rollback)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+10: Transaction success (commit)
+.RE
+.sp
+.RE
+Transaction roll\-backs are possible in Samba, and whilst they rarely reflect anything more than the failure of an individual operation (say due to the add of a conflicting record), they are possible\&. Audit logs are already generated and sent to the system logs before the transaction is complete\&. Logging the transaction details allows the identification of password and
+sam\&.ldb
+operations that have been rolled back, and so have not actually persisted\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+Changes to
+sam\&.ldb
+made locally by the
+root
+user with direct access to the database are not logged to the system logs, but to the administrator\*(Aqs own console\&. While less than ideal, any user able to make such modifications could disable the audit logging in any case\&.
+.sp .5v
+.RE
 Default:
 \fI\fIlog level\fR\fR\fI = \fR\fI0\fR\fI \fR
 .sp
@@ -7972,7 +8439,8 @@ The options are: "lmhosts", "host", "wins" and "bcast"\&. They cause names to be
 .\}
 \fBhost\fR
 : Do a standard host name to IP address resolution, using the system
-/etc/hosts, NIS, or DNS lookups\&. This method of name resolution is operating system depended for instance on IRIX or Solaris this may be controlled by the
+/etc/hosts
+or DNS lookups\&. This method of name resolution is operating system depended for instance on IRIX or Solaris this may be controlled by the
 /etc/nsswitch\&.conf
 file\&. Note that this method is used only if the NetBIOS name type being queried is the 0x20 (server) name type or 0x1c (domain controllers)\&. The latter case is only useful for active directory domains and results in a DNS query for the SRV RR entry matching _ldap\&._tcp\&.domain\&.
 .RE
@@ -8151,23 +8619,6 @@ The behavior can be controlled per netbios domain by using \*(Aqneutralize nt4 e
 .sp
 Default:
 \fI\fIneutralize nt4 emulation\fR\fR\fI = \fR\fIno\fR\fI \fR
-.RE
-
-NIS homedir (G)
-.PP
-.RS 4
-Get the home share server from a NIS map\&. For UNIX systems that use an automounter, the user\*(Aqs home directory will often be mounted on a workstation on demand from a remote server\&.
-.sp
-When the Samba logon server is not the actual home directory server, but is mounting the home directories via NFS then two network hops would be required to access the users home directory if the logon server told the client to use itself as the SMB server for home directories (one over SMB and one over NFS)\&. This can be very slow\&.
-.sp
-This option allows Samba to return the home share as being on a different server to the logon server and as long as a Samba daemon is running on the home directory server, it will be mounted on the Samba client directly from the directory server\&. When Samba is returning the home share to the client, it will consult the NIS map specified in
-\m[blue]\fBhomedir map\fR\m[]
-and return the server listed there\&.
-.sp
-Note that for this option to work there must be a working NIS system and the Samba server with this option must also be a logon server\&.
-.sp
-Default:
-\fI\fINIS homedir\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
 nmbd bind explicit broadcast (G)
@@ -8661,16 +9112,14 @@ uses to determine what to send to the
 \m[blue]\fBpasswd program\fR\m[]
 and what to expect back\&. If the expected output is not received then the password is not changed\&.
 .sp
-This chat sequence is often quite site specific, depending on what local methods are used for password control (such as NIS etc)\&.
+This chat sequence is often quite site specific, depending on what local methods are used for password control\&.
 .sp
 Note that this parameter only is used if the
 \m[blue]\fBunix password sync\fR\m[]
 parameter is set to
 \fByes\fR\&. This sequence is then called
 \fIAS ROOT\fR
-when the SMB password in the smbpasswd file is being changed, without access to the old password cleartext\&. This means that root must be able to reset the user\*(Aqs password without knowing the text of the previous password\&. In the presence of NIS/YP, this means that the
-\m[blue]\fBpasswd program\fR\m[]
-must be executed on the NIS master\&.
+when the SMB password in the smbpasswd file is being changed, without access to the old password cleartext\&. This means that root must be able to reset the user\*(Aqs password without knowing the text of the previous password\&.
 .sp
 The string can contain the macro
 \fI%n\fR
@@ -10233,7 +10682,7 @@ samba_kcc
 was installed in a non\-default location\&.
 .sp
 Default:
-\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.14\&.4/source4/scripting/bin/samba_kcc\fR\fI \fR
+\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.15\&.0rc1/source4/scripting/bin/samba_kcc\fR\fI \fR
 .sp
 Example:
 \fI\fIsamba kcc command\fR\fR\fI = \fR\fI/usr/local/bin/kcc\fR\fI \fR
@@ -10441,28 +10890,6 @@ version of the protocol\&. Long filename support\&.
 \fBSMB2_10\fR: Windows 7 SMB2 version\&.
 .RE
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB2_22\fR: Early Windows 8 SMB2 version\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB2_24\fR: Windows 8 beta SMB2 version\&.
-.RE
-.sp
 .RE
 By default SMB2 selects the SMB2_10 variant\&.
 .RE
@@ -10486,7 +10913,7 @@ By default SMB2 selects the SMB2_10 variant\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBSMB3_00\fR: Windows 8 SMB3 version\&. (mostly the same as SMB2_24)
+\fBSMB3_00\fR: Windows 8 SMB3 version\&.
 .RE
 .sp
 .RS 4
@@ -10508,18 +10935,7 @@ By default SMB2 selects the SMB2_10 variant\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBSMB3_10\fR: early Windows 10 technical preview SMB3 version\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBSMB3_11\fR: Windows 10 technical preview SMB3 version (maybe final)\&.
+\fBSMB3_11\fR: Windows 10 SMB3 version\&.
 .RE
 .sp
 .RE
@@ -10570,14 +10986,16 @@ will support SMB3 multi\-channel\&.
 .sp
 This parameter was added with version 4\&.4\&.
 .sp
-Warning: Note that this feature is still considered experimental\&. Use it at your own risk: Even though it may seem to work well in testing, it may result in data corruption under some race conditions\&. Future releases may improve this situation\&.
+Note that this feature was still considered experimental up to 4\&.14\&.
 .sp
 Due to dependencies to kernel APIs of Linux or FreeBSD, it\*(Aqs only possible to use this feature on Linux and FreeBSD for now\&. For testing this restriction can be overwritten by specifying
 \fBforce:server multi channel support=yes\fR
 in addition\&.
 .sp
+This option is enabled by default starting with to 4\&.15 (on Linux and FreeBSD)\&.
+.sp
 Default:
-\fI\fIserver multi channel support\fR\fR\fI = \fR\fIno\fR\fI \fR
+\fI\fIserver multi channel support\fR\fR\fI = \fR\fIyes\fR\fI \fR
 .RE
 
 server role (G)
@@ -10984,6 +11402,44 @@ Default:
 \fI\fIserver smb encrypt\fR\fR\fI = \fR\fIdefault\fR\fI \fR
 .RE
 
+server smb3 encryption algorithms (G)
+.PP
+.RS 4
+This parameter specifies the availability and order of encryption algorithms which are available for negotiation in the SMB3_11 dialect\&.
+.sp
+It is also possible to remove individual algorithms from the default list, by prefixing them with \*(Aq\-\*(Aq\&. This can avoid having to specify a hardcoded list\&.
+.sp
+Note: that the removal of aes\-128\-ccm from the list will result in SMB3_00 and SMB3_02 being unavailable, as it is the default and only available algorithm for these dialects\&.
+.sp
+Default:
+\fI\fIserver smb3 encryption algorithms\fR\fR\fI = \fR\fIaes\-128\-gcm, aes\-128\-ccm, aes\-256\-gcm, aes\-256\-ccm\fR\fI \fR
+.sp
+Example:
+\fI\fIserver smb3 encryption algorithms\fR\fR\fI = \fR\fIaes\-256\-gcm\fR\fI \fR
+.sp
+Example:
+\fI\fIserver smb3 encryption algorithms\fR\fR\fI = \fR\fI\-aes\-128\-gcm \-aes\-128\-ccm\fR\fI \fR
+.RE
+
+server smb3 signing algorithms (G)
+.PP
+.RS 4
+This parameter specifies the availability and order of signing algorithms which are available for negotiation in the SMB3_11 dialect\&.
+.sp
+It is also possible to remove individual algorithms from the default list, by prefixing them with \*(Aq\-\*(Aq\&. This can avoid having to specify a hardcoded list\&.
+.sp
+Note: that the removal of aes\-128\-cmac from the list will result in SMB3_00 and SMB3_02 being unavailable, and the removal od hmac\-sha\-256 will result in SMB2_02 and SMB2_10 being unavailable, as these are the default and only available algorithms for these dialects\&.
+.sp
+Default:
+\fI\fIserver smb3 signing algorithms\fR\fR\fI = \fR\fIaes\-128\-gmac, aes\-128\-cmac, hmac\-sha\-256\fR\fI \fR
+.sp
+Example:
+\fI\fIserver smb3 signing algorithms\fR\fR\fI = \fR\fIaes\-128\-cmac, hmac\-sha\-256\fR\fI \fR
+.sp
+Example:
+\fI\fIserver smb3 signing algorithms\fR\fR\fI = \fR\fI\-aes\-128\-cmac\fR\fI \fR
+.RE
+
 server string (G)
 .PP
 .RS 4
@@ -11194,21 +11650,6 @@ Example:
 \fI\fIset quota command\fR\fR\fI = \fR\fI/usr/local/sbin/set_quota\fR\fI \fR
 .RE
 
-share backend (G)
-.PP
-.RS 4
-This option specifies the backend that will be used to access the configuration of file shares\&.
-.sp
-Traditionally, Samba file shares have been configured in the
-\fBsmb\&.conf\fR
-file and this is still the default\&.
-.sp
-At the moment there are no other supported backends\&.
-.sp
-Default:
-\fI\fIshare backend\fR\fR\fI = \fR\fIclassic\fR\fI \fR
-.RE
-
 share:fake_fscaps (G)
 .PP
 .RS 4
@@ -11367,7 +11808,7 @@ The [MS\-SMB2] specification (under 3\&.3\&.5\&.14 Receiving an SMB2 LOCK Reques
 .sp
 But Windows Server (at least up to v2004) only does these checks for the Open\&.IsResilient and Open\&.IsPersistent\&. That means they do not implement the behavior specified in [MS\-SMB2]\&.
 .sp
-By default Samba behaves according to the specification and sends smb2 oplock break notification retries\&.
+By default Samba behaves according to the specification and implements lock sequence checking when multi\-channel is used\&.
 .sp
 Warning: Only enable this option if existing clients can\*(Aqt handle lock sequence checking for handles without Open\&.IsResilient and Open\&.IsPersistent\&. And it turns out that the Windows Server behavior is required\&.
 .sp
@@ -11510,6 +11951,15 @@ This parameter controls how many async operations to fetch the DOS attributes th
 .sp
 Default:
 \fI\fIsmbd max async dosmode\fR\fR\fI = \fR\fIaio max threads * 2\fR\fI \fR
+.RE
+
+smbd max xattr size (S)
+.PP
+.RS 4
+This parameter controls the maximum size of extended attributes that may be written to the server as EAs or as alternate data streams if vfs_streams_xattr is enabled\&. The maximum size of extended attributes depends on the Samba server\*(Aqs operating system and the underlying filesystem\&. The Linux VFS currently sets an upper boundary of 64 KiB per extended attribute\&. FreeBSD does not set a practical upper limit, but since pread() and pwrite() are not possible via the extattr on FreeBSD, it is not recommended to increase this value above a few MiB\&. If a client attempts to write an overly\-large alternate datastream, the Samba server will return STATUS_FILESYSTEM_LIMITATION\&. If this error is encountered, users may try increasing the maximum size supported for xattr writes\&. If this is not possible, and writes are from a MacOS client and to an AFP_Resource extended attribute, the user may enable the vfs_fruit module and configure to allow stream writes for AFP_Resource to an alternative storage location\&. See vfs_fruit documentation for further details\&.
+.sp
+Default:
+\fI\fIsmbd max xattr size\fR\fR\fI = \fR\fI65536\fR\fI \fR
 .RE
 
 smbd profiling level (G)
@@ -11905,7 +12355,7 @@ This option sets the command that for updating servicePrincipalName names from
 spn_update_list\&.
 .sp
 Default:
-\fI\fIspn update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.14\&.4/source4/scripting/bin/samba_spnupdate\fR\fI \fR
+\fI\fIspn update command\fR\fR\fI = \fR\fI/builddir/build/BUILD/samba\-4\&.15\&.0rc1/source4/scripting/bin/samba_spnupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIspn update command\fR\fR\fI = \fR\fI/usr/local/sbin/spnupdate\fR\fI \fR
@@ -12680,10 +13130,6 @@ sys = @system
 .sp
 You can have as many mappings as you like in a username map file\&.
 .sp
-If your system supports the NIS NETGROUP option then the netgroup database is checked before the
-/etc/group
-database for matching groups\&.
-.sp
 You can map Windows usernames that have spaces in them by using double quotes around the name\&. For example:
 .sp
 .if n \{\
@@ -12775,7 +13221,7 @@ username map script (G)
 .RS 4
 This script is a mutually exclusive alternative to the
 \m[blue]\fBusername map\fR\m[]
-parameter\&. This parameter specifies and external program or script that must accept a single command line option (the username transmitted in the authentication request) and return a line on standard output (the name to which the account should mapped)\&. In this way, it is possible to store username map tables in an LDAP or NIS directory services\&.
+parameter\&. This parameter specifies and external program or script that must accept a single command line option (the username transmitted in the authentication request) and return a line on standard output (the name to which the account should mapped)\&. In this way, it is possible to store username map tables in an LDAP directory services\&.
 .sp
 Default:
 \fI\fIusername map script\fR\fR\fI = \fR\fI\fR\fI \fR
@@ -12935,7 +13381,7 @@ Default:
 valid users (S)
 .PP
 .RS 4
-This is a list of users that should be allowed to login to this service\&. Names starting with \*(Aq@\*(Aq, \*(Aq+\*(Aq and \*(Aq&\*(Aq are interpreted using the same rules as described in the
+This is a list of users that should be allowed to login to this service\&. Names starting with an \*(Aq@\*(Aq are interpreted using the same rules as described in the
 \fIinvalid users\fR
 parameter\&.
 .sp
@@ -13372,8 +13818,8 @@ This option only takes effect when the
 option is set to
 \fBdomain\fR
 or
-\fBads\fR\&. If it is set to yes (the default), winbindd periodically tries to scan for new trusted domains and adds them to a global list inside of winbindd\&. The list can be extracted with
-wbinfo \-\-trusted\-domains \-\-verbose\&. This matches the behaviour of Samba 4\&.7 and older\&.
+\fBads\fR\&. If it is set to yes, winbindd periodically tries to scan for new trusted domains and adds them to a global list inside of winbindd\&. The list can be extracted with
+wbinfo \-\-trusted\-domains \-\-verbose\&. Setting it to yes matches the behaviour of Samba 4\&.7 and older\&.
 .sp
 The construction of that global list is not reliable and often incomplete in complex trust setups\&. In most situations the list is not needed any more for winbindd to operate correctly\&. E\&.g\&. for plain file serving via SMB using a simple idmap setup with
 \fBautorid\fR,
@@ -13385,7 +13831,7 @@ If you have a setup that doesn\*(Aqt require the global list, you should set
 \m[blue]\fBwinbind scan trusted domains = no\fR\m[]\&.
 .sp
 Default:
-\fI\fIwinbind scan trusted domains\fR\fR\fI = \fR\fIyes\fR\fI \fR
+\fI\fIwinbind scan trusted domains\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
 winbind sealed pipes (G)
@@ -13409,7 +13855,7 @@ and
 nss_winbind\&.so
 modules for UNIX services\&.
 .sp
-Please note that setting this parameter to + causes problems with group membership at least on glibc systems, as the character + is used as a special character for NIS in /etc/group\&.
+Please note that setting this parameter to + can cause problems with group membership at least on glibc systems, as the character + was used as a special character for NIS in /etc/group\&.
 .sp
 Default:
 \fI\fIwinbind separator\fR\fR\fI = \fR\fI\e\fR\fI \fR
@@ -13443,7 +13889,7 @@ winbindd (at least on a domain member) is never be able to have a complete pictu
 .sp
 With
 \m[blue]\fBwinbind scan trusted domains = no\fR\m[]
-winbindd don\*(Aqt even get an incomplete picture of the topology\&.
+winbindd doesn\*(Aqt even get a complete picture of the topology\&.
 .sp
 It is not really required to know about the trust topology\&. We can just rely on the [K]DCs of our primary domain (e\&.g\&. PRIMARY\&.A\&.EXAMPLE\&.COM) and use enterprise principals e\&.g\&. upnfromB@B\&.EXAMPLE\&.COM@PRIMARY\&.A\&.EXAMPLE\&.COM and follow the WRONG_REALM referrals in order to find the correct DC\&. The final principal might be userfromB@INTERNALB\&.EXAMPLE\&.PRIVATE\&.
 .sp
@@ -13452,10 +13898,10 @@ With
 winbindd enterprise principals will be used\&.
 .sp
 Default:
-\fI\fIwinbind use krb5 enterprise principals\fR\fR\fI = \fR\fIno\fR\fI \fR
+\fI\fIwinbind use krb5 enterprise principals\fR\fR\fI = \fR\fIyes\fR\fI \fR
 .sp
 Example:
-\fI\fIwinbind use krb5 enterprise principals\fR\fR\fI = \fR\fIyes\fR\fI \fR
+\fI\fIwinbind use krb5 enterprise principals\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
 winsdb:local_owner (G)
@@ -13781,7 +14227,7 @@ and
 special sections make life for an administrator easy, but the various combinations of default attributes can be tricky\&. Take extreme care when designing these sections\&. In particular, ensure that the permissions on spool directories are correct\&.
 .SH "VERSION"
 .PP
-This man page is part of version 4\&.14\&.4 of the Samba suite\&.
+This man page is part of version 4\&.15\&.0rc1 of the Samba suite\&.
 .SH "SEE ALSO"
 .PP
 \fBsamba\fR(7),

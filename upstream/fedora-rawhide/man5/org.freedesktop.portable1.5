@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.PORTABLE1" "5" "" "systemd 248" "org.freedesktop.portable1"
+.TH "ORG\&.FREEDESKTOP\&.PORTABLE1" "5" "" "systemd 249" "org.freedesktop.portable1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -46,6 +46,13 @@ node /org/freedesktop/portable1 {
                        out s image,
                        out ay os_release,
                        out a{say} units);
+      GetImageMetadataWithExtensions(in  s image,
+                                     in  as extensions,
+                                     in  as matches,
+                                     in  t flags,
+                                     out s image,
+                                     out ay os_release,
+                                     out a{say} units);
       GetImageState(in  s image,
                     out s state);
       AttachImage(in  s image,
@@ -54,9 +61,20 @@ node /org/freedesktop/portable1 {
                   in  b runtime,
                   in  s copy_mode,
                   out a(sss) changes);
+      AttachImageWithExtensions(in  s image,
+                                in  as extensions,
+                                in  as matches,
+                                in  s profile,
+                                in  s copy_mode,
+                                in  t flags,
+                                out a(sss) changes);
       DetachImage(in  s image,
                   in  b runtime,
                   out a(sss) changes);
+      DetachImageWithExtensions(in  s image,
+                                in  as extensions,
+                                in  t flags,
+                                out a(sss) changes);
       ReattachImage(in  s image,
                     in  as matches,
                     in  s profile,
@@ -64,6 +82,14 @@ node /org/freedesktop/portable1 {
                     in  s copy_mode,
                     out a(sss) changes_removed,
                     out a(sss) changes_updated);
+      ReattachImageWithExtensions(in  s image,
+                                  in  as extensions,
+                                  in  as matches,
+                                  in  s profile,
+                                  in  s copy_mode,
+                                  in  t flags,
+                                  out a(sss) changes_removed,
+                                  out a(sss) changes_updated);
       RemoveImage(in  s image);
       MarkImageReadOnly(in  s image,
                         in  b read_only);
@@ -106,6 +132,10 @@ node /org/freedesktop/portable1 {
 
 
 
+
+
+
+
 .SS "Methods"
 .PP
 \fBGetImage()\fR
@@ -123,6 +153,14 @@ file in the image and is useful to identify the operating system used in a porta
 retrieves metadata associated with an image\&. This method returns the image name, the image\*(Aqs
 \fBos-release\fR(5)
 content in the form of a (streamable) array of bytes, and a list of portable units contained in the image, in the form of a string (unit name) and an array of bytes with the content\&.
+.PP
+\fBGetImageMetadataWithExtensions()\fR
+retrieves metadata associated with an image\&. This method is a superset of
+\fBGetImageMetadata()\fR
+with the addition of a list of extensions as input parameter, which were overlaid on top of the main image via
+\fBAttachImageWithExtensions()\fR\&. The
+\fIflag\fR
+parameter is currently unused and reserved for future purposes\&.
 .PP
 \fBGetImageState()\fR
 retrieves the image state as one of the following strings:
@@ -290,6 +328,20 @@ mkdir
 .sp
 Note that an image cannot be attached if a unit that it contains is already present on the system\&.
 .PP
+\fBAttachImageWithExtensions()\fR
+attaches a portable image to the system\&. This method is a superset of
+\fBAttachImage()\fR
+with the addition of a list of extensions as input parameter, which will be overlaid on top of the main image\&. When this method is used, detaching must be done by passing the same arguments via the
+\fBDetachImageWithExtensions()\fR
+method\&. For more details on this functionality, see the
+\fIMountImages=\fR
+entry on
+\fBsystemd.exec\fR(5)
+and
+\fBsystemd-sysext\fR(8)\&. The
+\fIflag\fR
+parameter is currently unused and reserved for future purposes\&.
+.PP
 \fBDetachImage()\fR
 detaches a portable image from the system\&. This method takes an image path or name, and a boolean indicating whether the image to detach was attached only for the current boot session or persistently\&. This method returns the list of changes applied to the system (for example, which unit was removed and is no longer available as a system service)\&. Each change is represented as a triplet of strings: the type of change applied, the path on which it was applied, and the source (if any)\&. The type of change applied will be one of the following possible values:
 .sp
@@ -306,6 +358,14 @@ unlink
 .sp
 Note that an image cannot be detached if a unit that it contains is running\&.
 .PP
+\fBDetachImageWithExtensions()\fR
+detaches a portable image from the system\&. This method is a superset of
+\fBDetachImage()\fR
+with the addition of a list of extensions as input parameter, which were overlaid on top of the main image via
+\fBAttachImageWithExtensions()\fR\&. The
+\fIflag\fR
+parameter is currently unused and reserved for future purposes\&.
+.PP
 \fBReattachImage()\fR
 combines the effects of the
 \fBAttachImage()\fR
@@ -319,6 +379,18 @@ method (first array, units that were removed) and the
 \fBAttachImage()\fR
 method (second array, units that were updated or added)\&.
 .PP
+\fBReattachImageWithExtensions()\fR
+reattaches a portable image to the system\&. This method is a superset of
+\fBReattachImage()\fR
+with the addition of a list of extensions as input parameter, which will be overlaid on top of the main image\&. For more details on this functionality, see the
+\fIMountImages=\fR
+entry on
+\fBsystemd.exec\fR(5)
+and
+\fBsystemd-sysext\fR(8)\&. The
+\fIflag\fR
+parameter is currently unused and reserved for future purposes
+.PP
 \fBRemoveImage()\fR
 removes the image with the specified name\&.
 .PP
@@ -330,6 +402,24 @@ sets an overall quota limit on the pool of images\&.
 .PP
 \fBSetImageLimit()\fR
 sets a per\-image quota limit\&.
+.PP
+The
+\fBAttachImageWithExtensions()\fR,
+\fBDetachImageWithExtensions()\fR
+and
+\fBReattachImageWithExtensions()\fR
+methods take in options as flags instead of booleans to allow for extendability, defined as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define SD_SYSTEMD_PORTABLE_RUNTIME  (UINT64_C(1) << 0)
+      
+.fi
+.if n \{\
+.RE
+.\}
 .SS "Properties"
 .PP
 \fIPoolPath\fR
@@ -359,20 +449,42 @@ node /org/freedesktop/portable1 {
                   out s image,
                   out ay os_release,
                   out a{say} units);
+      GetMetadataWithExtensions(in  as extensions,
+                                in  as matches,
+                                in  t flags,
+                                out s image,
+                                out ay os_release,
+                                out a{say} units);
       GetState(out s state);
       Attach(in  as matches,
              in  s profile,
              in  b runtime,
              in  s copy_mode,
              out a(sss) changes);
+      AttachWithExtensions(in  as extensions,
+                           in  as matches,
+                           in  s profile,
+                           in  s copy_mode,
+                           in  t flags,
+                           out a(sss) changes);
       Detach(in  b runtime,
              out a(sss) changes);
+      DetachWithExtensions(in  as extensions,
+                           in  t flags,
+                           out a(sss) changes);
       Reattach(in  as matches,
                in  s profile,
                in  b runtime,
                in  s copy_mode,
                out a(sss) changes_removed,
                out a(sss) changes_updated);
+      ReattacheWithExtensions(in  as extensions,
+                              in  as matches,
+                              in  s profile,
+                              in  s copy_mode,
+                              in  t flags,
+                              out a(sss) changes_removed,
+                              out a(sss) changes_updated);
       Remove();
       MarkReadOnly(in  b read_only);
       SetLimit(in  t limit);
@@ -407,6 +519,10 @@ node /org/freedesktop/portable1 {
 .if n \{\
 .RE
 .\}
+
+
+
+
 
 
 
@@ -465,6 +581,17 @@ GetMetadata()
 .sp -1
 .IP \(bu 2.3
 .\}
+GetMetadataWithExtensions()
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 GetState()
 .RE
 .sp
@@ -487,6 +614,17 @@ Attach()
 .sp -1
 .IP \(bu 2.3
 .\}
+AttachWithExtensions()
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Detach()
 .RE
 .sp
@@ -498,7 +636,29 @@ Detach()
 .sp -1
 .IP \(bu 2.3
 .\}
+DetachWithExtensions()
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 Reattach()
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+ReattacheWithExtensions()
 .RE
 .sp
 .RS 4

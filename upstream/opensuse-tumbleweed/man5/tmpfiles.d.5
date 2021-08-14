@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 246" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 248" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,8 +61,8 @@ c+    /dev/char\-device\-to\-[re]create           mode user group \-           m
 b     /dev/block\-device\-to\-create              mode user group \-           major:minor
 b+    /dev/block\-device\-to\-[re]create          mode user group \-           major:minor
 C     /target/to/create                        \-    \-    \-     \-           /source/to/copy
-x     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
-X     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
+x     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
+X     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
 r     /empty/dir/to/remove                     \-    \-    \-     \-           \-
 R     /dir/to/remove/recursively               \-    \-    \-     \-           \-
 z     /path\-or\-glob/to/adjust/mode             mode user group \-           \-
@@ -85,13 +85,13 @@ configuration files provide a generic mechanism to define the
 of regular files, directories, pipes, and device nodes, adjustments to their
 \fIaccess mode, ownership, attributes, quota assignments, and contents\fR, and finally their time\-based
 \fIremoval\fR\&. It is mostly commonly used for volatile and temporary files and directories (such as those located under
-/run,
-/tmp,
-/var/tmp, the API file systems such as
-/sys
+/run/,
+/tmp/,
+/var/tmp/, the API file systems such as
+/sys/
 or
-/proc, as well as some other directories below
-/var)\&.
+/proc/, as well as some other directories below
+/var/)\&.
 .PP
 \fBsystemd\-tmpfiles\fR
 uses this configuration to create volatile files and directories during boot and to do periodic cleanup afterwards\&. See
@@ -101,7 +101,7 @@ systemd\-tmpfiles\-setup\&.service,
 systemd\-tmpfiles\-clean\&.service, and associated units\&.
 .PP
 System daemons frequently require private runtime directories below
-/run
+/run/
 to store communication sockets and similar\&. For these, it is better to use
 \fIRuntimeDirectory=\fR
 in their unit files (see
@@ -149,13 +149,13 @@ in
 bearing the same filename\&.
 .SH "CONFIGURATION FILE FORMAT"
 .PP
-The configuration format is one line per path containing type, path, mode, ownership, age, and argument fields:
+The configuration format is one line per path, containing type, path, mode, ownership, age, and argument fields\&. The lines are separated by newlines, the fields by whitespace:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-#Type Path        Mode User Group Age Argument
+#Type Path        Mode User Group Age Argument\&...
 d     /run/user   0755 root root  10d \-
 L     /tmp/foobar \-    \-    \-     \-   /dev/null
 .fi
@@ -163,7 +163,8 @@ L     /tmp/foobar \-    \-    \-     \-   /dev/null
 .RE
 .\}
 .PP
-Fields may be enclosed within quotes and contain C\-style escapes\&.
+Fields may contain C\-style escapes\&. With the exception of the seventh field (the "argument") all fields may be enclosed in quotes\&. Note that any whitespace found in the line after the beginning of the argument field will be considered part of the argument field\&. To begin the argument field with a whitespace character, use C\-style escapes (e\&.g\&.
+"\ex20")\&.
 .SS "Type"
 .PP
 The type consists of a single letter and optionally an exclamation mark ("!") and/or minus sign ("\-")\&.
@@ -256,16 +257,16 @@ It is recommended to use
 for subvolumes that typically contain further subvolumes, and where it is desirable to have accounting and quota limits on all child subvolumes together\&. Examples for
 \fIQ\fR
 are typically
-/home
+/home/
 or
-/var/lib/machines\&. In contrast,
+/var/lib/machines/\&. In contrast,
 \fIq\fR
 should be used for subvolumes that either usually do not include further subvolumes or where no accounting and quota limits are needed that apply to all child subvolumes together\&. Examples for
 \fIq\fR
 are typically
-/var
+/var/
 or
-/var/tmp\&.
+/var/tmp/\&.
 .sp
 As with
 \fIq\fR,
@@ -575,11 +576,7 @@ and
 \fIA\fR, determines ACL attributes to be set\&. For
 \fIh\fR
 and
-\fIH\fR, determines the file attributes to set\&. For
-\fIx\fR
-and
-\fIX\fR
-a comma separated list of usernames\&. If given, only paths belonging to these users will be excluded during directory cleanup\&. Ignored for all other lines\&.
+\fIH\fR, determines the file attributes to set\&. Ignored for all other lines\&.
 .PP
 This field can contain specifiers, see below\&.
 .SH "SPECIFIERS"
@@ -653,6 +650,20 @@ T}:T{
 In \fB\-\-user\fR mode, this is the same as \fI$XDG_CACHE_HOME\fR, and /var/cache otherwise\&.
 T}
 T{
+"%g"
+T}:T{
+User group
+T}:T{
+This is the name of the group running the command\&. In case of the system instance this resolves to "root"\&.
+T}
+T{
+"%G"
+T}:T{
+User GID
+T}:T{
+This is the numeric GID of the group running the command\&. In case of the system instance this resolves to \fB0\fR\&.
+T}
+T{
 "%h"
 T}:T{
 User home directory
@@ -706,28 +717,14 @@ T{
 T}:T{
 System or user runtime directory
 T}:T{
-In \fB\-\-user\fR mode, this is the same \fI$XDG_RUNTIME_DIR\fR, and /run otherwise\&.
+In \fB\-\-user\fR mode, this is the same \fI$XDG_RUNTIME_DIR\fR, and /run/ otherwise\&.
 T}
 T{
 "%T"
 T}:T{
 Directory for temporary files
 T}:T{
-This is either /tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&.
-T}
-T{
-"%g"
-T}:T{
-User group
-T}:T{
-This is the name of the group running the command\&. In case of the system instance this resolves to "root"\&.
-T}
-T{
-"%G"
-T}:T{
-User GID
-T}:T{
-This is the numeric GID of the group running the command\&. In case of the system instance this resolves to \fB0\fR\&.
+This is either /tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
 T}
 T{
 "%u"
@@ -755,7 +752,7 @@ T{
 T}:T{
 Directory for larger and persistent temporary files
 T}:T{
-This is either /var/tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&.
+This is either /var/tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
 T}
 T{
 "%w"

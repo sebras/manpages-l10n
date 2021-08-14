@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 246" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 248" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,6 +52,18 @@ by systemd are listed in
 See the
 \m[blue]\fBNew Control Group Interfaces\fR\m[]\&\s-2\u[1]\d\s+2
 for an introduction on how to make use of resource control APIs from programs\&.
+.SS "Setting resource controls for a group of related units"
+.PP
+As described in
+\fBsystemd.unit\fR(5), the settings listed here may be set through the main file of a unit and drop\-in snippets in
+*\&.d/
+directories\&. The list of directories searched for drop\-ins includes names formed by repeatedly truncating the unit name after all dashes\&. This is particularly convenient to set resource limits for a group of units with similar names\&.
+.PP
+For example, every user gets their own slice
+user\-\fInnn\fR\&.slice\&. Drop\-ins with local configuration that affect user 1000 may be placed in
+/etc/systemd/system/user\-1000\&.slice,
+/etc/systemd/system/user\-1000\&.slice\&.d/*\&.conf, but also
+/etc/systemd/system/user\-\&.slice\&.d/*\&.conf\&. This last directory applies to all user slices\&.
 .SH "IMPLICIT DEPENDENCIES"
 .PP
 The following dependencies are implicitly added:
@@ -202,7 +214,7 @@ This setting is supported only with the unified control group hierarchy\&.
 .PP
 \fIAllowedMemoryNodes=\fR
 .RS 4
-Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper CPU indices separated by a dash\&.
+Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper NUMA nodes indices separated by a dash\&.
 .sp
 Setting
 \fIAllowedMemoryNodes=\fR
@@ -220,34 +232,22 @@ in
 \fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
-\fIMemoryMin=\fR\fI\fIbytes\fR\fR
+\fIMemoryMin=\fR\fI\fIbytes\fR\fR, \fIMemoryLow=\fR\fI\fIbytes\fR\fR
 .RS 4
-Specify the memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their minimum boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed\&.
+Specify the memory usage protection of the executed processes in this unit\&. When reclaiming memory, the unit is treated as if it was using less memory resulting in memory to be preferentially reclaimed from unprotected units\&. Using
+\fIMemoryLow=\fR
+results in a weaker protection where memory may still be reclaimed to avoid invoking the OOM killer in case there is no other reclaimable memory\&.
+.sp
+For a protection to be effective, it is generally required to set a corresponding allocation on all ancestors, which is then distributed between children (with the exception of the root slice)\&. Any
+\fIMemoryMin=\fR
+or
+\fIMemoryLow=\fR
+allocation that is not explicitly distributed to specific children is used to create a shared protection for all children\&. As this is a shared protection, the children will freely compete for the memory\&.
 .sp
 Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
 "infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
 "memory\&.min"
-control group attribute\&. For details about this control group attribute, see
-\m[blue]\fBMemory Interface Files\fR\m[]\&\s-2\u[6]\d\s+2\&.
-.sp
-This setting is supported only if the unified control group hierarchy is used and disables
-\fIMemoryLimit=\fR\&.
-.sp
-Units may have their children use a default
-"memory\&.min"
-value by specifying
-\fIDefaultMemoryMin=\fR, which has the same semantics as
-\fIMemoryMin=\fR\&. This setting does not affect
-"memory\&.min"
-in the unit itself\&.
-.RE
-.PP
-\fIMemoryLow=\fR\fI\fIbytes\fR\fR
-.RS 4
-Specify the best\-effort memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their low boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed as long as memory can be reclaimed from unprotected units\&.
-.sp
-Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
-"infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
+or
 "memory\&.low"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBMemory Interface Files\fR\m[]\&\s-2\u[6]\d\s+2\&.
@@ -256,12 +256,22 @@ This setting is supported only if the unified control group hierarchy is used an
 \fIMemoryLimit=\fR\&.
 .sp
 Units may have their children use a default
+"memory\&.min"
+or
 "memory\&.low"
 value by specifying
+\fIDefaultMemoryMin=\fR
+or
 \fIDefaultMemoryLow=\fR, which has the same semantics as
+\fIMemoryMin=\fR
+and
 \fIMemoryLow=\fR\&. This setting does not affect
+"memory\&.min"
+or
 "memory\&.low"
-in the unit itself\&.
+in the unit itself\&. Using it to set a default child allocation is only useful on kernels older than 5\&.7, which do not support the
+"memory_recursiveprot"
+cgroup2 mount option\&.
 .RE
 .PP
 \fIMemoryHigh=\fR\fI\fIbytes\fR\fR
@@ -756,6 +766,96 @@ The following controller names may be specified:
 \fBbpf\-firewall\fR, and
 \fBbpf\-devices\fR\&.
 .RE
+.PP
+\fIManagedOOMSwap=auto|kill\fR, \fIManagedOOMMemoryPressure=auto|kill\fR
+.RS 4
+Specifies how
+\fBsystemd-oomd.service\fR(8)
+will act on this unit\*(Aqs cgroups\&. Defaults to
+\fBauto\fR\&.
+.sp
+When set to
+\fBkill\fR,
+\fBsystemd\-oomd\fR
+will actively monitor this unit\*(Aqs cgroup metrics to decide whether it needs to act\&. If the cgroup passes the limits set by
+\fBoomd.conf\fR(5)
+or its overrides,
+\fBsystemd\-oomd\fR
+will send a
+\fBSIGKILL\fR
+to all of the processes under the chosen candidate cgroup\&. Note that only descendant cgroups can be eligible candidates for killing; the unit that set its property to
+\fBkill\fR
+is not a candidate (unless one of its ancestors set their property to
+\fBkill\fR)\&. You can find more details on candidates and kill behavior at
+\fBsystemd-oomd.service\fR(8)
+and
+\fBoomd.conf\fR(5)\&. Setting either of these properties to
+\fBkill\fR
+will also automatically acquire
+\fIAfter=\fR
+and
+\fIWants=\fR
+dependencies on
+systemd\-oomd\&.service
+unless
+\fIDefaultDependencies=no\fR\&.
+.sp
+When set to
+\fBauto\fR,
+\fBsystemd\-oomd\fR
+will not actively use this cgroup\*(Aqs data for monitoring and detection\&. However, if an ancestor cgroup has one of these properties set to
+\fBkill\fR, a unit with
+\fBauto\fR
+can still be an eligible candidate for
+\fBsystemd\-oomd\fR
+to act on\&.
+.RE
+.PP
+\fIManagedOOMMemoryPressureLimit=\fR
+.RS 4
+Overrides the default memory pressure limit set by
+\fBoomd.conf\fR(5)
+for this unit (cgroup)\&. Takes a percentage value between 0% and 100%, inclusive\&. This property is ignored unless
+\fIManagedOOMMemoryPressure=\fR\fBkill\fR\&. Defaults to 0%, which means to use the default set by
+\fBoomd.conf\fR(5)\&.
+.RE
+.PP
+\fIManagedOOMPreference=none|avoid|omit\fR
+.RS 4
+Allows deprioritizing or omitting this unit\*(Aqs cgroup as a candidate when
+\fBsystemd\-oomd\fR
+needs to act\&. Requires support for extended attributes (see
+\fBxattr\fR(7)) in order to use
+\fBavoid\fR
+or
+\fBomit\fR\&. Additionally,
+\fBsystemd\-oomd\fR
+will ignore these extended attributes if the unit\*(Aqs cgroup is not owned by the root user\&.
+.sp
+If this property is set to
+\fBavoid\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will only select this cgroup if there are no other viable candidates\&.
+.sp
+If this property is set to
+\fBomit\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will ignore this cgroup as a candidate and will not perform any actions on it\&.
+.sp
+It is recommended to use
+\fBavoid\fR
+and
+\fBomit\fR
+sparingly, as it can adversely affect
+\fBsystemd\-oomd\fR\*(Aqs kill behavior\&. Also note that these extended attributes are not applied recursively to cgroups under this unit\*(Aqs cgroup\&.
+.sp
+Defaults to
+\fBnone\fR
+which means
+\fBsystemd\-oomd\fR
+will rank this unit\*(Aqs cgroup as defined in
+\fBsystemd-oomd.service\fR(8)
+and
+\fBoomd.conf\fR(5)\&.
+.RE
 .SH "DEPRECATED OPTIONS"
 .PP
 The following options are deprecated\&. Use the indicated superseding options instead:
@@ -882,7 +982,8 @@ instead\&.
 \fBsystemd.swap\fR(5),
 \fBsystemd.exec\fR(5),
 \fBsystemd.directives\fR(7),
-\fBsystemd.special\fR(7), The documentation for control groups and specific controllers in the Linux kernel:
+\fBsystemd.special\fR(7),
+\fBsystemd-oomd.service\fR(8), The documentation for control groups and specific controllers in the Linux kernel:
 \m[blue]\fBControl Groups v2\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .SH "NOTES"
 .IP " 1." 4

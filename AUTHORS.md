@@ -135,6 +135,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Julien Cristau <jcristau@debian.org>
 * Julien Rosal <albator.deb@gmail.com>
 * Luc Froidefond <luc.froidefond@free.fr>
+* Lucien Gentis <lucien.gentis@waika9.com>
 * Lyes Zemmouche <iliaas@hotmail.fr>
 * Marc Poiroud <marci1@archlinux.fr>
 * Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
@@ -234,16 +235,22 @@ of Linux manpages. The list is sorted alphabetically.
 * Böszörményi Zoltán <zboszor@mail.externet.hu>
 * Csehi András <acsehi@merlin.flexum.hu>
 * Daczi László <dacas@freemail.hu>
+* Domokos Péter <pdomokos@freemail.c3.hu>
 * Dyekiss Emil <emil2@cds.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
 * Füley István <ifuley@udv.nextra.ro>
+* Gábris Aurél <gabrisa@valerie.inf.elte.hu>
+* Gál Gyuri <gyuri@lamer.hu>
 * Gombai Sándor <sgombai@hotmail.com>
 * Hermann Benedek <bence@intercom.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * Kovács Emese <emese@eik.bme.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
+* Kulcsár Gábor <medve@iku.omikk.hu>
+* László Gergely <laszlog@kvi.ktm.hu>
+* Lestyán Zsolt <letcho@usa.net>
 * Magyari Miklós <magyari@freemail.hu>
 * Mező Tamás <tomfield@vm.hu>
 * Molnár Attila <attila.molnar@hu.appaloosacorp.com>
@@ -256,6 +263,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
 * Váraljai Nándor <vnandor@elender.hu>
+* Vizi Szilárd <vizisz@freemail.hu>
 * Zelena Endre <ezelena@lme.linux.hu>
 
 
@@ -286,6 +294,11 @@ of Linux manpages. The list is sorted alphabetically.
 ## Macedonian:
 
 * Kristijan Velkovski <me@krisfremen.com>
+
+
+## Persian:
+
+* Mk Safavi <mksafavi@gmail.com>
 
 
 ## Polish:

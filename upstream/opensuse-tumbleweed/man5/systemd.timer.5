@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.TIMER" "5" "" "systemd 246" "systemd.timer"
+.TH "SYSTEMD\&.TIMER" "5" "" "systemd 248" "systemd.timer"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -104,11 +104,14 @@ option\&.
 .\}
 Timer units with at least one
 \fIOnCalendar=\fR
-directive will have an additional
+directive acquire a pair of additional
 \fIAfter=\fR
-dependency on
-time\-sync\&.target
-to avoid being started before the system clock has been correctly set\&.
+dependencies on
+time\-set\&.target
+and
+time\-sync\&.target, in order to avoid being started before the system clock has been correctly set\&. See
+\fBsystemd.special\fR(7)
+for details on these two targets\&.
 .RE
 .SH "OPTIONS"
 .PP
@@ -238,25 +241,44 @@ Note that this setting is primarily a power saving option that allows coalescing
 .PP
 \fIRandomizedDelaySec=\fR
 .RS 4
-Delay the timer by a randomly selected, evenly distributed amount of time between 0 and the specified time value\&. Defaults to 0, indicating that no randomized delay shall be applied\&. Each timer unit will determine this delay randomly before each iteration, and the delay will simply be added on top of the next determined elapsing time\&. This is useful to stretch dispatching of similarly configured timer events over a certain amount time, to avoid that they all fire at the same time, possibly resulting in resource congestion\&. Note the relation to
+Delay the timer by a randomly selected, evenly distributed amount of time between 0 and the specified time value\&. Defaults to 0, indicating that no randomized delay shall be applied\&. Each timer unit will determine this delay randomly before each iteration, and the delay will simply be added on top of the next determined elapsing time, unless modified with
+\fIFixedRandomDelay=\fR, see below\&.
+.sp
+This setting is useful to stretch dispatching of similarly configured timer events over a certain time interval, to prevent them from firing all at the same time, possibly resulting in resource congestion\&.
+.sp
+Note the relation to
 \fIAccuracySec=\fR
-above: the latter allows the service manager to coalesce timer events within a specified time range in order to minimize wakeups, the former does the opposite: it stretches timer events over a time range, to make it unlikely that they fire simultaneously\&. If
+above: the latter allows the service manager to coalesce timer events within a specified time range in order to minimize wakeups, while this setting does the opposite: it stretches timer events over an interval, to make it unlikely that they fire simultaneously\&. If
 \fIRandomizedDelaySec=\fR
 and
 \fIAccuracySec=\fR
 are used in conjunction, first the randomized delay is added, and then the result is possibly further shifted to coalesce it with other timer events happening on the system\&. As mentioned above
 \fIAccuracySec=\fR
-defaults to 1min and
+defaults to 1 minute and
 \fIRandomizedDelaySec=\fR
-to 0, thus encouraging coalescing of timer events\&. In order to optimally stretch timer events over a certain range of time, make sure to set
+to 0, thus encouraging coalescing of timer events\&. In order to optimally stretch timer events over a certain range of time, set
+\fIAccuracySec=1us\fR
+and
 \fIRandomizedDelaySec=\fR
-to a higher value, and
-\fIAccuracySec=1us\fR\&.
+to some higher value\&.
+.RE
+.PP
+\fIFixedRandomDelay=\fR
+.RS 4
+Takes a boolean argument\&. When enabled, the randomized offset specified by
+\fIRandomizedDelaySec=\fR
+is reused for all firings of the same timer\&. For a given timer unit, the offset depends on the machine ID, user identifier and timer name, which means that it is stable between restarts of the manager\&. This effectively creates a fixed offset for an individual timer, reducing the jitter in firings of this timer, while still avoiding firing at the same time as other similarly configured timers\&.
+.sp
+This setting has no effect if
+\fIRandomizedDelaySec=\fR
+is set to 0\&. Defaults to
+\fBfalse\fR\&.
 .RE
 .PP
 \fIOnClockChange=\fR, \fIOnTimezoneChange=\fR
 .RS 4
-These options take boolean arguments\&. When true, the service unit will be triggered when the system clock (\fBCLOCK_REALTIME\fR) jumps relative to the monotonic clock (\fBCLOCK_MONOTONIC\fR), or when the local system timezone is modified\&. These options can be used alone or in combination with other timer expressions (see above) within the same timer unit\&. These options default to false\&.
+These options take boolean arguments\&. When true, the service unit will be triggered when the system clock (\fBCLOCK_REALTIME\fR) jumps relative to the monotonic clock (\fBCLOCK_MONOTONIC\fR), or when the local system timezone is modified\&. These options can be used alone or in combination with other timer expressions (see above) within the same timer unit\&. These options default to
+\fBfalse\fR\&.
 .RE
 .PP
 \fIUnit=\fR
@@ -270,7 +292,7 @@ The unit to activate when this timer elapses\&. The argument is a unit name, who
 Takes a boolean argument\&. If true, the time when the service unit was last triggered is stored on disk\&. When the timer is activated, the service unit is triggered immediately if it would have been triggered at least once during the time when the timer was inactive\&. Such triggering is nonetheless subject to the delay imposed by
 \fIRandomizedDelaySec=\fR\&. This is useful to catch up on missed runs of the service when the system was powered down\&. Note that this setting only has an effect on timers configured with
 \fIOnCalendar=\fR\&. Defaults to
-\fIfalse\fR\&.
+\fBfalse\fR\&.
 .sp
 Use
 \fBsystemctl clean \-\-what=state \&...\fR
@@ -282,7 +304,7 @@ for details\&.
 \fIWakeSystem=\fR
 .RS 4
 Takes a boolean argument\&. If true, an elapsing timer will cause the system to resume from suspend, should it be suspended and if the system supports this\&. Note that this option will only make sure the system resumes on the appropriate times, it will not take care of suspending it again after any work that is to be done is finished\&. Defaults to
-\fIfalse\fR\&.
+\fBfalse\fR\&.
 .sp
 Note that this functionality requires privileges and is thus generally only available in the system service manager\&.
 .sp
@@ -304,7 +326,7 @@ Takes a boolean argument\&. If true, a timer will stay loaded, and its state rem
 is on, starting the timer a second time has no effect\&. However, if
 \fIRemainAfterElapse=\fR
 is off and the timer unit was already unloaded, it can be started again, and thus the service can be triggered multiple times\&. Defaults to
-\fIyes\fR\&.
+\fBtrue\fR\&.
 .RE
 .SH "SEE ALSO"
 .PP

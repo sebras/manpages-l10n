@@ -2,6 +2,7 @@
 .\" and Copyright (C) 2012 Will Drewry <wad@chromium.org>
 .\" and Copyright (C) 2008, 2014,2017 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" and Copyright (C) 2017 Tyler Hicks <tyhicks@canonical.com>
+.\" and Copyright (C) 2020 Tycho Andersen <tycho@tycho.ws>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
 .\" Permission is granted to make and distribute verbatim copies of this
@@ -30,20 +31,25 @@
 seccomp \- operate on Secure Computing state of the process
 .SH SYNOPSIS
 .nf
-.B #include <linux/seccomp.h>
-.B #include <linux/filter.h>
-.B #include <linux/audit.h>
-.B #include <linux/signal.h>
-.B #include <sys/ptrace.h>
+.BR "#include <linux/seccomp.h>" "  /* Definition of " SECCOMP_* " constants */"
+.BR "#include <linux/filter.h>" "   /* Definition of " "struct sock_fprog" " */"
+.BR "#include <linux/audit.h>" "    /* Definition of " AUDIT_* " constants */"
+.BR "#include <linux/signal.h>" "   /* Definition of " SIG* " constants */"
+.BR "#include <sys/ptrace.h>" "     /* Definition of " PTRACE_* " constants */"
 .\" Kees Cook noted: Anything that uses SECCOMP_RET_TRACE returns will
 .\"                  need <sys/ptrace.h>
+.BR "#include <sys/syscall.h>" "    /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int seccomp(unsigned int " operation ", unsigned int " flags \
-", void *" args );
+.BI "int syscall(SYS_seccomp, unsigned int " operation ", unsigned int " flags ,
+.BI "            void *" args );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for this system call; see NOTES.
+glibc provides no wrapper for
+.BR seccomp (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR seccomp ()
@@ -206,6 +212,37 @@ The recognized
 are:
 .RS
 .TP
+.BR SECCOMP_FILTER_FLAG_LOG " (since Linux 4.14)"
+.\" commit e66a39977985b1e69e17c4042cb290768eca9b02
+All filter return actions except
+.BR SECCOMP_RET_ALLOW
+should be logged.
+An administrator may override this filter flag by preventing specific
+actions from being logged via the
+.IR /proc/sys/kernel/seccomp/actions_logged
+file.
+.TP
+.BR SECCOMP_FILTER_FLAG_NEW_LISTENER " (since Linux 5.0)"
+.\" commit 6a21cc50f0c7f87dae5259f6cfefe024412313f6
+After successfully installing the filter program,
+return a new user-space notification file descriptor.
+(The close-on-exec flag is set for the file descriptor.)
+When the filter returns
+.BR SECCOMP_RET_USER_NOTIF
+a notification will be sent to this file descriptor.
+.IP
+At most one seccomp filter using the
+.BR SECCOMP_FILTER_FLAG_NEW_LISTENER
+flag can be installed for a thread.
+.IP
+See
+.BR seccomp_unotify (2)
+for further details.
+.TP
+.BR SECCOMP_FILTER_FLAG_SPEC_ALLOW " (since Linux 4.17)"
+.\" commit 00a02d0c502a06d15e07b857f8ff921e3e402675
+Disable Speculative Store Bypass mitigation.
+.TP
 .BR SECCOMP_FILTER_FLAG_TSYNC
 When adding a new filter, synchronize all other threads of the calling
 process to the same seccomp filter tree.
@@ -221,20 +258,6 @@ Synchronization will fail if another thread in the same process is in
 .BR SECCOMP_MODE_STRICT
 or if it has attached new seccomp filters to itself,
 diverging from the calling thread's filter tree.
-.TP
-.BR SECCOMP_FILTER_FLAG_LOG " (since Linux 4.14)"
-.\" commit e66a39977985b1e69e17c4042cb290768eca9b02
-All filter return actions except
-.BR SECCOMP_RET_ALLOW
-should be logged.
-An administrator may override this filter flag by preventing specific
-actions from being logged via the
-.IR /proc/sys/kernel/seccomp/actions_logged
-file.
-.TP
-.BR SECCOMP_FILTER_FLAG_SPEC_ALLOW " (since Linux 4.17)"
-.\" commit 00a02d0c502a06d15e07b857f8ff921e3e402675
-Disable Speculative Store Bypass mitigation.
 .RE
 .TP
 .BR SECCOMP_GET_ACTION_AVAIL " (since Linux 4.14)"
@@ -250,6 +273,34 @@ The value of
 must be 0, and
 .IR args
 must be a pointer to an unsigned 32-bit filter return action.
+.TP
+.BR SECCOMP_GET_NOTIF_SIZES " (since Linux 5.0)"
+.\" commit 6a21cc50f0c7f87dae5259f6cfefe024412313f6
+Get the sizes of the seccomp user-space notification structures.
+Since these structures may evolve and grow over time,
+this command can be used to determine how
+much memory to allocate for sending and receiving notifications.
+.IP
+The value of
+.IR flags
+must be 0, and
+.IR args
+must be a pointer to a
+.IR "struct seccomp_notif_sizes" ,
+which has the following form:
+.IP
+.EX
+struct seccomp_notif_sizes
+    __u16 seccomp_notif;      /* Size of notification structure */
+    __u16 seccomp_notif_resp; /* Size of response structure */
+    __u16 seccomp_data;       /* Size of \(aqstruct seccomp_data\(aq */
+};
+.EE
+.IP
+See
+.BR seccomp_unotify (2)
+for further details.
+.\"
 .SS Filters
 When adding filters via
 .BR SECCOMP_SET_MODE_FILTER ,
@@ -568,6 +619,26 @@ portion of the filter's return value being passed to user space as the
 .IR errno
 value without executing the system call.
 .TP
+.BR SECCOMP_RET_USER_NOTIF " (since Linux 5.0)"
+.\" commit 6a21cc50f0c7f87dae5259f6cfefe024412313f6
+Forward the system call to an attached user-space supervisor
+process to allow that process to decide what to do with the system call.
+If there is no attached supervisor (either
+because the filter was not installed with the
+.BR SECCOMP_FILTER_FLAG_NEW_LISTENER
+flag or because the file descriptor was closed), the filter returns
+.BR ENOSYS
+(similar to what happens when a filter returns
+.BR SECCOMP_RET_TRACE
+and there is no tracer).
+See
+.BR seccomp_unotify (2)
+for further details.
+.IP
+Note that the supervisor process will not be notified
+if another filter returns an action value with a precedence greater than
+.BR SECCOMP_RET_USER_NOTIF .
+.TP
 .BR SECCOMP_RET_TRACE
 When returned, this value will cause the kernel to attempt to notify a
 .BR ptrace (2)-based
@@ -740,6 +811,12 @@ capability in its user namespace, or had not set
 before using
 .BR SECCOMP_SET_MODE_FILTER .
 .TP
+.BR EBUSY
+While installing a new filter, the
+.BR SECCOMP_FILTER_FLAG_NEW_LISTENER
+flag was specified,
+but a previous filter had already been installed with that flag.
+.TP
 .BR EFAULT
 .IR args
 was not a valid address.
@@ -858,9 +935,6 @@ Tile (since Linux 4.3)
 PA-RISC (since Linux 4.6)
 .\" User mode Linux since Linux 4.6
 .PD
-.PP
-Glibc does not provide a wrapper for this system call; call it using
-.BR syscall (2).
 .\"
 .SS Caveats
 There are various subtleties to consider when applying seccomp filters
@@ -1157,6 +1231,7 @@ main(int argc, char **argv)
 .BR bpf (2),
 .BR prctl (2),
 .BR ptrace (2),
+.BR seccomp_unotify (2),
 .BR sigaction (2),
 .BR proc (5),
 .BR signal (7),

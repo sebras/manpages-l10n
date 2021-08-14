@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 248" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 249" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -783,7 +783,9 @@ Takes a boolean argument\&. If true, ensures that the service process and all it
 \fISystemCallLog=\fR
 are specified\&. Note that even if this setting is overridden by them,
 \fBsystemctl show\fR
-shows the original value of this setting\&. Also see
+shows the original value of this setting\&. In case the service will be run in a new mount namespace anyway and SELinux is disabled, all file systems are mounted with
+\fBMS_NOSUID\fR
+flag\&. Also see
 \m[blue]\fBNo New Privileges Flag\fR\m[]\&\s-2\u[4]\d\s+2\&.
 .RE
 .PP
@@ -1159,7 +1161,7 @@ generally is useful only in shell pipelines\&.
 .PP
 \fINice=\fR
 .RS 4
-Sets the default nice level (scheduling priority) for executed processes\&. Takes an integer between \-20 (highest priority) and 19 (lowest priority)\&. See
+Sets the default nice level (scheduling priority) for executed processes\&. Takes an integer between \-20 (highest priority) and 19 (lowest priority)\&. In case of resource contention, smaller values mean more resources will be made available to the unit\*(Aqs processes, larger values mean less resources will be made available\&. See
 \fBsetpriority\fR(2)
 for details\&.
 .RE
@@ -1179,7 +1181,7 @@ for details\&.
 .PP
 \fICPUSchedulingPriority=\fR
 .RS 4
-Sets the CPU scheduling priority for executed processes\&. The available priority range depends on the selected CPU scheduling policy (see above)\&. For real\-time scheduling policies an integer between 1 (lowest priority) and 99 (highest priority) can be used\&. See
+Sets the CPU scheduling priority for executed processes\&. The available priority range depends on the selected CPU scheduling policy (see above)\&. For real\-time scheduling policies an integer between 1 (lowest priority) and 99 (highest priority) can be used\&. In case of CPU resource contention, smaller values mean less CPU time is made available to the service, larger values mean more\&. See
 \fBsched_setscheduler\fR(2)
 for details\&.
 .RE
@@ -1246,7 +1248,7 @@ for details\&.
 .PP
 \fIIOSchedulingPriority=\fR
 .RS 4
-Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. The available priorities depend on the selected I/O scheduling class (see above)\&. If the empty string is assigned to this option, all prior assignments to both
+Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. In case of I/O contention, smaller values mean more I/O bandwidth is made available to the unit\*(Aqs processes, larger values mean less bandwidth\&. The available priorities depend on the selected I/O scheduling class (see above)\&. If the empty string is assigned to this option, all prior assignments to both
 \fIIOSchedulingClass=\fR
 and
 \fIIOSchedulingPriority=\fR
@@ -1447,20 +1449,20 @@ these paths always reside on the host and are mounted from there into the unit\*
 .sp
 If
 \fIDynamicUser=\fR
-is used in conjunction with
-\fIStateDirectory=\fR, the logic for
-\fICacheDirectory=\fR
-and
+is used, the logic for
+\fICacheDirectory=\fR,
 \fILogsDirectory=\fR
+and
+\fIStateDirectory=\fR
 is slightly altered: the directories are created below
-/var/lib/private,
-/var/cache/private
+/var/cache/private,
+/var/log/private
 and
-/var/log/private, respectively, which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot be gained through dynamic user ID recycling\&. Symbolic links are created to hide this difference in behaviour\&. Both from perspective of the host and from inside the unit, the relevant directories hence always appear directly below
-/var/lib,
-/var/cache
+/var/lib/private, respectively, which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot be gained through dynamic user ID recycling\&. Symbolic links are created to hide this difference in behaviour\&. Both from perspective of the host and from inside the unit, the relevant directories hence always appear directly below
+/var/cache,
+/var/log
 and
-/var/log\&.
+/var/lib\&.
 .sp
 Use
 \fIRuntimeDirectory=\fR
@@ -2048,12 +2050,15 @@ This option is only available for system services and is not supported for servi
 .PP
 \fIRestrictAddressFamilies=\fR
 .RS 4
-Restricts the set of socket address families accessible to the processes of this unit\&. Takes a space\-separated list of address family names to allow\-list, such as
+Restricts the set of socket address families accessible to the processes of this unit\&. Takes
+"none", or a space\-separated list of address family names to allow\-list, such as
 \fBAF_UNIX\fR,
 \fBAF_INET\fR
 or
-\fBAF_INET6\fR\&. When prefixed with
-\fB~\fR
+\fBAF_INET6\fR\&. When
+"none"
+is specified, then all address families will be denied\&. When prefixed with
+"~"
 the listed address families will be applied as deny list, otherwise as allow list\&. Note that this restricts access to the
 \fBsocket\fR(2)
 system call only\&. Sockets passed into the process by other means (for example, by using socket activation with socket units, see
@@ -3265,7 +3270,7 @@ is a virtual console terminal, try to deallocate the TTY before and after execut
 .RE
 .SH "CREDENTIALS"
 .PP
-\fILoadCredential=\fR\fIID\fR:\fIPATH\fR
+\fILoadCredential=\fR\fIID\fR[:\fIPATH\fR]
 .RS 4
 Pass a credential to the unit\&. Credentials are limited\-size binary or textual objects that may be passed to unit processes\&. They are primarily used for passing cryptographic keys (both public and private) or certificates, user account information or identity information from host to services\&. The data is accessible from the unit\*(Aqs processes via the file system, at a read\-only location that (if possible and permitted) is backed by non\-swappable memory\&. The data is only accessible to the user associated with the unit, via the
 \fIUser=\fR/\fIDynamicUser=\fR
@@ -3275,13 +3280,13 @@ environment variable to the unit\*(Aqs processes\&.
 .sp
 The
 \fILoadCredential=\fR
-setting takes a textual ID to use as name for a credential plus a file system path\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
+setting takes a textual ID to use as name for a credential plus a file system path, separated by a colon\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
 \fBAF_UNIX\fR
 stream socket in the file system a connection is made to it (only once at unit start\-up) and the credential data read from the connection, providing an easy IPC integration point for dynamically providing credentials from other services\&. If the specified path is not absolute and itself qualifies as valid credential identifier it is understood to refer to a credential that the service manager itself received via the
 \fI$CREDENTIALS_DIRECTORY\fR
 environment variable, which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
 \fBNUL\fR
-bytes\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
+bytes\&. If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way do declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
 .sp
 The credential files/IPC sockets must be accessible to the service manager, but don\*(Aqt have to be directly accessible to the unit\*(Aqs processes: the credential data is read and copied into separate, read\-only copies for the unit that are accessible to appropriately privileged processes\&. This is particularly useful in combination with
 \fIDynamicUser=\fR
@@ -3503,7 +3508,7 @@ in the system manager\&. When compiled for systems with "unmerged
 is not a symlink to
 /usr/bin),
 ":/sbin:/bin"
-is appended\&. In case of the the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
+is appended\&. In case of the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
 \fI$PATH\fR\&.
 .RE
 .PP

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.LINK" "5" "" "systemd 246" "systemd.link"
+.TH "SYSTEMD\&.LINK" "5" "" "systemd 248" "systemd.link"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,13 +39,34 @@ The link files are read from the files located in the system network directory
 /run/systemd/network, and the local administration network directory
 /etc/systemd/network\&. Link files must have the extension
 \&.link; other extensions are ignored\&. All link files are collectively sorted and processed in lexical order, regardless of the directories in which they live\&. However, files with identical filenames replace each other\&. Files in
-/etc
+/etc/
 have the highest priority, files in
-/run
+/run/
 take precedence over files with the same name in
-/usr/lib\&. This can be used to override a system\-supplied link file with a local file if needed\&. As a special case, an empty file (file size 0) or symlink with the same name pointing to
+/usr/lib/\&. This can be used to override a system\-supplied link file with a local file if needed\&. As a special case, an empty file (file size 0) or symlink with the same name pointing to
 /dev/null
 disables the configuration file entirely (it is "masked")\&.
+.PP
+Along with the link file
+foo\&.link, a "drop\-in" directory
+foo\&.link\&.d/
+may exist\&. All files with the suffix
+"\&.conf"
+from this directory will be parsed after the file itself is parsed\&. This is useful to alter or add configuration settings, without having to modify the main configuration file\&. Each drop\-in file must have appropriate section headers\&.
+.PP
+In addition to
+/etc/systemd/network, drop\-in
+"\&.d"
+directories can be placed in
+/usr/lib/systemd/network
+or
+/run/systemd/network
+directories\&. Drop\-in files in
+/etc/
+take precedence over those in
+/run/
+which in turn take precedence over those in
+/usr/lib/\&. Drop\-in files under any of these directories take precedence over the main link file wherever located\&.
 .PP
 The link file contains a [Match] section, which determines if a given link file may be applied to a given device, as well as a [Link] section specifying how the device should be configured\&. The first (in lexical order) of the link files that matches a given device is applied\&. Note that a default file
 99\-default\&.link
@@ -118,7 +139,16 @@ of the device itself\&. If the list is prefixed with a "!", the test is inverted
 \fIType=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the device type, as exposed by
-\fBnetworkctl status\fR\&. If the list is prefixed with a "!", the test is inverted\&.
+\fBnetworkctl list\fR\&. If the list is prefixed with a "!", the test is inverted\&. Some valid values are
+"ether",
+"loopback",
+"wlan",
+"wwan"\&. Valid types are named either from the udev
+"DEVTYPE"
+attribute, or
+"ARPHRD_"
+macros in
+linux/if_arp\&.h, so this is not comprehensive\&.
 .RE
 .PP
 \fIProperty=\fR
@@ -227,15 +257,20 @@ bits set\&.
 .PP
 \fBnone\fR
 .RS 4
-Keeps the MAC address assigned by the kernel\&.
+Keeps the MAC address assigned by the kernel\&. Or use the MAC address specified in
+\fIMACAddress=\fR\&.
 .RE
+.sp
+An empty string assignment is equivalent to setting
+"none"\&.
 .RE
 .PP
 \fIMACAddress=\fR
 .RS 4
-The MAC address to use, if no
+The interface MAC address to use\&. For this setting to take effect,
 \fIMACAddressPolicy=\fR
-is specified\&.
+must either be unset, empty, or
+"none"\&.
 .RE
 .PP
 \fINamePolicy=\fR
@@ -322,6 +357,21 @@ A space\-separated list of policies by which the interface\*(Aqs alternative nam
 \fIAlternativeName=\fR
 .RS 4
 The alternative interface name to use\&. This option can be specified multiple times\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
+.RE
+.PP
+\fITransmitQueues=\fR
+.RS 4
+Specifies the device\*(Aqs number of transmit queues\&. An integer in the range 1\&...4096\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIReceiveQueues=\fR
+.RS 4
+Specifies the device\*(Aqs number of receive queues\&. An integer in the range 1\&...4096\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITransmitQueueLength=\fR
+.RS 4
+Specifies the transmit queue length of the device in number of packets\&. An unsigned integer in the range 0\&...4294967294\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIMTUBytes=\fR
@@ -653,6 +703,16 @@ Takes a boolean\&. When set, enables the transmit flow control, also known as th
 \fIAutoNegotiationFlowControl=\fR
 .RS 4
 Takes a boolean\&. When set, the auto negotiation enables the interface to exchange state advertisements with the connected peer so that the two devices can agree on the ethernet PAUSE configuration\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIGenericSegmentOffloadMaxBytes=\fR
+.RS 4
+Specifies the maximum size of a Generic Segment Offload (GSO) packet the device should accept\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&. An unsigned integer in the range 1\&...65536\&. Defaults to unset\&.
+.RE
+.PP
+\fIGenericSegmentOffloadMaxSegments=\fR
+.RS 4
+Specifies the maximum number of a Generic Segment Offload (GSO) segments the device should accept\&. An unsigned integer in the range 1\&...65535\&. Defaults to unset\&.
 .RE
 .SH "EXAMPLES"
 .PP

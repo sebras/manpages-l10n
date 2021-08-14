@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 248" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 249" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -200,7 +200,7 @@ foo\&.service, a "drop\-in" directory
 foo\&.service\&.d/
 may exist\&. All files with the suffix
 "\&.conf"
-from this directory will be parsed after the unit file itself is parsed\&. This is useful to alter or add configuration settings for a unit, without having to modify unit files\&. Drop\-in files must contain appropriate section headers\&. For instantiated units, this logic will first look for the instance
+from this directory will be merged in the alphanumeric order and parsed after the main unit file itself has been parsed\&. This is useful to alter or add configuration settings for a unit, without having to modify unit files\&. Each drop\-in file must contain appropriate section headers\&. For instantiated units, this logic will first look for the instance
 "\&.d/"
 subdirectory (e\&.g\&.
 "foo@bar\&.service\&.d/") and read its
@@ -254,12 +254,11 @@ Units also support a top\-level drop\-in with
 may be e\&.g\&.
 "service"
 or
-"socket", that allows altering or adding to the settings of all corresponding unit files on the system\&. The formatting and precedence of applying drop\-in configurations follow what is defined above\&. Configurations in
+"socket", that allows altering or adding to the settings of all corresponding unit files on the system\&. The formatting and precedence of applying drop\-in configurations follow what is defined above\&. Files in
 \fItype\fR\&.d/
-have the lowest precedence compared to settings in the name specific override directories\&. So the contents of
-foo\-\&.service\&.d/10\-override\&.conf
-would override
-service\&.d/10\-override\&.conf\&.
+have lower precedence compared to files in name\-specific override directories\&. The usual rules apply: multiple drop\-in files with different names are applied in lexicographic order, regardless of which of the directories they reside in, so a file in
+\fItype\fR\&.d/
+applies to a unit only if there are no drop\-ins or masks with that name in directories with higher precedence\&. See Examples\&.
 .PP
 Note that while systemd offers a flexible dependency system between units it is recommended to use this functionality only sparingly and instead rely on techniques such as bus\-based or socket\-based activation which make dependencies implicit, resulting in a both simpler and more flexible system\&.
 .PP
@@ -295,8 +294,11 @@ in the file system\&.
 The escaping algorithm operates as follows: given a string, any
 "/"
 character is replaced by
-"\-", and all other characters which are not ASCII alphanumerics or
+"\-", and all other characters which are not ASCII alphanumerics,
+":",
 "_"
+or
+"\&."
 are replaced by C\-style
 "\ex2d"
 escapes\&. In addition,
@@ -685,20 +687,20 @@ The unit file may include a [Unit] section, which carries generic information ab
 .PP
 \fIDescription=\fR
 .RS 4
-A human readable name for the unit\&. This is used by
+A short human readable title of the unit\&. This may be used by
 \fBsystemd\fR
-(and other UIs) as the label for the unit, so this string should identify the unit rather than describe it, despite the name\&.
+(and other UIs) as a user\-visible label for the unit, so this string should identify the unit rather than describe it, despite the name\&. This string also shouldn\*(Aqt just repeat the unit name\&.
 "Apache2 Web Server"
 is a good example\&. Bad examples are
 "high\-performance light\-weight HTTP server"
 (too generic) or
 "Apache2"
-(too specific and meaningless for people who do not know Apache)\&.
+(meaningless for people who do not know Apache, duplicates the unit name)\&.
 \fBsystemd\fR
-will use this string as a noun in status messages ("Starting \fIdescription\fR\&.\&.\&.",
+may use this string as a noun in status messages ("Starting \fIdescription\fR\&.\&.\&.",
 "Started \fIdescription\fR\&.",
 "Reached target \fIdescription\fR\&.",
-"Failed to start \fIdescription\fR\&."), so it should be capitalized, and should not be a full sentence or a phrase with a continuous verb\&. Bad examples include
+"Failed to start \fIdescription\fR\&."), so it should be capitalized, and should not be a full sentence, or a phrase with a continuous verb\&. Bad examples include
 "exiting the container"
 or
 "updating the database once per day\&."\&.
@@ -836,6 +838,30 @@ b\&.service\&.
 dependency cannot be specified directly\&.
 .RE
 .PP
+\fIUpholds=\fR
+.RS 4
+Configures dependencies similar to
+\fIWants=\fR, but as long a this unit is up, all units listed in
+\fIUpholds=\fR
+are started whenever found to be inactive or failed, and no job is queued for them\&. While a
+\fIWants=\fR
+dependency on another unit has a one\-time effect when this units started, a
+\fIUpholds=\fR
+dependency on it has a continuous effect, constantly restarting the unit if necessary\&. This is an alternative to the
+\fIRestart=\fR
+setting of service units, to ensure they are kept running whatever happens\&.
+.sp
+When
+\fIUpholds=b\&.service\fR
+is used on
+a\&.service, this dependency will show as
+\fIUpheldBy=a\&.service\fR
+in the property listing of
+b\&.service\&. The
+\fIUpheldBy=\fR
+dependency cannot be specified directly\&.
+.RE
+.PP
 \fIConflicts=\fR
 .RS 4
 A space\-separated list of unit names\&. Configures negative requirement dependencies\&. If a unit has a
@@ -914,9 +940,21 @@ state\&. A service unit using
 enters the failed state only after the start limits are reached\&.
 .RE
 .PP
+\fIOnSuccess=\fR
+.RS 4
+A space\-separated list of one or more units that are activated when this unit enters the
+"inactive"
+state\&.
+.RE
+.PP
 \fIPropagatesReloadTo=\fR, \fIReloadPropagatedFrom=\fR
 .RS 4
-A space\-separated list of one or more units where reload requests on this unit will be propagated to, or reload requests on the other unit will be propagated to this unit, respectively\&. Issuing a reload request on a unit will automatically also enqueue a reload request on all units that the reload request shall be propagated to via these two settings\&.
+A space\-separated list of one or more units to which reload requests from this unit shall be propagated to, or units from which reload requests shall be propagated to this unit, respectively\&. Issuing a reload request on a unit will automatically also enqueue reload requests on all units that are linked to it using these two settings\&.
+.RE
+.PP
+\fIPropagatesStopTo=\fR, \fIStopPropagatedFrom=\fR
+.RS 4
+A space\-separated list of one or more units to which stop requests from this unit shall be propagated to, or units from which stop requests shall be propagated to this unit, respectively\&. Issuing a stop request on a unit will automatically also enqueue stop requests on all units that are linked to it using these two settings\&.
 .RE
 .PP
 \fIJoinsNamespaceOf=\fR
@@ -1283,6 +1321,18 @@ setting in the same unit file has no effect on this condition\&. A special archi
 is mapped to the architecture the system manager itself is compiled for\&. The test may be negated by prepending an exclamation mark\&.
 .RE
 .PP
+\fIConditionFirmware=\fR
+.RS 4
+Check whether the system\*(Aqs firmware is of a certain type\&. Possible values are:
+"uefi"
+(for systems with EFI),
+"device\-tree"
+(for systems with a device tree) and
+"device\-tree\-compatible(xyz)"
+(for systems with a device tree that is compatible to
+"xyz")\&.
+.RE
+.PP
 \fIConditionVirtualization=\fR
 .RS 4
 Check whether the system is executed in a virtualized environment and optionally test whether it is a specific implementation\&. Takes either boolean value to check if being executed in any virtualized environment, or one of
@@ -1292,6 +1342,7 @@ and
 to test against a generic type of virtualization solution, or one of
 "qemu",
 "kvm",
+"amazon",
 "zvm",
 "vmware",
 "microsoft",
@@ -1416,11 +1467,22 @@ on the next following boot\&. Units making use of this condition should order th
 .sp
 If the
 \fIsystemd\&.condition\-needs\-update=\fR
-option is specified on the kernel command line (taking a boolean), it will override the result of this condition check, taking precedence over any file modification time checks\&. If it is used
+option is specified on the kernel command line (taking a boolean), it will override the result of this condition check, taking precedence over any file modification time checks\&. If the kernel command line option is used,
 systemd\-update\-done\&.service
 will not have immediate effect on any following
 \fIConditionNeedsUpdate=\fR
 checks, until the system is rebooted where the kernel command line option is not specified anymore\&.
+.sp
+Note that to make this scheme effective, the timestamp of
+/usr/
+should be explicitly updated after its contents are modified\&. The kernel will automatically update modification timestamp on a directory only when immediate children of a directory are modified; an modification of nested files will not automatically result in mtime of
+/usr/
+being updated\&.
+.sp
+Also note that if the update method includes a call to execute appropriate post\-update steps itself, it should not touch the timestamp of
+/usr/\&. In a typical distribution packaging scheme, packages will do any required update steps as part of the installation or upgrade, to make package contents immediately usable\&.
+\fIConditionNeedsUpdate=\fR
+should be used with other update mechanisms where such an immediate update does not happen\&.
 .RE
 .PP
 \fIConditionFirstBoot=\fR
@@ -1448,7 +1510,7 @@ existence checks\&.
 .PP
 \fIConditionPathExists=\fR
 .RS 4
-Check for the exists of a file\&. If the specified absolute path name does not exist, the condition will fail\&. If the absolute path name passed to
+Check for the existence of a file\&. If the specified absolute path name does not exist, the condition will fail\&. If the absolute path name passed to
 \fIConditionPathExists=\fR
 is prefixed with an exclamation mark ("!"), the test is negated, and the unit is only started if the path does not exist\&.
 .RE
@@ -1659,7 +1721,27 @@ instruction\&. This condition only does something on i386 and x86\-64 processors
 "constant_tsc"\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR
+\fIConditionOSRelease=\fR
+.RS 4
+Verify that a specific
+"key=value"
+pair is set in the host\*(Aqs
+\fBos-release\fR(5)\&.
+.sp
+Other than exact matching with
+"=", and
+"!=", relative comparisons are supported for versioned parameters (e\&.g\&.
+"VERSION_ID")\&. The comparator can be one of
+"<",
+"<=",
+"=",
+"!=",
+">="
+and
+">"\&.
+.RE
+.PP
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR, \fIAssertOSRelease=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
@@ -1961,6 +2043,8 @@ l l l
 l l l
 l l l
 l l l
+l l l
+l l l
 l l l.
 T{
 "%a"
@@ -1968,6 +2052,13 @@ T}:T{
 Architecture
 T}:T{
 A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR above for a full list\&.
+T}
+T{
+"%A"
+T}:T{
+Operating system image version
+T}:T{
+The operating system image version identifier of the running system, as read from the \fIIMAGE_VERSION=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%b"
@@ -2082,6 +2173,13 @@ T}:T{
 Machine ID
 T}:T{
 The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%M"
+T}:T{
+Operating system image identifier
+T}:T{
+The operating system image identifier of the running system, as read from the \fIIMAGE_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%n"
@@ -2346,6 +2444,79 @@ Note that for drop\-in files, if one wants to remove entries from a setting that
 (or e\&.g\&.
 \fIExecStart=\fR
 in service units), one needs to first clear the list before re\-adding all entries except the one that is to be removed\&. Dependencies (\fIAfter=\fR, etc\&.) cannot be reset to an empty list, so dependencies can only be added in drop\-ins\&. If you want to remove dependencies, you have to override the entire unit\&.
+.PP
+\fBExample\ \&3.\ \&Top level drop\-ins with template units\fR
+.PP
+Top level per\-type drop\-ins can be used to change some aspect of all units of a particular type\&. For example by creating the
+/etc/systemd/system/service\&.d/
+directory with a drop\-in file, the contents of the drop\-in file can be applied to all service units\&. We can take this further by having the top\-level drop\-in instantiate a secondary helper unit\&. Consider for example the following set of units and drop\-in files where we install an
+\fIOnFailure=\fR
+dependency for all service units\&.
+.PP
+/etc/systemd/system/failure\-handler@\&.service:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Unit]
+Description=My failure handler for %i
+
+[Service]
+Type=oneshot
+# Perform some special action for when %i exits unexpectedly\&.
+ExecStart=/usr/sbin/myfailurehandler %i
+     
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+We can then add an instance of
+failure\-handler@\&.service
+as an
+\fIOnFailure=\fR
+dependency for all service units\&.
+.PP
+/etc/systemd/system/service\&.d/10\-all\&.conf:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Unit]
+OnFailure=failure\-handler@%N\&.service
+    
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Now, after running
+\fBsystemctl daemon\-reload\fR
+all services will have acquired an
+\fIOnFailure=\fR
+dependency on
+failure\-handler@%N\&.service\&. The template instance units will also have gained the dependency which results in the creation of a recursive dependency chain\&. We can break the chain by disabling the drop\-in for the template instance units via a symlink to
+/dev/null:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBmkdir /etc/systemd/system/failure\-handler@\&.service\&.d/\fR
+\fBln \-s /dev/null /etc/systemd/system/failure\-handler@\&.service\&.d/10\-all\&.conf\fR
+\fBsystemctl daemon\-reload\fR
+    
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This ensures that if a
+failure\-handler@\&.service
+instance fails it will not trigger an instance named
+failure\-handler@failure\-handler\&.service\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
