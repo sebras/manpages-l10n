@@ -241,11 +241,14 @@ of Linux manpages. The list is sorted alphabetically.
 * Fehér -Aries- János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
 * Füley István <ifuley@udv.nextra.ro>
+* Gábris Aurél <gabrisa@valerie.inf.elte.hu>
+* Gál Gyuri <gyuri@lamer.hu>
 * Gombai Sándor <sgombai@hotmail.com>
 * Hermann Benedek <bence@intercom.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * Kovács Emese <emese@eik.bme.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
+* László Gergely <laszlog@kvi.ktm.hu>
 * Lestyán Zsolt <letcho@usa.net>
 * Magyari Miklós <magyari@freemail.hu>
 * Mező Tamás <tomfield@vm.hu>
