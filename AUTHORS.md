@@ -246,8 +246,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Gábris Aurél <gabrisa@valerie.inf.elte.hu>
 * Gál Gyuri <gyuri@lamer.hu>
 * Gombai Sándor <sgombai@hotmail.com>
+* Gyulai Mihály <gyulai@my-deja.com>
 * Hermann Benedek <bence@intercom.hu>
 * Horváth András <horvatha@rs1.szif.hu>
+* János Bauer <janos.bauer@eth.ericsson.se>
+* Kalmár Boldizsár <lskorpio@augusta.inf.elte.hu>
 * Kovács Emese <emese@eik.bme.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
 * Kulcsár Gábor <medve@iku.omikk.hu>
@@ -260,7 +263,9 @@ of Linux manpages. The list is sorted alphabetically.
 * Nagy Viktor <chaos@inf.elte.hu>
 * Németh Péter <qgenpete@gold.uni-miskolc.hu>
 * Szabó Zsolt <tunci@valerie.inf.elte.hu>
+* Szakács Gergely Márton <case@fornax.hu>
 * Szalay Attila <sasa@sophia.jpte.hu>
+* Szijjártó László <laca@janus.gimsz.sulinet.hu>
 * Tarbaj Péter <tarby@freeside.elte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
