@@ -2,12 +2,12 @@
 .\"     Title: btrfs-device
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/13/2021
+.\"      Date: 07/30/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.12.1
+.\"    Source: Btrfs v5.13.1
 .\"  Language: English
 .\"
-.TH "BTRFS\-DEVICE" "8" "05/13/2021" "Btrfs v5\&.12\&.1" "Btrfs Manual"
+.TH "BTRFS\-DEVICE" "8" "07/30/2021" "Btrfs v5\&.13\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,9 +43,20 @@ The device management works on a mounted filesystem\&. Devices can be added, rem
 .sp
 The profiles can be also changed, provided there\(cqs enough workspace to do the conversion, using the \fBbtrfs balance\fR command and namely the filter \fIconvert\fR\&.
 .PP
+Type
+.RS 4
+The block group profile type is the main distinction of the information stored on the block device\&. User data are called
+\fIData\fR, the internal data structures managed by filesystem are
+\fIMetadata\fR
+and
+\fISystem\fR\&.
+.RE
+.PP
 Profile
 .RS 4
-A profile describes an allocation policy based on the redundancy/replication constraints in connection with the number of devices\&. The profile applies to data and metadata block groups separately\&.
+A profile describes an allocation policy based on the redundancy/replication constraints in connection with the number of devices\&. The profile applies to data and metadata block groups separately\&. Eg\&.
+\fIsingle\fR,
+\fIRAID1\fR\&.
 .RE
 .PP
 RAID level
@@ -189,7 +200,97 @@ Check if the stats are all zeros and return 0 if it is so\&. Set bit 6 of the re
 .PP
 \fBusage\fR [options] \fI<path>\fR [\fI<path>\fR\&...]
 .RS 4
-Show detailed information about internal allocations in devices\&.
+Show detailed information about internal allocations on devices\&.
+.sp
+The level of detail can differ if the command is run under a regular or the root user (due to use of restricted ioctls)\&. The first example below is for normal user (warning included) and the next one with root on the same filesystem:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+WARNING: cannot read detailed chunk info, per\-device usage will not be shown, run as root
+/dev/sdc1, ID: 1
+   Device size:           931\&.51GiB
+   Device slack:              0\&.00B
+   Unallocated:           931\&.51GiB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/dev/sdc1, ID: 1
+   Device size:           931\&.51GiB
+   Device slack:              0\&.00B
+   Data,single:           641\&.00GiB
+   Data,RAID0/3:            1\&.00GiB
+   Metadata,single:        19\&.00GiB
+   System,single:          32\&.00MiB
+   Unallocated:           271\&.48GiB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice size\fR \(em size of the device as seen by the filesystem (may be different than actual device size)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice slack\fR \(em portion of device not used by the filesystem but still available in the physical space provided by the device, eg\&. after a device shrink
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData,single\fR,
+\fIMetadata,single\fR,
+\fISystem,single\fR \(em in general, list of block group type (Data, Metadata, System) and profile (single, RAID1, \&...) allocated on the device
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData,RAID0/3\fR \(em in particular, striped profiles RAID0/RAID10/RAID5/RAID6 with the number of devices on which the stripes are allocated, multiple occurences of the same profile can appear in case a new device has been added and all new available stripes have been used for writes
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIUnallocated\fR \(em remaining space that the filesystem can still use for new block groups
+.RE
 .sp
 \fBOptions\fR
 .PP
@@ -420,6 +521,8 @@ generation_errs
 .RS 4
 The block generation does not match the expected value (eg\&. stored in the parent node)\&.
 .RE
+.sp
+Since kernel 5\&.14 the device stats are also available in textual form in \fI/sys/fs/btrfs/FSID/devinfo/DEVID/error_stats\fR\&.
 .SH "EXIT STATUS"
 .sp
 \fBbtrfs device\fR returns a zero exit status if it succeeds\&. Non zero is returned in case of failure\&.

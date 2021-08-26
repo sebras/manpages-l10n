@@ -77,6 +77,7 @@ cat > index.html <<-END_OF_HEADER
    details please contact the respective maintainers.
    </p>
      <ul>
+       <li><a href="https://gitlab.com/arabeyes-i18n/manpages">Arabic</a>, last commit 2016, using po, only few pages</li>
        <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
        <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, integration in manpages-l10n is in progress</li>
        <li><a href="https://web.archive.org/web/20050403211946/http://lme.linux.hu/forditas/index.html">Hungarian (archived website)</a>, appears inactive, last release 2001, integration in manpages-l10n is in progress</li>

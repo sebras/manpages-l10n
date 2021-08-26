@@ -1,5 +1,5 @@
 '\" t
-.TH "REPART\&.D" "5" "" "systemd 248" "repart.d"
+.TH "REPART\&.D" "5" "" "systemd 249" "repart.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,9 +42,11 @@ Currently, support for partition definition files is only implemented for GPT pa
 .PP
 Partition files are generally matched against any partitions already existing on disk in a simple algorithm: the partition files are sorted by their filename (ignoring the directory prefix), and then compared in order against existing partitions matching the same partition type UUID\&. Specifically, the first existing partition with a specific partition type UUID is assigned the first definition file with the same partition type UUID, and the second existing partition with a specific type UUID the second partition file with the same type UUID, and so on\&. Any left\-over partition files that have no matching existing partition are assumed to define new partition that shall be created\&. Such partitions are appended to the end of the partition table, in the order defined by their names utilizing the first partition slot greater than the highest slot number currently in use\&. Any existing partitions that have no matching partition file are left as they are\&.
 .PP
-Note that these definitions may only be used to created and initialize new partitions or grow existing ones\&. In the latter case it will not grow the contained files systems however; separate mechanisms, such as
+Note that these definitions may only be used to create and initialize new partitions or to grow existing ones\&. In the latter case it will not grow the contained files systems however; separate mechanisms, such as
 \fBsystemd-growfs\fR(8)
-may be used to grow the file systems inside of these partitions\&.
+may be used to grow the file systems inside of these partitions\&. Partitions may also be marked for automatic growing via the
+\fIGrowFileSystem=\fR
+setting, in which case the file system is grown on first mount by tools that respect this flag\&. See below for details\&.
 .SH "[PARTITION] SECTION OPTIONS"
 .PP
 \fIType=\fR
@@ -408,7 +410,28 @@ determines the size of the padding applied\&.
 .PP
 \fICopyBlocks=\fR
 .RS 4
-Takes a path to a regular file, block device node or directory\&. If specified and the partition is newly created the data from the specified path is written to the newly created partition, on the block level\&. If a directory is specified the backing block device of the file system the directory is on is determined and the data read directly from that\&. This option is useful to efficiently replicate existing file systems on the block level on a new partition, for example to build a simple OS installer or OS image builder\&.
+Takes a path to a regular file, block device node or directory, or the special value
+"auto"\&. If specified and the partition is newly created, the data from the specified path is written to the newly created partition, on the block level\&. If a directory is specified, the backing block device of the file system the directory is on is determined, and the data read directly from that\&. This option is useful to efficiently replicate existing file systems onto new partitions on the block level \(em for example to build a simple OS installer or an OS image builder\&.
+.sp
+If the special value
+"auto"
+is specified, the source to copy from is automatically picked up from the running system (or the image specified with
+\fB\-\-image=\fR
+\(em if used)\&. A partition that matches both the configured partition type (as declared with
+\fIType=\fR
+described above), and the currently mounted directory appropriate for that partition type is determined\&. For example, if the partition type is set to
+"root"
+the partition backing the root directory (/) is used as source to copy from \(em if its partition type is set to
+"root"
+as well\&. If the declared type is
+"usr"
+the partition backing
+/usr/
+is used as source to copy blocks from \(em if its partition type is set to
+"usr"
+too\&. The logic is capable of automatically tracking down the backing partitions for encrypted and Verity\-enabled volumes\&.
+"CopyBlocks=auto"
+is useful for implementing "self\-replicating" systems, i\&.e\&. systems that are their own installer\&.
 .sp
 The file specified here must have a size that is a multiple of the basic block size 512 and not be empty\&. If this option is used, the size allocation algorithm is slightly altered: the partition is created as least as big as required to fit the data in, i\&.e\&. the data size is an additional minimum size value taken into consideration for the allocation algorithm, similar to and in addition to the
 \fISizeMin=\fR
@@ -461,6 +484,38 @@ The copy operation is executed before the file system is registered in the parti
 .sp
 This option cannot be combined with
 \fICopyBlocks=\fR\&.
+.sp
+When
+\fBsystemd\-repart\fR
+is invoked with the
+\fB\-\-image=\fR
+or
+\fB\-\-root=\fR
+command line switches the source paths specified are taken relative to the specified root directory or disk image root\&.
+.RE
+.PP
+\fIMakeDirectories=\fR
+.RS 4
+Takes one or more absolute paths, separated by whitespace, each declaring a directory to create within the new file system\&. Behaviour is similar to
+\fICopyFiles=\fR, but instead of copying in a set of files this just creates the specified directories with the default mode of 0755 owned by the root user and group, plus all their parent directories (with the same ownership and access mode)\&. To configure directories with different ownership or access mode, use
+\fICopyFiles=\fR
+and specify a source tree to copy containing appropriately owned/configured directories\&. This option may be used more than once to create multiple directories\&. When
+\fICopyFiles=\fR
+and
+\fIMakeDirectories=\fR
+are used together the former is applied first\&. If a directory listed already exists no operation is executed (in particular, the ownership/access mode of the directories is left as is)\&.
+.sp
+The primary usecase for this option is to create a minimal set of directories that may be mounted over by other partitions contained in the same disk image\&. For example, a disk image where the root file system is formatted at first boot might want to automatically pre\-create
+/usr/
+in it this way, so that the
+"usr"
+partition may over\-mount it\&.
+.sp
+Consider using
+\fBsystemd-tmpfiles\fR(8)
+with its
+\fB\-\-image=\fR
+option to pre\-create other, more complex directory hierarchies (as well as other inodes) with fine\-grained control of ownership, access modes and other file attributes\&.
 .RE
 .PP
 \fIEncrypt=\fR
@@ -488,14 +543,14 @@ The LUKS2 UUID is automatically derived from the partition UUID in a stable fash
 "key\-file"
 or
 "key\-file+tpm2"
-is used a key is added to the LUKS2 superblock, configurable with the
+is used, a key is added to the LUKS2 superblock, configurable with the
 \fB\-\-key\-file=\fR
-switch to
+option to
 \fBsystemd\-repart\fR\&. If
 "tpm2"
 or
 "key\-file+tpm2"
-is used a key is added to the LUKS2 superblock that is enrolled to the local TPM2 chip, as configured with the
+is used, a key is added to the LUKS2 superblock that is enrolled to the local TPM2 chip, as configured with the
 \fB\-\-tpm2\-device=\fR
 and
 \fB\-\-tpm2\-pcrs=\fR
@@ -515,11 +570,61 @@ This option has no effect if the partition already exists\&.
 .RS 4
 Takes a boolean argument\&. If specified the partition is marked for removal during a factory reset operation\&. This functionality is useful to implement schemes where images can be reset into their original state by removing partitions and creating them anew\&. Defaults to off\&.
 .RE
+.PP
+\fIFlags=\fR
+.RS 4
+Configures the 64bit GPT partition flags field to set for the partition when creating it\&. This option has no effect if the partition already exists\&. If not specified the flags values is set to all zeroes, except for the three bits that can also be configured via
+\fINoAuto=\fR,
+\fIReadOnly=\fR
+and
+\fIGrowFileSystem=\fR; see below for details on the defaults for these three flags\&. Specify the flags value in hexadecimal (by prefixing it with
+"0x"), binary (prefix
+"0b") or decimal (no prefix)\&.
+.RE
+.PP
+\fINoAuto=\fR, \fIReadOnly=\fR, \fIGrowFileSystem=\fR
+.RS 4
+Configures the No\-Auto, Read\-Only and Grow\-File\-System partition flags (bit 63, 60 and 59) of the partition table entry, as defined by the
+\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&. Only available for partition types supported by the specification\&. This option is a friendly way to set bits 63, 60 and 59 of the partition flags value without setting any of the other bits, and may be set via
+\fIFlags=\fR
+too, see above\&.
+.sp
+If
+\fIFlags=\fR
+is used in conjunction with one or more of
+\fINoAuto=\fR/\fIReadOnly=\fR/\fIGrowFileSystem=\fR
+the latter control the value of the relevant flags, i\&.e\&. the high\-level settings
+\fINoAuto=\fR/\fIReadOnly=\fR/\fIGrowFileSystem=\fR
+override the relevant bits of the low\-level setting
+\fIFlags=\fR\&.
+.sp
+Note that the three flags affect only automatic partition mounting, as implemented by
+\fBsystemd-gpt-auto-generator\fR(8)
+or the
+\fB\-\-image=\fR
+option of various commands (such as
+\fBsystemd-nspawn\fR(1))\&. It has no effect on explicit mounts, such as those done via
+\fBmount\fR(8)
+or
+\fBfstab\fR(5)\&.
+.sp
+If both bit 50 and 59 are set for a partition (i\&.e\&. the partition is marked both read\-only and marked for file system growing) the latter is typically without effect: the read\-only flag takes precedence in most tools reading these flags, and since growing the file system involves writing to the partition it is consequently ignored\&.
+.sp
+\fINoAuto=\fR
+defaults to off\&.
+\fIReadOnly=\fR
+defaults to on for Verity partition types, and off for all others\&.
+\fIGrowFileSystem=\fR
+defaults to on for all partition types that support it, except if the partition is marked read\-only (and thus effectively, defaults to off for Verity partitions)\&.
+.RE
 .SH "SPECIFIERS"
 .PP
 Specifiers may be used in the
-\fILabel=\fR
-setting\&. The following expansions are understood:
+\fILabel=\fR,
+\fICopyBlocks=\fR,
+\fICopyFiles=\fR,
+\fIMakeDirectories=\fR
+settings\&. The following expansions are understood:
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -547,6 +652,10 @@ l l l
 l l l
 l l l
 l l l
+l l l
+l l l
+l l l
+l l l
 l l l.
 T{
 "%a"
@@ -554,6 +663,13 @@ T}:T{
 Architecture
 T}:T{
 A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR in \fBsystemd.unit\fR(5) for a full list\&.
+T}
+T{
+"%A"
+T}:T{
+Operating system image version
+T}:T{
+The operating system image version identifier of the running system, as read from the \fIIMAGE_VERSION=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%b"
@@ -591,6 +707,13 @@ T}:T{
 The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
 T}
 T{
+"%M"
+T}:T{
+Operating system image identifier
+T}:T{
+The operating system image identifier of the running system, as read from the \fIIMAGE_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
 "%o"
 T}:T{
 Operating system ID
@@ -617,6 +740,20 @@ T}:T{
 Operating system variant ID
 T}:T{
 The operating system variant identifier of the running system, as read from the \fIVARIANT_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%T"
+T}:T{
+Directory for temporary files
+T}:T{
+This is either /tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
+T}
+T{
+"%V"
+T}:T{
+Directory for larger and persistent temporary files
+T}:T{
+This is either /var/tmp or the path "$TMPDIR", "$TEMP" or "$TMP" are set to\&. (Note that the directory may be specified without a trailing slash\&.)
 T}
 T{
 "%%"

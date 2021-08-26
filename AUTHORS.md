@@ -232,20 +232,26 @@ of Linux manpages. The list is sorted alphabetically.
 ## Hungarian:
 
 * Ámon Tamás <sajt@erba.hu>
+* Bendes László <bendes@eposta.hu>
 * Böszörményi Zoltán <zboszor@mail.externet.hu>
 * Csehi András <acsehi@merlin.flexum.hu>
 * Daczi László <dacas@freemail.hu>
+* Dénes Pál <denespal@valerie.inf.elte.hu>
 * Domokos Péter <pdomokos@freemail.c3.hu>
 * Dyekiss Emil <emil2@cds.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
 * Füley István <ifuley@udv.nextra.ro>
+* Gábris Aurél <gabrisa@valerie.inf.elte.hu>
+* Gál Gyuri <gyuri@lamer.hu>
 * Gombai Sándor <sgombai@hotmail.com>
 * Hermann Benedek <bence@intercom.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * Kovács Emese <emese@eik.bme.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
+* Kulcsár Gábor <medve@iku.omikk.hu>
+* László Gergely <laszlog@kvi.ktm.hu>
 * Lestyán Zsolt <letcho@usa.net>
 * Magyari Miklós <magyari@freemail.hu>
 * Mező Tamás <tomfield@vm.hu>
@@ -255,10 +261,12 @@ of Linux manpages. The list is sorted alphabetically.
 * Németh Péter <qgenpete@gold.uni-miskolc.hu>
 * Szabó Zsolt <tunci@valerie.inf.elte.hu>
 * Szalay Attila <sasa@sophia.jpte.hu>
+* Tarbaj Péter <tarby@freeside.elte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
 * Tímár András <timar_a@freemail.hu>
 * Váraljai Nándor <vnandor@elender.hu>
+* Vizi Szilárd <vizisz@freemail.hu>
 * Zelena Endre <ezelena@lme.linux.hu>
 
 

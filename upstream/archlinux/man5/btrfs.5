@@ -2,12 +2,12 @@
 .\"     Title: btrfs-man5
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/13/2021
+.\"      Date: 08/04/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.12.1
+.\"    Source: Btrfs v5.13.1
 .\"  Language: English
 .\"
-.TH "BTRFS\-MAN5" "5" "05/13/2021" "Btrfs v5\&.12\&.1" "Btrfs Manual"
+.TH "BTRFS\-MAN5" "5" "08/04/2021" "Btrfs v5\&.13\&.1" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -74,7 +74,7 @@ checksum algorithms
 .sp -1
 .IP "  4." 4.2
 .\}
-filesystem exclusive operations
+compression
 .RE
 .sp
 .RS 4
@@ -85,7 +85,7 @@ filesystem exclusive operations
 .sp -1
 .IP "  5." 4.2
 .\}
-filesystem limits
+filesystem exclusive operations
 .RE
 .sp
 .RS 4
@@ -96,7 +96,7 @@ filesystem limits
 .sp -1
 .IP "  6." 4.2
 .\}
-bootloader support
+filesystem limits
 .RE
 .sp
 .RS 4
@@ -107,7 +107,7 @@ bootloader support
 .sp -1
 .IP "  7." 4.2
 .\}
-file attributes
+bootloader support
 .RE
 .sp
 .RS 4
@@ -118,7 +118,7 @@ file attributes
 .sp -1
 .IP "  8." 4.2
 .\}
-control device
+file attributes
 .RE
 .sp
 .RS 4
@@ -129,7 +129,7 @@ control device
 .sp -1
 .IP "  9." 4.2
 .\}
-filesystems with multiple block group profiles
+zoned mode
 .RE
 .sp
 .RS 4
@@ -140,7 +140,7 @@ filesystems with multiple block group profiles
 .sp -1
 .IP "10." 4.2
 .\}
-seeding device
+control device
 .RE
 .sp
 .RS 4
@@ -151,7 +151,51 @@ seeding device
 .sp -1
 .IP "11." 4.2
 .\}
+filesystems with multiple block group profiles
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'12.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "12." 4.2
+.\}
+seeding device
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'13.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "13." 4.2
+.\}
 raid56 status and recommended practices
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'14.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "14." 4.2
+.\}
+storage model
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'15.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "15." 4.2
+.\}
+hardware considerations
 .RE
 .SH "MOUNT OPTIONS"
 .sp
@@ -702,12 +746,13 @@ to do so\&. If
 \fIv2\fR
 is enabled, kernels without
 \fIv2\fR
-support will only be able to mount the filesystem in read\-only mode\&. The
-\fBbtrfs\fR(8) command currently only has read\-only support for
-\fIv2\fR\&. A read\-write command may be run on a
+support will only be able to mount the filesystem in read\-only mode\&.
+.sp
+The
+\fBbtrfs\-check\fR(8) and
+\fBmkfs\&.btrfs\fR(8) commands have full
 \fIv2\fR
-filesystem by clearing the cache, running the command, and then remounting with
-\fIspace_cache=v2\fR\&.
+free space cache support since v4\&.19\&.
 .sp
 If a version is not explicitly specified, the default implementation will be chosen, which is
 \fIv1\fR\&.
@@ -1132,7 +1177,8 @@ that are supported by the running kernel, see
 .RS 4
 (since: 5\&.12)
 .sp
-zoned mode is allocation/write friendly to host\-managed devices, allocation space is split into fixed\-size zones that must be updated sequentially
+zoned mode is allocation/write friendly to host\-managed zoned devices, allocation space is partitioned into fixed\-size zones that must be updated sequentially, see
+\fIZONED MODE\fR
 .RE
 .SS "SWAPFILE SUPPORT"
 .sp
@@ -1351,11 +1397,15 @@ The \fIdigest size\fR affects overall size of data block checksums stored in the
 Approximate relative performance of the algorithms, measured against CRC32C using reference software implementations on a 3\&.5GHz intel CPU:
 .TS
 allbox tab(:);
-ct rt rt
-ct rt rt
-ct rt rt
-ct rt rt
-ct rt rt.
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt
+ct rt rt rt.
 T{
 .sp
 \fBDigest\fR
@@ -1365,6 +1415,9 @@ T}:T{
 T}:T{
 .sp
 \fBRatio\fR
+T}:T{
+.sp
+\fBImplementation\fR
 T}
 T{
 .sp
@@ -1375,6 +1428,9 @@ T}:T{
 T}:T{
 .sp
 1\&.00
+T}:T{
+.sp
+CPU instruction
 T}
 T{
 .sp
@@ -1385,6 +1441,9 @@ T}:T{
 T}:T{
 .sp
 1\&.44
+T}:T{
+.sp
+reference impl\&.
 T}
 T{
 .sp
@@ -1395,6 +1454,35 @@ T}:T{
 T}:T{
 .sp
 61
+T}:T{
+.sp
+reference impl\&.
+T}
+T{
+.sp
+SHA256
+T}:T{
+.sp
+36000
+T}:T{
+.sp
+21
+T}:T{
+.sp
+libgcrypt/AVX2
+T}
+T{
+.sp
+SHA256
+T}:T{
+.sp
+63000
+T}:T{
+.sp
+37
+T}:T{
+.sp
+libsodium/AVX2
 T}
 T{
 .sp
@@ -1405,9 +1493,217 @@ T}:T{
 T}:T{
 .sp
 13
+T}:T{
+.sp
+reference impl\&.
+T}
+T{
+.sp
+BLAKE2b
+T}:T{
+.sp
+19000
+T}:T{
+.sp
+11
+T}:T{
+.sp
+libgcrypt/AVX2
+T}
+T{
+.sp
+BLAKE2b
+T}:T{
+.sp
+19000
+T}:T{
+.sp
+11
+T}:T{
+.sp
+libsodium/AVX2
 T}
 .TE
 .sp 1
+.sp
+Many kernels are configured with SHA256 as built\-in and not as a module\&. The accelerated versions are however provided by the modules and must be loaded explicitly (\fBmodprobe sha256\fR) before mounting the filesystem to make use of them\&. You can check in \fI/sys/fs/btrfs/FSID/checksum\fR which one is used\&. If you see \fIsha256\-generic\fR, then you may want to unmount and mount the filesystem again, changing that on a mounted filesystem is not possible\&. Check the file \fI/proc/crypto\fR, when the implementation is built\-in, you\(cqd find
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+name         : sha256
+driver       : sha256\-generic
+module       : kernel
+priority     : 100
+\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+while accelerated implementation is e\&.g\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+name         : sha256
+driver       : sha256\-avx2
+module       : sha256_ssse3
+priority     : 170
+\&.\&.\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "COMPRESSION"
+.sp
+Btrfs supports transparent file compression\&. There are three algorithms available: ZLIB, LZO and ZSTD (since v4\&.14)\&. Basically, compression is on a file by file basis\&. You can have a single btrfs mount point that has some files that are uncompressed, some that are compressed with LZO, some with ZLIB, for instance (though you may not want it that way, it is supported)\&.
+.sp
+To enable compression, mount the filesystem with options \fIcompress\fR or \fIcompress\-force\fR\&. Please refer to section \fIMOUNT OPTIONS\fR\&. Once compression is enabled, all new writes will be subject to compression\&. Some files may not compress very well, and these are typically not recompressed but still written uncompressed\&.
+.sp
+Each compression algorithm has different speed/ratio trade offs\&. The levels can be selected by a mount option and affect only the resulting size (ie\&. no compatibility issues)\&.
+.sp
+Basic characteristics:
+.TS
+tab(:);
+lt lt
+lt lt
+lt lt.
+T{
+.sp
+ZLIB
+T}:T{
+.sp
+slower, higher compression ratio
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+levels: 1 to 9, mapped directly, default level is 3
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+good backward compatibility
+.RE
+T}
+T{
+.sp
+LZO
+T}:T{
+.sp
+faster compression and decompression than zlib, worse compression ratio, designed to be fast
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+no levels
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+good backward compatibility
+.RE
+T}
+T{
+.sp
+ZSTD
+T}:T{
+.sp
+compression comparable to zlib with higher compression/decompression speeds and different ratio
+
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+levels: 1 to 15
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+since 4\&.14, levels since 5\&.1
+.RE
+T}
+.TE
+.sp 1
+.sp
+The differences depend on the actual data set and cannot be expressed by a single number or recommendation\&. Higher levels consume more CPU time and may not bring a significant improvement, lower levels are close to real time\&.
+.sp
+The algorithms could be mixed in one file as they\(cqre stored per extent\&. The compression can be changed on a file by \fBbtrfs filesystem defrag\fR command, using the \fI\-c\fR option, or by \fBbtrfs property set\fR using the \fIcompression\fR property\&. Setting compression by \fIchattr +c\fR utility will set it to zlib\&.
+.SS "INCOMPRESSIBLE DATA"
+.sp
+Files with already compressed data or with data that won\(cqt compress well with the CPU and memory constraints of the kernel implementations are using a simple decision logic\&. If the first portion of data being compressed is not smaller than the original, the compression of the file is disabled \(em unless the filesystem is mounted with \fIcompress\-force\fR\&. In that case compression will always be attempted on the file only to be later discarded\&. This is not optimal and subject to optimizations and further development\&.
+.sp
+If a file is identified as incompressible, a flag is set (NOCOMPRESS) and it\(cqs sticky\&. On that file compression won\(cqt be performed unless forced\&. The flag can be also set by \fIchattr +m\fR (since e2fsprogs 1\&.46\&.2) or by properties with value \fIno\fR or \fInone\fR\&. Empty value will reset it to the default that\(cqs currently applicable on the mounted filesystem\&.
+.sp
+There are two ways to detect incompressible data:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+actual compression attempt \- data are compressed, if the result is not smaller, it\(cqs discarded, so this depends on the algorithm and level
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+pre\-compression heuristics \- a quick statistical evaluation on the data is peformed and based on the result either compression is performed or skipped, the NOCOMPRESS bit is not set just by the heuristic, only if the compression algorithm does not make an improvent
+.RE
+.SS "PRE\-COMPRESSION HEURISTICS"
+.sp
+The heuristics aim to do a few quick statistical tests on the compressed data in order to avoid probably costly compression that would turn out to be inefficient\&. Compression algorithms could have internal detection of incompressible data too but this leads to more overhead as the compression is done in another thread and has to write the data anyway\&. The heuristic is read\-only and can utilize cached memory\&.
+.sp
+The tests performed based on the following: data sampling, long repated pattern detection, byte frequency, Shannon entropy\&.
+.SS "COMPATIBILITY WITH OTHER FEATURES"
+.sp
+Compression is done using the COW mechanism so it\(cqs incompatible with \fInodatacow\fR\&. Direct IO works on compressed files but will fall back to buffered writes\&. Currently \fInodatasum\fR and compression don\(cqt work together\&.
 .SH "FILESYSTEM EXCLUSIVE OPERATIONS"
 .sp
 There are several operations that affect the whole filesystem and cannot be run in parallel\&. Attempt to start one while another is running will fail\&.
@@ -1692,6 +1988,167 @@ There\(cqs overlap of letters assigned to the bits with the attributes, this lis
 .RS 4
 \fIno dump\fR, same as the attribute
 .RE
+.SH "ZONED MODE"
+.sp
+Since version 5\&.12 btrfs supports so called \fIzoned mode\fR\&. This is a special on\-disk format and allocation/write strategy that\(cqs friendly to zoned devices\&. In short, a device is partitioned into fixed\-size zones and each zone can be updated by append\-only manner, or reset\&. As btrfs has no fixed data structures, except the super blocks, the zoned mode only requires block placement that follows the device constraints\&. You can learn about the whole architecture at \m[blue]\fBhttps://zonedstorage\&.io\fR\m[] \&.
+.sp
+The devices are also called SMR/ZBC/ZNS, in \fIhost\-managed\fR mode\&. Note that there are devices that appear as non\-zoned but actually are, this is \fIdrive\-managed\fR and using zoned mode won\(cqt help\&.
+.sp
+The zone size depends on the device, typical sizes are 256MiB or 1GiB\&. In general it must be a power of two\&. Emulated zoned devices like \fInull_blk\fR allow to set various zone sizes\&.
+.SS "REQUIREMENTS, LIMITATIONS"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+all devices must have the same zone size
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+maximum zone size is 8GiB
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+mixing zoned and non\-zoned devices is possible, the zone writes are emulated, but this is namely for testing
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+the super block is handled in a special way and is at different locations than on a non\-zoned filesystem:
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+primary: 0B (and the next two zones)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+secondary: 512G (and the next two zones)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+tertiary: 4TiB (4096GiB, and the next two zones)
+.RE
+.SS "INCOMPATIBLE FEATURES"
+.sp
+The main constraint of the zoned devices is lack of in\-place update of the data\&. This is inherently incompatbile with some features:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+nodatacow \- overwrite in\-place, cannot create such files
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+fallocate \- preallocating space for in\-place first write
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+mixed\-bg \- unordered writes to data and metadata, fixing that means using separate data and metadata block groups
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+booting \- the zone at offset 0 contains superblock, resetting the zone would destroy the bootloader data
+.RE
+.sp
+Initial support lacks some features but they\(cqre planned:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+only single profile is supported
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+fstrim \- due to dependency on free space cache v1
+.RE
+.SS "SUPER BLOCK"
+.sp
+As said above, super block is handled in a special way\&. In order to be crash safe, at least one zone in a known location must contain a valid superblock\&. This is implemented as a ring buffer in two consecutive zones, starting from known offsets 0, 512G and 4TiB\&. The values are different than on non\-zoned devices\&. Each new super block is appended to the end of the zone, once it\(cqs filled, the zone is reset and writes continue to the next one\&. Looking up the latest super block needs to read offsets of both zones and determine the last written version\&.
+.sp
+The amount of space reserved for super block depends on the zone size\&. The secondary and tertiary copies are at distant offsets as the capacity of the devices is expected to be large, tens of terabytes\&. Maximum zone size supported is 8GiB, which would mean that eg\&. offset 0\-16GiB would be reserved just for the super block on a hypothetical device of that zone size\&. This is wasteful but required to guarantee crash safety\&.
 .SH "CONTROL DEVICE"
 .sp
 There\(cqs a character special device \fB/dev/btrfs\-control\fR with major and minor numbers 10 and 234 (the device can be found under the \fImisc\fR category)\&.
@@ -1973,6 +2430,458 @@ When RAID56 is on the same filesystem with different raid profiles, the space re
 When scrub is started on a RAID56 filesystem, it\(cqs started on all devices that degrade the performance\&. The workaround is to start it on each device separately\&. Due to that the device stats may not match the actual state and some errors might get reported multiple times\&.
 .sp
 The \fIwrite hole\fR problem\&.
+.SH "STORAGE MODEL"
+.sp
+\fIA storage model is a model that captures key physical aspects of data structure in a data store\&. A filesystem is the logical structure organizing data on top of the storage device\&.\fR
+.sp
+The filesystem assumes several features or limitations of the storage device and utilizes them or applies measures to guarantee reliability\&. BTRFS in particular is based on a COW (copy on write) mode of writing, ie\&. not updating data in place but rather writing a new copy to a different location and then atomically switching the pointers\&.
+.sp
+In an ideal world, the device does what it promises\&. The filesystem assumes that this may not be true so additional mechanisms are applied to either detect misbehaving hardware or get valid data by other means\&. The devices may (and do) apply their own detection and repair mechanisms but we won\(cqt assume any\&.
+.sp
+The following assumptions about storage devices are considered (sorted by importance, numbers are for further reference):
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+atomicity of reads and writes of blocks/sectors (the smallest unit of data the device presents to the upper layers)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+there\(cqs a flush command that instructs the device to forcibly order writes before and after the command; alternatively there\(cqs a barrier command that facilitates the ordering but may not flush the data
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+data sent to write to a given device offset will be written without further changes to the data and to the offset
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
+.\}
+writes can be reordered by the device, unless explicitly serialized by the flush command
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  5." 4.2
+.\}
+reads and writes can be freely reordered and interleaved
+.RE
+.sp
+The consistency model of BTRFS builds on these assumptions\&. The logical data updates are grouped, into a generation, written on the device, serialized by the flush command and then the super block is written ending the generation\&. All logical links among metadata comprising a consistent view of the data may not cross the generation boundary\&.
+.SS "WHEN THINGS GO WRONG"
+.sp
+\fBNo or partial atomicity of block reads/writes (1)\fR
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIProblem\fR: a partial block contents is written (\fItorn write\fR), eg\&. due to a power glitch or other electronics failure during the read/write
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDetection\fR: checksum mismatch on read
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIRepair\fR: use another copy or rebuild from multiple blocks using some encoding scheme
+.RE
+.sp
+\fBThe flush command does not flush (2)\fR
+.sp
+This is perhaps the most serious problem and impossible to mitigate by filesystem without limitations and design restrictions\&. What could happen in the worst case is that writes from one generation bleed to another one, while still letting the filesystem consider the generations isolated\&. Crash at any point would leave data on the device in an inconsistent state without any hint what exactly got written, what is missing and leading to stale metadata link information\&.
+.sp
+Devices usually honor the flush command, but for performance reasons may do internal caching, where the flushed data are not yet persistently stored\&. A power failure could lead to a similar scenario as above, although it\(cqs less likely that later writes would be written before the cached ones\&. This is beyond what a filesystem can take into account\&. Devices or controllers are usually equipped with batteries or capacitors to write the cache contents even after power is cut\&. (\fIBattery backed write cache\fR)
+.sp
+\fBData get silently changed on write (3)\fR
+.sp
+Such thing should not happen frequently, but still can happen spuriously due the complex internal workings of devices or physical effects of the storage media itself\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIProblem\fR: while the data are written atomically, the contents get changed
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDetection\fR: checksum mismatch on read
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIRepair\fR: use another copy or rebuild from multiple blocks using some encoding scheme
+.RE
+.sp
+\fBData get silently written to another offset (3)\fR
+.sp
+This would be another serious problem as the filesystem has no information when it happens\&. For that reason the measures have to be done ahead of time\&. This problem is also commonly called \fIghost write\fR\&.
+.sp
+The metadata blocks have the checksum embedded in the blocks, so a correct atomic write would not corrupt the checksum\&. It\(cqs likely that after reading such block the data inside would not be consistent with the rest\&. To rule that out there\(cqs embedded block number in the metadata block\&. It\(cqs the logical block number because this is what the logical structure expects and verifies\&.
+.SH "HARDWARE CONSIDERATIONS"
+.sp
+The following is based on information publicly available, user feedback, community discussions or bug report analyses\&. It\(cqs not complete and further research is encouraged when in doubt\&.
+.SS "MAIN MEMORY"
+.sp
+The data structures and raw data blocks are temporarily stored in computer memory before they get written to the device\&. It is critical that memory is reliable because even simple bit flips can have vast consequences and lead to damaged structures, not only in the filesystem but in the whole operating system\&.
+.sp
+Based on experience in the community, memory bit flips are more common than one would think\&. When it happens, it\(cqs reported by the tree\-checker or by a checksum mismatch after reading blocks\&. There are some very obvious instances of bit flips that happen, e\&.g\&. in an ordered sequence of keys in metadata blocks\&. We can easily infer from the other data what values get damaged and how\&. However, fixing that is not straightforward and would require cross\-referencing data from the entire filesystem to see the scope\&.
+.sp
+If available, ECC memory should lower the chances of bit flips, but this type of memory is not available in all cases\&. A memory test should be performed in case there\(cqs a visible bit flip pattern, though this may not detect a faulty memory module because the actual load of the system could be the factor making the problems appear\&. In recent years attacks on how the memory modules operate have been demonstrated (\fIrowhammer\fR) achieving specific bits to be flipped\&. While these were targeted, this shows that a series of reads or writes can affect unrelated parts of memory\&.
+.sp
+Further reading:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://en\&.wikipedia\&.org/wiki/Row_hammer\fR\m[]
+.RE
+.sp
+What to do:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+run
+\fImemtest\fR, note that sometimes memory errors happen only when the system is under heavy load that the default memtest cannot trigger
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+memory errors may appear as filesystem going read\-only due to "pre write" check, that verify meta data before they get written but fail some basic consistency checks
+.RE
+.SS "DIRECT MEMORY ACCESS (DMA)"
+.sp
+Another class of errors is related to DMA (direct memory access) performed by device drivers\&. While this could be considered a software error, the data transfers that happen without CPU assistance may accidentally corrupt other pages\&. Storage devices utilize DMA for performance reasons, the filesystem structures and data pages are passed back and forth, making errors possible in case page life time is not properly tracked\&.
+.sp
+There are lots of quirks (device\-specific workarounds) in Linux kernel drivers (regarding not only DMA) that are added when found\&. The quirks may avoid specific errors or disable some features to avoid worse problems\&.
+.sp
+What to do:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+use up\-to\-date kernel (recent releases or maintained long term support versions)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+as this may be caused by faulty drivers, keep the systems up\-to\-date
+.RE
+.SS "ROTATIONAL DISKS (HDD)"
+.sp
+Rotational HDDs typically fail at the level of individual sectors or small clusters\&. Read failures are caught on the levels below the filesystem and are returned to the user as \fIEIO \- Input/output error\fR\&. Reading the blocks repeatedly may return the data eventually, but this is better done by specialized tools and filesystem takes the result of the lower layers\&. Rewriting the sectors may trigger internal remapping but this inevitably leads to data loss\&.
+.sp
+Disk firmware is technically software but from the filesystem perspective is part of the hardware\&. IO requests are processed, and caching or various other optimizations are performed, which may lead to bugs under high load or unexpected physical conditions or unsupported use cases\&.
+.sp
+Disks are connected by cables with two ends, both of which can cause problems when not attached properly\&. Data transfers are protected by checksums and the lower layers try hard to transfer the data correctly or not at all\&. The errors from badly\-connecting cables may manifest as large amount of failed read or write requests, or as short error bursts depending on physical conditions\&.
+.sp
+What to do:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+check
+\fIsmartctl\fR
+for potential issues
+.RE
+.SS "SOLID STATE DRIVES (SSD)"
+.sp
+The mechanism of information storage is different from HDDs and this affects the failure mode as well\&. The data are stored in cells grouped in large blocks with limited number of resets and other write constraints\&. The firmware tries to avoid unnecessary resets and performs optimizations to maximize the storage media lifetime\&. The known techniques are deduplication (blocks with same fingerprint/hash are mapped to same physical block), compression or internal remapping and garbage collection of used memory cells\&. Due to the additional processing there are measures to verity the data e\&.g\&. by ECC codes\&.
+.sp
+The observations of failing SSDs show that the whole electronic fails at once or affects a lot of data (eg\&. stored on one chip)\&. Recovering such data may need specialized equipment and reading data repeatedly does not help as it\(cqs possible with HDDs\&.
+.sp
+There are several technologies of the memory cells with different characteristics and price\&. The lifetime is directly affected by the type and frequency of data written\&. Writing "too much" distinct data (e\&.g\&. encrypted) may render the internal deduplication ineffective and lead to a lot of rewrites and increased wear of the memory cells\&.
+.sp
+There are several technologies and manufacturers so it\(cqs hard to describe them but there are some that exhibit similar behaviour:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+expensive SSD will use more durable memory cells and is optimized for reliability and high load
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+cheap SSD is projected for a lower load ("desktop user") and is optimized for cost, it may employ the optimizations and/or extended error reporting partially or not at all
+.RE
+.sp
+It\(cqs not possible to reliably determine the expected lifetime of an SSD due to lack of information about how it works or due to lack of reliable stats provided by the device\&.
+.sp
+Metadata writes tend to be the biggest component of lifetime writes to a SSD, so there is some value in reducing them\&. Depending on the device class (high end/low end) the features like DUP block group profiles may affect the reliability in both ways:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIhigh end\fR
+are typically more reliable and using
+\fIsingle\fR
+for data and metadata could be suitable to reduce device wear
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIlow end\fR
+could lack ability to identify errors so an additional redundancy at the filesystem level (checksums,
+\fIDUP\fR) could help
+.RE
+.sp
+Only users who consume 50 to 100% of the SSD\(cqs actual lifetime writes need to be concerned by the write amplification of btrfs DUP metadata\&. Most users will be far below 50% of the actual lifetime, or will write the drive to death and discover how many writes 100% of the actual lifetime was\&. SSD firmware often adds its own write multipliers that can be arbitrary and unpredictable and dependent on application behavior, and these will typically have far greater effect on SSD lifespan than DUP metadata\&. It\(cqs more or less impossible to predict when a SSD will run out of lifetime writes to within a factor of two, so it\(cqs hard to justify wear reduction as a benefit\&.
+.sp
+Further reading:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://www\&.snia\&.org/educational\-library/ssd\-and\-deduplication\-end\-spinning\-disk\-2012\fR\m[]
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://www\&.snia\&.org/educational\-library/realities\-solid\-state\-storage\-2013\-2013\fR\m[]
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://www\&.snia\&.org/educational\-library/ssd\-performance\-primer\-2013\fR\m[]
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://www\&.snia\&.org/educational\-library/how\-controllers\-maximize\-ssd\-life\-2013\fR\m[]
+.RE
+.sp
+What to do:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+run
+\fIsmartctl\fR
+or self\-tests to look for potential issues
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+keep the firmware up\-to\-date
+.RE
+.SS "NVM EXPRESS, NON\-VOLATILE MEMORY (NVMe)"
+.sp
+NVMe is a type of persistent memory usually connected over a system bus (PCIe) or similar interface and the speeds are an order of magnitude faster than SSD\&. It is also a non\-rotating type of storage, and is not typically connected by a cable\&. It\(cqs not a SCSI type device either but rather a complete specification for logical device interface\&.
+.sp
+In a way the errors could be compared to a combination of SSD class and regular memory\&. Errors may exhibit as random bit flips or IO failures\&. There are tools to access the internal log (\fInvme log\fR and \fInvme\-cli\fR) for a more detailed analysis\&.
+.sp
+There are separate error detection and correction steps performed e\&.g\&. on the bus level and in most cases never making in to the filesystem level\&. Once this happens it could mean there\(cqs some systematic error like overheating or bad physical connection of the device\&. You may want to run self\-tests (using \fIsmartctl\fR)\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://en\&.wikipedia\&.org/wiki/NVM_Express\fR\m[]
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\m[blue]\fBhttps://www\&.smartmontools\&.org/wiki/NVMe_Support\fR\m[]
+.RE
+.SS "DRIVE FIRMWARE"
+.sp
+Firmware is technically still software but embedded into the hardware\&. As all software has bugs, so does firmware\&. Storage devices can update the firmware and fix known bugs\&. In some cases the it\(cqs possible to avoid certain bugs by quirks (device\-specific workarounds) in Linux kernel\&.
+.sp
+A faulty firmware can cause wide range of corruptions from small and localized to large affecting lots of data\&. Self\-repair capabilities may not be sufficient\&.
+.sp
+What to do:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+check for firmware updates in case there are known problems, note that updating firmware can be risky on itself
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+use up\-to\-date kernel (recent releases or maintained long term support versions)
+.RE
+.SS "SD FLASH CARDS"
+.sp
+There are a lot of devices with low power consumption and thus using storage media based on low power consumption too, typically flash memory stored on a chip enclosed in a detachable card package\&. An improperly inserted card may be damaged by electrical spikes when the device is turned on or off\&. The chips storing data in turn may be damaged permanently\&. All types of flash memory have a limited number of rewrites, so the data are internally translated by FTL (flash translation layer)\&. This is implemented in firmware (technically a software) and prone to bugs that manifest as hardware errors\&.
+.sp
+Adding redundancy like using DUP profiles for both data and metadata can help in some cases but a full backup might be the best option once problems appear and replacing the card could be required as well\&.
+.SS "HARDWARE AS THE MAIN SOURCE OF FILESYSTEM CORRUPTIONS"
+.sp
+\fBIf you use unreliable hardware and don\(cqt know about that, don\(cqt blame the filesystem when it tells you\&.\fR
 .SH "SEE ALSO"
 .sp
 \fBacl\fR(5), \fBbtrfs\fR(8), \fBchattr\fR(1), \fBfstrim\fR(8), \fBioctl\fR(2), \fBmkfs\&.btrfs\fR(8), \fBmount\fR(8), \fBswapon\fR(8)
