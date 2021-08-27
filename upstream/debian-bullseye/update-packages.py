@@ -37,15 +37,15 @@ with open("packages.txt") as input_file:
         # Download HTML page and discover the correct link
         print("Checking package '{}' ... ".format(package), end="")
 
-        # Prefer manpages from buster-backports
-        download_page = urllib.request.urlopen("https://packages.debian.org/buster-backports/amd64/{}/download".format(package))
+        # Prefer manpages from bullseye-backports
+        download_page = urllib.request.urlopen("https://packages.debian.org/bullseye-backports/amd64/{}/download".format(package))
         contents = download_page.read().decode()
         download_page.close()
 
         package_url = re.findall(r"https?://ftp\.de\.debian\.org/debian/pool/[^\"]*", contents)
         if len(package_url) != 1:
-            # If there is no backport, try buster
-            download_page = urllib.request.urlopen("https://packages.debian.org/buster/amd64/{}/download".format(package))
+            # If there is no backport, try bullseye
+            download_page = urllib.request.urlopen("https://packages.debian.org/bullseye/amd64/{}/download".format(package))
             contents = download_page.read().decode()
             download_page.close()
 
