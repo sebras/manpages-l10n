@@ -34,7 +34,7 @@
 .\"     details for dup2().
 .\" 2008-10-09, mtk: add description of dup3()
 .\"
-.TH DUP 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH DUP 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 dup, dup2, dup3 \- duplicate a file descriptor
 .SH SYNOPSIS
@@ -45,7 +45,7 @@ dup, dup2, dup3 \- duplicate a file descriptor
 .BI "int dup2(int " oldfd ", int " newfd );
 
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
-.BR "#include <fcntl.h>" "              /* Obtain O_* constant definitions */
+.BR "#include <fcntl.h>" "              /* Obtain O_* constant definitions */"
 .B #include <unistd.h>
 .PP
 .BI "int dup3(int " oldfd ", int " newfd ", int " flags );
@@ -247,37 +247,40 @@ before calling
 because of the race condition described above.
 Instead, code something like the following could be used:
 .PP
+.in +4n
 .EX
-    /* Obtain a duplicate of 'newfd' that can subsequently
-       be used to check for close() errors; an EBADF error
-       means that 'newfd' was not open. */
+/* Obtain a duplicate of \(aqnewfd\(aq that can subsequently
+   be used to check for close() errors; an EBADF error
+   means that \(aqnewfd\(aq was not open. */
 
-    tmpfd = dup(newfd);
-    if (tmpfd == \-1 && errno != EBADF) {
-        /* Handle unexpected dup() error */
+tmpfd = dup(newfd);
+if (tmpfd == \-1 && errno != EBADF) {
+    /* Handle unexpected dup() error */
+}
+
+/* Atomically duplicate \(aqoldfd\(aq on \(aqnewfd\(aq */
+
+if (dup2(oldfd, newfd) == \-1) {
+    /* Handle dup2() error */
+}
+
+/* Now check for close() errors on the file originally
+   referred to by \(aqnewfd\(aq */
+
+if (tmpfd != \-1) {
+    if (close(tmpfd) == \-1) {
+        /* Handle errors from close */
     }
-
-    /* Atomically duplicate 'oldfd' on 'newfd' */
-
-    if (dup2(oldfd, newfd) == \-1) {
-        /* Handle dup2() error */
-    }
-
-    /* Now check for close() errors on the file originally
-       referred to by 'newfd' */
-
-    if (tmpfd != \-1) {
-        if (close(tmpfd) == \-1) {
-            /* Handle errors from close */
-        }
-    }
+}
 .EE
+.in
 .SH SEE ALSO
 .BR close (2),
 .BR fcntl (2),
-.BR open (2)
+.BR open (2),
+.BR pidfd_getfd (2)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

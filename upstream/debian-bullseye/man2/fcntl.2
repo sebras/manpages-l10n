@@ -1,4 +1,3 @@
-'\" t
 .\" This manpage is Copyright (C) 1992 Drew Eckhardt;
 .\" and Copyright (C) 1993 Michael Haardt, Ian Jackson;
 .\" and Copyright (C) 1998 Jamie Lokier;
@@ -65,7 +64,7 @@
 .\" 2017-06-26, Jens Axboe <axboe@kernel.dk>
 .\"     Document F_{GET,SET}_RW_HINT and F_{GET,SET}_FILE_RW_HINT
 .\"
-.TH FCNTL 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH FCNTL 2 2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fcntl \- manipulate file descriptor
 .SH SYNOPSIS
@@ -701,14 +700,14 @@ asynchronous notification of lost locks.
 .BR F_SETOWN ,
 .BR F_GETOWN_EX ,
 .BR F_SETOWN_EX ,
-.BR F_GETSIG
+.BR F_GETSIG ,
 and
 .B F_SETSIG
 are used to manage I/O availability signals:
 .TP
 .BR F_GETOWN " (\fIvoid\fP)"
 Return (as the function result)
-the process ID or process group currently receiving
+the process ID or process group ID currently receiving
 .B SIGIO
 and
 .B SIGURG
@@ -1229,7 +1228,7 @@ the following bits:
 .PP
 .RS
 .PD 0
-.TP 12
+.TP
 .B DN_ACCESS
 A file was accessed
 .RB ( read (2),
@@ -1525,6 +1524,24 @@ Furthermore, if there are any asynchronous I/O operations
 .RB ( io_submit (2))
 pending on the file,
 all outstanding writes will be discarded.
+.TP
+.BR F_SEAL_FUTURE_WRITE " (since Linux 5.1)"
+The effect of this seal is similar to
+.BR F_SEAL_WRITE ,
+but the contents of the file can still be modified via
+shared writable mappings that were created prior to the seal being set.
+Any attempt to create a new writable mapping on the file via
+.BR mmap (2)
+will fail with
+.BR EPERM .
+Likewise, an attempt to write to the file via
+.BR write (2)
+will fail with
+.BR EPERM .
+.IP
+Using this seal,
+one process can create a memory buffer that it can continue to modify
+while sharing that buffer on a "read-only" basis with other processes.
 .\"
 .SS File read/write hints
 Write lifetime hints can be used to inform the kernel about the relative
@@ -1609,7 +1626,7 @@ All the write-specific hints are relative to each other,
 and no individual absolute meaning should be attributed to them.
 .SH RETURN VALUE
 For a successful call, the return value depends on the operation:
-.TP 0.9i
+.TP
 .B F_DUPFD
 The new file descriptor.
 .TP
@@ -2109,7 +2126,7 @@ directory, and
 is called
 .IR mandatory.txt )
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

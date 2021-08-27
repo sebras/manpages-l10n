@@ -22,18 +22,19 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY 7 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify \- monitoring filesystem events
 .SH DESCRIPTION
 The fanotify API provides notification and interception of
 filesystem events.
 Use cases include virus scanning and hierarchical storage management.
-Currently, only a limited set of events is supported.
-In particular, there is no support for create, delete, and move events.
+In the original fanotify API, only a limited set of events was supported.
+In particular, there was no support for create, delete, and move events.
+The support for those events was added in Linux 5.1.
 (See
 .BR inotify (7)
-for details of an API that does notify those events.)
+for details of an API that did notify those events pre Linux 5.1.)
 .PP
 Additional capabilities compared to the
 .BR inotify (7)
@@ -110,14 +111,9 @@ Two types of events are generated:
 events and
 .I permission
 events.
-Notification events are merely informative
-and require no action to be taken by
-the receiving application with the exception being that the file
-descriptor provided within a generic event must be closed.
-The closing of file descriptors for each event applies only to
-applications that have initialized fanotify without using
-.BR FAN_REPORT_FID
-(see below).
+Notification events are merely informative and require no action to be taken
+by the receiving application with one exception: if a valid file descriptor
+is provided within a generic event, the file descriptor must be closed.
 Permission events are requests to the receiving application to decide
 whether permission for a file access shall be granted.
 For these events, the recipient must write a response which decides whether
@@ -142,12 +138,16 @@ until either a file event occurs or the call is interrupted by a signal
 (see
 .BR signal (7)).
 .PP
-The use of the
-.BR FAN_REPORT_FID
-flag in
+The use of one of the flags
+.BR FAN_REPORT_FID ,
+.BR FAN_REPORT_DIR_FID
+in
 .BR fanotify_init (2)
 influences what data structures are returned to the event listener for each
 event.
+Events reported to a group initialized with one of these flags will
+use file handles to identify filesystem objects instead of file descriptors.
+.TP
 After a successful
 .BR read (2),
 the read buffer contains one or more of the following structures:
@@ -166,17 +166,20 @@ struct fanotify_event_metadata {
 .EE
 .in
 .PP
-In the case where
-.BR FAN_REPORT_FID
-is supplied as one of the flags to
-.BR fanotify_init (2),
-you should also expect to receive the structure detailed below following
-the generic
+In case of an fanotify group that identifies filesystem objects by file
+handles, you should also expect to receive one or more additional information
+records of the structure detailed below following the generic
 .I fanotify_event_metadata
 structure within the read buffer:
 .PP
 .in +4n
 .EX
+struct fanotify_event_info_header {
+    __u8 info_type;
+    __u8 pad;
+    __u16 len;
+};
+
 struct fanotify_event_info_fid {
     struct fanotify_event_info_header hdr;
     __kernel_fsid_t fsid;
@@ -202,16 +205,13 @@ structure are as follows:
 .I event_len
 This is the length of the data for the current event and the offset
 to the next event in the buffer.
-Without
-.BR FAN_REPORT_FID ,
-the value of
+Unless the group identifies filesystem objects by file handles, the value of
 .I event_len
 is always
 .BR FAN_EVENT_METADATA_LEN .
-With
-.BR FAN_REPORT_FID ,
+For a group that identifies filesystem objects by file handles,
 .I event_len
-also includes the variable length file identifier.
+also includes the variable length file identifier records.
 .TP
 .I vers
 This field holds a version number for the structure.
@@ -238,8 +238,7 @@ This is a bit mask describing the event (see below).
 This is an open file descriptor for the object being accessed, or
 .B FAN_NOFD
 if a queue overflow occurred.
-If the fanotify file descriptor has been initialized using
-.BR FAN_REPORT_FID ,
+With an fanotify group that identifies filesystem objects by file handles,
 applications should expect this value to be set to
 .B FAN_NOFD
 for each event that is received.
@@ -381,6 +380,23 @@ This is a synonym for:
 .IP
     FAN_MOVED_FROM | FAN_MOVED_TO
 .PP
+The following bits may appear in
+.I mask
+only in conjunction with other event type bits:
+.TP
+.B FAN_ONDIR
+The events described in the
+.I mask
+have occurred on a directory object.
+Reporting events on directories requires setting this flag in the mark mask.
+See
+.BR fanotify_mark (2)
+for additional details.
+The
+.BR FAN_ONDIR
+flag is reported in an event mask only if the fanotify group identifies
+filesystem objects by file handles.
+.PP
 The fields of the
 .I fanotify_event_info_fid
 structure are as follows:
@@ -388,24 +404,45 @@ structure are as follows:
 .I hdr
 This is a structure of type
 .IR fanotify_event_info_header .
-It is a generic header that contains information used to describe
-additional information attached to the event.
+It is a generic header that contains information used to describe an
+additional information record attached to the event.
 For example, when an fanotify file descriptor is created using
 .BR FAN_REPORT_FID ,
-the
+a single information record is expected to be attached to the event with
 .I info_type
-field of this header is set to
+field value of
 .BR FAN_EVENT_INFO_TYPE_FID .
-Event listeners can use this field to check that the additional
-information received for an event is of the correct type.
-Additionally, the
+When an fanotify file descriptor is created using the combination of
+.BR FAN_REPORT_FID
+and
+.BR FAN_REPORT_DIR_FID ,
+there may be two information records attached to the event:
+one with
+.I info_type
+field value of
+.BR FAN_EVENT_INFO_TYPE_DFID ,
+identifying a parent directory object, and one with
+.I info_type
+field value of
+.BR FAN_EVENT_INFO_TYPE_FID ,
+identifying a non-directory object.
+The
 .I fanotify_event_info_header
-also contains a
+contains a
 .I len
 field.
-In the current implementation, the value of
+The value of
 .I len
-is always (event_len \- FAN_EVENT_METADATA_LEN).
+is the size of the additional information record including the
+.IR fanotify_event_info_header
+itself.
+The total size of all additional information records is not expected
+to be bigger than
+(
+.IR event_len
+\-
+.IR metadata_len
+).
 .TP
 .I fsid
 This is a unique identifier of the filesystem containing the object
@@ -418,31 +455,60 @@ when calling
 .BR statfs (2).
 .TP
 .I file_handle
-This is a variable length structure of type
-.IR file_handle .
+This is a variable length structure of type struct file_handle.
 It is an opaque handle that corresponds to a specified object on a
 filesystem as returned by
 .BR name_to_handle_at (2).
 It can be used to uniquely identify a file on a filesystem and can be
 passed as an argument to
 .BR open_by_handle_at (2).
-Note that for directory entry events, such as
+Note that for the directory entry modification events
 .BR FAN_CREATE ,
 .BR FAN_DELETE ,
 and
 .BR FAN_MOVE ,
 the
 .IR file_handle
-describes the modified directory and not the created/deleted/moved child
+identifies the modified directory and not the created/deleted/moved child
 object.
-The events
+If the value of
+.I info_type
+field is
+.BR FAN_EVENT_INFO_TYPE_DFID_NAME ,
+the file handle is followed by a null terminated string that identifies the
+created/deleted/moved directory entry name.
+For other events such as
+.BR FAN_OPEN ,
 .BR FAN_ATTRIB ,
 .BR FAN_DELETE_SELF ,
 and
-.BR FAN_MOVE_SELF
-will carry the
+.BR FAN_MOVE_SELF ,
+if the value of
+.I info_type
+field is
+.BR FAN_EVENT_INFO_TYPE_FID ,
+the
 .IR file_handle
-information for the child object if the child object is being watched.
+identifies the object correlated to the event.
+If the value of
+.I info_type
+field is
+.BR FAN_EVENT_INFO_TYPE_DFID ,
+the
+.IR file_handle
+identifies the directory object correlated to the event or the parent directory
+of a non-directory object correlated to the event.
+If the value of
+.I info_type
+field is
+.BR FAN_EVENT_INFO_TYPE_DFID_NAME ,
+the
+.IR file_handle
+identifies the same directory object that would be reported with
+.BR FAN_EVENT_INFO_TYPE_DFID
+and the file handle is followed by a null terminated string that identifies the
+name of a directory entry in that directory, or '.' to identify the directory
+object itself.
 .PP
 The following macros are provided to iterate over a buffer containing
 fanotify event metadata returned by a
@@ -523,8 +589,8 @@ to deny the file operation.
 If access is denied, the requesting application call will receive an
 .BR EPERM
 error.
+.\"
 .SS Closing the fanotify file descriptor
-.PP
 When all file descriptors referring to the fanotify notification group are
 closed, the fanotify group is released and its resources
 are freed for reuse by the kernel.
@@ -627,12 +693,17 @@ events for the monitored directory itself.
 Fanotify monitoring of directories is not recursive:
 to monitor subdirectories under a directory,
 additional marks must be created.
-(But note that the fanotify API provides no way of detecting when a
-subdirectory has been created under a marked directory,
-which makes recursive monitoring difficult.)
-Monitoring mounts offers the capability to monitor a whole directory tree.
+The
+.B FAN_CREATE
+event can be used for detecting when a subdirectory has been created under
+a marked directory.
+An additional mark must then be set on the newly created subdirectory.
+This approach is racy, because it can lose events that occurred inside the
+newly created subdirectory, before a mark is added on that subdirectory.
+Monitoring mounts offers the capability to monitor a whole directory tree
+in a race-free manner.
 Monitoring filesystems offers the capability to monitor changes made from
-any mount of a filesystem instance.
+any mount of a filesystem instance in a race-free manner.
 .PP
 The event queue can overflow.
 In this case, events are lost.
@@ -678,7 +749,7 @@ The return value will not be \-1, and
 .I errno
 will not be set.
 Thus, the reading application has no way to detect the error.
-.SH EXAMPLE
+.SH EXAMPLES
 The two example programs below demonstrate the usage of the fanotify API.
 .SS Example program: fanotify_example.c
 The first program is an example of fanotify being
@@ -716,8 +787,6 @@ FAN_CLOSE_WRITE: File /home/user/temp/notes
 Listening for events stopped.
 .EE
 .in
-.EE
-.in
 .SS Program source: fanotify_example.c
 \&
 .EX
@@ -750,7 +819,7 @@ handle_events(int fd)
 
         /* Read some events */
 
-        len = read(fd, (void *) &buf, sizeof(buf));
+        len = read(fd, buf, sizeof(buf));
         if (len == \-1 && errno != EAGAIN) {
             perror("read");
             exit(EXIT_FAILURE);
@@ -792,8 +861,7 @@ handle_events(int fd)
 
                     response.fd = metadata\->fd;
                     response.response = FAN_ALLOW;
-                    write(fd, &response,
-                          sizeof(struct fanotify_response));
+                    write(fd, &response, sizeof(response));
                 }
 
                 /* Handle closing of writable file event */
@@ -918,9 +986,8 @@ main(int argc, char *argv[])
 .EE
 .\"
 .SS Example program: fanotify_fid.c
-The second program is an example of fanotify being used with
-.B FAN_REPORT_FID
-enabled.
+The second program is an example of fanotify being used with a group that
+identifies objects by file handles.
 The program marks the filesystem object that is passed as
 a command-line argument
 and waits until an event of type
@@ -940,21 +1007,21 @@ This is followed by the creation of a regular file,
 .IR /home/user/testfile.txt .
 This results in a
 .B FAN_CREATE
-event being created and reported against the file's parent watched
-directory object.
+event being generated and reported against the file's parent watched
+directory object and with the created file name.
 Program execution ends once all events captured within the buffer have
 been processed.
-Program execution ends once all events captured within the buffer are
-processed.
 .PP
 .in +4n
 .EX
 # \fB./fanotify_fid /home/user\fP
 Listening for events.
-FAN_CREATE (file created): Directory /home/user has been modified.
+FAN_CREATE (file created):
+        Directory /home/user has been modified.
+        Entry \(aqtestfile.txt\(aq is not a subdirectory.
 All events processed successfully. Program exiting.
 
-$ \fBtouch /home/user/testing\fP              # In another terminal
+$ \fBtouch /home/user/testfile.txt\fP              # In another terminal
 .EE
 .in
 .PP
@@ -962,11 +1029,11 @@ The second session shows a mark being placed on
 .IR /home/user .
 This is followed by the creation of a directory,
 .IR /home/user/testdir .
-This specific action results in the program producing a
+This specific action results in a
 .B FAN_CREATE
-and
+event being generated and is reported with the
 .B FAN_ONDIR
-event.
+flag set and with the created directory name.
 .PP
 .in +4n
 .EX
@@ -974,9 +1041,10 @@ event.
 Listening for events.
 FAN_CREATE | FAN_ONDIR (subdirectory created):
         Directory /home/user has been modified.
+        Entry \(aqtestdir\(aq is a subdirectory.
 All events processed successfully. Program exiting.
 
-$ \fBmkdir \-p /home/user/testing\fP          # In another terminal
+$ \fBmkdir \-p /home/user/testdir\fP          # In another terminal
 .EE
 .in
 .SS Program source: fanotify_fid.c
@@ -998,7 +1066,7 @@ $ \fBmkdir \-p /home/user/testing\fP          # In another terminal
 int
 main(int argc, char **argv)
 {
-    int fd, ret, event_fd;
+    int fd, ret, event_fd, mount_fd;
     ssize_t len, path_len;
     char path[PATH_MAX];
     char procfd_path[PATH_MAX];
@@ -1006,16 +1074,26 @@ main(int argc, char **argv)
     struct file_handle *file_handle;
     struct fanotify_event_metadata *metadata;
     struct fanotify_event_info_fid *fid;
+    const char *file_name;
+    struct stat sb;
 
     if (argc != 2) {
         fprintf(stderr, "Invalid number of command line arguments.\en");
         exit(EXIT_FAILURE);
     }
 
-    /* Create an fanotify file descriptor with FAN_REPORT_FID as a flag
-       so that program can receive fid events. */
+    mount_fd = open(argv[1], O_DIRECTORY | O_RDONLY);
+    if (mount_fd == \-1) {
+        perror(argv[1]);
+        exit(EXIT_FAILURE);
+    }
 
-    fd = fanotify_init(FAN_CLASS_NOTIF | FAN_REPORT_FID, 0);
+
+    /* Create an fanotify file descriptor with FAN_REPORT_DFID_NAME as
+       a flag so that program can receive fid events with directory
+       entry name. */
+
+    fd = fanotify_init(FAN_CLASS_NOTIF | FAN_REPORT_DFID_NAME, 0);
     if (fd == \-1) {
         perror("fanotify_init");
         exit(EXIT_FAILURE);
@@ -1035,7 +1113,7 @@ main(int argc, char **argv)
 
     /* Read events from the event queue into a buffer */
 
-    len = read(fd, (void *) &events_buf, sizeof(events_buf));
+    len = read(fd, events_buf, sizeof(events_buf));
     if (len == \-1 && errno != EAGAIN) {
         perror("read");
         exit(EXIT_FAILURE);
@@ -1051,27 +1129,34 @@ main(int argc, char **argv)
 
         /* Ensure that the event info is of the correct type */
 
-        if (fid\->hdr.info_type != FAN_EVENT_INFO_TYPE_FID) {
+        if (fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_FID ||
+            fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_DFID) {
+            file_name = NULL;
+        } else if (fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_DFID_NAME) {
+            file_name = file_handle->f_handle +
+                        file_handle->handle_bytes;
+        } else {
             fprintf(stderr, "Received unexpected event info type.\en");
             exit(EXIT_FAILURE);
         }
 
         if (metadata\->mask == FAN_CREATE)
-            printf("FAN_CREATE (file created):");
+            printf("FAN_CREATE (file created):\en");
 
-        if (metadata\->mask == FAN_CREATE | FAN_ONDIR)
-            printf("FAN_CREATE | FAN_ONDIR (subdirectory created):");
+        if (metadata\->mask == (FAN_CREATE | FAN_ONDIR))
+            printf("FAN_CREATE | FAN_ONDIR (subdirectory created):\en");
 
-        /* metadata\->fd is set to FAN_NOFD when FAN_REPORT_FID is enabled.
-           To obtain a file descriptor for the file object corresponding to
-           an event you can use the struct file_handle that\(aqs provided
-           within the fanotify_event_info_fid in conjunction with the
-           open_by_handle_at(2) system call. A check for ESTALE is done
-           to accommodate for the situation where the file handle for the
-           object was deleted prior to this system call. */
+	/* metadata\->fd is set to FAN_NOFD when the group identifies
+	   objects by file handles.  To obtain a file descriptor for
+	   the file object corresponding to an event you can use the
+	   struct file_handle that\(aqs provided within the
+	   fanotify_event_info_fid in conjunction with the
+	   open_by_handle_at(2) system call.  A check for ESTALE is
+	   done to accommodate for the situation where the file handle
+	   for the object was deleted prior to this system call. */
 
-        event_fd = open_by_handle_at(AT_FDCWD, file_handle, O_RDONLY);
-        if (ret == \-1) {
+        event_fd = open_by_handle_at(mount_fd, file_handle, O_RDONLY);
+        if (event_fd == \-1) {
             if (errno == ESTALE) {
                 printf("File handle is no longer valid. "
                         "File has been deleted\en");
@@ -1079,7 +1164,7 @@ main(int argc, char **argv)
             } else {
                 perror("open_by_handle_at");
                 exit(EXIT_FAILURE);
-	    }
+            }
         }
 
         snprintf(procfd_path, sizeof(procfd_path), "/proc/self/fd/%d",
@@ -1096,6 +1181,22 @@ main(int argc, char **argv)
         path[path_len] = \(aq\e0\(aq;
         printf("\etDirectory \(aq%s\(aq has been modified.\en", path);
 
+        if (file_name) {
+            ret = fstatat(event_fd, file_name, &sb, 0);
+            if (ret == \-1) {
+                if (errno != ENOENT) {
+                    perror("fstatat");
+                    exit(EXIT_FAILURE);
+                }
+                printf("\etEntry \(aq%s\(aq does not exist.\en", file_name);
+            } else if ((sb.st_mode & S_IFMT) == S_IFDIR) {
+                printf("\etEntry \(aq%s\(aq is a subdirectory.\en", file_name);
+            } else {
+                printf("\etEntry \(aq%s\(aq is not a subdirectory.\en",
+                        file_name);
+            }
+        }
+
         /* Close associated file descriptor for this event */
 
         close(event_fd);
@@ -1111,7 +1212,7 @@ main(int argc, char **argv)
 .BR fanotify_mark (2),
 .BR inotify (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

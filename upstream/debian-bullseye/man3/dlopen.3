@@ -32,7 +32,7 @@
 .\" Modified by Walter Harms: dladdr, dlvsym
 .\" Modified by Petr Baudis <pasky@suse.cz>, 2008-12-04: dladdr caveat
 .\"
-.TH DLOPEN 3 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH DLOPEN 3 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 dlclose, dlopen, dlmopen \-
 open and close a shared object
@@ -47,7 +47,7 @@ open and close a shared object
 .br
 .B #include <dlfcn.h>
 .PP
-.BI "void *dlmopen (Lmid_t " lmid ", const char *" filename ", int " flags );
+.BI "void *dlmopen(Lmid_t " lmid ", const char *" filename ", int " flags );
 .PP
 Link with \fI\-ldl\fP.
 .SH DESCRIPTION
@@ -85,7 +85,10 @@ Otherwise, the dynamic linker searches for the object as follows
 .BR ld.so (8)
 for further details):
 .IP o 4
-(ELF only) If the executable file for the calling program
+(ELF only) If the calling object
+(i.e., the shared library or executable from which
+.BR dlopen ()
+is called)
 contains a DT_RPATH tag, and does not contain a DT_RUNPATH tag,
 then the directories listed in the DT_RPATH tag are searched.
 .IP o
@@ -96,7 +99,7 @@ then these are searched.
 (As a security measure, this variable is ignored for set-user-ID and
 set-group-ID programs.)
 .IP o
-(ELF only) If the executable file for the calling program
+(ELF only) If the calling object
 contains a DT_RUNPATH tag, then the directories listed in that tag
 are searched.
 .IP o
@@ -194,7 +197,7 @@ If
 .I filename
 is NULL, then the returned handle is for the main program.
 When given to
-.BR dlsym (),
+.BR dlsym (3),
 this handle causes a search for a symbol in the main program,
 followed by all shared objects loaded at program startup,
 and then all shared objects loaded by
@@ -541,9 +544,10 @@ when calling
 .BR dlopen ()
 results in a program crash
 .RB ( SIGSEGV )
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=18684
 if the call is made from any object loaded in a
 namespace other than the initial namespace.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below loads the (glibc) math library,
 looks up the address of the
 .BR cos (3)
@@ -563,7 +567,7 @@ $ \fB./a.out\fP
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include <gnu/lib-names.h>  /* Defines LIBM_SO (which will be a
+#include <gnu/lib\-names.h>  /* Defines LIBM_SO (which will be a
                                string such as "libm.so.6") */
 int
 main(void)
@@ -583,8 +587,8 @@ main(void)
     cosine = (double (*)(double)) dlsym(handle, "cos");
 
     /* According to the ISO C standard, casting between function
-       pointers and 'void *', as done above, produces undefined results.
-       POSIX.1-2003 and POSIX.1-2008 accepted this state of affairs and
+       pointers and \(aqvoid *\(aq, as done above, produces undefined results.
+       POSIX.1-2001 and POSIX.1-2008 accepted this state of affairs and
        proposed the following workaround:
 
            *(void **) (&cosine) = dlsym(handle, "cos");
@@ -592,11 +596,11 @@ main(void)
        This (clumsy) cast conforms with the ISO C standard and will
        avoid any compiler warnings.
 
-       The 2013 Technical Corrigendum to POSIX.1-2008 (a.k.a.
-       POSIX.1-2013) improved matters by requiring that conforming
-       implementations support casting 'void *' to a function pointer.
-       Nevertheless, some compilers (e.g., gcc with the '-pedantic'
-       option) may complain about the cast used in this program. */
+       The 2013 Technical Corrigendum 1 to POSIX.1-2008 improved matters
+       by requiring that conforming implementations support casting
+       \(aqvoid *\(aq to a function pointer.  Nevertheless, some compilers
+       (e.g., gcc with the \(aq\-pedantic\(aq option) may complain about the
+       cast used in this program. */
 .\" http://pubs.opengroup.org/onlinepubs/009695399/functions/dlsym.html#tag_03_112_08
 .\" http://pubs.opengroup.org/onlinepubs/9699919799/functions/dlsym.html#tag_16_96_07
 .\" http://austingroupbugs.net/view.php?id=74
@@ -621,13 +625,13 @@ main(void)
 .BR dlerror (3),
 .BR dlinfo (3),
 .BR dlsym (3),
-.BR rtld-audit (7),
+.BR rtld\-audit (7),
 .BR ld.so (8),
 .BR ldconfig (8)
 .PP
 gcc info pages, ld info pages
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

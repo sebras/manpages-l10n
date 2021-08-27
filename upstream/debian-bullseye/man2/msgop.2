@@ -1,4 +1,5 @@
 .\" Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
+.\" and Copyright 2015 Bill Pemberton <wfp5p@worldbroken.com>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
 .\" Permission is granted to make and distribute verbatim copies of this
@@ -36,7 +37,7 @@
 .\"	Language and formatting clean-ups
 .\"	Added notes on /proc files
 .\"
-.TH MSGOP 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH MSGOP 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 msgrcv, msgsnd \- System V message queue operations
 .SH SYNOPSIS
@@ -113,12 +114,12 @@ bytes, but this limit can be modified using
 .BR msgctl (2).
 A message queue is considered to be full if either of the following
 conditions is true:
-.IP * 2
+.IP \(bu 2
 Adding a new message to the queue would cause the total number of bytes
 in the queue to exceed the queue's maximum size (the
 .I msg_qbytes
 field).
-.IP *
+.IP \(bu
 Adding another message to the queue would cause the total number of messages
 in the queue to exceed the queue's maximum size (the
 .I msg_qbytes
@@ -142,14 +143,14 @@ then the call instead fails with the error
 A blocked
 .BR msgsnd ()
 call may also fail if:
-.IP * 2
+.IP \(bu 2
 the queue is removed,
 in which case the system call fails with
 .I errno
 set to
 .BR EIDRM ;
 or
-.IP *
+.IP \(bu
 a signal is caught, in which case the system call fails
 with
 .I errno
@@ -164,13 +165,13 @@ flag when establishing a signal handler.)
 .PP
 Upon successful completion the message queue data structure is updated
 as follows:
-.IP
+.IP \(bu 2
 .I msg_lspid
 is set to the process ID of the calling process.
-.IP
+.IP \(bu
 .I msg_qnum
 is incremented by 1.
-.IP
+.IP \(bu
 .I msg_stime
 is set to the current time.
 .SS msgrcv()
@@ -216,12 +217,12 @@ is specified in
 the
 .I msgtyp
 argument specifies the type of message requested, as follows:
-.IP * 2
+.IP \(bu 2
 If
 .I msgtyp
 is 0,
 then the first message in the queue is read.
-.IP *
+.IP \(bu
 If
 .I msgtyp
 is greater than 0,
@@ -235,7 +236,7 @@ in which case
 the first message in the queue of type not equal to
 .I msgtyp
 will be read.
-.IP *
+.IP \(bu
 If
 .I msgtyp
 is less than 0,
@@ -303,15 +304,15 @@ If no message of the requested type is available and
 isn't specified in
 .IR msgflg ,
 the calling process is blocked until one of the following conditions occurs:
-.IP * 2
+.IP \(bu 2
 A message of the desired type is placed in the queue.
-.IP *
+.IP \(bu
 The message queue is removed from the system.
 In this case, the system call fails with
 .I errno
 set to
 .BR EIDRM .
-.IP *
+.IP \(bu
 The calling process catches a signal.
 In this case, the system call fails with
 .I errno
@@ -466,8 +467,11 @@ and the queue contains less than
 messages.
 .TP
 .BR ENOSYS " (since Linux 3.8)"
-.I MSG_COPY
-was specified in
+Both
+.B MSG_COPY
+and
+.B IPC_NOWAIT
+were specified in
 .IR msgflg ,
 and this kernel was configured without
 .BR CONFIG_CHECKPOINT_RESTORE .
@@ -570,7 +574,7 @@ this error was not diagnosed by
 This bug is fixed
 .\" commit 4f87dac386cc43d5525da7a939d4b4e7edbea22c
 in Linux 3.14.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below demonstrates the use of
 .BR msgsnd ()
 and
@@ -636,7 +640,7 @@ send_msg(int qid, int msgtype)
     snprintf(msg.mtext, sizeof(msg.mtext), "a message at %s",
             ctime(&t));
 
-    if (msgsnd(qid, (void *) &msg, sizeof(msg.mtext),
+    if (msgsnd(qid, &msg, sizeof(msg.mtext),
                 IPC_NOWAIT) == \-1) {
         perror("msgsnd error");
         exit(EXIT_FAILURE);
@@ -649,7 +653,7 @@ get_msg(int qid, int msgtype)
 {
     struct msgbuf msg;
 
-    if (msgrcv(qid, (void *) &msg, sizeof(msg.mtext), msgtype,
+    if (msgrcv(qid, &msg, sizeof(msg.mtext), msgtype,
                MSG_NOERROR | IPC_NOWAIT) == \-1) {
         if (errno != ENOMSG) {
             perror("msgrcv");
@@ -714,7 +718,7 @@ main(int argc, char *argv[])
 .BR mq_overview (7),
 .BR sysvipc (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

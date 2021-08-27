@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SCHED_SETATTR 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH SCHED_SETATTR 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sched_setattr, sched_getattr \-
 set and get scheduling policy and attributes
@@ -113,7 +113,9 @@ struct sched_attr {
 .EE
 .in
 .PP
-The fields of this structure are as follows:
+The fields of the
+.IR sched_attr
+structure are as follows:
 .TP
 .B size
 This field should be set to the size of the structure in bytes, as in
@@ -284,10 +286,8 @@ structure,
 the additional bytes in the user-space structure are not touched.
 If the caller-provided structure is smaller than the kernel
 .I sched_attr
-structure and the kernel needs to return values outside the provided space,
-.BR sched_getattr ()
-fails with the error
-.BR E2BIG .
+structure, the kernel will silently not return any values which would be stored
+outside the provided space.
 As with
 .BR sched_setattr (),
 these semantics allow for future extensibility of the interface.
@@ -408,12 +408,22 @@ and (partially)
 In Linux versions up to
 .\" FIXME . patch sent to Peter Zijlstra
 3.15,
-.BR sched_settattr ()
+.BR sched_setattr ()
 failed with the error
 .BR EFAULT
 instead of
 .BR E2BIG
 for the case described in ERRORS.
+.PP
+In Linux versions up to 5.3,
+.BR sched_getattr ()
+failed with the error
+.BR EFBIG
+if the in-kernel
+.IR sched_attr
+structure was larger than the
+.IR size
+passed by user space.
 .\" In Linux versions up to up 3.15,
 .\" FIXME . patch from Peter Zijlstra pending
 .\" .BR sched_setattr ()
@@ -444,7 +454,7 @@ for the case described in ERRORS.
 .BR sched (7)
 .ad
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

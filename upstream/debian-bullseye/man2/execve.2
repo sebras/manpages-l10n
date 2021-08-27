@@ -34,13 +34,13 @@
 .\" 2007-09-14 Ollie Wild <aaw@google.com>, mtk
 .\"     Add text describing limits on command-line arguments + environment
 .\"
-.TH EXECVE 2 2019-10-10 "Linux" "Linux Programmer's Manual"
+.TH EXECVE 2 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 execve \- execute program
 .SH SYNOPSIS
 .B #include <unistd.h>
 .PP
-.BI "int execve(const char *" pathname ", char *const " argv "[], "
+.BI "int execve(const char *" pathname ", char *const " argv [],
 .br
 .BI "           char *const " envp []);
 .SH DESCRIPTION
@@ -61,17 +61,26 @@ starting with a line of the form:
 .PP
 For details of the latter case, see "Interpreter scripts" below.
 .PP
-\fIargv\fP is an array of argument strings passed to the new program.
+\fIargv\fP is an array of pointers to strings passed to the new program
+as its command-line arguments.
 By convention, the first of these strings (i.e.,
 .IR argv[0] )
 should contain the filename associated with the file being executed.
-\fIenvp\fP is an array of strings, conventionally of the form
-\fBkey=value\fP, which are passed as environment to the new program.
-The \fIargv\fP and \fIenvp\fP arrays must each include a null pointer
-at the end of the array.
+The
+.I argv
+array must be terminated by a NULL pointer.
+(Thus, in the new program,
+.IR argv[argc]
+will be NULL.)
+.PP
+\fIenvp\fP is an array of pointers to strings, conventionally of the form
+\fBkey=value\fP, which are passed as the environment of the new program.
+The
+.I envp
+array must be terminated by a NULL pointer.
 .PP
 The argument vector and environment can be accessed by the
-called program's main function, when it is defined as:
+new program's main function, when it is defined as:
 .PP
 .in +4n
 .EX
@@ -98,8 +107,8 @@ If the set-user-ID bit is set on the program file referred to by
 \fIpathname\fP,
 then the effective user ID of the calling process is changed
 to that of the owner of the program file.
-Similarly, when the set-group-ID
-bit of the program file is set the effective group ID of the calling
+Similarly, if the set-group-ID bit is set on the program file,
+then the effective group ID of the calling
 process is set to the group of the program file.
 .PP
 The aforementioned transformations of the effective IDs are
@@ -149,8 +158,9 @@ shared objects.
 This interpreter is typically
 .I /lib/ld-linux.so.2
 for binaries linked with glibc (see
-.BR ld-linux.so (8)).
-.PP
+.BR ld\-linux.so (8)).
+.\"
+.SS Effect on process attributes
 All process attributes are preserved during an
 .BR execve (),
 except the following:
@@ -200,12 +210,22 @@ The following Linux-specific process attributes are also
 not preserved during an
 .BR execve ():
 .IP * 3
-The
-.BR prctl (2)
-.B PR_SET_DUMPABLE
-flag is set,
-unless a set-user-ID or set-group ID program is being executed,
-in which case it is cleared.
+The process's "dumpable" attribute is set to the value 1,
+unless a set-user-ID program, a set-group-ID program,
+or a program with capabilities is being executed,
+in which case the dumpable flag may instead be reset to the value in
+.IR /proc/sys/fs/suid_dumpable ,
+in the circumstances described under
+.BR PR_SET_DUMPABLE
+in
+.BR prctl (2).
+Note that changes to the "dumpable" attribute may cause ownership
+of files in the process's
+.IR /proc/[pid]
+directory to change to
+.IR root:root ,
+as described in
+.BR proc (5).
 .IP *
 The
 .BR prctl (2)
@@ -285,7 +305,7 @@ POSIX.1 says that if file descriptors 0, 1, and 2 would
 otherwise be closed after a successful
 .BR execve (),
 and the process would gain privilege because the set-user-ID or
-set-group_ID mode bit was set on the executed file,
+set-group-ID mode bit was set on the executed file,
 then the system may open an unspecified file for each of these
 file descriptors.
 As a general principle, no portable program, whether privileged or not,
@@ -334,7 +354,7 @@ is the series of words pointed to by the
 argument of
 .BR execve (),
 starting at
-.IR argv [1].
+.IR argv[1] .
 Note that there is no way to get the
 .IR argv[0]
 that was passed to the
@@ -504,9 +524,7 @@ The system-wide limit on the total number of open files has been reached.
 .B ENOENT
 The file
 .I pathname
-or a script or ELF interpreter does not exist, or a shared library
-.\" FIXME but see http://sourceware.org/bugzilla/show_bug.cgi?id=12241
-needed for the file or interpreter cannot be found.
+or a script or ELF interpreter does not exist.
 .TP
 .B ENOEXEC
 An executable is not in a recognized format, is for the wrong
@@ -622,7 +640,10 @@ failure may occur past the point of no return:
 the original executable image has been torn down,
 but the new image could not be completely built.
 In such cases, the kernel kills the process with a
-.BR SIGKILL
+.\" commit 19d860a140beac48a1377f179e693abe86a9dac9
+.BR SIGSEGV
+.RB ( SIGKILL
+until Linux 3.17)
 signal.
 .\"
 .SS Interpreter scripts
@@ -759,7 +780,7 @@ Since UNIX\ V7, both are NULL.
 .\" .BR execve ()
 .\" that could be exploited for denial of service by a suitably crafted
 .\" ELF binary. There are no known problems with 2.0.34 or 2.2.15.
-.SH EXAMPLE
+.SH EXAMPLES
 The following program is designed to be execed by the second program below.
 It just echoes its command-line arguments, one per line.
 .PP
@@ -773,9 +794,7 @@ It just echoes its command-line arguments, one per line.
 int
 main(int argc, char *argv[])
 {
-    int j;
-
-    for (j = 0; j < argc; j++)
+    for (int j = 0; j < argc; j++)
         printf("argv[%d]: %s\en", j, argv[j]);
 
     exit(EXIT_SUCCESS);
@@ -836,8 +855,8 @@ program:
 .in +4n
 .EX
 .RB "$" " cat > script"
-.B #!./myecho script-arg
-.B ^D
+.B #!./myecho script\-arg
+.B \(haD
 .RB "$" " chmod +x script"
 .EE
 .in
@@ -848,7 +867,7 @@ We can then use our program to exec the script:
 .EX
 .RB "$" " ./execve ./script"
 argv[0]: ./myecho
-argv[1]: script-arg
+argv[1]: script\-arg
 argv[2]: ./script
 argv[3]: hello
 argv[4]: world
@@ -864,12 +883,13 @@ argv[4]: world
 .BR fexecve (3),
 .BR getopt (3),
 .BR system (3),
+.BR capabilities (7),
 .BR credentials (7),
 .BR environ (7),
 .BR path_resolution (7),
 .BR ld.so (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

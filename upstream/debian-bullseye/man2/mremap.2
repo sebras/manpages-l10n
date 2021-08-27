@@ -27,7 +27,7 @@
 .\"            Update for Linux 1.3.87 and later
 .\" 2005-10-11 mtk: Added NOTES for MREMAP_FIXED; revised EINVAL text.
 .\"
-.TH MREMAP 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH MREMAP 2 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mremap \- remap a virtual memory address
 .SH SYNOPSIS
@@ -74,27 +74,7 @@ If a new mapping is requested via this method, then the
 .B MREMAP_MAYMOVE
 flag must also be specified.
 .PP
-In Linux the memory is divided into pages.
-A user process has (one or)
-several linear virtual memory segments.
-Each virtual memory segment has one
-or more mappings to real memory pages (in the page table).
-Each virtual memory segment has its own
-protection (access rights), which may cause
-a segmentation violation if the memory is accessed incorrectly (e.g.,
-writing to a read-only segment).
-Accessing virtual memory outside of the
-segments will also cause a segmentation violation.
-.PP
-.BR mremap ()
-uses the Linux page table scheme.
-.BR mremap ()
-changes the
-mapping between virtual addresses and memory pages.
-This can be used to implement a very efficient
-.BR realloc (3).
-.PP
-The \fIflags\fP bit-mask argument may be 0, or include the following flag:
+The \fIflags\fP bit-mask argument may be 0, or include the following flags:
 .TP
 .B MREMAP_MAYMOVE
 By default, if there is not sufficient space to expand a mapping
@@ -124,11 +104,49 @@ Any previous mapping at the address range specified by
 and
 .I new_size
 is unmapped.
+.IP
 If
 .B MREMAP_FIXED
 is specified, then
 .B MREMAP_MAYMOVE
 must also be specified.
+.TP
+.BR MREMAP_DONTUNMAP " (since Linux 5.7)"
+.\" commit e346b3813067d4b17383f975f197a9aa28a3b077
+This flag, which must be used in conjunction with
+.BR MREMAP_MAYMOVE ,
+remaps a mapping to a new address but does not unmap the mapping at
+.IR old_address .
+.IP
+The
+.B MREMAP_DONTUNMAP
+flag can be used only with private anonymous mappings
+(see the description of
+.BR MAP_PRIVATE
+and
+.BR MAP_ANONYMOUS
+in
+.BR mmap (2)).
+.IP
+After completion,
+any access to the range specified by
+.IR old_address
+and
+.I old_size
+will result in a page fault.
+The page fault will be handled by a
+.BR userfaultfd (2)
+handler
+if the address is in a range previously registered with
+.BR userfaultfd (2).
+Otherwise, the kernel allocates a zero-filled page to handle the fault.
+.IP
+The
+.BR MREMAP_DONTUNMAP
+flag may be used to atomically move a mapping while leaving the source
+mapped.
+See NOTES for some possible applications of
+.BR MREMAP_DONTUNMAP .
 .PP
 If the memory segment specified by
 .I old_address
@@ -156,7 +174,7 @@ but this was not possible without exceeding the
 resource limit.
 .TP
 .B EFAULT
-"Segmentation fault." Some address in the range
+Some address in the range
 \fIold_address\fP to \fIold_address\fP+\fIold_size\fP is an invalid
 virtual memory address for this process.
 You can also get
@@ -176,6 +194,8 @@ a value other than
 .B MREMAP_MAYMOVE
 or
 .B MREMAP_FIXED
+or
+.B MREMAP_DONTUNMAP
 was specified in
 .IR flags ;
 .IP *
@@ -197,8 +217,23 @@ and
 .IR old_size ;
 .IP *
 .B MREMAP_FIXED
+or
+.B MREMAP_DONTUNMAP
 was specified without also specifying
 .BR MREMAP_MAYMOVE ;
+.IP *
+.B MREMAP_DONTUNMAP
+was specified, but one or more pages in the range specified by
+.IR old_address
+and
+.IR old_size
+were not private anonymous;
+.IP *
+.B MREMAP_DONTUNMAP
+was specified and
+.IR old_size
+was not equal to
+.IR new_size ;
 .IP *
 \fIold_size\fP was zero and \fIold_address\fP does not refer to a
 shareable mapping (but see BUGS);
@@ -209,10 +244,20 @@ flag was not specified.
 .RE
 .TP
 .B ENOMEM
+Not enough memory was available to complete the operation.
+Possible causes are:
+.RS
+.IP * 3
 The memory area cannot be expanded at the current virtual address, and the
 .B MREMAP_MAYMOVE
 flag is not set in \fIflags\fP.
 Or, there is not enough (virtual) memory available.
+.IP *
+.B MREMAP_DONTUNMAP
+was used causing a new mapping to be created that would exceed the
+(virtual) memory available.
+Or, it would exceed the maximum number of allowed mappings.
+.RE
 .SH CONFORMING TO
 This call is Linux-specific, and should not be used in programs
 intended to be portable.
@@ -220,13 +265,25 @@ intended to be portable.
 .\" .BR mremap (2)
 .\" call with completely different semantics.
 .SH NOTES
-Prior to version 2.4, glibc did not expose the definition of
-.BR MREMAP_FIXED ,
-and the prototype for
 .BR mremap ()
-did not allow for the
-.I new_address
-argument.
+changes the
+mapping between virtual addresses and memory pages.
+This can be used to implement a very efficient
+.BR realloc (3).
+.PP
+In Linux, memory is divided into pages.
+A process has (one or)
+several linear virtual memory segments.
+Each virtual memory segment has one
+or more mappings to real memory pages (in the page table).
+Each virtual memory segment has its own
+protection (access rights), which may cause
+a segmentation violation
+.RB ( SIGSEGV )
+if the memory is accessed incorrectly (e.g.,
+writing to a read-only segment).
+Accessing virtual memory outside of the
+segments will also cause a segmentation violation.
 .PP
 If
 .BR mremap ()
@@ -238,6 +295,41 @@ call will make a best effort to populate the new area but will not fail
 with
 .B ENOMEM
 if the area cannot be populated.
+.PP
+Prior to version 2.4, glibc did not expose the definition of
+.BR MREMAP_FIXED ,
+and the prototype for
+.BR mremap ()
+did not allow for the
+.I new_address
+argument.
+.\"
+.SS MREMAP_DONTUNMAP use cases
+Possible applications for
+.BR MREMAP_DONTUNMAP
+include:
+.IP * 3
+Non-cooperative
+.BR userfaultfd (2):
+an application can yank out a virtual address range using
+.BR MREMAP_DONTUNMAP
+and then employ a
+.BR userfaultfd (2)
+handler to handle the page faults that subsequently occur
+as other threads in the process touch pages in the yanked range.
+.IP *
+Garbage collection:
+.BR MREMAP_DONTUNMAP
+can be used in conjunction with
+.BR userfaultfd (2)
+to implement garbage collection algorithms (e.g., in a Java virtual machine).
+Such an implementation can be cheaper (and simpler)
+than conventional garbage collection techniques that involve
+marking pages with protection
+.BR PROT_NONE
+in conjunction with the of a
+.BR SIGSEGV
+handler to catch accesses to those pages.
 .SH BUGS
 Before Linux 4.14,
 if
@@ -272,10 +364,10 @@ in this scenario.
 Your favorite text book on operating systems
 for more information on paged memory
 (e.g., \fIModern Operating Systems\fP by Andrew S.\& Tanenbaum,
-\fIInside Linux\fP by Randolf Bentson,
+\fIInside Linux\fP by Randolph Bentson,
 \fIThe Design of the UNIX Operating System\fP by Maurice J.\& Bach)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

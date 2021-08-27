@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH NAMESPACES 7 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH NAMESPACES 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 namespaces \- overview of Linux namespaces
 .SH DESCRIPTION
@@ -41,7 +41,6 @@ describes the associated
 files, and summarizes the APIs for working with namespaces.
 .\"
 .SS Namespace types
-.PP
 The following table shows the namespace types available on Linux.
 The second column of the table shows the flag value that is used to specify
 the namespace type in various APIs.
@@ -66,6 +65,11 @@ stacks, ports, etc.
 T}
 Mount	CLONE_NEWNS	\fBmount_namespaces\fP(7)	Mount points
 PID	CLONE_NEWPID	\fBpid_namespaces\fP(7)	Process IDs
+Time	CLONE_NEWTIME	\fBtime_namespaces\fP(7)	T{
+Boot and monotonic
+.br
+clocks
+T}
 User	CLONE_NEWUSER	\fBuser_namespaces\fP(7)	User and group IDs
 UTS	CLONE_NEWUTS	\fButs_namespaces\fP(7)	T{
 Hostname and NIS
@@ -149,16 +153,18 @@ supports being manipulated by
 .PP
 .in +4n
 .EX
-$ \fBls \-l /proc/$$/ns\fP
+$ \fBls \-l /proc/$$/ns | awk \(aq{print $1, $9, $10, $11}\(aq\fP
 total 0
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 cgroup \-> cgroup:[4026531835]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 ipc \-> ipc:[4026531839]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 mnt \-> mnt:[4026531840]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 net \-> net:[4026531969]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 pid \-> pid:[4026531836]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 pid_for_children \-> pid:[4026531834]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 user \-> user:[4026531837]
-lrwxrwxrwx. 1 mtk mtk 0 Apr 28 12:46 uts \-> uts:[4026531838]
+lrwxrwxrwx. cgroup \-> cgroup:[4026531835]
+lrwxrwxrwx. ipc \-> ipc:[4026531839]
+lrwxrwxrwx. mnt \-> mnt:[4026531840]
+lrwxrwxrwx. net \-> net:[4026531969]
+lrwxrwxrwx. pid \-> pid:[4026531836]
+lrwxrwxrwx. pid_for_children \-> pid:[4026531834]
+lrwxrwxrwx. time -> time:[4026531834]
+lrwxrwxrwx. time_for_children -> time:[4026531834]
+lrwxrwxrwx. user \-> user:[4026531837]
+lrwxrwxrwx. uts \-> uts:[4026531838]
 .EE
 .in
 .PP
@@ -190,6 +196,11 @@ then the device IDs and inode numbers of their
 .IR /proc/[pid]/ns/xxx
 symbolic links will be the same; an application can check this using the
 .I stat.st_dev
+.\" Eric Biederman: "I reserve the right for st_dev to be significant
+.\" when comparing namespaces."
+.\" https://lore.kernel.org/lkml/87poky5ca9.fsf@xmission.com/
+.\" Re: Documenting the ioctl interfaces to discover relationships...
+.\" Date: Mon, 12 Dec 2016 11:30:38 +1300
 and
 .I stat.st_ino
 fields returned by
@@ -243,6 +254,21 @@ is created in the namespace.
 .BR readlink (2)
 of the symbolic link will return an empty buffer.)
 .TP
+.IR /proc/[pid]/ns/time " (since Linux 5.6)"
+This file is a handle for the time namespace of the process.
+.TP
+.IR /proc/[pid]/ns/time_for_children " (since Linux 5.6)"
+This file is a handle for the time namespace of
+child processes created by this process.
+This can change as a consequence of calls to
+.BR unshare (2)
+and
+.BR setns (2)
+(see
+.BR time_namespaces (7)),
+so the file may differ from
+.IR /proc/[pid]/ns/time .
+.TP
 .IR /proc/[pid]/ns/user " (since Linux 3.8)"
 .\" commit cde1975bc242f3e1072bde623ef378e547b73f91
 This file is a handle for the user namespace of the process.
@@ -284,7 +310,12 @@ network namespaces that may be created in the user namespace.
 .TP
 .IR max_pid_namespaces
 The value in this file defines a per-user limit on the number of
-pid namespaces that may be created in the user namespace.
+PID namespaces that may be created in the user namespace.
+.TP
+.IR max_time_namespaces " (since Linux 5.7)"
+.\" commit eeec26d5da8248ea4e240b8795bb4364213d3247
+The value in this file defines a per-user limit on the number of
+time namespaces that may be created in the user namespace.
 .TP
 .IR max_user_namespaces
 The value in this file defines a per-user limit on the number of
@@ -340,6 +371,7 @@ for the creator UID in the ancestor namespace is not exceeded.
 The aforementioned point ensures that creating a new user namespace
 cannot be used as a means to escape the limits in force
 in the current user namespace.
+.RE
 .\"
 .SS Namespace lifetime
 Absent any other factors,
@@ -363,6 +395,11 @@ and there is a process that refers to the namespace via a
 .IR /proc/[pid]/ns/pid_for_children
 symbolic link.
 .IP *
+It is a time namespace,
+and there is a process that refers to the namespace via a
+.IR /proc/[pid]/ns/time_for_children
+symbolic link.
+.IP *
 It is an IPC namespace, and a corresponding mount of an
 .I mqueue
 filesystem (see
@@ -372,7 +409,7 @@ refers to this namespace.
 It is a PID namespace, and a corresponding mount of a
 .BR proc (5)
 filesystem refers to this namespace.
-.SH EXAMPLE
+.SH EXAMPLES
 See
 .BR clone (2)
 and
@@ -399,7 +436,7 @@ and
 .BR pam_namespace (8),
 .BR switch_root (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

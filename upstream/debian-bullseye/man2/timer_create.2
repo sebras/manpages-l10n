@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH TIMER_CREATE 2 2019-03-06 Linux "Linux Programmer's Manual"
+.TH TIMER_CREATE 2 2020-11-01 Linux "Linux Programmer's Manual"
 .SH NAME
 timer_create \- create a POSIX per-process timer
 .SH SYNOPSIS
@@ -37,10 +37,10 @@ timer_create \- create a POSIX per-process timer
 .PP
 Link with \fI\-lrt\fP.
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .BR timer_create ():
 _POSIX_C_SOURCE\ >=\ 199309L
@@ -110,6 +110,13 @@ but will wake the system if it is suspended.
 The caller must have the
 .B CAP_WAKE_ALARM
 capability in order to set a timer against this clock.
+.TP
+.BR CLOCK_TAI " (since Linux 3.10)"
+A system-wide clock derived from wall-clock time but ignoring leap seconds.
+.PP
+See
+.BR clock_getres (2)
+for some further details on the above clocks.
 .PP
 As well as the above values,
 .I clockid
@@ -216,6 +223,20 @@ is invalid.
 .B ENOMEM
 .\" glibc layer: malloc()
 Could not allocate memory.
+.TP
+.B ENOTSUP
+The kernel does not support creating a timer against this
+.IR clockid .
+.TP
+.B EPERM
+.I clockid
+was
+.BR CLOCK_REALTIME_ALARM
+or
+.BR CLOCK_BOOTTIME_ALARM
+but the caller did not have the
+.BR CAP_WAKE_ALARM
+capability.
 .SH VERSIONS
 This system call is available since Linux 2.6.
 .SH CONFORMING TO
@@ -314,7 +335,7 @@ and in glibc versions before 2.17,
 .\" glibc commit 93a78ac437ba44f493333d7e2a4b0249839ce460
 the implementation falls back to this technique on systems
 running pre-2.6 Linux kernels.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below takes two arguments: a sleep period in seconds,
 and a timer frequency in nanoseconds.
 The program establishes a handler for the signal it uses for the timer,
@@ -348,6 +369,7 @@ Caught signal 34
 .SS Program source
 \&
 .EX
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -369,7 +391,7 @@ print_siginfo(siginfo_t *si)
     tidp = si\->si_value.sival_ptr;
 
     printf("    sival_ptr = %p; ", si\->si_value.sival_ptr);
-    printf("    *sival_ptr = 0x%lx\en", (long) *tidp);
+    printf("    *sival_ptr = %#jx\en", (uintmax_t) *tidp);
 
     or = timer_getoverrun(*tidp);
     if (or == \-1)
@@ -433,7 +455,7 @@ main(int argc, char *argv[])
     if (timer_create(CLOCKID, &sev, &timerid) == \-1)
         errExit("timer_create");
 
-    printf("timer ID is 0x%lx\en", (long) timerid);
+    printf("timer ID is %#jx\en", (uintmax_t) timerid);
 
     /* Start the timer */
 
@@ -478,7 +500,7 @@ main(int argc, char *argv[])
 .BR signal (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

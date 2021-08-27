@@ -1,8 +1,10 @@
 .\" %%%LICENSE_START(PUBLIC_DOMAIN)
 .\" This is in the public domain
 .\" %%%LICENSE_END
+.\" Various parts:
+.\" Copyright (C) 2007-9, 2013, 2016 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.TH LD.SO 8 2019-08-02 "GNU" "Linux Programmer's Manual"
+.TH LD.SO 8 2020-08-13 "GNU" "Linux Programmer's Manual"
 .SH NAME
 ld.so, ld\-linux.so \- dynamic linker/loader
 .SH SYNOPSIS
@@ -97,12 +99,41 @@ and then
 If the binary was linked with the
 .B \-z nodeflib
 linker option, this step is skipped.
-.SS Rpath token expansion
+.SS Dynamic string tokens
 .PP
-The dynamic linker
-understands certain token strings in an rpath specification
-(DT_RPATH or DT_RUNPATH).
-Those strings are substituted as follows:
+In several places, the dynamic linker expands dynamic string tokens:
+.IP o 3
+In the environment variables
+.BR LD_LIBRARY_PATH ,
+.BR LD_PRELOAD ,
+and
+.BR LD_AUDIT ,
+.IP o 3
+inside the values of the dynamic section tags
+.BR DT_NEEDED ,
+.BR DT_RPATH ,
+.BR DT_RUNPATH ,
+.BR DT_AUDIT ,
+and
+.BR DT_DEPAUDIT
+of ELF binaries,
+.IP o 3
+in the arguments to the
+.B ld.so
+command line options
+.BR \-\-audit ,
+.BR \-\-library-path ,
+and
+.B \-\-preload
+(see below), and
+.IP o 3
+in the filename arguments to the
+.BR dlopen (3)
+and
+.BR dlmopen (3)
+functions.
+.PP
+The substituted tokens are as follows:
 .TP
 .IR $ORIGIN " (or equivalently " ${ORIGIN} )
 This expands to
@@ -111,7 +142,11 @@ Thus, an application located in
 .I somedir/app
 could be compiled with
 .IP
-    gcc \-Wl,\-rpath,\(aq$ORIGIN/../lib\(aq
+.in +4n
+.EX
+gcc \-Wl,\-rpath,\(aq$ORIGIN/../lib\(aq
+.EE
+.in
 .IP
 so that it finds an associated shared object in
 .I somedir/lib
@@ -152,6 +187,10 @@ value in the auxiliary vector (see
 .\"
 .\" ld.so lets names be abbreviated, so $O will work for $ORIGIN;
 .\" Don't do this!!
+.PP
+Note that the dynamic string tokens have to be quoted properly when
+set from a shell,
+to prevent their expansion as shell or environment variables.
 .SH OPTIONS
 .TP
 .BI \-\-audit " list"
@@ -315,6 +354,7 @@ A list of directories in which to search for
 ELF libraries at execution time.
 The items in the list are separated by either colons or semicolons,
 and there is no support for escaping either separator.
+A zero-length directory name indicates the current working directory.
 .IP
 This variable is ignored in secure-execution mode.
 .IP
@@ -327,7 +367,7 @@ and
 .IR $PLATFORM
 (or the versions using curly braces around the names)
 as described above in
-.IR "Rpath token expansion" .
+.IR "Dynamic string tokens" .
 Thus, for example,
 the following would cause a library to be searched for in either the
 .I lib
@@ -337,7 +377,7 @@ subdirectory below the directory containing the program to be executed:
 .IP
 .in +4n
 .EX
-$ \fBLD_LIBRARY_PATH='$ORIGIN/$LIB' prog\fP
+$ \fBLD_LIBRARY_PATH=\(aq$ORIGIN/$LIB\(aq prog\fP
 .EE
 .in
 .IP
@@ -374,7 +414,7 @@ and
 .IR $PLATFORM
 (or the versions using curly braces around the names)
 as described above in
-.IR "Rpath token expansion" .
+.IR "Dynamic string tokens" .
 (See also the discussion of quoting under the description of
 .BR LD_LIBRARY_PATH .)
 .\" Tested with the following:
@@ -444,7 +484,7 @@ and
 .IR $PLATFORM
 (or the versions using curly braces around the names)
 as described above in
-.IR "Rpath token expansion" .
+.IR "Dynamic string tokens" .
 (See also the discussion of quoting under the description of
 .BR LD_LIBRARY_PATH .)
 .IP
@@ -678,7 +718,7 @@ program if the
 .B LD_TRACE_LOADED_OBJECTS
 environment variable has been set.
 .TP
-.BR LD_WARN " (since glibc 2.1.3)
+.BR LD_WARN " (since glibc 2.1.3)"
 If set to a nonempty string, warn about unresolved symbols.
 .TP
 .BR LD_PREFER_MAP_32BIT_EXEC " (x86-64 only; since glibc 2.23)"
@@ -700,7 +740,6 @@ randomization (ASLR),
 .B LD_PREFER_MAP_32BIT_EXEC
 is always disabled in secure-execution mode.
 .SH FILES
-.PD 0
 .TP
 .I /lib/ld.so
 a.out dynamic linker/loader
@@ -737,7 +776,6 @@ as a temporary workaround to a library misconfiguration issue.)
 .TP
 .I lib*.so*
 shared objects
-.PD
 .SH NOTES
 .SS Hardware capabilities
 Some shared objects are compiled using hardware-specific instructions which do
@@ -793,7 +831,7 @@ mtrr, pat, pbe, pge, pn, pse36, sep, ss, sse, sse2, tm
 .\"
 .\" In the above, (libc5) stands for David Engel's ld.so/ld\-linux.so.
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

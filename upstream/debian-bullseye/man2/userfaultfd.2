@@ -24,7 +24,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH USERFAULTFD 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH USERFAULTFD 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 userfaultfd \- create a file descriptor for handling page faults in user space
 .SH SYNOPSIS
@@ -131,7 +131,7 @@ single threaded non-cooperative userfaultfd manager implementations.
 .\"     problematic for multi-threaded monitor. I even suspect that it would be
 .\"     impossible to ensure synchronization between page faults and non-page
 .\"     fault events in multi-threaded monitor.
-.PP
+.\" .PP
 .\" FIXME elaborate about non-cooperating mode, describe its limitations
 .\" for kernels before 4.11, features added in 4.11
 .\" and limitations remaining in 4.11
@@ -440,6 +440,14 @@ reached.
 .TP
 .B ENOMEM
 Insufficient kernel memory was available.
+.TP
+.BR EPERM " (since Linux 5.2)"
+.\" cefdca0a86be517bc390fc4541e3674b8e7803b0
+The caller is not privileged (does not have the
+.B CAP_SYS_PTRACE
+capability in the initial user namespace), and
+.I /proc/sys/vm/unprivileged_userfaultfd
+has the value 0.
 .SH VERSIONS
 The
 .BR userfaultfd ()
@@ -475,7 +483,7 @@ might be created.
 In this case, a spurious
 .B UFFD_EVENT_FORK
 will be delivered to the userfaultfd monitor.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below demonstrates the use of the userfaultfd mechanism.
 The program creates two threads, one of which acts as the
 page-fault handler for the process, for the pages in a demand-page zero
@@ -558,6 +566,7 @@ Read address 0x7fd30106ec0f in main(): C
    Licensed under the GNU General Public License version 2 or later.
 */
 #define _GNU_SOURCE
+#include <inttypes.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <linux/userfaultfd.h>
@@ -642,8 +651,8 @@ fault_handler_thread(void *arg)
         /* Display info about the page\-fault event */
 
         printf("    UFFD_EVENT_PAGEFAULT event: ");
-        printf("flags = %llx; ", msg.arg.pagefault.flags);
-        printf("address = %llx\en", msg.arg.pagefault.address);
+        printf("flags = %"PRIx64"; ", msg.arg.pagefault.flags);
+        printf("address = %"PRIx64"\en", msg.arg.pagefault.address);
 
         /* Copy the page pointed to by \(aqpage\(aq into the faulting
            region. Vary the contents that are copied in, so that it
@@ -658,14 +667,14 @@ fault_handler_thread(void *arg)
            So, round faulting address down to page boundary */
 
         uffdio_copy.dst = (unsigned long) msg.arg.pagefault.address &
-                                           ~(page_size \- 1);
+                                           \(ti(page_size \- 1);
         uffdio_copy.len = page_size;
         uffdio_copy.mode = 0;
         uffdio_copy.copy = 0;
         if (ioctl(uffd, UFFDIO_COPY, &uffdio_copy) == \-1)
             errExit("ioctl\-UFFDIO_COPY");
 
-        printf("        (uffdio_copy.copy returned %lld)\en",
+        printf("        (uffdio_copy.copy returned %"PRId64")\en",
                 uffdio_copy.copy);
     }
 }
@@ -675,7 +684,7 @@ main(int argc, char *argv[])
 {
     long uffd;          /* userfaultfd file descriptor */
     char *addr;         /* Start of region handled by userfaultfd */
-    unsigned long len;  /* Length of region handled by userfaultfd */
+    uint64_t len;       /* Length of region handled by userfaultfd */
     pthread_t thr;      /* ID of thread that handles page faults */
     struct uffdio_api uffdio_api;
     struct uffdio_register uffdio_register;
@@ -687,7 +696,7 @@ main(int argc, char *argv[])
     }
 
     page_size = sysconf(_SC_PAGE_SIZE);
-    len = strtoul(argv[1], NULL, 0) * page_size;
+    len = strtoull(argv[1], NULL, 0) * page_size;
 
     /* Create and enable userfaultfd object */
 
@@ -758,9 +767,8 @@ main(int argc, char *argv[])
 .PP
 .IR Documentation/admin-guide/mm/userfaultfd.rst
 in the Linux kernel source tree
-.PP
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

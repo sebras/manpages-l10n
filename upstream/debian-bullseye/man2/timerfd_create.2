@@ -16,10 +16,7 @@
 .\" <http://www.gnu.org/licenses/>.
 .\" %%%LICENSE_END
 .\"
-.\" FIXME Linux 3.0: timerfd_settime() adds a TFD_TIMER_CANCEL_ON_SET flag;
-.\" This flag needs to documented.
-.\"
-.TH TIMERFD_CREATE 2 2019-03-06 Linux "Linux Programmer's Manual"
+.TH TIMERFD_CREATE 2 2020-08-13 Linux "Linux Programmer's Manual"
 .SH NAME
 timerfd_create, timerfd_settime, timerfd_gettime \-
 timers that notify via file descriptors
@@ -108,6 +105,10 @@ but will wake the system if it is suspended.
 The caller must have the
 .B CAP_WAKE_ALARM
 capability in order to set a timer against this clock.
+.PP
+See
+.BR clock_getres (2)
+for some further details on the above clocks.
 .PP
 The current value of each of these clocks can be retrieved using
 .BR clock_gettime (2).
@@ -268,7 +269,7 @@ then the timer is set to expire just once, at the time specified by
 .SS Operating on a timer file descriptor
 The file descriptor returned by
 .BR timerfd_create ()
-supports the following operations:
+supports the following additional operations:
 .TP
 .BR read (2)
 If the timer has already expired one or more times since
@@ -320,6 +321,28 @@ fails with the error
 if the real-time clock undergoes a discontinuous change.
 (This allows the reading application to discover
 such discontinuous changes to the clock.)
+.IP
+If the associated clock is either
+.BR CLOCK_REALTIME
+or
+.BR CLOCK_REALTIME_ALARM ,
+the timer is absolute
+.RB ( TFD_TIMER_ABSTIME ),
+and the flag
+.BR TFD_TIMER_CANCEL_ON_SET
+was
+.I not
+specified when calling
+.BR timerfd_settime (),
+then a discontinuous negative change to the clock (e.g.,
+.BR clock_settime (2))
+may cause
+.BR read (2)
+to unblock, but return a value of 0 (i.e., no bytes read),
+if the clock change occurs after the time expired,
+but before the
+.BR read (2)
+on the file descriptor.
 .TP
 .BR poll "(2), " select "(2) (and similar)"
 The file descriptor is readable
@@ -403,10 +426,7 @@ can fail with the following errors:
 .B EINVAL
 The
 .I clockid
-argument is neither
-.B CLOCK_MONOTONIC
-nor
-.BR CLOCK_REALTIME ;
+is not valid.
 .TP
 .B EINVAL
 .I flags
@@ -427,6 +447,16 @@ Could not mount (internal) anonymous inode device.
 .TP
 .B ENOMEM
 There was insufficient kernel memory to create the timer.
+.TP
+.B EPERM
+.I clockid
+was
+.BR CLOCK_REALTIME_ALARM
+or
+.BR CLOCK_BOOTTIME_ALARM
+but the caller did not have the
+.BR CAP_WAKE_ALARM
+capability.
 .PP
 .BR timerfd_settime ()
 and
@@ -451,6 +481,9 @@ is not a valid timerfd file descriptor.
 .BR timerfd_settime ()
 can also fail with the following errors:
 .TP
+.B ECANCELED
+See NOTES.
+.TP
 .B EINVAL
 .I new_value
 is not properly initialized (one of the
@@ -467,13 +500,59 @@ These system calls are available on Linux since kernel 2.6.25.
 Library support is provided by glibc since version 2.8.
 .SH CONFORMING TO
 These system calls are Linux-specific.
+.SH NOTES
+Suppose the following scenario for
+.BR CLOCK_REALTIME
+or
+.BR CLOCK_REALTIME_ALARM
+timer that was created with
+.BR timerfd_create ():
+.IP (a) 4
+The timer has been started
+.RB ( timerfd_settime ())
+with the
+.BR TFD_TIMER_ABSTIME
+and
+.BR TFD_TIMER_CANCEL_ON_SET
+flags;
+.IP (b)
+A discontinuous change (e.g.,
+.BR settimeofday (2))
+is subsequently made to the
+.BR CLOCK_REALTIME
+clock; and
+.IP (c)
+the caller once more calls
+.BR timerfd_settime ()
+to rearm the timer (without first doing a
+.BR read (2)
+on the file descriptor).
+.PP
+In this case the following occurs:
+.IP \(bu 2
+The
+.BR timerfd_settime ()
+returns \-1 with
+.I errno
+set to
+.BR ECANCELED .
+(This enables the caller to know that the previous timer was affected
+by a discontinuous change to the clock.)
+.IP \(bu
+The timer
+.I "is successfully rearmed"
+with the settings provided in the second
+.BR timerfd_settime ()
+call.
+(This was probably an implementation accident, but won't be fixed now,
+in case there are applications that depend on this behaviour.)
 .SH BUGS
 Currently,
 .\" 2.6.29
 .BR timerfd_create ()
 supports fewer types of clock IDs than
 .BR timer_create (2).
-.SH EXAMPLE
+.SH EXAMPLES
 The following program creates a timer and then monitors its progress.
 The program accepts up to three command-line arguments.
 The first argument specifies the number of seconds for
@@ -491,14 +570,14 @@ The following shell session demonstrates the use of the program:
 0.000: timer started
 3.000: read: 1; total=1
 4.000: read: 1; total=2
-.BR "^Z " "                 # type control-Z to suspend the program"
+.BR "\(haZ " "                 # type control-Z to suspend the program"
 [1]+  Stopped                 ./timerfd3_demo 3 1 100
 .RB "$ " "fg" "                # Resume execution after a few seconds"
 a.out 3 1 100
 9.660: read: 5; total=7
 10.000: read: 1; total=8
 11.000: read: 1; total=9
-.BR "^C " "                 # type control-C to suspend the program"
+.BR "\(haC " "                 # type control-C to suspend the program"
 .EE
 .in
 .SS Program source
@@ -545,6 +624,7 @@ a.out 3 1 100
 #include <sys/timerfd.h>
 #include <time.h>
 #include <unistd.h>
+#include <inttypes.h>      /* Definition of PRIu64 */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>        /* Definition of uint64_t */
@@ -627,9 +707,7 @@ main(int argc, char *argv[])
 
         tot_exp += exp;
         print_elapsed_time();
-        printf("read: %llu; total=%llu\en",
-                (unsigned long long) exp,
-                (unsigned long long) tot_exp);
+        printf("read: %" PRIu64 "; total=%" PRIu64 "\en", exp, tot_exp);
     }
 
     exit(EXIT_SUCCESS);
@@ -648,7 +726,7 @@ main(int argc, char *argv[])
 .BR epoll (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

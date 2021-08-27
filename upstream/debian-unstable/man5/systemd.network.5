@@ -71,9 +71,6 @@ take precedence over those in
 /run/
 which in turn take precedence over those in
 /lib/\&. Drop\-in files under any of these directories take precedence over the main network file wherever located\&.
-.PP
-Note that an interface without any static IPv6 addresses configured, and neither DHCPv6 nor IPv6LL enabled, shall be considered to have no IPv6 support\&. IPv6 will be automatically disabled for that interface by writing "1" to
-/proc/sys/net/ipv6/conf/\fIifname\fR/disable_ipv6\&.
 .SH "[MATCH] SECTION OPTIONS"
 .PP
 The network file contains a [Match] section, which determines if a given network file may be applied to a given device; and a [Network] section specifying how the device should be configured\&. The first (in lexical order) of the network files that matches a given device is applied, all later files are ignored, even if they match as well\&.
@@ -136,7 +133,16 @@ of the device itself\&. If the list is prefixed with a "!", the test is inverted
 \fIType=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the device type, as exposed by
-\fBnetworkctl status\fR\&. If the list is prefixed with a "!", the test is inverted\&.
+\fBnetworkctl list\fR\&. If the list is prefixed with a "!", the test is inverted\&. Some valid values are
+"ether",
+"loopback",
+"wlan",
+"wwan"\&. Valid types are named either from the udev
+"DEVTYPE"
+attribute, or
+"ARPHRD_"
+macros in
+linux/if_arp\&.h, so this is not comprehensive\&.
 .RE
 .PP
 \fIProperty=\fR
@@ -282,7 +288,7 @@ This is useful for preventing later matching network files from interfering with
 .PP
 \fIGroup=\fR
 .RS 4
-Link groups are similar to port ranges found in managed switches\&. When network interfaces are added to a numbered group, operations on all the interfaces from that group can be performed at once\&. An unsigned integer in the range 0\(em4294967294\&. Defaults to unset\&.
+Link groups are similar to port ranges found in managed switches\&. When network interfaces are added to a numbered group, operations on all the interfaces from that group can be performed at once\&. Takes an unsigned integer in the range 0\&...4294967295\&. Defaults to unset\&.
 .RE
 .PP
 \fIRequiredForOnline=\fR
@@ -427,7 +433,7 @@ Specifies how IPv6 link local address is generated\&. Takes one of
 "stable\-privacy"
 and
 "random"\&. When unset, the kernel\*(Aqs default will be used\&. Note that if
-\fILinkLocalAdressing=\fR
+\fILinkLocalAddressing=\fR
 not configured as
 "ipv6"
 then
@@ -1389,7 +1395,7 @@ setting described above:
 .PP
 \fIUseDNS=\fR
 .RS 4
-When true (the default), the DNS servers received from the DHCP server will be used and take precedence over any statically configured ones\&.
+When true (the default), the DNS servers received from the DHCP server will be used\&.
 .sp
 This corresponds to the
 \fBnameserver\fR
@@ -1407,8 +1413,7 @@ is disabled, this setting is ignored\&. Defaults to false\&.
 \fIUseNTP=\fR
 .RS 4
 When true (the default), the NTP servers received from the DHCP server will be used by
-systemd\-timesyncd\&.service
-and take precedence over any statically configured ones\&.
+systemd\-timesyncd\&.service\&.
 .RE
 .PP
 \fIUseSIP=\fR
@@ -1776,7 +1781,7 @@ setting described above:
 .PP
 \fIUseDNS=\fR
 .RS 4
-When true (the default), the DNS servers received in the Router Advertisement will be used and take precedence over any statically configured ones\&.
+When true (the default), the DNS servers received in the Router Advertisement will be used\&.
 .sp
 This corresponds to the
 \fBnameserver\fR

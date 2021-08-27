@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH BPF 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH BPF 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 bpf \- perform a command on an extended BPF map or program
 .SH SYNOPSIS
@@ -84,7 +84,7 @@ below for further details.
 Generally, eBPF programs are loaded by the user process and automatically
 unloaded when the process exits.
 In some cases, for example,
-.BR tc-bpf (8),
+.BR tc\-bpf (8),
 the program will continue to stay alive inside the kernel even after the
 process that loaded the program exits.
 In that case,
@@ -121,7 +121,7 @@ eBPF programs can access the same map:
 .EX
 tracing     tracing    tracing    packet      packet     packet
 event A     event B    event C    on eth0     on eth1    on eth2
- |             |         |          |           |          ^
+ |             |         |          |           |          \(ha
  |             |         |          |           v          |
  --> tracing <--     tracing      socket    tc ingress   tc egress
       prog_1          prog_2      prog_3    classifier    action
@@ -209,11 +209,11 @@ union bpf_attr {
     struct {    /* Used by BPF_PROG_LOAD */
         __u32         prog_type;
         __u32         insn_cnt;
-        __aligned_u64 insns;      /* 'const struct bpf_insn *' */
-        __aligned_u64 license;    /* 'const char *' */
+        __aligned_u64 insns;      /* \(aqconst struct bpf_insn *\(aq */
+        __aligned_u64 license;    /* \(aqconst char *\(aq */
         __u32         log_level;  /* verbosity level of verifier */
         __u32         log_size;   /* size of user buffer */
-        __aligned_u64 log_buf;    /* user supplied 'char *'
+        __aligned_u64 log_buf;    /* user supplied \(aqchar *\(aq
                                      buffer */
         __u32         kern_version;
                                   /* checked when prog_type=kprobe
@@ -314,9 +314,11 @@ bpf_map_lookup_elem(map_fd, fp - 4)
 the program will be rejected,
 since the in-kernel helper function
 .IP
+.in +4n
 .EX
-    bpf_map_lookup_elem(map_fd, void *key)
+bpf_map_lookup_elem(map_fd, void *key)
 .EE
+.in
 .IP
 expects to read 8 bytes from the location pointed to by
 .IR key ,
@@ -367,6 +369,14 @@ enum bpf_map_type {
     BPF_MAP_TYPE_DEVMAP,
     BPF_MAP_TYPE_SOCKMAP,
     BPF_MAP_TYPE_CPUMAP,
+    BPF_MAP_TYPE_XSKMAP,
+    BPF_MAP_TYPE_SOCKHASH,
+    BPF_MAP_TYPE_CGROUP_STORAGE,
+    BPF_MAP_TYPE_REUSEPORT_SOCKARRAY,
+    BPF_MAP_TYPE_PERCPU_CGROUP_STORAGE,
+    BPF_MAP_TYPE_QUEUE,
+    BPF_MAP_TYPE_STACK,
+    /* See /usr/include/linux/bpf.h for the full list. */
 };
 .EE
 .in
@@ -756,6 +766,25 @@ enum bpf_prog_type {
     BPF_PROG_TYPE_KPROBE,
     BPF_PROG_TYPE_SCHED_CLS,
     BPF_PROG_TYPE_SCHED_ACT,
+    BPF_PROG_TYPE_TRACEPOINT,
+    BPF_PROG_TYPE_XDP,
+    BPF_PROG_TYPE_PERF_EVENT,
+    BPF_PROG_TYPE_CGROUP_SKB,
+    BPF_PROG_TYPE_CGROUP_SOCK,
+    BPF_PROG_TYPE_LWT_IN,
+    BPF_PROG_TYPE_LWT_OUT,
+    BPF_PROG_TYPE_LWT_XMIT,
+    BPF_PROG_TYPE_SOCK_OPS,
+    BPF_PROG_TYPE_SK_SKB,
+    BPF_PROG_TYPE_CGROUP_DEVICE,
+    BPF_PROG_TYPE_SK_MSG,
+    BPF_PROG_TYPE_RAW_TRACEPOINT,
+    BPF_PROG_TYPE_CGROUP_SOCK_ADDR,
+    BPF_PROG_TYPE_LWT_SEG6LOCAL,
+    BPF_PROG_TYPE_LIRC_MODE2,
+    BPF_PROG_TYPE_SK_REUSEPORT,
+    BPF_PROG_TYPE_FLOW_DISSECTOR,
+    /* See /usr/include/linux/bpf.h for the full list. */
 };
 .EE
 .in
@@ -942,75 +971,6 @@ ioctl(event_fd, PERF_EVENT_IOC_SET_BPF, prog_fd);
 .in
 .\"
 .\"
-.SH EXAMPLES
-.EX
-/* bpf+sockets example:
- * 1. create array map of 256 elements
- * 2. load program that counts number of packets received
- *    r0 = skb->data[ETH_HLEN + offsetof(struct iphdr, protocol)]
- *    map[r0]++
- * 3. attach prog_fd to raw socket via setsockopt()
- * 4. print number of received TCP/UDP packets every second
- */
-int
-main(int argc, char **argv)
-{
-    int sock, map_fd, prog_fd, key;
-    long long value = 0, tcp_cnt, udp_cnt;
-
-    map_fd = bpf_create_map(BPF_MAP_TYPE_ARRAY, sizeof(key),
-                            sizeof(value), 256);
-    if (map_fd < 0) {
-        printf("failed to create map '%s'\en", strerror(errno));
-        /* likely not run as root */
-        return 1;
-    }
-
-    struct bpf_insn prog[] = {
-        BPF_MOV64_REG(BPF_REG_6, BPF_REG_1),        /* r6 = r1 */
-        BPF_LD_ABS(BPF_B, ETH_HLEN + offsetof(struct iphdr, protocol)),
-                                /* r0 = ip->proto */
-        BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_0, -4),
-                                /* *(u32 *)(fp - 4) = r0 */
-        BPF_MOV64_REG(BPF_REG_2, BPF_REG_10),       /* r2 = fp */
-        BPF_ALU64_IMM(BPF_ADD, BPF_REG_2, -4),      /* r2 = r2 - 4 */
-        BPF_LD_MAP_FD(BPF_REG_1, map_fd),           /* r1 = map_fd */
-        BPF_CALL_FUNC(BPF_FUNC_map_lookup_elem),
-                                /* r0 = map_lookup(r1, r2) */
-        BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 2),
-                                /* if (r0 == 0) goto pc+2 */
-        BPF_MOV64_IMM(BPF_REG_1, 1),                /* r1 = 1 */
-        BPF_XADD(BPF_DW, BPF_REG_0, BPF_REG_1, 0, 0),
-                                /* lock *(u64 *) r0 += r1 */
-.\"                                == atomic64_add
-        BPF_MOV64_IMM(BPF_REG_0, 0),                /* r0 = 0 */
-        BPF_EXIT_INSN(),                            /* return r0 */
-    };
-
-    prog_fd = bpf_prog_load(BPF_PROG_TYPE_SOCKET_FILTER, prog,
-                            sizeof(prog) / sizeof(prog[0]), "GPL");
-
-    sock = open_raw_sock("lo");
-
-    assert(setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &prog_fd,
-                      sizeof(prog_fd)) == 0);
-
-    for (;;) {
-        key = IPPROTO_TCP;
-        assert(bpf_lookup_elem(map_fd, &key, &tcp_cnt) == 0);
-        key = IPPROTO_UDP;
-        assert(bpf_lookup_elem(map_fd, &key, &udp_cnt) == 0);
-        printf("TCP %lld UDP %lld packets\en", tcp_cnt, udp_cnt);
-        sleep(1);
-    }
-
-    return 0;
-}
-.EE
-.PP
-Some complete working code can be found in the
-.I samples/bpf
-directory in the kernel source tree.
 .SH RETURN VALUE
 For a successful call, the return value depends on the operation:
 .TP
@@ -1120,11 +1080,33 @@ The
 .BR bpf ()
 system call is Linux-specific.
 .SH NOTES
-In the current implementation, all
+Prior to Linux 4.4, all
 .BR bpf ()
 commands require the caller to have the
 .B CAP_SYS_ADMIN
 capability.
+From Linux 4.4 onwards,
+.\" commit 1be7f75d1668d6296b80bf35dcf6762393530afc
+an unprivileged user may create limited programs of type
+.BR BPF_PROG_TYPE_SOCKET_FILTER
+and associated maps.
+However they may not store kernel pointers within
+the maps and are presently limited to the following helper functions:
+.\" [Linux 5.6] mtk: The list of available functions is, I think, governed
+.\" by the check in net/core/filter.c::bpf_base_func_proto().
+.IP * 3
+get_random
+.PD 0
+.IP *
+get_smp_processor_id
+.IP *
+tail_call
+.IP *
+ktime_get_ns
+.PD 1
+.PP
+Unprivileged access may be blocked by writing the value 1 to the file
+.IR /proc/sys/kernel/unprivileged_bpf_disabled .
 .PP
 eBPF objects (maps and programs) can be shared between processes.
 For example, after
@@ -1219,17 +1201,86 @@ MIPS 64 (since Linux 4.18; cBPF since Linux 3.16);
 riscv (since Linux 5.1).
 .\" commit 2353ecc6f91fd15b893fa01bf85a1c7a823ee4f2
 .PD
+.SH EXAMPLES
+.EX
+/* bpf+sockets example:
+ * 1. create array map of 256 elements
+ * 2. load program that counts number of packets received
+ *    r0 = skb->data[ETH_HLEN + offsetof(struct iphdr, protocol)]
+ *    map[r0]++
+ * 3. attach prog_fd to raw socket via setsockopt()
+ * 4. print number of received TCP/UDP packets every second
+ */
+int
+main(int argc, char **argv)
+{
+    int sock, map_fd, prog_fd, key;
+    long long value = 0, tcp_cnt, udp_cnt;
+
+    map_fd = bpf_create_map(BPF_MAP_TYPE_ARRAY, sizeof(key),
+                            sizeof(value), 256);
+    if (map_fd < 0) {
+        printf("failed to create map \(aq%s\(aq\en", strerror(errno));
+        /* likely not run as root */
+        return 1;
+    }
+
+    struct bpf_insn prog[] = {
+        BPF_MOV64_REG(BPF_REG_6, BPF_REG_1),        /* r6 = r1 */
+        BPF_LD_ABS(BPF_B, ETH_HLEN + offsetof(struct iphdr, protocol)),
+                                /* r0 = ip->proto */
+        BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_0, -4),
+                                /* *(u32 *)(fp - 4) = r0 */
+        BPF_MOV64_REG(BPF_REG_2, BPF_REG_10),       /* r2 = fp */
+        BPF_ALU64_IMM(BPF_ADD, BPF_REG_2, -4),      /* r2 = r2 - 4 */
+        BPF_LD_MAP_FD(BPF_REG_1, map_fd),           /* r1 = map_fd */
+        BPF_CALL_FUNC(BPF_FUNC_map_lookup_elem),
+                                /* r0 = map_lookup(r1, r2) */
+        BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 2),
+                                /* if (r0 == 0) goto pc+2 */
+        BPF_MOV64_IMM(BPF_REG_1, 1),                /* r1 = 1 */
+        BPF_XADD(BPF_DW, BPF_REG_0, BPF_REG_1, 0, 0),
+                                /* lock *(u64 *) r0 += r1 */
+.\"                                == atomic64_add
+        BPF_MOV64_IMM(BPF_REG_0, 0),                /* r0 = 0 */
+        BPF_EXIT_INSN(),                            /* return r0 */
+    };
+
+    prog_fd = bpf_prog_load(BPF_PROG_TYPE_SOCKET_FILTER, prog,
+                            sizeof(prog) / sizeof(prog[0]), "GPL");
+
+    sock = open_raw_sock("lo");
+
+    assert(setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &prog_fd,
+                      sizeof(prog_fd)) == 0);
+
+    for (;;) {
+        key = IPPROTO_TCP;
+        assert(bpf_lookup_elem(map_fd, &key, &tcp_cnt) == 0);
+        key = IPPROTO_UDP;
+        assert(bpf_lookup_elem(map_fd, &key, &udp_cnt) == 0);
+        printf("TCP %lld UDP %lld packets\en", tcp_cnt, udp_cnt);
+        sleep(1);
+    }
+
+    return 0;
+}
+.EE
+.PP
+Some complete working code can be found in the
+.I samples/bpf
+directory in the kernel source tree.
 .SH SEE ALSO
 .BR seccomp (2),
-.BR bpf-helpers (7),
+.BR bpf\-helpers (7),
 .BR socket (7),
 .BR tc (8),
-.BR tc-bpf (8)
+.BR tc\-bpf (8)
 .PP
 Both classic and extended BPF are explained in the kernel source file
 .IR Documentation/networking/filter.txt .
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

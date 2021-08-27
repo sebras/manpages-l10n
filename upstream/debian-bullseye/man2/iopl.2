@@ -30,7 +30,7 @@
 .\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
 .\"     Added notes on capability requirements
 .\"
-.TH IOPL 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH IOPL 2 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 iopl \- change I/O privilege level
 .SH SYNOPSIS
@@ -39,29 +39,18 @@ iopl \- change I/O privilege level
 .BI "int iopl(int " level );
 .SH DESCRIPTION
 .BR iopl ()
-changes the I/O privilege level of the calling process,
+changes the I/O privilege level of the calling thread,
 as specified by the two least significant bits in
 .IR level .
 .PP
-This call is necessary to allow 8514-compatible X servers to run under
-Linux.
-Since these X servers require access to all 65536 I/O ports, the
-.BR ioperm (2)
-call is not sufficient.
+The I/O privilege level for a normal thread is 0.
+Permissions are inherited from parents to children.
 .PP
-In addition to granting unrestricted I/O port access, running at a higher
-I/O privilege level also allows the process to disable interrupts.
-This will probably crash the system, and is not recommended.
-.PP
-Permissions are not inherited by the child process created by
-.BR fork (2)
-and are not preserved across
-.BR execve (2)
-(but see NOTES).
-.PP
-The I/O privilege level for a normal process is 0.
-.PP
-This call is mostly for the i386 architecture.
+This call is deprecated, is significantly slower than
+.BR ioperm (2),
+and is only provided for older X servers which require
+access to all 65536 I/O ports.
+It is mostly for the i386 architecture.
 On many other architectures it does not exist or will always
 return an error.
 .SH RETURN VALUE
@@ -79,7 +68,7 @@ is greater than 3.
 This call is unimplemented.
 .TP
 .B EPERM
-The calling process has insufficient privilege to call
+The calling thread has insufficient privilege to call
 .BR iopl ();
 the
 .B CAP_SYS_RAWIO
@@ -99,6 +88,12 @@ and in
 .IR <sys/perm.h> .
 Avoid the latter, it is available on i386 only.
 .PP
+Prior to Linux 5.5
+.BR iopl ()
+allowed the thread to disable interrupts while running
+at a higher I/O privilege level.
+This will probably crash the system, and is not recommended.
+.PP
 Prior to Linux 3.7,
 on some architectures (such as i386), permissions
 .I were
@@ -113,7 +108,7 @@ and won't be reinstated.
 .BR outb (2),
 .BR capabilities (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 1994,1995 Mike Battersby <mib@deakin.edu.au>
 .\" and Copyright 2004, 2005 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" based on work by faith@cs.unc.edu
@@ -46,7 +45,7 @@
 .\" 2015-01-17, Kees Cook <keescook@chromium.org>
 .\"	Added notes on ptrace SIGTRAP and SYS_SECCOMP.
 .\"
-.TH SIGACTION 2 2019-10-10 "Linux" "Linux Programmer's Manual"
+.TH SIGACTION 2 2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sigaction, rt_sigaction \- examine and change a signal action
 .SH SYNOPSIS
@@ -57,10 +56,10 @@ sigaction, rt_sigaction \- examine and change a signal action
 .BI "              struct sigaction *" oldact );
 .fi
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .ad l
 .BR sigaction ():
@@ -128,11 +127,15 @@ Some further details of the purpose of this field can be found in
 .I sa_handler
 specifies the action to be associated with
 .I signum
-and may be
+and is be one of the following:
+.IP * 2
 .B SIG_DFL
-for the default action,
+for the default action.
+.IP *
 .B SIG_IGN
-to ignore this signal, or a pointer to a signal handling function.
+to ignore this signal.
+.IP *
+A pointer to a signal handling function.
 This function receives the signal number as its only argument.
 .PP
 If
@@ -160,7 +163,6 @@ flag is used.
 .I sa_flags
 specifies a set of flags which modify the behavior of the signal.
 It is formed by the bitwise OR of zero or more of the following:
-.RS 4
 .TP
 .B SA_NOCLDSTOP
 If
@@ -169,7 +171,7 @@ is
 .BR SIGCHLD ,
 do not receive notification when child processes stop (i.e., when they
 receive one of
-.BR SIGSTOP ", " SIGTSTP ", " SIGTTIN ", "
+.BR SIGSTOP ", " SIGTSTP ", " SIGTTIN ,
 or
 .BR SIGTTOU )
 or resume (i.e., they receive
@@ -206,9 +208,13 @@ signal is generated in this case;
 on some other implementations, it is not.
 .TP
 .B SA_NODEFER
-Do not prevent the signal from being received from within its own signal
-handler.
+Do not add the signal to the thread's signal mask while the
+handler is executing, unless the signal is specified in
+.IR act.sa_mask .
+Consequently, a further instance of the signal may be delivered
+to the thread while it is executing the handler.
 This flag is meaningful only when establishing a signal handler.
+.IP
 .B SA_NOMASK
 is an obsolete, nonstandard synonym for this flag.
 .TP
@@ -221,6 +227,7 @@ This flag is meaningful only when establishing a signal handler.
 .BR SA_RESETHAND
 Restore the signal action to the default upon entry to the signal handler.
 This flag is meaningful only when establishing a signal handler.
+.IP
 .B SA_ONESHOT
 is an obsolete, nonstandard synonym for this flag.
 .TP
@@ -251,7 +258,7 @@ This flag is meaningful only when establishing a signal handler.
 .\" (The
 .\" .I sa_sigaction
 .\" field was added in Linux 2.1.86.)
-.RE
+.\"
 .SS The siginfo_t argument to a SA_SIGINFO handler
 When the
 .B SA_SIGINFO
@@ -294,7 +301,9 @@ on the user-space stack by the kernel; for details, see
 Further information about the
 .IR ucontext_t
 structure can be found in
-.BR getcontext (3).
+.BR getcontext (3)
+and
+.BR signal (7).
 Commonly, the handler function doesn't make any use of the third argument.
 .PP
 The
@@ -319,7 +328,7 @@ siginfo_t {
     int      si_status;    /* Exit value or signal */
     clock_t  si_utime;     /* User time consumed */
     clock_t  si_stime;     /* System time consumed */
-    sigval_t si_value;     /* Signal value */
+    union sigval si_value; /* Signal value */
     int      si_int;       /* POSIX.1b signal */
     void    *si_ptr;       /* POSIX.1b signal */
     int      si_overrun;   /* Timer overrun count;
@@ -764,10 +773,10 @@ Process breakpoint.
 .B TRAP_TRACE
 Process trace trap.
 .TP
-.BR TRAP_BRANCH " (since Linux 2.4, IA64 only))"
+.BR TRAP_BRANCH " (since Linux 2.4, IA64 only)"
 Process taken branch trap.
 .TP
-.BR TRAP_HWBKPT " (since Linux 2.4, IA64 only))"
+.BR TRAP_HWBKPT " (since Linux 2.4, IA64 only)"
 Hardware breakpoint/watchpoint.
 .RE
 .PP
@@ -850,7 +859,7 @@ points to memory which is not a valid part of the process address space.
 An invalid signal was specified.
 This will also be generated if an attempt
 is made to change the action for
-.BR SIGKILL " or " SIGSTOP ", "
+.BR SIGKILL " or " SIGSTOP ,
 which cannot be caught or ignored.
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008, SVr4.
@@ -922,7 +931,7 @@ flag is compatible with the SVr4 flag of the same name.
 The
 .B SA_NODEFER
 flag is compatible with the SVr4 flag of the same name under kernels
-1.3.9 and newer.
+1.3.9 and later.
 On older kernels the Linux implementation
 allowed the receipt of any signal, not just the one we are installing
 (effectively overriding any
@@ -946,7 +955,7 @@ See
 for details on manipulating signal sets.
 .PP
 See
-.BR signal-safety (7)
+.BR signal\-safety (7)
 for a list of the async-signal-safe functions that can be
 safely called inside from inside a signal handler.
 .\"
@@ -1020,6 +1029,14 @@ handler.
 See the relevant Linux kernel sources for details.
 This use is obsolete now.
 .SH BUGS
+When delivering a signal with a
+.B SA_SIGINFO
+handler,
+the kernel does not always provide meaningful values
+for all of the fields of the
+.I siginfo_t
+that are relevant for that signal.
+.PP
 In kernels up to and including 2.6.13, specifying
 .B SA_NODEFER
 in
@@ -1028,16 +1045,17 @@ prevents not only the delivered signal from being masked during
 execution of the handler, but also the signals specified in
 .IR sa_mask .
 This bug was fixed in kernel 2.6.14.
-.SH EXAMPLE
+.\" commit 69be8f189653cd81aae5a74e26615b12871bb72e
+.SH EXAMPLES
 See
 .BR mprotect (2).
 .SH SEE ALSO
 .BR kill (1),
 .BR kill (2),
 .BR pause (2),
-.BR pidfd_send_signal (2)
+.BR pidfd_send_signal (2),
 .BR restart_syscall (2),
-.BR seccomp (2)
+.BR seccomp (2),
 .BR sigaltstack (2),
 .BR signal (2),
 .BR signalfd (2),
@@ -1055,7 +1073,7 @@ See
 .BR core (5),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

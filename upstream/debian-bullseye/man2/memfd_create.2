@@ -18,7 +18,7 @@
 .\" <http://www.gnu.org/licenses/>.
 .\" %%%LICENSE_END
 .\"
-.TH MEMFD_CREATE 2 2019-03-06 Linux "Linux Programmer's Manual"
+.TH MEMFD_CREATE 2 2020-11-01 Linux "Linux Programmer's Manual"
 .SH NAME
 memfd_create \- create an anonymous file
 .SH SYNOPSIS
@@ -27,6 +27,7 @@ memfd_create \- create an anonymous file
 .B #include <sys/mman.h>
 .PP
 .BI "int memfd_create(const char *" name ", unsigned int " flags ");"
+.fi
 .SH DESCRIPTION
 .BR memfd_create ()
 creates an anonymous file and returns a file descriptor that refers to it.
@@ -205,7 +206,6 @@ The
 .BR memfd_create ()
 system call is Linux-specific.
 .SH NOTES
-.PP
 .\" See also http://lwn.net/Articles/593918/
 .\" and http://lwn.net/Articles/594919/ and http://lwn.net/Articles/591108/
 The
@@ -280,7 +280,16 @@ in order to restrict further modifications on the file.
 (If placing the seal
 .BR F_SEAL_WRITE ,
 then it will be necessary to first unmap the shared writable mapping
-created in the previous step.)
+created in the previous step.
+Otherwise, behavior similar to
+.BR F_SEAL_WRITE
+can be achieved by using
+.BR F_SEAL_FUTURE_WRITE ,
+which will prevent future writes via
+.BR mmap (2)
+and
+.BR write (2)
+from succeeding while keeping existing shared writable mappings).
 .IP 4.
 A second process obtains a file descriptor for the
 .BR tmpfs (5)
@@ -332,7 +341,7 @@ If desired, the second process can apply further seals
 to impose additional restrictions (so long as the
 .BR F_SEAL_SEAL
 seal has not yet been applied).
-.SH EXAMPLE
+.SH EXAMPLES
 Below are shown two example programs that demonstrate the use of
 .BR memfd_create ()
 and the file sealing API.
@@ -399,6 +408,7 @@ Existing seals: WRITE SHRINK
 \&
 .EX
 #define _GNU_SOURCE
+#include <stdint.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -425,6 +435,7 @@ main(int argc, char *argv[])
         fprintf(stderr, "\et\etg \- F_SEAL_GROW\en");
         fprintf(stderr, "\et\ets \- F_SEAL_SHRINK\en");
         fprintf(stderr, "\et\etw \- F_SEAL_WRITE\en");
+        fprintf(stderr, "\et\etW \- F_SEAL_FUTURE_WRITE\en");
         fprintf(stderr, "\et\etS \- F_SEAL_SEAL\en");
         exit(EXIT_FAILURE);
     }
@@ -445,8 +456,8 @@ main(int argc, char *argv[])
     if (ftruncate(fd, len) == \-1)
         errExit("truncate");
 
-    printf("PID: %ld; fd: %d; /proc/%ld/fd/%d\en",
-            (long) getpid(), fd, (long) getpid(), fd);
+    printf("PID: %jd; fd: %d; /proc/%jd/fd/%d\en",
+            (intmax_t) getpid(), fd, (intmax_t) getpid(), fd);
 
     /* Code to map the file and populate the mapping with data
        omitted */
@@ -463,6 +474,8 @@ main(int argc, char *argv[])
             seals |= F_SEAL_SHRINK;
         if (strchr(seals_arg, \(aqw\(aq) != NULL)
             seals |= F_SEAL_WRITE;
+        if (strchr(seals_arg, \(aqW\(aq) != NULL)
+            seals |= F_SEAL_FUTURE_WRITE;
         if (strchr(seals_arg, \(aqS\(aq) != NULL)
             seals |= F_SEAL_SEAL;
 
@@ -518,6 +531,8 @@ main(int argc, char *argv[])
         printf(" GROW");
     if (seals & F_SEAL_WRITE)
         printf(" WRITE");
+    if (seals & F_SEAL_FUTURE_WRITE)
+        printf(" FUTURE_WRITE");
     if (seals & F_SEAL_SHRINK)
         printf(" SHRINK");
     printf("\en");
@@ -535,7 +550,7 @@ main(int argc, char *argv[])
 .BR shmget (2),
 .BR shm_open (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

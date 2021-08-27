@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH TSEARCH 3  2019-05-09 "GNU" "Linux Programmer's Manual"
+.TH TSEARCH 3  2020-11-01 "GNU" "Linux Programmer's Manual"
 .SH NAME
 tsearch, tfind, tdelete, twalk, tdestroy \- manage a binary search tree
 .SH SYNOPSIS
@@ -49,7 +49,7 @@ tsearch, tfind, tdelete, twalk, tdestroy \- manage a binary search tree
 .PP
 .BI "void twalk_r(const void *" root ,
 .BI "                void (*" action ")(const void *" nodep ", VISIT " which ,
-.BI "                               void *" closure "),
+.BI "                               void *" closure ),
 .BI "                void *" closure );
 .PP
 .BI "void tdestroy(void *" root ", void (*" free_node ")(void *" nodep ));
@@ -263,7 +263,7 @@ further reference to a node after calling the user function with
 argument "endorder" or "leaf".
 This works with the GNU library
 implementation, but is not in the System V documentation.
-.SH EXAMPLE
+.SH EXAMPLES
 The following program inserts twelve random numbers into a binary
 tree, where duplicate numbers are collapsed, then prints the numbers
 in order.
@@ -271,6 +271,7 @@ in order.
 .EX
 #define _GNU_SOURCE     /* Expose declaration of tdestroy() */
 #include <search.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
@@ -278,7 +279,7 @@ in order.
 static void *root = NULL;
 
 static void *
-xmalloc(unsigned n)
+xmalloc(size_t n)
 {
     void *p;
     p = malloc(n);
@@ -322,17 +323,16 @@ action(const void *nodep, VISIT which, int depth)
 int
 main(void)
 {
-    int i, *ptr;
-    void *val;
+    int **val;
 
     srand(time(NULL));
-    for (i = 0; i < 12; i++) {
-        ptr = xmalloc(sizeof(int));
+    for (int i = 0; i < 12; i++) {
+        int *ptr = xmalloc(sizeof(*ptr));
         *ptr = rand() & 0xff;
-        val = tsearch((void *) ptr, &root, compare);
+        val = tsearch(ptr, &root, compare);
         if (val == NULL)
             exit(EXIT_FAILURE);
-        else if ((*(int **) val) != ptr)
+        else if (*val != ptr)
             free(ptr);
     }
     twalk(root, action);
@@ -346,7 +346,7 @@ main(void)
 .BR lsearch (3),
 .BR qsort (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

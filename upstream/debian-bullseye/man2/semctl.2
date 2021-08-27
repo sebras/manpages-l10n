@@ -39,7 +39,7 @@
 .\" 2005-08-02, mtk: Added IPC_INFO, SEM_INFO, SEM_STAT descriptions.
 .\" 2018-03-20, dbueso: Added SEM_STAT_ANY description.
 .\"
-.TH SEMCTL 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH SEMCTL 2 2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 semctl \- System V semaphore control operations
 .SH SYNOPSIS
@@ -88,11 +88,44 @@ data structure is defined in \fI<sys/sem.h>\fP as follows:
 struct semid_ds {
     struct ipc_perm sem_perm;  /* Ownership and permissions */
     time_t          sem_otime; /* Last semop time */
-    time_t          sem_ctime; /* Last change time */
+    time_t          sem_ctime; /* Creation time/time of last
+                                  modification via semctl() */
     unsigned long   sem_nsems; /* No. of semaphores in set */
 };
 .EE
 .in
+.PP
+The fields of the
+.I semid_ds
+structure are as follows:
+.TP 11
+.I sem_perm
+This is an
+.I ipc_perm
+structure (see below) that specifies the access permissions on the semaphore
+set.
+.TP
+.I sem_otime
+Time of last
+.BR semop (2)
+system call.
+.TP
+.I sem_ctime
+Time of creation of semaphore set or time of last
+.BR semctl ()
+.BR IPCSET ,
+.BR SETVAL ,
+or
+.BR SETALL
+operation.
+.TP
+.I sem_nsems
+Number of semaphores in the set.
+Each semaphore of the set is referenced by a nonnegative integer
+ranging from
+.B 0
+to
+.IR sem_nsems\-1 .
 .PP
 The
 .I ipc_perm
@@ -114,10 +147,29 @@ struct ipc_perm {
 .EE
 .in
 .PP
+The least significant 9 bits of the
+.I mode
+field of the
+.I ipc_perm
+structure define the access permissions for the shared memory segment.
+The permission bits are as follows:
+.TS
+l l.
+0400	Read by user
+0200	Write by user
+0040	Read by group
+0020	Write by group
+0004	Read by others
+0002	Write by others
+.TE
+.PP
+In effect, "write" means "alter" for a semaphore set.
+Bits 0100, 0010, and 0001 (the execute bits) are unused by the system.
+.PP
 Valid values for
 .I cmd
 are:
-.TP 10
+.TP
 .B IPC_STAT
 Copy information from the kernel data structure associated with
 .I semid
@@ -139,11 +191,13 @@ to the kernel data structure associated with this semaphore set,
 updating also its
 .I sem_ctime
 member.
+.IP
 The following members of the structure are updated:
 .IR sem_perm.uid ,
 .IR sem_perm.gid ,
 and (the least significant 9 bits of)
 .IR sem_perm.mode .
+.IP
 The effective UID of the calling process must match the owner
 .RI ( sem_perm.uid )
 or creator
@@ -266,22 +320,18 @@ is ignored.
 The calling process must have read permission on the semaphore set.
 .TP
 .B GETNCNT
-Return the value of
+Return the
 .B semncnt
-for the
+value for the
 .IR semnum \-th
 semaphore of the set
-(i.e., the number of processes waiting for an increase of
-.B semval
-for the
-.IR semnum \-th
-semaphore of the set).
+(i.e., the number of processes waiting for the semaphore's value to increase).
 The calling process must have read permission on the semaphore set.
 .TP
 .B GETPID
-Return the value of
+Return the
 .B sempid
-for the
+value for the
 .IR semnum \-th
 semaphore of the set.
 This is the PID of the process that last performed an operation on
@@ -289,30 +339,26 @@ that semaphore (but see NOTES).
 The calling process must have read permission on the semaphore set.
 .TP
 .B GETVAL
-Return the value of
+Return
 .B semval
-for the
+(i.e., the semaphore value) for the
 .IR semnum \-th
 semaphore of the set.
 The calling process must have read permission on the semaphore set.
 .TP
 .B GETZCNT
-Return the value of
+Return the
 .B semzcnt
-for the
+value for the
 .IR semnum \-th
 semaphore of the set
-(i.e., the number of processes waiting for
-.B semval
-of the
-.IR semnum \-th
-semaphore of the set to become 0).
+(i.e., the number of processes waiting for the semaphore value to become 0).
 The calling process must have read permission on the semaphore set.
 .TP
 .B SETALL
-Set
+Set the
 .B semval
-for all semaphores of the set using
+values for all semaphores of the set using
 .IR arg.array ,
 updating also the
 .I sem_ctime
@@ -332,8 +378,8 @@ The calling process must have alter (write) permission on
 the semaphore set.
 .TP
 .B SETVAL
-Set the value of
-.B semval
+Set the semaphore value
+.BR ( semval )
 to
 .I arg.val
 for the
@@ -359,7 +405,7 @@ indicating the error.
 Otherwise, the system call returns a nonnegative value depending on
 .I cmd
 as follows:
-.TP 10
+.TP
 .B GETNCNT
 the value of
 .BR semncnt .
@@ -508,7 +554,7 @@ to include these header files.
 .PP
 The
 .BR IPC_INFO ,
-.B SEM_STAT
+.BR SEM_STAT ,
 and
 .B SEM_INFO
 operations are used by the
@@ -587,8 +633,8 @@ Linux also updates
 for
 .BR SETVAL
 operations and semaphore adjustments.
-However, somewhat inconsistently, up to and including 4.5,
-Linux did not update
+However, somewhat inconsistently, up to and including Linux 4.5,
+the kernel did not update
 .I sempid
 for
 .BR SETALL
@@ -596,6 +642,9 @@ operations.
 This was rectified
 .\" commit a5f4db877177d2a3d7ae62a7bac3a5a27e083d7f
 in Linux 4.6.
+.SH EXAMPLES
+See
+.BR shmop (2).
 .SH SEE ALSO
 .BR ipc (2),
 .BR semget (2),
@@ -604,7 +653,7 @@ in Linux 4.6.
 .BR sem_overview (7),
 .BR sysvipc (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

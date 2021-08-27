@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: net
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 09/02/2019
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 05/06/2021
 .\"    Manual: System Administration tools
-.\"    Source: Samba 4.9.5-Debian
+.\"    Source: Samba 4.13.5-Debian
 .\"  Language: English
 .\"
-.TH "NET" "8" "09/02/2019" "Samba 4\&.9\&.5\-Debian" "System Administration tools"
+.TH "NET" "8" "05/06/2021" "Samba 4\&.13\&.5\-Debian" "System Administration tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -31,7 +31,7 @@
 net \- Tool for administration of Samba and remote CIFS servers\&.
 .SH "SYNOPSIS"
 .HP \w'\ 'u
-net {<ads|rap|rpc>} [\-h|\-\-help] [\-w|\-\-workgroup\ workgroup] [\-W|\-\-myworkgroup\ myworkgroup] [\-U|\-\-user\ user] [\-I|\-\-ipaddress\ ip\-address] [\-p|\-\-port\ port] [\-n\ myname] [\-s\ conffile] [\-S|\-\-server\ server] [\-l|\-\-long] [\-v|\-\-verbose] [\-f|\-\-force] [\-P|\-\-machine\-pass] [\-d\ debuglevel] [\-V] [\-\-request\-timeout\ seconds] [\-t|\-\-timeout\ seconds] [\-i|\-\-stdin] [\-\-tallocreport]
+net {<ads|rap|rpc>} [\-h|\-\-help] [\-w|\-\-workgroup\ workgroup] [\-W|\-\-myworkgroup\ myworkgroup] [\-U|\-\-user\ user] [\-A|\-\-authentication\-file\ authfile] [\-I|\-\-ipaddress\ ip\-address] [\-p|\-\-port\ port] [\-n\ myname] [\-s\ conffile] [\-S|\-\-server\ server] [\-l|\-\-long] [\-v|\-\-verbose] [\-f|\-\-force] [\-P|\-\-machine\-pass] [\-d\ debuglevel] [\-V] [\-\-request\-timeout\ seconds] [\-t|\-\-timeout\ seconds] [\-i|\-\-stdin] [\-\-tallocreport]
 .SH "DESCRIPTION"
 .PP
 This tool is part of the
@@ -281,6 +281,26 @@ Do not perform DNS updates as part of "net ads join"\&.
 Prevent the machine account removal as part of "net ads leave"\&.
 .RE
 .PP
+\-\-json
+.RS 4
+Report results in JSON format for "net ads info" and "net ads lookup"\&.
+.RE
+.PP
+\-\-recursive
+.RS 4
+Traverse a directory hierarchy\&.
+.RE
+.PP
+\-\-continue
+.RS 4
+Continue traversing a directory hierarchy in case conversion of one file fails\&.
+.RE
+.PP
+\-\-follow\-symlinks
+.RS 4
+Follow symlinks encountered while traversing a directory\&.
+.RE
+.PP
 \-e|\-\-encrypt
 .RS 4
 This command line parameter requires the remote server support the UNIX extensions or that the SMB3 protocol has been selected\&. Requests that the connection be encrypted\&. Negotiates SMB encryption using either SMB3 or POSIX extensions via GSSAPI\&. Uses the given credentials for the encryption negotiation (either kerberos or NTLMv1/v2 if given domain/username/password triple\&. Fails the connection if encryption cannot be negotiated\&.
@@ -352,11 +372,13 @@ Tries to set the date and time of the local server to that on the remote server 
 .SS "TIME ZONE"
 .PP
 Displays the timezone in hours from GMT on the remote server\&. The remote server must be specified with the \-S option\&.
-.SS "[RPC|ADS] JOIN [TYPE] [\-\-no\-dns\-updates] [\-U username[%password]] [createupn=UPN] [createcomputer=OU] [machinepass=PASS] [osName=string osVer=string] [options]"
+.SS "[RPC|ADS] JOIN [TYPE] [\-\-no\-dns\-updates] [\-U username[%password]] [dnshostname=FQDN] [createupn=UPN] [createcomputer=OU] [machinepass=PASS] [osName=string osVer=string] [options]"
 .PP
 Join a domain\&. If the account already exists on the server, and [TYPE] is MEMBER, the machine will attempt to join automatically\&. (Assuming that the machine has been created in server manager) Otherwise, a password will be prompted for, and a new account may be created\&.
 .PP
 [TYPE] may be PDC, BDC or MEMBER to specify the type of server joining the domain\&.
+.PP
+[FQDN] (ADS only) set the dnsHostName attribute during the join\&. The default format is netbiosname\&.dnsdomain\&.
 .PP
 [UPN] (ADS only) set the principalname attribute during the join\&. The default format is host/netbiosname@REALM\&.
 .PP
@@ -569,6 +591,18 @@ Give IP\*(Aqs of Domain Controllers for specified
 Give IP of master browser for specified
 \fIDOMAIN\fR
 or workgroup\&. Defaults to local domain\&.
+.SS "LOOKUP NAME [NAME]"
+.PP
+Lookup username\*(Aqs sid and type for specified
+\fINAME\fR
+.SS "LOOKUP SID [SID]"
+.PP
+Give sid\*(Aqs name and type for specified
+\fISID\fR
+.SS "LOOKUP DSGETDCNAME [NAME] [FLAGS] [SITENAME]"
+.PP
+Give Domain Controller information for specified domain
+\fINAME\fR
 .SS "CACHE"
 .PP
 Samba uses a general caching interface called \*(Aqgencache\*(Aq\&. It can be controlled using \*(AqNET CACHE\*(Aq\&.
@@ -947,6 +981,46 @@ Dump remote SAM database to local LDIF file or standard output\&.
 .PP
 Fetch domain SID and store it in the local
 secrets\&.tdb\&.
+.SS "ADS GPO"
+.SS "ADS GPO APPLY <USERNAME|MACHINENAME> "
+.PP
+Apply GPOs for a username or machine name\&. Either username or machine name should be provided to the command, not both\&.
+.SS "ADS GPO GETGPO [GPO]"
+.PP
+List specified GPO\&.
+.SS "ADS GPO LINKADD [LINKDN] [GPODN]"
+.PP
+Link a container to a GPO\&.
+\fILINKDN\fR
+Container to link to a GPO\&.
+\fIGPODN\fR
+GPO to link container to\&. DNs must be provided properly escaped\&. See RFC 4514 for details\&.
+.SS "ADS GPO LINKGET [CONTAINER]"
+.PP
+Lists gPLink of a containter\&.
+.SS "ADS GPO LIST <USERNAME|MACHINENAME> "
+.PP
+Lists all GPOs for a username or machine name\&. Either username or machine name should be provided to the command, not both\&.
+.SS "ADS GPO LISTALL"
+.PP
+Lists all GPOs on a DC\&.
+.SS "ADS GPO REFRESH [USERNAME] [MACHINENAME]"
+.PP
+Lists all GPOs assigned to an account and download them\&.
+\fIUSERNAME\fR
+User to refresh GPOs for\&.
+\fIMACHINENAME\fR
+Machine to refresh GPOs for\&.
+.SS "ADS DNS"
+.SS "ADS DNS REGISTER [HOSTNAME [IP [IP.....]]]"
+.PP
+Add host dns entry to Active Directory\&.
+.SS "ADS DNS UNREGISTER <HOSTNAME>"
+.PP
+Remove host dns entry from Active Directory\&.
+.SS "ADS DNS GETHOSTBYNAME <NAMESERVER|HOSTNAME>"
+.PP
+Look up the hostname from Active Directory\&. You can either provide nameserver ie IPv4|IPv6 address or the hostname\&. Only one should be provided at a time\&.
 .SS "ADS LEAVE [\-\-keep\-account]"
 .PP
 Make the remote host leave the domain it is part of\&.
@@ -1653,7 +1727,7 @@ Lock the database while doing the check\&.
 .PP
 \-\-reg\-version={1,2,3}
 .RS 4
-Specify the format of the registry database\&. If not given it defaults to the value of the binary or, if an registry\&.tdb is explizitly stated at the commandline, to the value found in the INFO/version record\&.
+Specify the format of the registry database\&. If not given it defaults to the value of the binary or, if an registry\&.tdb is explicitly stated at the commandline, to the value found in the INFO/version record\&.
 .RE
 .PP
 [\-\-db] <DB>
@@ -1995,6 +2069,95 @@ List sharename, filename and number of share modes for a record from locking\&.t
 .\}
 \fIKEY\fR
 Key of the tdb record as hex string\&.
+.RE
+.SS "vfs"
+.PP
+Access shared filesystem through the VFS\&.
+.SS "vfs stream2abouble [--recursive] [--verbose] [--continue] [--follow-symlinks] share path"
+.PP
+Convert file streams to AppleDouble files\&.
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIshare\fR
+A Samba share\&.
+.RE
+.sp
+.RE
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIpath\fR
+A relative path of something in the Samba share\&. "\&." can be used for the root directory of the share\&.
+.RE
+.sp
+.RE
+.PP
+Options:
+.PP
+\-\-recursive
+.RS 4
+Traverse a directory hierarchy\&.
+.RE
+.PP
+\-\-verbose
+.RS 4
+Verbose output\&.
+.RE
+.PP
+\-\-continue
+.RS 4
+Continue traversing a directory hierarchy if a single conversion fails\&.
+.RE
+.PP
+\-\-follow\-symlinks
+.RS 4
+Follow symlinks encountered while traversing a directory\&.
+.RE
+.SS "vfs getntacl share path"
+.PP
+Display the security descriptor of a file or directory\&.
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIshare\fR
+A Samba share\&.
+.RE
+.sp
+.RE
+.RS
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIpath\fR
+A relative path of something in the Samba share\&. "\&." can be used for the root directory of the share\&.
 .RE
 .SS "HELP [COMMAND]"
 .PP

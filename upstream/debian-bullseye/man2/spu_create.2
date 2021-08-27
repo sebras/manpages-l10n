@@ -22,7 +22,7 @@
 .\" 2007-07-10, some polishing by mtk
 .\" 2007-09-28, updates for newer kernels by Jeremy Kerr <jk@ozlabs.org>
 .\"
-.TH SPU_CREATE 2 2017-09-15 Linux "Linux Programmer's Manual"
+.TH SPU_CREATE 2 2020-12-21 Linux "Linux Programmer's Manual"
 .SH NAME
 spu_create \- create a new spu context
 .SH SYNOPSIS
@@ -30,7 +30,6 @@ spu_create \- create a new spu context
 .B #include <sys/types.h>
 .B #include <sys/spu.h>
 .PP
-.BI "int spu_create(const char *" pathname ", int " flags ", mode_t " mode ");"
 .BI "int spu_create(const char *" pathname ", int " flags ", mode_t " mode ","
 .BI "               int " neighbor_fd ");"
 .fi
@@ -75,6 +74,24 @@ directory) once the last reference to the context has gone;
 this usually occurs when the file descriptor returned by
 .BR spu_create ()
 is closed.
+.PP
+The
+.I mode
+argument (minus any bits set in the process's
+.BR umask (2))
+specifies the permissions used for creating the new directory in
+.BR spufs .
+See
+.BR stat (2)
+for a full list of the possible
+.I mode
+values.
+.PP
+The
+.I neighbor_fd
+is used only when the
+.B SPU_CREATE_AFFINITY_SPU
+flag is specified; see below.
 .PP
 The
 .I flags
@@ -138,7 +155,8 @@ contexts also requires the
 .B SPU_CREATE_NOSCHED
 flag.
 .TP
-.B SPU_CREATE_AFFINITY_SPU
+.BR SPU_CREATE_AFFINITY_SPU " (since Linux 2.6.23)"
+.\" commit 8e68e2f248332a9c3fd4f08258f488c209bd3e0c
 Create a context with affinity to another SPU context.
 This affinity information is used within the SPU scheduling algorithm.
 Using this flag requires that a file descriptor referring to
@@ -146,22 +164,11 @@ the other SPU context be passed in the
 .I neighbor_fd
 argument.
 .TP
-.B SPU_CREATE_AFFINITY_MEM
+.BR SPU_CREATE_AFFINITY_MEM " (since Linux 2.6.23)"
+.\" commit 8e68e2f248332a9c3fd4f08258f488c209bd3e0c
 Create a context with affinity to system memory.
 This affinity information
 is used within the SPU scheduling algorithm.
-.PP
-The
-.I mode
-argument (minus any bits set in the process's
-.BR umask (2))
-specifies the permissions used for creating the new directory in
-.BR spufs .
-See
-.BR stat (2)
-for a full list of the possible
-.I mode
-values.
 .SH RETURN VALUE
 On success,
 .BR spu_create ()
@@ -233,7 +240,7 @@ is not a directory.
 .TP
 .B EPERM
 The
-.I SPU_CREATE_NOSCHED
+.B SPU_CREATE_NOSCHED
 flag has been given, but the user does not have the
 .B CAP_SYS_NICE
 capability.
@@ -262,7 +269,15 @@ See
 .UR http://www.bsc.es\:/projects\:/deepcomputing\:/linuxoncell/
 .UE
 for the recommended libraries.
-.SH EXAMPLE
+.PP
+Prior to the addition of the
+.B SPU_CREATE_AFFINITY_SPU
+flag in Linux 2.6.23, the
+.BR spu_create ()
+system call took only three arguments (i.e., there was no
+.I neighbor_fd
+argument).
+.SH EXAMPLES
 See
 .BR spu_run (2)
 for an example of the use of
@@ -273,7 +288,7 @@ for an example of the use of
 .BR capabilities (7),
 .BR spufs (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

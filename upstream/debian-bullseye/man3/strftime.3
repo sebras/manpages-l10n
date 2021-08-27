@@ -34,7 +34,7 @@
 .\" 2005-11-22 mtk, added Glibc Notes covering optional 'flag' and
 .\"           'width' components of conversion specifications.
 .\"
-.TH STRFTIME 3  2019-03-06 "GNU" "Linux Programmer's Manual"
+.TH STRFTIME 3  2020-08-13 "GNU" "Linux Programmer's Manual"
 .SH NAME
 strftime \- format date and time
 .SH SYNOPSIS
@@ -89,27 +89,63 @@ structure are also shown.
 The abbreviated name of the day of the week according to the current locale.
 (Calculated from
 .IR tm_wday .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR ABDAY_ { 1 \(en 7 }
+as an argument.)
 .TP
 .B %A
 The full name of the day of the week according to the current locale.
 (Calculated from
 .IR tm_wday .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR DAY_ { 1 \(en 7 }
+as an argument.)
 .TP
 .B %b
 The abbreviated month name according to the current locale.
 (Calculated from
 .IR tm_mon .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR ABMON_ { 1 \(en 12 }
+as an argument.)
 .TP
 .B %B
 The full month name according to the current locale.
 (Calculated from
 .IR tm_mon .)
+(The specific names used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR MON_ { 1 \(en 12 }
+as an argument.)
 .TP
 .B %c
 The preferred date and time representation for the current locale.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B D_T_FMT
+as an argument for the
+.B %c
+conversion specification, and with
+.B ERA_D_T_FMT
+for the
+.B %Ec
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR "%a %b %e %H:%M:%S %Y" .)
 .TP
 .B %C
 The century number (year/100) as a 2-digit integer. (SU)
+(The
+.B %EC
+conversion specification corresponds to the name of the era.)
 (Calculated from
 .IR tm_year .)
 .TP
@@ -137,11 +173,11 @@ zero is replaced by a space. (SU)
 .IR tm_mday .)
 .TP
 .B %E
-Modifier: use alternative format, see below. (SU)
+Modifier: use alternative ("era-based") format, see below. (SU)
 .TP
 .B %F
 Equivalent to
-.B %Y-%m-%d
+.B %Y\-%m\-%d
 (the ISO\ 8601 date format). (C99)
 .TP
 .B %G
@@ -220,7 +256,7 @@ The minute as a decimal number (range 00 to 59).
 A newline character. (SU)
 .TP
 .B %O
-Modifier: use alternative format, see below. (SU)
+Modifier: use alternative numeric symbols, see below. (SU)
 .TP
 .B %p
 Either "AM" or "PM" according to the given time value, or the
@@ -228,6 +264,12 @@ corresponding strings for the current locale.
 Noon is treated as "PM" and midnight as "AM".
 (Calculated from
 .IR tm_hour .)
+(The specific string representations used for "AM" and "PM"
+in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.BR AM_STR " and " PM_STR ,
+respectively.)
 .TP
 .B %P
 Like
@@ -240,9 +282,14 @@ string for the current locale.
 .TP
 .B %r
 The time in a.m. or p.m. notation.
-In the POSIX locale this is equivalent to
-.BR "%I:%M:%S %p" .
 (SU)
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B T_FMT_AMPM
+as an argument.)
+(In the POSIX locale this is equivalent to
+.BR "%I:%M:%S %p" .)
 .TP
 .B %R
 The time in 24-hour notation
@@ -324,17 +371,52 @@ and
 .TP
 .B %x
 The preferred date representation for the current locale without the time.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B D_FMT
+as an argument for the
+.B %x
+conversion specification, and with
+.B ERA_D_FMT
+for the
+.B %Ex
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR %m/%d/%y .)
 .TP
 .B %X
 The preferred time representation for the current locale without the date.
+(The specific format used in the current locale can be obtained by calling
+.BR nl_langinfo (3)
+with
+.B T_FMT
+as an argument for the
+.B %X
+conversion specification, and with
+.B ERA_T_FMT
+for the
+.B %EX
+conversion specification.)
+(In the POSIX locale this is equivalent to
+.BR %H:%M:%S .)
 .TP
 .B %y
 The year as a decimal number without a century (range 00 to 99).
+(The
+.B %Ey
+conversion specification corresponds to the year since the beginning of the era
+denoted by the
+.B %EC
+conversion specification.)
 (Calculated from
 .IR tm_year )
 .TP
 .B %Y
 The year as a decimal number including the century.
+(The
+.B %EY
+conversion specification corresponds to the full alternative year representation.)
 (Calculated from
 .IR tm_year )
 .TP
@@ -342,7 +424,7 @@ The year as a decimal number including the century.
 The
 .I +hhmm
 or
-.I -hhmm
+.I \-hhmm
 numeric timezone (that is, the hour and minute offset from UTC). (SU)
 .TP
 .B %Z
@@ -393,7 +475,17 @@ where the effect of the
 .B O
 modifier is to use
 alternative numeric symbols (say, roman numerals), and that of the
-E modifier is to use a locale-dependent alternative representation.
+.B E
+modifier is to use a locale-dependent alternative representation.
+The rules governing date representation with the
+.B E
+modifier can be obtained by supplying
+.B ERA
+as an argument to a
+.BR nl_langinfo (3).
+One example of such alternative forms is the Japanese era calendar scheme in the
+.B ja_JP
+glibc locale.
 .SH RETURN VALUE
 Provided that the result string,
 including the terminating null byte, does not exceed
@@ -481,10 +573,10 @@ Week 1 is the first week where four or more days fall within the
 new year (or, synonymously, week 01 is:
 the first week of the year that contains a Thursday;
 or, the week that has 4 January in it).
-When three of fewer days of the first calendar week of the new year fall
+When three or fewer days of the first calendar week of the new year fall
 within that year,
-then the ISO 8601 week-based system counts those days as part of week 53
-of the preceding year.
+then the ISO 8601 week-based system counts those days as part of week 52
+or 53 of the preceding year.
 For example, 1 January 2010 is a Friday,
 meaning that just three days of that calendar week fall in 2010.
 Thus, the ISO\ 8601 week-based system considers these days to be part of
@@ -493,6 +585,8 @@ week 53
 of the year 2009
 .RB ( %G );
 week 01 of ISO\ 8601 year 2010 starts on Monday, 4 January 2010.
+Similarly, the first two days of January 2011 are considered to be part
+of week 52 of the year 2010.
 .SS Glibc notes
 Glibc provides some extensions for conversion specifications.
 (These extensions are not specified in POSIX.1-2001, but a few other
@@ -524,7 +618,7 @@ Do not pad a numeric result string.
 Pad a numeric result string with zeros even if the conversion
 specifier character uses space-padding by default.
 .TP
-.B ^
+.B \(ha
 Convert alphabetic characters in result string to uppercase.
 .TP
 .B #
@@ -559,7 +653,7 @@ Some buggy versions of
 .BR gcc (1)
 complain about the use of
 .BR %c :
-.IR "warning: `%c' yields only last 2 digits of year in some locales" .
+.IR "warning: \`%c\(aq yields only last 2 digits of year in some locales" .
 Of course programmers are encouraged to use
 .BR %c ,
 as it gives the preferred date and time representation.
@@ -587,18 +681,24 @@ provides the
 .IR \-Wno\-format\-y2k
 option to prevent the warning,
 so that the above workaround is no longer required.
-.SH EXAMPLE
+.SH EXAMPLES
 .BR "RFC\ 2822-compliant date format"
 (with an English locale for %a and %b)
 .PP
-.in +2n
+.in +4n
+.EX
 "%a,\ %d\ %b\ %Y\ %T\ %z"
+.EE
+.in
 .PP
 .BR "RFC\ 822-compliant date format"
 (with an English locale for %a and %b)
 .PP
-.in +2n
+.in +4n
+.EX
 "%a,\ %d\ %b\ %y\ %T\ %z"
+.EE
+.in
 .SS Example program
 The program below can be used to experiment with
 .BR strftime ().
@@ -651,11 +751,12 @@ main(int argc, char *argv[])
 .BR date (1),
 .BR time (2),
 .BR ctime (3),
+.BR nl_langinfo (3),
 .BR setlocale (3),
 .BR sprintf (3),
 .BR strptime (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

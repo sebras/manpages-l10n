@@ -22,7 +22,7 @@
 .\" <http://www.gnu.org/licenses/>.
 .\" %%%LICENSE_END
 .\"
-.TH DLSYM 3 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH DLSYM 3 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 dlsym, dlvsym \- obtain address of a symbol in a shared object or executable
 .SH SYNOPSIS
@@ -105,7 +105,6 @@ and
 from
 .IR <dlfcn.h> .
 .PP
-.PP
 The function
 .BR dlvsym ()
 does the same as
@@ -143,16 +142,22 @@ The
 .BR dlvsym ()
 function is a GNU extension.
 .SH NOTES
-The value of a symbol returned by
-.BR dlsym ()
-will never be NULL if the shared object is the result of normal compilation,
-since a global symbol is never placed at the NULL address.
-There are nevertheless cases where a lookup using
-.BR dlsym ()
-may return NULL as the value of a symbol.
-For example, the symbol value may be the result of
+There are several scenarios when the address of a global symbol is NULL.
+For example, a symbol can be placed at zero address by the linker, via
+a linker script or with
+.I \-\-defsym
+command-line option. Undefined weak symbols also have NULL value.
+Finally, the symbol value may be the result of
 a GNU indirect function (IFUNC) resolver function that returns
-NULL as the resolved value.
+NULL as the resolved value. In the latter case,
+.BR dlsym ()
+also returns NULL without error. However, in the former two cases, the
+behavior of GNU dynamic linker is inconsistent: relocation processing
+succeeds and the symbol can be observed to have NULL value, but
+.BR dlsym ()
+fails and
+.BR dlerror ()
+indicates a lookup error.
 .\"
 .SS History
 The
@@ -160,7 +165,7 @@ The
 function is part of the dlopen API, derived from SunOS.
 That system does not have
 .BR dlvsym ().
-.SH EXAMPLE
+.SH EXAMPLES
 See
 .BR dlopen (3).
 .SH SEE ALSO
@@ -171,7 +176,7 @@ See
 .BR dlopen (3),
 .BR ld.so (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

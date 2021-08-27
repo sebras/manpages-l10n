@@ -25,7 +25,7 @@
 .\"
 .\" Kernel commit d97b46a64674a267bc41c9e16132ee2a98c3347d
 .\"
-.TH KCMP 2 2019-10-10 "Linux" "Linux Programmer's Manual"
+.TH KCMP 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 kcmp \- compare two processes to determine if they share a kernel resource
 .SH SYNOPSIS
@@ -319,7 +319,7 @@ See
 .BR clone (2)
 for some background information on the shared resources
 referred to on this page.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below uses
 .BR kcmp ()
 to test whether pairs of file descriptors refer to
@@ -352,6 +352,7 @@ Child duplicated FD 3 to create FD 5
 #include <sys/syscall.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -369,11 +370,11 @@ kcmp(pid_t pid1, pid_t pid2, int type,
 }
 
 static void
-test_kcmp(char *msg, id_t pid1, pid_t pid2, int fd_a, int fd_b)
+test_kcmp(char *msg, pid_t pid1, pid_t pid2, int fd_a, int fd_b)
 {
     printf("\et%s\en", msg);
-    printf("\et\etkcmp(%ld, %ld, KCMP_FILE, %d, %d) ==> %s\en",
-            (long) pid1, (long) pid2, fd_a, fd_b,
+    printf("\et\etkcmp(%jd, %jd, KCMP_FILE, %d, %d) ==> %s\en",
+            (intmax_t) pid1, (intmax_t) pid2, fd_a, fd_b,
             (kcmp(pid1, pid2, KCMP_FILE, fd_a, fd_b) == 0) ?
                         "same" : "different");
 }
@@ -388,7 +389,7 @@ main(int argc, char *argv[])
     if (fd1 == \-1)
         errExit("open");
 
-    printf("Parent PID is %ld\en", (long) getpid());
+    printf("Parent PID is %jd\en", (intmax_t) getpid());
     printf("Parent opened file on FD %d\en\en", fd1);
 
     switch (fork()) {
@@ -396,7 +397,7 @@ main(int argc, char *argv[])
         errExit("fork");
 
     case 0:
-        printf("PID of child of fork() is %ld\en", (long) getpid());
+        printf("PID of child of fork() is %jd\en", (intmax_t) getpid());
 
         test_kcmp("Compare duplicate FDs from different processes:",
                 getpid(), getppid(), fd1, fd1);
@@ -429,7 +430,7 @@ main(int argc, char *argv[])
 .BR clone (2),
 .BR unshare (2)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

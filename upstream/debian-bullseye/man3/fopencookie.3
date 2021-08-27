@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH FOPENCOOKIE 3 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH FOPENCOOKIE 3 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fopencookie \- opening a custom stream
 .SH SYNOPSIS
@@ -183,7 +183,7 @@ argument specifies the new file offset depending on which
 of the following three values is supplied in
 .IR whence :
 .RS
-.TP 10
+.TP
 .B SEEK_SET
 The stream offset should be set
 .I *offset
@@ -256,7 +256,7 @@ T}	Thread safety	MT-Safe
 .TE
 .SH CONFORMING TO
 This function is a nonstandard GNU extension.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below implements a custom stream whose functionality
 is similar (but not identical) to that available via
 .BR fmemopen (3).
@@ -392,9 +392,7 @@ main(int argc, char *argv[])
     };
     FILE *stream;
     struct memfile_cookie mycookie;
-    ssize_t nread;
-    long p;
-    int j;
+    size_t nread;
     char buf[1000];
 
     /* Set up the cookie before calling fopencookie() */
@@ -417,7 +415,7 @@ main(int argc, char *argv[])
 
     /* Write command\-line arguments to our file */
 
-    for (j = 1; j < argc; j++)
+    for (int j = 1; j < argc; j++)
         if (fputs(argv[j], stream) == EOF) {
             perror("fputs");
             exit(EXIT_FAILURE);
@@ -425,22 +423,22 @@ main(int argc, char *argv[])
 
     /* Read two bytes out of every five, until EOF */
 
-    for (p = 0; ; p += 5) {
+    for (long p = 0; ; p += 5) {
         if (fseek(stream, p, SEEK_SET) == \-1) {
             perror("fseek");
             exit(EXIT_FAILURE);
         }
         nread = fread(buf, 1, 2, stream);
-        if (nread == \-1) {
-            perror("fread");
-            exit(EXIT_FAILURE);
-        }
         if (nread == 0) {
+            if (ferror(stream) != 0) {
+                fprintf(stderr, "fread failed\en");
+                exit(EXIT_FAILURE);
+            }
             printf("Reached end of file\en");
             break;
         }
 
-        printf("/%.*s/\en", nread, buf);
+        printf("/%.*s/\en", (int) nread, buf);
     }
 
     exit(EXIT_SUCCESS);
@@ -452,7 +450,7 @@ main(int argc, char *argv[])
 .BR fopen (3),
 .BR fseek (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

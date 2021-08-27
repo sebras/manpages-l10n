@@ -37,7 +37,7 @@
 .\" Modified Oct 2003 by aeb
 .\" Modified 2004-07-01 by mtk
 .\"
-.TH SEND 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH SEND 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 send, sendto, sendmsg \- send a message on a socket
 .SH SYNOPSIS
@@ -293,7 +293,7 @@ and
 fields specify scatter-gather locations, as for
 .BR writev (2).
 .PP
-You may send control information using the
+You may send control information (ancillary data) using the
 .I msg_control
 and
 .I msg_controllen
@@ -303,6 +303,11 @@ per socket by the value in
 .IR /proc/sys/net/core/optmem_max ;
 see
 .BR socket (7).
+For further information on the use of ancillary data in various
+socket domains, see
+.BR unix (7)
+and
+.BR ip (7).
 .PP
 The
 .I msg_flags
@@ -441,13 +446,18 @@ field of the
 .I msghdr
 structure should be typed as
 .IR socklen_t ,
-but glibc currently types it as
+and the
+.I msg_iovlen
+field should be typed as
+.IR int ,
+but glibc currently types both as
 .IR size_t .
-.\" glibc bug raised 12 Mar 2006
+.\" glibc bug for msg_controllen raised 12 Mar 2006
 .\" http://sourceware.org/bugzilla/show_bug.cgi?id=2448
 .\" The problem is an underlying kernel issue: the size of the
-.\" __kernel_size_t type used to type this field varies
-.\" across architectures, but socklen_t is always 32 bits.
+.\" __kernel_size_t type used to type these fields varies
+.\" across architectures, but socklen_t is always 32 bits,
+.\" as (at least with GCC) is int.
 .PP
 See
 .BR sendmmsg (2)
@@ -458,7 +468,7 @@ Linux may return
 .B EPIPE
 instead of
 .BR ENOTCONN .
-.SH EXAMPLE
+.SH EXAMPLES
 An example of the use of
 .BR sendto ()
 is shown in
@@ -481,7 +491,7 @@ is shown in
 .BR udp (7),
 .BR unix (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

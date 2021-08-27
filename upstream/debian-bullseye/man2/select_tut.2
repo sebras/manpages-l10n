@@ -29,180 +29,31 @@
 .\"             various other changes
 .\" 2008-01-26, mtk, substantial changes and rewrites
 .\"
-.TH SELECT_TUT 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH SELECT_TUT 2 2020-04-11 "Linux" "Linux Programmer's Manual"
 .SH NAME
-select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
-synchronous I/O multiplexing
+select, pselect \- synchronous I/O multiplexing
 .SH SYNOPSIS
-.nf
-/* According to POSIX.1-2001, POSIX.1-2008 */
-.B #include <sys/select.h>
-.PP
-/* According to earlier standards */
-.B #include <sys/time.h>
-.B #include <sys/types.h>
-.B #include <unistd.h>
-.PP
-.BI "int select(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
-.BI "           fd_set *" exceptfds ", struct timeval *" utimeout );
-.PP
-.BI "void FD_CLR(int " fd ", fd_set *" set );
-.BI "int  FD_ISSET(int " fd ", fd_set *" set );
-.BI "void FD_SET(int " fd ", fd_set *" set );
-.BI "void FD_ZERO(fd_set *" set );
-
-.B #include <sys/select.h>
-.PP
-.BI "int pselect(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
-.BI "            fd_set *" exceptfds ", const struct timespec *" ntimeout ,
-.BI "            const sigset_t *" sigmask );
-.fi
-.PP
-.in -4n
-Feature Test Macro Requirements for glibc (see
-.BR feature_test_macros (7)):
-.in
-.PP
-.BR pselect ():
-_POSIX_C_SOURCE\ >=\ 200112L
+See
+.BR select (2)
 .SH DESCRIPTION
+The
 .BR select ()
-(or
-.BR pselect ())
-is used to efficiently monitor multiple file descriptors,
+and
+.BR pselect ()
+system calls are used to efficiently monitor multiple file descriptors,
 to see if any of them is, or becomes, "ready";
 that is, to see whether I/O becomes possible,
 or an "exceptional condition" has occurred on any of the file descriptors.
 .PP
-Its principal arguments are three "sets" of file descriptors:
-\fIreadfds\fP, \fIwritefds\fP, and \fIexceptfds\fP.
-Each set is declared as type
-.IR fd_set ,
-and its contents can be manipulated with the macros
-.BR FD_CLR (),
-.BR FD_ISSET (),
-.BR FD_SET (),
+This page provides background and tutorial information
+on the use of these system calls.
+For details of the arguments and semantics of
+.BR select ()
 and
-.BR FD_ZERO ().
-A newly declared set should first be cleared using
-.BR FD_ZERO ().
-.BR select ()
-modifies the contents of the sets according to the rules
-described below; after calling
-.BR select ()
-you can test if a file descriptor is still present in a set with the
-.BR FD_ISSET ()
-macro.
-.BR FD_ISSET ()
-returns nonzero if a specified file descriptor is present in a set
-and zero if it is not.
-.BR FD_CLR ()
-removes a file descriptor from a set.
-.SS Arguments
-.TP
-\fIreadfds\fP
-This set is watched to see if data is available for reading from any of
-its file descriptors.
-After
-.BR select ()
-has returned, \fIreadfds\fP will be
-cleared of all file descriptors except for those that
-are immediately available for reading.
-.TP
-\fIwritefds\fP
-This set is watched to see if there is space to write data to any of
-its file descriptors.
-After
-.BR select ()
-has returned, \fIwritefds\fP will be
-cleared of all file descriptors except for those that
-are immediately available for writing.
-.TP
-\fIexceptfds\fP
-This set is watched for "exceptional conditions".
-In practice, only one such exceptional condition is common:
-the availability of \fIout-of-band\fP (OOB) data for reading
-from a TCP socket.
-See
-.BR recv (2),
-.BR send (2),
-and
-.BR tcp (7)
-for more details about OOB data.
-(One other less common case where
-.BR select (2)
-indicates an exceptional condition occurs with pseudoterminals
-in packet mode; see
-.BR ioctl_tty (2).)
-After
-.BR select ()
-has returned,
-\fIexceptfds\fP will be cleared of all file descriptors except for those
-for which an exceptional condition has occurred.
-.TP
-\fInfds\fP
-This is an integer one more than the maximum of any file descriptor in
-any of the sets.
-In other words, while adding file descriptors to each of the sets,
-you must calculate the maximum integer value of all of them,
-then increment this value by one, and then pass this as \fInfds\fP.
-.TP
-\fIutimeout\fP
-This is the longest time
-.BR select ()
-may wait before returning, even if nothing interesting happened.
-If this value is passed as NULL, then
-.BR select ()
-blocks indefinitely waiting for a file descriptor to become ready.
-\fIutimeout\fP can be set to zero seconds, which causes
-.BR select ()
-to return immediately, with information about the readiness
-of file descriptors at the time of the call.
-The structure \fIstruct timeval\fP is defined as:
-.IP
-.in +4n
-.EX
-struct timeval {
-    time_t tv_sec;    /* seconds */
-    long tv_usec;     /* microseconds */
-};
-.EE
-.in
-.TP
-\fIntimeout\fP
-This argument for
-.BR pselect ()
-has the same meaning as
-.IR utimeout ,
-but
-.I "struct timespec"
-has nanosecond precision as follows:
-.IP
-.in +4n
-.EX
-struct timespec {
-    long tv_sec;    /* seconds */
-    long tv_nsec;   /* nanoseconds */
-};
-.EE
-.in
-.TP
-\fIsigmask\fP
-This argument holds a set of signals that the kernel should unblock
-(i.e., remove from the signal mask of the calling thread),
-while the caller is blocked inside the
-.BR pselect ()
-call (see
-.BR sigaddset (3)
-and
-.BR sigprocmask (2)).
-It may be NULL,
-in which case the call does not modify the signal mask on
-entry and exit to the function.
-In this case,
-.BR pselect ()
-will then behave just like
-.BR select ().
+.BR pselect (),
+see
+.BR select (2).
+.\"
 .SS Combining signal and data events
 .BR pselect ()
 is useful if you are waiting for a signal as well as
@@ -220,6 +71,7 @@ This behavior is essential so that signals can be processed
 in the main loop of the program, otherwise
 .BR select ()
 would block indefinitely.
+.PP
 Now, somewhere
 in the main loop will be a conditional to check the global flag.
 So we must ask:
@@ -463,42 +315,9 @@ then the sets must be reinitialized before each call.
 .\" Having no file descriptors set is a useful
 .\" way to sleep the process with subsecond precision by using the timeout.
 .\" (See further on.)
-.SS Usleep emulation
-On systems that do not have a
-.BR usleep (3)
-function, you can call
-.BR select ()
-with a finite timeout and no file descriptors as
-follows:
-.PP
-.in +4n
-.EX
-struct timeval tv;
-tv.tv_sec = 0;
-tv.tv_usec = 200000;  /* 0.2 seconds */
-select(0, NULL, NULL, NULL, &tv);
-.EE
-.in
-.PP
-This is guaranteed to work only on UNIX systems, however.
 .SH RETURN VALUE
-On success,
-.BR select ()
-returns the total number of file descriptors
-still present in the file descriptor sets.
-.PP
-If
-.BR select ()
-timed out, then the return value will be zero.
-The file descriptors set should be all
-empty (but may not be on some systems).
-.PP
-A return value of \-1 indicates an error, with \fIerrno\fP being
-set appropriately.
-In the case of an error, the contents of the returned sets and
-the \fIstruct timeout\fP contents are undefined and should not be used.
-.BR pselect ()
-however never modifies \fIntimeout\fP.
+See
+.BR select (2).
 .SH NOTES
 Generally speaking,
 all operating systems that support sockets also support
@@ -525,7 +344,7 @@ API provides an interface that is more efficient than
 and
 .BR poll (2)
 when monitoring large numbers of file descriptors.
-.SH EXAMPLE
+.SH EXAMPLES
 Here is an example that better demonstrates the true utility of
 .BR select ().
 The listing below is a TCP forwarding program that forwards
@@ -535,8 +354,7 @@ from one TCP port to another.
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/time.h>
-#include <sys/types.h>
+#include <sys/select.h>
 #include <string.h>
 #include <signal.h>
 #include <sys/socket.h>
@@ -721,7 +539,9 @@ main(int argc, char *argv[])
                     printf("connect from %s\en",
                             inet_ntoa(client_addr.sin_addr));
 
-                /* Skip any events on the old, closed file descriptors. */
+                /* Skip any events on the old, closed file
+                   descriptors. */
+
                 continue;
             }
         }
@@ -819,7 +639,6 @@ connections cause the current connection to be dropped.
 .SH SEE ALSO
 .BR accept (2),
 .BR connect (2),
-.BR ioctl (2),
 .BR poll (2),
 .BR read (2),
 .BR recv (2),
@@ -827,16 +646,11 @@ connections cause the current connection to be dropped.
 .BR send (2),
 .BR sigprocmask (2),
 .BR write (2),
-.BR sigaddset (3),
-.BR sigdelset (3),
-.BR sigemptyset (3),
-.BR sigfillset (3),
-.BR sigismember (3),
 .BR epoll (7)
 .\" .SH AUTHORS
 .\" This man page was written by Paul Sheer.
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

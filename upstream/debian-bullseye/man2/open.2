@@ -48,7 +48,7 @@
 .\" FIXME . Apr 08: The next POSIX revision has O_EXEC, O_SEARCH, and
 .\" O_TTYINIT.  Eventually these may need to be documented.  --mtk
 .\"
-.TH OPEN 2 2018-04-30 "Linux" "Linux Programmer's Manual"
+.TH OPEN 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 open, openat, creat \- open and possibly create a file
 .SH SYNOPSIS
@@ -65,12 +65,16 @@ open, openat, creat \- open and possibly create a file
 .BI "int openat(int " dirfd ", const char *" pathname ", int " flags );
 .BI "int openat(int " dirfd ", const char *" pathname ", int " flags \
 ", mode_t " mode );
+.PP
+/* Documented separately, in \fBopenat2\fP(2): */
+.BI "int openat2(int " dirfd ", const char *" pathname ,
+.BI "            const struct open_how *" how ", size_t " size ");"
 .fi
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .BR openat ():
 .PD 0
@@ -279,40 +283,52 @@ For some filesystems, the behavior also depends on the
 and
 .I sysvgroups
 mount options described in
-.BR mount (8)).
+.BR mount (8).
 .\" As at 2.6.25, bsdgroups is supported by ext2, ext3, ext4, and
 .\" XFS (since 2.6.14).
-.RS
-.PP
+.IP
 The
 .I mode
-argument specifies the file mode bits be applied when a new file is created.
-This argument must be supplied when
+argument specifies the file mode bits to be applied when a new file is created.
+If neither
+.B O_CREAT
+nor
+.B O_TMPFILE
+is specified in
+.IR flags ,
+then
+.I mode
+is ignored (and can thus be specified as 0, or simply omitted).
+The
+.I mode
+argument
+.B must
+be supplied if
 .B O_CREAT
 or
 .B O_TMPFILE
 is specified in
 .IR flags ;
-if neither
-.B O_CREAT
-nor
-.B O_TMPFILE
-is specified, then
-.I mode
-is ignored.
+if it is not supplied,
+some arbitrary bytes from the stack will be applied as the file mode.
+.IP
 The effective mode is modified by the process's
 .I umask
 in the usual way: in the absence of a default ACL, the mode of the
 created file is
-.IR "(mode\ &\ ~umask)" .
-Note that this mode applies only to future accesses of the
+.IR "(mode\ &\ \(tiumask)" .
+.IP
+Note that
+.I mode
+applies only to future accesses of the
 newly created file; the
 .BR open ()
 call that creates a read-only file may well return a read/write
 file descriptor.
-.PP
+.IP
 The following symbolic constants are provided for
 .IR mode :
+.RS
 .TP 9
 .B S_IRWXU
 00700 user (file owner) has read, write, and execute permission
@@ -536,7 +552,9 @@ will not become the process's controlling terminal even if the
 process does not have one.
 .TP
 .B O_NOFOLLOW
-If \fIpathname\fP is a symbolic link, then the open fails, with the error
+If the trailing component (i.e., basename) of
+.I pathname
+is a symbolic link, then the open fails, with the error
 .BR ELOOP .
 Symbolic links in earlier components of the pathname will still be
 followed.
@@ -809,11 +827,19 @@ char path[PATH_MAX];
 fd = open("/path/to/dir", O_TMPFILE | O_RDWR,
                         S_IRUSR | S_IWUSR);
 
-/* File I/O on 'fd'... */
+/* File I/O on \(aqfd\(aq... */
+
+linkat(fd, NULL, AT_FDCWD, "/path/for/file", AT_EMPTY_PATH);
+
+/* If the caller doesn\(aqt have the CAP_DAC_READ_SEARCH
+   capability (needed to use AT_EMPTY_PATH with linkat(2)),
+   and there is a proc(5) filesystem mounted, then the
+   linkat(2) call above can be replaced with:
 
 snprintf(path, PATH_MAX,  "/proc/self/fd/%d", fd);
 linkat(AT_FDCWD, path, AT_FDCWD, "/path/for/file",
                         AT_SYMLINK_FOLLOW);
+*/
 .EE
 .in
 .IP
@@ -933,12 +959,23 @@ If
 is absolute, then
 .I dirfd
 is ignored.
+.\"
+.SS openat2(2)
+The
+.BR openat2 (2)
+system call is an extension of
+.BR openat (),
+and provides a superset of the features of
+.BR openat ().
+It is documented separately, in
+.BR openat2 (2).
 .SH RETURN VALUE
 .BR open (),
 .BR openat (),
 and
 .BR creat ()
-return the new file descriptor, or \-1 if an error occurred
+return the new file descriptor (a nonnegative integer),
+or \-1 if an error occurred
 (in which case,
 .I errno
 is set appropriately).
@@ -957,6 +994,33 @@ or the file did not exist yet and write access to the parent directory
 is not allowed.
 (See also
 .BR path_resolution (7).)
+.TP
+.B EACCES
+.\" commit 30aba6656f61ed44cba445a3c0d38b296fa9e8f5
+Where
+.B O_CREAT
+is specified, the
+.I protected_fifos
+or
+.I protected_regular
+sysctl is enabled, the file already exists and is a FIFO or regular file, the
+owner of the file is neither the current user nor the owner of the
+containing directory, and the containing directory is both world- or
+group-writable and sticky.
+For details, see the descriptions of
+.IR /proc/sys/fs/protected_fifos
+and
+.IR /proc/sys/fs/protected_regular
+in
+.BR proc (5).
+.TP
+.B EBUSY
+.B O_EXCL
+was specified in
+.I flags
+and
+.I pathname
+refers to a block device that is in use by the system (e.g., it is mounted).
 .TP
 .B EDQUOT
 Where
@@ -1013,6 +1077,12 @@ was specified.
 was specified in
 .I flags
 and the final component ("basename") of the new file's
+.I pathname
+is invalid
+(e.g., it contains characters not permitted by the underlying filesystem).
+.TP
+.B EINVAL
+The final component ("basename") of
 .I pathname
 is invalid
 (e.g., it contains characters not permitted by the underlying filesystem).
@@ -1142,7 +1212,7 @@ does not support
 refers to a regular file that is too large to be opened.
 The usual scenario here is that an application compiled
 on a 32-bit platform without
-.I -D_FILE_OFFSET_BITS=64
+.I \-D_FILE_OFFSET_BITS=64
 tried to open a file whose size exceeds
 .I (1<<31)-1
 bytes;
@@ -1186,7 +1256,7 @@ flag was specified.
 .TP
 .B ETXTBSY
 .I pathname
-refers to a file that is currently being read by the kernel (e.g. for
+refers to a file that is currently being read by the kernel (e.g., for
 module/firmware loading), and write access was requested.
 .TP
 .B EWOULDBLOCK
@@ -1219,6 +1289,9 @@ SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008.
 .PP
 .BR openat ():
 POSIX.1-2008.
+.PP
+.BR openat2 (2)
+is Linux-specific.
 .PP
 The
 .BR O_DIRECT ,
@@ -1539,12 +1612,16 @@ a directory file descriptor argument
 .BR fanotify_mark (2),
 .BR fchmodat (2),
 .BR fchownat (2),
+.BR fspick (2),
 .BR fstatat (2),
 .BR futimesat (2),
 .BR linkat (2),
 .BR mkdirat (2),
+.BR move_mount (2),
 .BR mknodat (2),
 .BR name_to_handle_at (2),
+.BR open_tree (2),
+.BR openat2 (2),
 .BR readlinkat (2),
 .BR renameat (2),
 .BR statx (2),
@@ -1608,10 +1685,37 @@ directory", via file descriptor(s) maintained by the application.
 on the use of
 .IR /proc/self/fd/ dirfd,
 but less efficiently.)
+.PP
+The
+.I dirfd
+argument for these APIs can be obtained by using
+.BR open ()
+or
+.BR openat ()
+to open a directory (with either the
+.BR O_RDONLY
+or the
+.BR O_PATH
+flag).
+Alternatively, such a file descriptor can be obtained by applying
+.BR dirfd (3)
+to a directory stream created using
+.BR opendir (3).
+.PP
+When these APIs are given a
+.I dirfd
+argument of
+.BR AT_FDCWD
+or the specified pathname is absolute,
+then they handle their pathname argument in the same way as
+the corresponding conventional APIs.
+However, in this case, several of the APIs have a
+.I flags
+argument that provides access to functionality that is not available with
+the corresponding conventional APIs.
 .\"
 .\"
 .SS O_DIRECT
-.PP
 The
 .B O_DIRECT
 flag may impose alignment restrictions on the length and address
@@ -1638,9 +1742,11 @@ The logical block size can be determined using the
 .B BLKSSZGET
 operation or from the shell using the command:
 .PP
+.in +4n
 .EX
-    blockdev \-\-getss
+blockdev \-\-getss
 .EE
+.in
 .PP
 .B O_DIRECT
 I/Os should never be run concurrently with the
@@ -1779,6 +1885,7 @@ is ignored).
 .BR mmap (2),
 .BR mount (2),
 .BR open_by_handle_at (2),
+.BR openat2 (2),
 .BR read (2),
 .BR socket (2),
 .BR stat (2),
@@ -1792,7 +1899,7 @@ is ignored).
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

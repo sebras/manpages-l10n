@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 1996 Andries Brouwer <aeb@cwi.nl>, Mon Oct 31 22:13:04 1996
 .\"
 .\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
@@ -21,7 +20,7 @@
 .\" 2006-05-27, Several corrections - Thomas E. Dickey
 .\" Modified Thu Dec 13 23:23:41 2001 by Martin Schulze <joey@infodrom.org>
 .\"
-.TH CONSOLE_CODES 4 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH CONSOLE_CODES 4 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 console_codes \- Linux console escape and control sequences
 .SH DESCRIPTION
@@ -94,27 +93,27 @@ The recognized control characters are BEL, BS, HT, LF, VT, FF,
 CR, SO, SI, CAN, SUB, ESC, DEL, CSI.
 They do what one would expect:
 .HP
-BEL (0x07, \fB^G\fP) beeps;
+BEL (0x07, \fB\(haG\fP) beeps;
 .HP
-BS (0x08, \fB^H\fP) backspaces one column
+BS (0x08, \fB\(haH\fP) backspaces one column
 (but not past the beginning of the line);
 .HP
-HT (0x09, \fB^I\fP) goes to the next tab stop or to the end of the line
+HT (0x09, \fB\(haI\fP) goes to the next tab stop or to the end of the line
 if there is no earlier tab stop;
 .HP
-LF (0x0A, \fB^J\fP), VT (0x0B, \fB^K\fP) and
-FF (0x0C, \fB^L\fP) all give a linefeed,
+LF (0x0A, \fB\(haJ\fP), VT (0x0B, \fB\(haK\fP) and
+FF (0x0C, \fB\(haL\fP) all give a linefeed,
 and if LF/NL (new-line mode) is set also a carriage return;
 .HP
-CR (0x0D, \fB^M\fP) gives a carriage return;
+CR (0x0D, \fB\(haM\fP) gives a carriage return;
 .HP
-SO (0x0E, \fB^N\fP) activates the G1 character set;
+SO (0x0E, \fB\(haN\fP) activates the G1 character set;
 .HP
-SI (0x0F, \fB^O\fP) activates the G0 character set;
+SI (0x0F, \fB\(haO\fP) activates the G0 character set;
 .HP
-CAN (0x18, \fB^X\fP) and SUB (0x1A, \fB^Z\fP) interrupt escape sequences;
+CAN (0x18, \fB\(haX\fP) and SUB (0x1A, \fB\(haZ\fP) abort escape sequences;
 .HP
-ESC (0x1B, \fB^[\fP) starts an escape sequence;
+ESC (0x1B, \fB\(ha[\fP) starts an escape sequence;
 .HP
 DEL (0x7F) is ignored;
 .HP
@@ -259,7 +258,10 @@ The toggle meta flag
 causes the high bit of a byte to be toggled
 before the mapping table translation is done.
 T}
-21	set normal intensity (ECMA-48 says "doubly underlined")
+21	T{
+set underline; before Linux 4.17, this value
+set normal intensity (as is done in many other terminals)
+T}
 22	set normal intensity
 24	underline off
 25	blink off
@@ -272,8 +274,14 @@ T}
 35	set magenta foreground
 36	set cyan foreground
 37	set white foreground
-38	set underscore on, set default foreground color
-39	set underscore off, set default foreground color
+38	T{
+256/24-bit foreground color follows, shoehorned into 16 basic colors
+(before Linux 3.16: set underscore on, set default foreground color)
+T}
+39	T{
+set default foreground color
+(before Linux 3.16: set underscore off, set default foreground color)
+T}
 40	set black background
 41	set red background
 42	set green background
@@ -282,7 +290,22 @@ T}
 45	set magenta background
 46	set cyan background
 47	set white background
+48	T{
+256/24-bit background color follows, shoehorned into 8 basic colors
+T}
 49	set default background color
+90..97	set foreground to bright versions of 30..37
+100.107	set background, same as 40..47 (bright not supported)
+.TE
+.PP
+Commands 38 and 48 require further arguments:
+.TS
+l l.
+;5;x	T{
+256 color: values 0..15 are IBGR (black, red, green, ... white),
+16..231 a 6x6x6 color cube, 232..255 a grayscale ramp
+T}
+;2;r;g;b	24-bit color, r/g/b components are in the range 0..255
 .TE
 .PP
 .B ECMA-48 Mode Switches
@@ -374,11 +397,11 @@ ESC [ 11 ; \fIn\fP ]	Set bell duration in msec.
 ESC [ 12 ; \fIn\fP ]	Bring specified console to the front.
 ESC [ 13 ]      	Unblank the screen.
 ESC [ 14 ; \fIn\fP ]   	Set the VESA powerdown interval in minutes.
-ESC [ 15 ]      	T{
+ESC [ 15 ]	T{
 Bring the previous console to the front
 (since Linux 2.6.0).
 T}
-ESC [ 16 ; \fIn\fP ]   	T{
+ESC [ 16 ; \fIn\fP ]	T{
 Set the cursor blink interval in milliseconds
 (since Linux 4.2).
 T}
@@ -393,8 +416,8 @@ b) VT100 graphics \-> PC, c) PC \-> PC, d) user-defined.
 There are two character sets, called G0 and G1, and one of them
 is the current character set.
 (Initially G0.)
-Typing \fB^N\fP causes G1 to become current,
-\fB^O\fP causes G0 to become current.
+Typing \fB\(haN\fP causes G1 to become current,
+\fB\(haO\fP causes G0 to become current.
 .PP
 These variables G0 and G1 point at a translation table, and can be
 changed by the user.
@@ -406,11 +429,11 @@ point at translation table a), b), c) and d), respectively.
 .PP
 The sequence ESC c causes a terminal reset, which is what you want if the
 screen is all garbled.
-The oft-advised "echo ^V^O" will make only G0 current,
+The oft-advised "echo \(haV\(haO" will make only G0 current,
 but there is no guarantee that G0 points at table a).
 In some distributions there is a program
 .BR reset (1)
-that just does "echo ^[c".
+that just does "echo \(ha[c".
 If your terminfo entry for the console is correct
 (and has an entry rs1=\eEc), then "tput reset" will also work.
 .PP
@@ -480,9 +503,9 @@ NUL (0x00) was ignored;
 .HP
 ENQ (0x05) triggered an answerback message;
 .HP
-DC1 (0x11, \fB^Q\fP, XON) resumed transmission;
+DC1 (0x11, \fB\(haQ\fP, XON) resumed transmission;
 .HP
-DC3 (0x13, \fB^S\fP, XOFF) caused VT100 to ignore (and stop transmitting)
+DC3 (0x13, \fB\(haS\fP, XOFF) caused VT100 to ignore (and stop transmitting)
 all codes except XOFF and XON.
 .PP
 VT100-like DC1/DC3 processing may be enabled by the terminal driver.
@@ -504,7 +527,7 @@ ESC O	SS3	Single shift 3. (Select G3 character set for the next
 		character only.)
 ESC P	DCS	Device control string (ended by ESC \e)
 ESC X	SOS	Start of string.
-ESC ^	PM	Privacy message (ended by ESC \e)
+ESC \(ha	PM	Privacy message (ended by ESC \e)
 ESC \e	ST	String terminator
 ESC * ...		Designate G2 character set
 ESC + ...		Designate G3 character set
@@ -516,7 +539,7 @@ The program
 ESC D, ESC E, ESC H, ESC M, ESC N, ESC O, ESC P ... ESC \e,
 ESC Z (it answers ESC [ ? 1 ; 2 c, "I am a VT100 with
 advanced video option")
-and ESC ^ ... ESC \e with the same meanings as indicated above.
+and ESC \(ha ... ESC \e with the same meanings as indicated above.
 It accepts ESC (, ESC ), ESC *,  ESC + followed by 0, A, B for
 the DEC special character and line drawing set, UK, and US-ASCII,
 respectively.
@@ -563,7 +586,7 @@ ESC |	LS3R	Invoke the G3 character set as GR.
 		Has no visible effect in xterm.
 ESC }	LS2R	Invoke the G2 character set as GR.
 		Has no visible effect in xterm.
-ESC ~	LS1R	Invoke the G1 character set as GR.
+ESC \(ti	LS1R	Invoke the G1 character set as GR.
 		Has no visible effect in xterm.
 .TE
 .PP
@@ -656,7 +679,7 @@ It is ignored.
 .BR ioctl_console (2),
 .BR charsets (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

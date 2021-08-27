@@ -21,7 +21,7 @@
 .\" License along with this manual; if not, see
 .\" <http://www.gnu.org/licenses/>.
 .\" %%%LICENSE_END
-.TH SOCK_DIAG 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH SOCK_DIAG 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sock_diag \- obtaining information about sockets
 .SH SYNOPSIS
@@ -637,7 +637,7 @@ and
 were introduced in Linux 3.6.
 .SH CONFORMING TO
 The NETLINK_SOCK_DIAG API is Linux-specific.
-.SH EXAMPLE
+.SH EXAMPLES
 The following example program prints inode number, peer's inode number,
 and name of all UNIX domain sockets in the current namespace.
 .PP
@@ -680,7 +680,7 @@ send_query(int fd)
         .iov_len = sizeof(req)
     };
     struct msghdr msg = {
-        .msg_name = (void *) &nladdr,
+        .msg_name = &nladdr,
         .msg_namelen = sizeof(nladdr),
         .msg_iov = &iov,
         .msg_iovlen = 1
@@ -711,13 +711,12 @@ print_diag(const struct unix_diag_msg *diag, unsigned int len)
         return \-1;
     }
 
-    struct rtattr *attr;
     unsigned int rta_len = len \- NLMSG_LENGTH(sizeof(*diag));
     unsigned int peer = 0;
     size_t path_len = 0;
     char path[sizeof(((struct sockaddr_un *) 0)\->sun_path) + 1];
 
-    for (attr = (struct rtattr *) (diag + 1);
+    for (struct rtattr *attr = (struct rtattr *) (diag + 1);
              RTA_OK(attr, rta_len); attr = RTA_NEXT(attr, rta_len)) {
         switch (attr\->rta_type) {
         case UNIX_DIAG_NAME:
@@ -726,7 +725,7 @@ print_diag(const struct unix_diag_msg *diag, unsigned int len)
                 if (path_len > sizeof(path) \- 1)
                     path_len = sizeof(path) \- 1;
                 memcpy(path, RTA_DATA(attr), path_len);
-                path[path_len] = '\e0';
+                path[path_len] = \(aq\e0\(aq;
             }
             break;
 
@@ -746,7 +745,7 @@ print_diag(const struct unix_diag_msg *diag, unsigned int len)
         printf(", name=%s%s", *path ? "" : "@",
                 *path ? path : path + 1);
 
-    putchar('\en');
+    putchar(\(aq\en\(aq);
     return 0;
 }
 
@@ -765,7 +764,7 @@ receive_responses(int fd)
 
     for (;;) {
         struct msghdr msg = {
-            .msg_name = (void *) &nladdr,
+            .msg_name = &nladdr,
             .msg_namelen = sizeof(nladdr),
             .msg_iov = &iov,
             .msg_iovlen = 1
@@ -841,7 +840,7 @@ main(void)
 .BR netlink (7),
 .BR tcp (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

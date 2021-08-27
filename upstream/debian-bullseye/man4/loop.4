@@ -23,7 +23,7 @@
 .\" USA.
 .\" %%%LICENSE_END
 .\"
-.TH LOOP 4 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH LOOP 4 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 loop, loop-control \- loop devices
 .SH SYNOPSIS
@@ -42,8 +42,8 @@ You could do
 .in +4n
 .EX
 $ \fBdd if=/dev/zero of=file.img bs=1MiB count=10\fP
-$ \fBsudo losetup /dev/loop4 file.img \fP
-$ \fBsudo mkfs -t ext4 /dev/loop4\fP
+$ \fBsudo losetup /dev/loop4 file.img\fP
+$ \fBsudo mkfs \-t ext4 /dev/loop4\fP
 $ \fBsudo mkdir /myloopdev\fP
 $ \fBsudo mount /dev/loop4 /myloopdev\fP
 .EE
@@ -73,7 +73,7 @@ Disassociate the loop device from any file descriptor.
 Set the status of the loop device using the (third)
 .BR ioctl (2)
 argument.
-This argument is a pointer to
+This argument is a pointer to a
 .I loop_info
 structure, defined in
 .I <linux/loop.h>
@@ -82,17 +82,18 @@ as:
 .in +4n
 .EX
 struct loop_info {
-    int           lo_number;            /* ioctl r/o */
-    dev_t         lo_device;            /* ioctl r/o */
-    unsigned long lo_inode;             /* ioctl r/o */
-    dev_t         lo_rdevice;           /* ioctl r/o */
+    int           lo_number;      /* ioctl r/o */
+    dev_t         lo_device;      /* ioctl r/o */
+    unsigned long lo_inode;       /* ioctl r/o */
+    dev_t         lo_rdevice;     /* ioctl r/o */
     int           lo_offset;
     int           lo_encrypt_type;
     int           lo_encrypt_key_size;  /* ioctl w/o */
-    int           lo_flags;             /* ioctl r/o */
+    int           lo_flags;       /* ioctl r/w (r/o before
+                                     Linux 2.6.25) */
     char          lo_name[LO_NAME_SIZE];
     unsigned char lo_encrypt_key[LO_KEY_SIZE];
-                                        /* ioctl w/o */
+                                  /* ioctl w/o */
     unsigned long lo_init[2];
     char          reserved[4];
 };
@@ -129,7 +130,20 @@ The loopback device will autodestruct on last close.
 .BR LO_FLAGS_PARTSCAN " (since Linux 3.2)"
 .\" commit e03c8dd14915fabc101aa495828d58598dc5af98
 Allow automatic partition scanning.
+.TP
+.BR LO_FLAGS_DIRECT_IO " (since Linux 4.10)"
+.\" commit 2e5ab5f379f96a6207c45be40c357ebb1beb8ef3
+Use direct I/O mode to access the backing file.
 .RE
+.IP
+The only
+.I lo_flags
+that can be modified by
+.BR LOOP_SET_STATUS
+are
+.BR LO_FLAGS_AUTOCLEAR
+and
+.BR LO_FLAGS_PARTSCAN .
 .TP
 .B LOOP_GET_STATUS
 Get the status of the loop device.
@@ -152,6 +166,72 @@ Resize a live loop device.
 One can change the size of the underlying backing store and then use this
 operation so that the loop driver learns about the new size.
 This operation takes no argument.
+.TP
+.BR LOOP_SET_DIRECT_IO " (since Linux 4.10)"
+.\" commit ab1cb278bc7027663adbfb0b81404f8398437e11
+Set DIRECT I/O mode on the loop device, so that
+it can be used to open backing file.
+The (third)
+.BR ioctl (2)
+argument is an unsigned long value.
+A nonzero represents direct I/O mode.
+.TP
+.BR LOOP_SET_BLOCK_SIZE " (since Linux 4.14)"
+.\" commit 89e4fdecb51cf5535867026274bc97de9480ade5
+Set the block size of the loop device.
+The (third)
+.BR ioctl (2)
+argument is an unsigned long value.
+This value must be a power of two in the range
+[512,pagesize];
+otherwise, an
+.B EINVAL
+error results.
+.TP
+.BR LOOP_CONFIGURE " (since Linux 5.8)"
+.\" commit 3448914e8cc550ba792d4ccc74471d1ca4293aae
+Setup and configure all loop device parameters in a single step using
+the (third)
+.BR ioctl (2)
+argument.
+This argument is a pointer to a
+.I loop_config
+structure, defined in
+.I <linux/loop.h>
+as:
+.IP
+.in +4n
+.EX
+struct loop_config {
+    __u32               fd;
+    __u32               block_size;
+    struct loop_info64  info;
+    __u64               __reserved[8];
+};
+.EE
+.in
+.IP
+In addition to doing what
+.BR LOOP_SET_STATUS
+can do,
+.BR LOOP_CONFIGURE
+can also be used to do the following:
+.RS
+.IP * 2
+set the correct block size immediately by setting
+.IR loop_config.block_size ;
+.IP *
+explicitly request direct I/O mode by setting
+.BR LO_FLAGS_DIRECT_IO
+in
+.IR loop_config.info.lo_flags ;
+and
+.IP *
+explicitly request read-only mode by setting
+.BR LO_FLAGS_READ_ONLY
+in
+.IR loop_config.info.lo_flags .
+.RE
 .PP
 Since Linux 2.6, there are two new
 .BR ioctl (2)
@@ -168,15 +248,16 @@ which has some additional fields and a larger range for some other fields:
 .in +4n
 .EX
 struct loop_info64 {
-    uint64_t lo_device;                   /* ioctl r/o */
-    uint64_t lo_inode;                    /* ioctl r/o */
-    uint64_t lo_rdevice;                  /* ioctl r/o */
+    uint64_t lo_device;           /* ioctl r/o */
+    uint64_t lo_inode;            /* ioctl r/o */
+    uint64_t lo_rdevice;          /* ioctl r/o */
     uint64_t lo_offset;
-    uint64_t lo_sizelimit;/* bytes, 0 == max available */
-    uint32_t lo_number;                   /* ioctl r/o */
+    uint64_t lo_sizelimit;  /* bytes, 0 == max available */
+    uint32_t lo_number;           /* ioctl r/o */
     uint32_t lo_encrypt_type;
-    uint32_t lo_encrypt_key_size;         /* ioctl w/o */
-    uint32_t lo_flags;                    /* ioctl r/o */
+    uint32_t lo_encrypt_key_size; /* ioctl w/o */
+    uint32_t lo_flags; i          /* ioctl r/w (r/o before
+                                     Linux 2.6.25) */
     uint8_t  lo_file_name[LO_NAME_SIZE];
     uint8_t  lo_crypt_name[LO_NAME_SIZE];
     uint8_t  lo_encrypt_key[LO_KEY_SIZE]; /* ioctl w/o */
@@ -223,7 +304,7 @@ If the device is in use, the call fails with the error
 .TP
 .IR /dev/loop*
 The loop block special device files.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below uses the
 .I /dev/loop-control
 device to find a free loop device, opens the loop device,
@@ -295,7 +376,7 @@ main(int argc, char *argv[])
 .BR losetup (8),
 .BR mount (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

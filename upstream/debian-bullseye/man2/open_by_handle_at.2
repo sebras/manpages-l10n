@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH OPEN_BY_HANDLE_AT 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH OPEN_BY_HANDLE_AT 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 name_to_handle_at, open_by_handle_at \- obtain handle
 for a pathname and open file via a handle
@@ -110,7 +110,7 @@ and
 .IR handle->handle_bytes
 is set to indicate the required size;
 the caller can then use this information to allocate a structure
-of the correct size (see EXAMPLE below).
+of the correct size (see EXAMPLES below).
 Some care is needed here as
 .BR EOVERFLOW
 can also indicate that no file handle is available for this particular
@@ -279,7 +279,7 @@ On success,
 returns 0,
 and
 .BR open_by_handle_at ()
-returns a nonnegative file descriptor.
+returns a file descriptor (a nonnegative integer).
 .PP
 In the event of an error, both system calls return \-1 and set
 .I errno
@@ -467,7 +467,7 @@ in order to produce the
 .IR mount_fd
 argument used by
 .BR open_by_handle_at ().
-.SH EXAMPLE
+.SH EXAMPLES
 The two programs below demonstrate the use of
 .BR name_to_handle_at ()
 and
@@ -504,7 +504,7 @@ The following shell session demonstrates the use of these two programs:
 .PP
 .in +4n
 .EX
-$ \fBecho 'Can you please think about it?' > cecilia.txt\fP
+$ \fBecho \(aqCan you please think about it?\(aq > cecilia.txt\fP
 $ \fB./t_name_to_handle_at cecilia.txt > fh\fP
 $ \fB./t_open_by_handle_at < fh\fP
 open_by_handle_at: Operation not permitted
@@ -528,7 +528,7 @@ no longer exists.
 $ \fBstat \-\-printf="%i\en" cecilia.txt\fP     # Display inode number
 4072121
 $ \fBrm cecilia.txt\fP
-$ \fBecho 'Can you please think about it?' > cecilia.txt\fP
+$ \fBecho \(aqCan you please think about it?\(aq > cecilia.txt\fP
 $ \fBstat \-\-printf="%i\en" cecilia.txt\fP     # Check inode number
 4072121
 $ \fBsudo ./t_open_by_handle_at < fh\fP
@@ -555,7 +555,7 @@ int
 main(int argc, char *argv[])
 {
     struct file_handle *fhp;
-    int mount_id, fhsize, flags, dirfd, j;
+    int mount_id, fhsize, flags, dirfd;
     char *pathname;
 
     if (argc != 2) {
@@ -586,7 +586,7 @@ main(int argc, char *argv[])
 
     /* Reallocate file_handle structure with correct size */
 
-    fhsize = sizeof(struct file_handle) + fhp\->handle_bytes;
+    fhsize = sizeof(*fhp) + fhp\->handle_bytes;
     fhp = realloc(fhp, fhsize);         /* Copies fhp\->handle_bytes */
     if (fhp == NULL)
         errExit("realloc");
@@ -600,8 +600,8 @@ main(int argc, char *argv[])
        for later reuse by t_open_by_handle_at.c */
 
     printf("%d\en", mount_id);
-    printf("%d %d   ", fhp\->handle_bytes, fhp\->handle_type);
-    for (j = 0; j < fhp\->handle_bytes; j++)
+    printf("%u %d   ", fhp\->handle_bytes, fhp\->handle_type);
+    for (int j = 0; j < fhp\->handle_bytes; j++)
         printf(" %02x", fhp\->f_handle[j]);
     printf("\en");
 
@@ -677,7 +677,7 @@ int
 main(int argc, char *argv[])
 {
     struct file_handle *fhp;
-    int mount_id, fd, mount_fd, handle_bytes, j;
+    int mount_id, fd, mount_fd, handle_bytes;
     ssize_t nread;
     char buf[1000];
 #define LINE_SIZE 100
@@ -707,7 +707,7 @@ main(int argc, char *argv[])
 
     /* Given handle_bytes, we can now allocate file_handle structure */
 
-    fhp = malloc(sizeof(struct file_handle) + handle_bytes);
+    fhp = malloc(sizeof(*fhp) + handle_bytes);
     if (fhp == NULL)
         errExit("malloc");
 
@@ -715,7 +715,7 @@ main(int argc, char *argv[])
 
     fhp\->handle_type = strtoul(nextp, &nextp, 0);
 
-    for (j = 0; j < fhp\->handle_bytes; j++)
+    for (int j = 0; j < fhp\->handle_bytes; j++)
         fhp\->f_handle[j] = strtoul(nextp, &nextp, 16);
 
     /* Obtain file descriptor for mount point, either by opening
@@ -765,7 +765,7 @@ release at
 .UR https://www.kernel.org/pub/linux/utils/util\-linux/
 .UE
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

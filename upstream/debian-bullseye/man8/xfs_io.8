@@ -200,7 +200,7 @@ option will set the file permissions to read-write (0644). This allows xfs_io to
 set up mismatches between the file permissions and the open file descriptor
 read/write mode to exercise permission checks inside various syscalls.
 .TP
-.BI "pread [ \-b " bsize " ] [ \-v ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
+.BI "pread [ \-b " bsize " ] [ \-qv ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
 Reads a range of bytes in a specified blocksize from the given
 .IR offset .
 .RS 1.0i
@@ -211,15 +211,18 @@ can be used to set the blocksize into which the
 .BR read (2)
 requests will be split. The default blocksize is 4096 bytes.
 .TP
+.B \-q
+quiet mode, do not write anything to standard output.
+.TP
 .B \-v
 dump the contents of the buffer after reading,
 by default only the count of bytes actually read is dumped.
 .TP
 .B \-F
-read the buffers in a forwards sequential direction.
+read the buffers in a forward sequential direction.
 .TP
 .B \-B
-read the buffers in a reserve sequential direction.
+read the buffers in a reverse sequential direction.
 .TP
 .B \-R
 read the buffers in the give range in a random order.
@@ -241,7 +244,7 @@ See the
 .B pread
 command.
 .TP
-.BI "pwrite [ \-i " file " ] [ \-dDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
+.BI "pwrite [ \-i " file " ] [ \-qdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
 Writes a range of bytes in a specified blocksize from the given
 .IR offset .
 The bytes written can be either a set pattern or read in from another
@@ -253,6 +256,9 @@ file before writing.
 allows an input
 .I file
 to be specified as the source of the data to be written.
+.TP
+.B \-q
+quiet mode, do not write anything to standard output.
 .TP
 .B \-d
 causes direct I/O, rather than the usual buffered
@@ -299,10 +305,10 @@ is used when the data to write is not coming from a file.
 The default buffer fill pattern value is 0xcdcdcdcd.
 .TP
 .B \-F
-write the buffers in a forwards sequential direction.
+write the buffers in a forward sequential direction.
 .TP
 .B \-B
-write the buffers in a reserve sequential direction.
+write the buffers in a reverse sequential direction.
 .TP
 .B \-R
 write the buffers in the give range in a random order.
@@ -516,10 +522,13 @@ Call fallocate with FALLOC_FL_UNSHARE_RANGE flag as described in the
 .BR fallocate (2)
 manual page to unshare all shared blocks within the range.
 .TP
-.BI fzero " offset length"
+.BI "fzero [ \-k ]" " offset length"
 Call fallocate with FALLOC_FL_ZERO_RANGE flag as described in the
 .BR fallocate (2)
 manual page to allocate and zero blocks within the range.
+With the
+.B -k
+option, use the FALLOC_FL_KEEP_SIZE flag as well.
 .TP
 .BI zero " offset length"
 Call xfsctl with
@@ -532,13 +541,17 @@ manual page to allocate and zero blocks within the range.
 Truncates the current file at the given offset using
 .BR ftruncate (2).
 .TP
-.BI "sendfile \-i " srcfile " | \-f " N " [ " "offset length " ]
+.BI "sendfile [ \-q ] \-i " srcfile " | \-f " N " [ " "offset length " ]
 On platforms which support it, allows a direct in-kernel copy between
 two file descriptors. The current open file is the target, the source
 must be specified as another open file
 .RB ( \-f )
 or by path
 .RB ( \-i ).
+.RS 1.0i
+.B \-q
+quiet mode, do not write anything to standard output.
+.RE
 .TP
 .BI "readdir [ -v ] [ -o " offset " ] [ -l " length " ] "
 Read a range of directory entries from a given offset of a directory.
@@ -657,18 +670,22 @@ Do not print timing statistics at all.
 .RE
 .PD
 .TP
-.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file"
+.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file | \-f " N
 On filesystems that support the
 .BR copy_file_range (2)
-system call, copies data from the
-.I src_file
-into the open file.  If
-.IR src_offset ,
-.IR dst_offset ,
-and
+system call, copies data from the source file into the current open file.
+The source must be specified either by path
+.RB ( src_file )
+or as another open file
+.RB ( \-f ).
+If
 .I length
-are omitted the contents of src_file will be copied to the beginning of the
-open file, overwriting any data already there.
+is not specified, this command copies data from
+.I src_offset
+to the end of
+.BI src_file
+into the dst_file at
+.IR dst_offset .
 .RS 1.0i
 .PD 0
 .TP 0.4i
@@ -694,12 +711,17 @@ Swaps extent forks between files. The current open file is the target. The donor
 file is specified by path. Note that file data is not copied (file content moves
 with the fork(s)).
 .TP
-.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]"
+.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keyspec " ]"
 On filesystems that support encryption, assign an encryption policy to the
 current file.
-.I keydesc
-is a 16-byte hex string which identifies the encryption key to use.
-If not specified, a "default" key descriptor of all 0's will be used.
+.I keyspec
+is a hex string which specifies the encryption key to use.  For v1 encryption
+policies,
+.I keyspec
+must be a 16-character hex string (8 bytes).  For v2 policies,
+.I keyspec
+must be a 32-character hex string (16 bytes).  If unspecified, an all-zeroes
+value is used.
 .RS 1.0i
 .PD 0
 .TP 0.4i
@@ -713,14 +735,69 @@ filenames encryption mode (e.g. AES-256-CTS)
 policy flags (numeric)
 .TP
 .BI \-v " version"
-version of policy structure (numeric)
+policy version.  Defaults to 1 or 2 depending on the length of
+.IR keyspec ;
+or to 1 if
+.I keyspec
+is unspecified.
 .RE
 .PD
 .TP
-.BR get_encpolicy
+.BI "get_encpolicy [ \-1 ] [ \-t ]"
 On filesystems that support encryption, display the encryption policy of the
 current file.
-
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.BI \-1
+Use only the old ioctl to get the encryption policy.  This only works if the
+file has a v1 encryption policy.
+.TP
+.BI \-t
+Test whether v2 encryption policies are supported.  Prints "supported",
+"unsupported", or an error message.
+.RE
+.PD
+.TP
+.BI "add_enckey [ \-d " descriptor " ] [ \-k " key_id " ]"
+On filesystems that support encryption, add an encryption key to the filesystem
+containing the currently open file.  By default, the raw key in binary
+(typically 64 bytes long) is read from standard input.
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.BI \-d " descriptor"
+key descriptor, as a 16-character hex string (8 bytes).  If given, the key will
+be available for use by v1 encryption policies that use this descriptor.
+Otherwise, the key is added as a v2 policy key, and on success the resulting
+"key identifier" will be printed.
+.TP
+.BI \-k " key_id"
+ID of kernel keyring key of type "fscrypt-provisioning".  If given, the raw key
+will be taken from here rather than from standard input.
+.RE
+.PD
+.TP
+.BI "rm_enckey [ -a ] " keyspec
+On filesystems that support encryption, remove an encryption key from the
+filesystem containing the currently open file.
+.I keyspec
+is a hex string specifying the key to remove, as a 16-character "key descriptor"
+or a 32-character "key identifier".
+.RS 1.0i
+.PD 0
+.TP 0.4i
+.BI \-a
+Remove the key for all users who have added it, not just the current user.  This
+is a privileged operation.
+.RE
+.PD
+.TP
+.BI "enckey_status " keyspec
+On filesystems that support encryption, display the status of an encryption key.
+.I keyspec
+is a hex string specifying the key for which to display the status, as a
+16-character "key descriptor" or a 32-character "key identifier".
 .TP
 .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
 List extended inode flags on the currently open file. If the
@@ -731,18 +808,95 @@ for all directory entries below the currently open file
 can be used to restrict the output to directories only).
 This is a depth first descent, it does not follow symlinks and
 it also does not cross mount points.
+
+The current inode flag letters are documented below.
+Please refer to the
+.BR ioctl_xfs_fsgetxattr "(2)"
+documentation for more details about what they mean.
+
+.PD 0
+.RS
+.TP 0.5i
+.B r
+realtime file (XFS_XFLAG_REALTIME)
+
+.TP
+.B p
+prealloc (XFS_XFLAG_PREALLOC)
+
+.TP
+.B i
+immutable (XFS_XFLAG_IMMUTABLE)
+
+.TP
+.B a
+append only (XFS_XFLAG_APPEND)
+
+.TP
+.B s
+synchronous file writes (XFS_XFLAG_SYNC)
+
+.TP
+.B A
+noatime (XFS_XFLAG_NOATIME)
+
+.TP
+.B d
+nodump (XFS_XFLAG_NODUMP)
+
+.TP
+.B t
+inherit realtime flag (XFS_XFLAG_RTINHERIT)"
+
+.TP
+.B P
+inherit project id (XFS_XFLAG_PROJINHERIT)
+
+.TP
+.B n
+no symlink creation (XFS_XFLAG_NOSYMLINKS)
+
+.TP
+.B e
+extent size hint (XFS_XFLAG_EXTSIZE)
+
+.TP
+.B E
+inherit extent size hint (XFS_XFLAG_EXTSZINHERIT)
+
+.TP
+.B f
+nodefrag (XFS_XFLAG_NODEFRAG)
+
+.TP
+.B S
+filestream allocator (XFS_XFLAG_FILESTREAM)
+
+.TP
+.B x
+direct access persistent memory (XFS_XFLAG_DAX)
+
+.TP
+.B C
+copy on write extent hint (XFS_XFLAG_COWEXTSIZE)
+
+.TP
+.B X
+has extended attributes (XFS_XFLAG_HASATTR)
+.RE
+
 .TP
 .BR chattr " [ " \-R " | " \-D " ] [ " + / \-riasAdtPneEfSxC " ]"
 Change extended inode flags on the currently open file. The
 .B \-R
 and
 .B \-D
-options have the same meaning as above. The mapping between each
-letter and the inode flags (refer to
-.BR xfsctl (3)
-for the full list) is available via the
-.B help
-command.
+options have the same meaning as above.
+
+See the
+.B lsattr
+command above for the list of inode flag letters.
+
 .TP
 .BI "flink " path
 Link the currently open file descriptor into the filesystem namespace.
@@ -989,6 +1143,57 @@ for the current memory mapping.
 
 .SH FILESYSTEM COMMANDS
 .TP
+.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-s " startino " ] [ \-v " version" ]
+Display raw stat information about a bunch of inodes in an XFS filesystem.
+Options are as follows:
+.RS 1.0i
+.PD 0
+.TP
+.BI \-a " agno"
+Display only results from the given allocation group.
+If not specified, all results returned will be displayed.
+.TP
+.BI \-d
+Print debugging information about call results.
+.TP
+.BI \-e " endino"
+Stop displaying records when this inode number is reached.
+Defaults to stopping when the system call stops returning results.
+.TP
+.BI \-n " batchsize"
+Retrieve at most this many records per call.
+Defaults to 4,096.
+.TP
+.BI \-s " startino"
+Display inode allocation records starting with this inode.
+Defaults to the first inode in the filesystem.
+If the given inode is not allocated, results will begin with the next allocated
+inode in the filesystem.
+.TP
+.BI \-v " version"
+Use a particular version of the kernel interface.
+Currently supported versions are 1 and 5.
+.RE
+.PD
+.TP
+.BI "bulkstat_single [ \-d ] [ \-v " version " ] [ " inum... " | " special... " ]
+Display raw stat information about individual inodes in an XFS filesystem.
+The
+.B \-d
+and
+.B \-v
+options are the same as the
+.B bulkstat
+command.
+Arguments must be inode numbers or any of the special values:
+.RS 1.0i
+.PD 0
+.TP
+.B root
+Display information about the root directory inode.
+.RE
+.PD
+.TP
 .B freeze
 Suspend all write I/O requests to the filesystem of the current file.
 Only available in expert mode and requires privileges.
@@ -1058,6 +1263,40 @@ printed in the result; if no inode
 .I number
 was specified on the command line, the maximum possible inode number in
 the system will be printed along with its size.
+.PD
+.TP
+.BI "inumbers [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-s " startino " ] [ \-v " version " ]
+Prints allocation information about groups of inodes in an XFS filesystem.
+Callers can use this information to figure out which inodes are allocated.
+Options are as follows:
+.RS 1.0i
+.PD 0
+.TP
+.BI \-a " agno"
+Display only results from the given allocation group.
+If not specified, all results returned will be displayed.
+.TP
+.BI \-d
+Print debugging information about call results.
+.TP
+.BI \-e " endino"
+Stop displaying records when this inode number is reached.
+Defaults to stopping when the system call stops returning results.
+.TP
+.BI \-n " batchsize"
+Retrieve at most this many records per call.
+Defaults to 4,096.
+.TP
+.BI \-s " startino"
+Display inode allocation records starting with this inode.
+Defaults to the first inode in the filesystem.
+If the given inode is not allocated, results will begin with the next allocated
+inode in the filesystem.
+.TP
+.BI \-v " version"
+Use a particular version of the kernel interface.
+Currently supported versions are 1 and 5.
+.RE
 .PD
 .TP
 .BI "scrub " type " [ " agnumber " | " "ino" " " "gen" " ]"

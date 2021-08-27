@@ -5,6 +5,7 @@ find \- search for files in a directory hierarchy
 .SH SYNOPSIS
 .B find
 [\-H] [\-L] [\-P] [\-D debugopts] [\-Olevel] [starting-point...\&] [expression]
+.
 .SH DESCRIPTION
 This manual page
 documents the GNU version of
@@ -31,6 +32,7 @@ findutils.
 That document also includes a lot more detail
 and discussion than this manual page, so you may find it a more useful
 source of information.
+.
 .SH OPTIONS
 The
 .BR \-H ,
@@ -64,14 +66,23 @@ and
 must appear before
 the first path name, if at all.  A double dash
 .B \-\-
-can also be used
-to signal that any remaining arguments are not options (though
-ensuring that all start points begin with either `./' or `/' is
-generally safer if you use wildcards in the list of start points).
+could theoretically be used to signal that any remaining arguments
+are not options, but this does not really work due to the way
+.B find
+determines the end of the following path arguments: it does that by reading
+until an expression argument comes (which also starts with a `-').
+Now, if a path argument would start with a `-', then
+.B find
+would treat it as expression argument instead.
+Thus, to ensure that all start points are taken as such, and especially to
+prevent that wildcard patterns expanded by the calling shell are not mistakenly
+treated as expression arguments, it is generally safer to prefix wildcards or
+dubious path names with either `./' or to use absolute path names starting
+with '/'.
 .IP \-P
 Never follow symbolic links.  This is the default behaviour.  When
 .B find
-examines or prints information a file, and the file is a symbolic
+examines or prints information about files, and the file is a symbolic
 link, the information used shall be taken from the properties of the
 symbolic link itself.
 
@@ -136,7 +147,8 @@ If
 is in effect and one of the
 paths specified on the command line is a symbolic link to a directory,
 the contents of that directory will be examined (though of course
-\-maxdepth 0 would prevent this).
+.B \-maxdepth\ 0
+would prevent this).
 .P
 If more than one of
 .BR \-H ,
@@ -180,8 +192,8 @@ the link itself will be used.
 When the
 .B \-H
 or
-.B \-L options are in effect, any symbolic links listed
-as the argument of
+.B \-L
+options are in effect, any symbolic links listed as the argument of
 .B \-newer
 will be dereferenced, and the timestamp
 will be taken from the file to which the symbolic link points.  The
@@ -213,8 +225,7 @@ is not doing what you want.  The list of debug options should be comma
 separated.  Compatibility of the debug options is not guaranteed
 between releases of findutils.  For a complete list of valid debug
 options, see the output of
-.B find \-D
-.BR help .
+.BR "find \-D\ help" .
 Valid debug options include
 .RS
 .IP exec
@@ -274,8 +285,7 @@ modern versions of Unix, file types are returned by
 and so these predicates are faster to evaluate than predicates which
 need to stat the file first.
 If you use the
-.B \-fstype
-.I FOO
+.B "\-fstype\ \fIFOO\fR"
 predicate and specify a filesystem type
 .I FOO
 which is not known (that is, present in `/etc/mtab') at the time
@@ -297,9 +307,9 @@ predicates which are likely to fail are evaluated earlier.
 The cost-based optimiser has a fixed idea of how likely any given test
 is to succeed.  In some cases the probability takes account of the
 specific nature of the test (for example,
-.B \-type f
+.B \-type\ f
 is assumed to be more likely to succeed than
-.BR "\-type c" ).
+.BR "\-type\ c" ).
 The cost-based optimiser is currently being evaluated.
 If it does not actually improve the performance of
 .BR find ,
@@ -310,7 +320,7 @@ level 1) will not be changed in the 4.3.x release series.  The
 findutils test suite runs all the tests on
 .B find
 at each optimisation level and ensures that the result is the same.
-.P
+.
 .SH EXPRESSION
 The part of the command line after the list of starting points is the
 .IR expression .
@@ -358,12 +368,29 @@ include for example
 is assumed.
 
 .P
-If the whole expression contains no actions other than
+The
+.B \-print
+action is performed on all files for which the whole expression is
+true, unless it contains an action other than
 .B \-prune
 or
-.BR \-print ,
+.BR \-quit .
+Actions which inhibit the default
 .B \-print
-is performed on all files for which the whole expression is true.
+are
+.BR \-delete ,
+.BR \-exec ,
+.BR \-execdir ,
+.BR \-ok ,
+.BR \-okdir ,
+.BR \-fls ,
+.BR \-fprint ,
+.BR \-fprintf ,
+.BR \-ls ,
+.B \-print
+and
+.BR \-printf .
+
 
 The
 .B \-delete
@@ -430,8 +457,7 @@ and
 .B \-iregex
 tests which occur later on the command line.  To see which regular
 expression types are known, use
-.B \-regextype
-.BR help .
+.BR "\-regextype\ help" .
 The Texinfo documentation (see
 .B SEE
 .BR ALSO )
@@ -511,14 +537,14 @@ action will be true.
 
 .IP "\-maxdepth \fIlevels\fR"
 Descend at most \fIlevels\fR (a non-negative integer) levels of
-directories below the starting-points.
-.B \-maxdepth 0
+directories below the starting-points.  Using
+.B \-maxdepth\ 0
 means only apply the tests and actions to the starting-points themselves.
 
 .IP "\-mindepth \fIlevels\fR"
 Do not apply any tests or actions at levels less than \fIlevels\fR (a
-non-negative integer).
-.B \-mindepth 1
+non-negative integer).  Using
+.B \-mindepth\ 1
 means process all files except the starting-points.
 
 .IP \-mount
@@ -576,7 +602,17 @@ system call fails for it), an error message is issued, and
 .B find
 exits with a nonzero status.
 .P
-Numeric arguments can be specified as
+A numeric argument \fIn\fR can be specified to tests (like
+.BR \-amin ,
+.BR \-mtime ,
+.BR \-gid ,
+.BR \-inum ,
+.BR \-links ,
+.BR \-size ,
+.BR \-uid
+and
+.BR \-used )
+as
 .IP \fI+n\fP
 for greater than
 .IR n ,
@@ -586,46 +622,50 @@ for less than
 .IP \fIn\fP
 for exactly
 .IR n .
+.
 .P
+Supported tests:
 
 .IP "\-amin \fIn\fR"
-File was last accessed \fIn\fR minutes ago.
+File was last accessed less than, more than or exactly \fIn\fR minutes ago.
 
-.IP "\-anewer \fIfile\fR"
-File was last accessed more recently than \fIfile\fR was modified.  If
-\fIfile\fR is a symbolic link and the
+.IP "\-anewer \fIreference\fR"
+Time of the last access of the current file is more recent than that
+of the last data modification of the \fIreference\fR file.
+If \fIreference\fR is a symbolic link and the
 .B \-H
 option or the
 .B \-L
-option is in effect, the access time of the file it points to is
-always used.
+option is in effect, then the time of the last data modification of the file
+it points to is always used.
 
 .IP "\-atime \fIn\fR"
-File was last accessed
+File was last accessed less than, more than or exactly
 .IR n *24
 hours ago.
 When find figures out how many 24-hour periods ago the file
 was last accessed, any fractional part is ignored, so to match
-.B \-atime
-.BR +1 ,
+.BR "\-atime\ +1" ,
 a file has to have been accessed at least
 .I two
 days ago.
 
 .IP "\-cmin \fIn\fR"
-File's status was last changed \fIn\fR minutes ago.
+File's status was last changed less than, more than or exactly \fIn\fR minutes
+ago.
 
-.IP "\-cnewer \fIfile\fR"
-File's status was last changed more recently than \fIfile\fR was
-modified.  If \fIfile\fR is a symbolic link and the
+.IP "\-cnewer \fIreference\fR"
+Time of the last status change of the current file is more recent than that
+of the last data modification of the \fIreference\fR file.
+If \fIreference\fR is a symbolic link and the
 .B \-H
 option or the
 .B \-L
-option is in effect, the status-change time of the file it points
-to is always used.
+option is in effect, then the time of the last data modification of the file
+it points to is always used.
 
 .IP "\-ctime \fIn\fR"
-File's status was last changed
+File's status was last changed less than, more than or exactly
 .IR n *24
 hours ago.
 See the comments for
@@ -668,7 +708,7 @@ is: ufs, 4.2, 4.3, nfs, tmp, mfs, S51K, S52K.  You can use
 with the %F directive to see the types of your filesystems.
 
 .IP "\-gid \fIn\fR"
-File's numeric group ID is
+File's numeric group ID is less than, more than or exactly
 .IR n .
 
 .IP "\-group \fIgname\fR"
@@ -695,7 +735,7 @@ patterns `fo*' and `F??' match the file names `Foo', `FOO', `foo',
 The pattern `*foo*` will also match a file called '.foobar'.
 
 .IP "\-inum \fIn\fR"
-File has inode number
+File has inode number smaller than, greater than or exactly
 .IR n .
 It is normally easier to use the
 .B \-samefile
@@ -716,7 +756,7 @@ See \-ipath.  This alternative is less portable than
 .BR \-ipath .
 
 .IP "\-links \fIn\fR"
-File has \fIn\fR hard links.
+File has less than, more than or exactly \fIn\fR hard links.
 
 .IP "\-lname \fIpattern\fR"
 File is a symbolic link whose contents match shell pattern
@@ -730,10 +770,11 @@ option is in effect, this test returns false unless the symbolic link
 is broken.
 
 .IP "\-mmin \fIn\fR"
-File's data was last modified \fIn\fR minutes ago.
+File's data was last modified less than, more than or exactly \fIn\fR minutes
+ago.
 
 .IP "\-mtime \fIn\fR"
-File's data was last modified
+File's data was last modified less than, more than or exactly
 .IR n *24
 hours ago.
 See the comments for
@@ -758,10 +799,9 @@ The metacharacters (`*', `?',
 and `[]') match a `.\&' at the start of the base name (this is a change
 in findutils-4.2.2; see section STANDARDS CONFORMANCE below).  To ignore a
 directory and the files under it, use
-.BR \-prune ;
-see an example in the
-description of
-.BR \-path .
+.B \-prune
+rather than checking every file in the tree;
+see an example in the description of that action.
 Braces are not recognised as being
 special, despite the fact that some shells including Bash imbue braces
 with a special meaning in shell patterns.  The filename matching is
@@ -771,15 +811,15 @@ library function.
 Don't forget to enclose the pattern in quotes in order to protect it
 from expansion by the shell.
 
-.IP "\-newer \fIfile\fR"
-File was modified more recently than
-.IR file .
-If \fIfile\fR is a symbolic link and the
+.IP "\-newer \fIreference\fR"
+Time of the last data modification of the current file is more recent than that
+of the last data modification of the \fIreference\fR file.
+If \fIreference\fR is a symbolic link and the
 .B \-H
 option or the
 .B \-L
-option is in effect, the
-modification time of the file it points to is always used.
+option is in effect, then the time of the last data modification of the file
+it points to is always used.
 
 .IP "\-newerXY \fIreference\fR"
 Succeeds if timestamp \fIX\fR of the file being considered is newer
@@ -830,33 +870,28 @@ File name matches shell pattern
 .IR pattern .
 The metacharacters do not treat `/' or `.\&' specially;
 so, for example,
-.br
-.in +1i
+.in +4m
+.nf
 find . \-path \(dq./sr*sc\(dq
-.br
-.in -1i
-will print an entry for a directory called `./src/misc' (if one
-exists).  To ignore a whole directory tree, use
+.fi
+.in
+will print an entry for a directory called
+.I ./src/misc
+(if one exists).  To ignore a whole directory tree, use
 .B \-prune
 rather than
-checking every file in the tree.  For example, to skip the
-directory `src/emacs' and all files and directories under it, and
-print the names of the other files found, do something like this:
-.br
-.in +1i
-find . \-path ./src/emacs \-prune \-o \-print
-.br
-.in -1i
+checking every file in the tree.
 Note that the pattern match test applies to the whole file name,
 starting from one of the start points named on the command line.  It
 would only make sense to use an absolute path name here if the
 relevant start point is also an absolute path.  This means that this
 command will never match anything:
 .br
-.in +1i
+.in +4m
+.nf
 find bar \-path /foo/bar/myfile \-print
-.br
-.in -1i
+.fi
+.in
 Find compares the
 .B \-path
 argument with the concatenation of a directory name and the base name
@@ -901,8 +936,7 @@ section for some illustrative examples.  If no permission bits in
 .I mode
 are set, this test matches any file (the idea here is to be consistent
 with the behaviour of
-.B \-perm
-.BR \-000 ).
+.BR "\-perm\ \-000" ).
 
 .IP "\-perm +\fImode\fR"
 This is no longer supported (and has been deprecated since 2005).  Use
@@ -925,7 +959,8 @@ information held on the server.
 File name matches regular expression
 .IR pattern .
 This is a match on the whole path, not a search.
-For example, to match a file named `./fubar3',
+For example, to match a file named
+.IR ./fubar3,
 you can use the regular expression `.*bar.\&' or `.*b.*3',
 but not `f.*r3'.
 The regular expressions understood by
@@ -943,8 +978,8 @@ When
 is in effect, this can include symbolic links.
 
 .IP "\-size \fIn\fR[cwbkMG]"
-File uses \fIn\fP units of space, rounding up.  The following suffixes
-can be used:
+File uses less than, more than or exactly \fIn\fP units of space, rounding up.
+The following suffixes can be used:
 .RS
 .IP `b'
 for 512-byte blocks (this is the default if no suffix is used)
@@ -963,7 +998,7 @@ for gibibytes (GiB, units of 1024 * 1024 * 1024 = 1\|073\|741\|824 bytes)
 The size is simply the st_size member of the struct stat populated by
 the lstat (or stat) system call, rounded up as shown above.
 In other words, it's consistent with the result you get for
-.BR "ls -l" .
+.BR "ls\ \-l" .
 Bear in
 mind that the `%k' and `%b' format specifiers of
 .B \-printf
@@ -976,9 +1011,9 @@ The + and - prefixes signify greater than and less than, as usual;
 i.e., an exact size of \fIn\fR units does not match.
 Bear in mind that the size is rounded up to the next unit.
 Therefore
-.B \-size \-1M
+.B \-size\ \-1M
 is not equivalent to
-.BR "\-size \-1\|048\|576c".
+.BR "\-size\ \-1\|048\|576c" .
 The former only matches empty files, the latter matches files from 0 to
 1,048,575 bytes.
 .IP \-true
@@ -1017,11 +1052,12 @@ door (Solaris)
 To search for more than one type at once, you can supply the combined list of
 type letters separated by a comma `,' (GNU extension).
 .IP "\-uid \fIn\fR"
-File's numeric user ID is
+File's numeric user ID is less than, more than or exactly
 .IR n .
 
 .IP "\-used \fIn\fR"
-File was last accessed \fIn\fR days after its status was last changed.
+File was last accessed less than, more than or exactly \fIn\fR days after its
+status was last changed.
 
 .IP "\-user \fIuname\fR"
 File is owned by user \fIuname\fR (numeric user ID allowed).
@@ -1152,18 +1188,21 @@ command will be much less than the number of matched files.  The
 command line is built in much the same way that
 .B xargs
 builds its command lines.  Only one instance of `{}' is allowed within
-the command, and (when
-.B find
-is being invoked from a shell) it should be quoted (for
-example, \(aq{}\(aq) to protect it from interpretation by shells.  The
-command is executed in the starting directory.  If any invocation
+the command, and it must appear at the end, immediately before the `+';
+it needs to be escaped (with a `\e') or quoted to protect it from
+interpretation by the shell.
+The command is executed in the starting directory.  If any invocation
 with the `+' form returns a non-zero value as exit status, then
 .B find
 returns a non-zero exit status.  If
 .B find
 encounters an error, this can sometimes cause an
 immediate exit, so some pending commands may not be run
-at all.  This variant of
+at all.  For this reason
+.B \-exec\ \fImy-command\fP\ ...\ {}\ +\ \-quit
+may not result in
+.I my-command
+actually being run.  This variant of
 .B \-exec
 always returns true.
 
@@ -1210,13 +1249,9 @@ The result of the action depends on whether the
 or the
 .B ;
 variant is being used;
-.B \-execdir
-.I command
-.B {} +
+.B \-execdir\ \fIcommand\fP\ {}\ +
 always returns true, while
-.B \-execdir
-.I command
-.B {} ;
+.B \-execdir\ \fIcommand\fP\ {}\ ;
 returns true only if
 .I command
 returns 0.
@@ -1238,8 +1273,11 @@ True; print the full file name into file
 .IR file .
 If \fIfile\fR
 does not exist when \fBfind\fR is run, it is created; if it does
-exist, it is truncated.  The file names `/dev/stdout' and
-`/dev/stderr' are handled specially; they refer to the standard
+exist, it is truncated.  The file names
+.I /dev/stdout
+and
+.I /dev/stderr
+are handled specially; they refer to the standard
 output and standard error output, respectively.
 The output file is always created, even if the predicate is never matched.
 See the
@@ -1282,7 +1320,7 @@ Like
 but ask the user first.  If the user agrees, run the command.  Otherwise
 just return false.  If the command is run, its standard input is redirected
 from
-.BR /dev/null .
+.IR /dev/null .
 
 .IP
 The response to the prompt is matched against a pair of regular
@@ -1308,7 +1346,7 @@ but ask the user first in the same way as for
 .BR \-ok .
 If the user does not agree, just return false.
 If the command is run, its standard input is redirected from
-.BR /dev/null .
+.IR /dev/null .
 
 .IP \-print
 True; print the full file name on the standard output, followed by a
@@ -1340,7 +1378,9 @@ option of
 .IP "\-printf \fIformat\fR"
 True; print \fIformat\fR on the standard output, interpreting `\e'
 escapes and `%' directives.  Field widths and precisions can be
-specified as with the `printf' C function.  Please note that many of
+specified as with the
+.BR printf (3)
+C function.  Please note that many of
 the fields are printed as %s rather than %d, and this may mean that
 flags don't work as you might expect.  This also means that the `\-'
 flag does work (it forces fields to be left-aligned).  Unlike
@@ -1377,14 +1417,23 @@ ordinary character, so they both are printed.
 .IP %%
 A literal percent sign.
 .IP %a
-File's last access time in the format returned by the C `ctime' function.
+File's last access time in the format returned by the C
+.BR ctime (3)
+function.
 .IP %A\fIk\fP
 File's last access time in the format specified by
 .IR k ,
-which is either `@' or a directive for the C `strftime' function.
-The possible values for \fIk\fR are listed below;
-some of them might not be available on all systems,
-due to differences in `strftime' between systems.
+which is either `@' or a directive for the C
+.BR strftime (3)
+function.
+The following shows an incomplete list of possible values for \fIk\fR.
+Please refer to the documentation of
+.BR strftime (3)
+for the full list.
+Some of the conversion specification characters might not be available on all systems,
+due to differences in the implementation of the
+.BR strftime (3)
+library function.
 .RS
 .IP @
 seconds since Jan.\& 1, 1970, 00:00 GMT, with fractional part.
@@ -1438,6 +1487,8 @@ in the seconds field.
 day of month (01..31)
 .IP D
 date (mm/dd/yy)
+.IP F
+date (yyyy-mm-dd)
 .IP h
 same as b
 .IP j
@@ -1462,7 +1513,8 @@ The amount of disk space used for this file in 512-byte blocks.  Since disk
 space is allocated in multiples of the filesystem block size this is usually
 greater than %s/512, but it can also be smaller if the file is a sparse file.
 .IP %c
-File's last status change time in the format returned by the C `ctime'
+File's last status change time in the format returned by the C
+.BR ctime (3)
 function.
 .IP %C\fIk\fP
 File's last status change time in the format specified by
@@ -1474,7 +1526,14 @@ File's depth in the directory tree; 0 means the file is a starting-point.
 The device number on which the file exists (the st_dev field of struct
 stat), in decimal.
 .IP %f
-File's name with any leading directories removed (only the last element).
+Print the basename; the file's name with any leading directories
+removed (only the last element).  For
+.BR / ,
+the result is `/'.
+See the
+.B EXAMPLES
+section for an example.
+
 .IP %F
 Type of the filesystem the file is on; this value can be used for
 \-fstype.
@@ -1483,9 +1542,14 @@ File's group name, or numeric group ID if the group has no name.
 .IP %G
 File's numeric group ID.
 .IP %h
-Leading directories of file's name (all but the last element).
-If the file name contains no slashes (since it is in the current
-directory) the %h specifier expands to `.'.
+Dirname; the Leading directories of the file's name (all but the last
+element).  If the file name contains no slashes (since it is in the
+current directory) the %h specifier expands to `.'.  For files which
+are themselves directories and contain a slash (including
+.BR / ),
+%h expands to the empty string.  See the
+.B EXAMPLES
+section for an example.
 .IP %H
 Starting-point under which file was found.
 .IP %i
@@ -1533,7 +1597,8 @@ If the file size is zero, the value printed is undefined.
 On systems which lack support for st_blocks,
 a file's sparseness is assumed to be 1.0.
 .IP %t
-File's last modification time in the format returned by the C `ctime'
+File's last modification time in the format returned by the C
+.BR ctime (3)
 function.
 .IP %T\fIk\fP
 File's last modification time in the format specified by
@@ -1548,8 +1613,9 @@ File's type (like in
 .BR "ls \-l" ),
 U=unknown type (shouldn't happen)
 .IP %Y
-File's type (like %y), plus follow symlinks: `L'=loop, `N'=nonexistent, `?' for
-any other error when determining the type of the symlink target.
+File's type (like %y), plus follow symbolic links: `L'=loop, `N'=nonexistent,
+`?' for any other error when determining the type of the target of a symbolic
+link.
 .IP %Z
 (SELinux only) file's security context.
 .IP "%{ %[ %("
@@ -1563,8 +1629,7 @@ character.  In some locales, it may hide your door keys, while in
 others it may remove the final page from the novel you are reading.
 
 The %m and %d directives support the
-.B #
-,
+.BR # ,
 .B 0
 and
 .B +
@@ -1590,7 +1655,9 @@ section for information about how unusual characters in filenames are handled.
 .IP \-prune
 True; if the file is a directory, do not descend into it.  If
 .B \-depth
-is given, false; no effect.  Because
+is given, then
+.B \-prune
+has no effect.  Because
 .B \-delete
 implies
 .BR \-depth ,
@@ -1599,23 +1666,52 @@ you cannot usefully use
 and
 .B \-delete
 together.
+For example, to skip the directory
+.I src/emacs
+and all files and directories under it, and print the names of the other files
+found, do something like this:
+.in +4m
+.nf
+find . \-path ./src/emacs \-prune \-o \-print
+.fi
+.in
+
 
 .IP "\-quit"
-Exit immediately.  No child processes will be left running, but no more
-paths specified on the command line will be processed.  For example,
-.B find /tmp/foo /tmp/bar \-print \-quit
-will print only
-.BR /tmp/foo .
-Any command lines which have been built up with
-.B \-execdir \&...\& {} +
-will be invoked before
+Exit immediately (with return value zero if no errors have occurred).
+This is different to
+.B \-prune
+because
+.B \-prune
+only applies to the contents of pruned directories, while
+.B \-quit
+simply makes
 .B find
-exits.
-The exit status may or may not be zero,
-depending on whether an error has already occurred.
+stop immediately.  No child processes will be left
+running.  Any command lines which have been built by
+.B \-exec\ ...\ +
+or
+.B \-execdir\ ...\ +
+are invoked before the program is
+exited.  After
+.B \-quit
+is executed, no more files specified on the command line will be
+processed.  For example,
+.RB ` "find\ \fI/tmp/foo\fP\ \fI/tmp/bar\fP\ \-print\ \-quit" `
+will print only `/tmp/foo`.
+.br
+One common use of
+.B \-quit
+is to stop searching the file system once we have
+found what we want.  For example, if we want to find just a single
+file we can do this:
+.in +4m
+.nf
+find / -name needle -print -quit
+.fi
+.in
 
 .SS OPERATORS
-.P
 Listed in order of decreasing precedence:
 
 .IP "( \fIexpr\fR )"
@@ -1678,8 +1774,7 @@ This means that
 .B find . \-name afile \-o \-name bfile \-print
 will never print
 .IR afile .
-
-
+.
 .SH UNUSUAL FILENAMES
 Many of the actions of
 .B find
@@ -1746,7 +1841,7 @@ The
 and
 .B \-okdir
 actions print the current filename as-is.  This may change in a future release.
-
+.
 .SH "STANDARDS CONFORMANCE"
 For closest compliance to the POSIX standard, you should set the
 POSIXLY_CORRECT environment variable.  The following options are
@@ -1763,7 +1858,7 @@ This option is supported, but POSIX conformance depends on the
 POSIX conformance of the system's
 .BR fnmatch (3)
 library function.  As of findutils-4.2.2, shell metacharacters
-(`*', `?' or `[]' for example) will match a leading `.', because
+(`*', `?' or `[]' for example) match a leading `.', because
 IEEE PASC interpretation 126 requires this.
 This is a change from previous versions of findutils.
 
@@ -1781,8 +1876,9 @@ patterns selected by setting the `LC_MESSAGES' environment variable.
 When the `POSIXLY_CORRECT' environment variable is set, these patterns
 are taken system's definition of a positive (yes) or negative (no)
 response.  See the system's
-documentation for \fBnl_langinfo\fP(3), in particular YESEXPR and
-NOEXPR.
+documentation for
+.BR nl_langinfo (3),
+in particular YESEXPR and NOEXPR.
 When `POSIXLY_CORRECT' is not set, the patterns are instead taken from
 .BR find 's
 own message catalogue.
@@ -1821,9 +1917,10 @@ are all supported.
 
 .P
 The POSIX standard specifies parentheses `(', `)', negation `!' and the
-`and' and `or' operators (
-.BR \-a ,
-.BR \-o ).
+logical AND/OR operators
+.B \-a
+and
+.BR \-o .
 .P
 All other options, predicates, expressions and so forth are extensions
 beyond the POSIX standard.  Many of these extensions are not unique to
@@ -1884,6 +1981,7 @@ of the
 or
 .B \-iregex
 tests because those tests aren't specified in the POSIX standard.
+.
 .SH "ENVIRONMENT VARIABLES"
 
 .IP LANG
@@ -1964,13 +2062,11 @@ all messages printed on stderr are diagnostics and must result in a
 non-zero exit status.
 .IP
 When POSIXLY_CORRECT is not set,
-.B \-perm
-+zzz
+.B "\-perm \fI+zzz\fR"
 is treated just like
-.B \-perm
-/zzz
+.B "\-perm \fI/zzz\fR"
 if
-+zzz is not a valid symbolic mode.  When POSIXLY_CORRECT is set, such
+\fI+zzz\fR is not a valid symbolic mode.  When POSIXLY_CORRECT is set, such
 constructs are treated as an error.
 .IP
 When POSIXLY_CORRECT is set, the response to the prompt made by the
@@ -1986,171 +2082,253 @@ directives of
 .B \-printf
 and
 .BR \-fprintf .
+.
 .SH "EXAMPLES"
+.\" A bulleted \[bu] list of examples.
+.SS Simple `find|xargs` approach
+.IP \[bu]
+Find files named
+.I core
+in or below the directory
+.I /tmp
+and delete them.
 .nf
-.B find /tmp \-name core \-type f \-print | xargs /bin/rm \-f
-
+\&
+.in +4m
+.B $ find /tmp \-name core \-type f \-print | xargs /bin/rm \-f
+.in
+\&
 .fi
-Find files named
-.B core
-in or below the directory
-.B /tmp
-and delete them.  Note that this will work incorrectly if there are
+Note that this will work incorrectly if there are
 any filenames containing newlines, single or double quotes, or spaces.
-.P
-.B find /tmp \-name core \-type f \-print0 | xargs \-0 /bin/rm \-f
-
-.fi
-Find files named
-.B core
-in or below the directory
-.B /tmp
+.
+.SS Safer `find -print0 | xargs -0` approach
+.IP \[bu]
+Find files named \fIcore\fP in or below the directory \fI/tmp\fP
 and delete them, processing filenames in such a way that file or
 directory names containing single or double quotes, spaces or newlines
-are correctly handled.  The
+are correctly handled.
+.nf
+\&
+.in +4m
+.B $ find /tmp \-name core \-type f \-print0 | xargs \-0 /bin/rm \-f
+.in
+\&
+.fi
+The
 .B \-name
 test comes before the
 .B \-type
 test in order to avoid having to call
 .B stat(2)
 on every file.
+.PP
+Note that there is still a race between the time
+.B find
+traverses the hierarchy printing the matching filenames, and the time the
+process executed by
+.B xargs
+works with that file.
 
-.P
+.SS
+Executing a command for each file
+.IP \[bu]
+Run
+.I file
+on every file in or below the current directory.
 .nf
-.B find . \-type f \-exec file \(aq{}\(aq \e;
-
+\&
+.in +4m
+.B $ find . \-type f \-exec file \(aq{}\(aq \e;
+.in
+\&
 .fi
-Runs `file' on every file in or below the current directory.  Notice
-that the braces are enclosed in single quote marks to protect them
+Notice that the braces are enclosed in single quote marks to protect them
 from interpretation as shell script punctuation.  The semicolon is
 similarly protected by the use of a backslash, though single quotes
 could have been used in that case also.
-
-.P
-.nf
-.B find / \e( \-perm \-4000 \-fprintf /root/suid.txt \
-\(aq%#m %u %p\en\(aq \e) , \e
-.B  \e( \-size +100M \-fprintf /root/big.txt  \(aq%\-10s %p\en\(aq \e)
-
-.fi
-Traverse the filesystem just once, listing setuid files and
+.PP
+In many cases, one might prefer the
+.B `\-exec\ \&...\&\ +`
+or better the
+.B `\-execdir\ \&...\&\ +`
+syntax for performance and security reasons.
+.
+.SS Traversing the filesystem just once - for 2 different actions
+.IP \[bu]
+Traverse the filesystem just once, listing set-user-ID files and
 directories into
-.B /root/suid.txt
+.I /root/suid.txt
 and large files into
-.BR /root/big.txt .
-
-.P
+.IR /root/big.txt .
 .nf
-.B find $HOME  \-mtime 0
-
+\&
+.in +4m
+.B $ find / \e
+.in +4m
+.B \e( \-perm \-4000 \-fprintf /root/suid.txt \(aq%#m %u %p\en\(aq \e) , \e
+.br
+.B \e( \-size +100M \-fprintf /root/big.txt  \(aq%\-10s %p\en\(aq \e)
+.in -4m
+.in -4m
+\&
 .fi
+This example uses the line-continuation character \(aq\e\(aq on the first two
+lines to instruct the shell to continue reading the command on the next line.
+.
+.SS
+Searching files by age
+.IP \[bu]
 Search for files in your home directory which have been modified in
-the last twenty-four hours.  This command works this way because the
+the last twenty-four hours.
+.nf
+\&
+.in +4m
+.B $ find $HOME  \-mtime 0
+.in
+\&
+.fi
+This command works this way because the
 time since each file was last modified is divided by 24 hours and any
 remainder is discarded.  That means that to match
 .B \-mtime
 .BR 0 ,
 a file will have to have a modification in the past which is less than
 24 hours ago.
-
-.P
-.nf
-.B find /sbin /usr/sbin \-executable \e! \-readable \-print
-
-.fi
+.
+.SS
+Searching files by permissions
+.IP \[bu]
 Search for files which are executable but not readable.
-
-.P
 .nf
-.B find . \-perm 664
-
+\&
+.in +4m
+.B $ find /sbin /usr/sbin \-executable \e! \-readable \-print
+.in
+\&
 .fi
+.
+.IP \[bu]
 Search for files which have read and write permission for their owner,
-and group, but which other users can read but not write to.  Files
-which meet these criteria but have other permissions bits set (for
-example if someone can execute the file) will not be matched.
-
-.P
+and group, but which other users can read but not write to.
 .nf
-.B find . \-perm \-664
-
+\&
+.in +4m
+.B $ find . \-perm 664
+.in
+\&
 .fi
+Files which meet these criteria but have other permissions bits set
+(for example if someone can execute the file) will not be matched.
+.
+.IP \[bu]
 Search for files which have read and write permission for their owner
 and group, and which other users can read, without regard to the
 presence of any extra permission bits (for example the executable
-bit).  This will match a file which has mode 0777, for example.
-
-.P
+bit).
 .nf
-.B find . \-perm /222
-
+\&
+.in +4m
+.B $ find . \-perm \-664
+.in
+\&
 .fi
+This will match a file which has mode
+.IR 0777 ,
+for example.
+.
+.IP \[bu]
 Search for files which are writable by somebody (their owner, or
 their group, or anybody else).
-
-.P
 .nf
-.B find . \-perm /220
-.B find . \-perm /u+w,g+w
-.B find . \-perm /u=w,g=w
-
+\&
+.in +4m
+.B $ find . \-perm /222
+.in
+\&
+.fi
+.
+.IP \[bu]
+Search for files which are writable by either their owner or their group.
+.nf
+\&
+.in +4m
+.B $ find . \-perm /220
+.B $ find . \-perm /u+w,g+w
+.B $ find . \-perm /u=w,g=w
+.in
+\&
 .fi
 All three of these commands do the same thing, but the first one uses
 the octal representation of the file mode, and the other two use the
-symbolic form.  These commands all search for files which are
-writable by either their owner or their group.  The files don't have
-to be writable by both the owner and group to be matched; either will
-do.
-
-.P
+symbolic form.
+The files don't have to be writable by both the owner and group to be matched;
+either will do.
+.
+.IP \[bu]
+Search for files which are writable by both their owner and their group.
 .nf
-.B find . \-perm \-220
-.B find . \-perm \-g+w,u+w
-
+\&
+.in +4m
+.B $ find . \-perm \-220
+.B $ find . \-perm \-g+w,u+w
+.in
+\&
 .fi
-Both these commands do the same thing; search for files which are
-writable by both their owner and their group.
-
-.P
+Both these commands do the same thing.
+.
+.IP \[bu]
+A more elaborate search on permissions.
 .nf
-.B find . \-perm \-444 \-perm /222 \e! \-perm /111
-.B find . \-perm \-a+r \-perm /a+w \e! \-perm /a+x
-
+\&
+.in +4m
+.B $ find . \-perm \-444 \-perm /222 \e! \-perm /111
+.B $ find . \-perm \-a+r \-perm /a+w \e! \-perm /a+x
+.in
+\&
 .fi
-These two commands both search for files that are readable for
-everybody (
-.B \-perm \-444
+These two commands both search for files that are readable for everybody
+.RB ( "\-perm \-444"
 or
 .BR "\-perm \-a+r" ),
 have at least one write bit
-set (
-.B \-perm /222
+set
+.RB ( "\-perm /222"
 or
 .BR "\-perm /a+w" )
-but are not executable for anybody (
-.B ! \-perm /111
-and
+but are not executable for anybody
+.RB ( "! \-perm /111"
+or
 .B ! \-perm /a+x
 respectively).
-
-.P
-.nf
-.B cd /source-dir
-.B find . \-name .snapshot \-prune \-o \e( \e! \-name \(aq*~\(aq \-print0 \e)|
-.B cpio \-pmd0   /dest-dir
-
-.fi
-This command copies the contents of
-.B /source-dir
+.
+.SS
+Pruning - omitting files and subdirectories
+.IP \[bu]
+Copy the contents of
+.I /source-dir
 to
-.BR /dest-dir ,
-but omits files and directories named
-.B .snapshot
+.IR /dest-dir ,
+but omit files and directories named
+.I .snapshot
 (and anything in them).  It also omits files or directories whose name
 ends in
-.BR ~ ,
-but not their contents.  The construct
-.B \-prune \-o \e( \&...\& \-print0 \e)
+.IR '\(ti' ,
+but not their contents.
+.nf
+\&
+.in +4m
+.B $ cd /source-dir
+.B $ find . \-name .snapshot \-prune \-o \e( \e! \-name \(aq*~\(aq \-print0 \e) \e
+.br
+.in +4m
+.B | cpio \-pmd0  /dest-dir
+.in -4m
+.in -4m
+\&
+.fi
+The construct
+.B \-prune\ \-o\ \e(\ \&...\&\ \-print0\ \e)
 is quite common.  The idea here is that the expression before
 .B \-prune
 matches things which are to be pruned.  However, the
@@ -2171,49 +2349,109 @@ binds more tightly than
 .BR \-o ,
 this is the default anyway, but the parentheses help to show
 what is going on.
-
-.P
-.nf
-.B find repo/ \e( \-exec test \-d \(aq{}\(aq/.svn \e; \-or \e
-.B \-exec test \-d {}/.git \e; \-or \-exec test \-d {}/CVS \e; \e) \e
-.B \-print \-prune
-.fi
-
+.
+.IP \[bu]
 Given the following directory of projects and their associated SCM
 administrative directories, perform an efficient search for the
 projects' roots:
-
 .nf
+\&
+.in +4m
+.B $ find repo/ \e
+.in +4m
+.B \e( \-exec test \-d \(aq{}/.svn\(aq \e; \e
+.B \-or \-exec test \-d \(aq{}/.git\(aq \e; \e
+.B \-or \-exec test \-d \(aq{}/CVS\(aq \e; \e
+.B \e) \-print \-prune
+.in -4m
+.in -4m
+\&
+.fi
+Sample output:
+.nf
+\&
+.in +4m
 .B repo/project1/CVS
 .B repo/gnu/project2/.svn
 .B repo/gnu/project3/.svn
 .B repo/gnu/project3/src/.svn
 .B repo/project4/.git
-
+.in
+\&
 .fi
 In this example,
 .B \-prune
 prevents unnecessary descent into directories that have already been
-discovered (for example we do not search project3/src because we
-already found project3/.svn), but ensures sibling directories
-(project2 and project3) are found.
-
-.P
+discovered (for example we do not search
+.I project3/src
+because we already found
+.IR project3/.svn ),
+but ensures sibling directories
+.RI ( project2
+and
+.IR project3 )
+are found.
+.
+.SS
+Other useful examples
+.IP \[bu]
+Search for several file types.
 .nf
-.B find /tmp \-type f,d,l
+\&
+.in +4m
+.B $ find /tmp \-type f,d,l
+.in
+\&
 .fi
-
 Search for files, directories, and symbolic links in the directory
-.B /tmp
+.I /tmp
 passing these types as a comma-separated list (GNU extension),
 which is otherwise equivalent to the longer, yet more portable:
-
 .nf
-.B find /tmp \e( \-type f \-o \-type d \-o \-type l \e)
+\&
+.in +4m
+.B $ find /tmp \e( \-type f \-o \-type d \-o \-type l \e)
+.in
+\&
 .fi
-
+.
+.IP \[bu]
+Search for files with the particular name
+.I needle
+and stop immediately when we find the first one.
+.nf
+\&
+.in +4m
+.B $ find / -name needle -print -quit
+.in
+\&
+.fi
+.
+.IP \[bu]
+Demonstrate the interpretation of the
+.B %f
+and
+.B %h
+format directives of the
+.B \-printf
+action for some corner-cases.
+Here is an example including some output.
+.nf
+\&
+.in +4m
+.B $ find . .. / /tmp /tmp/TRACE compile compile/64/tests/find -maxdepth 0 -printf '[%h][%f]\en'
+.B [.][.]
+.B [.][..]
+.B [][/]
+.B [][tmp]
+.B [/tmp][TRACE]
+.B [.][compile]
+.B [compile/64/tests][find]
+.in
+\&
+.fi
+.
 .SH EXIT STATUS
-.PP
 .B find
 exits with status 0 if all files are processed successfully, greater
 than 0 if errors occur.
@@ -2227,35 +2465,18 @@ When some error occurs,
 may stop immediately, without completing all the actions specified.
 For example, some starting points may not have been examined or some
 pending program invocations for
-.B \-exec \&...\& {} +
+.B \-exec\ \&...\&\ {}\ +
 or
-.B \-execdir \&...\& {} +
+.B "\-execdir\ \&...\&\ {}\ +
 may not have been performed.
-
-
-.SH "SEE ALSO"
-\fBlocate\fP(1), \fBlocatedb\fP(5), \fBupdatedb\fP(1), \fBxargs\fP(1),
-\fBchmod\fP(1), \fBfnmatch\fP(3), \fBregex\fP(7), \fBstat\fP(2),
-\fBlstat\fP(2), \fBls\fP(1), \fBprintf\fP(3), \fBstrftime\fP(3),
-\fBctime\fP(3)
-
-The full documentation for
-.B find
-is maintained as a Texinfo manual.  If the
-.B info
-and
-.B find
-programs are properly installed at your site, the command
-.B info find
-should give you access to the complete manual.
-
+.
 .SH "HISTORY"
 As of findutils-4.2.2, shell metacharacters (`*', `?' or `[]' for
-example) used in filename patterns will match a leading `.', because
+example) used in filename patterns match a leading `.', because
 IEEE POSIX interpretation 126 requires this.
 .P
 As of findutils-4.3.3,
-.B \-perm /000
+.B \-perm\ /000
 now matches all files instead of none.
 .P
 Nanosecond-resolution
@@ -2311,7 +2532,7 @@ The
 .B +MODE
 syntax had been deprecated since findutils-4.2.21
 which was released in 2005.
-.P
+.
 .SH "NON-BUGS"
 .SS Operator precedence surprises
 The command
@@ -2357,16 +2578,8 @@ instead of file names expanded by the parent shell:
 .B $ find . \-name \(aq*.c\(aq \-print
 .B $ find . \-name \e*.c \-print
 .fi
-
-.SH COPYRIGHT
-Copyright \(co 1990-2019 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
-.br
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.
-
+.
 .SH "BUGS"
-.P
 There are security problems inherent in the behaviour that the POSIX
 standard specifies for
 .BR find ,
@@ -2376,21 +2589,53 @@ action is
 inherently insecure, and
 .B \-execdir
 should be used instead.
-Please see \fBFinding Files\fP for more information.
+.
 .P
 The environment variable
 .B  LC_COLLATE
 has no effect on the
 .B \-ok
 action.
-.P
-The best way to report a bug is to use the form at
-https://savannah.gnu.org/bugs/?group=findutils.
-The reason for this is that you will then be able to track progress in
-fixing the problem.
-Other comments about \fBfind\fP(1) and about the findutils package in
-general can be sent to the
+.
+.SH "REPORTING BUGS"
+GNU findutils online help: <https://www.gnu.org/software/findutils/#get-help>
+.br
+Report any translation bugs to <https://translationproject.org/team/>
+.PP
+Report any other issue via the form at the GNU Savannah bug tracker:
+.RS
+<https://savannah.gnu.org/bugs/?group=findutils>
+.RE
+General topics about the GNU findutils package are discussed at the
 .I bug\-findutils
-mailing list.
-To join the list, send email to
-.IR bug\-findutils\-request@gnu.org .
+mailing list:
+.RS
+<https://lists.gnu.org/mailman/listinfo/bug-findutils>
+.RE
+.
+.SH COPYRIGHT
+Copyright \(co 1990-2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.
+.SH "SEE ALSO"
+.BR chmod (1),
+.BR locate (1),
+.BR ls (1),
+.BR updatedb (1),
+.BR xargs (1),
+.BR lstat (2),
+.BR stat (2),
+.BR ctime (3)
+.BR fnmatch (3),
+.BR printf (3),
+.BR strftime (3),
+.BR locatedb (5),
+.BR regex (7)
+.PP
+Full documentation <https://www.gnu.org/software/findutils/find>
+.br
+or available locally via:
+.B info find

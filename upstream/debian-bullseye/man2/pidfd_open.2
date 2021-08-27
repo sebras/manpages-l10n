@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PIDFD_OPEN 2 2019-11-19 "Linux" "Linux Programmer's Manual"
+.TH PIDFD_OPEN 2 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pidfd_open \- obtain a file descriptor that refers to a process
 .SH SYNOPSIS
@@ -47,7 +47,7 @@ currently, this argument must be specified as 0.
 .SH RETURN VALUE
 On success,
 .BR pidfd_open ()
-returns a nonnegative file descriptor.
+returns a file descriptor (a nonnegative integer).
 On error, \-1 is returned and
 .I errno
 is set to indicate the cause of the error.
@@ -111,14 +111,14 @@ call, its PID will not have been recycled and the returned
 file descriptor will refer to the resulting zombie process.
 Note, however, that this is guaranteed only if the following
 conditions hold true:
-.IP * 3
+.IP \(bu 2
 the disposition of
 .BR SIGCHLD
 has not been explicitly set to
 .BR SIG_IGN
 (see
 .BR sigaction (2));
-.IP *
+.IP \(bu
 the
 .BR SA_NOCLDWAIT
 flag was not specified while establishing a handler for
@@ -128,7 +128,7 @@ or while setting the disposition of that signal to
 (see
 .BR sigaction (2));
 and
-.IP *
+.IP \(bu
 the zombie process was not reaped elsewhere in the program
 (e.g., either by an asynchronously executed signal handler or by
 .BR wait (2)
@@ -143,20 +143,19 @@ with the
 flag.
 .\"
 .SS Use cases for PID file descriptors
-.PP
 A PID file descriptor returned by
 .BR pidfd_open ()
-(of by
+(or by
 .BR clone (2)
 with the
 .BR CLONE_PID
 flag) can be used for the following purposes:
-.IP * 3
+.IP \(bu 2
 The
 .BR pidfd_send_signal (2)
 system call can be used to send a signal to the process referred to by
 a PID file descriptor.
-.IP *
+.IP \(bu
 A PID file descriptor can be monitored using
 .BR poll (2),
 .BR select (2),
@@ -169,10 +168,20 @@ nothing can be read from the file descriptor
 .RB ( read (2)
 on the file descriptor fails with the error
 .BR EINVAL ).
-.IP *
+.IP \(bu
 If the PID file descriptor refers to a child of the calling process,
 then it can be waited on using
 .BR waitid (2).
+.IP \(bu
+The
+.BR pidfd_getfd (2)
+system call can be used to obtain a duplicate of a file descriptor
+of another process referred to by a PID file descriptor.
+.IP \(bu
+A PID file descriptor can be used as the argument of
+.BR setns (2)
+in order to move into one or more of the same namespaces as the process
+referred to by the file descriptor.
 .PP
 The
 .BR pidfd_open ()
@@ -188,7 +197,7 @@ furthermore, the file descriptor obtained in this way is
 .I not
 pollable and can't be waited on with
 .BR waitid (2).
-.SH EXAMPLE
+.SH EXAMPLES
 The program below opens a PID file descriptor for the
 process whose PID is specified as its command-line argument.
 It then uses
@@ -199,7 +208,7 @@ event.
 .\"
 .SS Program source
 \&
-.nf
+.EX
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/syscall.h>
@@ -244,22 +253,25 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("Events (0x%x): POLLIN is %sset\en", pollfd.revents,
+    printf("Events (%#x): POLLIN is %sset\en", pollfd.revents,
             (pollfd.revents & POLLIN) ? "" : "not ");
 
+    close(pidfd);
     exit(EXIT_SUCCESS);
 }
-.fi
+.EE
 .SH SEE ALSO
 .BR clone (2),
 .BR kill (2),
+.BR pidfd_getfd (2),
 .BR pidfd_send_signal (2),
 .BR poll (2),
 .BR select (2),
+.BR setns (2),
 .BR waitid (2),
 .BR epoll (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

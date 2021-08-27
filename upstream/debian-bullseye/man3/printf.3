@@ -31,7 +31,7 @@
 .\" 2000-07-26 jsm28@hermes.cam.ac.uk - three small fixes
 .\" 2000-10-16 jsm28@hermes.cam.ac.uk - more fixes
 .\"
-.TH PRINTF 3  2019-10-10 "GNU" "Linux Programmer's Manual"
+.TH PRINTF 3  2020-11-01 "GNU" "Linux Programmer's Manual"
 .SH NAME
 printf, fprintf, dprintf, sprintf, snprintf, vprintf, vfprintf, vdprintf,
 vsprintf, vsnprintf \- formatted output conversion
@@ -55,10 +55,10 @@ vsprintf, vsnprintf \- formatted output conversion
 ", va_list " ap );
 .fi
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .ad l
 .BR snprintf (),
@@ -101,7 +101,7 @@ write output to the given output
 .IR stream ;
 .BR sprintf (),
 .BR snprintf (),
-.BR vsprintf ()
+.BR vsprintf (),
 and
 .BR vsnprintf ()
 write to the character string
@@ -251,7 +251,7 @@ Thus,
 .PP
 .in +4n
 .EX
-    printf("%\(aq.2f", 1234567.89);
+printf("%\(aq.2f", 1234567.89);
 .EE
 .in
 .PP
@@ -467,24 +467,24 @@ argument.
 .TP
 .B h
 A following integer conversion corresponds to a
-.I short int
+.I short
 or
-.I unsigned short int
+.I unsigned short
 argument, or a following
 .B n
 conversion corresponds to a pointer to a
-.I short int
+.I short
 argument.
 .TP
 .B l
 (ell) A following integer conversion corresponds to a
-.I long int
+.I long
 or
-.I unsigned long int
+.I unsigned long
 argument, or a following
 .B n
 conversion corresponds to a pointer to a
-.I long int
+.I long
 argument, or a following
 .B c
 conversion corresponds to a
@@ -498,13 +498,13 @@ argument.
 .B ll
 (ell-ell).
 A following integer conversion corresponds to a
-.I long long int
+.I long long
 or
-.I unsigned long long int
+.I unsigned long long
 argument, or a following
 .B n
 conversion corresponds to a pointer to a
-.I long long int
+.I long long
 argument.
 .TP
 .B q
@@ -605,7 +605,7 @@ and
 as synonyms, so that one can, for example, write
 .BR llg
 (as a synonym for the standards-compliant
-.RB Lg )
+.BR Lg )
 and
 .BR Ld
 (as a synonym for the standards compliant
@@ -730,7 +730,7 @@ conversion, the
 .I double
 argument is converted to hexadecimal notation (using the letters abcdef)
 in the style
-.RB [\-] 0x h \&. hhhh p \(+-;
+.RB [\-] 0x h \&. hhhh p \(+-d;
 for
 .B A
 conversion the prefix
@@ -746,6 +746,8 @@ and otherwise is sufficiently large to distinguish values of type
 .IR double .
 The digit before the decimal point is unspecified for nonnormalized
 numbers, and nonzero but otherwise unspecified for normalized numbers.
+The exponent always contains at least one
+digit; if the value is zero, the exponent is 0.
 .TP
 .B c
 If no
@@ -948,7 +950,7 @@ with C99.
 .\" locale, "%m$" and "*m$".
 .\" It knows about the length modifiers \fBh\fP, \fBl\fP, \fBL\fP,
 .\" \fBZ\fP, and \fBq\fP, but accepts \fBL\fP and \fBq\fP
-.\" both for \fIlong double\fP and for \fIlong long int\fP (this is a bug).
+.\" both for \fIlong double\fP and for \fIlong long\fP (this is a bug).
 .\" It no longer recognizes \fBF\fP, \fBD\fP, \fBO\fP, and \fBU\fP,
 .\" but adds the conversion character
 .\" .BR m ,
@@ -1068,7 +1070,7 @@ call to write to memory and creating a security hole.
 .\" .PP
 .\" Some floating-point conversions under early libc4
 .\" caused memory leaks.
-.SH EXAMPLE
+.SH EXAMPLES
 To print
 .I Pi
 to five decimal places:
@@ -1132,29 +1134,32 @@ To allocate a sufficiently large string and print into it
 char *
 make_message(const char *fmt, ...)
 {
-    int size = 0;
+    int n = 0;
+    size_t size = 0;
     char *p = NULL;
     va_list ap;
 
     /* Determine required size */
 
     va_start(ap, fmt);
-    size = vsnprintf(p, size, fmt, ap);
+    n = vsnprintf(p, size, fmt, ap);
     va_end(ap);
 
-    if (size < 0)
+    if (n < 0)
         return NULL;
 
-    size++;             /* For '\e0' */
+    /* One extra byte for \(aq\e0\(aq */
+
+    size = (size_t) n + 1;
     p = malloc(size);
     if (p == NULL)
         return NULL;
 
     va_start(ap, fmt);
-    size = vsnprintf(p, size, fmt, ap);
+    n = vsnprintf(p, size, fmt, ap);
     va_end(ap);
 
-    if (size < 0) {
+    if (n < 0) {
         free(p);
         return NULL;
     }
@@ -1176,7 +1181,7 @@ error instead of being handled gracefully.
 .BR wprintf (3),
 .BR locale (5)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

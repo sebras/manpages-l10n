@@ -43,7 +43,7 @@
 .\" 2005-08-02, mtk: Added IPC_INFO, SHM_INFO, SHM_STAT descriptions.
 .\" 2018-03-20, dbueso: Added SHM_STAT_ANY description.
 .\"
-.TH SHMCTL 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH SHMCTL 2 2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 shmctl \- System V shared memory control
 .SH SYNOPSIS
@@ -73,7 +73,8 @@ struct shmid_ds {
     size_t          shm_segsz;   /* Size of segment (bytes) */
     time_t          shm_atime;   /* Last attach time */
     time_t          shm_dtime;   /* Last detach time */
-    time_t          shm_ctime;   /* Last change time */
+    time_t          shm_ctime;   /* Creation time/time of last
+                                    modification via shmctl() */
     pid_t           shm_cpid;    /* PID of creator */
     pid_t           shm_lpid;    /* PID of last shmat(2)/shmdt(2) */
     shmatt_t        shm_nattch;  /* No. of current attaches */
@@ -81,6 +82,48 @@ struct shmid_ds {
 };
 .EE
 .in
+.PP
+The fields of the
+.I shmid_ds
+structure are as follows:
+.TP 12
+.I shm_perm
+This is an
+.I ipc_perm
+structure (see below) that specifies the access permissions
+on the shared memory segment.
+.TP
+.I shm_segsz
+Size in bytes of the shared memory segment.
+.TP
+.I shm_atime
+Time of the last
+.BR shmat (2)
+system call that attached this segment.
+.TP
+.I shm_dtime
+Time of the last
+.BR shmdt (2)
+system call that detached tgis segment.
+.TP
+.I shm_ctime
+Time of creation of segment or time of the last
+.BR shmctl ()
+.BR IPC_SET
+operation.
+.TP
+.I shm_cpid
+ID of the process that created the shared memory segment.
+.TP
+.I shm_lpid
+ID of the last process that executed a
+.BR shmat (2)
+or
+.BR shmdt (2)
+system call on this segment.
+.TP
+.I shm_nattch
+Number of processes that have this segment attached.
 .PP
 The
 .I ipc_perm
@@ -103,10 +146,34 @@ struct ipc_perm {
 .EE
 .in
 .PP
+The least significant 9 bits of the
+.I mode
+field of the
+.I ipc_perm
+structure define the access permissions for the shared memory segment.
+The permission bits are as follows:
+.TS
+l l.
+0400	Read by user
+0200	Write by user
+0040	Read by group
+0020	Write by group
+0004	Read by others
+0002	Write by others
+.TE
+.PP
+Bits 0100, 0010, and 0001 (the execute bits) are unused by the system.
+(It is not necessary to have execute permission on a segment
+in order to perform a
+.BR shmat (2)
+call with the
+.B SHM_EXEC
+flag.)
+.PP
 Valid values for
 .I cmd
 are:
-.TP 10
+.TP
 .B IPC_STAT
 Copy information from the kernel data structure associated with
 .I shmid
@@ -125,9 +192,11 @@ to the kernel data structure associated with this shared memory segment,
 updating also its
 .I shm_ctime
 member.
-The following fields can be changed:
+.IP
+The following fields are updated:
 \fIshm_perm.uid\fP, \fIshm_perm.gid\fP,
 and (the least significant 9 bits of) \fIshm_perm.mode\fP.
+.IP
 The effective UID of the calling process must match the owner
 .RI ( shm_perm.uid )
 or creator
@@ -162,7 +231,7 @@ See also the description of
 .I  /proc/sys/kernel/shm_rmid_forced
 in
 .BR proc (5).
-.TP 10
+.TP
 .BR IPC_INFO " (Linux-specific)"
 Return information about system-wide shared memory limits and
 parameters in the structure pointed to by
@@ -259,7 +328,7 @@ to obtain the same information).
 .PP
 The caller can prevent or allow swapping of a shared
 memory segment with the following \fIcmd\fP values:
-.TP 10
+.TP
 .BR SHM_LOCK " (Linux-specific)"
 Prevent swapping of the shared memory segment.
 The caller must fault in
@@ -411,7 +480,7 @@ to include these header files.
 .PP
 The
 .BR IPC_INFO ,
-.B SHM_STAT
+.BR SHM_STAT ,
 and
 .B SHM_INFO
 operations are used by the
@@ -449,7 +518,7 @@ flag in
 .BR capabilities (7),
 .BR sysvipc (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

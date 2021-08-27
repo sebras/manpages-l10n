@@ -17,7 +17,7 @@
 .\" (e.g., compare with recommendation in mbind(2)).
 .\" Does this page need to give advice on this topic?
 .\"
-.TH MOVE_PAGES 2 2019-10-10 "Linux" "Linux Programmer's Manual"
+.TH MOVE_PAGES 2 2020-06-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 move_pages \- move individual pages of a process to another node
 .SH SYNOPSIS
@@ -105,6 +105,9 @@ is an array of integers that return the status of each page.
 The array contains valid values only if
 .BR move_pages ()
 did not return an error.
+Preinitialization of the array to a value
+which cannot represent a real numa node or valid error of status array
+could help to identify pages that have been migrated.
 .PP
 .I flags
 specify what types of pages to move.
@@ -125,36 +128,36 @@ array.
 .B 0..MAX_NUMNODES
 Identifies the node on which the page resides.
 .TP
-.B -EACCES
+.B \-EACCES
 The page is mapped by multiple processes and can be moved only if
 .B MPOL_MF_MOVE_ALL
 is specified.
 .TP
-.B -EBUSY
+.B \-EBUSY
 The page is currently busy and cannot be moved.
 Try again later.
 This occurs if a page is undergoing I/O or another kernel subsystem
 is holding a reference to the page.
 .TP
-.B -EFAULT
+.B \-EFAULT
 This is a zero page or the memory area is not mapped by the process.
 .TP
-.B -EIO
+.B \-EIO
 Unable to write back a page.
 The page has to be written back
 in order to move it since the page is dirty and the filesystem
 does not provide a migration function that would allow the move
 of dirty pages.
 .TP
-.B -EINVAL
+.B \-EINVAL
 A dirty page cannot be moved.
 The filesystem does not
 provide a migration function and has no ability to write back pages.
 .TP
-.B -ENOENT
+.B \-ENOENT
 The page is not present.
 .TP
-.B -ENOMEM
+.B \-ENOMEM
 Unable to allocate memory on target node.
 .SH RETURN VALUE
 On success
@@ -165,8 +168,15 @@ returns zero.
 On error, it returns \-1, and sets
 .I errno
 to indicate the error.
+If positive value is returned, it is the number of
+nonmigrated pages.
 .SH ERRORS
 .TP
+.B Positive value
+The number of nonmigrated pages if they were the result of nonfatal
+reasons (since
+.\" commit a49bd4d7163707de377aee062f17befef6da891b
+Linux 4.17).
 .B E2BIG
 Too many pages to move.
 Since Linux 2.6.29,
@@ -190,12 +200,6 @@ was specified or an attempt was made to migrate pages of a kernel thread.
 .TP
 .B ENODEV
 One of the target nodes is not online.
-.TP
-.B ENOENT
-No pages were found that require moving.
-All pages are either already
-on the target node, not present, had an invalid address or could not be
-moved because they were mapped by multiple processes.
 .TP
 .B EPERM
 The caller specified
@@ -254,7 +258,7 @@ or a similar package.
 .BR migratepages (8),
 .BR numastat (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

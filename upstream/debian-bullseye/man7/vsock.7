@@ -22,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH VSOCK 7 2017-11-30 "Linux" "Linux Programmer's Manual"
+.TH VSOCK 7 2020-02-09 "Linux" "Linux Programmer's Manual"
 .SH NAME
 vsock \- Linux VSOCK address family
 .SH SYNOPSIS
@@ -95,6 +95,11 @@ struct sockaddr_vm {
     unsigned short svm_reserved1;
     unsigned int   svm_port;       /* Port # in host byte order */
     unsigned int   svm_cid;        /* Address in host byte order */
+    unsigned char  svm_zero[sizeof(struct sockaddr) \-
+                            sizeof(sa_family_t) \-
+                            sizeof(unsigned short) \-
+                            sizeof(unsigned int) \-
+                            sizeof(unsigned int)];
 };
 .EE
 .in
@@ -113,6 +118,8 @@ Only a process with the
 capability may
 .BR bind (2)
 to these port numbers.
+.I svm_zero
+must be zero-filled.
 .PP
 There are several special addresses:
 .B VMADDR_CID_ANY
@@ -120,8 +127,8 @@ There are several special addresses:
 means any address for binding;
 .B VMADDR_CID_HYPERVISOR
 (0) is reserved for services built into the hypervisor;
-.B VMADDR_CID_RESERVED
-(1) must not be used;
+.B VMADDR_CID_LOCAL
+(1) is the well-known address for local communication (loopback);
 .B VMADDR_CID_HOST
 (2)
 is the well-known address of the host.
@@ -157,6 +164,16 @@ Consider using
 .B VMADDR_CID_ANY
 when binding instead of getting the local CID with
 .BR IOCTL_VM_SOCKETS_GET_LOCAL_CID .
+.SS Local communication
+.B VMADDR_CID_LOCAL
+(1) directs packets to the same host that generated them.
+This is useful
+for testing applications on a single host and for debugging.
+.PP
+The local CID obtained with
+.BR IOCTL_VM_SOCKETS_GET_LOCAL_CID
+can be used for the same purpose, but it is preferable to use
+.B VMADDR_CID_LOCAL .
 .SH ERRORS
 .TP
 .B EACCES
@@ -215,6 +232,12 @@ are valid.
 Support for VMware (VMCI) has been available since Linux 3.9.
 KVM (virtio) is supported since Linux 4.8.
 Hyper-V is supported since Linux 4.14.
+.PP
+VMADDR_CID_LOCAL is supported since Linux 5.6.
+.\" commit ef343b35d46667668a099655fca4a5b2e43a5dfe
+Local communication in the guest and on the host is available since Linux 5.6.
+Previous versions supported only local communication within a guest
+(not on the host), and with only some transports (VMCI and virtio).
 .SH SEE ALSO
 .BR bind (2),
 .BR connect (2),
@@ -224,7 +247,7 @@ Hyper-V is supported since Linux 4.14.
 .BR socket (2),
 .BR capabilities (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

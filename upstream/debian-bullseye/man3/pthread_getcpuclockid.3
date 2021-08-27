@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PTHREAD_GETCPUCLOCKID 3 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_GETCPUCLOCKID 3 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pthread_getcpuclockid \- retrieve ID of a thread's CPU time clock
 .SH SYNOPSIS
@@ -31,15 +31,18 @@ pthread_getcpuclockid \- retrieve ID of a thread's CPU time clock
 .B #include <pthread.h>
 .B #include <time.h>
 .PP
-.BI "int pthread_getcpuclockid(pthread_t " thread ", clockid_t *" clock_id );
+.BI "int pthread_getcpuclockid(pthread_t " thread ", clockid_t *" clockid );
 .PP
 Compile and link with \fI\-pthread\fP.
 .fi
 .SH DESCRIPTION
 The
 .BR pthread_getcpuclockid ()
-function returns the clock ID for the CPU time clock of the thread
-.IR thread .
+function obtains the ID of the CPU-time clock of the thread whose ID is
+given in
+.IR thread ,
+and returns it in the location pointed to by
+.IR clockid .
 .\" The clockid is constructed as follows:
 .\" *clockid = CLOCK_THREAD_CPUTIME_ID | (pd->tid << CLOCK_IDFIELD_SIZE)
 .\" where CLOCK_IDFIELD_SIZE is 3.
@@ -87,7 +90,7 @@ and
 .BR clock_settime (2)
 when given the clock ID
 .BR CLOCK_THREAD_CPUTIME_ID .
-.SH EXAMPLE
+.SH EXAMPLES
 The program below creates a thread and then uses
 .BR clock_gettime (2)
 to retrieve the total process CPU time,
@@ -112,6 +115,7 @@ Subthread CPU time:        0.992
 
 #include <time.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -140,7 +144,7 @@ pclock(char *msg, clockid_t cid)
     printf("%s", msg);
     if (clock_gettime(cid, &ts) == \-1)
         handle_error("clock_gettime");
-    printf("%4ld.%03ld\en", ts.tv_sec, ts.tv_nsec / 1000000);
+    printf("%4jd.%03ld\en", (intmax_t) ts.tv_sec, ts.tv_nsec / 1000000);
 }
 
 int
@@ -148,7 +152,7 @@ main(int argc, char *argv[])
 {
     pthread_t thread;
     clockid_t cid;
-    int j, s;
+    int s;
 
     s = pthread_create(&thread, NULL, thread_start, NULL);
     if (s != 0)
@@ -158,7 +162,7 @@ main(int argc, char *argv[])
     sleep(1);
 
     printf("Main thread consuming some CPU time...\en");
-    for (j = 0; j < 2000000; j++)
+    for (int j = 0; j < 2000000; j++)
         getppid();
 
     pclock("Process total CPU time: ", CLOCK_PROCESS_CPUTIME_ID);
@@ -188,7 +192,7 @@ main(int argc, char *argv[])
 .BR pthreads (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

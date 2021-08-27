@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 2010 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
@@ -23,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH AIO 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH AIO 7 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 aio \- POSIX asynchronous I/O overview
 .SH DESCRIPTION
@@ -36,7 +35,7 @@ by delivery of a signal, by instantiation of a thread,
 or no notification at all.
 .PP
 The POSIX AIO interface consists of the following functions:
-.TP 16
+.TP
 .BR aio_read (3)
 Enqueue a read request.
 This is the asynchronous analog of
@@ -104,7 +103,7 @@ enum { LIO_READ, LIO_WRITE, LIO_NOP };
 .in
 .PP
 The fields of this structure are as follows:
-.TP 16
+.TP
 .I aio_fildes
 The file descriptor on which the I/O operation is to be performed.
 .TP
@@ -147,7 +146,7 @@ The type of operation to be performed; used only for
 .PP
 In addition to the standard functions listed above,
 the GNU C library provides the following extension to the POSIX AIO API:
-.TP 16
+.TP
 .BR aio_init (3)
 Set parameters for tuning the behavior of the glibc POSIX AIO implementation.
 .SH ERRORS
@@ -193,7 +192,7 @@ reimplemented using the kernel system calls.
 .\" http://lse.sourceforge.net/io/aio.html
 .\" http://lse.sourceforge.net/io/aionotes.txt
 .\" http://lwn.net/Articles/148755/
-.SH EXAMPLE
+.SH EXAMPLES
 The program below opens each of the files named in its command-line
 arguments and queues a request on the resulting file descriptor using
 .BR aio_read (3).
@@ -258,8 +257,6 @@ aio_return():
 
 #define errExit(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
-#define errMsg(msg)  do { perror(msg); } while (0)
-
 struct ioRequest {      /* Application\-defined structure for tracking
                            I/O requests */
     int           reqNum;
@@ -295,10 +292,8 @@ aioSigHandler(int sig, siginfo_t *si, void *ucontext)
 int
 main(int argc, char *argv[])
 {
-    struct ioRequest *ioList;
-    struct aiocb *aiocbList;
     struct sigaction sa;
-    int s, j;
+    int s;
     int numReqs;        /* Total number of queued I/O requests */
     int openReqs;       /* Number of I/O requests still in progress */
 
@@ -312,11 +307,11 @@ main(int argc, char *argv[])
 
     /* Allocate our arrays */
 
-    ioList = calloc(numReqs, sizeof(struct ioRequest));
+    struct ioRequest *ioList = calloc(numReqs, sizeof(*ioList));
     if (ioList == NULL)
         errExit("calloc");
 
-    aiocbList = calloc(numReqs, sizeof(struct aiocb));
+    struct aiocb *aiocbList = calloc(numReqs, sizeof(*aiocbList));
     if (aiocbList == NULL)
         errExit("calloc");
 
@@ -337,7 +332,7 @@ main(int argc, char *argv[])
     /* Open each file specified on the command line, and queue
        a read request on the resulting file descriptor */
 
-    for (j = 0; j < numReqs; j++) {
+    for (int j = 0; j < numReqs; j++) {
         ioList[j].reqNum = j;
         ioList[j].status = EINPROGRESS;
         ioList[j].aiocbp = &aiocbList[j];
@@ -380,7 +375,7 @@ main(int argc, char *argv[])
 
             printf("got SIGQUIT; canceling I/O requests: \en");
 
-            for (j = 0; j < numReqs; j++) {
+            for (int j = 0; j < numReqs; j++) {
                 if (ioList[j].status == EINPROGRESS) {
                     printf("    Request %d on descriptor %d:", j,
                             ioList[j].aiocbp\->aio_fildes);
@@ -393,7 +388,7 @@ main(int argc, char *argv[])
                     else if (s == AIO_ALLDONE)
                         printf("I/O all done\en");
                     else
-                        errMsg("aio_cancel");
+                        perror("aio_cancel");
                 }
             }
 
@@ -404,7 +399,7 @@ main(int argc, char *argv[])
            in progress */
 
         printf("aio_error():\en");
-        for (j = 0; j < numReqs; j++) {
+        for (int j = 0; j < numReqs; j++) {
             if (ioList[j].status == EINPROGRESS) {
                 printf("    for request %d (descriptor %d): ",
                         j, ioList[j].aiocbp\->aio_fildes);
@@ -421,7 +416,7 @@ main(int argc, char *argv[])
                     printf("Canceled\en");
                     break;
                 default:
-                    errMsg("aio_error");
+                    perror("aio_error");
                     break;
                 }
 
@@ -436,7 +431,7 @@ main(int argc, char *argv[])
     /* Check status return of all I/O requests */
 
     printf("aio_return():\en");
-    for (j = 0; j < numReqs; j++) {
+    for (int j = 0; j < numReqs; j++) {
         ssize_t s;
 
         s = aio_return(ioList[j].aiocbp);
@@ -469,7 +464,7 @@ Proceedings of the Linux Symposium, 2003,
 .UR https://www.kernel.org/doc/ols/2003/ols2003\-pages\-351\-366.pdf
 .UE
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

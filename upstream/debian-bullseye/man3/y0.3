@@ -33,7 +33,7 @@
 .\" Modified 2004-11-12 as per suggestion by Fabian Kreutz/AEB
 .\" 2008-07-24, mtk, created this page, based on material from j0.3.
 .\"
-.TH Y0 3  2017-09-15 "" "Linux Programmer's Manual"
+.TH Y0 3  2020-06-09 "" "Linux Programmer's Manual"
 .SH NAME
 y0, y0f, y0l, y1, y1f, y1l, yn, ynf, ynl \-
 Bessel functions of the second kind
@@ -56,10 +56,10 @@ Bessel functions of the second kind
 .PP
 Link with \fI\-lm\fP.
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .ad l
 .BR y0 (),
@@ -85,7 +85,6 @@ _XOPEN_SOURCE \ >=\ 600
 .RE
 .ad b
 .SH DESCRIPTION
-.PP
 The
 .BR y0 ()
 and
@@ -187,41 +186,31 @@ Pole error: \fIx\fP is 0.0
 .\" as a range error.
 .I errno
 is set to
-.\" FIXME . y0(0.0) gives EDOM
 .BR ERANGE
-(but see BUGS).
-No
+and an
 .B FE_DIVBYZERO
-exception is returned by
-.BR fetestexcept (3)
-for this case.
-.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6808
+exception is raised
+(but see BUGS).
 .TP
 Range error: result underflow
 .\" e.g., y0(1e33) on glibc 2.8/x86-32
 .I errno
 is set to
 .BR ERANGE .
-.\" An underflow floating-point exception
-.\" .RB ( FE_UNDERFLOW )
-.\" is raised.
-.\" FIXME . Is it intentional that these functions do not use FE_*?
-.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6806
 No
 .B FE_UNDERFLOW
 exception is returned by
+.\" This is intended behavior
+.\" See http://sources.redhat.com/bugzilla/show_bug.cgi?id=6806
 .BR fetestexcept (3)
 for this case.
 .TP
 Range error: result overflow
 .\" e.g., yn(10, 1e-40) on glibc 2.8/x86-32
-.\" .I errno
-.\" is set to
-.\" .BR ERANGE .
 .I errno
-is not set for this case.
-.\" FIXME . Is it intentional that errno is not set?
-.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6808
+is set to
+.BR ERANGE
+(but see BUGS).
 An overflow floating-point exception
 .RB ( FE_OVERFLOW )
 is raised.
@@ -256,18 +245,26 @@ conform to SVr4, 4.3BSD,
 POSIX.1-2001, POSIX.1-2008.
 The others are nonstandard functions that also exist on the BSDs.
 .SH BUGS
-On a pole error, these functions set
+Before glibc 2.19,
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=6807
+these functions misdiagnosed pole errors:
 .I errno
-to
+was set to
 .BR EDOM ,
 instead of
 .BR ERANGE
-as POSIX.1-2004 requires.
-.\" FIXME .
-.\" Bug raised: http://sourceware.org/bugzilla/show_bug.cgi?id=6807
+and no
+.B FE_DIVBYZERO
+exception was raised.
+.PP
+Before glibc 2.17,
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=6808
+did not set
+.I errno
+for "range error: result underflow".
 .PP
 In glibc version 2.3.2 and earlier,
-.\" FIXME . Actually, 2.3.2 is the earliest test result I have; so yet
+.\" Actually, 2.3.2 is the earliest test result I have; so yet
 .\" to confirm if this error occurs only in 2.3.2.
 these functions do not raise an invalid floating-point exception
 .RB ( FE_INVALID )
@@ -275,7 +272,7 @@ when a domain error occurs.
 .SH SEE ALSO
 .BR j0 (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

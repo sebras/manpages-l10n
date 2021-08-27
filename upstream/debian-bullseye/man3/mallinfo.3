@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
@@ -23,7 +22,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH MALLINFO 3  2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH MALLINFO 3  2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mallinfo \- obtain memory allocation information
 .SH SYNOPSIS
@@ -54,7 +53,7 @@ struct mallinfo {
     int smblks;    /* Number of free fastbin blocks */
     int hblks;     /* Number of mmapped regions */
     int hblkhd;    /* Space allocated in mmapped regions (bytes) */
-    int usmblks;   /* Maximum total allocated space (bytes) */
+    int usmblks;   /* See below */
     int fsmblks;   /* Space in freed fastbin blocks (bytes) */
     int uordblks;  /* Total allocated space (bytes) */
     int fordblks;  /* Total free space (bytes) */
@@ -77,6 +76,8 @@ This figure includes both in-use blocks and blocks on the free list.
 The number of ordinary (i.e., non-fastbin) free blocks.
 .TP
 .I smblks
+.\" the glibc info page wrongly says this field is unused
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=26746
 The number of fastbin free blocks (see
 .BR mallopt (3)).
 .TP
@@ -93,11 +94,15 @@ The number of bytes in blocks currently allocated using
 .BR mmap (2).
 .TP
 .I usmblks
-The "highwater mark" for allocated space\(emthat is,
-the maximum amount of space that was ever allocated.
-This field is maintained only in nonthreading environments.
+This field is unused, and is always 0.
+.\" It seems to have been zero since at least as far back as glibc 2.15
+Historically, it was the "highwater mark" for allocated space\(emthat is,
+the maximum amount of space that was ever allocated (in bytes);
+this field was maintained only in nonthreading environments.
 .TP
 .I fsmblks
+.\" the glibc info page wrongly says this field is unused
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=26746
 The total number of bytes in fastbin free blocks.
 .TP
 .I uordblks
@@ -164,7 +169,7 @@ structure are typed as
 However, because some internal bookkeeping values may be of type
 .IR long ,
 the reported values may wrap around zero and thus be inaccurate.
-.SH EXAMPLE
+.SH EXAMPLES
 The program below employs
 .BR mallinfo ()
 to retrieve memory allocation statistics before and after
@@ -264,7 +269,7 @@ main(int argc, char *argv[])
 {
 #define MAX_ALLOCS 2000000
     char *alloc[MAX_ALLOCS];
-    int numBlocks, j, freeBegin, freeEnd, freeStep;
+    int numBlocks, freeBegin, freeEnd, freeStep;
     size_t blockSize;
 
     if (argc < 3 || strcmp(argv[1], "\-\-help") == 0) {
@@ -282,7 +287,7 @@ main(int argc, char *argv[])
     printf("============== Before allocating blocks ==============\en");
     display_mallinfo();
 
-    for (j = 0; j < numBlocks; j++) {
+    for (int j = 0; j < numBlocks; j++) {
         if (numBlocks >= MAX_ALLOCS) {
             fprintf(stderr, "Too many allocations\en");
             exit(EXIT_FAILURE);
@@ -298,7 +303,7 @@ main(int argc, char *argv[])
     printf("\en============== After allocating blocks ==============\en");
     display_mallinfo();
 
-    for (j = freeBegin; j < freeEnd; j += freeStep)
+    for (int j = freeBegin; j < freeEnd; j += freeStep)
         free(alloc[j]);
 
     printf("\en============== After freeing blocks ==============\en");
@@ -317,7 +322,7 @@ main(int argc, char *argv[])
 .BR malloc_trim (3),
 .BR mallopt (3)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

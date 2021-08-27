@@ -28,7 +28,7 @@
 .\"     POSIX 1003.1-2004 documentation
 .\"     (http://www.opengroup.org/onlinepubs/009695399)
 .\"
-.TH POSIX_SPAWN 3 2019-03-06 "GNU" "Linux Programmer's Manual"
+.TH POSIX_SPAWN 3 2020-11-01 "GNU" "Linux Programmer's Manual"
 .SH NAME
 posix_spawn, posix_spawnp \- spawn a process
 .SH SYNOPSIS
@@ -41,9 +41,9 @@ posix_spawn, posix_spawnp \- spawn a process
 .BI "                char *const " argv[] ", char *const " envp[] );
 .PP
 .BI "int posix_spawnp(pid_t *" pid ", const char *" file ,
-.BI "                const posix_spawn_file_actions_t *" file_actions ,
-.BI "                const posix_spawnattr_t *" attrp ,
-.BI "                char *const " argv[] ", char *const " envp[] );
+.BI "                 const posix_spawn_file_actions_t *" file_actions ,
+.BI "                 const posix_spawnattr_t *" attrp ,
+.BI "                 char *const " argv[] ", char *const " envp[] );
 .fi
 .SH DESCRIPTION
 The
@@ -155,9 +155,16 @@ and the
 .BR exec ()
 step (executed in the child).
 .SS fork() step
-The
+Since glibc 2.24, the
 .BR posix_spawn ()
 function commences by calling
+.BR clone (2)
+with
+.BR CLONE_VM
+and
+.BR CLONE_VFORK
+flags.
+Older implementations use
 .BR fork (2),
 or possibly
 .BR vfork (2)
@@ -176,7 +183,7 @@ If the child fails in any of the housekeeping steps described below,
 or fails to execute the desired file,
 it exits with a status of 127.
 .PP
-The child process is created using
+Before glibc 2.24, the child process is created using
 .BR vfork (2)
 instead of
 .BR fork (2)
@@ -213,10 +220,10 @@ the requested file.
 .PP
 .SS pre-exec() step: housekeeping
 In between the
-.BR fork (2)
+.BR fork()
 and the
-.BR exec (3),
-a child process may need to perform a set of housekeeping actions.
+.BR exec()
+steps, a child process may need to perform a set of housekeeping actions.
 The
 .BR posix_spawn ()
 and
@@ -271,7 +278,7 @@ to be used during those actions.
 The effects of the flags that may be specified in
 .IR spawn-flags
 are as follows:
-.TP 8
+.TP
 .B POSIX_SPAWN_SETSIGMASK
 Set the signal mask to the signal set specified in the
 .I spawn-sigmask
@@ -375,6 +382,32 @@ the child's process group ID is made the same as its process ID.
 If the
 .B POSIX_SPAWN_SETPGROUP
 flag is not set, the child inherits the parent's process group ID.
+.TP
+.B POSIX_SPAWN_USEVFORK
+Since glibc 2.24, this flag has no effect.
+On older implementations, setting this flag forces the
+.BR fork()
+step to use
+.BR vfork (2)
+instead of
+.BR fork (2).
+The
+.B _GNU_SOURCE
+feature test macro must be defined to obtain the definition of this constant.
+.TP
+.BR POSIX_SPAWN_SETSID " (since glibc 2.26)"
+If this flag is set,
+the child process shall create a new session and become the session leader.
+The child process shall also become the process group leader of the new process
+group in the session (see
+.BR setsid (2)).
+The
+.B _GNU_SOURCE
+feature test macro must be defined to obtain the definition of this constant.
+.\" This flag has been accepted in POSIX, see:
+.\" http://austingroupbugs.net/view.php?id=1044
+.\" and has been implemented in glibc since version 2.26
+.\" commit daeb1fa2e1b33323e719015f5f546988bd4cc73b
 .PP
 If
 .I attrp
@@ -397,7 +430,7 @@ If
 .I file_actions
 is NULL, then no special action is taken, and standard
 .BR exec (3)
-semantics apply--file descriptors open before the exec
+semantics apply\(emfile descriptors open before the exec
 remain open in the new process,
 except those for which the
 .B FD_CLOEXEC
@@ -459,8 +492,9 @@ and
 place the PID of the child process in
 .IR pid ,
 and return 0.
-If there is an error before or during the
-.BR fork (2),
+If there is an error during the
+.BR fork()
+step,
 then no child is created,
 the contents of
 .IR *pid
@@ -480,14 +514,16 @@ The
 and
 .BR posix_spawnp ()
 functions fail only in the case where the underlying
-.BR fork (2)
-or
+.BR fork (2),
 .BR vfork (2)
+or
+.BR clone (2)
 call fails;  in these cases, these functions return an error number,
 which will be one of the errors described for
-.BR fork (2)
+.BR fork (2),
+.BR vfork (2)
 or
-.BR vfork (2).
+.BR clone (2).
 .PP
 In addition, these functions fail if:
 .TP
@@ -500,7 +536,6 @@ and
 .BR posix_spawnp ()
 functions are available since glibc 2.2.
 .SH CONFORMING TO
-.PP
 POSIX.1-2001, POSIX.1-2008.
 .\" FIXME . This piece belongs in spawnattr_setflags(3)
 .\" The
@@ -527,13 +562,14 @@ only the POSIX-specified functions.
 although these objects may be implemented as structures containing fields,
 portable programs must avoid dependence on such implementation details.)
 .PP
-According to POSIX, it unspecified whether fork handlers established with
+According to POSIX, it is unspecified whether fork handlers established with
 .BR pthread_atfork (3)
 are called when
 .BR posix_spawn ()
 is invoked.
-On glibc,
+Since glibc 2.24, the fork handlers are not executed in any case.
 .\" Tested on glibc 2.12
+On older implementations,
 fork handlers are called only if the child is created using
 .BR fork (2).
 .PP
@@ -563,7 +599,7 @@ failed with an error if
 .BR POSIX_SPAWN_SETSCHEDULER
 was specified without also specifying
 .BR POSIX_SPAWN_SETSCHEDPARAM .
-.SH EXAMPLE
+.SH EXAMPLES
 The program below demonstrates the use of various functions in the
 POSIX spawn API.
 The program accepts command-line attributes that can be used
@@ -577,7 +613,7 @@ command is executed in the child, and the
 .BR posix_spawn ()
 call employs no file actions or attributes objects.
 .PP
-.in +4
+.in +4n
 .EX
 $ \fB./a.out date\fP
 PID of child: 7634
@@ -594,9 +630,9 @@ Consequently,
 .BR date (1)
 fails when trying to perform output and exits with a status of 1.
 .PP
-.in +4
+.in +4n
 .EX
-$ \fB./a.out -c date\fP
+$ \fB./a.out \-c date\fP
 PID of child: 7636
 date: write error: Bad file descriptor
 Child status: exited, status=1
@@ -618,16 +654,16 @@ is necessary
 .RB ( SIGKILL
 can't be blocked).
 .PP
-.in +4
+.in +4n
 .EX
-$ \fB./a.out -s sleep 60 &\fP
+$ \fB./a.out \-s sleep 60 &\fP
 [1] 7637
 $ PID of child: 7638
 
 $ \fBkill 7638\fP
-$ \fBkill -KILL 7638\fP
+$ \fBkill \-KILL 7638\fP
 $ Child status: killed by signal 9
-[1]+  Done                    ./a.out -s sleep 60
+[1]+  Done                    ./a.out \-s sleep 60
 .EE
 .in
 .PP
@@ -635,7 +671,7 @@ When we try to execute a nonexistent command in the child, the
 .BR exec (3)
 fails and the child exits with a status of 127.
 .PP
-.in +4
+.in +4n
 .EX
 $ \fB./a.out xxxxx
 PID of child: 10190
@@ -646,6 +682,7 @@ Child status: exited, status=127
 \&
 .EX
 #include <spawn.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -744,7 +781,7 @@ main(int argc, char *argv[])
             errExitEN(s, "posix_spawn_file_actions_destroy");
     }
 
-    printf("PID of child: %ld\en", (long) child_pid);
+    printf("PID of child: %jd\en", (intmax_t) child_pid);
 
     /* Monitor status of the child until it terminates */
 
@@ -807,7 +844,7 @@ main(int argc, char *argv[])
 Base Definitions volume of POSIX.1-2001,
 .I http://www.opengroup.org/unix/online.html
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

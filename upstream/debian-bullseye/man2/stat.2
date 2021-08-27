@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
 .\" Parts Copyright (c) 1995 Nicolai Langfeldt (janl@ifi.uio.no), 1/1/95
 .\" and Copyright (c) 2006, 2007, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
@@ -37,7 +36,7 @@
 .\" 2007-06-08 mtk: Added example program
 .\" 2007-07-05 mtk: Added details on underlying system call interfaces
 .\"
-.TH STAT 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH STAT 2 2020-08-13 "Linux" "Linux Programmer's Manual"
 .SH NAME
 stat, fstat, lstat, fstatat \- get file status
 .SH SYNOPSIS
@@ -58,21 +57,18 @@ statbuf ,
 .BI "            int " flags );
 .fi
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .ad l
 .BR lstat ():
 .RS 4
 /* glibc 2.19 and earlier */ _BSD_SOURCE
-.br
     || /* Since glibc 2.20 */ _DEFAULT_SOURCE
-.br
     || _XOPEN_SOURCE\ >=\ 500
 .\"   _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
-.br
     || /* Since glibc 2.10: */ _POSIX_C_SOURCE\ >=\ 200112L
 .RE
 .PP
@@ -90,7 +86,6 @@ _ATFILE_SOURCE
 .PD
 .ad
 .SH DESCRIPTION
-.PP
 These functions return information about a file, in the buffer pointed to by
 .IR statbuf .
 No permissions are required on the file itself, but\(emin the case of
@@ -117,7 +112,7 @@ is identical to
 except that if
 .I pathname
 is a symbolic link, then it returns information about the link itself,
-not the file that it refers to.
+not the file that the link refers to.
 .PP
 .BR fstat ()
 is identical to
@@ -246,13 +241,14 @@ in 512-byte units.
 when the file has holes.)
 .TP
 .I st_atime
-This is the file's last access timestamp.
+This is the time of the last access of file data.
 .TP
 .I st_mtime
-This is the file's last modification timestamp.
+This is the time of last modification of file data.
 .TP
 .I st_ctime
-This is the file's last status change timestamp.
+This is the file's last status change timestamp
+(time of last change to the inode).
 .PP
 For further information on the above fields, see
 .BR inode (7).
@@ -339,15 +335,9 @@ Since Linux 4.14,
 .\" commit 42f46148217865a545e129612075f3d828a2c4e4
 also don't instantiate a nonexistent name in an
 on-demand directory such as used for automounter indirect maps.
-This flag can be used in tools that scan directories
-to prevent mass-automounting of a directory of automount points.
-The
-.B AT_NO_AUTOMOUNT
+This
 flag has no effect if the mount point has already been mounted over.
-This flag is Linux-specific; define
-.B _GNU_SOURCE
-.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
-to obtain its definition.
+.IP
 Both
 .BR stat ()
 and
@@ -355,6 +345,16 @@ and
 act as though
 .B AT_NO_AUTOMOUNT
 was set.
+.IP
+The
+.B AT_NO_AUTOMOUNT
+can be used in tools that scan directories
+to prevent mass-automounting of a directory of automount points.
+.IP
+This flag is Linux-specific; define
+.B _GNU_SOURCE
+.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
+to obtain its definition.
 .TP
 .B AT_SYMLINK_NOFOLLOW
 If
@@ -431,7 +431,7 @@ or
 .IR blkcnt_t .
 This error can occur when, for example,
 an application compiled on a 32-bit platform without
-.I -D_FILE_OFFSET_BITS=64
+.I \-D_FILE_OFFSET_BITS=64
 calls
 .BR stat ()
 on a file whose size exceeds
@@ -634,7 +634,7 @@ wrapper function is actually called
 or, on some architectures,
 .\" strace(1) shows the name "newfstatat" on x86-64
 .BR newfstatat ().
-.SH EXAMPLE
+.SH EXAMPLES
 The following program calls
 .BR lstat ()
 and displays selected fields in the returned
@@ -644,6 +644,7 @@ structure.
 .EX
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -664,8 +665,9 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    printf("ID of containing device:  [%lx,%lx]\en",
-	    (long) major(sb.st_dev), (long) minor(sb.st_dev));
+    printf("ID of containing device:  [%jx,%jx]\en",
+            (uintmax_t) major(sb.st_dev),
+            (uintmax_t) minor(sb.st_dev));
 
     printf("File type:                ");
 
@@ -680,21 +682,21 @@ main(int argc, char *argv[])
     default:       printf("unknown?\en");                break;
     }
 
-    printf("I\-node number:            %ld\en", (long) sb.st_ino);
+    printf("I\-node number:            %ju\en", (uintmax_t) sb.st_ino);
 
-    printf("Mode:                     %lo (octal)\en",
-            (unsigned long) sb.st_mode);
+    printf("Mode:                     %jo (octal)\en",
+            (uintmax_t) sb.st_mode);
 
-    printf("Link count:               %ld\en", (long) sb.st_nlink);
-    printf("Ownership:                UID=%ld   GID=%ld\en",
-            (long) sb.st_uid, (long) sb.st_gid);
+    printf("Link count:               %ju\en", (uintmax_t) sb.st_nlink);
+    printf("Ownership:                UID=%ju   GID=%ju\en",
+            (uintmax_t) sb.st_uid, (uintmax_t) sb.st_gid);
 
-    printf("Preferred I/O block size: %ld bytes\en",
-            (long) sb.st_blksize);
-    printf("File size:                %lld bytes\en",
-            (long long) sb.st_size);
-    printf("Blocks allocated:         %lld\en",
-            (long long) sb.st_blocks);
+    printf("Preferred I/O block size: %jd bytes\en",
+            (intmax_t) sb.st_blksize);
+    printf("File size:                %jd bytes\en",
+            (intmax_t) sb.st_size);
+    printf("Blocks allocated:         %jd\en",
+            (intmax_t) sb.st_blocks);
 
     printf("Last status change:       %s", ctime(&sb.st_ctime));
     printf("Last file access:         %s", ctime(&sb.st_atime));
@@ -716,7 +718,7 @@ main(int argc, char *argv[])
 .BR inode (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

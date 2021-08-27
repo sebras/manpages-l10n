@@ -24,7 +24,7 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH USER_NAMESPACES 7 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH USER_NAMESPACES 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 user_namespaces \- overview of Linux user namespaces
 .SH DESCRIPTION
@@ -148,19 +148,22 @@ the process will lose all capabilities.
 See the discussion of user and group ID mappings, below.
 .PP
 A call to
-.BR clone (2),
-.BR unshare (2),
+.BR clone (2)
 or
-.BR setns (2)
+.BR unshare (2)
 using the
 .BR CLONE_NEWUSER
-flag sets the "securebits" flags
+flag
+or a call to
+.BR setns (2)
+that moves the caller into another user namespace
+sets the "securebits" flags
 (see
 .BR capabilities (7))
 to their default values (all flags disabled) in the child (for
 .BR clone (2))
 or caller (for
-.BR unshare (2),
+.BR unshare (2)
 or
 .BR setns (2)).
 Note that because the caller no longer has capabilities
@@ -232,7 +235,7 @@ namespaces owned by (associated with) the user namespace
 .PP
 On the other hand, there are many privileged operations that affect
 resources that are not associated with any namespace type,
-for example, changing the system time (governed by
+for example, changing the system (i.e., calendar) time (governed by
 .BR CAP_SYS_TIME ),
 loading a kernel module (governed by
 .BR CAP_SYS_MODULE ),
@@ -978,7 +981,7 @@ Linux 3.12 added support for the last of the unsupported major filesystems,
 .\" commit d6970d4b726cea6d7a9bc4120814f95c09571fc3
 XFS.
 .\"
-.SH EXAMPLE
+.SH EXAMPLES
 The program below is designed to allow experimenting with
 user namespaces, as well as other types of namespaces.
 It creates namespaces as specified by command-line options and then executes
@@ -1015,7 +1018,7 @@ and group ID
 .PP
 .in +4n
 .EX
-$ \fB./userns_child_exec \-p \-m \-U \-M '0 1000 1' \-G '0 1000 1' bash\fP
+$ \fB./userns_child_exec \-p \-m \-U \-M \(aq0 1000 1\(aq \-G \(aq0 1000 1\(aq bash\fP
 .EE
 .in
 .PP
@@ -1050,10 +1053,10 @@ and a full set of permitted and effective capabilities:
 .PP
 .in +4n
 .EX
-bash$ \fBcat /proc/$$/status | egrep '^[UG]id'\fP
+bash$ \fBcat /proc/$$/status | egrep \(aq\(ha[UG]id\(aq\fP
 Uid:	0	0	0	0
 Gid:	0	0	0	0
-bash$ \fBcat /proc/$$/status | egrep '^Cap(Prm|Inh|Eff)'\fP
+bash$ \fBcat /proc/$$/status | egrep \(aq\(haCap(Prm|Inh|Eff)\(aq\fP
 CapInh:	0000000000000000
 CapPrm:	0000001fffffffff
 CapEff:	0000001fffffffff
@@ -1073,6 +1076,7 @@ CapEff:	0000001fffffffff
 #define _GNU_SOURCE
 #include <sched.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -1146,13 +1150,13 @@ usage(char *pname)
 static void
 update_map(char *mapping, char *map_file)
 {
-    int fd, j;
+    int fd;
     size_t map_len;     /* Length of \(aqmapping\(aq */
 
     /* Replace commas in mapping string with newlines */
 
     map_len = strlen(mapping);
-    for (j = 0; j < map_len; j++)
+    for (int j = 0; j < map_len; j++)
         if (mapping[j] == \(aq,\(aq)
             mapping[j] = \(aq\en\(aq;
 
@@ -1187,8 +1191,8 @@ proc_setgroups_write(pid_t child_pid, char *str)
     char setgroups_path[PATH_MAX];
     int fd;
 
-    snprintf(setgroups_path, PATH_MAX, "/proc/%ld/setgroups",
-            (long) child_pid);
+    snprintf(setgroups_path, PATH_MAX, "/proc/%jd/setgroups",
+            (intmax_t) child_pid);
 
     fd = open(setgroups_path, O_RDWR);
     if (fd == \-1) {
@@ -1219,7 +1223,7 @@ proc_setgroups_write(pid_t child_pid, char *str)
 static int              /* Start function for cloned child */
 childFunc(void *arg)
 {
-    struct child_args *args = (struct child_args *) arg;
+    struct child_args *args = arg;
     char ch;
 
     /* Wait until the parent has updated the UID and GID mappings.
@@ -1320,16 +1324,17 @@ main(int argc, char *argv[])
     /* Parent falls through to here */
 
     if (verbose)
-        printf("%s: PID of child created by clone() is %ld\en",
-                argv[0], (long) child_pid);
+        printf("%s: PID of child created by clone() is %jd\en",
+                argv[0], (intmax_t) child_pid);
 
     /* Update the UID and GID maps in the child */
 
     if (uid_map != NULL || map_zero) {
-        snprintf(map_path, PATH_MAX, "/proc/%ld/uid_map",
-                (long) child_pid);
+        snprintf(map_path, PATH_MAX, "/proc/%jd/uid_map",
+                (intmax_t) child_pid);
         if (map_zero) {
-            snprintf(map_buf, MAP_BUF_SIZE, "0 %ld 1", (long) getuid());
+            snprintf(map_buf, MAP_BUF_SIZE, "0 %jd 1",
+                    (intmax_t) getuid());
             uid_map = map_buf;
         }
         update_map(uid_map, map_path);
@@ -1338,10 +1343,11 @@ main(int argc, char *argv[])
     if (gid_map != NULL || map_zero) {
         proc_setgroups_write(child_pid, "deny");
 
-        snprintf(map_path, PATH_MAX, "/proc/%ld/gid_map",
-                (long) child_pid);
+        snprintf(map_path, PATH_MAX, "/proc/%jd/gid_map",
+                (intmax_t) child_pid);
         if (map_zero) {
-            snprintf(map_buf, MAP_BUF_SIZE, "0 %ld 1", (long) getgid());
+            snprintf(map_buf, MAP_BUF_SIZE, "0 %ld 1",
+                    (intmax_t) getgid());
             gid_map = map_buf;
         }
         update_map(gid_map, map_path);
@@ -1372,7 +1378,7 @@ main(int argc, char *argv[])
 .BR subgid (5),         \" From the shadow package
 .BR subuid (5),         \" From the shadow package
 .BR capabilities (7),
-.BR cgroup_namespaces (7)
+.BR cgroup_namespaces (7),
 .BR credentials (7),
 .BR namespaces (7),
 .BR pid_namespaces (7)
@@ -1380,7 +1386,7 @@ main(int argc, char *argv[])
 The kernel source file
 .IR Documentation/namespaces/resource-control.txt .
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

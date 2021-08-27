@@ -8,14 +8,14 @@
 .\" %%%LICENSE_END
 .\"
 .\" $Id: cmsg.3,v 1.8 2000/12/20 18:10:31 ak Exp $
-.TH CMSG 3 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH CMSG 3 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 CMSG_ALIGN, CMSG_SPACE, CMSG_NXTHDR, CMSG_FIRSTHDR \- access ancillary data
 .SH SYNOPSIS
 .nf
 .B #include <sys/socket.h>
 .BI "struct cmsghdr *CMSG_FIRSTHDR(struct msghdr *" msgh );
-.BI "struct cmsghdr *CMSG_NXTHDR(struct msghdr *" msgh " ,
+.BI "struct cmsghdr *CMSG_NXTHDR(struct msghdr *" msgh ,
 .BR "                            struct cmsghdr *" cmsg );
 .BI "size_t CMSG_ALIGN(size_t " length );
 .BI "size_t CMSG_SPACE(size_t " length );
@@ -106,6 +106,12 @@ This is a constant expression.
 .BR CMSG_DATA ()
 returns a pointer to the data portion of a
 .IR cmsghdr .
+The pointer returned cannot be assumed to be suitably aligned for
+accessing arbitrary payload data types.
+Applications should not cast it to a pointer type matching the payload,
+but should instead use
+.BR memcpy (3)
+to copy data to or from a suitably declared object.
 .IP *
 .BR CMSG_LEN ()
 returns the value to store in the
@@ -153,6 +159,17 @@ see
 .SH CONFORMING TO
 This ancillary data model conforms to the POSIX.1g draft, 4.4BSD-Lite,
 the IPv6 advanced API described in RFC\ 2292 and SUSv2.
+.BR CMSG_FIRSTHDR (),
+.BR CMSG_NXTHDR (),
+and
+.BR CMSG_DATA ()
+are specified in POSIX.1-2008.
+.BR CMSG_SPACE ()
+and
+.BR CMSG_LEN ()
+.\" https://www.austingroupbugs.net/view.php?id=978#c3242
+will be included in the next POSIX release (Issue 8).
+.PP
 .BR CMSG_ALIGN ()
 is a Linux extension.
 .SH NOTES
@@ -169,7 +186,7 @@ and
 are constant expressions (assuming their argument is constant),
 meaning that these values can be used to declare the size of global variables.
 This may not be portable, however.
-.SH EXAMPLE
+.SH EXAMPLES
 This code looks for the
 .B IP_TTL
 option in a received ancillary buffer:
@@ -178,7 +195,6 @@ option in a received ancillary buffer:
 .EX
 struct msghdr msgh;
 struct cmsghdr *cmsg;
-int *ttlptr;
 int received_ttl;
 
 /* Receive auxiliary data in msgh */
@@ -187,8 +203,7 @@ for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg != NULL;
         cmsg = CMSG_NXTHDR(&msgh, cmsg)) {
     if (cmsg\->cmsg_level == IPPROTO_IP
             && cmsg\->cmsg_type == IP_TTL) {
-        ttlptr = (int *) CMSG_DATA(cmsg);
-        received_ttl = *ttlptr;
+        memcpy(&receive_ttl, CMSG_DATA(cmsg), sizeof(received_ttl));
         break;
     }
 }
@@ -226,8 +241,8 @@ msg.msg_controllen = sizeof(u.buf);
 cmsg = CMSG_FIRSTHDR(&msg);
 cmsg\->cmsg_level = SOL_SOCKET;
 cmsg\->cmsg_type = SCM_RIGHTS;
-cmsg\->cmsg_len = CMSG_LEN(sizeof(int) * NUM_FD);
-memcpy(CMSG_DATA(cmsg), myfds, NUM_FD * sizeof(int));
+cmsg\->cmsg_len = CMSG_LEN(sizeof(myfds));
+memcpy(CMSG_DATA(cmsg), myfds, sizeof(myfds));
 .EE
 .in
 .SH SEE ALSO
@@ -236,7 +251,7 @@ memcpy(CMSG_DATA(cmsg), myfds, NUM_FD * sizeof(int));
 .PP
 RFC\ 2292
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

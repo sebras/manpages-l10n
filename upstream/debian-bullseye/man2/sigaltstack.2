@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (c) 2001, 2017 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
 .\" %%%LICENSE_START(VERBATIM)
@@ -24,7 +23,7 @@
 .\" %%%LICENSE_END
 .\"
 .\" aeb, various minor fixes
-.TH SIGALTSTACK 2 2017-11-08 "Linux" "Linux Programmer's Manual"
+.TH SIGALTSTACK 2 2020-12-21 "Linux" "Linux Programmer's Manual"
 .SH NAME
 sigaltstack \- set and/or get signal stack context
 .SH SYNOPSIS
@@ -32,10 +31,10 @@ sigaltstack \- set and/or get signal stack context
 .PP
 .BI "int sigaltstack(const stack_t *" ss ", stack_t *" old_ss );
 .PP
-.in -4n
+.RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
-.in
+.RE
 .PP
 .BR sigaltstack ():
 .ad l
@@ -50,7 +49,7 @@ _XOPEN_SOURCE\ >=\ 500
 .ad
 .SH DESCRIPTION
 .BR sigaltstack ()
-allows a process to define a new alternate
+allows a thread to define a new alternate
 signal stack and/or retrieve the state of an existing
 alternate signal stack.
 An alternate signal stack is used during the
@@ -154,15 +153,15 @@ address and size of that stack.
 The \fIold_ss.ss_flags\fP may return either of the following values:
 .TP
 .B SS_ONSTACK
-The process is currently executing on the alternate signal stack.
+The thread is currently executing on the alternate signal stack.
 (Note that it is not possible
-to change the alternate signal stack if the process is
+to change the alternate signal stack if the thread is
 currently executing on it.)
 .TP
 .B SS_DISABLE
 The alternate signal stack is currently disabled.
 .IP
-Alternatively, this value is returned if the process is currently
+Alternatively, this value is returned if the thread is currently
 executing on an alternate signal stack that was established using the
 .B SS_AUTODISARM
 flag.
@@ -209,7 +208,7 @@ was less than
 .TP
 .B EPERM
 An attempt was made to change the alternate signal stack while
-it was active (i.e., the process was already executing
+it was active (i.e., the thread was already executing
 on the current alternate signal stack).
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
@@ -233,18 +232,18 @@ flag is a Linux extension.
 The most common usage of an alternate signal stack is to handle the
 .B SIGSEGV
 signal that is generated if the space available for the
-normal process stack is exhausted: in this case, a signal handler for
+standard stack is exhausted: in this case, a signal handler for
 .B SIGSEGV
-cannot be invoked on the process stack; if we wish to handle it,
+cannot be invoked on the standard stack; if we wish to handle it,
 we must use an alternate signal stack.
 .PP
-Establishing an alternate signal stack is useful if a process
+Establishing an alternate signal stack is useful if a thread
 expects that it may exhaust its standard stack.
 This may occur, for example, because the stack grows so large
 that it encounters the upwardly growing heap, or it reaches a
 limit established by a call to \fBsetrlimit(RLIMIT_STACK, &rlim)\fP.
 If the standard stack is exhausted, the kernel sends
-the process a \fBSIGSEGV\fP signal.
+the thread a \fBSIGSEGV\fP signal.
 In these circumstances the only way to catch this signal is
 on an alternate signal stack.
 .PP
@@ -257,7 +256,7 @@ of the direction of stack growth.
 Functions called from a signal handler executing on an alternate
 signal stack will also use the alternate signal stack.
 (This also applies to any handlers invoked for other signals while
-the process is executing on the alternate signal stack.)
+the thread is executing on the alternate signal stack.)
 Unlike the standard stack, the system does not
 automatically extend the alternate signal stack.
 Exceeding the allocated size of the alternate signal stack will
@@ -270,6 +269,14 @@ signal stack.
 A child process created via
 .BR fork (2)
 inherits a copy of its parent's alternate signal stack settings.
+The same is also true for a child process created using
+.BR clone (2),
+unless the clone flags include
+.BR CLONE_VM
+and do not include
+.BR CLONE_VFORK ,
+in which case any alternate signal stack that was established in the parent
+is disabled in the child process.
 .PP
 .BR sigaltstack ()
 supersedes the older
@@ -286,42 +293,6 @@ system call.
 It used a slightly
 different struct, and had the major disadvantage that the caller
 had to know the direction of stack growth.
-.SH EXAMPLE
-The following code segment demonstrates the use of
-.BR sigaltstack ()
-(and
-.BR sigaction (2))
-to install an alternate signal stack that is employed by a handler
-for the
-.BR SIGSEGV
-signal:
-.PP
-.in +4n
-.EX
-stack_t ss;
-
-ss.ss_sp = malloc(SIGSTKSZ);
-if (ss.ss_sp == NULL) {
-    perror("malloc");
-    exit(EXIT_FAILURE);
-}
-
-ss.ss_size = SIGSTKSZ;
-ss.ss_flags = 0;
-if (sigaltstack(&ss, NULL) == \-1) {
-    perror("sigaltstack");
-    exit(EXIT_FAILURE);
-}
-
-sa.sa_flags = SA_ONSTACK;
-sa.sa_handler = handler();      /* Address of a signal handler */
-sigemptyset(&sa.sa_mask);
-if (sigaction(SIGSEGV, &sa, NULL) == -1) {
-    perror("sigaction");
-    exit(EXIT_FAILURE);
-}
-.EE
-.in
 .SH BUGS
 In Linux 2.2 and earlier, the only flag that could be specified
 in
@@ -360,6 +331,42 @@ give an error if
 .B SS_ONSTACK
 is specified in
 .IR ss.ss_flags .
+.SH EXAMPLES
+The following code segment demonstrates the use of
+.BR sigaltstack ()
+(and
+.BR sigaction (2))
+to install an alternate signal stack that is employed by a handler
+for the
+.BR SIGSEGV
+signal:
+.PP
+.in +4n
+.EX
+stack_t ss;
+
+ss.ss_sp = malloc(SIGSTKSZ);
+if (ss.ss_sp == NULL) {
+    perror("malloc");
+    exit(EXIT_FAILURE);
+}
+
+ss.ss_size = SIGSTKSZ;
+ss.ss_flags = 0;
+if (sigaltstack(&ss, NULL) == \-1) {
+    perror("sigaltstack");
+    exit(EXIT_FAILURE);
+}
+
+sa.sa_flags = SA_ONSTACK;
+sa.sa_handler = handler();      /* Address of a signal handler */
+sigemptyset(&sa.sa_mask);
+if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+    perror("sigaction");
+    exit(EXIT_FAILURE);
+}
+.EE
+.in
 .SH SEE ALSO
 .BR execve (2),
 .BR setrlimit (2),
@@ -368,7 +375,7 @@ is specified in
 .BR sigsetjmp (3),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

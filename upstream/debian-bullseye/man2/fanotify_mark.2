@@ -21,7 +21,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY_MARK 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY_MARK 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify_mark \- add, remove, or modify an fanotify mark on a filesystem
 object
@@ -126,12 +126,19 @@ is not itself a mount point, the mount point containing
 will be marked.
 All directories, subdirectories, and the contained files of the mount point
 will be monitored.
-This value cannot be used if the
-.I fanotify_fd
-file descriptor has been initialized with the flag
-.BR FAN_REPORT_FID
-or if any of the new directory modification events are provided as a
-.IR mask .
+The events which require that filesystem objects are identified by file handles,
+such as
+.BR FAN_CREATE ,
+.BR FAN_ATTRIB ,
+.BR FAN_MOVE ,
+and
+.BR FAN_DELETE_SELF ,
+cannot be provided as a
+.IR mask
+when
+.I flags
+contains
+.BR FAN_MARK_MOUNT .
 Attempting to do so will result in the error
 .B EINVAL
 being returned.
@@ -184,41 +191,48 @@ See NOTES for additional details.
 .BR FAN_ATTRIB " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when the metadata for a file or directory has changed.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_CREATE " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been created in a marked
 parent directory.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_DELETE " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been deleted in a marked
 parent directory.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_DELETE_SELF " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a marked file or directory itself is deleted.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_MOVED_FROM " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been moved from a marked
 parent directory.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_MOVED_TO " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a file or directory has been moved to a marked parent
 directory.
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .BR FAN_MOVE_SELF " (since Linux 5.1)"
 .\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
 Create an event when a marked file or directory itself has been moved.
-.TP
-.B FAN_Q_OVERFLOW
-Create an event when an overflow of the event queue occurs.
-The size of the event queue is limited to 16384 entries if
-.B FAN_UNLIMITED_QUEUE
-is not set in
-.BR fanotify_init (2).
+An fanotify group that identifies filesystem objects by file handles
+is required.
 .TP
 .B FAN_OPEN_PERM
 Create an event when a permission to open a file or directory is requested.
@@ -254,37 +268,40 @@ Create events for directories\(emfor example, when
 (but see BUGS), and
 .BR closedir (3)
 are called.
-Without this flag, only events for files are created.
-The
-.BR FAN_ONDIR
-flag is reported in an event mask only if the
-.I fanotify_fd
-file descriptor has been initialized with the flag
-.BR FAN_REPORT_FID .
+Without this flag, events are created only for files.
 In the context of directory entry events, such as
 .BR FAN_CREATE ,
 .BR FAN_DELETE ,
 .BR FAN_MOVED_FROM ,
 and
-.BR FAN_MOVED_TO
-for example, specifying the flag
+.BR FAN_MOVED_TO ,
+specifying the flag
 .BR FAN_ONDIR
 is required in order to create events when subdirectory entries are
 modified (i.e.,
 .BR mkdir (2)/
 .BR rmdir (2)).
-Subdirectory entry modification events will never be merged with
-nonsubdirectory entry modification events.
-This flag is never reported individually within an event and is always
-supplied in conjunction with another event type.
 .TP
 .B FAN_EVENT_ON_CHILD
 Events for the immediate children of marked directories shall be created.
 The flag has no effect when marking mounts and filesystems.
 Note that events are not generated for children of the subdirectories
 of marked directories.
+More specifically, the directory entry modification events
+.BR FAN_CREATE ,
+.BR FAN_DELETE ,
+.BR FAN_MOVED_FROM ,
+and
+.BR FAN_MOVED_TO
+are not generated for any entry modifications performed inside subdirectories
+of marked directories.
+Note that the events
+.BR FAN_DELETE_SELF
+and
+.BR FAN_MOVE_SELF
+are not generated for children of marked directories.
 To monitor complete directory trees it is necessary to mark the relevant
-mount.
+mount or filesystem.
 .PP
 The following composed values are defined:
 .TP
@@ -366,8 +383,7 @@ was not an fanotify file descriptor.
 .B EINVAL
 The fanotify file descriptor was opened with
 .B FAN_CLASS_NOTIF
-or
-.B FAN_REPORT_FID
+or the fanotify group identifies filesystem objects by file handles
 and mask contains a flag for permission events
 .RB ( FAN_OPEN_PERM
 or
@@ -380,11 +396,8 @@ is not associated with a filesystem that supports
 .I fsid
 (e.g.,
 .BR tmpfs (5)).
-This error can be returned only when an fanotify file descriptor returned
-by
-.BR fanotify_init (2)
-has been created with
-.BR FAN_REPORT_FID .
+This error can be returned only with an fanotify group that identifies
+filesystem objects by file handles.
 .TP
 .B ENOENT
 The filesystem object indicated by
@@ -425,11 +438,8 @@ The object indicated by
 .I pathname
 is associated with a filesystem that does not support the encoding of file
 handles.
-This error can be returned only when an fanotify file descriptor returned
-by
-.BR fanotify_init (2)
-has been created with
-.BR FAN_REPORT_FID .
+This error can be returned only with an fanotify group that identifies
+filesystem objects by file handles.
 .TP
 .B EXDEV
 The filesystem object indicated by
@@ -439,11 +449,8 @@ resides within a filesystem subvolume (e.g.,
 which uses a different
 .I fsid
 than its root superblock.
-This error can be returned only when an fanotify file descriptor returned
-by
-.BR fanotify_init (2)
-has been created with
-.BR FAN_REPORT_FID .
+This error can be returned only with an fanotify group that identifies
+filesystem objects by file handles.
 .SH VERSIONS
 .BR fanotify_mark ()
 was introduced in version 2.6.36 of the Linux kernel and enabled in version
@@ -467,7 +474,7 @@ for files that are opened using
 or
 .BR uselib (2).
 Events of these types will not be raised in the situation where an
-interpreter is passed (or reads) a script file for interpretation.
+interpreter is passed (or reads) a file for interpretation.
 .PP
 Additionally, if a mark has also been placed on the Linux dynamic
 linker, a user should also expect to receive an event for it when
@@ -504,7 +511,7 @@ If
 .I flags
 contains
 .BR FAN_MARK_FLUSH ,
-.I dirfd
+.IR dirfd ,
 and
 .I pathname
 must specify a valid filesystem object, even though this object is not used.
@@ -526,7 +533,7 @@ is not checked for invalid values.
 .BR fanotify_init (2),
 .BR fanotify (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -1,4 +1,3 @@
-'\" t
 .\" Copyright (C) 2006, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" Copyright (C) 2014 Heinrich Schuchardt <xypron.glpk@gmx.de>
 .\"
@@ -24,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH INOTIFY 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH INOTIFY 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 inotify \- monitoring filesystem events
 .SH DESCRIPTION
@@ -145,7 +144,7 @@ The
 .I name
 field is present only when an event is returned
 for a file inside a watched directory;
-it identifies the filename within to the watched directory.
+it identifies the filename within the watched directory.
 This filename is null-terminated,
 and may include further null bytes (\(aq\e0\(aq) to align subsequent reads to a
 suitable address boundary.
@@ -877,12 +876,12 @@ of the bug occurring in real-world applications,
 as of Linux 3.15,
 .\" FIXME . https://bugzilla.kernel.org/show_bug.cgi?id=77111
 no kernel changes have yet been made to eliminate this possible bug.
-.SH EXAMPLE
+.SH EXAMPLES
 The following program demonstrates the usage of the inotify API.
 It marks the directories passed as a command-line arguments
 and waits for events of type
 .BR IN_OPEN ,
-.BR IN_CLOSE_NOWRITE
+.BR IN_CLOSE_NOWRITE ,
 and
 .BR IN_CLOSE_WRITE .
 .PP
@@ -923,8 +922,9 @@ Listening for events stopped.
 #include <stdlib.h>
 #include <sys/inotify.h>
 #include <unistd.h>
+#include <string.h>
 
-/* Read all available inotify events from the file descriptor 'fd'.
+/* Read all available inotify events from the file descriptor \(aqfd\(aq.
    wd is the table of watch descriptors for the directories in argv.
    argc is the length of wd and argv.
    argv is the list of watched directories.
@@ -942,9 +942,7 @@ handle_events(int fd, int *wd, int argc, char* argv[])
     char buf[4096]
         __attribute__ ((aligned(__alignof__(struct inotify_event))));
     const struct inotify_event *event;
-    int i;
     ssize_t len;
-    char *ptr;
 
     /* Loop while events can be read from inotify file descriptor. */
 
@@ -952,7 +950,7 @@ handle_events(int fd, int *wd, int argc, char* argv[])
 
         /* Read some events. */
 
-        len = read(fd, buf, sizeof buf);
+        len = read(fd, buf, sizeof(buf));
         if (len == \-1 && errno != EAGAIN) {
             perror("read");
             exit(EXIT_FAILURE);
@@ -967,7 +965,7 @@ handle_events(int fd, int *wd, int argc, char* argv[])
 
         /* Loop over all events in the buffer */
 
-        for (ptr = buf; ptr < buf + len;
+        for (char *ptr = buf; ptr < buf + len;
                 ptr += sizeof(struct inotify_event) + event\->len) {
 
             event = (const struct inotify_event *) ptr;
@@ -983,7 +981,7 @@ handle_events(int fd, int *wd, int argc, char* argv[])
 
             /* Print the name of the watched directory */
 
-            for (i = 1; i < argc; ++i) {
+            for (int i = 1; i < argc; ++i) {
                 if (wd[i] == event\->wd) {
                     printf("%s/", argv[i]);
                     break;
@@ -1045,8 +1043,8 @@ main(int argc, char* argv[])
         wd[i] = inotify_add_watch(fd, argv[i],
                                   IN_OPEN | IN_CLOSE);
         if (wd[i] == \-1) {
-            fprintf(stderr, "Cannot watch '%s'\en", argv[i]);
-            perror("inotify_add_watch");
+            fprintf(stderr, "Cannot watch \(aq%s\(aq: %s\en",
+                    argv[i], strerror(errno));
             exit(EXIT_FAILURE);
         }
     }
@@ -1083,7 +1081,7 @@ main(int argc, char* argv[])
 
                 /* Console input is available. Empty stdin and quit */
 
-                while (read(STDIN_FILENO, &buf, 1) > 0 && buf != '\en')
+                while (read(STDIN_FILENO, &buf, 1) > 0 && buf != \(aq\en\(aq)
                     continue;
                 break;
             }
@@ -1121,7 +1119,7 @@ main(int argc, char* argv[])
 .IR Documentation/filesystems/inotify.txt
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

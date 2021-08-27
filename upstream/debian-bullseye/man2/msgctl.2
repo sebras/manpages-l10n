@@ -35,7 +35,7 @@
 .\" 2005-08-02, mtk: Added IPC_INFO, MSG_INFO, MSG_STAT descriptions
 .\" 2018-03-20, dbueso: Added MSG_STAT_ANY description.
 .\"
-.TH MSGCTL 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH MSGCTL 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 msgctl \- System V message control operations
 .SH SYNOPSIS
@@ -60,21 +60,66 @@ data structure is defined in \fI<sys/msg.h>\fP as follows:
 .in +4n
 .EX
 struct msqid_ds {
-    struct ipc_perm msg_perm;     /* Ownership and permissions */
-    time_t          msg_stime;    /* Time of last msgsnd(2) */
-    time_t          msg_rtime;    /* Time of last msgrcv(2) */
-    time_t          msg_ctime;    /* Time of last change */
-    unsigned long   __msg_cbytes; /* Current number of bytes in
-                                     queue (nonstandard) */
-    msgqnum_t       msg_qnum;     /* Current number of messages
-                                     in queue */
-    msglen_t        msg_qbytes;   /* Maximum number of bytes
-                                     allowed in queue */
-    pid_t           msg_lspid;    /* PID of last msgsnd(2) */
-    pid_t           msg_lrpid;    /* PID of last msgrcv(2) */
+    struct ipc_perm msg_perm;   /* Ownership and permissions */
+    time_t          msg_stime;  /* Time of last msgsnd(2) */
+    time_t          msg_rtime;  /* Time of last msgrcv(2) */
+    time_t          msg_ctime;  /* Time of creation or last
+                                   modification by msgctl() */
+    unsigned long   msg_cbytes; /* # of bytes in queue */
+    msgqnum_t       msg_qnum;   /* # number of messages in queue */
+    msglen_t        msg_qbytes; /* Maximum # of bytes in queue */
+    pid_t           msg_lspid;  /* PID of last msgsnd(2) */
+    pid_t           msg_lrpid;  /* PID of last msgrcv(2) */
 };
 .EE
 .in
+.PP
+The fields of the
+.I msgid_ds
+structure are as follows:
+.TP 11
+.I msg_perm
+This is an
+.I ipc_perm
+structure (see below) that specifies the access permissions on the message
+queue.
+.TP
+.I msg_stime
+Time of the last
+.BR msgsnd (2)
+system call.
+.TP
+.I msg_rtime
+Time of the last
+.BR msgrcv (2)
+system call.
+.TP
+.I msg_ctime
+Time of creation of queue or time of last
+.BR msgctl ()
+.BR IPC_SET
+operation.
+.TP
+.I msg_cbytes
+Number of bytes in all messages currently on the message queue.
+This is a nonstandard Linux extension that is not specified in POSIX.
+.TP
+.I msg_qnum
+Number of messages currently on the message queue.
+.TP
+.I msg_qbytes
+Maximum number of bytes of message text allowed on the message
+queue.
+.TP
+.I msg_lspid
+ID of the process that performed the last
+.BR msgsnd (2)
+system call.
+.TP
+.I msg_lrpid
+ID of the process that performed the last
+.BR msgrcv (2)
+system call.
 .PP
 The
 .I ipc_perm
@@ -95,6 +140,24 @@ struct ipc_perm {
 };
 .EE
 .in
+.PP
+The least significant 9 bits of the
+.I mode
+field of the
+.I ipc_perm
+structure define the access permissions for the message queue.
+The permission bits are as follows:
+.TS
+l l.
+0400	Read by user
+0200	Write by user
+0040	Read by group
+0020	Write by group
+0004	Read by others
+0002	Write by others
+.TE
+.PP
+Bits 0100, 0010, and 0001 (the execute bits) are unused by the system.
 .PP
 Valid values for
 .I cmd
@@ -118,12 +181,14 @@ to the kernel data structure associated with this message queue,
 updating also its
 .I msg_ctime
 member.
+.IP
 The following members of the structure are updated:
 .IR msg_qbytes ,
 .IR msg_perm.uid ,
 .IR msg_perm.gid ,
 and (the least significant 9 bits of)
 .IR msg_perm.mode .
+.IP
 The effective UID of the calling process must match the owner
 .RI ( msg_perm.uid )
 or creator
@@ -182,7 +247,7 @@ struct msginfo {
                     unused within kernel */
     int msgtql;  /* Maximum number of messages on all queues
                     in system; unused within kernel */
-    unsigned short int msgseg;
+    unsigned short msgseg;
                  /* Maximum number of segments;
                     unused within kernel */
 };
@@ -359,7 +424,7 @@ to include these header files.
 .PP
 The
 .BR IPC_INFO ,
-.B MSG_STAT
+.BR MSG_STAT ,
 and
 .B MSG_INFO
 operations are used by the
@@ -390,7 +455,7 @@ flag in
 .BR mq_overview (7),
 .BR sysvipc (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

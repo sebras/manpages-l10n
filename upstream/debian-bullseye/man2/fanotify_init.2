@@ -21,7 +21,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY_INIT 2 2019-08-02 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY_INIT 2 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify_init \- create and initialize fanotify group
 .SH SYNOPSIS
@@ -94,36 +94,6 @@ already contain their final content.
 This notification class might be used by malware detection programs, for
 example.
 .TP
-.BR FAN_REPORT_FID " (since Linux 5.1)"
-.\" commit a8b13aa20afb69161b5123b4f1acc7ea0a03d360
-This value allows the receipt of events which contain additional information
-about the underlying filesystem object correlated to an event.
-An additional structure encapsulates the information about the object and is
-included alongside the generic event metadata structure.
-The file descriptor that is used to represent the object correlated to an
-event is instead substituted with a file handle.
-It is intended for applications that may find the use of a file handle to
-identify an object more suitable than a file descriptor.
-Additionally, it may be used for applications that are interested in
-directory entry events, such as
-.BR FAN_CREATE ,
-.BR FAN_ATTRIB ,
-.BR FAN_MOVE ,
-and
-.BR FAN_DELETE
-for example.
-Note that the use of directory modification events are not supported when
-monitoring a mount point.
-The use of
-.BR FAN_CLASS_CONTENT
-or
-.BR FAN_CLASS_PRE_CONTENT
-is not permitted with this flag and will result in the error
-.BR EINVAL .
-See
-.BR fanotify (7)
-for additional information.
-.TP
 .B FAN_CLASS_NOTIF
 This is the default value.
 It does not need to be specified.
@@ -184,6 +154,130 @@ supplied to
 .BR read (2)
 (see
 .BR fanotify (7)).
+.TP
+.BR FAN_REPORT_FID " (since Linux 5.1)"
+.\" commit a8b13aa20afb69161b5123b4f1acc7ea0a03d360
+This value allows the receipt of events which contain additional information
+about the underlying filesystem object correlated to an event.
+An additional record of type
+.BR FAN_EVENT_INFO_TYPE_FID
+encapsulates the information about the object and is included alongside the
+generic event metadata structure.
+The file descriptor that is used to represent the object correlated to an
+event is instead substituted with a file handle.
+It is intended for applications that may find the use of a file handle to
+identify an object more suitable than a file descriptor.
+Additionally, it may be used for applications monitoring a directory or a
+filesystem that are interested in the directory entry modification events
+.BR FAN_CREATE ,
+.BR FAN_DELETE ,
+and
+.BR FAN_MOVE ,
+or in events such as
+.BR FAN_ATTRIB ,
+.BR FAN_DELETE_SELF ,
+and
+.BR FAN_MOVE_SELF .
+All the events above require an fanotify group that identifies filesystem
+objects by file handles.
+Note that for the directory entry modification events the reported file handle
+identifies the modified directory and not the created/deleted/moved child
+object.
+The use of
+.BR FAN_CLASS_CONTENT
+or
+.BR FAN_CLASS_PRE_CONTENT
+is not permitted with this flag and will result in the error
+.BR EINVAL .
+See
+.BR fanotify (7)
+for additional details.
+.TP
+.BR FAN_REPORT_DIR_FID " (since Linux 5.9)"
+Events for fanotify groups initialized with this flag will contain
+(see exceptions below) additional information about a directory object
+correlated to an event.
+An additional record of type
+.BR FAN_EVENT_INFO_TYPE_DFID
+encapsulates the information about the directory object and is included
+alongside the generic event metadata structure.
+For events that occur on a non-directory object, the additional structure
+includes a file handle that identifies the parent directory filesystem object.
+Note that there is no guarantee that the directory filesystem object will be
+found at the location described by the file handle information at the time
+the event is received.
+When combined with the flag
+.BR FAN_REPORT_FID ,
+two records may be reported with events that occur on a non-directory object,
+one to identify the non-directory object itself and one to identify the parent
+directory object.
+Note that in some cases, a filesystem object does not have a parent,
+for example, when an event occurs on an unlinked but open file.
+In that case, with the
+.BR FAN_REPORT_FID
+flag, the event will be reported with only one record to identify the
+non-directory object itself, because there is no directory associated with
+the event.
+Without the
+.BR FAN_REPORT_FID
+flag, no event will be reported.
+See
+.BR fanotify (7)
+for additional details.
+.TP
+.BR FAN_REPORT_NAME " (since Linux 5.9)"
+Events for fanotify groups initialized with this flag will contain additional
+information about the name of the directory entry correlated to an event.
+This flag must be provided in conjunction with the flag
+.BR FAN_REPORT_DIR_FID .
+Providing this flag value without
+.BR FAN_REPORT_DIR_FID
+will result in the error
+.BR EINVAL .
+This flag may be combined with the flag
+.BR FAN_REPORT_FID .
+An additional record of type
+.BR FAN_EVENT_INFO_TYPE_DFID_NAME ,
+which encapsulates the information about the directory entry, is included
+alongside the generic event metadata structure and substitutes the additional
+information record of type
+.BR FAN_EVENT_INFO_TYPE_DFID .
+The additional record includes a file handle that identifies a directory
+filesystem object followed by a name that identifies an entry in that
+directory.
+For the directory entry modification events
+.BR FAN_CREATE ,
+.BR FAN_DELETE ,
+and
+.BR FAN_MOVE ,
+the reported name is that of the created/deleted/moved directory entry.
+For other events that occur on a directory object, the reported file handle
+is that of the directory object itself and the reported name is '.'.
+For other events that occur on a non-directory object, the reported file handle
+is that of the parent directory object and the reported name is the name of a
+directory entry where the object was located at the time of the event.
+The rationale behind this logic is that the reported directory file handle can
+be passed to
+.BR open_by_handle_at (2)
+to get an open directory file descriptor and that file descriptor along with
+the reported name can be used to call
+.BR fstatat (2).
+The same rule that applies to record type
+.BR FAN_EVENT_INFO_TYPE_DFID
+also applies to record type
+.BR FAN_EVENT_INFO_TYPE_DFID_NAME :
+if a non-directory object has no parent, either the event will not be reported
+or it will be reported without the directory entry information.
+Note that there is no guarantee that the filesystem object will be found at the
+location described by the directory entry information at the time the event is
+received.
+See
+.BR fanotify (7)
+for additional details.
+.TP
+.B FAN_REPORT_DFID_NAME
+This is a synonym for
+.RB ( FAN_REPORT_DIR_FID | FAN_REPORT_NAME ).
 .PP
 The
 .I event_f_flags
@@ -308,7 +402,7 @@ returned when reading from the fanotify file descriptor.
 .BR fanotify_mark (2),
 .BR fanotify (7)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,

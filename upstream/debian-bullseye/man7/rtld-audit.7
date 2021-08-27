@@ -25,7 +25,7 @@
 .\"
 .\" 2009-01-12, mtk, Created
 .\"
-.TH RTLD-AUDIT 7 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH RTLD-AUDIT 7 2020-11-01 "Linux" "Linux Programmer's Manual"
 .SH NAME
 rtld-audit \- auditing API for the dynamic linker
 .SH SYNOPSIS
@@ -70,17 +70,33 @@ the auditing library.
 When invoking this function, the dynamic linker passes, in
 .IR version ,
 the highest version of the auditing interface that the linker supports.
-If necessary, the auditing library can check that this version
-is sufficient for its requirements.
 .PP
-As its function result,
-this function should return the version of the auditing interface
-that this auditing library expects to use (returning
+A typical implementation of this function simply returns the constant
+.BR LAV_CURRENT ,
+which indicates the version of
+.I <link.h>
+that was used to build the audit module.
+If the dynamic linker does
+not support this version of the audit interface, it will refuse to
+activate this audit module.
+If the function returns zero, the dynamic
+linker also does not activate this audit module.
+.PP
+In order to enable backwards compatibility with older dynamic linkers,
+an audit module can examine the
 .I version
-is acceptable).
-If the returned value is 0,
-or a version that is greater than that supported by the dynamic linker,
-then the audit library is ignored.
+argument and return an earlier version than
+.BR LAV_CURRENT ,
+assuming the module can adjust its implementation to match the
+requirements of the previous version of the audit interface.
+The
+.B la_version
+function should not return the value of
+.I version
+without further checks because it could correspond to an interface
+that does not match the
+.I <link.h>
+definitions used to build the audit module.
 .SS la_objsearch()
 \&
 .nf
@@ -360,7 +376,7 @@ Here is the definition for x86-32:
 .BI "Elf32_Addr la_i86_gnu_pltenter(Elf32_Sym *" sym ", unsigned int " ndx ,
 .BI "                 uintptr_t *" refcook ", uintptr_t *" defcook ,
 .BI "                 La_i86_regs *" regs ", unsigned int *" flags ,
-.BI "                 const char *" symname ", long int *" framesizep );
+.BI "                 const char *" symname ", long *" framesizep );
 .fi
 .PP
 This function is invoked just before a PLT entry is called,
@@ -500,7 +516,7 @@ This is reportedly fixed in glibc 2.10.
 .\" My simple tests on Solaris work okay, but not on Linux -- mtk, Jan 2009
 .\" glibc bug filed: http://sourceware.org/bugzilla/show_bug.cgi?id=9733
 .\" Reportedly, this is fixed on 16 Mar 2009 (i.e., for glibc 2.10)
-.SH EXAMPLE
+.SH EXAMPLES
 .EX
 #include <link.h>
 #include <stdio.h>
@@ -508,9 +524,10 @@ This is reportedly fixed in glibc 2.10.
 unsigned int
 la_version(unsigned int version)
 {
-    printf("la_version(): %d\en", version);
+    printf("la_version(): version = %u; LAV_CURRENT = %u\en",
+            version, LAV_CURRENT);
 
-    return version;
+    return LAV_CURRENT;
 }
 
 char *
@@ -572,7 +589,7 @@ la_symbind32(Elf32_Sym *sym, unsigned int ndx, uintptr_t *refcook,
 {
     printf("la_symbind32(): symname = %s; sym\->st_value = %p\en",
             symname, sym\->st_value);
-    printf("        ndx = %d; flags = 0x%x", ndx, *flags);
+    printf("        ndx = %u; flags = %#x", ndx, *flags);
     printf("; refcook = %p; defcook = %p\en", refcook, defcook);
 
     return sym\->st_value;
@@ -584,7 +601,7 @@ la_symbind64(Elf64_Sym *sym, unsigned int ndx, uintptr_t *refcook,
 {
     printf("la_symbind64(): symname = %s; sym\->st_value = %p\en",
             symname, sym\->st_value);
-    printf("        ndx = %d; flags = 0x%x", ndx, *flags);
+    printf("        ndx = %u; flags = %#x", ndx, *flags);
     printf("; refcook = %p; defcook = %p\en", refcook, defcook);
 
     return sym\->st_value;
@@ -593,7 +610,7 @@ la_symbind64(Elf64_Sym *sym, unsigned int ndx, uintptr_t *refcook,
 Elf32_Addr
 la_i86_gnu_pltenter(Elf32_Sym *sym, unsigned int ndx,
         uintptr_t *refcook, uintptr_t *defcook, La_i86_regs *regs,
-        unsigned int *flags, const char *symname, long int *framesizep)
+        unsigned int *flags, const char *symname, long *framesizep)
 {
     printf("la_i86_gnu_pltenter(): %s (%p)\en", symname, sym\->st_value);
 
@@ -606,7 +623,7 @@ la_i86_gnu_pltenter(Elf32_Sym *sym, unsigned int ndx,
 .BR ld.so (8),
 .BR ldconfig (8)
 .SH COLOPHON
-This page is part of release 5.04 of the Linux
+This page is part of release 5.10 of the Linux
 .I man-pages
 project.
 A description of the project,
