@@ -251,9 +251,11 @@ of Linux manpages. The list is sorted alphabetically.
 * Horneczki Gábor <arthur@freemail.c3.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * János Bauer <janos.bauer@eth.ericsson.se>
+* Kabódi László <kabodik@ludens.elte.hu>
 * Kaiser László <titanic@hcbyte.hu>
 * Kalmár Boldizsár <lskorpio@augusta.inf.elte.hu>
 * Kovács Emese <emese@eik.bme.hu>
+* Kovács Tamás <kox@ludens.elte.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
 * Kulcsár Gábor <medve@iku.omikk.hu>
 * László Gergely <laszlog@kvi.ktm.hu>
