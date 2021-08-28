@@ -62,7 +62,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Petr Sykora <petrsykora@jabber.tecka.cz>
 * Stinovlas <stinovlas@gmail.com>
 * Tomáš Andrle <tomas.andrle@pslib.cz>
-* Tomáš Řezáč <tomas.rezac@pslib.cz>
 * Václav Doubek <vaclav.doubek@pslib.cz>
 * Zdeněk Pytela <letty@mrakoplas.phil.muni.cz>
 
@@ -252,6 +251,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Horneczki Gábor <arthur@freemail.c3.hu>
 * Horváth András <horvatha@rs1.szif.hu>
 * János Bauer <janos.bauer@eth.ericsson.se>
+* Kaiser László <titanic@hcbyte.hu>
 * Kalmár Boldizsár <lskorpio@augusta.inf.elte.hu>
 * Kovács Emese <emese@eik.bme.hu>
 * Kővári Péter <pkovari@freemail.c3.hu>
@@ -375,7 +375,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Claudio S. Suárez <csuarez@ctv.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
-* Diego Sevilla Ruiz <dsevilla@ditec.um.es>
 * Enrique Ferrero Puchades <enferpuc@olemail.com>
 * Fidel García <fidelgq@dinamic.net>
 * fmarzoa <fmarzoa@globalnet.es>
