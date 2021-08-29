@@ -268,6 +268,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Nagy Ernő <ned@elte.hu>
 * Nagy Viktor <chaos@inf.elte.hu>
 * Németh Péter <qgenpete@gold.uni-miskolc.hu>
+* Szabó Ákos <fonya@k2.jozsef.kando.hu>
 * Szabó Zsolt <tunci@valerie.inf.elte.hu>
 * Szakács Gergely Márton <case@fornax.hu>
 * Szalay Attila <sasa@sophia.jpte.hu>
