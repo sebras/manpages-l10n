@@ -27,7 +27,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH STATX 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH STATX 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 statx \- get file status (extended)
 .SH SYNOPSIS
@@ -77,6 +77,7 @@ struct statx {
        containing the filesystem where the file resides */
     __u32 stx_dev_major;   /* Major ID */
     __u32 stx_dev_minor;   /* Minor ID */
+    __u64 stx_mnt_id;      /* Mount ID */
 };
 .EE
 .in
@@ -142,6 +143,9 @@ is a file descriptor that refers to a directory, then
 is a relative pathname that is interpreted relative to the directory
 referred to by
 .IR dirfd .
+(See
+.BR openat (2)
+for an explanation of why this is useful.)
 .TP
 By file descriptor
 If
@@ -255,6 +259,7 @@ STATX_SIZE	Want stx_size
 STATX_BLOCKS	Want stx_blocks
 STATX_BASIC_STATS	[All of the above]
 STATX_BTIME	Want stx_btime
+STATX_MNT_ID	Want stx_mnt_id (since Linux 5.8)
 STATX_ALL	[All currently available fields]
 .TE
 .in
@@ -408,6 +413,14 @@ The device on which this file (inode) resides.
 .IR stx_rdev_major " and "  stx_rdev_minor
 The device that this file (inode) represents if the file is of block or
 character device type.
+.TP
+.I stx_mnt_id
+.\" commit fa2fcf4f1df1559a0a4ee0f46915b496cc2ebf60
+The mount ID of the mount containing the file.
+This is the same number reported by
+.BR name_to_handle_at (2)
+and corresponds to the number in the first field in one of the records in
+.IR /proc/self/mountinfo .
 .PP
 For further information on the above fields, see
 .BR inode (7).
@@ -505,8 +518,12 @@ in the path prefix of
 .BR path_resolution (7).)
 .TP
 .B EBADF
+.I pathname
+is relative but
 .I dirfd
-is not a valid open file descriptor.
+is neither
+.B AT_FDCWD
+nor a valid file descriptor.
 .TP
 .B EFAULT
 .I pathname
@@ -566,14 +583,16 @@ is Linux-specific.
 .BR access (2),
 .BR chmod (2),
 .BR chown (2),
+.BR name_to_handle_at (2),
 .BR readlink (2),
 .BR stat (2),
 .BR utime (2),
+.BR proc (5),
 .BR capabilities (7),
 .BR inode (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.12 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,
