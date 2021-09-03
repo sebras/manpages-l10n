@@ -238,6 +238,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Dénes Pál <denespal@valerie.inf.elte.hu>
 * Domokos Péter <pdomokos@freemail.c3.hu>
 * Dyekiss Emil <emil2@cds.hu>
+* Érdi 'Cactus' Gergő <cactus@freemail.c3.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
@@ -273,6 +274,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Szakács Gergely Márton <case@fornax.hu>
 * Szalay Attila <sasa@sophia.jpte.hu>
 * Szijjártó László <laca@janus.gimsz.sulinet.hu>
+* Sztrepka Pál <szpal@firefly.szarvas.hu>
 * Tarbaj Péter <tarby@freeside.elte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
