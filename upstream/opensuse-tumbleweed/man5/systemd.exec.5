@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 248" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 249" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -313,7 +313,7 @@ suffix is found next to the image file, bearing otherwise the same name (except 
 suffix, in which case the verity data file must not have it in its name), the verity data is read from it and automatically used\&.
 .sp
 This option is supported only for disk images that contain a single file system, without an enveloping partition table\&. Images that contain a GPT partition table should instead include both root file system and matching Verity data in the same image, implementing the
-\m[blue]\fBDiscoverable Partition Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -517,7 +517,7 @@ A read\-only OverlayFS will be set up on top of
 /usr/
 and
 /opt/
-hierarchies from the root\&. The order in which the images are listed will determine the order in which the overlay is laid down: images specified first to last will result in overlayfs layers bottom to top\&.
+hierarchies\&. The order in which the images are listed will determine the order in which the overlay is laid down: images specified first to last will result in overlayfs layers bottom to top\&.
 .sp
 Mount options may be defined as a single comma\-separated list of options, in which case they will be implicitly applied to the root partition on the image, or a series of colon\-separated tuples of partition name and mount options\&. Valid partition names and mount options are the same as for
 \fIRootImageOptions=\fR
@@ -783,7 +783,9 @@ Takes a boolean argument\&. If true, ensures that the service process and all it
 \fISystemCallLog=\fR
 are specified\&. Note that even if this setting is overridden by them,
 \fBsystemctl show\fR
-shows the original value of this setting\&. Also see
+shows the original value of this setting\&. In case the service will be run in a new mount namespace anyway and SELinux is disabled, all file systems are mounted with
+\fBMS_NOSUID\fR
+flag\&. Also see
 \m[blue]\fBNo New Privileges Flag\fR\m[]\&\s-2\u[4]\d\s+2\&.
 .RE
 .PP
@@ -2048,12 +2050,15 @@ This option is only available for system services and is not supported for servi
 .PP
 \fIRestrictAddressFamilies=\fR
 .RS 4
-Restricts the set of socket address families accessible to the processes of this unit\&. Takes a space\-separated list of address family names to allow\-list, such as
+Restricts the set of socket address families accessible to the processes of this unit\&. Takes
+"none", or a space\-separated list of address family names to allow\-list, such as
 \fBAF_UNIX\fR,
 \fBAF_INET\fR
 or
-\fBAF_INET6\fR\&. When prefixed with
-\fB~\fR
+\fBAF_INET6\fR\&. When
+"none"
+is specified, then all address families will be denied\&. When prefixed with
+"~"
 the listed address families will be applied as deny list, otherwise as allow list\&. Note that this restricts access to the
 \fBsocket\fR(2)
 system call only\&. Sockets passed into the process by other means (for example, by using socket activation with socket units, see
@@ -2652,7 +2657,7 @@ is implied\&. This feature makes use of the Secure Computing Mode 2 interfaces o
 \fIEnvironment=\fR
 .RS 4
 Sets environment variables for executed processes\&. Each line is unquoted using the rules described in "Quoting" section in
-\fBsystemd.syntax\fR(5)
+\fBsystemd.syntax\fR(7)
 and becomes a list of variable assignments\&. If you need to assign a value containing spaces or the equals sign to a variable, put quotes around the whole assignment\&. Variable expansion is not performed inside the strings and the
 "$"
 character has no special meaning\&. Specifier expansion is performed, see the "Specifiers" section in
@@ -3265,7 +3270,7 @@ is a virtual console terminal, try to deallocate the TTY before and after execut
 .RE
 .SH "CREDENTIALS"
 .PP
-\fILoadCredential=\fR\fIID\fR:\fIPATH\fR
+\fILoadCredential=\fR\fIID\fR[:\fIPATH\fR]
 .RS 4
 Pass a credential to the unit\&. Credentials are limited\-size binary or textual objects that may be passed to unit processes\&. They are primarily used for passing cryptographic keys (both public and private) or certificates, user account information or identity information from host to services\&. The data is accessible from the unit\*(Aqs processes via the file system, at a read\-only location that (if possible and permitted) is backed by non\-swappable memory\&. The data is only accessible to the user associated with the unit, via the
 \fIUser=\fR/\fIDynamicUser=\fR
@@ -3275,13 +3280,13 @@ environment variable to the unit\*(Aqs processes\&.
 .sp
 The
 \fILoadCredential=\fR
-setting takes a textual ID to use as name for a credential plus a file system path\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
+setting takes a textual ID to use as name for a credential plus a file system path, separated by a colon\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
 \fBAF_UNIX\fR
 stream socket in the file system a connection is made to it (only once at unit start\-up) and the credential data read from the connection, providing an easy IPC integration point for dynamically providing credentials from other services\&. If the specified path is not absolute and itself qualifies as valid credential identifier it is understood to refer to a credential that the service manager itself received via the
 \fI$CREDENTIALS_DIRECTORY\fR
 environment variable, which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
 \fBNUL\fR
-bytes\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
+bytes\&. If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way do declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
 .sp
 The credential files/IPC sockets must be accessible to the service manager, but don\*(Aqt have to be directly accessible to the unit\*(Aqs processes: the credential data is read and copied into separate, read\-only copies for the unit that are accessible to appropriately privileged processes\&. This is particularly useful in combination with
 \fIDynamicUser=\fR
@@ -3503,7 +3508,7 @@ in the system manager\&. When compiled for systems with "unmerged
 is not a symlink to
 /usr/bin),
 ":/sbin:/bin"
-is appended\&. In case of the the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
+is appended\&. In case of the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
 \fI$PATH\fR\&.
 .RE
 .PP

@@ -5,7 +5,7 @@
 .\" Distributed under GPL
 .\" %%%LICENSE_END
 .\"
-.TH IOCTL_TTY 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH IOCTL_TTY 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 ioctl_tty \- ioctls for terminals and serial lines
 .SH SYNOPSIS
@@ -26,7 +26,7 @@ or
 .IR arg .
 .PP
 Use of
-.I ioctl
+.BR ioctl ()
 makes for nonportable programs.
 Use the POSIX interface described in
 .BR termios (3)
@@ -71,6 +71,38 @@ Equivalent to
 Allow the output buffer to drain, discard pending input, and
 set the current serial port settings.
 .PP
+The following four ioctls, added in Linux 2.6.20,
+.\" commit 64bb6c5e1ddcd47c951740485026ef08975ee2e6
+.\" commit 592ee3a5e5e2a981ef2829a0380093006d045661
+are just like
+.BR TCGETS ,
+.BR TCSETS ,
+.BR TCSETSW ,
+.BR TCSETSF ,
+except that they take a
+.I "struct termios2\ *"
+instead of a
+.IR "struct termios\ *" .
+If the structure member
+.B c_cflag
+contains the flag
+.BR BOTHER ,
+then the baud rate is stored in the structure members
+.B c_ispeed
+and
+.B c_ospeed
+as integer values.
+These ioctls are not supported on all architectures.
+.RS
+.TS
+lb l.
+TCGETS2	\fBstruct termios2 *\fPargp
+TCSETS2	\fBconst struct termios2 *\fPargp
+TCSETSW2	\fBconst struct termios2 *\fPargp
+TCSETSF2	\fBconst struct termios2 *\fPargp
+.TE
+.RE
+.PP
 The following four ioctls are just like
 .BR TCGETS ,
 .BR TCSETS ,
@@ -80,14 +112,15 @@ except that they take a
 .I "struct termio\ *"
 instead of a
 .IR "struct termios\ *" .
-.IP
-.BI "TCGETA	struct termio *" argp
-.IP
-.BI "TCSETA	const struct termio *" argp
-.IP
-.BI "TCSETAW	const struct termio *" argp
-.IP
-.BI "TCSETAF	const struct termio *" argp
+.RS
+.TS
+lb l.
+TCGETA	\fBstruct termio *\fPargp
+TCSETA	\fBconst struct termio *\fPargp
+TCSETAW	\fBconst struct termio *\fPargp
+TCSETAF	\fBconst struct termio *\fPargp
+.TE
+.RE
 .SS Locking the termios structure
 The
 .I termios
@@ -120,7 +153,6 @@ Window sizes are kept in the kernel, but not used by the kernel
 (except in the case of virtual consoles, where the kernel will
 update the window size when the size of the virtual console changes,
 for example, by loading a new font).
-.PP
 .TP
 .B TIOCGWINSZ
 Argument:
@@ -171,7 +203,7 @@ When
 .I arg
 is nonzero, nobody knows what will happen.
 .IP
-(SVr4, UnixWare, Solaris, Linux treat
+(SVr4, UnixWare, Solaris, and Linux treat
 .I "tcsendbreak(fd,arg)"
 with nonzero
 .I arg
@@ -530,6 +562,7 @@ The BSD ioctls
 .BR TIOCSTOP ,
 .BR TIOCSTART ,
 .BR TIOCUCNTL ,
+and
 .B TIOCREMOTE
 have not been implemented under Linux.
 .SS Modem control
@@ -700,7 +733,8 @@ Insufficient permission.
 Check the condition of DTR on the serial port.
 .PP
 .EX
-#include <termios.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
