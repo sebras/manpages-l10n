@@ -1,5 +1,11 @@
 # Changelog for manpages-l10n
 
+## Version 4.11.0
+*Tue Sep 14 20:57:20 CET 2021*
+
+* Enable Hungarian translation
+* Updated and added many translations
+
 ## Version 4.10.0
 *Mon Jun 13 18:49:01 CET 2021*
 
