@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = cs da de es fr nl it mk pl pt_BR ro
+SUBDIRS = cs da de es fr hu nl it mk pl pt_BR ro
 
 
 # Reformat all .po files and commit changes
