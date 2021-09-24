@@ -14,7 +14,7 @@ precedence.
 This is a simple example on how init\-d\-script can be used to start
 and stop a daemon with PID file support:
 .Bd -literal -offset indent
-#!/usr/bin/env /lib/init/init\-d\-script
+#!/bin/sh /lib/init/init\-d\-script
 ### BEGIN INIT INFO
 # Provides:          atd
 # Required\-Start:    $syslog $time $remote_fs
@@ -29,10 +29,13 @@ DAEMON=/usr/sbin/atd
 .Ed
 .Pp
 The following variables affect behaviour of an init script:
-.Bl -tag -width "DAEMON_ARGS"
+.Bl -tag -width "RELOAD_SIGNAL"
 .It Ev DAEMON
 Path to daemon being started.
-If the init script is not supposed to start any kind of daemon, the functions
+If the init script is not supposed to start any kind of daemon,
+it should be set to
+.Dq Li none
+and the functions
 .Fn do_start_override ,
 .Fn do_stop_override
 and
@@ -40,8 +43,13 @@ and
 should be defined instead.
 .It Ev DAEMON_ARGS
 Additional arguments, passed to daemon during start.
+.It Ev DESC
+Full name or short description of the daemon, printed on screen.
+If unset, this variable defaults to the
+.Dq Ev NAME
+value.
 .It Ev NAME
-Additional environment variables are sources from
+Additional environment variables are sourced from
 .Pa /etc/default/${NAME} .
 If unset, this variable defaults to the basename of the
 .Dq Ev DAEMON
@@ -52,8 +60,15 @@ If this variable is set, it is used as argument to the
 option of
 .Xr start\-stop\-daemon 8 .
 It may be useful if the value of the
-.Ev NAME
-variable is too long.
+.Dq Ev NAME
+variable is longer than the command name length supported by
+the running kernel.
+If the value is verbatim
+.Dq Li none ,
+the command name will not be used to match the processes.
+If unset, this variable defaults to the
+.Dq Ev NAME
+value.
 .It Ev PIDFILE
 Path to file where the process identifier of the started daemon
 will be stored during start.
@@ -62,7 +77,26 @@ If the value is verbatim
 the process identifier will not be stored in any file.
 If this variable is not set, it gets a sensible default value,
 so it is rarely necessary to set this variable explicitly.
+.It Ev RELOAD_SIGNAL
+Signal number or name (without the SIG prefix) that will be sent to
+the process on
+.Ic reload .
+If the daemon performs reload action upon receiving a
+.Dv SIGHUP
+signal, this variable should be set to
+.Dq Li 1
+or
+.Dq Li HUP .
 .El
+.Pp
+The variables
+.Ev RELOAD_ARGS ,
+.Ev START_ARGS
+and
+.Ev STOP_ARGS
+are additional arguments, passed to
+.Xr start\-stop\-daemon 8
+during reload, start and stop actions, to override the default options.
 .Pp
 Additionally, it is possible to change the behaviour of the resulting
 shell script by overriding some of the internal functions.
@@ -137,12 +171,16 @@ action; it should be implemented by the script writer by defining a
 .Fn do_reload
 function.
 .Pp
-If the daemon performs reload action upon receiving a
-.Dv SIGUSR1
-signal, a generic implementation can be used with the following code:
-.Bd -literal -offset indent
-alias do_reload=do_reload_sigusr1
-.Ed
+If
+.Fn do_reload
+is not defined but
+.Fn do_reload_cmd
+is, the latter will be called on
+.Ic reload ,
+after
+.Fn do_reload_prepare
+and before
+.Fn do_reload_cleanup .
 .Sh SEE ALSO
 .Xr inittab 8 ,
 .Xr service 8 ,
