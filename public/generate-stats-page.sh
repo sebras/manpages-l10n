@@ -77,16 +77,15 @@ cat > index.html <<-END_OF_HEADER
    details please contact the respective maintainers.
    </p>
      <ul>
-       <li><a href="https://gitlab.com/arabeyes-i18n/manpages">Arabic</a>, last commit 2006, using po, only few pages</li>
+       <li><a href="https://gitlab.com/arabeyes-i18n/manpages">Arabic</a>, last commit 2006, using po4a, only few pages</li>
        <li><a href="https://github.com/man-pages-zh/man-pages-translation">Chinese</a>, active, using po4a</li>
-       <li><a href="http://tropikhajma.sweb.cz/man-pages-cs/">Czech</a>, appears inactive, last release 2009, integration in manpages-l10n is in progress</li>
-       <li><a href="https://web.archive.org/web/20050403211946/http://lme.linux.hu/forditas/index.html">Hungarian (archived website)</a>, appears inactive, last release 2001, integration in manpages-l10n is in progress</li>
        <li>Indonesian (no web page), last release 1999, appears inactive, license situation unclear</li>
        <li><a href="https://linuxjm.osdn.jp/">Japanese</a>, active, but not current (e.g. partially on the state of 2011/2016)</li>
        <li><a href="https://web.archive.org/web/20060205162241/http://man.kldp.org/wiki">Korean (archived website)</a>, appears inactive, last release 2005, license situation unclear</li>
        <li>Portuguese (no web page), last release 2004</li>
-       <li><a href="https://www.transifex.com/kruvalig/man-pages/">Russian</a>, active and current, only man-pages itself (e.g. no coreutils)</li>
+       <li><a href="https://sourceforge.net/projects/man-pages-ru/">Russian</a>, last activity 2019-10-17, only man-pages itself (e.g. no coreutils); probably to be considered as inactive</li>
        <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008</li>
+       <li>Finnish (no web page), appears inactive, only one release in 1999; translated man pages are still available as a <a href="http://www.win.tue.nl/~aeb/ftpdocs/linux-local/manpages/tr/man-pages-fi-0.1-4.noarch.rpm">RPM package</a></li>
      </ul>
    </body>
   </html>

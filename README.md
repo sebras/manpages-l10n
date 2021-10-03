@@ -7,6 +7,7 @@ languages. Currently we support the following languages:
 *  da - Danish *
 *  de - German
 *  es - Spanish
+*  fa - Persian
 *  fr - French
 *  hu - Hungarian *
 *  it - Italian
