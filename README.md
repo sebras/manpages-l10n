@@ -16,6 +16,7 @@ languages. Currently we support the following languages:
 *  pl - Polish
 *  pt_BR - Brazilian Portuguese
 *  ro - Romanian *
+*  sr - Serbian *
 
 (the languages marked with * are currently - at least partially - unmaintained,
 feel free to pick up the maintenance)
