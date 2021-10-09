@@ -67,6 +67,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-pt_BR.html">The Brazilian Portuguese translation</a></li>
         <li><a href="index-ro.html">The Romanian translation</a></li>
         <li><a href="index-es.html">The Spanish translation</a></li>
+        <li><a href="index-sr.html">The Serbian translation</a></li>
       </ul>
       <p>
       You also  might want to <a href="https://salsa.debian.org/manpages-l10n-team/manpages-l10n">view the git repository</a> directly.
@@ -91,7 +92,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in cs da de es fa fr hu it nl mk pl pt_BR ro; do
+for tlang in cs da de es fa fr hu it nl mk pl pt_BR ro sr; do
     echo $tlang
 
 # Determine manpage section names
