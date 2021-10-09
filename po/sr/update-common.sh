@@ -1,6 +1,6 @@
-# Makefile for manpages-l10n
+#!/bin/sh
 #
-# Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
+# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = cs da de es fr hu nl it mk pl pt_BR ro sr
+# Handle primary messages
+compendium=$(mktemp)
+msgcat --use-first common/*po > "$compendium"
+rm -f common/*po
+tmppo=$(mktemp)
+for potfile in ../../templates/common/*pot; do
+	pofile=$(basename "$potfile")
+	# Remove the letter "t" at the end
+	pofile=${pofile%t}
+	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
+	mv "$tmppo" "common/$pofile"
+done
 
-
-# Reformat all .po files and commit changes
-.PHONY: reformat
-reformat:
-	for d in $(SUBDIRS) ; do \
-		cd $$d && make reformat && cd .. ; \
-	done
-
-# Reformat and update all .po files and commit changes
-.PHONY: update-po
-update-po: reformat
-	$(srcdir)/update-translations.py ; \
-	git commit -m "Update .po files from templates and common messages" . || true
+rm -f "$compendium" "$tmppo"

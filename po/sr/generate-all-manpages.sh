@@ -1,4 +1,4 @@
-# Makefile for manpages-l10n
+#!/bin/sh
 #
 # Copyright © 2017-2019 Dr. Tobias Quathamer <toddy@debian.org>
 #
@@ -15,18 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = cs da de es fr hu nl it mk pl pt_BR ro sr
+# Require distribution name
+if [ -z "$1" ]; then
+	echo "Please specify the distribution." >&2
+	exit 1
+fi
+distribution=$1
 
-
-# Reformat all .po files and commit changes
-.PHONY: reformat
-reformat:
-	for d in $(SUBDIRS) ; do \
-		cd $$d && make reformat && cd .. ; \
-	done
-
-# Reformat and update all .po files and commit changes
-.PHONY: update-po
-update-po: reformat
-	$(srcdir)/update-translations.py ; \
-	git commit -m "Update .po files from templates and common messages" . || true
+echo "Processing distribution '$distribution'"
+manpages=$(find "../../upstream/$distribution"/man* -type f | cut -d/ -f5- | LC_ALL=C sort)
+for manpage in $manpages; do
+	if [ -f "$manpage.po" ]; then
+		./generate-manpage.sh $distribution "$manpage"
+	fi
+done

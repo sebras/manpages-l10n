@@ -122,6 +122,7 @@ AC_CONFIG_FILES([
     po/pl/Makefile
     po/pt_BR/Makefile
     po/ro/Makefile
+    po/sr/Makefile
 ])
 
 AC_OUTPUT
