@@ -28,7 +28,7 @@
 .\" authorization.                                                           *
 .\"***************************************************************************
 .\"
-.\" $Id: tput.1,v 1.67 2021/06/17 21:11:08 tom Exp $
+.\" $Id: tput.1,v 1.71 2021/09/19 00:34:23 tom Exp $
 .TH tput 1 ""
 .ds d /usr/share/terminfo
 .ds n 1
@@ -423,7 +423,7 @@ exit code	error message
 \fB0\fR	T{
 (\fIcapname\fR is a numeric variable that is not specified in the
 \fBterminfo\fR(5) database for this terminal type, e.g.
-\fBtput \-T450 lines\fR and \fBtput \-T2621 xmc\fR)
+\fBtput \-T450 lines\fR and \fBtput \-Thp2621 xmc\fR)
 T}
 \fB1\fR	no error message is printed, see the \fBEXIT CODES\fR section.
 \fB2\fR	usage error
@@ -436,10 +436,21 @@ T}
 The \fBtput\fP command was begun by Bill Joy in 1980.
 The initial version only cleared the screen.
 .PP
-AT&T System V provided a different \fBtput\fP command,
-whose \fBinit\fP and \fBreset\fP  subcommands
+AT&T System V provided a different \fBtput\fP command:
+.bP
+SVr2 provided a rudimentary \fBtput\fP
+which checked the parameter against each
+predefined capability and returned the corresponding value.
+This version of \fBtput\fP did not use \fBtparm\fP(3X) for
+the capabilities which are parameterized.
+.bP
+SVr3 replaced that, a year later, by a more extensive program
+whose \fBinit\fP and \fBreset\fP subcommands
 (more than half the program) were incorporated from
 the \fBreset\fP feature of BSD \fBtset\fP written by Eric Allman.
+.bP
+SVr4 added color initialization using the \fIorig_colors\fP and
+\fIorig_pairs\fP capabilities in the \fBinit\fP subcommand.
 .PP
 Keith Bostic replaced the BSD \fBtput\fP command in 1989
 with a new implementation
@@ -505,6 +516,14 @@ requiring \fBtput\fP to know which type to use.
 This implementation uses a table to determine the parameter types for
 the standard \fIcapname\fR operands, and an internal library
 function to analyze nonstandard \fIcapname\fR operands.
+.IP
+Besides providing more reliable operation than AT&T's utility,
+a portability problem is introduced by this analysis.
+An OpenBSD developer adapted the internal library function from ncurses
+to allow \fBtput\fP to interpret multiple commands on a line.
+Portable applications should not rely upon this feature;
+ncurses provides it to support applications written
+specifically for OpenBSD.
 .PP
 This implementation (unlike others) can accept both \fItermcap\fP
 and \fIterminfo\fP names for the \fIcapname\fP feature,
@@ -597,4 +616,4 @@ to either ncurses or X/Open.
 \fBterminfo\fR(5).
 .PP
 This describes \fBncurses\fR
-version 6.2 (patch 20210731).
+version 6.2 (patch 20210925).
