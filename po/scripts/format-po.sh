@@ -46,23 +46,25 @@ else
     lcode=$(basename $(pwd))
 fi
 
-lname="Unknown"
-case $lcode in
-    cs) lname="Czech";;
-    da) lname="Danish";;
-    de) lname="German";;
-    es) lname="Spanish";;
-    fa) lname="Persian";;
-    fr) lname="French";;
-    hu) lname="Hungarian";;
-    it) lname="Italian";;
-    mk) lname="Macedonian";;
-    nl) lname="Dutch";;
-    pl) lname="Polish";;
-    pt_BR) lname="Brazilian Portugues";;
-    ro) lname="Romanian";;
-    sr) lname="Serbian";;
-esac
+source ../scripts/l10n_set
+
+#lname="Unknown"
+#case $lcode in
+#    cs) lname="Czech";;
+#    da) lname="Danish";;
+#    de) lname="German";;
+#    es) lname="Spanish";;
+#    fa) lname="Persian";;
+#    fr) lname="French";;
+#    hu) lname="Hungarian";;
+#    it) lname="Italian";;
+#    mk) lname="Macedonian";;
+#    nl) lname="Dutch";;
+#    pl) lname="Polish";;
+#    pt_BR) lname="Brazilian Portugues";;
+#    ro) lname="Romanian";;
+#    sr) lname="Serbian";;
+#esac
 
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
