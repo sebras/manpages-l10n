@@ -23,20 +23,58 @@ if [ "$1" == "-h" ]; then
   echo "Usage: ./`basename $0`"
   echo This script reformats any *.po files. It wraps the lines at 80 characters
   echo and removes outdated messages at the end of the file. 
+  echo ""
+  echo It needs the language code as parameter
+  echo ""
+  echo Alternatively call it directly from the language directory, e.g. po/fr
   exit 0
 fi
+
+if [ a"$1" != a ]; then
+    if [ -d ../$1 ]; then
+	cd ../$1
+    else
+	echo "Language $1 could not be found, aborting"
+	exit 1
+    fi
+    lcode=$1
+else
+    if [ ! -d man1 ]; then
+	echo "No directories with man pages found, aborting"
+	exit 2
+    fi
+    lcode=$(basename $(pwd))
+fi
+
+lname="Unknown"
+case $lcode in
+    cs) lname="Czech";;
+    da) lname="Danish";;
+    de) lname="German";;
+    es) lname="Spanish";;
+    fa) lname="Persian";;
+    fr) lname="French";;
+    hu) lname="Hungarian";;
+    it) lname="Italian";;
+    mk) lname="Macedonian";;
+    nl) lname="Dutch";;
+    pl) lname="Polish";;
+    pt_BR) lname="Brazilian Portugues";;
+    ro) lname="Romanian";;
+    sr) lname="Serbian";;
+esac
 
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
 	# Get the head of the file until first msgid line
 	# and filter out all comment lines without year information
 	sed -n "1,/^msgid/p" "$translation" |
-	grep -v "^# German translation of manpages" |
+	grep -v "^# $lname translation of manpages" |
 	grep -v "^# This file is distributed under the same license as the manpages-l10n package." |
 	grep -v "^# Copyright © of this file:" |
 	grep -v "^#\s*$" > "$header"
 	sed -e "1,/^msgid/d" "$translation" > "$tail"
-	echo "# German translation of manpages" > "$result"
+	echo "# $lname translation of manpages" > "$result"
 	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$result"
 	echo "# Copyright © of this file:" >> "$result"
 	cat "$result" "$header" "$tail" > "$translation"
