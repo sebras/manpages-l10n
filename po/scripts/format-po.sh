@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,24 +48,6 @@ else
 fi
 
 source ../scripts/l10n_set
-
-#lname="Unknown"
-#case $lcode in
-#    cs) lname="Czech";;
-#    da) lname="Danish";;
-#    de) lname="German";;
-#    es) lname="Spanish";;
-#    fa) lname="Persian";;
-#    fr) lname="French";;
-#    hu) lname="Hungarian";;
-#    it) lname="Italian";;
-#    mk) lname="Macedonian";;
-#    nl) lname="Dutch";;
-#    pl) lname="Polish";;
-#    pt_BR) lname="Brazilian Portugues";;
-#    ro) lname="Romanian";;
-#    sr) lname="Serbian";;
-#esac
 
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
