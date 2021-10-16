@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-l10n 4.11.0\n"
 "POT-Creation-Date: 2021-09-10 15:40+0200\n"
-"PO-Revision-Date: 2021-10-15 13:59+0200\n"
+"PO-Revision-Date: 2021-10-16 09:30+0200\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -2087,6 +2087,10 @@ msgid ""
 "    int    pipe_fd[2];  /* Pipe used to synchronize parent and child */\n"
 "};\n"
 msgstr ""
+"struct child_args {\n"
+"    char **argv;        /* Vom Kind auszuführender Befehl, mit Argumenten */\n"
+"    int    pipe_fd[2];  /* Zur Sychronisation Eltern/Kind verwandte Pipe */\n"
+"};\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2133,6 +2137,38 @@ msgid ""
 "    fpe(\"the commas are replaced by newlines before writing\"\n"
 "        \" to map files.\\en\");\n"
 msgstr ""
+"static void\n"
+"usage(char *pname)\n"
+"{\n"
+"    fprintf(stderr, \"Verwendung: %s [Optionen] Bef [Arg…]\\en\\en\", pname);\n"
+"    fprintf(stderr, \"Erstellt einen Kindprozess, der einen Shellbefehl \"\n"
+"            \"in einem neuen Benutzernamensraum ausführt\\en\"\n"
+"            \"und möglicherweise auch anderen neuen Namensräumen.\\en\\en\");\n"
+"    fprintf(stderr, \"Optionen können sein:\\en\\en\");\n"
+"#define fpe(str) fprintf(stderr, \"    %s\", str);\n"
+"    fpe(\"-i          Neuer IPC-Namensraum\\en\");\n"
+"    fpe(\"-m          Neuer Einhänge-Namensraum\\en\");\n"
+"    fpe(\"-n          Neuer Netzwerk-Namensraum\\en\");\n"
+"    fpe(\"-p          Neuer PID-Namensraum\\en\");\n"
+"    fpe(\"-u          Neuer UTS-Namensraum\\en\");\n"
+"    fpe(\"-U          Neuer Benutzernamensraum\\en\");\n"
+"    fpe(\"-M uid_map  Angabe einer UID-Abbildung für Benutzernamensraum\\en\");\n"
+"    fpe(\"-G gid_map  Angabe einer GID-Abbildung für Benutzernamensraum\\en\");\n"
+"    fpe(\"-z          Benutzer-UID und -GID auf 0 im Benutzernamensraum abbilden\\en\");\n"
+"    fpe(\"            (äquivalent zu: -M \\(aq0 E<lt>uidE<gt> 1\\(aq -G \\(aq0 E<lt>gidE<gt> 1\\(aq)\\en\");\n"
+"    fpe(\"-v          Anzeige ausführlicher Meldungen\\en\");\n"
+"    fpe(\"\\en\");\n"
+"    fpe(\"Falls -z, -M oder -G angegeben wird, ist -U verpflichtend.\\en\");\n"
+"    fpe(\"Es ist nicht erlaubt, sowohl -z als auch entweder -M oder -G anzugeben.\\en\");\n"
+"    fpe(\"\\en\");\n"
+"    fpe(\"Abbildungszeichenketten für -M und -G bestehen aus Datensätzen der folgenden Form:\\en\");\n"
+"    fpe(\"\\en\");\n"
+"    fpe(\"    Namensrauminterne-Kennung   Namensraumexterne-Kennung   Länge\\en\");\n"
+"    fpe(\"\\en\");\n"
+"    fpe(\"Eine Abbildungszeichenkette kann mehrere Datensätze enthalten,\"\n"
+"        \" getrennt durch Kommata;\\en\");\n"
+"    fpe(\"die Kommata werden vor dem Schreiben in die Abbildungsdateien durch\"\n"
+"        \" Zeilenumbrüche ersetzt.\\en\");\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2155,13 +2191,17 @@ msgid ""
 "   GID mapping consists of one or more newline-delimited records\n"
 "   of the form:\n"
 msgstr ""
+"/* Aktualisiert die Abbildungsdatei »Datei«, mit dem in »Abbildung«\n"
+"   bereitgestellten Wert, einer Zeichenkette, die eine UID- oder GID-\n"
+"   Abbildung definiert. Eine UID- oder GID-Abbildung besteht aus einem oder\n"
+"   mehreren, durch Zeilenumbrüche getrennten Datensätzen der folgenden Form:\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-3 opensuse-tumbleweed
 #, no-wrap
 msgid "       ID_inside-ns    ID-outside-ns   length\n"
-msgstr ""
+msgstr "       Namensrauminterne-Kennung   Namensraumexterne-Kennung   Länge\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2173,6 +2213,11 @@ msgid ""
 "   use of commas to delimit records in this string, and replace them\n"
 "   with newlines before writing the string to the file. */\n"
 msgstr ""
+"   Für die Befehlszeile zu verlangen, dass Zeichenketten mit Zeilenumbrüchen\n"
+"   bereitgestellt werden, ist natürlich unbequem. Daher erlauben wir die\n"
+"   Verwendung von Kommata zu Begrenzung von Datensätzen in dieser\n"
+"   Zeichenkette und ersetzen sie vor dem Schreiben in die Datei durch\n"
+"   Zeilenumbrüche. */\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2185,12 +2230,17 @@ msgid ""
 "    int fd;\n"
 "    size_t map_len;     /* Length of \\(aqmapping\\(aq */\n"
 msgstr ""
+"static void\n"
+"update_map(char *mapping, char *map_file)\n"
+"{\n"
+"    int fd;\n"
+"    size_t map_len;     /* Länge der »Abbildung« */\n"
 
 #. type: Plain text
 #: archlinux fedora-rawhide mageia-cauldron opensuse-tumbleweed
 #, no-wrap
 msgid "    /* Replace commas in mapping string with newlines. */\n"
-msgstr ""
+msgstr "    /* Kommata durch Zeilenumbrüche in Abbildungszeichenkette ersetzen. */\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2219,6 +2269,12 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    fd = open(map_file, O_RDWR);\n"
+"    if (fd == -1) {\n"
+"        fprintf(stderr, \"FEHLER: open %s: %s\\en\", map_file,\n"
+"                strerror(errno));\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2231,6 +2287,11 @@ msgid ""
 "        exit(EXIT_FAILURE);\n"
 "    }\n"
 msgstr ""
+"    if (write(fd, mapping, map_len) != map_len) {\n"
+"        fprintf(stderr, \"FEHLER: write %s: %s\\en\", map_file,\n"
+"                strerror(errno));\n"
+"        exit(EXIT_FAILURE);\n"
+"    }\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -2243,6 +2304,7 @@ msgstr ""
 "    close(fd);\n"
 "}\n"
 
+# FIXME Text missing? in order to drop → in order to drop privileges?
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-3 opensuse-tumbleweed
@@ -2257,6 +2319,14 @@ msgid ""
 "   the /proc/PID/setgroups files for this namespace.  That is the\n"
 "   purpose of the following function. */\n"
 msgstr ""
+"/* Linux 3.19 änderte die Handhabung von setgroups(2) und die Datei\n"
+"   »gid_map«, um ein Sicherheitsproblem zu adressieren. Das Problem erlaubte\n"
+"   *nicht privilegierten* Benutzern einen Benutzernamensraum einzusetzen, um\n"
+"   abzugeben. Das Fazit der 3.19er Änderung ist, dass die Verwendung des\n"
+"   Systemaufrufs setgroups() in diesem Benutzernamensraum zuerst durch\n"
+"   Schreiben von »deny« in eine der Dateien /proc/PID/setgroups für diesen\n"
+"   Namensraum erfolgen muss, damit die Datei »gid_maps« aktualisert wird.\n"
+"   Das ist der Zweck der folgenden Funktion. */\n"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
