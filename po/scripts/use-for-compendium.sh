@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +22,12 @@ if [ ! -f "$1" ]; then
 	exit 1
 fi
 proofread_translation=$1
+
+# If we are in the scripts directory, we need to switch to the language directory
+if [ ! -d man1 ]; then
+    langdirectory=$(dirname $(dirname $1))
+    cd $langdirectory
+fi
 
 tmppo1=$(mktemp)
 tmppo2=$(mktemp)
