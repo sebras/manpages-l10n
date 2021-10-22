@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +15,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ a"$2" != a ]; then
+    if [ -d ../$2 ]; then
+        cd ../$2
+    else
+        echo "Language $2 could not be found, aborting"
+        exit 1
+    fi
+    lcode=$2
+else
+    if [ ! -d man1 ]; then
+        echo "No directories with man pages found, aborting"
+        exit 2
+    fi
+    lcode=$(basename $(pwd))
+fi
 
 # Require one argument (the .po file of the manpage)
 if [ ! -f "$1" ]; then
@@ -37,7 +54,7 @@ cp "$1" "$backup"
 
 # Generate compendium
 compendium=$(mktemp)
-./generate-compendium.sh "$1" "$compendium"
+../scripts/generate-compendium.sh "$1" "$compendium" "$lcode"
 
 # Update .po file from .pot file
 tmppo=$(mktemp)
@@ -54,8 +71,8 @@ msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$tmppo" > "$1
 
 # Determine if the only change is the "POT-Creation-Date:" header
 # If so, copy back the backup to revert that change
-sed -f remove-potcdate.sed < "$backup" > "$tmppo"
-sed -f remove-potcdate.sed < "$1" > "$compendium"
+sed -f ../scripts/remove-potcdate.sed < "$backup" > "$tmppo"
+sed -f ../scripts/remove-potcdate.sed < "$1" > "$compendium"
 if cmp "$tmppo" "$compendium" >/dev/null 2>&1; then \
 	mv "$backup" "$1"; \
 fi
