@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +15,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ a"$3" != a ]; then
+    if [ -d ../$3 ]; then
+        cd ../$3
+    else
+        echo "Language $3 could not be found, aborting"
+        exit 1
+    fi
+    lcode=$3
+else
+    if [ ! -d man1 ]; then
+        echo "No directories with man pages found, aborting"
+        exit 2
+    fi
+    lcode=$(basename $(pwd))
+fi
+
+source ../scripts/l10n_set
+
 
 # This is the distribution for which the manpage should be generated
 distribution="$1"
@@ -33,22 +53,18 @@ if [ ! -f "$master" ]; then
 	exit
 fi
 
-# Determine if an encoding is specified,
-# otherwise fall back to ISO-8859-1
-# coding=$(grep "\-\*\- coding:" "$master" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
-# if [ -z "$coding" ]; then
-#	coding="ISO-8859-1"
-# fi
-
 # Set up the filename of the translation
 translation="$localized.po"
 
 # Append the output directory
 localized="$distribution/$localized"
 
-# Create the addendum for this manpage
-addendum=$(mktemp)
-./generate-addendum.sh "$translation" "$addendum"
+# It might be that addenda for a certain language do not (yet) work
+if [ ! -f noaddendum ]; then
+    # Create the addendum for this manpage
+    addendum=$(mktemp)
+    ./generate-addendum.sh "$translation" "$addendum"
+fi
 
 # Create a separate .po file for this distribution,
 # otherwise po4a will emit really a lot of warnings
@@ -59,7 +75,20 @@ pofile=$(mktemp)
 msggrep --location="$distribution" $translation > $pofile
 
 # Actual translation
-po4a-translate \
+if [ -f noaddendum ]; then
+    po4a-translate \
+	-f man \
+	--option groff_code=verbatim \
+	--option generated \
+	--option untranslated="a.RE,\|" \
+	--option unknown_macros=untranslated \
+	-m "$master" \
+	-M "utf-8" \
+	-p "$pofile" \
+	-L UTF-8 \
+	-l "$localized";
+else
+    po4a-translate \
 	-f man \
 	--option groff_code=verbatim \
 	--option generated \
@@ -72,6 +101,7 @@ po4a-translate \
 	-a "license.add" \
 	-L UTF-8 \
 	-l "$localized";
+fi
 
 # Ensure a proper encoding if the generation has been successful
 if [ -f "$localized" ]; then
