@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ a"$1" != a ]; then
+    if [ -d ../$1 ]; then
+        cd ../$1
+    else
+        echo "Language $2 could not be found, aborting"
+        exit 1
+    fi
+    lcode=$1
+else
+    if [ ! -d man1 ]; then
+        echo "No directories with man pages found, aborting"
+        exit 2
+    fi
+    lcode=$(basename $(pwd))
+fi
+
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
 	echo $(basename "$translation")
-	./update-po.sh "$translation"
+	../scripts/update-po.sh "$translation"
 done
