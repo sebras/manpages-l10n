@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +15,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+if [ a"$1" != a ]; then
+    if [ -d ../$1 ]; then
+        cd ../$1
+    else
+        echo "Language $1 could not be found, aborting"
+        exit 1
+    fi
+else
+    if [ ! -d man1 ]; then
+        echo "No directories with man pages found, aborting"
+        exit 2
+    fi
+fi
 
 # Handle primary messages
 compendium=$(mktemp)
