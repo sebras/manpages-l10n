@@ -17,7 +17,7 @@
 
 # Require one argument (the name of the manpage)
 if [ -z "$1" ]; then
-	echo "Please specify the name of the translation, e.g. 'arch.1.po'." >&2
+	echo "Please specify the name of the translation, e.g. 'de/man1/arch.1.po'." >&2
 	exit 1
 fi
 
