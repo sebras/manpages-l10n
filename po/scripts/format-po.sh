@@ -31,20 +31,19 @@ if [ "$1" == "-h" ]; then
   exit 0
 fi
 
-if [ a"$1" != a ]; then
-    if [ -d ../$1 ]; then
-	cd ../$1
-    else
-	echo "Language $1 could not be found, aborting"
-	exit 1
-    fi
-    lcode=$1
-else
-    if [ ! -d man1 ]; then
-	echo "No directories with man pages found, aborting"
-	exit 2
-    fi
+if [ -d man1 ]; then
     lcode=$(basename $(pwd))
+elif [ a"$1" != a ]; then
+    if [ -d ../$1 ]; then
+        cd ../$1
+        lcode=$1
+    else
+        echo "Language $1 could not be found, aborting"
+        exit 1
+    fi
+else
+    echo "Could not determine target directory, aborting"
+    exit 2
 fi
 
 source ../scripts/l10n_set

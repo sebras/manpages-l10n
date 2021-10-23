@@ -16,20 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ a"$3" != a ]; then
+if [ -d man1 ]; then
+    lcode=$(basename $(pwd))
+elif [ a"$3" != a ]; then
     if [ -d ../$3 ]; then
         cd ../$3
+        lcode=$3
     else
         echo "Language $3 could not be found, aborting"
         exit 1
     fi
-    lcode=$3
 else
-    if [ ! -d man1 ]; then
-        echo "No directories with man pages found, aborting"
-        exit 2
-    fi
-    lcode=$(basename $(pwd))
+    echo "Could not determine target directory, aborting"
+    exit 2
 fi
 
 source ../scripts/l10n_set
