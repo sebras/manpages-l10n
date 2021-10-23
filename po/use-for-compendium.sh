@@ -27,6 +27,10 @@ proofread_translation=$1
 if [ ! -d man1 ]; then
     langdirectory=$(dirname $(dirname $1))
     cd $langdirectory
+    # We need to adjust the path after cd
+    mandir=$(basename $(dirname $1))
+    filename=$(basename $1)
+    proofread_translation="$mandir/$filename"
 fi
 
 tmppo1=$(mktemp)
