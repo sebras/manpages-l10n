@@ -19,7 +19,7 @@
 # Require one argument (filename of the proofread translation)
 if [ ! -f "$1" ]; then
 	echo "The file '$1' could not be found." >&2
-	exit 1
+	exit 13
 fi
 proofread_translation=$1
 

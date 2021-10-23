@@ -18,7 +18,7 @@
 # Require distribution name
 if [ -z "$1" ]; then
 	echo "Please specify the distribution." >&2
-	exit 1
+	exit 17
 fi
 distribution=$1
 

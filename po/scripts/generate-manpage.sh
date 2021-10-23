@@ -24,11 +24,11 @@ elif [ a"$3" != a ]; then
         lcode=$3
     else
         echo "Language $3 could not be found, aborting"
-        exit 1
+        exit 11
     fi
 else
     echo "Could not determine target directory, aborting"
-    exit 2
+    exit 12
 fi
 
 source ../scripts/l10n_set
@@ -49,7 +49,7 @@ master="../../upstream/$distribution/$localized"
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
 	echo "The original manpage for '$localized' could not be found in '$distribution'." >&2
-	exit
+	exit 16
 fi
 
 # Set up the filename of the translation

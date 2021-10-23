@@ -18,7 +18,7 @@
 # Require one argument (the .po file of the manpage)
 if [ ! -f "$1" ]; then
 	echo "The file '$1' could not be found."
-	exit 1
+	exit 13
 fi
 
 # path to the templates
@@ -28,7 +28,7 @@ templatedir="../templates"
 potfile="$templatedir/$1""t"
 if [ ! -f "$potfile" ]; then
 	echo "The potfile '$potfile' could not be found." >&2
-	exit 1
+	exit 14
 fi
 
 # Create backup, to be able later to run diff on the files.

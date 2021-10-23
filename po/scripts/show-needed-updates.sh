@@ -24,11 +24,11 @@ elif [ a"$1" != a ]; then
         lcode=$1
     else
         echo "Language $1 could not be found, aborting"
-        exit 1
+        exit 11
     fi
 else
     echo "Could not determine target directory, aborting"
-    exit 2
+    exit 12
 fi
 
 source ../scripts/l10n_set
