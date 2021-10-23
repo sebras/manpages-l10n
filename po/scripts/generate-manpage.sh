@@ -62,7 +62,7 @@ localized="$distribution/$localized"
 if [ ! -f noaddendum ]; then
     # Create the addendum for this manpage
     addendum=$(mktemp)
-    ./generate-addendum.sh "$translation" "$addendum"
+    ../scripts/generate-addendum.sh "$translation" "$addendum"
 fi
 
 # Create a separate .po file for this distribution,

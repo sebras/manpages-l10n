@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefejll.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +16,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ -d man1 ]; then
+    lcode=$(basename $(pwd))
+elif [ a"$2" != a ]; then
+    if [ -d $2 ]; then
+        cd $2
+	lcode=$2
+    else
+        echo "Language $2 could not be found, aborting"
+        exit 11
+    fi
+else
+    echo "Could not determine target directory, aborting"
+    exit 12
+fi
+
+source ../l10n_set
+
 # Require one argument (the name of the manpage)
 if [ -z "$1" ]; then
 	echo "Please specify the name of the manpage, e.g. 'arch.1'." >&2
@@ -25,30 +43,30 @@ fi
 manpage=$(basename $1)
 mandir="man"$(echo $manpage | sed -e "s/.*\.\([0-9]\).\?$/\1/")
 pofile=$mandir/$manpage.po
-potfile=../templates/$mandir/$manpage.pot
+potfile=../../templates/$mandir/$manpage.pot
 
 # Create the template
-cd ../templates
+cd ../../templates
 ./generate-one-template.sh $manpage
 # Update common templates
 ./create-common-templates.sh
-cd ../po
+cd ../po/$lcode
 
 # Update common translations
-./update-common.sh
+../update-common.sh
 
 # Ensure that there is a .po file
 if [ ! -f $mandir/$manpage.po ]; then
 	# Create a new .po file
-	msginit --no-translator --locale="de" -i "$potfile" -o "$pofile"
+	msginit --no-translator --locale="$lcode" -i "$potfile" -o "$pofile"
 
 	# Get the head of the file until first msgid line
 	# and generate the standard header
 	tmppo1=$(mktemp)
 	tmppo2=$(mktemp)
 	sed -e "1,/^msgid/d" "$pofile" > "$tmppo1"
-	echo "# German translation of manpages" > "$pofile"
-	echo "# This file is distributed under the same license as the manpages-de package." >> "$pofile"
+	echo "# $langname translation of manpages" > "$pofile"
+	echo "# This file is distributed under the same license as the manpages-l10n package." >> "$pofile"
 	echo "# Copyright © of this file:" >> "$pofile"
 	echo "msgid \"\"" >> "$pofile"
 	cat "$pofile" "$tmppo1" > "$tmppo2"
@@ -56,9 +74,10 @@ if [ ! -f $mandir/$manpage.po ]; then
 	rm -f "$tmppo1" "$tmppo2"
 
 	# Adjust two header lines
-	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: German <debian-l10n-german@lists.debian.org>\\\n\"/" "$pofile"
-	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-de\\\n\"/" "$pofile"
+	#sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: German <debian-l10n-german@lists.debian.org>\\\n\"/" "$pofile"
+	sed -i -e "s/^\"Language-Team: none\\\n\"$/\"Language-Team: $langmail\\\n\"/" "$pofile"
+	sed -i -e "s/^\"Project-Id-Version: manpages-de .*$/\"Project-Id-Version: manpages-l10n\\\n\"/" "$pofile"
 fi
 
 # Finally, populate the translation from the compendium.
-./update-po.sh "$pofile"
+../update-po.sh "$pofile" "$lcode"

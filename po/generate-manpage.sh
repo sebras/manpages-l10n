@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ -d man1 ]; then
+    lcode=$(basename $(pwd))
+elif [ a"$3" != a ]; then
+    if [ -d $3 ]; then
+        cd $3
+        lcode=$3
+    else
+        echo "Language $3 could not be found, aborting"
+        exit 11
+    fi
+else
+    echo "Could not determine target directory, aborting"
+    exit 12
+fi
+
+source ../l10n_set
+
+
 # This is the distribution for which the manpage should be generated
 distribution="$1"
 
@@ -25,19 +44,12 @@ localized="$2"
 localized=$(echo "$localized" | sed -e "s/\.po$//")
 
 # Set up the path to the original manpage
-master="../upstream/$distribution/$localized"
+master="../../upstream/$distribution/$localized"
 
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
 	echo "The original manpage for '$localized' could not be found in '$distribution'." >&2
-	exit
-fi
-
-# Determine if an encoding is specified,
-# otherwise fall back to ISO-8859-1
-coding=$(grep "\-\*\- coding:" "$master" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
-if [ -z "$coding" ]; then
-	coding="ISO-8859-1"
+	exit 16
 fi
 
 # Set up the filename of the translation
@@ -46,9 +58,12 @@ translation="$localized.po"
 # Append the output directory
 localized="$distribution/$localized"
 
-# Create the addendum for this manpage
-addendum=$(mktemp)
-./generate-addendum.sh "$translation" "$addendum"
+# It might be that addenda for a certain language do not (yet) work
+if [ ! -f noaddendum ]; then
+    # Create the addendum for this manpage
+    addendum=$(mktemp)
+    ../generate-addendum.sh "$translation" "$addendum"
+fi
 
 # Create a separate .po file for this distribution,
 # otherwise po4a will emit really a lot of warnings
@@ -59,19 +74,33 @@ pofile=$(mktemp)
 msggrep --location="$distribution" $translation > $pofile
 
 # Actual translation
-po4a-translate \
+if [ -f noaddendum ]; then
+    po4a-translate \
 	-f man \
 	--option groff_code=verbatim \
 	--option generated \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
 	-m "$master" \
-	-M "$coding" \
+	-M "utf-8" \
 	-p "$pofile" \
-	-a "$addendum" \
-	-a "../lizenz.add" \
 	-L UTF-8 \
 	-l "$localized";
+else
+    po4a-translate \
+	-f man \
+	--option groff_code=verbatim \
+	--option generated \
+	--option untranslated="a.RE,\|" \
+	--option unknown_macros=untranslated \
+	-m "$master" \
+	-M "utf-8" \
+	-p "$pofile" \
+	-a "$addendum" \
+	-a "license.add" \
+	-L UTF-8 \
+	-l "$localized";
+fi
 
 # Ensure a proper encoding if the generation has been successful
 if [ -f "$localized" ]; then

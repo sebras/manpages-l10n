@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +23,12 @@ if [ ! -f "$1" ]; then
 fi
 proofread_translation=$1
 
+# If we are in the base directory, we need to switch to the language directory
+if [ ! -d man1 ]; then
+    langdirectory=$(dirname $(dirname $1))
+    cd $langdirectory
+fi
+
 tmppo1=$(mktemp)
 tmppo2=$(mktemp)
 
@@ -35,7 +42,7 @@ for pofile in $(find common/ -type f | LC_ALL=C sort); do
 	msgcat --use-first --unique $pofile $proofread_translation $tmppo1 > $tmppo2
 	# Second, use the template and the proofread translation
 	# in order to update the now missing translations.
-	potfile="../templates/$pofile""t"
+	potfile="../../templates/$pofile""t"
 	msgmerge --previous --compendium $proofread_translation $tmppo2 $potfile > $pofile
 done
 
