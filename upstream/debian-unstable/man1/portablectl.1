@@ -1,5 +1,5 @@
 '\" t
-.TH "PORTABLECTL" "1" "" "systemd 247" "portablectl"
+.TH "PORTABLECTL" "1" "" "systemd 249" "portablectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -212,6 +212,23 @@ are passed, the portable service(s) are immediately stopped (blocking operation)
 \fBattach\fR\&.
 .RE
 .PP
+\fBreattach\fR \fIIMAGE\fR [\fIPREFIX\&...\fR]
+.RS 4
+Detaches an existing portable service image from the host, and immediately attaches it again\&. This is useful in case the image was replaced\&. Running units are not stopped during the process\&. Partial matching, to allow for different versions in the image name, is allowed: only the part before the first
+"_"
+character has to match\&. If the new image doesn\*(Aqt exist, the existing one will not be detached\&. The parameters follow the same syntax as the
+\fBattach\fR
+command\&.
+.PP
+If
+\fB\-\-now\fR
+and/or
+\fB\-\-enable\fR
+are passed, the portable service(s) are immediately stopped if removed, started and/or enabled if added, or restarted if updated\&. Prefixes are also accepted, in the same way as described in the
+\fBattach\fR
+case\&.
+.RE
+.PP
 \fBinspect\fR \fIIMAGE\fR [\fIPREFIX\&...\fR]
 .RS 4
 Extracts various metadata from a portable service image and presents it to the caller\&. Specifically, the
@@ -367,12 +384,27 @@ Immediately enable/disable the portable service after attaching/detaching\&.
 .PP
 \fB\-\-now\fR
 .RS 4
-Immediately start/stop the portable service after attaching/before detaching\&.
+Immediately start/stop/restart the portable service after attaching/before detaching/after upgrading\&.
 .RE
 .PP
 \fB\-\-no\-block\fR
 .RS 4
 Don\*(Aqt block waiting for attach \-\-now to complete\&.
+.RE
+.PP
+\fB\-\-extension=\fR\fIPATH\fR
+.RS 4
+Add an additional image
+\fIPATH\fR
+as an overlay on top of
+\fIIMAGE\fR
+when attaching/detaching\&. This argument can be specified multiple times, in which case the order in which images are laid down follows the rules specified in
+\fBsystemd.exec\fR(5)
+for the
+\fIExtensionImages=\fR
+directive\&.
+.sp
+Note that the same extensions have to be specified, in the same order, when attaching and detaching\&.
 .RE
 .PP
 \fB\-H\fR, \fB\-\-host=\fR
@@ -386,7 +418,18 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
+Execute operation on a local container\&. Specify a container name to connect to, optionally prefixed by a user name to connect as and a separating
+"@"
+character\&. If the special string
+"\&.host"
+is used in place of the container name, a connection to the local system is made (which is useful to connect to a specific user\*(Aqs user bus:
+"\-\-user \-\-machine=lennart@\&.host")\&. If the
+"@"
+syntax is not used, the connection is made as root user\&. If the
+"@"
+syntax is used either the left hand side or the right hand side may be omitted (but not both) in which case the local user name and
+"\&.host"
+are implied\&.
 .RE
 .PP
 \fB\-\-no\-pager\fR
@@ -487,6 +530,73 @@ and similar\&.
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "ENVIRONMENT"
 .PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
+.PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
 Pager to use when
@@ -584,9 +694,12 @@ instead\&.
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
@@ -602,4 +715,5 @@ and other conditions\&.
 .SH "SEE ALSO"
 .PP
 \fBsystemd\fR(1),
+\fBorg.freedesktop.portable1\fR(5),
 \fBsystemd-portabled.service\fR(8)

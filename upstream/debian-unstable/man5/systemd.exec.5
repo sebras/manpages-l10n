@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 247" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 249" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -160,6 +160,28 @@ and
 settings are particularly useful in conjunction with
 \fIRootDirectory=\fR\&. For details, see below\&.
 .sp
+If
+\fIRootDirectory=\fR/\fIRootImage=\fR
+are used together with
+\fINotifyAccess=\fR
+the notification socket is automatically mounted from the host into the root environment, to ensure the notification interface can work correctly\&.
+.sp
+Note that services using
+\fIRootDirectory=\fR/\fIRootImage=\fR
+will not be able to log via the syslog or journal protocols to the host logging infrastructure, unless the relevant sockets are mounted from the host, specifically:
+.PP
+\fBExample\ \&1.\ \&Mounting logging sockets into root environment\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BindReadOnlyPaths=/dev/log /run/systemd/journal/socket /run/systemd/journal/stdout
+.fi
+.if n \{\
+.RE
+.\}
+
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
@@ -219,58 +241,16 @@ is implied\&. Options for multiple partitions can be specified in a single line 
 \fBmount\fR(8)\&.
 .sp
 Valid partition names follow the
-\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2:
+\fBroot\fR,
+\fBusr\fR,
+\fBhome\fR,
+\fBsrv\fR,
+\fBesp\fR,
+\fBxbootldr\fR,
+\fBtmp\fR,
+\fBvar\fR\&.
 .sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.B Table\ \&1.\ \&Accepted partition names
-.TS
-allbox tab(:);
-lB.
-T{
-Partition Name
-T}
-.T&
-l
-l
-l
-l
-l
-l
-l
-l
-l.
-T{
-root
-T}
-T{
-root\-secondary
-T}
-T{
-home
-T}
-T{
-srv
-T}
-T{
-esp
-T}
-T{
-xbootldr
-T}
-T{
-tmp
-T}
-T{
-var
-T}
-T{
-usr
-T}
-.TE
-.sp 1
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
@@ -333,7 +313,7 @@ suffix is found next to the image file, bearing otherwise the same name (except 
 suffix, in which case the verity data file must not have it in its name), the verity data is read from it and automatically used\&.
 .sp
 This option is supported only for disk images that contain a single file system, without an enveloping partition table\&. Images that contain a GPT partition table should instead include both root file system and matching Verity data in the same image, implementing the
-\m[blue]\fBDiscoverable Partition Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+\m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -342,16 +322,25 @@ This option is only available for system services and is not supported for servi
 .RS 4
 Takes a boolean argument\&. If on, a private mount namespace for the unit\*(Aqs processes is created and the API file systems
 /proc/,
-/sys/, and
+/sys/,
 /dev/
-are mounted inside of it, unless they are already mounted\&. Note that this option has no effect unless used in conjunction with
+and
+/run/
+(as an empty
+"tmpfs") are mounted inside of it, unless they are already mounted\&. Note that this option has no effect unless used in conjunction with
 \fIRootDirectory=\fR/\fIRootImage=\fR
-as these three mounts are generally mounted in the host anyway, and unless the root directory is changed, the private mount namespace will be a 1:1 copy of the host\*(Aqs, and include these three mounts\&. Note that the
+as these four mounts are generally mounted in the host anyway, and unless the root directory is changed, the private mount namespace will be a 1:1 copy of the host\*(Aqs, and include these four mounts\&. Note that the
 /dev/
 file system of the host is bind mounted if this option is used without
 \fIPrivateDevices=\fR\&. To run the service with a private, minimal version of
 /dev/, combine this option with
 \fIPrivateDevices=\fR\&.
+.sp
+In order to allow propagating mounts at runtime in a safe manner,
+/run/systemd/propagate
+on the host will be used to set up new mounts, and
+/run/host/incoming/
+in the private namespace will be used as an intermediate step to store them before being moved to the final mount point\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -404,7 +393,8 @@ This option is only available for system services and is not supported for servi
 Takes one of
 "all"
 (the default) and
-"pid"\&. If the latter all files and directories not directly associated with process management and introspection are made invisible in the
+"pid"\&. If
+"pid", all files and directories not directly associated with process management and introspection are made invisible in the
 /proc/
 file system configured for the unit\*(Aqs processes\&. This controls the
 "subset="
@@ -516,7 +506,64 @@ below, as it may change the setting of
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
-.SH "CREDENTIALS"
+.PP
+\fIExtensionImages=\fR
+.RS 4
+This setting is similar to
+\fIMountImages=\fR
+in that it mounts a file system hierarchy from a block device node or loopback file, but instead of providing a destination path, an overlay will be set up\&. This option expects a whitespace separated list of mount definitions\&. Each definition consists of a source path, optionally followed by a colon and a list of mount options\&.
+.sp
+A read\-only OverlayFS will be set up on top of
+/usr/
+and
+/opt/
+hierarchies\&. The order in which the images are listed will determine the order in which the overlay is laid down: images specified first to last will result in overlayfs layers bottom to top\&.
+.sp
+Mount options may be defined as a single comma\-separated list of options, in which case they will be implicitly applied to the root partition on the image, or a series of colon\-separated tuples of partition name and mount options\&. Valid partition names and mount options are the same as for
+\fIRootImageOptions=\fR
+setting described above\&.
+.sp
+Each mount definition may be prefixed with
+"\-", in which case it will be ignored when its source path does not exist\&. The source argument is a path to a block device node or regular file\&. If the source path contains a
+":", it needs to be escaped as
+"\e:"\&. The device node or file system image file needs to follow the same rules as specified for
+\fIRootImage=\fR\&. Any mounts created with this option are specific to the unit, and are not visible in the host\*(Aqs mount table\&.
+.sp
+These settings may be used more than once, each usage appends to the unit\*(Aqs list of image paths\&. If the empty string is assigned, the entire list of mount paths defined prior to this is reset\&.
+.sp
+When
+\fIDevicePolicy=\fR
+is set to
+"closed"
+or
+"strict", or set to
+"auto"
+and
+\fIDeviceAllow=\fR
+is set, then this setting adds
+/dev/loop\-control
+with
+\fBrw\fR
+mode,
+"block\-loop"
+and
+"block\-blkext"
+with
+\fBrwm\fR
+mode to
+\fIDeviceAllow=\fR\&. See
+\fBsystemd.resource-control\fR(5)
+for the details about
+\fIDevicePolicy=\fR
+or
+\fIDeviceAllow=\fR\&. Also, see
+\fIPrivateDevices=\fR
+below, as it may change the setting of
+\fIDevicePolicy=\fR\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.SH "USER/GROUP IDENTITY"
 .PP
 These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .PP
@@ -718,24 +765,27 @@ does not affect commands prefixed with
 Takes a boolean argument\&. If true, ensures that the service process and all its children can never gain new privileges through
 \fBexecve()\fR
 (e\&.g\&. via setuid or setgid bits, or filesystem capabilities)\&. This is the simplest and most effective way to ensure that a process and its children can never elevate privileges again\&. Defaults to false, but certain settings override this and ignore the value of this setting\&. This is the case when
-\fISystemCallFilter=\fR,
-\fISystemCallArchitectures=\fR,
+\fIDynamicUser=\fR,
+\fILockPersonality=\fR,
+\fIMemoryDenyWriteExecute=\fR,
+\fIPrivateDevices=\fR,
+\fIProtectClock=\fR,
+\fIProtectHostname=\fR,
+\fIProtectKernelLogs=\fR,
+\fIProtectKernelModules=\fR,
+\fIProtectKernelTunables=\fR,
 \fIRestrictAddressFamilies=\fR,
 \fIRestrictNamespaces=\fR,
-\fIPrivateDevices=\fR,
-\fIProtectKernelTunables=\fR,
-\fIProtectKernelModules=\fR,
-\fIProtectKernelLogs=\fR,
-\fIProtectClock=\fR,
-\fIMemoryDenyWriteExecute=\fR,
 \fIRestrictRealtime=\fR,
 \fIRestrictSUIDSGID=\fR,
-\fIDynamicUser=\fR
-or
-\fILockPersonality=\fR
+\fISystemCallArchitectures=\fR,
+\fISystemCallFilter=\fR, or
+\fISystemCallLog=\fR
 are specified\&. Note that even if this setting is overridden by them,
 \fBsystemctl show\fR
-shows the original value of this setting\&. Also see
+shows the original value of this setting\&. In case the service will be run in a new mount namespace anyway and SELinux is disabled, all file systems are mounted with
+\fBMS_NOSUID\fR
+flag\&. Also see
 \m[blue]\fBNo New Privileges Flag\fR\m[]\&\s-2\u[4]\d\s+2\&.
 .RE
 .PP
@@ -809,7 +859,7 @@ will be rounded up implicitly to multiples of 1s\&. For
 the value may be specified in two syntaxes: if prefixed with
 "+"
 or
-"\-", the value is understood as regular Linux nice value in the range \-20\&.\&.19\&. If not prefixed like this the value is understood as raw resource limit parameter in the range 0\&.\&.40 (with 0 being equivalent to 1)\&.
+"\-", the value is understood as regular Linux nice value in the range \-20\&...19\&. If not prefixed like this the value is understood as raw resource limit parameter in the range 0\&...40 (with 0 being equivalent to 1)\&.
 .sp
 Note that most process resource limits configured with these options are per\-process, and processes may fork in order to acquire a new set of resources that are accounted independently of the original process, and may thus escape limits set\&. Also note that
 \fILimitRSS=\fR
@@ -832,7 +882,7 @@ user@\&.service\&. After making such changes, make sure to restart the user\*(Aq
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&2.\ \&Resource limit directives, their equivalent ulimit shell commands and the unit used
+.B Table\ \&1.\ \&Resource limit directives, their equivalent ulimit shell commands and the unit used
 .TS
 allbox tab(:);
 lB lB lB.
@@ -1017,7 +1067,7 @@ file)\&. Takes a whitespace\-separated combination of mapping type names or numb
 \fBcore\fR(5)
 for the meaning of the mapping types\&. When specified multiple times, all specified masks are ORed\&. When not set, or if the empty value is assigned, the inherited value is not changed\&.
 .PP
-\fBExample\ \&1.\ \&Add DAX pages to the dump filter\fR
+\fBExample\ \&2.\ \&Add DAX pages to the dump filter\fR
 .sp
 .if n \{\
 .RS 4
@@ -1111,7 +1161,7 @@ generally is useful only in shell pipelines\&.
 .PP
 \fINice=\fR
 .RS 4
-Sets the default nice level (scheduling priority) for executed processes\&. Takes an integer between \-20 (highest priority) and 19 (lowest priority)\&. See
+Sets the default nice level (scheduling priority) for executed processes\&. Takes an integer between \-20 (highest priority) and 19 (lowest priority)\&. In case of resource contention, smaller values mean more resources will be made available to the unit\*(Aqs processes, larger values mean less resources will be made available\&. See
 \fBsetpriority\fR(2)
 for details\&.
 .RE
@@ -1131,7 +1181,7 @@ for details\&.
 .PP
 \fICPUSchedulingPriority=\fR
 .RS 4
-Sets the CPU scheduling priority for executed processes\&. The available priority range depends on the selected CPU scheduling policy (see above)\&. For real\-time scheduling policies an integer between 1 (lowest priority) and 99 (highest priority) can be used\&. See
+Sets the CPU scheduling priority for executed processes\&. The available priority range depends on the selected CPU scheduling policy (see above)\&. For real\-time scheduling policies an integer between 1 (lowest priority) and 99 (highest priority) can be used\&. In case of CPU resource contention, smaller values mean less CPU time is made available to the service, larger values mean more\&. See
 \fBsched_setscheduler\fR(2)
 for details\&.
 .RE
@@ -1198,7 +1248,7 @@ for details\&.
 .PP
 \fIIOSchedulingPriority=\fR
 .RS 4
-Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. The available priorities depend on the selected I/O scheduling class (see above)\&. If the empty string is assigned to this option, all prior assignments to both
+Sets the I/O scheduling priority for executed processes\&. Takes an integer between 0 (highest priority) and 7 (lowest priority)\&. In case of I/O contention, smaller values mean more I/O bandwidth is made available to the unit\*(Aqs processes, larger values mean less bandwidth\&. The available priorities depend on the selected I/O scheduling class (see above)\&. If the empty string is assigned to this option, all prior assignments to both
 \fIIOSchedulingClass=\fR
 and
 \fIIOSchedulingPriority=\fR
@@ -1296,7 +1346,7 @@ These options take a whitespace\-separated list of directory names\&. The specif
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&3.\ \&Automatic directory creation and environment variables
+.B Table\ \&2.\ \&Automatic directory creation and environment variables
 .TS
 allbox tab(:);
 lB lB lB lB.
@@ -1399,20 +1449,20 @@ these paths always reside on the host and are mounted from there into the unit\*
 .sp
 If
 \fIDynamicUser=\fR
-is used in conjunction with
-\fIStateDirectory=\fR, the logic for
-\fICacheDirectory=\fR
-and
+is used, the logic for
+\fICacheDirectory=\fR,
 \fILogsDirectory=\fR
+and
+\fIStateDirectory=\fR
 is slightly altered: the directories are created below
-/var/lib/private,
-/var/cache/private
+/var/cache/private,
+/var/log/private
 and
-/var/log/private, respectively, which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot be gained through dynamic user ID recycling\&. Symbolic links are created to hide this difference in behaviour\&. Both from perspective of the host and from inside the unit, the relevant directories hence always appear directly below
-/var/lib,
-/var/cache
+/var/lib/private, respectively, which are host directories made inaccessible to unprivileged users, which ensures that access to these directories cannot be gained through dynamic user ID recycling\&. Symbolic links are created to hide this difference in behaviour\&. Both from perspective of the host and from inside the unit, the relevant directories hence always appear directly below
+/var/cache,
+/var/log
 and
-/var/log\&.
+/var/lib\&.
 .sp
 Use
 \fIRuntimeDirectory=\fR
@@ -1527,7 +1577,7 @@ for details\&. Takes the usual time values and defaults to
 \fBinfinity\fR, i\&.e\&. by default no timeout is applied\&. If a timeout is configured the clean operation will be aborted forcibly when the timeout is reached, potentially leaving resources on disk\&.
 .RE
 .PP
-\fIReadWritePaths=\fR, \fIReadOnlyPaths=\fR, \fIInaccessiblePaths=\fR
+\fIReadWritePaths=\fR, \fIReadOnlyPaths=\fR, \fIInaccessiblePaths=\fR, \fIExecPaths=\fR, \fINoExecPaths=\fR
 .RS 4
 Sets up a new file system namespace for executed processes\&. These options may be used to limit access a process has to the file system\&. Each setting takes a space\-separated list of paths relative to the host\*(Aqs root directory (i\&.e\&. the system running the service manager)\&. Note that if paths contain symlinks, they are resolved relative to the root directory set with
 \fIRootDirectory=\fR/\fIRootImage=\fR\&.
@@ -1556,13 +1606,23 @@ will be made inaccessible for processes inside the namespace along with everythi
 inside it\&. For a more flexible option, see
 \fITemporaryFileSystem=\fR\&.
 .sp
+Content in paths listed in
+\fINoExecPaths=\fR
+are not executable even if the usual file access controls would permit this\&. Nest
+\fIExecPaths=\fR
+inside of
+\fINoExecPaths=\fR
+in order to provide executable content within non\-executable directories\&.
+.sp
 Non\-directory paths may be specified as well\&. These options may be specified more than once, in which case all paths listed will have limited access from within the namespace\&. If the empty string is assigned to this option, the specific list is reset, and all prior assignments have no effect\&.
 .sp
 Paths in
 \fIReadWritePaths=\fR,
-\fIReadOnlyPaths=\fR
+\fIReadOnlyPaths=\fR,
+\fIInaccessiblePaths=\fR,
+\fIExecPaths=\fR
 and
-\fIInaccessiblePaths=\fR
+\fINoExecPaths=\fR
 may be prefixed with
 "\-", in which case they will be ignored when they do not exist\&. If prefixed with
 "+"
@@ -1588,6 +1648,23 @@ Note that the effect of these settings may be undone by privileged processes\&. 
 \fICapabilityBoundingSet=~CAP_SYS_ADMIN\fR
 or
 \fISystemCallFilter=~@mount\fR\&.
+.sp
+Simple allow\-list example using these directives:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[Service]
+ReadOnlyPaths=/
+ReadWritePaths=/var /run
+InaccessiblePaths=\-/lost+found
+NoExecPaths=/
+ExecPaths=/usr/sbin/my_daemon /lib /lib64
+.fi
+.if n \{\
+.RE
+.\}
 .sp
 These options are only available for system services and are not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -1640,7 +1717,7 @@ directories inside it that are not shared by processes outside of the namespace\
 /tmp/
 or
 /var/tmp/
-impossible\&. If this is enabled, all temporary files created by a service in these directories will be removed after the service is stopped\&. Defaults to false\&. It is possible to run two or more units within the same private
+impossible\&. If true, all temporary files created by a service in these directories will be removed after the service is stopped\&. Defaults to false\&. It is possible to run two or more units within the same private
 /tmp/
 and
 /var/tmp/
@@ -1763,6 +1840,46 @@ When this option is used on a socket unit any sockets bound on behalf of this un
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
+\fIPrivateIPC=\fR
+.RS 4
+Takes a boolean argument\&. If true, sets up a new IPC namespace for the executed processes\&. Each IPC namespace has its own set of System V IPC identifiers and its own POSIX message queue file system\&. This is useful to avoid name clash of IPC identifiers\&. Defaults to false\&. It is possible to run two or more units within the same private IPC namespace by using the
+\fIJoinsNamespaceOf=\fR
+directive, see
+\fBsystemd.unit\fR(5)
+for details\&.
+.sp
+Note that IPC namespacing does not have an effect on
+\fBAF_UNIX\fR
+sockets, which are the most common form of IPC used on Linux\&. Instead,
+\fBAF_UNIX\fR
+sockets in the file system are subject to mount namespacing, and those in the abstract namespace are subject to network namespacing\&. IPC namespacing only has an effect on SysV IPC (which is mostly legacy) as well as POSIX message queues (for which
+\fBAF_UNIX\fR/\fBSOCK_SEQPACKET\fR
+sockets are typically a better replacement)\&. IPC namespacing also has no effect on POSIX shared memory (which is subject to mount namespacing) either\&. See
+\fBipc_namespaces\fR(7)
+for the details\&.
+.sp
+Note that the implementation of this setting might be impossible (for example if IPC namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
+\fIIPCNamespacePath=\fR
+.RS 4
+Takes an absolute file system path refererring to a Linux IPC namespace pseudo\-file (i\&.e\&. a file like
+/proc/$PID/ns/ipc
+or a bind mount or symlink to one)\&. When set the invoked processes are added to the network namespace referenced by that path\&. The path has to point to a valid namespace file at the moment the processes are forked off\&. If this option is used
+\fIPrivateIPC=\fR
+has no effect\&. If this option is used together with
+\fIJoinsNamespaceOf=\fR
+then it only has an effect if this unit is started before any of the listed units that have
+\fIPrivateIPC=\fR
+or
+\fIIPCNamespacePath=\fR
+configured, as otherwise the network namespace of those units is reused\&.
+.sp
+This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.RE
+.PP
 \fIPrivateUsers=\fR
 .RS 4
 Takes a boolean argument\&. If true, sets up a new user namespace for the executed processes and configures a minimal user and group mapping, that maps the
@@ -1802,6 +1919,14 @@ Note that the implementation of this setting might be impossible (for example if
 .sp
 Note that when this option is enabled for a service hostname changes no longer propagate from the system into the service, it is hence not suitable for services that need to take notice of system hostname changes dynamically\&.
 .sp
+If this setting is on, but the unit doesn\*(Aqt have the
+\fBCAP_SYS_ADMIN\fR
+capability (e\&.g\&. services for which
+\fIUser=\fR
+is set),
+\fINoNewPrivileges=yes\fR
+is implied\&.
+.sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
 .PP
@@ -1818,7 +1943,13 @@ is implied\&. This ensures
 /dev/rtc1, etc\&. are made read\-only to the service\&. See
 \fBsystemd.resource-control\fR(5)
 for the details about
-\fIDeviceAllow=\fR\&.
+\fIDeviceAllow=\fR\&. If this setting is on, but the unit doesn\*(Aqt have the
+\fBCAP_SYS_ADMIN\fR
+capability (e\&.g\&. services for which
+\fIUser=\fR
+is set),
+\fINoNewPrivileges=yes\fR
+is implied\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -1839,7 +1970,7 @@ will be made read\-only to all processes of the unit\&. Usually, tunable kernel 
 \fBsysctl.d\fR(5)
 mechanism\&. Few services need to write to these at runtime; it is hence recommended to turn this on for most services\&. For this setting the same restrictions regarding mount propagation and privileges apply as for
 \fIReadOnlyPaths=\fR
-and related calls, see above\&. Defaults to off\&. If turned on and if running in user mode, or in system mode, but without the
+and related calls, see above\&. Defaults to off\&. If this setting is on, but the unit doesn\*(Aqt have the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. services for which
 \fIUser=\fR
@@ -1869,10 +2000,11 @@ and related calls, see above\&. Note that limited automatic module loading due t
 \fBkernel\&.modules_disabled\fR
 mechanism and
 /proc/sys/kernel/modules_disabled
-documentation\&. If turned on and if running in user mode, or in system mode, but without the
+documentation\&. If this setting is on, but the unit doesn\*(Aqt have the
 \fBCAP_SYS_ADMIN\fR
-capability (e\&.g\&. setting
-\fIUser=\fR),
+capability (e\&.g\&. services for which
+\fIUser=\fR
+is set),
 \fINoNewPrivileges=yes\fR
 is implied\&.
 .sp
@@ -1890,7 +2022,13 @@ system call (not to be confused with the libc API
 for userspace logging)\&. The kernel exposes its log buffer to userspace via
 /dev/kmsg
 and
-/proc/kmsg\&. If enabled, these are made inaccessible to all the processes in the unit\&.
+/proc/kmsg\&. If enabled, these are made inaccessible to all the processes in the unit\&. If this setting is on, but the unit doesn\*(Aqt have the
+\fBCAP_SYS_ADMIN\fR
+capability (e\&.g\&. services for which
+\fIUser=\fR
+is set),
+\fINoNewPrivileges=yes\fR
+is implied\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
 .RE
@@ -1912,12 +2050,15 @@ This option is only available for system services and is not supported for servi
 .PP
 \fIRestrictAddressFamilies=\fR
 .RS 4
-Restricts the set of socket address families accessible to the processes of this unit\&. Takes a space\-separated list of address family names to allow\-list, such as
+Restricts the set of socket address families accessible to the processes of this unit\&. Takes
+"none", or a space\-separated list of address family names to allow\-list, such as
 \fBAF_UNIX\fR,
 \fBAF_INET\fR
 or
-\fBAF_INET6\fR\&. When prefixed with
-\fB~\fR
+\fBAF_INET6\fR\&. When
+"none"
+is specified, then all address families will be denied\&. When prefixed with
+"~"
 the listed address families will be applied as deny list, otherwise as allow list\&. Note that this restricts access to the
 \fBsocket\fR(2)
 system call only\&. Sockets passed into the process by other means (for example, by using socket activation with socket units, see
@@ -1928,7 +2069,7 @@ system call only\&. Sockets passed into the process by other means (for example,
 or similar\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
-\fIUser=nobody\fR),
+\fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&. By default, no restrictions apply, all address families are accessible to processes\&. If assigned the empty string, any previous address family restriction changes are undone\&. This setting does not affect commands prefixed with
 "+"\&.
@@ -2196,7 +2337,7 @@ can be used to explicitly specify killing\&. This value takes precedence over th
 \fISystemCallErrorNumber=\fR, see below\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
-\fIUser=nobody\fR),
+\fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&. This feature makes use of the Secure Computing Mode 2 interfaces of the kernel (\*(Aqseccomp filtering\*(Aq) and is useful for enforcing a minimal sandboxing environment\&. Note that the
 \fBexecve()\fR,
@@ -2232,7 +2373,7 @@ character, followed by name of the set\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&4.\ \&Currently predefined system call sets
+.B Table\ \&3.\ \&Currently predefined system call sets
 .TS
 allbox tab(:);
 lB lB.
@@ -2483,7 +2624,7 @@ described in
 implicitly maps to the native architecture of the system (or more precisely: to the architecture the system manager is compiled for)\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
-\fIUser=nobody\fR),
+\fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&. By default, this option is set to the empty list, i\&.e\&. no filtering is applied\&.
 .sp
@@ -2506,7 +2647,7 @@ Takes a space\-separated list of system call names\&. If this setting is used, a
 "~", the effect is inverted: all system calls except the listed system calls will be logged\&. If running in user mode, or in system mode, but without the
 \fBCAP_SYS_ADMIN\fR
 capability (e\&.g\&. setting
-\fIUser=nobody\fR),
+\fIUser=\fR),
 \fINoNewPrivileges=yes\fR
 is implied\&. This feature makes use of the Secure Computing Mode 2 interfaces of the kernel (\*(Aqseccomp filtering\*(Aq) and is useful for auditing or setting up a minimal sandboxing environment\&. This option may be specified more than once, in which case the filter masks are merged\&. If the empty string is assigned, the filter is reset, all prior assignments will have no effect\&. This does not affect commands prefixed with
 "+"\&.
@@ -2515,9 +2656,14 @@ is implied\&. This feature makes use of the Secure Computing Mode 2 interfaces o
 .PP
 \fIEnvironment=\fR
 .RS 4
-Sets environment variables for executed processes\&. Takes a space\-separated list of variable assignments\&. This option may be specified more than once, in which case all listed variables will be set\&. If the same variable is set twice, the later setting will override the earlier setting\&. If the empty string is assigned to this option, the list of environment variables is reset, all prior assignments have no effect\&. Variable expansion is not performed inside the strings, however, specifier expansion is possible\&. The
+Sets environment variables for executed processes\&. Each line is unquoted using the rules described in "Quoting" section in
+\fBsystemd.syntax\fR(7)
+and becomes a list of variable assignments\&. If you need to assign a value containing spaces or the equals sign to a variable, put quotes around the whole assignment\&. Variable expansion is not performed inside the strings and the
 "$"
-character has no special meaning\&. If you need to assign a value containing spaces or the equals sign to a variable, use double quotes (") for the assignment\&.
+character has no special meaning\&. Specifier expansion is performed, see the "Specifiers" section in
+\fBsystemd.unit\fR(5)\&.
+.sp
+This option may be specified more than once, in which case all listed variables will be set\&. If the same variable is listed twice, the later setting will override the earlier setting\&. If the empty string is assigned to this option, the list of environment variables is reset, all prior assignments have no effect\&.
 .sp
 The names of the variables can contain ASCII letters, digits, and the underscore character\&. Variable names cannot be empty or start with a digit\&. In variable values, most characters are allowed, but non\-printable characters are currently rejected\&.
 .sp
@@ -2733,6 +2879,7 @@ Controls where file descriptor 1 (stdout) of the executed processes is connected
 \fBkmsg+console\fR,
 \fBfile:\fR\fB\fIpath\fR\fR,
 \fBappend:\fR\fB\fIpath\fR\fR,
+\fBtruncate:\fR\fB\fIpath\fR\fR,
 \fBsocket\fR
 or
 \fBfd:\fR\fB\fIname\fR\fR\&.
@@ -2775,6 +2922,31 @@ socket in the file system, as in that case only a single stream connection is cr
 is similar to
 \fBfile:\fR\fB\fIpath\fR\fR
 above, but it opens the file in append mode\&.
+.sp
+\fBtruncate:\fR\fB\fIpath\fR\fR
+is similar to
+\fBfile:\fR\fB\fIpath\fR\fR
+above, but it truncates the file when opening it\&. For units with multiple command lines, e\&.g\&.
+\fIType=oneshot\fR
+services with multiple
+\fIExecStart=\fR, or services with
+\fIExecCondition=\fR,
+\fIExecStartPre=\fR
+or
+\fIExecStartPost=\fR, the output file is reopened and therefore re\-truncated for each command line\&. If the output file is truncated while another process still has the file open, e\&.g\&. by an
+\fIExecReload=\fR
+running concurrently with an
+\fIExecStart=\fR, and the other process continues writing to the file without adjusting its offset, then the space between the file pointers of the two processes may be filled with
+\fBNUL\fR
+bytes, producing a sparse file\&. Thus,
+\fBtruncate:\fR\fB\fIpath\fR\fR
+is typically only useful for units where only one process runs at a time, such as services with a single
+\fIExecStart=\fR
+and no
+\fIExecStartPost=\fR,
+\fIExecReload=\fR,
+\fIExecStop=\fR
+or similar\&.
 .sp
 \fBsocket\fR
 connects standard output to a socket acquired via socket activation\&. The semantics are similar to the same option of
@@ -2905,7 +3077,7 @@ log level, one of
 for details\&. By default no filtering is applied (i\&.e\&. the default maximum log level is
 \fBdebug\fR)\&. Use this option to configure the logging system to drop log messages of a specific service above the specified level\&. For example, set
 \fILogLevelMax=\fR\fBinfo\fR
-in order to turn off debug logging of a particularly chatty unit\&. Note that the configured level is applied to any log messages written by any of the processes belonging to this unit, sent via any supported logging protocol\&. The filtering is applied early in the logging pipeline, before any kind of further processing is done\&. Moreover, messages which pass through this filter successfully might still be dropped by filters applied at a later stage in the logging subsystem\&. For example,
+in order to turn off debug logging of a particularly chatty unit\&. Note that the configured level is applied to any log messages written by any of the processes belonging to this unit, as well as any log messages written by the system manager process (PID 1) in reference to this unit, sent via any supported logging protocol\&. The filtering is applied early in the logging pipeline, before any kind of further processing is done\&. Moreover, messages which pass through this filter successfully might still be dropped by filters applied at a later stage in the logging subsystem\&. For example,
 \fIMaxLevelStore=\fR
 configured in
 \fBjournald.conf\fR(5)
@@ -3098,7 +3270,7 @@ is a virtual console terminal, try to deallocate the TTY before and after execut
 .RE
 .SH "CREDENTIALS"
 .PP
-\fILoadCredential=\fR\fIID\fR:\fIPATH\fR
+\fILoadCredential=\fR\fIID\fR[:\fIPATH\fR]
 .RS 4
 Pass a credential to the unit\&. Credentials are limited\-size binary or textual objects that may be passed to unit processes\&. They are primarily used for passing cryptographic keys (both public and private) or certificates, user account information or identity information from host to services\&. The data is accessible from the unit\*(Aqs processes via the file system, at a read\-only location that (if possible and permitted) is backed by non\-swappable memory\&. The data is only accessible to the user associated with the unit, via the
 \fIUser=\fR/\fIDynamicUser=\fR
@@ -3108,13 +3280,13 @@ environment variable to the unit\*(Aqs processes\&.
 .sp
 The
 \fILoadCredential=\fR
-setting takes a textual ID to use as name for a credential plus a file system path\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
+setting takes a textual ID to use as name for a credential plus a file system path, separated by a colon\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
 \fBAF_UNIX\fR
 stream socket in the file system a connection is made to it (only once at unit start\-up) and the credential data read from the connection, providing an easy IPC integration point for dynamically providing credentials from other services\&. If the specified path is not absolute and itself qualifies as valid credential identifier it is understood to refer to a credential that the service manager itself received via the
 \fI$CREDENTIALS_DIRECTORY\fR
 environment variable, which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
 \fBNUL\fR
-bytes\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
+bytes\&. If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way do declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
 .sp
 The credential files/IPC sockets must be accessible to the service manager, but don\*(Aqt have to be directly accessible to the unit\*(Aqs processes: the credential data is read and copied into separate, read\-only copies for the unit that are accessible to appropriately privileged processes\&. This is particularly useful in combination with
 \fIDynamicUser=\fR
@@ -3126,7 +3298,7 @@ command line use
 "${CREDENTIALS_DIRECTORY}/mycred", e\&.g\&.
 "ExecStart=cat ${CREDENTIALS_DIRECTORY}/mycred"\&.
 .sp
-Currently, an accumulated credential size limit of 1M bytes per unit is enforced\&.
+Currently, an accumulated credential size limit of 1 MB per unit is enforced\&.
 .sp
 If referencing an
 \fBAF_UNIX\fR
@@ -3314,7 +3486,7 @@ If the same environment variable is set by multiple of these sources, the later 
 \fIUnsetEnvironment=\fR
 are removed from the compiled environment variable list, immediately before it is passed to the executed process\&.
 .PP
-The general philosophy is to expose a small curated list of environment variables to processes\&. Services started by the system manager (PID 1) will be started, without additional service\-specific configuration, with just a few environment variables\&. The user manager inherits environment variables as any other system service, but in addition may receive additional environment variables from PAM, and, typically, additional imported variables when the user starts a graphical session\&. It is recommended to keep the environment blocks in both the system and user managers managers lean\&.
+The general philosophy is to expose a small curated list of environment variables to processes\&. Services started by the system manager (PID 1) will be started, without additional service\-specific configuration, with just a few environment variables\&. The user manager inherits environment variables as any other system service, but in addition may receive additional environment variables from PAM, and, typically, additional imported variables when the user starts a graphical session\&. It is recommended to keep the environment blocks in both the system and user managers managers lean\&. Importing all variables inherited by the graphical session or by one of the user shells is strongly discouraged\&.
 .PP
 Hint:
 \fBsystemd\-run \-P env\fR
@@ -3336,7 +3508,7 @@ in the system manager\&. When compiled for systems with "unmerged
 is not a symlink to
 /usr/bin),
 ":/sbin:/bin"
-is appended\&. In case of the the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
+is appended\&. In case of the user manager, a different path may be configured by the distribution\&. It is recommended to not rely on the order of entries, and have only one program with a given name in
 \fI$PATH\fR\&.
 .RE
 .PP
@@ -3432,6 +3604,17 @@ Information about watchdog keep\-alive notifications\&. See
 \fBsd_watchdog_enabled\fR(3)\&.
 .RE
 .PP
+\fI$SYSTEMD_EXEC_PID\fR
+.RS 4
+The PID of the unit process (e\&.g\&. process invoked by
+\fIExecStart=\fR)\&. The child process can use this information to determine whether the process is directly invoked by the service manager or indirectly as a child of another process by comparing this value with the current PID (as similar to the scheme used in
+\fBsd_listen_fds\fR(3)
+with
+\fI$LISTEN_PID\fR
+and
+\fI$LISTEN_FDS\fR)\&.
+.RE
+.PP
 \fI$TERM\fR
 .RS 4
 Terminal type, set only for units connected to a terminal (\fIStandardInput=tty\fR,
@@ -3475,7 +3658,7 @@ processes, and encodes the service "result"\&. Currently, the following values a
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&5.\ \&Defined \fI$SERVICE_RESULT\fR values
+.B Table\ \&4.\ \&Defined \fI$SERVICE_RESULT\fR values
 .TS
 allbox tab(:);
 lB lB.
@@ -3569,7 +3752,7 @@ is
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&6.\ \&Summary of possible service result variable values
+.B Table\ \&5.\ \&Summary of possible service result variable values
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3739,7 +3922,7 @@ The following basic service exit codes are defined by the C library\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&7.\ \&Basic C library exit codes
+.B Table\ \&6.\ \&Basic C library exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3777,7 +3960,7 @@ The following service exit codes are defined by the
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&8.\ \&LSB service exit codes
+.B Table\ \&7.\ \&LSB service exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3846,7 +4029,7 @@ The LSB specification suggests that error codes 200 and above are reserved for i
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&9.\ \&systemd\-specific exit codes
+.B Table\ \&8.\ \&systemd\-specific exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -4080,7 +4263,7 @@ T{
 T}:T{
 \fBEXIT_NAMESPACE\fR
 T}:T{
-Failed to set up mount namespacing\&. See \fIReadOnlyPaths=\fR and related settings above\&.
+Failed to set up mount, UTS, or IPC namespacing\&. See \fIReadOnlyPaths=\fR, \fIProtectHostname=\fR, \fIPrivateIPC=\fR, and related settings above\&.
 T}
 T{
 227
@@ -4203,7 +4386,7 @@ Finally, the BSD operating systems define a set of exit codes, typically defined
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&10.\ \&BSD exit codes
+.B Table\ \&9.\ \&BSD exit codes
 .TS
 allbox tab(:);
 lB lB lB.

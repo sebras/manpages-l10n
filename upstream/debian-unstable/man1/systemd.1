@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD" "1" "" "systemd 247" "systemd"
+.TH "SYSTEMD" "1" "" "systemd 249" "systemd"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -63,7 +63,7 @@ for more information\&.
 .SH "CONCEPTS"
 .PP
 systemd provides a dependency system between various entities called "units" of 11 different types\&. Units encapsulate various objects that are relevant for system boot\-up and maintenance\&. The majority of units are configured in unit configuration files, whose syntax and basic set of options is described in
-\fBsystemd.unit\fR(5), however some are created automatically from other configuration, dynamically from system state or programmatically at runtime\&. Units may be "active" (meaning started, bound, plugged in, \&..., depending on the unit type, see below), or "inactive" (meaning stopped, unbound, unplugged, \&...), as well as in the process of being activated or deactivated, i\&.e\&. between the two states (these states are called "activating", "deactivating")\&. A special "failed" state is available as well, which is very similar to "inactive" and is entered when the service failed in some way (process returned error code on exit, or crashed, an operation timed out, or after too many restarts)\&. If this state is entered, the cause will be logged, for later reference\&. Note that the various unit types may have a number of additional substates, which are mapped to the five generalized unit states described here\&.
+\fBsystemd.unit\fR(5), however some are created automatically from other configuration files, dynamically from system state or programmatically at runtime\&. Units may be "active" (meaning started, bound, plugged in, \&..., depending on the unit type, see below), or "inactive" (meaning stopped, unbound, unplugged, \&...), as well as in the process of being activated or deactivated, i\&.e\&. between the two states (these states are called "activating", "deactivating")\&. A special "failed" state is available as well, which is very similar to "inactive" and is entered when the service failed in some way (process returned error code on exit, or crashed, an operation timed out, or after too many restarts)\&. If this state is entered, the cause will be logged, for later reference\&. Note that the various unit types may have a number of additional substates, which are mapped to the five generalized unit states described here\&.
 .PP
 The following unit types are available:
 .sp
@@ -611,39 +611,74 @@ and
 Some of the variables understood by
 \fBsystemd\fR:
 .PP
-\fI$SYSTEMD_LOG_COLOR\fR
-.RS 4
-Controls whether systemd highlights important log messages\&. This can be overridden with
-\fB\-\-log\-color=\fR\&.
-.RE
-.PP
 \fI$SYSTEMD_LOG_LEVEL\fR
 .RS 4
-systemd reads the log level from this environment variable\&. This can be overridden with
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.sp
+This can be overridden with
 \fB\-\-log\-level=\fR\&.
 .RE
 .PP
-\fI$SYSTEMD_LOG_LOCATION\fR
+\fI$SYSTEMD_LOG_COLOR\fR
 .RS 4
-Controls whether systemd prints the code location along with log messages\&. This can be overridden with
-\fB\-\-log\-location=\fR\&.
-.RE
-.PP
-\fI$SYSTEMD_LOG_TARGET\fR
-.RS 4
-systemd reads the log target from this environment variable\&. This can be overridden with
-\fB\-\-log\-target=\fR\&.
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This can be overridden with
+\fB\-\-log\-color=\fR\&.
 .RE
 .PP
 \fI$SYSTEMD_LOG_TIME\fR
 .RS 4
-Controls whether systemd prefixes log messages with the current time\&. This can be overridden with
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This can be overridden with
 \fB\-\-log\-time=\fR\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+This can be overridden with
+\fB\-\-log\-location=\fR\&.
 .RE
 .PP
 \fI$SYSTEMD_LOG_TID\fR
 .RS 4
-Controls whether systemd prefixes log messages with the current thread ID (TID)\&.
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.sp
+This can be overridden with
+\fB\-\-log\-target=\fR\&.
 .RE
 .PP
 \fI$XDG_CONFIG_HOME\fR, \fI$XDG_CONFIG_DIRS\fR, \fI$XDG_DATA_HOME\fR, \fI$XDG_DATA_DIRS\fR
@@ -658,16 +693,6 @@ to find its configuration\&.
 Controls where systemd looks for unit files and generators\&.
 .sp
 These variables may contain a list of paths, separated by colons (":")\&. When set, if the list ends with an empty component ("\&.\&.\&.:"), this list is prepended to the usual set of paths\&. Otherwise, the specified list replaces the usual set of paths\&.
-.RE
-.PP
-\fI$SYSTEMD_SYSVINIT_PATH\fR
-.RS 4
-Controls where systemd looks for SysV init scripts\&.
-.RE
-.PP
-\fI$SYSTEMD_SYSVRCND_PATH\fR
-.RS 4
-Controls where systemd looks for SysV init script runlevel link farms\&.
 .RE
 .PP
 \fI$SYSTEMD_PAGER\fR
@@ -767,9 +792,12 @@ instead\&.
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
@@ -875,12 +903,14 @@ is passed as kernel command line option, in which case it defaults to
 .PP
 \fIsystemd\&.status_unit_format=\fR
 .RS 4
-Takes either
-\fBname\fR
-or
+Takes
+\fBname\fR,
 \fBdescription\fR
+or
+\fBcombined\fR
 as the value\&. If
-\fBname\fR, the system manager will use unit names in status messages\&. If specified, overrides the system manager configuration file option
+\fBname\fR, the system manager will use unit names in status messages\&. If
+\fBcombined\fR, the system manager will use unit names and description in status messages\&. When specified, overrides the system manager configuration file option
 \fBStatusUnitFormat=\fR, see
 \fBsystemd-system.conf\fR(5)\&.
 .RE
@@ -1151,7 +1181,7 @@ above\&.
 .PP
 \fB\-\-log\-time=\fR
 .RS 4
-Prefix messages with timestamp\&. See
+Prefix console messages with timestamp\&. See
 \fIsystemd\&.log_time\fR
 above\&.
 .RE

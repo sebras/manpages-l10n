@@ -2,12 +2,12 @@
 .\"     Title: btrfs-subvolume
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 09/20/2021
+.\"      Date: 10/08/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.14.1
+.\"    Source: Btrfs v5.14.2
 .\"  Language: English
 .\"
-.TH "BTRFS\-SUBVOLUME" "8" "09/20/2021" "Btrfs v5\&.14\&.1" "Btrfs Manual"
+.TH "BTRFS\-SUBVOLUME" "8" "10/08/2021" "Btrfs v5\&.14\&.2" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -414,6 +414,29 @@ Wait until given subvolume(s) are completely removed from the filesystem after d
 sleep N seconds between checks (default: 1)
 .RE
 .RE
+.SH "SUBVOLUME FLAGS"
+.sp
+The subvolume flag currently implemented is the \fIro\fR property\&. Read\-write subvolumes have that set to \fIfalse\fR, snapshots as \fItrue\fR\&. In addition to that, a plain snapshot will also have last change generation and creation generation equal\&.
+.sp
+Read\-only snapshots are building blocks fo incremental send (see \fBbtrfs\-send\fR(8)) and the whole use case relies on unmodified snapshots where the relative changes are generated from\&. Thus, changing the subvolume flags from read\-only to read\-write will break the assumptions and may lead to unexpected changes in the resulting incremental stream\&.
+.sp
+A snapshot that was created by send/receive will be read\-only, with different last change generation, read\-only and with set \fIreceived_uuid\fR which identifies the subvolume on the filesystem that produced the stream\&. The usecase relies on matching data on both sides\&. Changing the subvolume to read\-write after it has been received requires to reset the \fIreceived_uuid\fR\&. As this is a notable change and could potentially break the incremental send use case, performing it by \fBbtrfs property set\fR requires force if that is really desired by user\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+The safety checks have been implemented in 5\&.14\&.2, any subvolumes previously received (with a valid \fIreceived_uuid\fR) and read\-write status may exist and could still lead to problems with send/receive\&. You can use \fBbtrfs subvolume show\fR to identify them\&. Flipping the flags to read\-only and back to read\-write will reset the \fIreceived_uuid\fR manually\&. There may exist a convenience tool in the future\&.
+.sp .5v
+.RE
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Deleting a subvolume\fR
@@ -437,4 +460,4 @@ btrfs subvolume delete /mnt/bar/foo
 \fBbtrfs\fR is part of btrfs\-progs\&. Please refer to the btrfs wiki \m[blue]\fBhttp://btrfs\&.wiki\&.kernel\&.org\fR\m[] for further details\&.
 .SH "SEE ALSO"
 .sp
-\fBmkfs\&.btrfs\fR(8), \fBmount\fR(8), \fBbtrfs\-quota\fR(8), \fBbtrfs\-qgroup\fR(8),
+\fBmkfs\&.btrfs\fR(8), \fBmount\fR(8), \fBbtrfs\-quota\fR(8), \fBbtrfs\-qgroup\fR(8), \fBbtrfs\-send\fR(8)

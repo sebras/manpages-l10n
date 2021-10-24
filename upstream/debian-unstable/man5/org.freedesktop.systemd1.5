@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 247" "org.freedesktop.systemd1"
+.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 249" "org.freedesktop.systemd1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -109,6 +109,17 @@ node /org/freedesktop/systemd1 {
       SetUnitProperties(in  s name,
                         in  b runtime,
                         in  a(sv) properties);
+      BindMountUnit(in  s name,
+                    in  s source,
+                    in  s destination,
+                    in  b read_only,
+                    in  b mkdir);
+      MountImageUnit(in  s name,
+                     in  s source,
+                     in  s destination,
+                     in  b read_only,
+                     in  b mkdir,
+                     in  a(ss) options);
       RefUnit(in  s name);
       UnrefUnit(in  s name);
       StartTransientUnit(in  s name,
@@ -158,6 +169,7 @@ node /org/freedesktop/systemd1 {
       UnsetEnvironment(in  as names);
       UnsetAndSetEnvironment(in  as names,
                              in  as assignments);
+      EnqueueMarkedJobs(out ao jobs);
       ListUnitFiles(out a(ss) unit_files);
       ListUnitFilesByPatterns(in  as states,
                               in  as patterns,
@@ -473,6 +485,8 @@ node /org/freedesktop/systemd1 {
       readonly t TimerSlackNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s DefaultOOMPolicy = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s CtrlAltDelBurstAction = \*(Aq\&.\&.\&.\*(Aq;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -483,6 +497,10 @@ node /org/freedesktop/systemd1 {
 .if n \{\
 .RE
 .\}
+
+
+
+
 
 
 
@@ -724,6 +742,21 @@ mode is invalid for this method\&.
 \fBReloadOrTryRestartUnit()\fR
 may be used to restart and/or reload a unit\&. These methods take similar arguments as
 \fBStartUnit()\fR\&. Reloading is done only if the unit is already running and fails otherwise\&. If a service is restarted that isn\*(Aqt running, it will be started unless the "Try" flavor is used in which case a service that isn\*(Aqt running is not affected by the restart\&. The "ReloadOrRestart" flavors attempt a reload if the unit supports it and use a restart otherwise\&.
+.PP
+\fBEnqueueMarkedJobs()\fR
+creates reload/restart jobs for units which have been appropriately marked, see
+\fIMarks\fR
+property above\&. This is equivalent to calling
+\fBTryRestartUnit()\fR
+or
+\fBReloadOrTryRestartUnit()\fR
+for the marked units\&.
+.PP
+\fBBindMountUnit()\fR
+can be used to bind mount new files or directories into a running service mount namespace\&.
+.PP
+\fBMountImageUnit()\fR
+can be used to mount new images into a running service mount namespace\&.
 .PP
 \fBKillUnit()\fR
 may be used to kill (i\&.e\&. send a signal to) all processes of a unit\&. It takes the unit
@@ -1374,6 +1407,12 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as OnFailure = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as OnFailureOf = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as OnSuccess = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as OnSuccessOf = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Triggers = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as TriggeredBy = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
@@ -1382,7 +1421,13 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as ReloadPropagatedFrom = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as PropagatesStopTo = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as StopPropagatedFrom = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as JoinsNamespaceOf = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as SliceOf = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as RequiresMountsFor = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -1438,11 +1483,15 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b DefaultDependencies = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s OnSuccessJobMode = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s OnFailureJobMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b IgnoreOnIsolate = \&.\&.\&.;
-      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b NeedDaemonReload = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly as Markers = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t JobTimeoutUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -1498,6 +1547,14 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
 
 
 
@@ -1814,6 +1871,14 @@ is a boolean that indicates whether the configuration file this unit is loaded f
 or
 \fISourcePath\fR) has changed since the configuration was read and hence whether a configuration reload is recommended\&.
 .PP
+\fIMarkers\fR
+is an array of string flags that can be set using
+\fBSetUnitProperties()\fR
+to indicate that the service should be reloaded or restarted\&. Currently known values are
+"needs\-restart"
+and
+"needs\-reload"\&. Package scripts may use the first to mark units for later restart when a new version of the package is installed\&. Configuration management scripts may use the second to mark units for a later reload when the configuration is adjusted\&. Those flags are not set by the manager, except to unset as appropriate when when the unit is stopped, restarted, or reloaded\&.
+.PP
 \fIJobTimeoutUSec\fR
 maps directly to the corresponding configuration setting in the unit file\&.
 .PP
@@ -1864,6 +1929,15 @@ interface (see above)\&.
 node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
   interface org\&.freedesktop\&.systemd1\&.Service {
     methods:
+      BindMount(in  s source,
+                in  s destination,
+                in  b read_only,
+                in  b mkdir);
+      MountImage(in  s source,
+                 in  s destination,
+                 in  b read_only,
+                 in  b mkdir,
+                 in  a(ss) options);
       GetProcesses(out a(sus) processes);
       AttachProcesses(in  s subcgroup,
                       in  au pids);
@@ -1971,6 +2045,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly s ControlGroup = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -2090,7 +2166,15 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2183,6 +2267,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly s RootHashSignaturePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RootVerity = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sba(ss)) ExtensionImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssba(ss)) MountImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2284,6 +2370,10 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as InaccessiblePaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateTmp = \&.\&.\&.;
@@ -2305,6 +2395,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly b PrivateUsers = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateMounts = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly b PrivateIPC = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s ProtectHome = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2389,6 +2481,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly b ProtectHostname = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s NetworkNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s IPCNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2695,6 +2789,28 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+.SS "Methods"
+.PP
+\fBBindMount()\fR
+and
+\fBMountImage()\fR
+implement the same operations as the respective methods on the
+Manager
+object (see above)\&. However, these methods operate on the service object and hence do not take a unit name parameter\&. Invoking the methods directly on the Manager object has the advantage of not requiring a
+\fBGetUnit()\fR
+call to get the unit object for a specific unit name\&. Calling the methods on the Manager object is hence a round trip optimization\&.
 .SS "Properties"
 .PP
 Most properties of the Service interface map directly to the corresponding settings in service unit files\&. For the sake of brevity, here\*(Aqs a list of all exceptions only:
@@ -2789,6 +2905,24 @@ indicates that a service has been started too frequently in a specific time fram
 .PP
 \fIControlGroup\fR
 indicates the control group path the processes of this service unit are placed in\&.
+.PP
+The following properties map 1:1 to corresponding settings in the unit file:
+\fIRootDirectory\fR
+\fIRootImage\fR
+\fIRootImageOptions\fR
+\fIRootVerity\fR
+\fIRootHash\fR
+\fIRootHashSignature\fR
+\fIMountImages\fR
+\fIExtensionImages\fR
+see systemd\&.exec(5) for their meaning\&.
+.PP
+\fIMemoryAvailable\fR
+indicates how much unused memory is available to the unit before the
+"MemoryMax"
+or
+"MemoryHigh"
+(whichever is lower) limit set by the cgroup memory controller is reached\&. It will take into consideration limits on all parent slices, other than the limits set on the unit itself\&.
 .SH "SOCKET UNIT OBJECTS"
 .sp
 .if n \{\
@@ -2921,6 +3055,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay EffectiveCPUs = [\&.\&.\&.];
@@ -3039,7 +3175,15 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3132,6 +3276,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly s RootHashSignaturePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RootVerity = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sba(ss)) ExtensionImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssba(ss)) MountImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3233,6 +3379,10 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as InaccessiblePaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateTmp = \&.\&.\&.;
@@ -3254,6 +3404,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly b PrivateUsers = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateMounts = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly b PrivateIPC = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s ProtectHome = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3339,6 +3491,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s NetworkNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s IPCNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i KillSignal = \&.\&.\&.;
@@ -3363,6 +3517,16 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3799,6 +3963,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay EffectiveCPUs = [\&.\&.\&.];
@@ -3917,7 +4083,15 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4010,6 +4184,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       readonly s RootHashSignaturePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RootVerity = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sba(ss)) ExtensionImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssba(ss)) MountImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4111,6 +4287,10 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as InaccessiblePaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateTmp = \&.\&.\&.;
@@ -4132,6 +4312,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       readonly b PrivateUsers = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateMounts = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly b PrivateIPC = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s ProtectHome = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4217,6 +4399,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s NetworkNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s IPCNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i KillSignal = \&.\&.\&.;
@@ -4241,6 +4425,16 @@ node /org/freedesktop/systemd1/unit/home_2emount {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4707,6 +4901,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay EffectiveCPUs = [\&.\&.\&.];
@@ -4825,7 +5021,15 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4918,6 +5122,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       readonly s RootHashSignaturePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RootVerity = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sba(ss)) ExtensionImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssba(ss)) MountImages = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5019,6 +5225,10 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as InaccessiblePaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateTmp = \&.\&.\&.;
@@ -5040,6 +5250,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       readonly b PrivateUsers = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b PrivateMounts = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly b PrivateIPC = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s ProtectHome = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5125,6 +5337,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s NetworkNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s IPCNamespacePath = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i KillSignal = \&.\&.\&.;
@@ -5149,6 +5363,16 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5491,6 +5715,8 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay EffectiveCPUs = [\&.\&.\&.];
@@ -5609,7 +5835,15 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -5621,6 +5855,11 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
 
 
 
@@ -5727,6 +5966,8 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t MemoryCurrent = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t MemoryAvailable = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t CPUUsageNSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay EffectiveCPUs = [\&.\&.\&.];
@@ -5845,7 +6086,15 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s ManagedOOMMemoryPressure = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
-      readonly s ManagedOOMMemoryPressureLimitPercent = \*(Aq\&.\&.\&.\*(Aq;
+      readonly u ManagedOOMMemoryPressureLimit = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly s ManagedOOMPreference = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(ss) BPFProgram = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5871,6 +6120,11 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
 
 
 

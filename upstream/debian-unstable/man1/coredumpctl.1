@@ -1,5 +1,5 @@
 '\" t
-.TH "COREDUMPCTL" "1" "" "systemd 247" "coredumpctl"
+.TH "COREDUMPCTL" "1" "" "systemd 249" "coredumpctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -108,7 +108,9 @@ will be used\&. This may be changed using the
 \fB\-\-debugger=\fR
 option or the
 \fI$SYSTEMD_DEBUGGER\fR
-environment variable\&.
+environment variable\&. Use the
+\fB\-\-debugger\-arguments=\fR
+option to pass extra command line arguments to the debugger\&.
 .RE
 .SH "OPTIONS"
 .PP
@@ -124,19 +126,36 @@ Print a short help text and exit\&.
 Print a short version string and exit\&.
 .RE
 .PP
-\fB\-\-no\-legend\fR
-.RS 4
-Do not print column headers\&.
-.RE
-.PP
 \fB\-\-no\-pager\fR
 .RS 4
 Do not pipe output into a pager\&.
 .RE
 .PP
+\fB\-\-no\-legend\fR
+.RS 4
+Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+.RE
+.PP
+\fB\-\-json=\fR\fIMODE\fR
+.RS 4
+Shows output formatted as JSON\&. Expects one of
+"short"
+(for the shortest possible output without any redundant whitespace or line breaks),
+"pretty"
+(for a pretty version of the same, with indentation and line breaks) or
+"off"
+(to turn off JSON output, the default)\&.
+.RE
+.PP
 \fB\-1\fR
 .RS 4
-Show information of a single core dump only, instead of listing all known core dumps\&.
+Show information of the most recent core dump only, instead of listing all known core dumps\&. Equivalent to
+\fB\-\-reverse \-n 1\fR\&.
+.RE
+.PP
+\fB\-n\fR \fIINT\fR
+.RS 4
+Show at most the specified number of entries\&. The specified parameter must be an integer greater or equal to 1\&.
 .RE
 .PP
 \fB\-S\fR, \fB\-\-since\fR
@@ -174,6 +193,15 @@ command\&. If not given and
 is unset, then
 \fBgdb\fR(1)
 will be used\&.
+.RE
+.PP
+\fB\-A\fR \fIARGS\fR, \fB\-\-debugger\-arguments=\fR\fIARGS\fR
+.RS 4
+Pass the given
+\fIARGS\fR
+as extra command line arguments to the debugger\&. Quote as appropriate when
+\fIARGS\fR
+contain whitespace\&. (See Examples\&.)
 .RE
 .PP
 \fB\-\-file=\fR\fB\fIGLOB\fR\fR
@@ -234,17 +262,28 @@ option\&.
 .RE
 .SH "EXAMPLES"
 .PP
-\fBExample\ \&1.\ \&List all the core dumps of a program named foo\fR
+\fBExample\ \&1.\ \&List all the core dumps of a program\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# coredumpctl list foo
+$ coredumpctl list /lib64/firefox/firefox
+TIME     PID  UID  GID SIG     COREFILE EXE                         SIZE
+Tue \&...   8018 1000 1000 SIGSEGV missing  /lib64/firefox/firefox   n/a
+Wed \&... 251609 1000 1000 SIGTRAP missing  /lib64/firefox/firefox   n/a
+Fri \&... 552351 1000 1000 SIGSEGV present  /lib64/firefox/firefox 28\&.7M
 .fi
 .if n \{\
 .RE
 .\}
+.PP
+The journal has three entries pertaining to
+/lib64/firefox/firefox, and only the last entry still has an available core file (in external storage on disk)\&.
+.PP
+Note that
+coredumpctl
+needs access to the journal files to retrieve the relevant entries from the journal\&. Thus, an unprivileged user will normally only see information about crashing programs of this user\&.
 .PP
 \fBExample\ \&2.\ \&Invoke gdb on the last core dump\fR
 .sp
@@ -252,31 +291,73 @@ option\&.
 .RS 4
 .\}
 .nf
-# coredumpctl debug
+$ coredumpctl debug
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-\fBExample\ \&3.\ \&Show information about a process that dumped core, matching by its PID 6654\fR
+\fBExample\ \&3.\ \&Use gdb to display full register info from the last core dump\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# coredumpctl info 6654
+$ coredumpctl debug \-\-debugger\-arguments="\-batch \-ex \*(Aqinfo all\-registers\*(Aq"
 .fi
 .if n \{\
 .RE
 .\}
 .PP
-\fBExample\ \&4.\ \&Extract the last core dump of /usr/bin/bar to a file named bar\&.coredump\fR
+\fBExample\ \&4.\ \&Show information about a core dump matched by PID\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# coredumpctl \-o bar\&.coredump dump /usr/bin/bar
+$ coredumpctl info 6654
+           PID: 6654 (bash)
+           UID: 1000 (user)
+           GID: 1000 (user)
+        Signal: 11 (SEGV)
+     Timestamp: Mon 2021\-01\-01 00:00:01 CET (20s ago)
+  Command Line: bash \-c $\*(Aqkill \-SEGV $$\*(Aq
+    Executable: /usr/bin/bash
+ Control Group: /user\&.slice/user\-1000\&.slice/\&...
+          Unit: user@1000\&.service
+     User Unit: vte\-spawn\-\&...\&.scope
+         Slice: user\-1000\&.slice
+     Owner UID: 1000 (user)
+       Boot ID: \&...
+    Machine ID: \&...
+      Hostname: \&...
+       Storage: /var/lib/systemd/coredump/core\&.bash\&.1000\&.\&...\&.zst (present)
+     Disk Size: 51\&.7K
+       Message: Process 130414 (bash) of user 1000 dumped core\&.
+
+                Stack trace of thread 130414:
+                #0  0x00007f398142358b kill (libc\&.so\&.6 + 0x3d58b)
+                #1  0x0000558c2c7fda09 kill_builtin (bash + 0xb1a09)
+                #2  0x0000558c2c79dc59 execute_builtin\&.lto_priv\&.0 (bash + 0x51c59)
+                #3  0x0000558c2c79709c execute_simple_command (bash + 0x4b09c)
+                #4  0x0000558c2c798408 execute_command_internal (bash + 0x4c408)
+                #5  0x0000558c2c7f6bdc parse_and_execute (bash + 0xaabdc)
+                #6  0x0000558c2c85415c run_one_command\&.isra\&.0 (bash + 0x10815c)
+                #7  0x0000558c2c77d040 main (bash + 0x31040)
+                #8  0x00007f398140db75 __libc_start_main (libc\&.so\&.6 + 0x27b75)
+                #9  0x0000558c2c77dd1e _start (bash + 0x31d1e)
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&5.\ \&Extract the last core dump of /usr/bin/bar to a file named bar\&.coredump\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ coredumpctl \-o bar\&.coredump dump /usr/bin/bar
 .fi
 .if n \{\
 .RE

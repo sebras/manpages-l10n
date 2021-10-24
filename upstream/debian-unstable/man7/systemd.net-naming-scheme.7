@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 247" "systemd.net-naming-scheme"
+.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 249" "systemd.net-naming-scheme"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -253,7 +253,7 @@ For PCI, BCMA, and USB devices, the same rules as described above for slot namin
 .PP
 The following "naming schemes" have been defined (which may be chosen at system boot\-up time via the
 \fInet\&.naming\-scheme=\fR
-kernel command line switch, see above:
+kernel command line switch, see above):
 .PP
 \fBv238\fR
 .RS 4
@@ -324,11 +324,31 @@ from the container name it previously simply truncated the result at 15 characte
 .PP
 \fBv247\fR
 .RS 4
-If the PCI slot is associated with PCI bridge and that has multiple child network controllers then all of them might derive the same value of
+When a PCI slot is associated with a PCI bridge that has multiple child network controllers, the same value of the
 \fIID_NET_NAME_SLOT\fR
-property\&. That could cause naming conflict if the property is selected as a device name\&. Now, we detect the situation, slot \- bridge relation, and we don\*(Aqt produce the
+property might be derived for those controllers\&. This would cause a naming conflict if the property is selected as the device name\&. Now, we detect this situation and don\*(Aqt produce the
 \fIID_NET_NAME_SLOT\fR
-property to avoid possible naming conflict\&.
+property\&.
+.RE
+.PP
+\fBv249\fR
+.RS 4
+PCI hotplug slot names for the s390 PCI driver are a hexadecimal representation of the
+function_id
+device attribute\&. This attribute is now used to build the
+\fIID_NET_NAME_SLOT\fR\&. Before that, all slot names were parsed as decimal numbers, which could either result in an incorrect value of the
+\fIID_NET_NAME_SLOT\fR
+property or none at all\&.
+.sp
+Some firmware and hypervisor implementations report unreasonable high numbers for the onboard index\&. To prevent the generation of bogus onbard interface names, index numbers greater than 16381 (2^14\-1) were ignored\&. For s390 PCI devices index values up to 65535 (2^16\-1) are valid\&. To account for that, the limit is increased to now 65535\&.
+.sp
+The udev rule
+\fINAME=\fR
+replaces
+":",
+"/", and
+"%"
+with an underscore ("_"), and refuses strings which contain only numerics\&.
 .RE
 .PP
 Note that
