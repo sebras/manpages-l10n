@@ -8,8 +8,8 @@ languages. Currently we support the following languages:
 *  de - [German](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/de)
 *  es - [Spanish](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/es)
 *  fa - [Persian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/fa)
+*  fi - [Finnish](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/fi) *
 *  fr - [French](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/fr)
-*  fr - [Finnish](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/fi) *
 *  hu - [Hungarian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/hu) *
 *  it - [Italian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/it)
 *  mk - [Macedonian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/mk)
