@@ -57,6 +57,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-cs.html">The Czech translation</a></li>
         <li><a href="index-da.html">The Danish translation</a></li>
         <li><a href="index-nl.html">The Dutch translation</a></li>
+        <li><a href="index-fi.html">The Finnish translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
         <li><a href="index-hu.html">The Hungarian translation</a></li>
@@ -86,13 +87,12 @@ cat > index.html <<-END_OF_HEADER
        <li>Portuguese (no web page), last release 2004</li>
        <li><a href="https://sourceforge.net/projects/man-pages-ru/">Russian</a>, last activity 2019-10-17, only man-pages itself (e.g. no coreutils); probably to be considered as inactive</li>
        <li><a href="https://sourceforge.net/projects/belgeler/files/man-pages-tr/">Turkish</a>, appears inactive, last release 2008</li>
-       <li>Finnish (no web page), appears inactive, only one release in 1999; translated man pages are still available as a <a href="http://www.win.tue.nl/~aeb/ftpdocs/linux-local/manpages/tr/man-pages-fi-0.1-4.noarch.rpm">RPM package</a></li>
      </ul>
    </body>
   </html>
 END_OF_HEADER
 
-for tlang in cs da de es fa fr hu it nl mk pl pt_BR ro sr; do
+for tlang in cs da de es fa fi fr hu it nl mk pl pt_BR ro sr; do
     echo $tlang
 
 # Determine manpage section names
