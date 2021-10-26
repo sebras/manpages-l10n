@@ -22,6 +22,7 @@ language_list=(
     '"Danish"     da'
     '"Dutch"      nl'
     '"French"     fr'
+    '"Finnish"    fi'
     '"German"     de'
     '"Hungarian"  hu'
     '"Italian"    it'
