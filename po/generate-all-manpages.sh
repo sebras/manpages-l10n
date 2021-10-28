@@ -15,6 +15,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0` distribution language_code"
+  echo ""
+  echo This script generates translated man pages from the existing *.po files.
+  echo The files will be stored in the subdirectory of the chosen language and
+  echo there in a directory with the distribution name.
+  echo Example: de/debian-unstable/man*
+  echo ""
+  echo It is mandatory to submit the distribution name and the language code
+  echo as parameters.
+  exit 0
+fi
 
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
