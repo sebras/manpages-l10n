@@ -16,6 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0` language_code"
+  echo ""
+  echo This script updates the files in po/language_code/common/man* by merging
+  echo the .po files with the .pot files from templates/common/man*.
+  echo ""
+  echo It is mandatory to submit the language code as parameter.
+  exit 0
+fi
+
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$1" != a ]; then
