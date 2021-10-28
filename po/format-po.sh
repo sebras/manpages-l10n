@@ -21,13 +21,13 @@ tail=$(mktemp)
 result=$(mktemp)
 
 if [ "$1" == "-h" ]; then
-  echo "Usage: ./`basename $0`"
+  echo "Usage: ./`basename $0` language_code"
   echo This script reformats any *.po files. It wraps the lines at 80 characters
   echo and removes outdated messages at the end of the file. 
   echo ""
-  echo It needs the language code as parameter
+  echo It is mandatory to submit the language code as parameter.
   echo ""
-  echo Alternatively call it directly from the language directory, e.g. po/fr
+  echo Alternatively call it directly from the language directory, e.g. po/fr.
   exit 0
 fi
 
