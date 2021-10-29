@@ -49,7 +49,7 @@ master="../../upstream/$distribution/$localized"
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
 	echo "The original manpage for '$localized' could not be found in '$distribution'." >&2
-	exit 16
+	exit
 fi
 
 # Set up the filename of the translation
