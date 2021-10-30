@@ -81,6 +81,49 @@ of Linux manpages. The list is sorted alphabetically.
 * Mario Blättermann <mario.blaettermann@gmail.com>
 
 
+## Finnish:
+
+* Antti Salmela <asap@lyseo.edu.ouka.fi>
+* Edvard Majakari <ed@lodge.ton.tut.fi>
+* Esa Toivonen <esa.toivonen@helia.fi>
+* Heikki Kultala <hkultala@sci.fi>
+* Jaakko Puurunen <jaakko.puurunen@iki.fi>
+* Jani Frilander <jani.frilander@mail.wwnet.fi>
+* Janne Viitala <janne.viitala@cc.tut.fi>
+* Jari Antikainen <shogun@sci.fi>
+* Jari Kivirinta <jkivirin@ratol.fi>
+* Jarno Elonen <elonen@iki.fi>
+* Juha Manninen <juha.manninen@vip.fi>
+* Juhani Rantanen <misty@sgic.fi>
+* Juha-Pekka Syrjälä <jsyrjala@iki.fi>
+* Jukka Zitting <jukka.zitting@iki.fi>
+* Jussi Larjo <larjo@cc.tut.fi>
+* Lauri Manner <lauri.manner@pp.inet.fi>
+* Lauri Nurmi <lanurmi@kauhajoki.fi>
+* Marko Viirelä <mviirela@paju.oulu.fi>
+* Markus Valtokari <mkv@iki.fi>
+* Mikko Hurskainen <mikko.hurskainen@utanet.fi>
+* Petri Aerikkala <paerikka@turkuamk.fi>
+* Rami Koivunen <rkoivu@utu.fi>
+* René Gauffin <rene.gauffin@dlc.fi>
+* Risto Levänen <rike@freenet.hut.fi>
+* Sami Kuhmonen <sami@iqs.fi>
+* Sami Louko <slouko@dlc.fi>
+* Samuli Sorvakko <galaxy@cedunet.com>
+* Santeri Kannisto <sk@sot.com>
+* Santeri Säkäjärvi <ss@sot.com>
+* Teppo Kankaanpää <photon@clinet.fi>
+* Tero Heikkilä <Tero.T.Heikkila@hut.fi>
+* Thomas Raivio <tjraivio@cc.hut.fi>
+* Timo Tiirikka <tht801@GNWmail.com>
+* Tommi Vainikainen <mucus@pcuf.fi>
+* Tuomas Angervuori <tumppi@icon.fi>
+* Tuomo Pyhälä <tuomo@lesti.kpnet.fi>
+* Tuukka Forssell <taf@jytol.fi>
+* Tuukka Urpi <tuukka@wakkanet.fi>
+* Ville Karjalainen <duet@sci.fi>
+
+
 ## French:
 
 * Alain Portal <aportal@univ-montp2.fr>
@@ -159,49 +202,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Thomas Vincent <tvincent@debian.org>
 * Valéry Perrin <valery.perrin.debian@free.fr>
 * Yves Rütschlé <l10n@rutschle.net>
-
-
-## Finnish:
-
-* Antti Salmela <asap@lyseo.edu.ouka.fi>
-* Edvard Majakari <ed@lodge.ton.tut.fi>
-* Esa Toivonen <esa.toivonen@helia.fi>
-* Heikki Kultala <hkultala@sci.fi>
-* Jaakko Puurunen <jaakko.puurunen@iki.fi>
-* Jani Frilander <jani.frilander@mail.wwnet.fi>
-* Janne Viitala <janne.viitala@cc.tut.fi>
-* Jari Antikainen <shogun@sci.fi>
-* Jari Kivirinta <jkivirin@ratol.fi>
-* Jarno Elonen <elonen@iki.fi>
-* Juha Manninen <juha.manninen@vip.fi>
-* Juhani Rantanen <misty@sgic.fi>
-* Juha-Pekka Syrjälä <jsyrjala@iki.fi>
-* Jukka Zitting <jukka.zitting@iki.fi>
-* Jussi Larjo <larjo@cc.tut.fi>
-* Lauri Manner <lauri.manner@pp.inet.fi>
-* Lauri Nurmi <lanurmi@kauhajoki.fi>
-* Marko Viirelä <mviirela@paju.oulu.fi>
-* Markus Valtokari <mkv@iki.fi>
-* Mikko Hurskainen <mikko.hurskainen@utanet.fi>
-* Petri Aerikkala <paerikka@turkuamk.fi>
-* Rami Koivunen <rkoivu@utu.fi>
-* René Gauffin <rene.gauffin@dlc.fi>
-* Risto Levänen <rike@freenet.hut.fi>
-* Sami Kuhmonen <sami@iqs.fi>
-* Sami Louko <slouko@dlc.fi>
-* Samuli Sorvakko <galaxy@cedunet.com>
-* Santeri Kannisto <sk@sot.com>
-* Santeri Säkäjärvi <ss@sot.com>
-* Teppo Kankaanpää <photon@clinet.fi>
-* Tero Heikkilä <Tero.T.Heikkila@hut.fi>
-* Thomas Raivio <tjraivio@cc.hut.fi>
-* Timo Tiirikka <tht801@GNWmail.com>
-* Tommi Vainikainen <mucus@pcuf.fi>
-* Tuomas Angervuori <tumppi@icon.fi>
-* Tuomo Pyhälä <tuomo@lesti.kpnet.fi>
-* Tuukka Forssell <taf@jytol.fi>
-* Tuukka Urpi <tuukka@wakkanet.fi>
-* Ville Karjalainen <duet@sci.fi>
 
 
 ## German:
@@ -325,6 +325,17 @@ of Linux manpages. The list is sorted alphabetically.
 * Váraljai Nándor <vnandor@elender.hu>
 * Vizi Szilárd <vizisz@freemail.hu>
 * Zelena Endre <ezelena@lme.linux.hu>
+
+
+## Indonesian:
+
+* Decy Sophan Aryanto <decy.sophan@upg.siemens.co.id>
+* I Made Wiryana <mwiryana@gunadarma.ac.id>
+* Johan Efendi <johan-efendi@iname.com>
+* Priyadi Iman Nurcahyo <priyadi@priyadi.id.org>
+* Rachman M. Heryanto <manz@ibm.net>
+* Rizqy Syarief <rizqy@rad.net.id>
+* Teguh Adhi A. <adicom@thepentagon.com>
 
 
 ## Italian:

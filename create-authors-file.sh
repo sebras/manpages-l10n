@@ -25,6 +25,7 @@ language_list=(
     '"French"     fr'
     '"German"     de'
     '"Hungarian"  hu'
+    '"Indonesian" id'
     '"Italian"    it'
     '"Macedonian" mk'
     '"Persian"    fa'
