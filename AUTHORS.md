@@ -194,6 +194,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Stephane Blondon <stephane.blondon@gmail.com>
 * Stéphan Rafin <stephan.rafin@laposte.net>
 * Steve Petruzzello <dlist@bluewin.ch>
+* stolck
 * Sylvain Archenault <sylvain.archenault@laposte.net>
 * Sylvain Cherrier <sylvain.cherrier@free.fr>
 * Thierry Vignaud <tvignaud@mandriva.com>
