@@ -480,8 +480,3 @@ of Linux manpages. The list is sorted alphabetically.
 * Urko Lusa <ulusa@lacueva.ddns.org>
 * Vicente Pastor Gómez <vpastorg@santandersupernet.com>
 * Victor Moral <victor@venexma.es>
-
-
-## Swedish sv:
-
-* Swedish translation of manpages
