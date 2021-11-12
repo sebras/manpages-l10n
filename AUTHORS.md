@@ -130,12 +130,14 @@ of Linux manpages. The list is sorted alphabetically.
 * Alexandre Kuoch <alex.kuoch@gmail.com>
 * Alexandre Normand <aj.normand@free.fr>
 * Amand Tihon <amand@alrj.org>
+* arne
 * Aymeric Nys <aymeric AT nnx POINT com>
 * Bastien Scher <bastien0705@gmail.com>
 * Bernard Siaud
 * carmie
 * Cédric Boutillier <cedric.boutillier@gmail.com>
 * Cédric Lucantis <omer@no-log.org>
+* Celia Boudjemai <celisou2008@gmail.com>
 * Christophe Blaess <ccb@club-internet.fr>
 * Christophe Blaess <https://www.blaess.fr/christophe/>
 * Christophe Blaess <http://www.blaess.fr/christophe/>
@@ -182,6 +184,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Marc Poiroud <marci1@archlinux.fr>
 * Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
 * Michel Quercia <quercia AT cal DOT enst DOT fr>
+* Montanes David <montanes.david@gmail.com>
 * Nicolas François <nicolas.francois@centraliens.net>
 * Nicolas Haller <nicolas@boiteameuh.org>
 * Nicolas Sauzède <nsauzede@free.fr>
@@ -201,6 +204,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Thomas Blein <tblein@tblein.eu>
 * Thomas Huriaux <thomas.huriaux@gmail.com>
 * Thomas Vincent <tvincent@debian.org>
+* tv
 * Valéry Perrin <valery.perrin.debian@free.fr>
 * Yves Rütschlé <l10n@rutschle.net>
 
@@ -476,3 +480,8 @@ of Linux manpages. The list is sorted alphabetically.
 * Urko Lusa <ulusa@lacueva.ddns.org>
 * Vicente Pastor Gómez <vpastorg@santandersupernet.com>
 * Victor Moral <victor@venexma.es>
+
+
+## Swedish sv:
+
+* Swedish translation of manpages
