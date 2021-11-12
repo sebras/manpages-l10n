@@ -19,6 +19,7 @@ languages. Currently we support the following languages:
 *  pt_BR - [Brazilian Portuguese](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/pt_BR)
 *  ro - [Romanian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/ro) *
 *  sr - [Serbian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/sr) *
+*  sv - [Swedish](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/sv) *
 
 (the languages marked with * are currently - at least partially - unmaintained,
 feel free to pick up the maintenance)
