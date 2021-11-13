@@ -60,7 +60,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-fi.html">The Finnish translation</a></li>
         <li><a href="index-fr.html">The French translation</a></li>
         <li><a href="index-de.html">The German translation</a></li>
-        <li><a href="index-de.html">The Greek translation</a></li>
+        <li><a href="index-el.html">The Greek translation</a></li>
         <li><a href="index-hu.html">The Hungarian translation</a></li>
         <li><a href="index-id.html">The Indonesian translation</a></li>
         <li><a href="index-it.html">The Italian translation</a></li>
