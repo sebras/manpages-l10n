@@ -16,6 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0` language_code"
+  echo This script uses a certain *.po file for the compendium. It adds the gettext
+  echo messages to the files in */common/*.
+  echo ""
+  echo It is mandatory to call it with the relative path to the desired file.
+  echo Example: ./use-for-compendium.sh de/man1/chown.1.po
+  exit 0
+fi
+
 # Require one argument (filename of the proofread translation)
 if [ ! -f "$1" ]; then
 	echo "The file '$1' could not be found." >&2
