@@ -16,6 +16,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0` language_code"
+  echo This script updates all *.po files of a certain language. It uses both
+  echo the template files in templates/man*/ and the compendium in po/common/*. 
+  echo ""
+  echo It is mandatory to submit the language code as parameter.
+  exit 0
+fi
+
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$1" != a ]; then
