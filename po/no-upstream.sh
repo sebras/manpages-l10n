@@ -19,6 +19,19 @@
 # Check if there is a .po file without the corresponding
 # upstream manpage, e.g. when a package has been removed.
 
+if [ "$1" == "-h" ]; then
+  echo "Usage: ./`basename $0` language_code"
+  echo This script detects *.po files which have no corresponding upstream man page
+  echo in upstream/*/man*. You should consider to move such orphan *.po files
+  echo to the archives in po/*/archive. Otherwise, try to find out whether a
+  echo corresponding man page exist for the target distribution, and add the
+  echo appropriate package to upstream/*/packages.txt.
+  echo ""
+  echo It is mandatory to submit the language code as parameter.
+  echo ""
+  exit 0
+fi
+
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$1" != a ]; then
