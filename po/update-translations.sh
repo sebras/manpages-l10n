@@ -19,7 +19,7 @@
 if [ "$1" == "-h" ]; then
   echo "Usage: ./`basename $0` language_code"
   echo This script updates all *.po files of a certain language. It uses both
-  echo the template files in templates/man*/ and the compendium in po/common/*. 
+  echo the template files in templates/man*/ and the compendium in po/common/*.
   echo ""
   echo It is mandatory to submit the language code as parameter.
   exit 0
