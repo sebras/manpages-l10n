@@ -22,6 +22,9 @@ if [ "$1" == "-h" ]; then
   echo the template files in templates/man*/ and the compendium in po/common/*.
   echo ""
   echo It is mandatory to submit the language code as parameter.
+  echo ""
+  echo The language code may be omitted if called from the language directory,
+  echo e.g. po/sv
   exit 0
 fi
 

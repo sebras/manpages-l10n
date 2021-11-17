@@ -29,6 +29,8 @@ if [ "$1" == "-h" ]; then
   echo ""
   echo It is mandatory to submit the language code as parameter.
   echo ""
+  echo The language code may be omitted if called from the language directory,
+  echo e.g. po/pl
   exit 0
 fi
 

@@ -25,6 +25,9 @@ if [ "$1" == "-h" ]; then
   echo ""
   echo It is mandatory to submit the distribution name and the language code
   echo as parameters.
+  echo ""
+  echo The language code may be omitted if called from the language directory, 
+  echo e.g. po/es
   exit 0
 fi
 
