@@ -2,12 +2,12 @@
 .\"     Title: mkfs.btrfs
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 10/08/2021
+.\"      Date: 11/05/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v5.14.2
+.\"    Source: Btrfs v5.15
 .\"  Language: English
 .\"
-.TH "MKFS\&.BTRFS" "8" "10/08/2021" "Btrfs v5\&.14\&.2" "Btrfs Manual"
+.TH "MKFS\&.BTRFS" "8" "11/05/2021" "Btrfs v5\&.15" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -103,20 +103,34 @@ or
 (case does not matter)\&.
 .sp
 Default on a single device filesystem is
-\fIDUP\fR, unless an SSD is detected, in which case it will default to
-\fIsingle\fR\&. The detection is based on the value of
-\fB/sys/block/DEV/queue/rotational\fR, where
-\fIDEV\fR
-is the short name of the device\&.
+\fIDUP\fR
+and is recommended for metadata in general\&. The duplication might not be necessary in some use cases and it\(cqs up to the user to changed that at mkfs time or later\&. This depends on hardware that could potentially deduplicate the blocks again but this cannot be detected at mkfs time\&.
+.if n \{\
 .sp
-Note that the rotational status can be arbitrarily set by the underlying block device driver and may not reflect the true status (network block device, memory\-backed SCSI devices etc)\&. It\(cqs recommended to options
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNOTE\fR
+.ps -1
+.br
+Up to version 5\&.14 there was a detection of a SSD device (more precisely if it\(cqs a rotational device, determined by the contents of file
+\fB/sys/block/DEV/queue/rotational\fR) that used to select
+\fIsingle\fR\&. This has changed in version 5\&.15 to be always
+\fIdup\fR\&.
+.sp
+Note that the rotational status can be arbitrarily set by the underlying block device driver and may not reflect the true status (network block device, memory\-backed SCSI devices, real block device behind some additonal device mapper layer, etc)\&. It\(cqs recommended to always set the options
 \fI\-\-data/\-\-metadata\fR
-to avoid confusion\&.
+to avoid confusion and unexpected results\&.
 .sp
 See
 \fIDUP PROFILES ON A SINGLE DEVICE\fR
 for more details\&.
-.sp
+.sp .5v
+.RE
 On multiple devices the default is
 \fIraid1\fR\&.
 .RE
@@ -386,7 +400,7 @@ reduced\-size metadata for extent references, saves a few percent of metadata
 .PP
 \fBno\-holes\fR
 .RS 4
-(kernel support since 3\&.14)
+(default since btrfs\-progs 5\&.15, kernel support since 3\&.14)
 .sp
 improved representation of file extents where holes are not explicitly stored as an extent, saves a few percent of metadata if sparse files are used
 .RE
@@ -415,7 +429,7 @@ Enable quota support (qgroups)\&. The qgroup accounting will be consistent, can 
 .PP
 \fBfree\-space\-tree\fR
 .RS 4
-(kernel support since 4\&.5)
+(default since btrfs\-progs 5\&.15, kernel support since 4\&.5)
 .sp
 Enable the free space tree (mount option space_cache=v2) for persisting the free space cache\&.
 .RE
