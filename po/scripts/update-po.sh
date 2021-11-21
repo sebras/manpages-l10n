@@ -18,15 +18,10 @@
 
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
-    manname=$1
 elif [ a"$2" != a ]; then
-    if [ -d $2 ]; then
-        cd $2
+    if [ -d ../$2 ]; then
+        cd ../$2
         lcode=$2
-	# Due to the cd, we need to reconstruct $1
-	mfilename=$(basename $1)
-	mdirname=$(basename $(dirname $1))
-	manname=$mdirname/$mfilename
     else
         echo "Language $2 could not be found, aborting"
         exit 11
@@ -37,8 +32,8 @@ else
 fi
 
 # Require one argument (the .po file of the manpage)
-if [ ! -f "$manname" ]; then
-	echo "The file '$manname' could not be found."
+if [ ! -f "$1" ]; then
+	echo "The file '$1' could not be found."
 	exit 13
 fi
 
@@ -46,7 +41,7 @@ fi
 templatedir="../../templates"
 
 # Find the pot file by adding the letter 't'
-potfile="$templatedir/$manname""t"
+potfile="$templatedir/$1""t"
 if [ ! -f "$potfile" ]; then
 	echo "The potfile '$potfile' could not be found." >&2
 	exit 14
@@ -54,31 +49,31 @@ fi
 
 # Create backup, to be able later to run diff on the files.
 backup=$(mktemp)
-cp "$manname" "$backup"
+cp "$1" "$backup"
 
 # Generate compendium
 compendium=$(mktemp)
-../generate-compendium.sh "$manname" "$compendium" "$lcode"
+../scripts/generate-compendium.sh "$1" "$compendium" "$lcode"
 
 # Update .po file from .pot file
 tmppo=$(mktemp)
-msgmerge --previous --compendium "$compendium" "$manname" "$potfile" > "$tmppo"
+msgmerge --previous --compendium "$compendium" "$1" "$potfile" > "$tmppo"
 
 # Remove obsolete strings
-msgattrib --no-obsolete "$tmppo" > "$manname"
+msgattrib --no-obsolete "$tmppo" > "$1"
 
 # Translate dates, if possible
-./translate-dates.pl < "$manname" > "$tmppo"
+./translate-dates.pl < "$1" > "$tmppo"
 
 # Prefer the translations from the compendium
-msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$tmppo" > "$manname"
+msgmerge --compendium "$compendium" --no-fuzzy-matching /dev/null "$tmppo" > "$1"
 
 # Determine if the only change is the "POT-Creation-Date:" header
 # If so, copy back the backup to revert that change
-sed -f ../remove-potcdate.sed < "$backup" > "$tmppo"
-sed -f ../remove-potcdate.sed < "$manname" > "$compendium"
+sed -f ../scripts/remove-potcdate.sed < "$backup" > "$tmppo"
+sed -f ../scripts/remove-potcdate.sed < "$1" > "$compendium"
 if cmp "$tmppo" "$compendium" >/dev/null 2>&1; then \
-	mv "$backup" "$manname"; \
+	mv "$backup" "$1"; \
 fi
 
 # Cleanup

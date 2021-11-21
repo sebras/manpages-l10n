@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright © 2017 Dr. Tobias Quathamer <toddy@debian.org>
-#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
+# Copyright © 2010-2017 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,14 +18,13 @@
 
 if [ "$1" == "-h" ]; then
   echo "Usage: ./`basename $0` language_code"
-  echo ""
-  echo This script updates the files in po/language_code/common/man* by merging
-  echo the .po files with the .pot files from templates/common/man*.
+  echo This script updates all *.po files of a certain language. It uses both
+  echo the template files in templates/man*/ and the compendium in po/common/*.
   echo ""
   echo It is mandatory to submit the language code as parameter.
   echo ""
   echo The language code may be omitted if called from the language directory,
-  echo e.g. po/it
+  echo e.g. po/sv
   exit 0
 fi
 
@@ -37,24 +36,15 @@ elif [ a"$1" != a ]; then
         lcode=$1
     else
         echo "Language $1 could not be found, aborting"
-        exit 1
+        exit 11
     fi
 else
     echo "Could not determine target directory, aborting"
-    exit 2
+    exit 12
 fi
 
-# Handle primary messages
-compendium=$(mktemp)
-msgcat --use-first common/*po > "$compendium"
-rm -f common/*po
-tmppo=$(mktemp)
-for potfile in ../../templates/common/*pot; do
-	pofile=$(basename "$potfile")
-	# Remove the letter "t" at the end
-	pofile=${pofile%t}
-	msgmerge --force-po --previous --compendium "$compendium" /dev/null "$potfile" > "$tmppo"
-	mv "$tmppo" "common/$pofile"
+translations=$(find man* -name "*.po" | LC_ALL=C sort)
+for translation in $translations; do
+	echo $(basename "$translation")
+	../update-po.sh "$translation"
 done
-
-rm -f "$compendium" "$tmppo"

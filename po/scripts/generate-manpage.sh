@@ -19,8 +19,8 @@
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$3" != a ]; then
-    if [ -d $3 ]; then
-        cd $3
+    if [ -d ../$3 ]; then
+        cd ../$3
         lcode=$3
     else
         echo "Language $3 could not be found, aborting"
@@ -31,7 +31,7 @@ else
     exit 12
 fi
 
-source ../l10n_set
+source ../scripts/l10n_set
 
 
 # This is the distribution for which the manpage should be generated
@@ -49,7 +49,7 @@ master="../../upstream/$distribution/$localized"
 # Cannot generate manpage if the original could not be found
 if [ ! -f "$master" ]; then
 	echo "The original manpage for '$localized' could not be found in '$distribution'." >&2
-	exit
+	exit 16
 fi
 
 # Set up the filename of the translation
@@ -62,7 +62,7 @@ localized="$distribution/$localized"
 if [ ! -f noaddendum ]; then
     # Create the addendum for this manpage
     addendum=$(mktemp)
-    ./generate-addendum.sh "$translation" "$addendum"
+    ../scripts/generate-addendum.sh "$translation" "$addendum"
 fi
 
 # Create a separate .po file for this distribution,

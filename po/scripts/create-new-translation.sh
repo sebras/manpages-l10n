@@ -19,8 +19,8 @@
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$2" != a ]; then
-    if [ -d $2 ]; then
-        cd $2
+    if [ -d ../$2 ]; then
+        cd ../$2
 	lcode=$2
     else
         echo "Language $2 could not be found, aborting"
@@ -31,7 +31,7 @@ else
     exit 12
 fi
 
-source ../l10n_set
+source ../scripts/l10n_set
 
 # Require one argument (the name of the manpage)
 if [ -z "$1" ]; then
@@ -53,7 +53,7 @@ cd ../../templates
 cd ../po/$lcode
 
 # Update common translations
-../update-common.sh
+../scripts/update-common.sh $lcode
 
 # Ensure that there is a .po file
 if [ ! -f $mandir/$manpage.po ]; then
@@ -80,4 +80,4 @@ if [ ! -f $mandir/$manpage.po ]; then
 fi
 
 # Finally, populate the translation from the compendium.
-../update-po.sh "$pofile" "$lcode"
+../scripts/update-po.sh "$pofile" "$lcode"

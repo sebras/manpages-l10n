@@ -21,21 +21,21 @@ tail=$(mktemp)
 result=$(mktemp)
 
 if [ "$1" == "-h" ]; then
-  echo "Usage: ./`basename $0` language_code"
+  echo "Usage: ./`basename $0`"
   echo This script reformats any *.po files. It wraps the lines at 80 characters
   echo and removes outdated messages at the end of the file. 
   echo ""
-  echo It is mandatory to submit the language code as parameter.
+  echo It needs the language code as parameter
   echo ""
-  echo Alternatively call it directly from the language directory, e.g. po/fr.
+  echo Alternatively call it directly from the language directory, e.g. po/fr
   exit 0
 fi
 
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$1" != a ]; then
-    if [ -d $1 ]; then
-        cd $1
+    if [ -d ../$1 ]; then
+        cd ../$1
         lcode=$1
     else
         echo "Language $1 could not be found, aborting"
@@ -46,7 +46,7 @@ else
     exit 12
 fi
 
-source ../l10n_set
+source ../scripts/l10n_set
 
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do

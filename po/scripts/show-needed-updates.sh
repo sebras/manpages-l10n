@@ -16,23 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ "$1" == "-h" ]; then
-  echo "Usage: ./`basename $0` language_code"
-  echo This script shows the translation percentages of *.po files.
-  echo Note, you get only totals instead of distribution-related values.
-  echo ""
-  echo It is mandatory to submit the language code as parameter.
-  echo ""
-  echo The language code may be omitted if called from the language directory,
-  echo e.g. po/fi
-  exit 0
-fi
-
 if [ -d man1 ]; then
     lcode=$(basename $(pwd))
 elif [ a"$1" != a ]; then
-    if [ -d $1 ]; then
-        cd $1
+    if [ -d ../$1 ]; then
+        cd ../$1
         lcode=$1
     else
         echo "Language $1 could not be found, aborting"
@@ -43,7 +31,7 @@ else
     exit 12
 fi
 
-source ../l10n_set
+source ../scripts/l10n_set
 
 translations=$(find man* -name "*.po" | LC_ALL=C sort)
 for translation in $translations; do
