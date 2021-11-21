@@ -38,7 +38,8 @@ echo "PO4A-HEADER:mode=after;position=^\.(TH|Dt);beginboundary=FakePo4aBoundary"
 echo >> "$addendum"
 # Special case for manpages which use mdoc syntax (currently only tar.1)
 case $(basename "$translation") in
-	tar.1.po ) echo ".Sh ÜBERSETZUNG" >> "$addendum" ;;
+	tar.1.po | ncal.1.po | ssh-add.1.po | bsd-write.1.po | sftp.1.po | ssh-keyscan.1.po | ssh.1.po | ssh-keygen.1.po | ssh-copy-id.1.po | scp.1.po | file.1.po | ssh-agent.1.po | ssh-argv0.1.po | crypt.3.po | sshd_config.5.po | moduli.5.po | ssh_config.5.po | ssh-pkcs11-helper.8.po | sshd.8.po | ssh-keysign.8.po) echo ".Sh ÜBERSETZUNG" >> "$addendum" ;;
+	#tar.1.po) echo ".Sh ÜBERSETZUNG" >> "$addendum" ;;
 	* ) echo ".SH ÜBERSETZUNG" >> "$addendum" ;;
 esac
 echo "Die deutsche Übersetzung dieser Handbuchseite wurde von" >> "$addendum"
@@ -65,3 +66,8 @@ fi
 
 # Output of common ending
 echo "erstellt." >> "$addendum"
+
+case $(basename "$translation") in
+	ncal.1.po | ssh-add.1.po | bsd-write.1.po | sftp.1.po | ssh-keyscan.1.po | ssh.1.po | ssh-keygen.1.po | ssh-copy-id.1.po | scp.1.po | file.1.po | ssh-agent.1.po | ssh-argv0.1.po | crypt.3.po | sshd_config.5.po | moduli.5.po | ssh_config.5.po | ssh-pkcs11-helper.8.po | sshd.8.po | ssh-keysign.8.po) cat license.add.mdoc >> "$addendum" ;;
+	* ) cat license.add >> "$addendum" ;;
+esac
