@@ -31,12 +31,12 @@ if os.path.exists("downloads/packages.json"):
         package_data = json.loads(input_file.read())
 
 # Get current package information
-download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.3/repo/oss/x86_64/")
+download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/x86_64/")
 contents = download_page.read().decode()
 download_page.close()
 
 # Also get noarch package information as a fallback
-download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.3/repo/oss/noarch/")
+download_page = urllib.request.urlopen("https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/noarch/")
 contents_fallback = download_page.read().decode()
 download_page.close()
 
