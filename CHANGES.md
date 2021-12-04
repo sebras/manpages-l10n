@@ -31,8 +31,6 @@
 
 * Updated and added many translations
 
-# Changelog for manpages-l10n
-
 ## Version 4.9.0pre1
 *Sat Jan  23 21:39:01 CET 2021*
 
