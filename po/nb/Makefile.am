@@ -15,18 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SUBDIRS = cs da de es fi fr hu nb nl it mk pl pt_BR ro sr
+LANGUAGE = nb
 
-
-# Reformat all .po files and commit changes
-.PHONY: reformat
-reformat:
-	for d in $(SUBDIRS) ; do \
-		cd $$d && make reformat && cd .. ; \
-	done
-
-# Reformat and update all .po files and commit changes
-.PHONY: update-po
-update-po: reformat
-	$(srcdir)/update-translations.py ; \
-	git commit -m "Update .po files from templates and common messages" . || true
+include ../common.mk
