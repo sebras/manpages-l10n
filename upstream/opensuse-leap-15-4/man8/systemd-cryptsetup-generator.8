@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-CRYPTSETUP\-GENERATOR" "8" "" "systemd 246" "systemd-cryptsetup-generator"
+.TH "SYSTEMD\-CRYPTSETUP\-GENERATOR" "8" "" "systemd 249" "systemd-cryptsetup-generator"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -91,24 +91,53 @@ or
 \fIluks\&.uuid=\fR
 and will additionally make the LUKS device given by the UUID appear under the provided name\&.
 .sp
+This parameter is the analogue of the first
+\fBcrypttab\fR(5)
+field
+\fIvolume\-name\fR\&.
+.sp
 \fIrd\&.luks\&.name=\fR
 is honored only by initial RAM disk (initrd) while
 \fIluks\&.name=\fR
 is honored by both the main system and the initrd\&.
 .RE
 .PP
-\fIluks\&.options=\fR, \fIrd\&.luks\&.options=\fR
+\fIluks\&.data=\fR, \fIrd\&.luks\&.data=\fR
 .RS 4
-Takes a LUKS super block UUID followed by an
+Takes a LUKS super block UUID followed by a
 "="
-and a string of options separated by commas as argument\&. This will override the options for the given UUID\&.
+and a block device specification for device hosting encrypted data\&.
 .sp
-If only a list of options, without an UUID, is specified, they apply to any UUIDs not specified elsewhere, and without an entry in
-/etc/crypttab\&.
+For those entries specified with
+\fIrd\&.luks\&.uuid=\fR
+or
+\fIluks\&.uuid=\fR, the data device will be set to the one specified by
+\fIrd\&.luks\&.data=\fR
+or
+\fIluks\&.data=\fR
+of the corresponding UUID\&.
 .sp
-\fIrd\&.luks\&.options=\fR
+LUKS data device parameter is useful for specifying encrypted data devices with detached headers specified in
+\fIluks\&.options\fR
+entry containing
+"header="
+argument\&. For example,
+\fIrd\&.luks\&.uuid=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40
+\fIrd\&.luks\&.options=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40=header=/path/to/luks\&.hdr
+\fIrd\&.luks\&.data=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40=/dev/sdx\&. Hence, in this case, we will attempt to unlock LUKS device assembled from data device
+"/dev/sdx"
+and LUKS header (metadata) put in
+"/path/to/luks\&.hdr"
+file\&. This syntax is for now only supported on a per\-device basis, i\&.e\&. you have to specify LUKS device UUID\&.
+.sp
+This parameter is the analogue of the second
+\fBcrypttab\fR(5)
+field
+\fIencrypted\-device\fR\&.
+.sp
+\fIrd\&.luks\&.data=\fR
 is honored only by initial RAM disk (initrd) while
-\fIluks\&.options=\fR
+\fIluks\&.data=\fR
 is honored by both the main system and the initrd\&.
 .RE
 .PP
@@ -132,9 +161,46 @@ It is also possible to specify an external device which should be mounted before
 \fIrd\&.luks\&.key=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40=/keyfile:LABEL=keydev\&. Hence, in this case, we will attempt to mount file system residing on the block device with label
 "keydev"\&. This syntax is for now only supported on a per\-device basis, i\&.e\&. you have to specify LUKS device UUID\&.
 .sp
+This parameter is the analogue of the third
+\fBcrypttab\fR(5)
+field
+\fIkey\-file\fR\&.
+.sp
 \fIrd\&.luks\&.key=\fR
 is honored only by initial RAM disk (initrd) while
 \fIluks\&.key=\fR
+is honored by both the main system and the initrd\&.
+.RE
+.PP
+\fIluks\&.options=\fR, \fIrd\&.luks\&.options=\fR
+.RS 4
+Takes a LUKS super block UUID followed by an
+"="
+and a string of options separated by commas as argument\&. This will override the options for the given UUID\&.
+.sp
+If only a list of options, without an UUID, is specified, they apply to any UUIDs not specified elsewhere, and without an entry in
+/etc/crypttab\&.
+.sp
+This parameter is the analogue of the fourth
+\fBcrypttab\fR(5)
+field
+\fIoptions\fR\&.
+.sp
+It is possible to specify an external device which should be mounted before we attempt to unlock the LUKS device\&. systemd\-cryptsetup will assemble LUKS device by combining data device specified in
+\fIluks\&.data\fR
+with detached LUKS header found in
+"header="
+argument\&. For example,
+\fIrd\&.luks\&.uuid=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40
+\fIrd\&.luks\&.options=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40=header=/luks\&.hdr:LABEL=hdrdev
+\fIrd\&.luks\&.data=\fRb40f1abf\-2a53\-400a\-889a\-2eccc27eaa40=/dev/sdx\&. Hence, in this case, we will attempt to mount file system residing on the block device with label
+"hdrdev", and look for
+"luks\&.hdr"
+on that file system\&. Said header will be used to unlock (decrypt) encrypted data stored on /dev/sdx\&. This syntax is for now only supported on a per\-device basis, i\&.e\&. you have to specify LUKS device UUID\&.
+.sp
+\fIrd\&.luks\&.options=\fR
+is honored only by initial RAM disk (initrd) while
+\fIluks\&.options=\fR
 is honored by both the main system and the initrd\&.
 .RE
 .SH "SEE ALSO"
@@ -142,5 +208,6 @@ is honored by both the main system and the initrd\&.
 \fBsystemd\fR(1),
 \fBcrypttab\fR(5),
 \fBsystemd-cryptsetup@.service\fR(8),
+\fBsystemd-cryptenroll\fR(1),
 \fBcryptsetup\fR(8),
 \fBsystemd-fstab-generator\fR(8)

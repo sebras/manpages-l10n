@@ -1,5 +1,5 @@
 '\" t
-.TH "MACHINECTL" "1" "" "systemd 246" "machinectl"
+.TH "MACHINECTL" "1" "" "systemd 249" "machinectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -81,8 +81,8 @@ Machines are instantiated from disk or file system images that frequently\ \&\(e
 .IP \(bu 2.3
 .\}
 Directory trees containing an OS, including the top\-level directories
-/usr,
-/etc, and so on\&.
+/usr/,
+/etc/, and so on\&.
 .RE
 .sp
 .RS 4
@@ -395,14 +395,14 @@ Note that per\-container size limits are only supported on btrfs file systems\&.
 \fBclean\fR
 .RS 4
 Remove hidden VM or container images (or all)\&. This command removes all hidden machine images from
-/var/lib/machines, i\&.e\&. those whose name begins with a dot\&. Use
+/var/lib/machines/, i\&.e\&. those whose name begins with a dot\&. Use
 \fBmachinectl list\-images \-\-all\fR
 to see a list of all machine images, including the hidden ones\&.
 .sp
 When combined with the
 \fB\-\-all\fR
 switch removes all images, not just hidden ones\&. This command effectively empties
-/var/lib/machines\&.
+/var/lib/machines/\&.
 .sp
 Note that commands such as
 \fBmachinectl pull\-tar\fR
@@ -513,7 +513,7 @@ Imports a TAR or RAW container or VM image, and places it under the specified na
 /var/lib/machines/\&. When
 \fBimport\-tar\fR
 is used, the file specified as the first argument should be a tar archive, possibly compressed with xz, gzip or bzip2\&. It will then be unpacked into its own subvolume in
-/var/lib/machines\&. When
+/var/lib/machines/\&. When
 \fBimport\-raw\fR
 is used, the file should be a qcow2 or raw disk image, possibly compressed with xz, gzip or bzip2\&. If the second argument (the resulting image name) is not specified, it is automatically derived from the file name\&. If the filename is passed as
 "\-", the image is read from standard input, in which case the second argument is mandatory\&.
@@ -609,12 +609,18 @@ to select whether to kill only the leader process of the machine or all processe
 \fB\-s\fR, \fB\-\-signal=\fR
 .RS 4
 When used with
-\fBkill\fR, choose which signal to send to selected processes\&. Must be one of the well\-known signal specifiers, such as
+\fBkill\fR, choose which signal to send to selected processes\&. Must be one of the well\-known signal specifiers such as
 \fBSIGTERM\fR,
 \fBSIGINT\fR
 or
 \fBSIGSTOP\fR\&. If omitted, defaults to
 \fBSIGTERM\fR\&.
+.sp
+The special value
+"help"
+will list the known values and the program will exit immediately, and the special value
+"list"
+will list known values along with the numerical signal numbers and the program will exit immediately\&.
 .RE
 .PP
 \fB\-\-uid=\fR
@@ -800,7 +806,7 @@ and
 /usr/lib/machines/\&. For compatibility reasons, the directory
 /var/lib/container/
 is searched, too\&. Note that images stored below
-/usr
+/usr/
 are always considered read\-only\&. It is possible to symlink machines images from other directories into
 /var/lib/machines/
 to make them available for control with
@@ -883,13 +889,13 @@ to open a shell in it\&.
 .\}
 .nf
 # machinectl pull\-raw \-\-verify=no \e
-      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/33/Cloud/x86_64/images/Fedora\-Cloud\-Base\-33\-1\&.2\&.x86_64\&.raw\&.xz \e
-      Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
-# systemd\-nspawn \-M Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
+      https://download\&.fedoraproject\&.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora\-Cloud\-Base\-34\-1\&.2\&.x86_64\&.raw\&.xz \e
+      Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
+# systemd\-nspawn \-M Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
 # passwd
 # exit
-# machinectl start Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
-# machinectl login Fedora\-Cloud\-Base\-33\-1\&.2\&.x86\-64
+# machinectl start Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
+# machinectl login Fedora\-Cloud\-Base\-34\-1\&.2\&.x86\-64
 .fi
 .if n \{\
 .RE
@@ -936,6 +942,73 @@ This creates a new shell session on the local host for the user ID
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
 .PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
@@ -1027,16 +1100,19 @@ or
 \fI$PAGER\fR
 variables are to be honoured,
 \fI$SYSTEMD_PAGERSECURE\fR
-must be set too\&. It might be reasonable to completly disable the pager using
+must be set too\&. It might be reasonable to completely disable the pager using
 \fB\-\-no\-pager\fR
 instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE

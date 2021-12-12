@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 246" "systemd-resolved.service"
+.TH "SYSTEMD\-RESOLVED\&.SERVICE" "8" "" "systemd 249" "systemd-resolved.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -102,7 +102,7 @@ or
 .SH "SYNTHETIC RECORDS"
 .PP
 \fBsystemd\-resolved\fR
-synthetizes DNS resource records (RRs) for the following cases:
+synthesizes DNS resource records (RRs) for the following cases:
 .sp
 .RS 4
 .ie n \{\
@@ -155,6 +155,19 @@ is resolved to all current default routing gateway addresses, ordered by their m
 .sp -1
 .IP \(bu 2.3
 .\}
+The hostname
+"_outbound"
+is resolved to the local IPv4 and IPv6 addresses that are most likely used for communication with other hosts\&. This is determined by requesting a routing decision to the configured default gateways from the kernel and then using the local IP addresses selected by this decision\&. This hostname is only available if there is at least one local default gateway configured\&. This assigns a stable hostname to the local outbound IP addresses, useful for referencing them independently of the current network configuration state\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 The mappings defined in
 /etc/hosts
 are resolved to their configured addresses and back, but they will not affect lookups for non\-address types (like MX)\&. Support for
@@ -165,7 +178,9 @@ may be disabled with
 .RE
 .SH "PROTOCOLS AND ROUTING"
 .PP
-Lookup requests are routed to the available DNS servers, LLMNR, and MulticastDNS interfaces according to the following rules:
+The lookup requests that
+systemd\-resolved\&.service
+receives are routed to the available DNS servers, LLMNR, and MulticastDNS interfaces according to the following rules:
 .sp
 .RS 4
 .ie n \{\
@@ -191,7 +206,7 @@ are never routed to the network and a reply is sent immediately\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-Single\-label names are resolved using LLMNR on all local interfaces where LLMNR is enabled\&. Lookups for IPv4 addresses are only sent via LLMNR on IPv4, and lookups for IPv6 addresses are only sent via LLMNR on IPv6\&. Note that lookups for single\-label synthetized names are not routed to LLMNR, MulticastDNS or unicast DNS\&.
+Single\-label names are resolved using LLMNR on all local interfaces where LLMNR is enabled\&. Lookups for IPv4 addresses are only sent via LLMNR on IPv4, and lookups for IPv6 addresses are only sent via LLMNR on IPv6\&. Note that lookups for single\-label synthesized names are not routed to LLMNR, MulticastDNS or unicast DNS\&.
 .RE
 .sp
 .RS 4
@@ -202,9 +217,9 @@ Single\-label names are resolved using LLMNR on all local interfaces where LLMNR
 .sp -1
 .IP \(bu 2.3
 .\}
-Queries for the address records (A and AAAA) of single\-label non\-synthetized names are resolved via unicast DNS using search domains\&. For any interface which defines search domains, such look\-ups are routed to that interface, suffixed with each of the search domains defined on that interface in turn\&. When global search domains are defined, such look\-ups are routed to all interfaces, suffixed by each of the global search domains in turn\&. Additionally, lookup of single\-label names via unicast DNS may be enabled with the
+Queries for the address records (A and AAAA) of single\-label non\-synthesized names are resolved via unicast DNS using search domains\&. For any interface which defines search domains, such look\-ups are routed to the servers defined for that interface, suffixed with each of those search domains\&. When global search domains are defined, such look\-ups are routed to the global servers\&. For each search domain, queries are performed by suffixing the name with each of the search domains in turn\&. Additionally, lookup of single\-label names via unicast DNS may be enabled with the
 \fIResolveUnicastSingleLabel=yes\fR
-setting\&. The details of which servers are queried and how the final reply is chosen are described below\&. Note that this means that address queries for single\-label names are never sent out to remote DNS servers by default, and resoulution is only possible if search domains are defined\&.
+setting\&. The details of which servers are queried and how the final reply is chosen are described below\&. Note that this means that address queries for single\-label names are never sent out to remote DNS servers by default, and resolution is only possible if search domains are defined\&.
 .RE
 .sp
 .RS 4
@@ -262,7 +277,8 @@ in
 \fBresolved.conf\fR(5)
 for a description of globally configured DNS settings\&.
 .PP
-The following query routing logic applies for unicast DNS traffic:
+The following query routing logic applies for unicast DNS lookups initiated by
+systemd\-resolved\&.service:
 .sp
 .RS 4
 .ie n \{\
@@ -274,7 +290,7 @@ The following query routing logic applies for unicast DNS traffic:
 .\}
 If a name to look up matches (that is: is equal to or has as suffix) any of the configured routing domains (search or route\-only) of any link, or the globally configured DNS settings, "best matching" routing domain is determined: the matching one with the most labels\&. The query is then sent to all DNS servers of any links or the globally configured DNS servers associated with this "best matching" routing domain\&. (Note that more than one link might have this same "best matching" routing domain configured, in which case the query is sent to all of them in parallel)\&.
 .sp
-In case of single\-label names, when search domains are defined, the same logic applies, except that the name is first suffixed by each of the search domains in turn\&. Note that this search logic doesn\*(Aqt apply to any names with at least one dot\&. Also see the discussion about compatiblity with the traditional glibc resolver below\&.
+In case of single\-label names, when search domains are defined, the same logic applies, except that the name is first suffixed by each of the search domains in turn\&. Note that this search logic doesn\*(Aqt apply to any names with at least one dot\&. Also see the discussion about compatibility with the traditional glibc resolver below\&.
 .RE
 .sp
 .RS 4
@@ -323,7 +339,7 @@ or in
 files\&. If not set, it is implicitly determined based on the configured DNS domains for a link: if there\*(Aqs a route\-only domain other than
 "~\&.", it defaults to false, otherwise to true\&.
 .PP
-Effectively this means: in order to support single\-label non\-synthetized names, define appropriate search domains\&. In order to preferably route all DNS queries not explicitly matched by routing domain configuration to a specific link, configure a
+Effectively this means: in order to support single\-label non\-synthesized names, define appropriate search domains\&. In order to preferably route all DNS queries not explicitly matched by routing domain configuration to a specific link, configure a
 "~\&."
 route\-only domain on it\&. This will ensure that other links will not be considered for these queries (unless they too carry such a routing domain)\&. In order to route all such DNS queries to a specific link only if no other link is preferred, set the
 \fIDefaultRoute=\fR
@@ -333,9 +349,9 @@ route\-only domain on it\&. Finally, in order to ensure that a specific link nev
 \fIDefaultRoute=\fR
 option for it to false\&.
 .PP
-See the
-\m[blue]\fBresolved D\-Bus API Documentation\fR\m[]\&\s-2\u[3]\d\s+2
-for information about the APIs
+See
+\fBorg.freedesktop.resolve1\fR(5)
+for information about the D\-Bus APIs
 systemd\-resolved
 provides\&.
 .SH "COMPATIBILITY WITH THE TRADITIONAL GLIBC STUB RESOLVER"
@@ -344,8 +360,8 @@ This section provides a short summary of differences in the stub resolver implem
 \fBnss-resolve\fR(8)
 together with
 \fBsystemd\-resolved\fR
-and the tranditional stub resolver implemented in
-\fBnss-dns\fR(8)\&.
+and the traditional stub resolver implemented in
+nss\-dns\&.
 .sp
 .RS 4
 .ie n \{\
@@ -356,8 +372,13 @@ and the tranditional stub resolver implemented in
 .IP \(bu 2.3
 .\}
 Some names are always resolved internally (see Synthetic Records above)\&. Traditionally they would be resolved by
-nss\-files, and only if provided in
-/etc/hosts\&.
+nss\-files
+if provided in
+/etc/hosts\&. But note that the details of how a query is constructed are under the control of the client library\&.
+nss\-dns
+will first try to resolve names using search domains and even if those queries are routed to
+systemd\-resolved, it will send them out over the network using the usual rules for multi\-label name routing
+\&\s-2\u[3]\d\s+2\&.
 .RE
 .sp
 .RS 4
@@ -368,7 +389,7 @@ nss\-files, and only if provided in
 .sp -1
 .IP \(bu 2.3
 .\}
-Single\-label names are not resolved for A and AAAA records using unicast DNS (unless overriden with
+Single\-label names are not resolved for A and AAAA records using unicast DNS (unless overridden with
 \fIResolveUnicastSingleLabel=\fR, see
 \fBresolved.conf\fR(5))\&. This is similar to the
 \fBno\-tld\-query\fR
@@ -393,7 +414,7 @@ would resolve names both as relative (using search domains) and absolute FQDN na
 \fIndots\fR
 option in
 /etc/resolv\&.conf
-was used to control how many dots the name needs to have to be resolved as relative first\&. This stub resolver does not implement this at all: multi\-label names are only resolved as FQDNs\&. (There are currently more than 1500 top\-level domain names defined, and new ones are added regularly, often using "attractive" names that are also likely to be used locally\&. Not looking up multi\-label names in this fashion avoids fragility in both directions: a valid global name could be obscured by a local name, and resolution of a relative local name could suddenly break when a new top\-level domain is created, or when a new subdomain of a top\-level domain in registered\&. Resolving any given name as either relative or absolute avoids this ambiguity\&.)
+was used to control how many dots the name needs to have to be resolved as relative first\&. This stub resolver does not implement this at all: multi\-label names are only resolved as FQDNs\&.\&\s-2\u[4]\d\s+2
 .RE
 .sp
 .RS 4
@@ -609,7 +630,43 @@ RFC6762
 \%https://tools.ietf.org/html/rfc6762
 .RE
 .IP " 3." 4
-resolved D-Bus API Documentation
+For example, if
+/etc/resolv.conf
+has
+.sp
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/resolved
+.if n \{\
+.RS 4
+.\}
+.nf
+nameserver 127.0.0.53
+search foobar.com barbar.com
+      
+.fi
+.if n \{\
 .RE
+.\}
+.sp
+and we look up
+"localhost",
+nss-dns
+will send the following queries to
+systemd-resolved
+listening on 127.0.0.53:53: first
+"localhost.foobar.com", then
+"localhost.barbar.com", and finally
+"localhost". If (hopefully) the first two queries fail,
+systemd-resolved
+will synthesize an answer for the third query.
+.RE
+.sp
+.RS 4n
+When using
+nss-dns
+with any search domains, it is thus crucial to always configure
+nss-files
+with higher priority and provide mappings for names that should not be resolved using search domains.
+.RE
+.IP " 4." 4
+There are currently more than 1500 top-level domain names defined, and new ones are added regularly, often using "attractive" names that are also likely to be used locally. Not looking up multi-label names in this fashion avoids fragility in both directions: a valid global name could be obscured by a local name, and resolution of a relative local name could suddenly break when a new top-level domain is created, or when a new subdomain of a top-level domain in registered. Resolving any given name as either relative or absolute avoids this ambiguity.
+

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 246" "systemd.net-naming-scheme"
+.TH "SYSTEMD\&.NET\-NAMING\-SCHEME" "7" "" "systemd 249" "systemd.net-naming-scheme"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -185,6 +185,8 @@ For USB devices the full chain of port numbers of hubs is composed\&. If the nam
 SR\-IOV virtual devices are named based on the name of the parent interface, with a suffix of
 \fBv\fR
 and the virtual device number, with any leading zeros removed\&. The bus number is ignored\&.
+.sp
+In some configurations a parent PCI bridge of a given network controller may be associated with a slot\&. In such case we don\*(Aqt generate this device property to avoid possible naming conflicts\&.
 .RE
 .PP
 \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI\fBc\fR\fR\fI\fIbus_id\fR\fR, \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI\fBa\fR\fR\fI\fIvendor\fR\fR\fI\fImodel\fR\fR\fI\fBi\fR\fR\fI\fIinstance\fR\fR, \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI\fBi\fR\fR\fI\fIaddress\fR\fR\fI\fBn\fR\fR\fI\fIport_name\fR\fR, \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI[\fR\fI\fBP\fR\fR\fI\fIdomain\fR\fR\fI]\fR\fI\fBp\fR\fR\fI\fIbus\fR\fR\fI\fBs\fR\fR\fI\fIslot\fR\fR\fI[\fR\fI\fBf\fR\fR\fI\fIfunction\fR\fR\fI][\fR\fI\fBn\fR\fR\fI\fIphys_port_name\fR\fR\fI|\fR\fI\fBd\fR\fR\fI\fIdev_port\fR\fR\fI]\fR, \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI[\fR\fI\fBP\fR\fR\fI\fIdomain\fR\fR\fI]\fR\fI\fBp\fR\fR\fI\fIbus\fR\fR\fI\fBs\fR\fR\fI\fIslot\fR\fR\fI[\fR\fI\fBf\fR\fR\fI\fIfunction\fR\fR\fI][\fR\fI\fBn\fR\fR\fI\fIphys_port_name\fR\fR\fI|\fR\fI\fBd\fR\fR\fI\fIdev_port\fR\fR\fI]\fR\fI\fBb\fR\fR\fI\fInumber\fR\fR, \fIID_NET_NAME_PATH=\fR\fI\fIprefix\fR\fR\fI[\fR\fI\fBP\fR\fR\fI\fIdomain\fR\fR\fI]\fR\fI\fBp\fR\fR\fI\fIbus\fR\fR\fI\fBs\fR\fR\fI\fIslot\fR\fR\fI[\fR\fI\fBf\fR\fR\fI\fIfunction\fR\fR\fI][\fR\fI\fBn\fR\fR\fI\fIphys_port_name\fR\fR\fI|\fR\fI\fBd\fR\fR\fI\fIdev_port\fR\fR\fI]\fR\fI\fBu\fR\fR\fI\fIport\fR\fR\fI\&...[\fR\fI\fBc\fR\fR\fI\fIconfig\fR\fR\fI][\fR\fI\fBi\fR\fR\fI\fIinterface\fR\fR\fI]\fR
@@ -249,7 +251,9 @@ For PCI, BCMA, and USB devices, the same rules as described above for slot namin
 .RE
 .SH "HISTORY"
 .PP
-The following "naming schemes" have been defined:
+The following "naming schemes" have been defined (which may be chosen at system boot\-up time via the
+\fInet\&.naming\-scheme=\fR
+kernel command line switch, see above):
 .PP
 \fBv238\fR
 .RS 4
@@ -316,6 +320,35 @@ When
 derives the name for the host side of the network interface created with
 \fB\-\-network\-veth\fR
 from the container name it previously simply truncated the result at 15 characters if longer (since that\*(Aqs the maximum length for network interface names)\&. From now on, for any interface name that would be longer than 15 characters the last 4 characters are set to a 24bit hash value of the full interface name\&. This way network interface name collisions between multiple similarly named containers (who only differ in container name suffix) should be less likely (but still possible, since the 24bit hash value is very small)\&.
+.RE
+.PP
+\fBv247\fR
+.RS 4
+When a PCI slot is associated with a PCI bridge that has multiple child network controllers, the same value of the
+\fIID_NET_NAME_SLOT\fR
+property might be derived for those controllers\&. This would cause a naming conflict if the property is selected as the device name\&. Now, we detect this situation and don\*(Aqt produce the
+\fIID_NET_NAME_SLOT\fR
+property\&.
+.RE
+.PP
+\fBv249\fR
+.RS 4
+PCI hotplug slot names for the s390 PCI driver are a hexadecimal representation of the
+function_id
+device attribute\&. This attribute is now used to build the
+\fIID_NET_NAME_SLOT\fR\&. Before that, all slot names were parsed as decimal numbers, which could either result in an incorrect value of the
+\fIID_NET_NAME_SLOT\fR
+property or none at all\&.
+.sp
+Some firmware and hypervisor implementations report unreasonable high numbers for the onboard index\&. To prevent the generation of bogus onbard interface names, index numbers greater than 16381 (2^14\-1) were ignored\&. For s390 PCI devices index values up to 65535 (2^16\-1) are valid\&. To account for that, the limit is increased to now 65535\&.
+.sp
+The udev rule
+\fINAME=\fR
+replaces
+":",
+"/", and
+"%"
+with an underscore ("_"), and refuses strings which contain only numerics\&.
 .RE
 .PP
 Note that

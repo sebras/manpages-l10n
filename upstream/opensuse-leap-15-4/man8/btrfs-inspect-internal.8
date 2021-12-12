@@ -2,12 +2,12 @@
 .\"     Title: btrfs-inspect-internal
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/05/2018
+.\"      Date: 09/10/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v4.19.1
+.\"    Source: Btrfs v5.14
 .\"  Language: English
 .\"
-.TH "BTRFS\-INSPECT\-INTE" "8" "12/05/2018" "Btrfs v4\&.19\&.1" "Btrfs Manual"
+.TH "BTRFS\-INSPECT\-INTE" "8" "09/10/2021" "Btrfs v5\&.14" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -110,7 +110,7 @@ specify which mirror to print, valid values are 0, 1 and 2 and the superblock mu
 .RE
 .RE
 .PP
-\fBdump\-tree\fR [options] \fI<device>\fR
+\fBdump\-tree\fR [options] \fI<device>\fR [device\&...]
 .RS 4
 (replaces the standalone tool
 \fBbtrfs\-debug\-tree\fR)
@@ -160,7 +160,7 @@ print only the uuid tree information, empty output if the tree does not exist
 .PP
 \-b \fI<block_num>\fR
 .RS 4
-print info of the specified block only
+print info of the specified block only, can be specified multiple times
 .RE
 .PP
 \-\-follow
@@ -172,12 +172,99 @@ use with
 .PP
 \-\-dfs
 .RS 4
-use depth\-first search to print trees\&. (default) the nodes and leaves are intermixed in the output
+(default up to 5\&.2)
+.sp
+use depth\-first search to print trees, the nodes and leaves are intermixed in the output
 .RE
 .PP
 \-\-bfs
 .RS 4
-use breadth\-first search to print trees\&. the nodes are printed before all leaves
+(default since 5\&.3)
+.sp
+use breadth\-first search to print trees, the nodes are printed before all leaves
+.RE
+.PP
+\-\-hide\-names
+.RS 4
+print a placeholder
+\fIHIDDEN\fR
+instead of various names, useful for developers to inspect the dump while keeping potentially sensitive information hidden
+.sp
+This is:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+directory entries (files, directories, subvolumes)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+default subvolume
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+extended attributes (name, value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+hardlink names (if stored inside another item or as extended references in standalone items)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+lengths are not hidden because they can be calculated from the item size anyway\&.
+.sp .5v
+.RE
+.RE
+.RE
+.PP
+\-\-csum\-headers
+.RS 4
+print b\-tree node checksums stored in headers (metadata)
+.RE
+.PP
+\-\-csum\-items
+.RS 4
+print checksums stored in checksum items (data)
+.RE
+.PP
+\-\-noscan
+.RS 4
+do not automatically scan the system for other devices from the same filesystem, only use the devices provided as the arguments
 .RE
 .PP
 \-t \fI<tree_id>\fR
@@ -256,11 +343,13 @@ in a given subvolume at
 .PP
 \-v
 .RS 4
-verbose mode, print count of returned paths and ioctl() return value
+(deprecated) alias for global
+\fI\-v\fR
+option
 .RE
 .RE
 .PP
-\fBlogical\-resolve\fR [\-Pv] [\-s \fI<bufsize>\fR] \fI<logical>\fR \fI<path>\fR
+\fBlogical\-resolve\fR [\-Pvo] [\-s \fI<bufsize>\fR] \fI<logical>\fR \fI<path>\fR
 .RS 4
 (needs root privileges)
 .sp
@@ -275,15 +364,22 @@ address in the linear filesystem space
 skip the path resolving and print the inodes instead
 .RE
 .PP
-\-v
+\-o
 .RS 4
-verbose mode, print count of returned paths and all ioctl() return values
+ignore offsets, find all references to an extent instead of a single block\&. Requires kernel support for the V2 ioctl (added in 4\&.15)\&. The results might need further processing to filter out unwanted extents by the offset that is supposed to be obtained by other means\&.
 .RE
 .PP
 \-s \fI<bufsize>\fR
 .RS 4
 set internal buffer for storing the file names to
-\fIbufsize\fR, default is 4096, maximum 64k
+\fIbufsize\fR, default is 64k, maximum 16m\&. Buffer sizes over 64K require kernel support for the V2 ioctl (added in 4\&.15)\&.
+.RE
+.PP
+\-v
+.RS 4
+(deprecated) alias for global
+\fI\-v\fR
+option
 .RE
 .RE
 .PP

@@ -2,12 +2,12 @@
 .\"     Title: btrfs-convert
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/05/2018
+.\"      Date: 09/10/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v4.19.1
+.\"    Source: Btrfs v5.14
 .\"  Language: English
 .\"
-.TH "BTRFS\-CONVERT" "8" "12/05/2018" "Btrfs v4\&.19\&.1" "Btrfs Manual"
+.TH "BTRFS\-CONVERT" "8" "09/10/2021" "Btrfs v5\&.14" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -83,22 +83,36 @@ The conversion utilizes free space of the original filesystem\&. The exact estim
 If the ability to rollback is no longer important, the it is recommended to perform a few more steps to transition the btrfs filesystem to a more compact layout\&. This is because the conversion inherits the original data blocks\*(Aq fragmentation, and also because the metadata blocks are bound to the original free space layout\&.
 .sp
 Due to different constraints, it is only possible to convert filesystems that have a supported data block size (ie\&. the same that would be valid for \fImkfs\&.btrfs\fR)\&. This is typically the system page size (4KiB on x86_64 machines)\&.
+.sp
+\fBBEFORE YOU START\fR
+.sp
+The source filesystem must be clean, eg\&. no journal to replay or no repairs needed\&. The respective \fIfsck\fR utility must be run on the source filesytem prior to conversion\&. Please refer to the manual pages in case you encounter problems\&.
+.sp
+For ext2/3/4:
+.sp
 .if n \{\
-.sp
-.\}
 .RS 4
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.ps +1
-\fBNote\fR
-.ps -1
-.br
-.sp
-The source filesystem should be clean, you are encouraged to run the \fIfsck\fR tool if you\(cqre not sure\&.
-.sp .5v
+.\}
+.nf
+# e2fsck \-fvy /dev/sdx
+.fi
+.if n \{\
 .RE
+.\}
+.sp
+For reiserfs:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# reiserfsck \-fy /dev/sdx
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Skipping that step could lead to incorrect results on the target filesystem, but it may work\&.
 .sp
 \fBREMOVE THE ORIGINAL FILESYSTEM METADATA\fR
 .sp
@@ -150,6 +164,17 @@ Note that balance operation takes a lot of time, please see also \fBbtrfs\-balan
 .RE
 .\}
 .SH "OPTIONS"
+.PP
+\-\-csum \fI<type>\fR, \-\-checksum \fI<type>\fR
+.RS 4
+Specify the checksum algorithm\&. Default is
+\fIcrc32c\fR\&. Valid values are
+\fIcrc32c\fR,
+\fIxxhash\fR,
+\fIsha256\fR
+or
+\fIblake2\fR\&. To mount such filesystem kernel must support the checksums as well\&.
+.RE
 .PP
 \-d|\-\-no\-datasum
 .RS 4
@@ -208,6 +233,48 @@ show progress of conversion (a heartbeat indicator and number of inodes processe
 \-\-no\-progress
 .RS 4
 disable progress and show only the main phases of conversion
+.RE
+.PP
+\-\-uuid \fI<SPEC>\fR
+.RS 4
+set the FSID of the new filesystem based on
+\fISPEC\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fInew\fR
+\- (default) generate UUID for the FSID of btrfs
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcopy\fR
+\- copy UUID from the source filesystem
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIUUID\fR
+\- a conforming UUID value, the 36 byte string representation
+.RE
 .RE
 .SH "EXIT STATUS"
 .sp

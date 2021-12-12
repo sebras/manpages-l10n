@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 246" "org.freedesktop.login1"
+.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 249" "org.freedesktop.login1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -99,12 +99,19 @@ node /org/freedesktop/login1 {
                    in  b interactive);
       FlushDevices(in  b interactive);
       PowerOff(in  b interactive);
+      PowerOffWithFlags(in  t flags);
       Reboot(in  b interactive);
+      RebootWithFlags(in  t flags);
       Halt(in  b interactive);
+      HaltWithFlags(in  t flags);
       Suspend(in  b interactive);
+      SuspendWithFlags(in  t flags);
       Hibernate(in  b interactive);
+      HibernateWithFlags(in  t flags);
       HybridSleep(in  b interactive);
+      HybridSleepWithFlags(in  t flags);
       SuspendThenHibernate(in  b interactive);
+      SuspendThenHibernateWithFlags(in  t flags);
       CanPowerOff(out s result);
       CanReboot(out s result);
       CanHalt(out s result);
@@ -333,6 +340,13 @@ node /org/freedesktop/login1 {
 
 
 
+
+
+
+
+
+
+
 .SS "Methods"
 .PP
 \fBGetSession()\fR
@@ -420,11 +434,11 @@ authorization interactivity (see below)\&. Note that the user linger state is pe
 .PP
 \fBAttachDevice()\fR
 may be used to assign a specific device to a specific seat\&. The device is identified by its
-/sys
+/sys/
 path and must be eligible for seat assignments\&.
 \fBAttachDevice()\fR
 takes three arguments: the seat id, the sysfs path, and a boolean for controlling polkit interactivity (see below)\&. Device assignments are persistently stored on disk\&. To create a new seat, simply specify a previously unused seat id\&. For more information about the seat assignment logic see
-\m[blue]\fBMulti\-Seat for Linux\fR\m[]\&\s-2\u[2]\d\s+2\&.
+\fBsd-login\fR(3)\&.
 .PP
 \fBFlushDevices()\fR
 removes all explicit seat assignments for devices, resetting all assignments to the automatic defaults\&. The only argument it takes is the polkit interactivity boolean (see below)\&.
@@ -440,7 +454,40 @@ results in the system entering a hybrid\-sleep mode, i\&.e\&. the system is both
 \fBSuspendThenHibernate()\fR
 results in the system being suspended, then later woken using an RTC timer and hibernated\&. The only argument is the polkit interactivity boolean
 \fIinteractive\fR
-(see below)\&. The main purpose of these calls is that they enforce polkit policy and hence allow powering off/rebooting/suspending/hibernating even by unprivileged users\&. They also enforce inhibition locks\&. UIs should expose these calls as the primary mechanism to poweroff/reboot/suspend/hibernate the machine\&.
+(see below)\&. The main purpose of these calls is that they enforce polkit policy and hence allow powering off/rebooting/suspending/hibernating even by unprivileged users\&. They also enforce inhibition locks for non\-privileged users\&. UIs should expose these calls as the primary mechanism to poweroff/reboot/suspend/hibernate the machine\&. Methods
+\fBPowerOffWithFlags()\fR,
+\fBRebootWithFlags()\fR,
+\fBHaltWithFlags()\fR,
+\fBSuspendWithFlags()\fR,
+\fBHibernateWithFlags()\fR,
+\fBHybridSleepWithFlags()\fR
+and
+\fBSuspendThenHibernateWithFlags()\fR
+add
+\fIflags\fR
+to allow for extendability, defined as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define SD_LOGIND_ROOT_CHECK_INHIBITORS  (UINT64_C(1) << 0)
+#define SD_LOGIND_KEXEC_REBOOT           (UINT64_C(1) << 1)
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+When the
+\fIflags\fR
+is 0 then these methods behave just like the versions without flags\&. When
+\fBSD_LOGIND_ROOT_CHECK_INHIBITORS\fR
+(0x01) is set, active inhibitors are honoured for privileged users too\&. When
+\fBSD_LOGIND_KEXEC_REBOOT\fR
+(0x02) is set, then
+\fBRebootWithFlags()\fR
+perform kexec reboot if kexec kernel is loaded\&.
 .PP
 \fBSetRebootParameter()\fR
 sets a parameter for a subsequent reboot operation\&. See the description of
@@ -538,7 +585,7 @@ is either
 or
 "delay"
 which encodes whether the inhibit shall be consider mandatory or whether it should just delay the operation to a certain maximum time\&. The method returns a file descriptor\&. The lock is released the moment this file descriptor and all its duplicates are closed\&. For more information on the inhibition logic see
-\m[blue]\fBInhibitor Locks\fR\m[]\&\s-2\u[3]\d\s+2\&.
+\m[blue]\fBInhibitor Locks\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .SS "Signals"
 .PP
 Whenever the inhibition state or idle hint changes,
@@ -561,7 +608,7 @@ and
 signals are sent right before (with the argument
 "true") or after (with the argument
 "false") the system goes down for reboot/poweroff and suspend/hibernate, respectively\&. This may be used by applications to save data on disk, release memory, or do other jobs that should be done shortly before shutdown/sleep, in conjunction with delay inhibitor locks\&. After completion of this work they should release their inhibition locks in order to not delay the operation any further\&. For more information see
-\m[blue]\fBInhibitor Locks\fR\m[]\&\s-2\u[3]\d\s+2\&.
+\m[blue]\fBInhibitor Locks\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .SS "Properties"
 .PP
 Most properties simply reflect the configuration, see
@@ -947,7 +994,7 @@ clocks, respectively\&.
 \fIRuntimePath\fR
 encodes the runtime path of the user, i\&.e\&.
 \fI$XDG_RUNTIME_DIR\fR\&. For details see the
-\m[blue]\fBXDG Basedir Specification\fR\m[]\&\s-2\u[4]\d\s+2\&.
+\m[blue]\fBXDG Basedir Specification\fR\m[]\&\s-2\u[3]\d\s+2\&.
 .PP
 \fIService\fR
 contains the unit name of the user systemd service of this user\&. Each logged in user is assigned a user service that runs a user systemd instance\&. This is usually an instance of
@@ -1405,7 +1452,7 @@ $ gdbus introspect \-\-system \-\-dest org\&.freedesktop\&.login1 \e
 .SH "VERSIONING"
 .PP
 These D\-Bus interfaces follow
-\m[blue]\fBthe usual interface versioning guidelines\fR\m[]\&\s-2\u[5]\d\s+2\&.
+\m[blue]\fBthe usual interface versioning guidelines\fR\m[]\&\s-2\u[4]\d\s+2\&.
 .SH "NOTES"
 .IP " 1." 4
 polkit
@@ -1413,21 +1460,16 @@ polkit
 \%https://www.freedesktop.org/software/polkit/docs/latest/
 .RE
 .IP " 2." 4
-Multi-Seat for Linux
-.RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/multiseat
-.RE
-.IP " 3." 4
 Inhibitor Locks
 .RS 4
 \%http://www.freedesktop.org/wiki/Software/systemd/inhibit
 .RE
-.IP " 4." 4
+.IP " 3." 4
 XDG Basedir Specification
 .RS 4
 \%https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 .RE
-.IP " 5." 4
+.IP " 4." 4
 the usual interface versioning guidelines
 .RS 4
 \%http://0pointer.de/blog/projects/versioning-dbus.html
