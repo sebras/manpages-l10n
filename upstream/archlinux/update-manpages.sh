@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,19 +29,28 @@ while read line; do
 	package=$(echo "$line" | cut -d" " -f2)
 
 	# Download HTML page and discover the correct link
-	echo "Downloading and updating package '$package' from '$repo'"
+	echo -n "Downloading and updating package '$package' from '$repo' format "
 	url=$(wget --quiet -O - "https://mirror.netcologne.de/archlinux/$repo/os/x86_64/" |
-	grep "\"$package-[0-9][^\"]*\.pkg\.tar\.zst[^.]" |
+        grep -E "\"$package-[0-9][^\"]*\.pkg\.tar\.(zst|xz)[^.]" |
 	sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1,")
 	url="https://mirror.netcologne.de/archlinux/$repo/os/x86_64/$url"
 	wget --quiet --directory-prefix=tmp/downloads "$url"
 
 	# Update the manpages from the package
-	latest_pkg=$(ls tmp/downloads/$package-*.pkg.tar.zst)
-	if [ -z $latest_pkg ]; then
-		echo "Warning: Could not find .pkg.tar.zst for package '$package'"
+	latest_pkg_zst=$(ls tmp/downloads/$package-*.pkg.tar.zst 2>/dev/null)
+	latest_pkg_xz=$(ls tmp/downloads/$package-*.pkg.tar.xz 2>/dev/null)
+	latest=$latest_pkg_zst.$latest_pkg_xz
+	if [ -z $latest ]; then
+	    echo "Warning: Could not find .pkg.tar.(zst|xz) for package '$package'"
+	elif [ -z $latest_pkg_xz ]; then
+		echo "zst"
+		#tar xaf $latest_pkg_zst --directory=tmp 2>/dev/null
+		tar xaf $latest_pkg_zst --directory=tmp
+		./move-manpages.sh
 	else
-		tar xaf $latest_pkg --directory=tmp 2>/dev/null
+		echo "xz"
+		#tar xJf $latest_pkg_xz --directory=tmp 2>/dev/null
+		tar xJf $latest_pkg_xz --directory=tmp
 		./move-manpages.sh
 	fi
 	# Finally, remove the tarball, so that the regexp
