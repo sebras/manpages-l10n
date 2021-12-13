@@ -15,6 +15,7 @@ languages. Currently we support the following languages:
 *  id - [Indonesian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/id) *
 *  it - [Italian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/it)
 *  mk - [Macedonian](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/mk)
+*  mk - [Norwegian bokmål](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/nb) *
 *  nl - [Dutch](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/nl)
 *  pl - [Polish](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/pl)
 *  pt_BR - [Brazilian Portuguese](https://salsa.debian.org/manpages-l10n-team/manpages-l10n/-/tree/master/po/pt_BR)
