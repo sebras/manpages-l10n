@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 246" "systemd-analyze"
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 249" "systemd-analyze"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,8 @@ systemd-analyze \- Analyze and debug system manager
 \fBsystemd\-analyze\fR [OPTIONS...] unit\-paths
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] exit\-status [\fISTATUS\fR...]
+.HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] capability [\fICAPABILITY\fR...]
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] condition \fICONDITION\fR\&...
 .HP \w'\fBsystemd\-analyze\fR\ 'u
@@ -289,7 +291,7 @@ This command prints a list of exit statuses along with their "class", i\&.e\&. t
 "systemd",
 "LSB", or
 "BSD"), see the Process Exit Codes section in
-\fBsystemd.exec\fR(5)\&. If no additional arguments are specified, all known statuses are are shown\&. Otherwise, only the definitions for the specified codes are shown\&.
+\fBsystemd.exec\fR(5)\&. If no additional arguments are specified, all known statuses are shown\&. Otherwise, only the definitions for the specified codes are shown\&.
 .PP
 \fBExample\ \&9.\ \&Show some example exit status names\fR
 .sp
@@ -308,6 +310,30 @@ DATAERR 65     BSD
 .if n \{\
 .RE
 .\}
+.SS "systemd\-analyze capability [\fICAPABILITY\fR\&.\&.\&.]"
+.PP
+This command prints a list of Linux capabilities along with their numeric IDs\&. See
+\fBcapabilities\fR(7)
+for details\&. If no argument is specified the full list of capabilities known to the service manager and the kernel is shown\&. Capabilities defined by the kernel but not known to the service manager are shown as
+"cap_???"\&. Optionally, if arguments are specified they may refer to specific cabilities by name or numeric ID, in which case only the indicated capabilities are shown in the table\&.
+.PP
+\fBExample\ \&10.\ \&Show some example capability names\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze capability 0 1 {30\&.\&.32}
+NAME              NUMBER
+cap_chown              0
+cap_dac_override       1
+cap_audit_control     30
+cap_setfcap           31
+cap_mac_override      32
+.fi
+.if n \{\
+.RE
+.\}
 .SS "systemd\-analyze condition \fICONDITION\fR\&.\&.\&."
 .PP
 This command will evaluate
@@ -318,7 +344,7 @@ assignments, and print their values, and the resulting value of the combined con
 \fBsystemd.unit\fR(5)
 for a list of available conditions and asserts\&.
 .PP
-\fBExample\ \&10.\ \&Evaluate conditions that check kernel versions\fR
+\fBExample\ \&11.\ \&Evaluate conditions that check kernel versions\fR
 .sp
 .if n \{\
 .RS 4
@@ -360,7 +386,7 @@ to show the specified number of next times the expression elapses\&. Each time t
 \fBtimestamp\fR
 verb below\&.
 .PP
-\fBExample\ \&11.\ \&Show leap days in the near future\fR
+\fBExample\ \&12.\ \&Show leap days in the near future\fR
 .sp
 .if n \{\
 .RS 4
@@ -388,7 +414,7 @@ Normalized form: *\-02\-29 00:00:00
 This command parses a timestamp (i\&.e\&. a single point in time) and outputs the normalized form and the difference between this timestamp and now\&. The timestamp should adhere to the syntax documented in
 \fBsystemd.time\fR(7), section "PARSING TIMESTAMPS"\&.
 .PP
-\fBExample\ \&12.\ \&Show parsing of timestamps\fR
+\fBExample\ \&13.\ \&Show parsing of timestamps\fR
 .sp
 .if n \{\
 .RS 4
@@ -421,7 +447,7 @@ Normalized form: Wed 2019\-05\-22 00:00:00 CEST
 This command parses a time span (i\&.e\&. a difference between two timestamps) and outputs the normalized form and the equivalent value in microseconds\&. The time span should adhere to the syntax documented in
 \fBsystemd.time\fR(7), section "PARSING TIME SPANS"\&. Values without units are parsed as seconds\&.
 .PP
-\fBExample\ \&13.\ \&Show parsing of timespans\fR
+\fBExample\ \&14.\ \&Show parsing of timespans\fR
 .sp
 .if n \{\
 .RS 4
@@ -452,7 +478,7 @@ or
 /usr/lib/systemd/logind\&.conf), or a name relative to the prefix (such as
 systemd/logind\&.conf)\&.
 .PP
-\fBExample\ \&14.\ \&Showing logind configuration\fR
+\fBExample\ \&15.\ \&Showing logind configuration\fR
 .sp
 .if n \{\
 .RS 4
@@ -532,7 +558,7 @@ commands listed in
 and similar which are not found in the system or not executable\&.
 .RE
 .PP
-\fBExample\ \&15.\ \&Misspelt directives\fR
+\fBExample\ \&16.\ \&Misspelt directives\fR
 .sp
 .if n \{\
 .RS 4
@@ -561,7 +587,7 @@ user\&.slice: man nosuchfile(1) command failed with code 16
 .RE
 .\}
 .PP
-\fBExample\ \&16.\ \&Missing service units\fR
+\fBExample\ \&17.\ \&Missing service units\fR
 .sp
 .if n \{\
 .RS 4
@@ -591,7 +617,7 @@ This command analyzes the security and sandboxing settings of one or more specif
 .PP
 Please note that many of the security and sandboxing settings individually can be circumvented \(em unless combined with others\&. For example, if a service retains the privilege to establish or undo mount points many of the sandboxing options can be undone by the service code itself\&. Due to that is essential that each service uses the most comprehensive and strict sandboxing and security settings possible\&. The tool will take into account some of these combinations and relationships between the settings, but not all\&. Also note that the security and sandboxing settings analyzed here only apply to the operations executed by the service code itself\&. If a service has access to an IPC system (such as D\-Bus) it might request operations from other services that are not subject to the same restrictions\&. Any comprehensive security and sandboxing analysis is hence incomplete if the IPC access policy is not validated too\&.
 .PP
-\fBExample\ \&17.\ \&Analyze systemd\-logind\&.service\fR
+\fBExample\ \&18.\ \&Analyze systemd\-logind\&.service\fR
 .sp
 .if n \{\
 .RS 4
@@ -717,7 +743,18 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
+Execute operation on a local container\&. Specify a container name to connect to, optionally prefixed by a user name to connect as and a separating
+"@"
+character\&. If the special string
+"\&.host"
+is used in place of the container name, a connection to the local system is made (which is useful to connect to a specific user\*(Aqs user bus:
+"\-\-user \-\-machine=lennart@\&.host")\&. If the
+"@"
+syntax is not used, the connection is made as root user\&. If the
+"@"
+syntax is used either the left hand side or the right hand side may be omitted (but not both) in which case the local user name and
+"\&.host"
+are implied\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
@@ -738,6 +775,73 @@ Do not pipe output into a pager\&.
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
 .PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
@@ -829,16 +933,19 @@ or
 \fI$PAGER\fR
 variables are to be honoured,
 \fI$SYSTEMD_PAGERSECURE\fR
-must be set too\&. It might be reasonable to completly disable the pager using
+must be set too\&. It might be reasonable to completely disable the pager using
 \fB\-\-no\-pager\fR
 instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE

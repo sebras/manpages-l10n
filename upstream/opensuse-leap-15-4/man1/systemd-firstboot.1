@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-FIRSTBOOT" "1" "" "systemd 246" "systemd-firstboot"
+.TH "SYSTEMD\-FIRSTBOOT" "1" "" "systemd 249" "systemd-firstboot"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ systemd\-firstboot\&.service
 initializes the most basic system settings interactively on the first boot, or optionally non\-interactively when a system image is created\&. The service is started if
 \fIConditionFirstBoot=yes\fR
 is satisfied\&. This essentially means that
-/etc
+/etc/
 is empty, see
 \fBsystemd.unit\fR(5)
 for details\&.
@@ -225,7 +225,7 @@ Prompt the user interactively for a specific basic setting\&. Note that any expl
 .PP
 \fB\-\-prompt\fR
 .RS 4
-Query the user for locale, keymap, timezone, hostname and root password\&. This is equivalent to specifying
+Query the user for locale, keymap, timezone, hostname, root\*(Aqs password, and root\*(Aqs shell\&. This is equivalent to specifying
 \fB\-\-prompt\-locale\fR,
 \fB\-\-prompt\-keymap\fR,
 \fB\-\-prompt\-timezone\fR,
@@ -244,7 +244,7 @@ Copy a specific basic setting from the host\&. This only works in combination wi
 .PP
 \fB\-\-copy\fR
 .RS 4
-Copy locale, keymap, time zone and root password from the host\&. This is equivalent to specifying
+Copy locale, keymap, time zone, root password and shell from the host\&. This is equivalent to specifying
 \fB\-\-copy\-locale\fR,
 \fB\-\-copy\-keymap\fR,
 \fB\-\-copy\-timezone\fR,
@@ -290,6 +290,63 @@ Print a short help text and exit\&.
 .RS 4
 Print a short version string and exit\&.
 .RE
+.SH "CREDENTIALS"
+.PP
+\fBsystemd\-firstboot\fR
+supports the service credentials logic as implemented by
+\fILoadCredential=\fR/\fISetCredential=\fR
+(see
+\fBsystemd.exec\fR(1)
+for details)\&. The following credentials are used when passed in:
+.PP
+"passwd\&.hashed\-password\&.root", "passwd\&.plaintext\-password\&.root"
+.RS 4
+A hashed or plaintext version of the root password to use, in place of prompting the user\&. These credentials are equivalent to the same ones defined for the
+\fBsystemd-sysusers.service\fR(8)
+service\&.
+.RE
+.PP
+"passwd\&.shell\&.root"
+.RS 4
+Specifies the shell binary to use for the specified account\&. Equivalent to the credential of the same name defined for the
+\fBsystemd-sysusers.service\fR(8)
+service\&.
+.RE
+.PP
+"firstboot\&.locale", "firstboot\&.locale\-messages"
+.RS 4
+These credentials specify the locale settings to set during first boot, in place of prompting the user\&.
+.RE
+.PP
+"firstboot\&.keymap"
+.RS 4
+This credential specifies the keyboard setting to set during first boot, in place of prompting the user\&.
+.RE
+.PP
+"firstboot\&.timezone"
+.RS 4
+This credential specifies the system timezone setting to set during first boot, in place of prompting the user\&.
+.RE
+.PP
+Note that by default the
+systemd\-firstboot\&.service
+unit file is set up to inherit the listed credentials from the service manager\&. Thus, when invoking a container with an unpopulated
+/etc/
+for the first time it is possible to configure the root user\*(Aqs password to be
+"systemd"
+like this:
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+# systemd\-nspawn \-\-image=\&... \-\-set\-credential=firstboot\&.locale:de_DE\&.UTF\-8 \&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Note that these credentials are only read and applied during the first boot process\&. Once they are applied they remain applied for subsequent boots, and the credentials are not considered anymore\&.
 .SH "EXIT STATUS"
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.

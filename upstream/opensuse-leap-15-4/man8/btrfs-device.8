@@ -2,12 +2,12 @@
 .\"     Title: btrfs-device
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/10/2020
+.\"      Date: 09/10/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v4.19.1
+.\"    Source: Btrfs v5.14
 .\"  Language: English
 .\"
-.TH "BTRFS\-DEVICE" "8" "12/10/2020" "Btrfs v4\&.19\&.1" "Btrfs Manual"
+.TH "BTRFS\-DEVICE" "8" "09/10/2021" "Btrfs v5\&.14" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -43,9 +43,20 @@ The device management works on a mounted filesystem\&. Devices can be added, rem
 .sp
 The profiles can be also changed, provided there\(cqs enough workspace to do the conversion, using the \fBbtrfs balance\fR command and namely the filter \fIconvert\fR\&.
 .PP
+Type
+.RS 4
+The block group profile type is the main distinction of the information stored on the block device\&. User data are called
+\fIData\fR, the internal data structures managed by filesystem are
+\fIMetadata\fR
+and
+\fISystem\fR\&.
+.RE
+.PP
 Profile
 .RS 4
-A profile describes an allocation policy based on the redundancy/replication constraints in connection with the number of devices\&. The profile applies to data and metadata block groups separately\&.
+A profile describes an allocation policy based on the redundancy/replication constraints in connection with the number of devices\&. The profile applies to data and metadata block groups separately\&. Eg\&.
+\fIsingle\fR,
+\fIRAID1\fR\&.
 .RE
 .PP
 RAID level
@@ -137,7 +148,7 @@ Alias of remove kept for backward compatibility
 Wait until all devices of a multiple\-device filesystem are scanned and registered within the kernel module\&. This is to provide a way for automatic filesystem mounting tools to wait before the mount can start\&. The device scan is only one of the preconditions and the mount can fail for other reasons\&. Normal users usually do not need this command and may safely ignore it\&.
 .RE
 .PP
-\fBscan\fR [(\-\-all\-devices|\-d)|\fI<device>\fR [\fI<device>\fR\&...]]
+\fBscan\fR [options] [\fI<device>\fR [\fI<device>\fR\&...]]
 .RS 4
 Scan devices for a btrfs filesystem and register them with the kernel module\&. This allows mounting multiple\-device filesystem by specifying just one from the whole group\&.
 .sp
@@ -147,10 +158,22 @@ The options
 \fI\-\-all\-devices\fR
 or
 \fI\-d\fR
-are deprecated and kept for backward compatibility\&. If used, behavior is the same as if no devices are passed\&.
+can be used as a fallback in case blkid is not available\&. If used, behavior is the same as if no devices are passed\&.
 .sp
 The command can be run repeatedly\&. Devices that have been already registered remain as such\&. Reloading the kernel module will drop this information\&. There\(cqs an alternative way of mounting multiple\-device filesystem without the need for prior scanning\&. See the mount option
 \fIdevice\fR\&.
+.sp
+\fBOptions\fR
+.PP
+\-d|\-\-all\-devices
+.RS 4
+Enumerate and register all devices, use as a fallback in case blkid is not available\&.
+.RE
+.PP
+\-u|\-\-forget
+.RS 4
+Unregister a given device or all stale devices if no path is given, the device must be unmounted otherwise it\(cqs an error\&.
+.RE
 .RE
 .PP
 \fBstats\fR [options] \fI<path>\fR|\fI<device>\fR
@@ -177,7 +200,97 @@ Check if the stats are all zeros and return 0 if it is so\&. Set bit 6 of the re
 .PP
 \fBusage\fR [options] \fI<path>\fR [\fI<path>\fR\&...]
 .RS 4
-Show detailed information about internal allocations in devices\&.
+Show detailed information about internal allocations on devices\&.
+.sp
+The level of detail can differ if the command is run under a regular or the root user (due to use of restricted ioctls)\&. The first example below is for normal user (warning included) and the next one with root on the same filesystem:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+WARNING: cannot read detailed chunk info, per\-device usage will not be shown, run as root
+/dev/sdc1, ID: 1
+   Device size:           931\&.51GiB
+   Device slack:              0\&.00B
+   Unallocated:           931\&.51GiB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/dev/sdc1, ID: 1
+   Device size:           931\&.51GiB
+   Device slack:              0\&.00B
+   Data,single:           641\&.00GiB
+   Data,RAID0/3:            1\&.00GiB
+   Metadata,single:        19\&.00GiB
+   System,single:          32\&.00MiB
+   Unallocated:           271\&.48GiB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice size\fR \(em size of the device as seen by the filesystem (may be different than actual device size)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice slack\fR \(em portion of device not used by the filesystem but still available in the physical space provided by the device, eg\&. after a device shrink
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData,single\fR,
+\fIMetadata,single\fR,
+\fISystem,single\fR \(em in general, list of block group type (Data, Metadata, System) and profile (single, RAID1, \&...) allocated on the device
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData,RAID0/3\fR \(em in particular, striped profiles RAID0/RAID10/RAID5/RAID6 with the number of devices on which the stripes are allocated, multiple occurences of the same profile can appear in case a new device has been added and all new available stripes have been used for writes
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIUnallocated\fR \(em remaining space that the filesystem can still use for new block groups
+.RE
 .sp
 \fBOptions\fR
 .PP
@@ -408,6 +521,8 @@ generation_errs
 .RS 4
 The block generation does not match the expected value (eg\&. stored in the parent node)\&.
 .RE
+.sp
+Since kernel 5\&.14 the device stats are also available in textual form in \fI/sys/fs/btrfs/FSID/devinfo/DEVID/error_stats\fR\&.
 .SH "EXIT STATUS"
 .sp
 \fBbtrfs device\fR returns a zero exit status if it succeeds\&. Non zero is returned in case of failure\&.

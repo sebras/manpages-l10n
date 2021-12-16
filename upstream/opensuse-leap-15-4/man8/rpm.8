@@ -49,16 +49,22 @@ rpm \- RPM Package Manager
 
 \fBrpm\fR \fB--setugids\fR \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
 
+\fBrpm\fR \fB--setcaps\fR \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
+
+\fBrpm\fR \fB--restore\fR \fB\fIPACKAGE_NAME\fB\fR\fI ...\fR
+
 .SS "select-options"
 .PP
 
- [\fB\fIPACKAGE_NAME\fB\fR] [\fB-a,--all\fR] [\fB-f,--file \fIFILE\fB\fR]
+ [\fB\fIPACKAGE_NAME\fB\fR]
+ [\fB-a,--all [\fISELECTOR\fR]\fR] [\fB-f,--file \fIFILE\fB\fR]
  [\fB-g,--group \fIGROUP\fB\fR] {\fB-p,--package \fIPACKAGE_FILE\fB\fR]
  [\fB--hdrid \fISHA1\fB\fR] [\fB--pkgid \fIMD5\fB\fR] [\fB--tid \fITID\fB\fR]
  [\fB--querybynumber \fIHDRNUM\fB\fR] [\fB--triggeredby \fIPACKAGE_NAME\fB\fR]
  [\fB--whatprovides \fICAPABILITY\fB\fR] [\fB--whatrequires \fICAPABILITY\fB\fR]
  [\fB--whatrecommends \fICAPABILITY\fB\fR] [\fB--whatsuggests \fICAPABILITY\fB\fR]
  [\fB--whatsupplements \fICAPABILITY\fB\fR] [\fB--whatenhances \fICAPABILITY\fB\fR]
+ [\fB--whatobsoletes \fICAPABILITY\fB\fR] [\fB--whatconflicts \fICAPABILITY\fB\fR]
 
 .SS "query-options"
 .PP
@@ -497,6 +503,12 @@ Format in hexadecimal.
 \fB:octal\fR
 Format in octal.
 .TP
+\fB:humaniec\fR
+Human readable number (in IEC 80000). The suffix K = 1024, M = 1048576, ...
+.TP
+\fB:humansi\fR
+Human readable number (in SI). The suffix K = 1000, M = 1000000, ...
+.TP
 \fB:perms\fR
 Format file permissions.
 .TP
@@ -532,8 +544,12 @@ Query installed package named \fIPACKAGE_NAME\fR. To specify the package more pr
 both separated by a dash or an architecture name separated by a dot. See the output of \fBrpm -qa\fR or \fBrpm -qp \fIPACKAGE_FILE\fB\fR as an example.
 
 .TP
-\fB-a, --all\fR
+\fB-a, --all [\fISELECTOR\fR]\fR
 Query all installed packages.
+
+An optional \fISELECTOR\fR in the form of tag=pattern can be provided to
+narrow the selection, for example name="b*" to query packages whose name
+starts with "b".
 .TP
 \fB--dupes\fB
 List duplicated packages.
@@ -608,6 +624,9 @@ a single transaction have a common identifier.
 Query packages that are triggered by package(s)
 \fIPACKAGE_NAME\fR.
 .TP
+\fB--whatobsoletes \fICAPABILITY\fB\fR
+Query all packages that obsolete \fICAPABILITY\fR for proper functioning.
+.TP
 \fB--whatprovides \fICAPABILITY\fB\fR
 Query all packages that provide the \fICAPABILITY\fR capability.
 .TP
@@ -618,6 +637,9 @@ Note that this does not return what requires a given package.
 A package usually provides multiple capabilities and file-names on which
 other packages may depend. To see the complete dependencies
 for a package, use \fB-e --test \fIPACKAGE_NAME\fB\fR
+.TP
+\fB--whatconflicts \fICAPABILITY\fB\fR
+Query all packages that conflict with \fICAPABILITY\fR.
 .TP
 \fB--whatrecommends \fICAPABILITY\fB\fR
 Query all packages that recommend \fICAPABILITY\fR.
@@ -838,15 +860,24 @@ options are currently set in
 configuration file(s).
 .TP
 \fBrpm\fR \fB--setperms\fR \fIPACKAGE_NAME\fR
-sets permissions of files in the given package.
+sets permissions of files in the given package. Consider using
+\fB--restore\fR instead.
 .TP
 \fBrpm\fR \fB--setugids\fR \fIPACKAGE_NAME\fR
 sets user/group ownership of files in the given package. This command can
-change permissions of files in that package. It is caused by calling command
-\fBchmod\fR that can clear SUID and SGID bits in some situations. So it is
-safer to call also \fB--setperms\fR after calling \fB--setugids\fR.
+change permissions and capabilities of files in that package. In most
+cases it is better to use \fB--restore\fR instead.
 .TP
-Options \fB--setperms\fR and \fB--setugids\fR are mutually exclusive.
+\fBrpm\fR \fB--setcaps\fR \fIPACKAGE_NAME\fR
+sets capabilities of files in the given package. Consider using
+\fB--restore\fR instead.
+.TP
+\fBrpm\fR \fB--restore\fR \fIPACKAGE_NAME\fR
+The option restores owner, group, permissions and capabilities of files
+in the given package.
+.TP
+Options \fB--setperms\fR, \fB--setugids\fR, \fB--setcaps\fR and
+\fB--restore\fR are mutually exclusive.
 
 .SS "FTP/HTTP OPTIONS"
 .PP
@@ -942,7 +973,7 @@ Install the package containing \fBrpmbuild\fR (usually \fBrpm-build\fR) and see
 .SH "SEE ALSO"
 
 .nf
-\fBrpm-misc(8)\fR(3),
+\fBrpm-misc(8),
 \fBpopt\fR(3),
 \fBrpm2cpio\fR(8),
 \fBrpmbuild\fR(8),

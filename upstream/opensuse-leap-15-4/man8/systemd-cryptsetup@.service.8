@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-CRYPTSETUP@\&.SERVICE" "8" "" "systemd 246" "systemd-cryptsetup@.service"
+.TH "SYSTEMD\-CRYPTSETUP@\&.SERVICE" "8" "" "systemd 249" "systemd-cryptsetup@.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -25,11 +25,18 @@ systemd-cryptsetup@.service, systemd-cryptsetup \- Full disk decryption logic
 .PP
 systemd\-cryptsetup@\&.service
 .PP
+system\-systemd\ex2dcryptsetup\&.slice
+.PP
 /usr/lib/systemd/systemd\-cryptsetup
 .SH "DESCRIPTION"
 .PP
 systemd\-cryptsetup@\&.service
 is a service responsible for setting up encrypted block devices\&. It is instantiated for each device that requires decryption for access\&.
+.PP
+systemd\-cryptsetup@\&.service
+instances are part of the
+system\-systemd\ex2dcryptsetup\&.slice
+slice, which is destroyed only very late in the shutdown procedure\&. This allows the encrypted devices to remain up until filesystems have been unmounted\&.
 .PP
 systemd\-cryptsetup@\&.service
 will ask for hard disk passwords via the
@@ -55,9 +62,11 @@ tries to acquire a suitable password or binary key via the following mechanisms,
 .IP "  1." 4.2
 .\}
 If a key file is explicitly configured (via the third column in
-/etc/crypttab), a key read from it is used\&. If a PKCS#11 token is configured (using the
-\fIpkcs11\-uri=\fR
-option) the key is decrypted before use\&.
+/etc/crypttab), a key read from it is used\&. If a PKCS#11 token, FIDO2 token or TPM2 device is configured (using the
+\fIpkcs11\-uri=\fR,
+\fIfido2\-device=\fR,
+\fItpm2\-device=\fR
+options) the key is decrypted before use\&.
 .RE
 .sp
 .RS 4
@@ -71,7 +80,7 @@ option) the key is decrypted before use\&.
 If no key file is configured explicitly this way, a key file is automatically loaded from
 /etc/cryptsetup\-keys\&.d/\fIvolume\fR\&.key
 and
-/run/cryptsetup\-keys\&.d/\fIvolume\fR\&.key, if present\&. Here too, if a PKCS#11 token is configured, any key found this way is decrypted before use\&.
+/run/cryptsetup\-keys\&.d/\fIvolume\fR\&.key, if present\&. Here too, if a PKCS#11/FIDO2/TPM2 token/device is configured, any key found this way is decrypted before use\&.
 .RE
 .sp
 .RS 4
@@ -106,7 +115,9 @@ The kernel keyring is then checked for a suitable cached password from previous 
 .sp -1
 .IP "  5." 4.2
 .\}
-Finally, the user is queried for a password, possibly multiple times\&.
+Finally, the user is queried for a password, possibly multiple times, unless the
+\fIheadless\fR
+option is set\&.
 .RE
 .PP
 If no suitable key may be acquired via any of the mechanisms describes above, volume activation fails\&.
@@ -115,6 +126,7 @@ If no suitable key may be acquired via any of the mechanisms describes above, vo
 \fBsystemd\fR(1),
 \fBsystemd-cryptsetup-generator\fR(8),
 \fBcrypttab\fR(5),
+\fBsystemd-cryptenroll\fR(1),
 \fBcryptsetup\fR(8)
 .SH "NOTES"
 .IP " 1." 4

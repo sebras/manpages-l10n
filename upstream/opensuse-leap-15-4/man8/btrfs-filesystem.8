@@ -2,12 +2,12 @@
 .\"     Title: btrfs-filesystem
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/10/2020
+.\"      Date: 09/10/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v4.19.1
+.\"    Source: Btrfs v5.14
 .\"  Language: English
 .\"
-.TH "BTRFS\-FILESYSTEM" "8" "12/10/2020" "Btrfs v4\&.19\&.1" "Btrfs Manual"
+.TH "BTRFS\-FILESYSTEM" "8" "09/10/2021" "Btrfs v5\&.14" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -211,7 +211,7 @@ Defragment file data on a mounted filesystem\&. Requires kernel 2\&.6\&.33 and n
 .sp
 If
 \fI\-r\fR
-is passed, files in dir will be defragmented recursively\&. The start position and the number of bytes to defragment can be specified by start and length using
+is passed, files in dir will be defragmented recursively (not descending to subvolumes, mount points and directory symlinks)\&. The start position and the number of bytes to defragment can be specified by start and length using
 \fI\-s\fR
 and
 \fI\-l\fR
@@ -259,11 +259,6 @@ it is possible to append units designator: \*(AqK\*(Aq, \*(AqM\*(Aq, \*(AqG\*(Aq
 .sp
 \fBOptions\fR
 .PP
-\-v
-.RS 4
-be verbose, print file names as they\(cqre submitted for defragmentation
-.RE
-.PP
 \-c[\fI<algo>\fR]
 .RS 4
 compress file contents while defragmenting\&. Optional argument selects the compression algorithm,
@@ -277,7 +272,7 @@ or
 .PP
 \-r
 .RS 4
-defragment files recursively in given directories
+defragment files recursively in given directories, does not descend to subvolumes or mount points
 .RE
 .PP
 \-f
@@ -306,6 +301,13 @@ target extent size, do not touch extents bigger than
 .sp
 The value is only advisory and the final size of the extents may differ, depending on the state of the free space and fragmentation or other internal logic\&. Reasonable values are from tens to hundreds of megabytes\&.
 .RE
+.PP
+\-v
+.RS 4
+(deprecated) alias for global
+\fI\-v\fR
+option
+.RE
 .RE
 .PP
 \fBdu\fR [options] \fI<path>\fR [\fI<path>\fR\&.\&.]
@@ -320,7 +322,7 @@ will have a
 \fIset shared\fR
 value calculated for it\&. We define each
 \fIset\fR
-as those files found by a recursive search of an argument\&. The
+as those files found by a recursive search of an argument (recursion descends to subvolumes but not mount points)\&. The
 \fIset shared\fR
 value then is a sum of all shared space referenced by the set\&.
 .sp
@@ -526,8 +528,10 @@ show sizes in TiB, or TB with \-\-si
 \fBsync\fR \fI<path>\fR
 .RS 4
 Force a sync of the filesystem at
-\fIpath\fR\&. This is done via a special ioctl and will also trigger cleaning of deleted subvolumes\&. Besides that it\(cqs equivalent to the
-\fBsync\fR(1) command\&.
+\fIpath\fR, similar to the
+\fBsync\fR(1) command\&. In addition, it starts cleaning of deleted subvolumes\&. To wait for the subvolume deletion to complete use the
+\fBbtrfs subvolume sync\fR
+command\&.
 .RE
 .PP
 \fBusage\fR [options] \fI<path>\fR [\fI<path>\fR\&...]
@@ -551,13 +555,182 @@ Overall:
     Device missing:                  0\&.00B
     Used:                          1\&.14TiB
     Free (estimated):            692\&.57GiB      (min: 692\&.57GiB)
+    Free (statfs, df)            692\&.57GiB
     Data ratio:                       1\&.00
     Metadata ratio:                   1\&.00
     Global reserve:              512\&.00MiB      (used: 0\&.00B)
+    Multiple profiles:                  no
 .fi
 .if n \{\
 .RE
 .\}
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice size\fR \(em sum of raw device capacity available to the filesystem
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice allocated\fR \(em sum of total space allocated for data/metadata/system profiles, this also accounts space reserved but not yet used for extents
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice unallocated\fR \(em the remaining unallocated space for future allocations (difference of the above two numbers)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice missing\fR \(em sum of capacity of all missing devices
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIUsed\fR \(em sum of the used space of data/metadata/system profiles, not including the reserved space
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIFree (estimated)\fR \(em approximate size of the remaining free space usable for data, including currently allocated space and estimating the usage of the unallocated space based on the block group profiles, the
+\fImin\fR
+is the lower bound of the estimate in case multiple profiles are present
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIFree (statfs, df)\fR \(em the amount of space available for data as reported by the
+\fBstatfs\fR
+syscall, also returned as
+\fIAvail\fR
+in the output of
+\fIdf\fR\&. The value is calculated in a different way and may not match the estimate in some cases (eg\&. multiple profiles)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIData ratio\fR \(em ratio of total space for data including redundancy or parity to the effectively usable data space, eg\&. single is 1\&.0, RAID1 is 2\&.0 and for RAID5/6 it depends on the number of devices
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIMetadata ratio\fR \(em dtto, for metadata
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIGlobal reserve\fR \(em portion of metadata currently used for global block reserve, used for emergency purposes (like deletion on a full filesystem)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIMultiple profiles\fR \(em what block group types (data, metadata) have more than one profile (single, raid1, \&...), see
+\fBbtrfs\fR(5) section
+\fIFILESYSTEMS WITH MULTIPLE BLOCK GROUP PROFILES\fR\&.
+.RE
+.sp
+And on a zoned filesystem there are two more lines in the
+\fIDevice\fR
+section:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    Device zone unusable:          5\&.13GiB
+    Device zone size:            256\&.00MiB
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice zone unusable\fR \(em sum of of space that\(cqs been used in the past but now is not due to COW and not referenced anymory, the chunks have to be reclaimed and zones reset to make it usable again
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIDevice zone size\fR \(em the reported zone size of the host\-managed device, same for all devices
+.RE
 .sp
 The root user will also see stats broken down by block group types:
 .sp
@@ -565,13 +738,13 @@ The root user will also see stats broken down by block group types:
 .RS 4
 .\}
 .nf
-Data,single: Size:1\&.15TiB, Used:1\&.13TiB
+Data,single: Size:1\&.15TiB, Used:1\&.13TiB (98\&.26%)
    /dev/sdb        1\&.15TiB
 
-Metadata,single: Size:12\&.00GiB, Used:6\&.45GiB
+Metadata,single: Size:12\&.00GiB, Used:6\&.45GiB (53\&.75%)
    /dev/sdb       12\&.00GiB
 
-System,single: Size:32\&.00MiB, Used:144\&.00KiB
+System,single: Size:32\&.00MiB, Used:144\&.00KiB (0\&.44%)
    /dev/sdb       32\&.00MiB
 
 Unallocated:
@@ -580,6 +753,18 @@ Unallocated:
 .if n \{\
 .RE
 .\}
+.sp
+\fIData\fR
+is block group type,
+\fIsingle\fR
+is block group profile,
+\fISize\fR
+is total size occupied by this type,
+\fIUsed\fR
+is the actually used space, the percent is ratio of
+\fIUsed/Size\fR\&. The
+\fIUnallocated\fR
+is remaining space\&.
 .sp
 \fBOptions\fR
 .PP
@@ -690,4 +875,4 @@ There are two ways to minimize the filesystem on a given device\&. The \fBbtrfs 
 \fBbtrfs\fR is part of btrfs\-progs\&. Please refer to the btrfs wiki \m[blue]\fBhttp://btrfs\&.wiki\&.kernel\&.org\fR\m[] for further details\&.
 .SH "SEE ALSO"
 .sp
-\fBmkfs\&.btrfs\fR(8),
+\fBbtrfs\-subvolume\fR(8), \fBmkfs\&.btrfs\fR(8),

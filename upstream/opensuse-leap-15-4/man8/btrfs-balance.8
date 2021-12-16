@@ -2,12 +2,12 @@
 .\"     Title: btrfs-balance
 .\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 12/10/2020
+.\"      Date: 09/10/2021
 .\"    Manual: Btrfs Manual
-.\"    Source: Btrfs v4.19.1
+.\"    Source: Btrfs v5.14
 .\"  Language: English
 .\"
-.TH "BTRFS\-BALANCE" "8" "12/10/2020" "Btrfs v4\&.19\&.1" "Btrfs Manual"
+.TH "BTRFS\-BALANCE" "8" "09/10/2021" "Btrfs v5\&.14" "Btrfs Manual"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ btrfs-balance \- balance block groups on a btrfs filesystem
 \fBbtrfs balance\fR \fI<subcommand>\fR \fI<args>\fR
 .SH "DESCRIPTION"
 .sp
-The primary purpose of the balance feature is to spread block groups across all devices so they match constraints defined by the respective profiles\&. See \fBmkfs\&.btrfs\fR(8) section \fIPROFILES\fR for more details\&. The scope of the balancing process can be further tuned by use of filters that can select the block groups to process\&. Balance works only on a mounted filesystem\&.
+The primary purpose of the balance feature is to spread block groups across all devices so they match constraints defined by the respective profiles\&. See \fBmkfs\&.btrfs\fR(8) section \fIPROFILES\fR for more details\&. The scope of the balancing process can be further tuned by use of filters that can select the block groups to process\&. Balance works only on a mounted filesystem\&. Extent sharing is preserved and reflinks are not broken\&. Files are not defragmented nor recompressed, file extents are preserved but the physical location on devices will change\&.
 .sp
 The balance operation is cancellable by the user\&. The on\-disk state of the filesystem is always consistent so an unexpected interruption (eg\&. system crash, reboot) does not corrupt the filesystem\&. The progress of the balance operation is temporarily stored as an internal state and will be resumed upon mount, unless the mount option \fIskip_balance\fR is specified\&.
 .if n \{\
@@ -50,7 +50,7 @@ The balance operation is cancellable by the user\&. The on\-disk state of the fi
 .ps -1
 .br
 .sp
-running balance without filters will take a lot of time as it basically rewrites the entire filesystem and needs to update all block pointers\&.
+running balance without filters will take a lot of time as it basically move data/metadata from the whol filesystem and needs to update all block pointers\&.
 .sp .5v
 .RE
 .sp
@@ -93,7 +93,9 @@ perform actions only on a given device (filters
 \fIdrange\fR)
 .RE
 .sp
-The filters can be applied to a combination of block group types (data, metadata, system)\&. Note that changing \fIsystem\fR needs the force option\&.
+The filters can be applied to a combination of block group types (data, metadata, system)\&. Note that changing only the \fIsystem\fR type needs the force option\&. Otherwise \fIsystem\fR gets automatically converted whenever \fImetadata\fR profile is converted\&.
+.sp
+When metadata redundancy is reduced (eg\&. from RAID1 to single) the force option is also required and it is noted in system log\&.
 .if n \{\
 .sp
 .\}
@@ -153,6 +155,8 @@ Depending upon the block group layout, it can also be seek heavy\&. Performance 
 \fBcancel\fR \fI<path>\fR
 .RS 4
 cancels a running or paused balance, the command will block and wait until the current blockgroup being processed completes
+.sp
+Since kernel 5\&.7 the response time of the cancellation is significantly improved, on older kernels it might take a long time until currently processed chunk is completely finished\&.
 .RE
 .PP
 \fBpause\fR \fI<path>\fR
@@ -162,13 +166,13 @@ pause running balance operation, this will store the state of the balance progre
 .PP
 \fBresume\fR \fI<path>\fR
 .RS 4
-resume interrupted balance, the balance status must be stored on the filesystem from previous run, eg\&. after it was forcibly interrupted and mounted again with
+resume interrupted balance, the balance status must be stored on the filesystem from previous run, eg\&. after it was paused or forcibly interrupted and mounted again with
 \fIskip_balance\fR
 .RE
 .PP
 \fBstart\fR [options] \fI<path>\fR
 .RS 4
-start the balance operation according to the specified filters, no filters will rewrite the entire filesystem\&. The process runs in the foreground\&.
+start the balance operation according to the specified filters, without any filters the data and metadata from the whole filesystem are moved\&. The process runs in the foreground\&.
 .if n \{\
 .sp
 .\}
@@ -181,7 +185,7 @@ start the balance operation according to the specified filters, no filters will 
 \fBNote\fR
 .ps -1
 .br
-the balance command without filters will basically rewrite everything in the filesystem\&. The run time is potentially very long, depending on the filesystem size\&. To prevent starting a full balance by accident, the user is warned and has a few seconds to cancel the operation before it starts\&. The warning and delay can be skipped with
+the balance command without filters will basically move everything in the filesystem to a new physical location on devices (ie\&. it does not affect the logical properties of file extents like offsets within files and extent sharing)\&. The run time is potentially very long, depending on the filesystem size\&. To prevent starting a full balance by accident, the user is warned and has a few seconds to cancel the operation before it starts\&. The warning and delay can be skipped with
 \fI\-\-full\-balance\fR
 option\&.
 .sp .5v
@@ -193,8 +197,27 @@ and
 \fI\-s\fR
 options, because they\(cqre optional and bare
 \fI\-d\fR
-etc also work and mean no filters\&.
+and
+\fI\-m\fR
+also work and mean no filters\&.
+.if n \{\
 .sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+when the target profile for conversion filter is
+\fIraid5\fR
+or
+\fIraid6\fR, there\(cqs a safety timeout of 10 seconds to warn users about the status of the feature
+.sp .5v
+.RE
 \fBOptions\fR
 .PP
 \-d[\fI<filters>\fR]
@@ -222,17 +245,15 @@ section for details about
 \fIfilters\fR\&.
 .RE
 .PP
-\-v
-.RS 4
-be verbose and print balance filter arguments
-.RE
-.PP
 \-f
 .RS 4
-force reducing of metadata integrity, eg\&. when going from
+force a reduction of metadata integrity, eg\&. when going from
 \fIraid1\fR
 to
-\fIsingle\fR
+\fIsingle\fR, or skip safety timeout when the target conversion profile is
+\fIraid5\fR
+or
+\fIraid6\fR
 .RE
 .PP
 \-\-background|\-\-bg
@@ -245,15 +266,27 @@ run the balance operation asynchronously in the background, uses
 .RS 4
 wait if there\(cqs another exclusive operation running, otherwise continue
 .RE
+.PP
+\-v
+.RS 4
+(deprecated) alias for global
+\fI\-v\fR
+option
+.RE
 .RE
 .PP
 \fBstatus\fR [\-v] \fI<path>\fR
 .RS 4
 Show status of running or paused balance\&.
 .sp
-If
+\fBOptions\fR
+.PP
+\-v
+.RS 4
+(deprecated) alias for global
 \fI\-v\fR
-option is given, output will be verbose\&.
+option
+.RE
 .RE
 .SH "FILTERS"
 .sp
@@ -369,7 +402,7 @@ Takes no parameters\&. Only has meaning when converting between profiles\&. When
 The soft mode switch is (like every other filter) per\-type\&. For example, this means that we can convert metadata chunks the "hard" way while converting data chunks selectively with soft switch\&.
 .RE
 .sp
-Profile names, used in \fIprofiles\fR and \fIconvert\fR are one of: \fIraid0\fR, \fIraid1\fR, \fIraid10\fR, \fIraid5\fR, \fIraid6\fR, \fIdup\fR, \fIsingle\fR\&. The mixed data/metadata profiles can be converted in the same way, but it\(cqs conversion between mixed and non\-mixed is not implemented\&. For the constraints of the profiles please refer to \fBmkfs\&.btrfs\fR(8), section \fIPROFILES\fR\&.
+Profile names, used in \fIprofiles\fR and \fIconvert\fR are one of: \fIraid0\fR, \fIraid1\fR, \fIraid1c3\fR, \fIraid1c4\fR, \fIraid10\fR, \fIraid5\fR, \fIraid6\fR, \fIdup\fR, \fIsingle\fR\&. The mixed data/metadata profiles can be converted in the same way, but it\(cqs conversion between mixed and non\-mixed is not implemented\&. For the constraints of the profiles please refer to \fBmkfs\&.btrfs\fR(8), section \fIPROFILES\fR\&.
 .SH "ENOSPC"
 .sp
 The way balance operates, it usually needs to temporarily create a new block group and move the old data there, before the old block group can be removed\&. For that it needs the work space, otherwise it fails for ENOSPC reasons\&. This is not the same ENOSPC as if the free space is exhausted\&. This refers to the space on the level of block groups, which are bigger parts of the filesystem that contain many file extents\&.
@@ -543,7 +576,11 @@ There\(cqs a special case when the block groups are completely unused, possibly 
 This should lead to decrease in the \fItotal\fR numbers in the \fBbtrfs filesystem df\fR output\&.
 .SH "EXIT STATUS"
 .sp
-\fBbtrfs balance\fR returns a zero exit status if it succeeds\&. Non zero is returned in case of failure\&.
+Unless indicated otherwise below, all \fBbtrfs balance\fR subcommands return a zero exit status if they succeed, and non zero in case of failure\&.
+.sp
+The \fBpause\fR, \fBcancel\fR, and \fBresume\fR subcommands exit with a status of \fB2\fR if they fail because a balance operation was not running\&.
+.sp
+The \fBstatus\fR subcommand exits with a status of \fB0\fR if a balance operation is not running, \fB1\fR if the command\-line usage is incorrect or a balance operation is still running, and \fB2\fR on other errors\&.
 .SH "AVAILABILITY"
 .sp
 \fBbtrfs\fR is part of btrfs\-progs\&. Please refer to the btrfs wiki \m[blue]\fBhttp://btrfs\&.wiki\&.kernel\&.org\fR\m[] for further details\&.

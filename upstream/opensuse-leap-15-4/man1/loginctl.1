@@ -1,5 +1,5 @@
 '\" t
-.TH "LOGINCTL" "1" "" "systemd 246" "loginctl"
+.TH "LOGINCTL" "1" "" "systemd 249" "loginctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -75,7 +75,7 @@ Activates/deactivates the screen lock on all current sessions supporting it\&.
 .PP
 \fBterminate\-session\fR \fIID\fR\&...
 .RS 4
-Terminates a session\&. This kills all processes of the session and deallocates all resources attached to the session\&.
+Terminates a session\&. This kills all processes of the session and deallocates all resources attached to the session\&. If the argument is specified as empty string the session invoking the command is terminated\&.
 .RE
 .PP
 \fBkill\-session\fR \fIID\fR\&...
@@ -84,7 +84,7 @@ Send a signal to one or more processes of the session\&. Use
 \fB\-\-kill\-who=\fR
 to select which process to kill\&. Use
 \fB\-\-signal=\fR
-to select the signal to send\&.
+to select the signal to send\&. If the argument is specified as empty string the signal is sent to the session invoking the command\&.
 .RE
 .SS "User Commands"
 .PP
@@ -122,14 +122,14 @@ setting in
 .PP
 \fBterminate\-user\fR \fIUSER\fR\&...
 .RS 4
-Terminates all sessions of a user\&. This kills all processes of all sessions of the user and deallocates all runtime resources attached to the user\&.
+Terminates all sessions of a user\&. This kills all processes of all sessions of the user and deallocates all runtime resources attached to the user\&. If the argument is specified as empty string the sessions of the user invoking the command are terminated\&.
 .RE
 .PP
 \fBkill\-user\fR \fIUSER\fR\&...
 .RS 4
 Send a signal to all processes of a user\&. Use
 \fB\-\-signal=\fR
-to select the signal to send\&.
+to select the signal to send\&. If the argument is specified as empty string the signal is sent to the sessions of the user invoking the command\&.
 .RE
 .SS "Seat Commands"
 .PP
@@ -158,7 +158,7 @@ if you are looking for formatted human\-readable output\&.
 \fBattach\fR \fINAME\fR \fIDEVICE\fR\&...
 .RS 4
 Persistently attach one or more devices to a seat\&. The devices should be specified via device paths in the
-/sys
+/sys/
 file system\&. To create a new seat, attach at least one graphics card to a previously unused seat name\&. Seat names may consist only of a\(enz, A\(enZ, 0\(en9,
 "\-"
 and
@@ -230,6 +230,12 @@ or
 or
 \fBSIGSTOP\fR\&. If omitted, defaults to
 \fBSIGTERM\fR\&.
+.sp
+The special value
+"help"
+will list the known values and the program will exit immediately, and the special value
+"list"
+will list known values along with the numerical signal numbers and the program will exit immediately\&.
 .RE
 .PP
 \fB\-n\fR, \fB\-\-lines=\fR
@@ -261,7 +267,18 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
+Execute operation on a local container\&. Specify a container name to connect to, optionally prefixed by a user name to connect as and a separating
+"@"
+character\&. If the special string
+"\&.host"
+is used in place of the container name, a connection to the local system is made (which is useful to connect to a specific user\*(Aqs user bus:
+"\-\-user \-\-machine=lennart@\&.host")\&. If the
+"@"
+syntax is not used, the connection is made as root user\&. If the
+"@"
+syntax is used either the left hand side or the right hand side may be omitted (but not both) in which case the local user name and
+"\&.host"
+are implied\&.
 .RE
 .PP
 \fB\-\-no\-pager\fR
@@ -318,6 +335,73 @@ Apr 09 14:40:30 laptop login[2325]: LOGIN ON tty3 BY fatima
 .PP
 There are two sessions, 3 and 5\&. Session 3 is a graphical session, marked with a star\&. The tree of processing including the two corresponding scope units and the user manager unit are shown\&.
 .SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
 .PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
@@ -409,16 +493,19 @@ or
 \fI$PAGER\fR
 variables are to be honoured,
 \fI$SYSTEMD_PAGERSECURE\fR
-must be set too\&. It might be reasonable to completly disable the pager using
+must be set too\&. It might be reasonable to completely disable the pager using
 \fB\-\-no\-pager\fR
 instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE

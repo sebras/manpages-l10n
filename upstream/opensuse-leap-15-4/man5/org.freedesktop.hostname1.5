@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.HOSTNAME1" "5" "" "systemd 246" "org.freedesktop.hostname1"
+.TH "ORG\&.FREEDESKTOP\&.HOSTNAME1" "5" "" "systemd 249" "org.freedesktop.hostname1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,10 +52,14 @@ node /org/freedesktop/hostname1 {
                   in  b interactive);
       GetProductUUID(in  b interactive,
                      out ay uuid);
+      Describe(out s json);
     properties:
       readonly s Hostname = \*(Aq\&.\&.\&.\*(Aq;
       readonly s StaticHostname = \*(Aq\&.\&.\&.\*(Aq;
       readonly s PrettyHostname = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s DefaultHostname = \*(Aq\&.\&.\&.\*(Aq;
+      readonly s HostnameSource = \*(Aq\&.\&.\&.\*(Aq;
       readonly s IconName = \*(Aq\&.\&.\&.\*(Aq;
       readonly s Chassis = \*(Aq\&.\&.\&.\*(Aq;
       readonly s Deployment = \*(Aq\&.\&.\&.\*(Aq;
@@ -72,6 +76,10 @@ node /org/freedesktop/hostname1 {
       readonly s OperatingSystemCPEName = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s HomeURL = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s HardwareVendor = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s HardwareModel = \*(Aq\&.\&.\&.\*(Aq;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -105,6 +113,11 @@ node /org/freedesktop/hostname1 {
 
 
 
+
+
+
+
+
 .PP
 Whenever the hostname or other metadata is changed via the daemon,
 \fBPropertyChanged\fR
@@ -113,32 +126,56 @@ signals are sent out to subscribed clients\&. Changing a hostname using this int
 .SH "SEMANTICS"
 .PP
 The
-\fIstatic (configured) hostname\fR
-is the one configured in
-/etc/hostname\&. It is chosen by the local user\&. It is not always in sync with the current hostname as returned by the
+\fIStaticHostname\fR
+property exposes the "static" hostname configured in
+/etc/hostname\&. It is not always in sync with the current hostname as returned by the
 \fBgethostname\fR(3)
-system call\&. If no hostname is configured this property will be the empty string\&. Setting this property to the empty string will remove
-/etc/hostname\&. This property should be an internet\-style hostname, 7\-bit lowercase ASCII, no special chars/spaces\&.
+system call\&. If no static hostname is configured this property will be the empty string\&.
+.PP
+When
+\fBsystemd\fR(1)
+or
+\fBsystemd-hostnamed.service\fR(8)
+set the hostname, this static hostname
+\fIhas the highest priority\fR\&.
 .PP
 The
-\fItransient (dynamic) hostname\fR
-is the one configured via the kernel\*(Aqs
-\fBsethostname\fR(3)\&. It can be different from the static hostname if DHCP or mDNS have been configured to change the name based on network information\&.
-This property is never empty\&. If no hostname is set this will default to
-"localhost"
-(configurable at compilation time)\&. Setting this property to the empty string will reset the dynamic hostname to the static hostname\&. If no static hostname is configured the dynamic hostname will be reset to
-"localhost"\&. This property should be an internet\-style hostname, 7\-bit lowercase ASCII, no special chars/spaces\&.
+\fIHostname\fR
+property exposes the actual hostname configured in the kernel via
+\fBsethostname\fR(3)\&. It can be different from the static hostname\&. This property is never empty\&.
 .PP
 The
+\fIPrettyHostname\fR
+property exposes the
 \fIpretty hostname\fR
-is a free\-form UTF\-8 hostname for presentation to the user\&. User interfaces should ensure that the pretty hostname and the static hostname stay in sync\&. I\&.e\&. when the former is
+which is a free\-form UTF\-8 hostname for presentation to the user\&. User interfaces should ensure that the pretty hostname and the static hostname stay in sync\&. E\&.g\&. when the former is
 "Lennart\(cqs Computer"
 the latter should be
 "lennarts\-computer"\&. If no pretty hostname is set this setting will be the empty string\&. Applications should then find a suitable fallback, such as the dynamic hostname\&.
 .PP
 The
+\fIDefaultHostname\fR
+property exposes the default hostname (configured through
+\fBos-release\fR(5), or a fallback set at compilation time)\&.
+.PP
+The
+\fIHostnameSource\fR
+property exposes the origin of the currently configured hostname\&. One of
+"static"
+(set from
+/etc/hostname),
+"transient"
+(a non\-permanent hostname from an external source),
+"default"
+(the value from
+os\-release
+or the compiled\-in fallback)\&.
+.PP
+The
+\fIIconName\fR
+property exposes the
 \fIicon name\fR
-is a name following the XDG icon naming spec\&. If not set, information such as the chassis type (see below) is used to find a suitable fallback icon name (i\&.e\&.
+following the XDG icon naming spec\&. If not set, information such as the chassis type (see below) is used to find a suitable fallback icon name (i\&.e\&.
 "computer\-laptop"
 vs\&.
 "computer\-desktop"
@@ -146,8 +183,9 @@ is picked based on the chassis information)\&. If no such data is available, the
 "computer"\&. If this property is set to the empty string, the automatic fallback name selection is enabled again\&.
 .PP
 The
-\fIchassis type\fR
-should be one of the currently defined chassis types:
+\fIChassis\fR
+property exposes a
+\fIchassis type\fR, one of the currently defined chassis types:
 "desktop",
 "laptop",
 "server",
@@ -164,7 +202,9 @@ starts only on request and terminates after a short idle period\&. This effectiv
 \fBPropertyChanged\fR
 messages are not sent out for changes made directly on the files (as in: administrator edits the files with vi)\&. This is the intended behavior: manual configuration changes should require manual reloading\&.
 .PP
-The transient (dynamic) hostname maps directly to the kernel hostname\&. This hostname should be assumed to be highly dynamic, and hence should be watched directly, without depending on
+The transient (dynamic) hostname exposed by the
+\fIHostname\fR
+property maps directly to the kernel hostname\&. This hostname should be assumed to be highly dynamic, and hence should be watched directly, without depending on
 \fBPropertyChanged\fR
 messages from
 systemd\-hostnamed\&. To accomplish this, open
@@ -181,19 +221,38 @@ Applications may read the hostname data directly if hostname change notification
 (possibly with per\-distribution fallbacks), and
 \fBmachine-info\fR(3)
 for that\&. For more information on these files and syscalls see the respective man pages\&.
-.SS "Methods and Properties"
+.PP
+\fIKernelName\fR,
+\fIKernelRelease\fR, and
+\fIKernelVersion\fR
+expose the kernel name (e\&.g\&.
+"Linux"), release (e\&.g\&.
+"5\&.0\&.0\-11"), and version (i\&.e\&. the build number, e\&.g\&.
+"#11") as reported by
+\fBuname\fR(2)\&.
+\fIOperatingSystemPrettyName\fR,
+\fIOperatingSystemCPEName\fR, and
+\fIHomeURL\fR
+expose the
+\fIPRETTY_NAME=\fR,
+\fICPE_NAME=\fR
+and
+\fIHOME_URL=\fR
+fields from
+\fBos-release\fR(5)\&. The purpose of those properties is to allow remote clients to access this information over D\-Bus\&. Local clients can access the information directly\&.
+.SS "Methods"
 .PP
 \fBSetHostname()\fR
-sets the transient (dynamic) hostname which is exposed by the
-\fIHostname\fR
-property\&. If empty, the transient hostname is set to the static hostname\&.
+sets the transient (dynamic) hostname, which is used if no static hostname is set\&. This value must be an internet\-style hostname, 7\-bit lowercase ASCII, no special chars/spaces\&. An empty string will unset the transient hostname\&.
 .PP
 \fBSetStaticHostname()\fR
 sets the static hostname which is exposed by the
 \fIStaticHostname\fR
-property\&. If empty, the built\-in default of
-"localhost"
-is used\&.
+property\&. When called with an empty argument, the static configuration in
+/etc/hostname
+is removed\&. Since the static hostname has the highest priority, calling this function usually affects also the
+\fIHostname\fR
+property and the effective hostname configured in the kernel\&.
 .PP
 \fBSetPrettyHostname()\fR
 sets the pretty hostname which is exposed by the
@@ -225,27 +284,11 @@ are stored in
 for the semantics of those settings\&.
 .PP
 \fBGetProductUUID()\fR
-returns the "product uuid" as exposed by the kernel based on DMI information in
+returns the "product UUID" as exposed by the kernel based on DMI information in
 /sys/class/dmi/id/product_uuid\&. Reading the file directly requires root privileges, and this method allows access to unprivileged clients through the polkit framework\&.
 .PP
-\fIKernelName\fR,
-\fIKernelRelease\fR, and
-\fIKernelVersion\fR
-expose the kernel name (e\&.g\&.
-"Linux"), release (e\&.g\&.
-"5\&.0\&.0\-11"), and version (i\&.e\&. the build number, e\&.g\&.
-"#11") as reported by
-\fBuname\fR(2)\&.
-\fIOperatingSystemPrettyName\fR,
-\fIOperatingSystemCPEName\fR, and
-\fIHomeURL\fR
-expose the
-\fIPRETTY_NAME=\fR,
-\fICPE_NAME=\fR
-and
-\fIHOME_URL=\fR
-fields from
-\fBos-release\fR(5)\&. The purpose of those properties is to allow remote clients to access this information over D\-Bus\&. Local clients can access the information directly\&.
+\fBDescribe()\fR
+returns a JSON representation of all properties in one\&.
 .SS "Security"
 .PP
 The
@@ -261,9 +304,11 @@ and
 \fBSetPrettyHostname()\fR
 it is
 org\&.freedesktop\&.hostname1\&.set\-static\-hostname\&. For
-\fBSetIconName()\fR
+\fBSetIconName()\fR,
+\fBSetChassis()\fR,
+\fBSetDeployment()\fR
 and
-\fBSetChassis()\fR
+\fBSetLocation()\fR
 it is
 org\&.freedesktop\&.hostname1\&.set\-machine\-info\&.
 .SH "RECOMMENDATIONS"
@@ -308,11 +353,6 @@ To properly handle name lookups with changing local hostnames without having to 
 systemd\-hostnamed
 in combination with
 \fBnss-myhostname\fR(3)\&.
-.PP
-A client that wants to change the local hostname for DHCP/mDNS should invoke
-SetHostname("newname", false)
-as soon as the name is available and afterwards reset it via
-SetHostname("")\&.
 .PP
 Here are some recommendations to follow when generating a static (internet) hostname from a pretty name:
 .sp
@@ -382,8 +422,7 @@ Limit the hostname to 63 chars, which is the length of a DNS label\&.
 .\}
 If after stripping special chars the empty string is the result, you can pass this as\-is to
 systemd\-hostnamed
-in which case it will automatically use
-"localhost"\&.
+in which case it will automatically use a suitable fallback\&.
 .RE
 .sp
 .RS 4

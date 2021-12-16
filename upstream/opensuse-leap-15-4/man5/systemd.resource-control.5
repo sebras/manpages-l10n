@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 246" "systemd.resource-control"
+.TH "SYSTEMD\&.RESOURCE\-CONTROL" "5" "" "systemd 249" "systemd.resource-control"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -52,6 +52,18 @@ by systemd are listed in
 See the
 \m[blue]\fBNew Control Group Interfaces\fR\m[]\&\s-2\u[1]\d\s+2
 for an introduction on how to make use of resource control APIs from programs\&.
+.SS "Setting resource controls for a group of related units"
+.PP
+As described in
+\fBsystemd.unit\fR(5), the settings listed here may be set through the main file of a unit and drop\-in snippets in
+*\&.d/
+directories\&. The list of directories searched for drop\-ins includes names formed by repeatedly truncating the unit name after all dashes\&. This is particularly convenient to set resource limits for a group of units with similar names\&.
+.PP
+For example, every user gets their own slice
+user\-\fInnn\fR\&.slice\&. Drop\-ins with local configuration that affect user 1000 may be placed in
+/etc/systemd/system/user\-1000\&.slice,
+/etc/systemd/system/user\-1000\&.slice\&.d/*\&.conf, but also
+/etc/systemd/system/user\-\&.slice\&.d/*\&.conf\&. This last directory applies to all user slices\&.
 .SH "IMPLICIT DEPENDENCIES"
 .PP
 The following dependencies are implicitly added:
@@ -134,7 +146,7 @@ Assign the specified CPU time weight to the processes executed, if the unified c
 control group attribute\&. The allowed range is 1 to 10000\&. Defaults to 100\&. For details about this control group attribute, see
 \m[blue]\fBControl Groups v2\fR\m[]\&\s-2\u[2]\d\s+2
 and
-\m[blue]\fBCFS Scheduler\fR\m[]\&\s-2\u[4]\d\s+2\&. The available CPU time is split up among all units within one slice relative to their CPU time weight\&.
+\m[blue]\fBCFS Scheduler\fR\m[]\&\s-2\u[4]\d\s+2\&. The available CPU time is split up among all units within one slice relative to their CPU time weight\&. A higher weight means more CPU time, a lower weight means less\&.
 .sp
 While
 \fIStartupCPUWeight=\fR
@@ -202,7 +214,7 @@ This setting is supported only with the unified control group hierarchy\&.
 .PP
 \fIAllowedMemoryNodes=\fR
 .RS 4
-Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper CPU indices separated by a dash\&.
+Restrict processes to be executed on specific memory NUMA nodes\&. Takes a list of memory NUMA nodes indices or ranges separated by either whitespace or commas\&. Memory NUMA nodes ranges are specified by the lower and upper NUMA nodes indices separated by a dash\&.
 .sp
 Setting
 \fIAllowedMemoryNodes=\fR
@@ -220,34 +232,22 @@ in
 \fBsystemd-system.conf\fR(5)\&.
 .RE
 .PP
-\fIMemoryMin=\fR\fI\fIbytes\fR\fR
+\fIMemoryMin=\fR\fI\fIbytes\fR\fR, \fIMemoryLow=\fR\fI\fIbytes\fR\fR
 .RS 4
-Specify the memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their minimum boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed\&.
+Specify the memory usage protection of the executed processes in this unit\&. When reclaiming memory, the unit is treated as if it was using less memory resulting in memory to be preferentially reclaimed from unprotected units\&. Using
+\fIMemoryLow=\fR
+results in a weaker protection where memory may still be reclaimed to avoid invoking the OOM killer in case there is no other reclaimable memory\&.
+.sp
+For a protection to be effective, it is generally required to set a corresponding allocation on all ancestors, which is then distributed between children (with the exception of the root slice)\&. Any
+\fIMemoryMin=\fR
+or
+\fIMemoryLow=\fR
+allocation that is not explicitly distributed to specific children is used to create a shared protection for all children\&. As this is a shared protection, the children will freely compete for the memory\&.
 .sp
 Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
 "infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
 "memory\&.min"
-control group attribute\&. For details about this control group attribute, see
-\m[blue]\fBMemory Interface Files\fR\m[]\&\s-2\u[6]\d\s+2\&.
-.sp
-This setting is supported only if the unified control group hierarchy is used and disables
-\fIMemoryLimit=\fR\&.
-.sp
-Units may have their children use a default
-"memory\&.min"
-value by specifying
-\fIDefaultMemoryMin=\fR, which has the same semantics as
-\fIMemoryMin=\fR\&. This setting does not affect
-"memory\&.min"
-in the unit itself\&.
-.RE
-.PP
-\fIMemoryLow=\fR\fI\fIbytes\fR\fR
-.RS 4
-Specify the best\-effort memory usage protection of the executed processes in this unit\&. If the memory usages of this unit and all its ancestors are below their low boundaries, this unit\*(Aqs memory won\*(Aqt be reclaimed as long as memory can be reclaimed from unprotected units\&.
-.sp
-Takes a memory size in bytes\&. If the value is suffixed with K, M, G or T, the specified memory size is parsed as Kilobytes, Megabytes, Gigabytes, or Terabytes (with the base 1024), respectively\&. Alternatively, a percentage value may be specified, which is taken relative to the installed physical memory on the system\&. If assigned the special value
-"infinity", all available memory is protected, which may be useful in order to always inherit all of the protection afforded by ancestors\&. This controls the
+or
 "memory\&.low"
 control group attribute\&. For details about this control group attribute, see
 \m[blue]\fBMemory Interface Files\fR\m[]\&\s-2\u[6]\d\s+2\&.
@@ -256,12 +256,22 @@ This setting is supported only if the unified control group hierarchy is used an
 \fIMemoryLimit=\fR\&.
 .sp
 Units may have their children use a default
+"memory\&.min"
+or
 "memory\&.low"
 value by specifying
+\fIDefaultMemoryMin=\fR
+or
 \fIDefaultMemoryLow=\fR, which has the same semantics as
+\fIMemoryMin=\fR
+and
 \fIMemoryLow=\fR\&. This setting does not affect
+"memory\&.min"
+or
 "memory\&.low"
-in the unit itself\&.
+in the unit itself\&. Using it to set a default child allocation is only useful on kernels older than 5\&.7, which do not support the
+"memory_recursiveprot"
+cgroup2 mount option\&.
 .RE
 .PP
 \fIMemoryHigh=\fR\fI\fIbytes\fR\fR
@@ -352,7 +362,7 @@ or
 Set the default overall block I/O weight for the executed processes, if the unified control group hierarchy is used on the system\&. Takes a single weight value (between 1 and 10000) to set the default block I/O weight\&. This controls the
 "io\&.weight"
 control group attribute, which defaults to 100\&. For details about this control group attribute, see
-\m[blue]\fBIO Interface Files\fR\m[]\&\s-2\u[8]\d\s+2\&. The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight\&.
+\m[blue]\fBIO Interface Files\fR\m[]\&\s-2\u[8]\d\s+2\&. The available I/O bandwidth is split up among all units within one slice relative to their block I/O weight\&. A higher weight means more I/O bandwidth, a lower weight means less\&.
 .sp
 While
 \fIStartupIOWeight=\fR
@@ -591,10 +601,297 @@ filters in any of these units\&. By default there are no filters specified\&.
 .sp
 If these settings are used multiple times in the same unit all the specified programs are attached\&. If an empty string is assigned to these settings the program list is reset and all previous specified programs ignored\&.
 .sp
+If the path
+\fIBPF_FS_PROGRAM_PATH\fR
+in
+\fIIPIngressFilterPath=\fR
+assignment is already being handled by
+\fIBPFProgram=\fR
+ingress hook, e\&.g\&.
+\fIBPFProgram=\fR\fBingress\fR:\fIBPF_FS_PROGRAM_PATH\fR, the assignment will be still considered valid and the program will be attached to a cgroup\&. Same for
+\fIIPEgressFilterPath=\fR
+path and
+\fBegress\fR
+hook\&.
+.sp
 Note that for socket\-activated services, the IP filter programs configured on the socket unit apply to all sockets associated with it directly, but not to any sockets created by the ultimately activated services for it\&. Conversely, the IP filter programs configured for the service are not applied to any sockets passed into the service via socket activation\&. Thus, it is usually a good idea, to replicate the IP filter programs on both the socket and the service unit, however it often makes sense to maintain one configuration more open and the other one more restricted, depending on the usecase\&.
 .sp
 Note that these settings might not be supported on some systems (for example if eBPF control group support is not enabled in the underlying kernel or container manager)\&. These settings will fail the service in that case\&. If compatibility with such systems is desired it is hence recommended to attach your filter manually (requires
 \fIDelegate=\fR\fByes\fR) instead of using this setting\&.
+.RE
+.PP
+\fIBPFProgram=\fR\fI\fItype\fR\fR\fI\fB:\fR\fR\fI\fIprogram\-path\fR\fR
+.RS 4
+Add a custom cgroup BPF program\&.
+.sp
+\fIBPFProgram=\fR
+allows attaching BPF hooks to the cgroup of a systemd unit\&. (This generalizes the functionality exposed via
+\fIIPEgressFilterPath=\fR
+for egress and
+\fIIPIngressFilterPath=\fR
+for ingress\&.) Cgroup\-bpf hooks in the form of BPF programs loaded to the BPF filesystem are attached with cgroup\-bpf attach flags determined by the unit\&. For details about attachment types and flags see
+\m[blue]\fB\%https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/linux/bpf.h\fR\m[]\&. For general BPF documentation please refer to
+\m[blue]\fB\%https://www.kernel.org/doc/html/latest/bpf/index.html\fR\m[]\&.
+.sp
+The specification of BPF program consists of a
+\fItype\fR
+followed by a
+\fIprogram\-path\fR
+with
+":"
+as the separator:
+\fItype\fR\fB:\fR\fIprogram\-path\fR\&.
+.sp
+\fItype\fR
+is the string name of BPF attach type also used in
+\fBbpftool\fR\&.
+\fItype\fR
+can be one of
+\fBegress\fR,
+\fBingress\fR,
+\fBsock_create\fR,
+\fBsock_ops\fR,
+\fBdevice\fR,
+\fBbind4\fR,
+\fBbind6\fR,
+\fBconnect4\fR,
+\fBconnect6\fR,
+\fBpost_bind4\fR,
+\fBpost_bind6\fR,
+\fBsendmsg4\fR,
+\fBsendmsg6\fR,
+\fBsysctl\fR,
+\fBrecvmsg4\fR,
+\fBrecvmsg6\fR,
+\fBgetsockopt\fR,
+\fBsetsockopt\fR\&.
+.sp
+Setting
+\fIBPFProgram=\fR
+to an empty value makes previous assignments ineffective\&.
+.sp
+Multiple assignments of the same
+\fItype\fR:\fIprogram\-path\fR
+value have the same effect as a single assignment: the program with the path
+\fIprogram\-path\fR
+will be attached to cgroup hook
+\fItype\fR
+just once\&.
+.sp
+If BPF
+\fBegress\fR
+pinned to
+\fIprogram\-path\fR
+path is already being handled by
+\fIIPEgressFilterPath=\fR,
+\fIBPFProgram=\fR
+assignment will be considered valid and
+\fIBPFProgram=\fR
+will be attached to a cgroup\&. Similarly for
+\fBingress\fR
+hook and
+\fIIPIngressFilterPath=\fR
+assignment\&.
+.sp
+BPF programs passed with
+\fIBPFProgram=\fR
+are attached to the cgroup of a unit with BPF attach flag
+\fBmulti\fR, that allows further attachments of the same
+\fItype\fR
+within cgroup hierarchy topped by the unit cgroup\&.
+.sp
+Examples:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+BPFProgram=egress:/sys/fs/bpf/egress\-hook
+BPFProgram=bind6:/sys/fs/bpf/sock\-addr\-hook
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fISocketBindAllow=\fR\fI\fIbind\-rule\fR\fR, \fISocketBindDeny=\fR\fI\fIbind\-rule\fR\fR
+.RS 4
+Allow or deny binding a socket address to a socket by matching it with the
+\fIbind\-rule\fR
+and applying a corresponding action if there is a match\&.
+.sp
+\fIbind\-rule\fR
+describes socket properties such as
+\fIaddress\-family\fR,
+\fItransport\-protocol\fR
+and
+\fIip\-ports\fR\&.
+.sp
+\fIbind\-rule\fR
+:= { [\fIaddress\-family\fR\fB:\fR][\fItransport\-protocol\fR\fB:\fR][\fIip\-ports\fR] |
+\fBany\fR
+}
+.sp
+\fIaddress\-family\fR
+:= {
+\fBipv4\fR
+|
+\fBipv6\fR
+}
+.sp
+\fItransport\-protocol\fR
+:= {
+\fBtcp\fR
+|
+\fBudp\fR
+}
+.sp
+\fIip\-ports\fR
+:= {
+\fIip\-port\fR
+|
+\fIip\-port\-range\fR
+}
+.sp
+An optional
+\fIaddress\-family\fR
+expects
+\fBipv4\fR
+or
+\fBipv6\fR
+values\&. If not specified, a rule will be matched for both IPv4 and IPv6 addresses and applied depending on other socket fields, e\&.g\&.
+\fItransport\-protocol\fR,
+\fIip\-port\fR\&.
+.sp
+An optional
+\fItransport\-protocol\fR
+expects
+\fBtcp\fR
+or
+\fBudp\fR
+transport protocol names\&. If not specified, a rule will be matched for any transport protocol\&.
+.sp
+An optional
+\fIip\-port\fR
+value must lie within 1\&...65535 interval inclusively, i\&.e\&. dynamic port
+\fB0\fR
+is not allowed\&. A range of sequential ports is described by
+\fIip\-port\-range\fR
+:=
+\fIip\-port\-low\fR\fB\-\fR\fIip\-port\-high\fR, where
+\fIip\-port\-low\fR
+is smaller than or equal to
+\fIip\-port\-high\fR
+and both are within 1\&...65535 inclusively\&.
+.sp
+A special value
+\fBany\fR
+can be used to apply a rule to any address family, transport protocol and any port with a positive value\&.
+.sp
+To allow multiple rules assign
+\fISocketBindAllow=\fR
+or
+\fISocketBindDeny=\fR
+multiple times\&. To clear the existing assignments pass an empty
+\fISocketBindAllow=\fR
+or
+\fISocketBindDeny=\fR
+assignment\&.
+.sp
+For each of
+\fISocketBindAllow=\fR
+and
+\fISocketBindDeny=\fR, maximum allowed number of assignments is
+\fB128\fR\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Binding to a socket is allowed when a socket address matches an entry in the
+\fISocketBindAllow=\fR
+list\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Otherwise, binding is denied when the socket address matches an entry in the
+\fISocketBindDeny=\fR
+list\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Otherwise, binding is allowed\&.
+.RE
+.sp
+The feature is implemented with
+\fBcgroup/bind4\fR
+and
+\fBcgroup/bind6\fR
+cgroup\-bpf hooks\&.
+.sp
+Examples:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&...
+# Allow binding IPv6 socket addresses with a port greater than or equal to 10000\&.
+[Service]
+SocketBindAllow=ipv6:10000\-65535
+SocketBindDeny=any
+\&...
+# Allow binding IPv4 and IPv6 socket addresses with 1234 and 4321 ports\&.
+[Service]
+SocketBindAllow=1234
+SocketBindAllow=4321
+SocketBindDeny=any
+\&...
+# Deny binding IPv6 socket addresses\&.
+[Service]
+SocketBindDeny=ipv6
+\&...
+# Deny binding IPv4 and IPv6 socket addresses\&.
+[Service]
+SocketBindDeny=any
+\&...
+# Allow binding only over TCP
+[Service]
+SocketBindAllow=tcp
+SocketBindDeny=any
+\&...
+# Allow binding only over IPv6/TCP
+[Service]
+SocketBindAllow=ipv6:tcp
+SocketBindDeny=any
+\&...
+# Allow binding ports within 10000\-65535 range over IPv4/UDP\&.
+[Service]
+SocketBindAllow=ipv4:udp:10000\-65535
+SocketBindDeny=any
+\&...
+.fi
+.if n \{\
+.RE
+.\}
 .RE
 .PP
 \fIDeviceAllow=\fR
@@ -756,6 +1053,96 @@ The following controller names may be specified:
 \fBbpf\-firewall\fR, and
 \fBbpf\-devices\fR\&.
 .RE
+.PP
+\fIManagedOOMSwap=auto|kill\fR, \fIManagedOOMMemoryPressure=auto|kill\fR
+.RS 4
+Specifies how
+\fBsystemd-oomd.service\fR(8)
+will act on this unit\*(Aqs cgroups\&. Defaults to
+\fBauto\fR\&.
+.sp
+When set to
+\fBkill\fR,
+\fBsystemd\-oomd\fR
+will actively monitor this unit\*(Aqs cgroup metrics to decide whether it needs to act\&. If the cgroup passes the limits set by
+\fBoomd.conf\fR(5)
+or its overrides,
+\fBsystemd\-oomd\fR
+will send a
+\fBSIGKILL\fR
+to all of the processes under the chosen candidate cgroup\&. Note that only descendant cgroups can be eligible candidates for killing; the unit that set its property to
+\fBkill\fR
+is not a candidate (unless one of its ancestors set their property to
+\fBkill\fR)\&. You can find more details on candidates and kill behavior at
+\fBsystemd-oomd.service\fR(8)
+and
+\fBoomd.conf\fR(5)\&. Setting either of these properties to
+\fBkill\fR
+will also automatically acquire
+\fIAfter=\fR
+and
+\fIWants=\fR
+dependencies on
+systemd\-oomd\&.service
+unless
+\fIDefaultDependencies=no\fR\&.
+.sp
+When set to
+\fBauto\fR,
+\fBsystemd\-oomd\fR
+will not actively use this cgroup\*(Aqs data for monitoring and detection\&. However, if an ancestor cgroup has one of these properties set to
+\fBkill\fR, a unit with
+\fBauto\fR
+can still be an eligible candidate for
+\fBsystemd\-oomd\fR
+to act on\&.
+.RE
+.PP
+\fIManagedOOMMemoryPressureLimit=\fR
+.RS 4
+Overrides the default memory pressure limit set by
+\fBoomd.conf\fR(5)
+for this unit (cgroup)\&. Takes a percentage value between 0% and 100%, inclusive\&. This property is ignored unless
+\fIManagedOOMMemoryPressure=\fR\fBkill\fR\&. Defaults to 0%, which means to use the default set by
+\fBoomd.conf\fR(5)\&.
+.RE
+.PP
+\fIManagedOOMPreference=none|avoid|omit\fR
+.RS 4
+Allows deprioritizing or omitting this unit\*(Aqs cgroup as a candidate when
+\fBsystemd\-oomd\fR
+needs to act\&. Requires support for extended attributes (see
+\fBxattr\fR(7)) in order to use
+\fBavoid\fR
+or
+\fBomit\fR\&. Additionally,
+\fBsystemd\-oomd\fR
+will ignore these extended attributes if the unit\*(Aqs cgroup is not owned by the root user\&.
+.sp
+If this property is set to
+\fBavoid\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will only select this cgroup if there are no other viable candidates\&.
+.sp
+If this property is set to
+\fBomit\fR, the service manager will convey this to
+\fBsystemd\-oomd\fR, which will ignore this cgroup as a candidate and will not perform any actions on it\&.
+.sp
+It is recommended to use
+\fBavoid\fR
+and
+\fBomit\fR
+sparingly, as it can adversely affect
+\fBsystemd\-oomd\fR\*(Aqs kill behavior\&. Also note that these extended attributes are not applied recursively to cgroups under this unit\*(Aqs cgroup\&.
+.sp
+Defaults to
+\fBnone\fR
+which means
+\fBsystemd\-oomd\fR
+will rank this unit\*(Aqs cgroup as defined in
+\fBsystemd-oomd.service\fR(8)
+and
+\fBoomd.conf\fR(5)\&.
+.RE
 .SH "DEPRECATED OPTIONS"
 .PP
 The following options are deprecated\&. Use the indicated superseding options instead:
@@ -882,7 +1269,8 @@ instead\&.
 \fBsystemd.swap\fR(5),
 \fBsystemd.exec\fR(5),
 \fBsystemd.directives\fR(7),
-\fBsystemd.special\fR(7), The documentation for control groups and specific controllers in the Linux kernel:
+\fBsystemd.special\fR(7),
+\fBsystemd-oomd.service\fR(8), The documentation for control groups and specific controllers in the Linux kernel:
 \m[blue]\fBControl Groups v2\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .SH "NOTES"
 .IP " 1." 4

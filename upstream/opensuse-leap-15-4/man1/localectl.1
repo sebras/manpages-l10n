@@ -1,5 +1,5 @@
 '\" t
-.TH "LOCALECTL" "1" "" "systemd 246" "localectl"
+.TH "LOCALECTL" "1" "" "systemd 249" "localectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -136,7 +136,18 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
+Execute operation on a local container\&. Specify a container name to connect to, optionally prefixed by a user name to connect as and a separating
+"@"
+character\&. If the special string
+"\&.host"
+is used in place of the container name, a connection to the local system is made (which is useful to connect to a specific user\*(Aqs user bus:
+"\-\-user \-\-machine=lennart@\&.host")\&. If the
+"@"
+syntax is not used, the connection is made as root user\&. If the
+"@"
+syntax is used either the left hand side or the right hand side may be omitted (but not both) in which case the local user name and
+"\&.host"
+are implied\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
@@ -157,6 +168,73 @@ Do not pipe output into a pager\&.
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.
 .SH "ENVIRONMENT"
+.PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TID\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with the current numerical thread ID (TID)\&.
+.sp
+Note that the this information is attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
+.RE
 .PP
 \fI$SYSTEMD_PAGER\fR
 .RS 4
@@ -248,16 +326,19 @@ or
 \fI$PAGER\fR
 variables are to be honoured,
 \fI$SYSTEMD_PAGERSECURE\fR
-must be set too\&. It might be reasonable to completly disable the pager using
+must be set too\&. It might be reasonable to completely disable the pager using
 \fB\-\-no\-pager\fR
 instead\&.
 .RE
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
