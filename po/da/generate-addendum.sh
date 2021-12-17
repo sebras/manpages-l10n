@@ -41,7 +41,7 @@ case $(basename "$translation") in
 	tar.1.po ) echo ".Sh OVERSÆTTELSE" >> "$addendum" ;;
 	* ) echo ".SH OVERSÆTTELSE" >> "$addendum" ;;
 esac
-echo "De oversatte denne manual til dansk" >> "$addendum"
+echo "Oversættere af denne manual til dansk" >> "$addendum"
 
 # Warn if the translators string is empty
 if [ -z "$translators" ]; then
