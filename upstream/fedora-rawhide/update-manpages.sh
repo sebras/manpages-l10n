@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,14 +21,17 @@ rm -rf man* links.txt untranslated.txt
 
 mkdir man0p man1 man1p man2 man3 man3p man4 man5 man6 man7 man8
 
-# Download HTML page
-page=$(mktemp)
 cpio_archive=$(mktemp)
-wget --quiet -O "$page" "https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/*/"
+mirror="https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/"
 
 # Process packages
 while read package; do
 	mkdir -p tmp/downloads
+	page=$(mktemp)
+	group=$(echo $package| awk '{print(substr($1,1,1))}')
+
+    # Download HTML page
+	wget --quiet -O "$page" "$mirror/$group/"
 
   # Discover the correct link in HTML page.
   # Sometimes, there are multiple versions of a package
@@ -38,14 +42,15 @@ while read package; do
   # version should come last. Therefore, convert spaces
   # the the grep'ed string to newlines and use only the
   # last line.
-	echo "Downloading and updating package '$package'"
+	echo -n "Downloading and updating package '$package' from group '$group'"
   url=$(grep "\"$package-[0-9][^\"]*\.rpm[^.]" "$page" |
         sed -e "s,.*<a href=\"\($package-[^\"]*\).*,\1," |
         perl -pe "s/ /\n/g" |
         tail -n1)
-
-  url="https://ftp.fau.de/fedora/linux/development/rawhide/Everything/x86_64/os/Packages/*/$url"
+  url="$mirror/$group/$url"
   wget --quiet --directory-prefix=tmp/downloads "$url"
+
+	echo -n " with url '$url'"
 
 	# Update the manpages from the package
 	latest_rpm=$(ls tmp/downloads/$package-*.rpm)
@@ -60,6 +65,6 @@ while read package; do
 	# Finally, remove the tarball, so that the regexp
 	# matching does not match the wrong tarball.
 	# See pacman and pacman-contrib for an example.
-	rm -rf tmp
+	rm -rf tmp $page
 done < packages.txt
-rm "$page" "$cpio_archive"
+rm "$cpio_archive"
