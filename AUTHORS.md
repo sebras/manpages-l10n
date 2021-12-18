@@ -62,6 +62,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Petr Sykora <petrsykora@jabber.tecka.cz>
 * Stinovlas <stinovlas@gmail.com>
 * Tomáš Andrle <tomas.andrle@pslib.cz>
+* Tomáš Řezáč <tomas.rezac@pslib.cz>
 * Václav Doubek <vaclav.doubek@pslib.cz>
 * Zdeněk Pytela <letty@mrakoplas.phil.muni.cz>
 
@@ -69,6 +70,7 @@ of Linux manpages. The list is sorted alphabetically.
 ## Danish:
 
 * Byrial Ole Jensen <byrial@vip.cybercity.dk>
+* Joe Hansen <joedalton2@yahoo.dk>
 * Kenneth Rohde Christiansen <kenneth@gnu.org>
 * Peter Makholm <peter@makholm.net>
 
@@ -93,6 +95,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Jari Antikainen <shogun@sci.fi>
 * Jari Kivirinta <jkivirin@ratol.fi>
 * Jarno Elonen <elonen@iki.fi>
+* Joose Vettenranta <joose@iki.fi>
 * Juha Manninen <juha.manninen@vip.fi>
 * Juhani Rantanen <misty@sgic.fi>
 * Juha-Pekka Syrjälä <jsyrjala@iki.fi>
@@ -112,6 +115,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Samuli Sorvakko <galaxy@cedunet.com>
 * Santeri Kannisto <sk@sot.com>
 * Santeri Säkäjärvi <ss@sot.com>
+* Simo Muinonen <smm@iki.fi>
 * Teppo Kankaanpää <photon@clinet.fi>
 * Tero Heikkilä <Tero.T.Heikkila@hut.fi>
 * Thomas Raivio <tjraivio@cc.hut.fi>
@@ -289,6 +293,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Érdi 'Cactus' Gergő <cactus@freemail.c3.hu>
 * Farkas Zsolt <farkaszs@freemail.hu>
 * Fehér -Aries- János <aries@vlug.vein.hu>
+* Fehér János <aries@vlug.vein.hu>
 * Fejős Tamás <tms@dunaferr.hu>
 * Füley István <ifuley@udv.nextra.ro>
 * Gábris Aurél <gabrisa@valerie.inf.elte.hu>
@@ -323,6 +328,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Szalay Attila <sasa@sophia.jpte.hu>
 * Szijjártó László <laca@janus.gimsz.sulinet.hu>
 * Sztrepka Pál <szpal@firefly.szarvas.hu>
+* Sztrepka Pál <szpal@szarvas.hu>
 * Tarbaj Péter <tarby@freeside.elte.hu>
 * Tenkes Csaba <zafir@primposta.com>
 * Tevesz Tamás <ice@rulez.org>
@@ -440,6 +446,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Claudio S. Suárez <csuarez@ctv.es>
 * David García a.k.a. PowR <powr@thepentagon.com>
 * Diego Novillo <diego@cs.ualberta.ca>
+* Diego Sevilla Ruiz <dsevilla@ditec.um.es>
 * Enrique Ferrero Puchades <enferpuc@olemail.com>
 * Fidel García <fidelgq@dinamic.net>
 * fmarzoa <fmarzoa@globalnet.es>
