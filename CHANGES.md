@@ -1,6 +1,11 @@
 # Changelog for manpages-l10n
 
 ## Version 4.12.0
+*Sun Dec 19 11:24:00 CET 2021*
+
+* Bugfix: Enable new languages in po/Makefile.am
+
+## Version 4.12.0
 *Sun Dec 19 11:07:00 CET 2021*
 
 * New languages: Finnish, Greek, Indonesian, Norwegian bokmål, Swedish, Serbian
