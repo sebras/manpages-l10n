@@ -1,5 +1,12 @@
 # Changelog for manpages-l10n
 
+## Version 4.12.0
+*Sun Dec 19 11:07:00 CET 2021*
+
+* New languages: Finnish, Greek, Indonesian, Norwegian bokmål, Swedish, Serbian
+* Persian (fa) is in a very early state; still disabled
+* Updated and added many translations
+
 ## Version 4.11.0
 *Tue Sep 14 20:57:20 CET 2021*
 
