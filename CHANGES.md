@@ -1,6 +1,6 @@
 # Changelog for manpages-l10n
 
-## Version 4.12.0
+## Version 4.12.1
 *Sun Dec 19 11:24:00 CET 2021*
 
 * Bugfix: Enable new languages in po/Makefile.am
