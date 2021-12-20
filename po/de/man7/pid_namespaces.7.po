@@ -1,12 +1,13 @@
 # German translation of manpages
 # This file is distributed under the same license as the manpages-l10n package.
 # Copyright © of this file:
+# Helge Kreutzmann <debian@helgefjell.de>, 2021.
 msgid ""
 msgstr ""
-"Project-Id-Version: manpages-l10n 4.11.0\n"
+"Project-Id-Version: manpages-l10n 4.12.1\n"
 "POT-Creation-Date: 2021-12-05 11:40+0100\n"
-"PO-Revision-Date: 2021-12-19 07:51+0100\n"
-"Last-Translator: Automatically generated\n"
+"PO-Revision-Date: 2021-12-20 12:43+0100\n"
+"Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -53,7 +54,7 @@ msgstr "BEZEICHNUNG"
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 msgid "pid_namespaces - overview of Linux PID namespaces"
-msgstr ""
+msgstr "pid_namespaces - Überblick über PID-Namensräume"
 
 #. type: SH
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -78,6 +79,12 @@ msgid ""
 "processes in the container and migrating the container to a new host while "
 "the processes inside the container maintain the same PIDs."
 msgstr ""
+"PID-Namensräume isolieren den Raum der Prozesskennungen. Das bedeutet, dass "
+"Prozesse in verschiedenen PID-Namensräumen die gleiche PID haben können. PID-"
+"Namensräume erlauben Containern, Funktionalitäten wie Suspendierung/"
+"Wiederaufnahme der Gruppe an Prozessen in dem Container und der Migration "
+"des Containers auf einen neuen Rechner bereitzustellen, bei denen die "
+"Prozesse innerhalb des Containers die gleiche PID behalten."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -87,6 +94,10 @@ msgid ""
 "and calls to B<fork>(2), B<vfork>(2), or B<clone>(2)  will produce processes "
 "with PIDs that are unique within the namespace."
 msgstr ""
+"PIDs in einem neuen PID-Namensraum beginnen bei 1, ähnlich wie in einem "
+"autonomen Systemen. Aufrufe von B<fork>(2), B<vfork>(2) oder B<clone>(2) "
+"werden Prozesse mit PIDs erstellen, die innerhalb des Namensraums eindeutig "
+"sind."
 
 #
 #.  ============================================================
@@ -97,13 +108,15 @@ msgid ""
 "Use of PID namespaces requires a kernel that is configured with the "
 "B<CONFIG_PID_NS> option."
 msgstr ""
+"Die Verwendung von PID-Namensräumen benötigt einen Kernel, der mit der "
+"Option B<CONFIG_PID_NS> konfiguriert wurde."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 #, no-wrap
 msgid "The namespace init process"
-msgstr ""
+msgstr "Der Init-Prozess des Namensraums"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -117,6 +130,14 @@ msgid ""
 "are orphaned because a process that resides in this PID namespace terminated "
 "(see below for further details)."
 msgstr ""
+"Der erste in einem neuen Namensraum erstellte Prozess (d.h. der mittels "
+"B<clone>(2) mit dem Schalter B<CLONE_NEWPID> erstellte Prozess oder der "
+"erste Prozess, der durch einen Prozess nach einem Aufruf von B<unshare>(2) "
+"mittels des Schalters B<CLONE_NEWPID> erstellt wurde) hat die PID 1 und ist "
+"der »Init«-Prozess für den Namensraum (siehe B<init>(1)). Dieser Prozess "
+"wird der Elternprozess jedes Kindprozesses, die verwaist wurden, da sich ein "
+"Prozess der sich in diesem Namensraum befindet, beendet hat (weitere Details "
+"finden Sie weiter unten)."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -136,6 +157,21 @@ msgid ""
 "B<fork>(2)  terminates, then subsequent calls to B<fork>(2)  fail with "
 "B<ENOMEM>."
 msgstr ""
+"Falls sich der »Init«-Prozess eines PID-Namensraums beendet, beendet der "
+"Kernel mittels des Signals B<SIGKILL> alle Prozess in dem Namensraum. Dieses "
+"Verhalten spiegelt die Tatsache, dass der »Init«-Prozess für das korrekte "
+"Funktionieren eines PID-Namensraums wesentlich ist. In diesem Fall wird ein "
+"nachfolgender B<fork>(2) in den Namensraum mit dem Fehler B<ENOMEM> "
+"fehlschlagen; es ist nicht möglich, einen neuen Prozess in einem PID-"
+"Namensraum zu erstellen, dessen »Init«-Prozess sich beendet hat. Solche "
+"Szenarien können auftreten, wenn beispielsweise ein Prozess einen offenen "
+"Dateideskriptor für eine Datei I</proc/[PID]/ns/pid> verwendet, der einem "
+"Prozess entspricht, der in einem Namensraum war und der mit B<setns>(2) in "
+"einen Namensraum soll, nachdem sich der »Init«-Prozess beendet hat. Ein "
+"anderes mögliches Szenario kann direkt nach dem Aufruf von B<unshare>(2) "
+"auftreten: Falls sich der erste Kindprozess, der nach einem B<fork>(2) "
+"nachfolgend erstellt wurde, beendet, dann schlagen nachfolgende Aufrufe von "
+"B<fork>(2) mit B<ENOMEM> fehl."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -146,6 +182,11 @@ msgid ""
 "This restriction applies even to privileged processes, and prevents other "
 "members of the PID namespace from accidentally killing the \"init\" process."
 msgstr ""
+"Nur Signale, für die der »Init«-Prozess einen Signal-Handler etabliert hat, "
+"können durch andere Mitglieder des PID-Namensraums an den »Init«-Prozess "
+"gesandt werden. Diese Einschränkung gilt sogar für privilegierte Prozesse "
+"und verhindert, dass andere Mitglieder des PID-Namensraums versehentlich den "
+"»Init«-Prozess töten."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -162,6 +203,16 @@ msgid ""
 "the usual actions associated with those signals (respectively, terminating "
 "and stopping the process)."
 msgstr ""
+"Entsprechend kann ein Prozess in einem Vorgängernamensraum \\(en gemäß der "
+"gewöhnlichen, in B<kill>(2) beschriebenen Berechtigungsprüfungen \\(en nur "
+"Signale an den »Init«-Prozess eines Nachfolge-PID-Namensraums senden, falls "
+"der »Init«-Prozess einen Handler für das Signal etabliert hat. (Innerhalb "
+"des Handlers wird das B<sigaction>(2) I<siginfo_t>-Feld I<si_pid> Null "
+"sein.) B<SIGKILL> oder B<SIGSTOP> werden besonders behandelt: diese Signale "
+"werden zwangsweise zugestellt, wenn sie von einem Vorgänger-PID-Namensraum "
+"gesandt werden. Keines dieser Signale kann durch den »Init«-Prozess "
+"abgefangen werden. Daher führen sie zu den gewöhnlichen Aktionen, die diesen "
+"Signalen zugeordnet sind (beenden bzw. stoppen des Prozesses)."
 
 #
 #.  ============================================================
@@ -172,13 +223,16 @@ msgid ""
 "Starting with Linux 3.4, the B<reboot>(2)  system call causes a signal to be "
 "sent to the namespace \"init\" process.  See B<reboot>(2)  for more details."
 msgstr ""
+"Seit Linux 3.4 führt der Systemaufruf B<reboot>(2) zum Senden eines Signales "
+"an den »Init«-Prozess des Namensraumes. Siehe B<reboot>(2) für weitere "
+"Details."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 #, no-wrap
 msgid "Nesting PID namespaces"
-msgstr ""
+msgstr "Verschachtelung von PID-Namensräumen"
 
 #.  commit f2302505775fd13ba93f034206f1e2a587017929
 #.  The kernel constant MAX_PID_NS_LEVEL
@@ -193,6 +247,14 @@ msgid ""
 "ultimately tracing their ancestry to the root namespace.  Since Linux 3.7, "
 "the kernel limits the maximum nesting depth for PID namespaces to 32."
 msgstr ""
+"PID-Namensräume können verschachtelt werden: jeder PID-Namensraum hat einen "
+"Vorgänger, außer für den anfänglichen (»Wurzel-«) PID-Namensraum. Der "
+"Vorgänger eines PID-Namensraums ist der PID-Namensraum des Prozesses, der "
+"den Namensraum mittels B<clone>(2) oder B<unshare>(2) erstellte. PID-"
+"Namensräume formen somit einen Baum, wobei alle Namensräume in letzter "
+"Instanz ihren Vorgänger auf den Wurzelnamensraum zurückführen. Seit Linux 3."
+"7 begrenzt der Kernel die maximale Schachtelungstiefe für PID-Namensräume "
+"auf 32."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -208,6 +270,16 @@ msgid ""
 "values with B<setpriority>(2), etc.) only processes contained in its own PID "
 "namespace and in descendants of that namespace."
 msgstr ""
+"Ein Prozess ist für andere Prozesse in seinem PID-Namensraum sichtbar und "
+"für Prozesse in jedem direkten Vorgänger-PID-Namensraum, direkt zurück bis "
+"zum Wurzel-PID-Namensraum. In diesem Zusammenhang bedeutet »sichtbar«, dass "
+"ein Prozess das Ziel von Aktionen eines anderen Prozesses durch Verwendung "
+"von Systemaufrufen sein kann, die eine Prozesskennung angeben können. "
+"Umgekehrt kann ein Prozess in einem Nachfolge-PID-Namensraum die Prozesse in "
+"dem Vorgänger und weiter entfernten Vorgänger-Namensräumen nicht sehen. Kurz "
+"gesagt: Ein Prozess kann nur Prozesse, die in seinem eigenen PID-Namensraum "
+"und in Nachfolgern dieses Namensraums sind, sehen (z.B. ihnen Signale mit "
+"B<kill>(2) senden, Ihren Nice-Wert mit B<setpriority>(2) ändern usw.)."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -220,6 +292,13 @@ msgid ""
 "namespace of the caller.  A call to B<getpid>(2)  always returns the PID "
 "associated with the namespace in which the process was created."
 msgstr ""
+"Ein Prozess hat eine Prozesskennung in jedem der Ebenen der PID-Namensraum-"
+"Hierarchie, in der er sichtbar ist, sowie rückwärts durch jeden direkten "
+"Vorgängernamensraum bis zum Wurzel-PID-Namensraum. Systemaufrufe, die auf "
+"Prozesskennungen agieren, agieren immer auf Prozesskennungen, die in dem PID-"
+"Namensraum des aufrufenden Prozesses sichtbar sind. Ein Aufruf von "
+"B<getpid>(2) liefert immer die PID zurück, die dem Namensraum zugeordnet "
+"ist, in dem der Prozess erstellt wurde."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -233,6 +312,15 @@ msgid ""
 "different PID namespace from the caller of B<setns>(2).  Calls to "
 "B<getppid>(2)  for such processes return 0."
 msgstr ""
+"Einige Prozesse in einem PID-Namensraum können Elternprozesse haben, die "
+"sich außerhalb des Namensraums befinden. Der Elternprozess des anfänglichen "
+"Prozesses in dem Namensraum (d.h. der B<init>(1)-Prozess mit der PID 1) "
+"befindet sich beispielsweise notwendigerweise in einem anderen Namensraum. "
+"Entsprechend sind die direkten Kindprozesses eines Prozesses, der "
+"B<setns>(2) verwendet, damit seine Kindprozesse einem PID-Namensraum "
+"beitreten, in einem anderen PID-Nemsraum als der Aufrufende von B<setns>(2). "
+"Wird für solche Prozesse B<getppid>(2) aufgerufen, dann wird 0 "
+"zurückgeliefert."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -244,6 +332,11 @@ msgid ""
 "namespaces (parent, grandparent, etc.).  Changing PID namespaces is a one-"
 "way operation."
 msgstr ""
+"Während Prozesse frei in Nachfolge-PID-Namensräume absteigen können (z.B. "
+"mittels B<setns>(2) mit einem PID-Namensraum-Dateideskriptor), können sie "
+"sich nicht in die andere Richtung bewegen. Das bedeutet, Prozesse dürfen "
+"keine Vorgängernamensräume (direkte, zweiter Stufe, usw.) betreten. Das "
+"Ändern von PID-Namensräumen ist eine Einwegaktion."
 
 #
 #.  ============================================================
@@ -254,6 +347,8 @@ msgid ""
 "The B<NS_GET_PARENT> B<ioctl>(2)  operation can be used to discover the "
 "parental relationship between PID namespaces; see B<ioctl_ns>(2)."
 msgstr ""
+"Die Aktion B<NS_GET_PARENT> B<ioctl>(2) kann zum Erkennen der hierarchischen "
+"Beziehung zwischen PID-Namensräumen verwandt werden; siehe B<ioctl_ns>(2)."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
