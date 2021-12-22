@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: manpages-l10n 4.12.1\n"
 "POT-Creation-Date: 2021-12-05 11:40+0100\n"
-"PO-Revision-Date: 2021-12-20 12:43+0100\n"
+"PO-Revision-Date: 2021-12-22 09:04+0100\n"
 "Last-Translator: Helge Kreutzmann <debian@helgefjell.de>\n"
 "Language-Team: German <debian-l10n-german@lists.debian.org>\n"
 "Language: de\n"
@@ -355,7 +355,7 @@ msgstr ""
 #: opensuse-leap-15-4 opensuse-tumbleweed
 #, no-wrap
 msgid "setns(2) and unshare(2) semantics"
-msgstr ""
+msgstr "Semantik von setns und unshare(2)"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -370,6 +370,16 @@ msgid ""
 "because doing so would change the caller's idea of its own PID (as reported "
 "by B<getpid>()), which would break many applications and libraries."
 msgstr ""
+"Aufrufe von B<setns>(2), die einen PID-Namensraum-Dateideskriptor festlegen "
+"und Aufrufe von B<unshare>(2) mit dem Schalter B<CLONE_NEWPID> führen dazu, "
+"dass nachfolgend durch den Aufrufenden erstellte Kindprozesse in einem "
+"anderen PID-Namensraum als dem des Aufrufenden abgelegt werden. (Seit Linux "
+"4.12 wird dieser PID-Namensraum über die Datei I</proc/[PID]/ns/"
+"pid_for_children> gezeigt, wie in B<namespaces>(7) beschrieben.) Diese "
+"Aufrufe ändern allerdings nicht den PID-Namensraum des aufrufenden "
+"Prozesses, da dies das Verständnis des Aufrufenden über seine eigene PID "
+"(wie sie mit B<getpid>() berichtet wird) ändern würde, wodurch viele "
+"Anwendungen und Bibliotheken beschädigt würden."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -382,6 +392,12 @@ msgid ""
 "parent of a process is either in the same namespace or resides in the "
 "immediate parent PID namespace."
 msgstr ""
+"Um es anders zu sagen: die Mitgliedschaft eines Prozesses in einem PID-"
+"Namensraum wird bei der Erstellung des Prozesses bestimmt und kann danach "
+"nicht mehr geändert werden. Unter anderem bedeutet dies, dass die Eltern-"
+"Kind-Beziehung zwischen Prozessen die Vorgänger-Nachfolger-Beziehung "
+"zwischen PID-Namensräumen spiegelt: der Elternprozess ist entweder im "
+"gleichen Namensraum oder befindet sich im direkten Vorgänger-PID-Namensraum."
 
 #
 #.  ============================================================
@@ -394,13 +410,17 @@ msgid ""
 "symbolic link will be empty until the first child is created in the "
 "namespace."
 msgstr ""
+"Ein Prozess kann B<unshare>(2) mit dem Schalter B<CLONE_NEWPID> nur einmal "
+"aufrufen. Nachdem er diese Aktion durchgeführt hat, wird sein symbolischer "
+"Link I</proc/PID/ns/pid_for_children> leer sein, bis der erste Kindprozess "
+"in dem Namensraum erstellt wurde."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-tumbleweed
 #, no-wrap
 msgid "Adoption of orphaned children"
-msgstr ""
+msgstr "Adoption von verwaisten Kindprozessen"
 
 #
 #.  Furthermore, by definition, the parent of the "init" process
@@ -419,13 +439,22 @@ msgid ""
 "I<parent> of the child's PID namespace, rather than the \"init\" process in "
 "the child's own PID namespace."
 msgstr ""
+"Wenn ein Kindprozess verwaist wird, wird der »Init«-Prozess in dem PID-"
+"Namensraum seines Elternprozesses sein neuer Elternprozess (außer einer der "
+"Vorfahrprozesse des Elternprozesses, der näher dran ist, setzt den Befehl "
+"B<prctl>(2) B<PR_SET_CHILD_SUBREAPER> ein, um sich selbst als Auffänger des "
+"verwaisten Nachfahrprozesses zu markieren.) Beachten Sie, dass aufgrund der "
+"oben beschriebenen Semantik von B<setns>(2) und B<unshare>(2) dies der "
+"»Init«-Prozess in dem PID-Namensraum sein kann, der I<Vorgänger> des PID-"
+"Namensraums des Kindprozesses sein kann, statt des »Init«-Prozesses in dem "
+"eigenen PID-Namensraum des Kindprozesses."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 #, no-wrap
 msgid "Compatibility of CLONE_NEWPID with other CLONE_* flags"
-msgstr ""
+msgstr "Kompatibilität von CLONE_NEWPID zu anderen CLONE_*-Schaltern"
 
 #. type: Plain text
 #: archlinux fedora-rawhide mageia-cauldron opensuse-tumbleweed
@@ -441,6 +470,18 @@ msgid ""
 "signal queue shared by processes in multiple PID namespaces would defeat "
 "that."
 msgstr ""
+"In der aktuellen Version von Linux kann B<CLONE_NEWPID> nicht mit "
+"B<CLONE_THREAD> kombiniert werden. Threads müssen im gleichen PID-Namensraum "
+"sein, damit die Threads in einem Prozess sich gegenseitig Signale senden "
+"können. Entsprechend muss es möglich sein, alle Threads eines Prozesses in "
+"dem Dateisystem B<proc>(5) zu sehen. Ergänzend kommt hinzu, dass die "
+"Prozesskennung des Prozesses, der ein Signal sendet, nicht beim Senden eines "
+"Signals aussagekräftig kodiert werden könnte, falls die zwei Threads in "
+"verschiedenen PID-Namensräumen wären (siehe die Beschreibung des Typs "
+"I<siginfo_t> in B<sigaction>(2)). Da diese berechnet wird, wenn ein Signal "
+"in die Warteschlange gestellt wird, würde eine Signalwarteschlange, die von "
+"Prozessen in mehreren PID-Namensräumen gemeinsam benutzt würde, dies "
+"vereiteln."
 
 #
 #.  Note these restrictions were all introduced in
@@ -459,13 +500,17 @@ msgid ""
 "that lifted these restrictions have also been ported to earlier stable "
 "kernels."
 msgstr ""
+"In früheren Versionen von Linux war zusätzlich B<CLONE_NEWPID> verboten "
+"(schlug mit dem Fehler B<EINVAL> fehl) zusammen mit B<CLONE_SIGHAND> (vor "
+"Linux 4.3) sowie B<CLONE_VM> (vor Linux 3.12). Die Änderungen, die diese "
+"Beschränkungen aufhoben, wurden auch in ältere stabile Kernel portiert."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 #, no-wrap
 msgid "/proc and PID namespaces"
-msgstr ""
+msgstr "/proc und PID-Namensräume"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -476,6 +521,10 @@ msgid ""
 "mount, even if the I</proc> filesystem is viewed from processes in other "
 "namespaces."
 msgstr ""
+"Ein Dateisystem I</proc> zeigt (in den Verzeichnissen I</proc/[PID]>) nur "
+"Prozesse, die in dem PID-Namensraum des Prozesses sichtbar sind, der die "
+"Einhängung durchführte, selbst falls das Dateisystem I</proc> von Prozessen "
+"in anderen Namensräumen betrachtet wird."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -488,12 +537,20 @@ msgid ""
 "of B<clone>(2)  or B<unshare>(2), then it isn't necessary to change the root "
 "directory: a new procfs instance can be mounted directly over I</proc>."
 msgstr ""
+"Nach dem Erstellen eines neuen PID-Namensraumes ist es für den Kindprozess "
+"nützlich, sein Wurzelverzeichnis zu ändern und eine neue Procfs-Instanz "
+"unter I</proc> einzuhängen, so dass Werkzeuge wie B<ps>(1) korrekt "
+"funktionieren. Falls ein neuer Einhängenamensraum gleichzeitig durch "
+"Aufnahme von B<CLONE_NEWNS> in dem Argument I<flags> von B<clone>(2) oder "
+"B<unshare>(2) erstellt wird, dann ist es nicht notwendig, das "
+"Wurzelverzeichnis zu ändern: eine neue Procfs-Instanz kann direkt über I</"
+"proc> eingehängt werden."
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
 #: opensuse-leap-15-4 opensuse-tumbleweed
 msgid "From a shell, the command to mount I</proc> is:"
-msgstr ""
+msgstr "In einer Shell lautet der Einhängebefehl für I</proc>:"
 
 #. type: Plain text
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -514,6 +571,11 @@ msgid ""
 "introspection purposes, when a process wants to discover its PID in other "
 "namespaces."
 msgstr ""
+"Der Aufruf von B<readlink>(2) auf dem Pfad I</proc/self> liefert die "
+"Prozesskennung des Aufrufenden in dem PID-Namensraum der Procfs-Einhängung "
+"(d.h. des PID-Namensraums, der Procfs einhängte). Dies kann zu "
+"Untersuchungszwecken nützlich sein, wenn ein Prozess seine PID in anderen "
+"Namensräumen herausfinden möchte."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -539,6 +601,11 @@ msgid ""
 "the kernel will search for the lowest unallocated PID that is greater than "
 "this value, and when this file is subsequently read it will show that PID."
 msgstr ""
+"Diese Datei (die pro PID-Namensraum virtualisiert ist) zeigt die letzte PID, "
+"die in diesem PID-Namensraum zugewiesen wurde. Wenn die nächste PID "
+"zugewiesen wird, wird der Kernel nach der kleinsten nicht zugewiesenen PID "
+"suchen, die größer als dieser Wert ist, und wenn danach diese Datei gelesen "
+"wird, wird diese PID dann gezeigt."
 
 #
 #.  This ability is necessary to support checkpoint restore in user-space
@@ -553,6 +620,11 @@ msgid ""
 "that is allocated to the next process that is created inside this PID "
 "namespace."
 msgstr ""
+"Diese Datei ist für einen Prozess, der über die Capability B<CAP_SYS_ADMIN> "
+"oder (seit Linux 5.9) B<CAP_CHECKPOINT_RESTORE> innerhalb des "
+"Benutzernamensraums, der den PID-Namensraum besitzt, verfügt, schreibbar. "
+"Dies ermöglicht es, die PID zu bestimmen, die dem nächsten Prozess, der "
+"innerhalb des PID-Namensraums erstellt wird, zugewiesen wird."
 
 #. type: SS
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -570,6 +642,10 @@ msgid ""
 "B<unix>(7)), it is translated into the corresponding PID value in the "
 "receiving process's PID namespace."
 msgstr ""
+"Wenn eine Prozesskennung über einen UNIX-Domain-Socket an einen Prozess in "
+"einem anderen PID-Namensraum übergeben wird (siehe die Beschreibung von "
+"B<SCM_CREDENTIALS> in B<unix>(7)), dann wird sie in den entsprechenden PID-"
+"Wert in dem PID-Namensraum des empfangenen Prozesses übersetzt."
 
 #. type: SH
 #: archlinux debian-bullseye debian-unstable fedora-rawhide mageia-cauldron
@@ -650,6 +726,18 @@ msgid ""
 "signal queue shared by processes in multiple PID namespaces would defeat "
 "that."
 msgstr ""
+"In der aktuellen Version von Linux kann B<CLONE_NEWPID> nicht mit "
+"B<CLONE_THREAD> kombiniert werden. Threads müssen im gleichen PID-Namensraum "
+"sein, damit die Threads in einem Prozess sich gegenseitig Signale senden "
+"können. Entsprechend muss es möglich sein, alle Threads eines Prozesses in "
+"dem Dateisystem B<proc>(5) zu sehen. Ergänzend kommt hinzu, dass die "
+"Prozesskennung des Prozesses, der ein Signal sendet, nicht beim Senden eines "
+"Signals aussagekräftig kodiert werden könnte, falls die zwei Threads in "
+"verschiedenen PID-Namensräumen wären (siehe die Beschreibung des Typs "
+"I<siginfo_t> in B<sigaction>(2)). Da diese berechnet wird, wenn ein Signal "
+"in die Warteschlange gestellt wird, würde eine Signalwarteschlange, die von "
+"Prozesse in mehreren PID-Namensräumen gemeinsam benutzt würde, dies "
+"vereiteln."
 
 #. type: Plain text
 #: debian-bullseye debian-unstable
@@ -683,6 +771,16 @@ msgid ""
 "B<PR_SET_CHILD_SUBREAPER> command to mark itself as the reaper of orphaned "
 "descendant processes)."
 msgstr ""
+"Der erste in einem neuen Namensraum erstellte Prozess (d.h. der mittels "
+"B<clone>(2) mit dem Schalter B<CLONE_NEWPID> erstellte Prozess oder der "
+"erste Prozess, der durch einen Prozess nach einem Aufruf von B<unshare>(2) "
+"mittels des Schalters B<CLONE_NEWPID> erstellt wurde) hat die PID 1 und ist "
+"der »Init«-Prozess für den Namensraum (siehe B<init>(1)). Ein Kindprozess "
+"der innerhalb des Namensraums verwaist ist erhält diesen Prozess als "
+"Elternprozess statt B<init>(1) (außer einer der Vorfahrprozesse des "
+"Kindprozesses in dem gleichen PID-Namensraum setzt den Befehl B<prctl>(2) "
+"B<PR_SET_CHILD_SUBREAPER> ein, um sich selbst als Auffänger des verwaisten "
+"Nachfahrprozesses zu markieren.)"
 
 #. type: Plain text
 #: opensuse-leap-15-4
@@ -701,6 +799,21 @@ msgid ""
 "B<fork>(2)  terminates, then subsequent calls to B<fork>(2)  fail with "
 "B<ENOMEM>."
 msgstr ""
+"Falls sich der »Init«-Prozess eines PID-Namensraums beendet, beendet der "
+"Kernel mittels des Signals B<SIGKILL> alle Prozess in dem Namensraum. Dieses "
+"Verhalten spiegelt die Tatsache, dass der »Init«-Prozess für das korrekte "
+"Funktionieren eines PID-Namensraums wesentlich ist. In diesem Fall wird ein "
+"nachfolgender B<fork>(2) in den Namensraum mit dem Fehler B<ENOMEM> "
+"fehlschlagen; es ist nicht möglich, einen neuen Prozess in einem PID-"
+"Namensraum zu erstellen, dessen »Init«-Prozess sich beendet hat. Solche "
+"Szenarien können auftreten, wenn beispielsweise ein Prozess einen offenen "
+"Dateideskriptor für eine Datei I</proc/[PID]/ns/pid> verwendet, der einem "
+"Prozess entspricht, der in einem Namensraum war und der mit B<setns>(2) in "
+"einen Namensraum soll, nachdem sich der »Init«-Prozess beendet hat. Ein "
+"anderes mögliches Szenario kann direkt nach dem Aufruf von B<unshare>(2) "
+"auftreten: Falls sich der erste Kindprozess, der nach einem B<fork>(2) "
+"nachfolgend erstellt wurde, beendet, dann schlagen nachfolgende Aufrufe von "
+"B<fork>(2) mit B<ENOMEM> fehl."
 
 #.  commit b8f566b04d3cddd192cfd2418ae6d54ac6353792
 #. type: Plain text
@@ -711,6 +824,10 @@ msgid ""
 "unallocated PID that is greater than this value, and when this file is "
 "subsequently read it will show that PID."
 msgstr ""
+"Diese Datei zeigt die letzte PID, die in diesem PID-Namensraum zugewiesen "
+"wurde. Wenn die nächste PID zugewiesen wird, wird der Kernel nach der "
+"kleinsten nicht zugewiesenen PID suchen, die größer als dieser Wert ist, und "
+"wenn danach diese Datei gelesen wird, wird diese PID dann gezeigt."
 
 #
 #.  This ability is necessary to support checkpoint restore in user-space
@@ -722,6 +839,10 @@ msgid ""
 "inside its user namespace.  This makes it possible to determine the PID that "
 "is allocated to the next process that is created inside this PID namespace."
 msgstr ""
+"Diese Datei ist für einen Prozess, der über die Capability B<CAP_SYS_ADMIN> "
+"innerhalb seines Benutzernamensraums, verfügt, schreibbar. Dies ermöglicht "
+"es, die PID zu bestimmen, die dem nächsten Prozess, der innerhalb des PID-"
+"Namensraums erstellt wird, zugewiesen wird."
 
 #. type: SH
 #: opensuse-leap-15-4
