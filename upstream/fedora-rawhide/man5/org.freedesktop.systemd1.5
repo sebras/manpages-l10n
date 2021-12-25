@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 249" "org.freedesktop.systemd1"
+.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 250" "org.freedesktop.systemd1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -67,6 +67,10 @@ node /org/freedesktop/systemd1 {
       StartUnit(in  s name,
                 in  s mode,
                 out o job);
+      StartUnitWithFlags(in  s name,
+                         in  s mode,
+                         in  t flags,
+                         out o job);
       StartUnitReplace(in  s old_unit,
                        in  s new_unit,
                        in  s mode,
@@ -323,6 +327,10 @@ node /org/freedesktop/systemd1 {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t UnitsLoadFinishTimestampMonotonic = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t UnitsLoadTimestamp = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t UnitsLoadTimestampMonotonic = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t InitRDSecurityStartTimestamp = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t InitRDSecurityStartTimestampMonotonic = \&.\&.\&.;
@@ -486,6 +494,8 @@ node /org/freedesktop/systemd1 {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s DefaultOOMPolicy = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly i DefaultOOMScoreAdjust = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s CtrlAltDelBurstAction = \*(Aq\&.\&.\&.\*(Aq;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
@@ -497,6 +507,10 @@ node /org/freedesktop/systemd1 {
 .if n \{\
 .RE
 .\}
+
+
+
+
 
 
 
@@ -727,6 +741,23 @@ enqueues a start job and possibly depending jobs\&. It takes the unit to activat
 is similar to
 \fBStartUnit()\fR
 but replaces a job that is queued for one unit by a job for another unit\&.
+.PP
+\fBStartUnitWithFlags()\fR
+is similar to
+\fBStartUnit()\fR
+but allows the caller to pass an extra
+\fIflags\fR
+parameter, which does not support any flags for now, and is reserved for future extensions\&. The new method also changes the behaviour of the
+\fIJobRemoved\fR
+signal and make it return
+"skipped"
+in case the unit activation job is skipped because a
+\fICondition*=\fR
+is not satisfied\&. With the
+\fIStartUnit\fR
+method,
+"done"
+would be returned instead\&.
 .PP
 \fBStopUnit()\fR
 is similar to
@@ -1256,6 +1287,15 @@ timestamp will always be 0 and
 and
 \fILoaderTimestampMonotonic\fR
 are to be read as negative values\&. Also, not all fields are always available, depending on the used firmware, boot loader or initrd implementation\&. In these cases the respective pairs of timestamps are both 0, indicating that no data is available\&.
+.PP
+\fIUnitsLoadTimestamp\fR
+and
+\fIUnitsLoadTimestampMonotonic\fR
+encode
+\fBCLOCK_REALTIME\fR
+and
+\fBCLOCK_MONOTONIC\fR
+microseconds timestamps (as described above)\&. The timestamps are taken every time when the manager starts loading unit files\&.
 .PP
 Similarly, the
 \fISecurityStartTimestamp\fR,
@@ -1877,7 +1917,7 @@ is an array of string flags that can be set using
 to indicate that the service should be reloaded or restarted\&. Currently known values are
 "needs\-restart"
 and
-"needs\-reload"\&. Package scripts may use the first to mark units for later restart when a new version of the package is installed\&. Configuration management scripts may use the second to mark units for a later reload when the configuration is adjusted\&. Those flags are not set by the manager, except to unset as appropriate when when the unit is stopped, restarted, or reloaded\&.
+"needs\-reload"\&. Package scripts may use the first to mark units for later restart when a new version of the package is installed\&. Configuration management scripts may use the second to mark units for a later reload when the configuration is adjusted\&. Those flags are not set by the manager, except to unset as appropriate when the unit is stopped, restarted, or reloaded\&.
 .PP
 \fIJobTimeoutUSec\fR
 maps directly to the corresponding configuration setting in the unit file\&.
@@ -1945,6 +1985,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s Type = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s ExitType = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s Restart = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s PIDFile = \*(Aq\&.\&.\&.\*(Aq;
@@ -1964,6 +2006,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly s TimeoutStopFailureMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RuntimeMaxUSec = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t RuntimeRandomizedExtraUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t WatchdogUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -2092,7 +2136,11 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -2175,6 +2223,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2322,6 +2372,10 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b TTYVTDisallocate = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYRows = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYColumns = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i SyslogPriority = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s SyslogIdentifier = \*(Aq\&.\&.\&.\*(Aq;
@@ -2358,7 +2412,11 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(say) SetCredential = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(say) SetCredentialEncrypted = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ss) LoadCredential = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(ss) LoadCredentialEncrypted = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as SupplementaryGroups = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2373,6 +2431,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecSearchPath = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2432,19 +2492,27 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly (bas) RestrictAddressFamilies = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) RuntimeDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RuntimeDirectoryPreserve = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u RuntimeDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as RuntimeDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) StateDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u StateDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as StateDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) CacheDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u CacheDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as CacheDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) LogsDirectorySymlink = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u LogsDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2463,6 +2531,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly b RestrictSUIDSGID = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RestrictNamespaces = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly (bas) RestrictFileSystems = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssbt) BindPaths = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -2508,6 +2578,21 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2923,6 +3008,20 @@ indicates how much unused memory is available to the unit before the
 or
 "MemoryHigh"
 (whichever is lower) limit set by the cgroup memory controller is reached\&. It will take into consideration limits on all parent slices, other than the limits set on the unit itself\&.
+.PP
+\fIRuntimeDirectorySymlink\fR,
+\fIStateDirectorySymlink\fR,
+\fICacheDirectorySymlink\fR
+and
+\fILogsDirectorySymlink\fR
+respectively implement the destination parameter of the unit files settings
+\fIRuntimeDirectory\fR,
+\fIStateDirectory\fR,
+\fICacheDirectory\fR
+and
+\fILogsDirectory\fR, which will create a symlink of the given name to the respective directory\&. The messages take an unused
+\fIflags\fR
+parameter, reserved for future backward\-compatible changes\&.
 .SH "SOCKET UNIT OBJECTS"
 .sp
 .if n \{\
@@ -3101,7 +3200,11 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -3184,6 +3287,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3331,6 +3436,10 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b TTYVTDisallocate = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYRows = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYColumns = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i SyslogPriority = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s SyslogIdentifier = \*(Aq\&.\&.\&.\*(Aq;
@@ -3367,7 +3476,11 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(say) SetCredential = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(say) SetCredentialEncrypted = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ss) LoadCredential = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(ss) LoadCredentialEncrypted = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as SupplementaryGroups = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3382,6 +3495,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecSearchPath = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3441,19 +3556,27 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly (bas) RestrictAddressFamilies = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) RuntimeDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RuntimeDirectoryPreserve = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u RuntimeDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as RuntimeDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) StateDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u StateDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as StateDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) CacheDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u CacheDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as CacheDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) LogsDirectorySymlink = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u LogsDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3472,6 +3595,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
       readonly b RestrictSUIDSGID = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RestrictNamespaces = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly (bas) RestrictFileSystems = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssbt) BindPaths = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -3517,6 +3642,19 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2esocket {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4009,7 +4147,11 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -4092,6 +4234,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4239,6 +4383,10 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b TTYVTDisallocate = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYRows = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYColumns = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i SyslogPriority = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s SyslogIdentifier = \*(Aq\&.\&.\&.\*(Aq;
@@ -4275,7 +4423,11 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(say) SetCredential = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(say) SetCredentialEncrypted = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ss) LoadCredential = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(ss) LoadCredentialEncrypted = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as SupplementaryGroups = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4290,6 +4442,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecSearchPath = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4349,19 +4503,27 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly (bas) RestrictAddressFamilies = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) RuntimeDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RuntimeDirectoryPreserve = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u RuntimeDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as RuntimeDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) StateDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u StateDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as StateDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) CacheDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u CacheDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as CacheDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) LogsDirectorySymlink = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u LogsDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4380,6 +4542,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
       readonly b RestrictSUIDSGID = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RestrictNamespaces = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly (bas) RestrictFileSystems = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssbt) BindPaths = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4425,6 +4589,19 @@ node /org/freedesktop/systemd1/unit/home_2emount {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4718,6 +4895,8 @@ node /org/freedesktop/systemd1/unit/proc_2dsys_2dfs_2dbinfmt_5fmisc_2eautomount 
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s Where = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s ExtraOptions = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u DirectoryMode = \&.\&.\&.;
       readonly s Result = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -4733,6 +4912,7 @@ node /org/freedesktop/systemd1/unit/proc_2dsys_2dfs_2dbinfmt_5fmisc_2eautomount 
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -4947,7 +5127,11 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -5030,6 +5214,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as Environment = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5177,6 +5363,10 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly b TTYVTDisallocate = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYRows = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly q TTYColumns = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly i SyslogPriority = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s SyslogIdentifier = \*(Aq\&.\&.\&.\*(Aq;
@@ -5213,7 +5403,11 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(say) SetCredential = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(say) SetCredentialEncrypted = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ss) LoadCredential = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(ss) LoadCredentialEncrypted = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as SupplementaryGroups = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5228,6 +5422,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       readonly as ExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as NoExecPaths = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly as ExecSearchPath = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t MountFlags = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5287,19 +5483,27 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly (bas) RestrictAddressFamilies = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) RuntimeDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s RuntimeDirectoryPreserve = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u RuntimeDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as RuntimeDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) StateDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u StateDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as StateDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) CacheDirectorySymlink = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u CacheDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly as CacheDirectory = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(sst) LogsDirectorySymlink = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly u LogsDirectoryMode = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5318,6 +5522,8 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
       readonly b RestrictSUIDSGID = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RestrictNamespaces = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly (bas) RestrictFileSystems = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly a(ssbt) BindPaths = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -5363,6 +5569,19 @@ node /org/freedesktop/systemd1/unit/dev_2dsda3_2eswap {
 .if n \{\
 .RE
 .\}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -5761,7 +5980,11 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -5844,6 +6067,8 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -5855,6 +6080,9 @@ node /org/freedesktop/systemd1/unit/system_2eslice {
 .if n \{\
 .RE
 .\}
+
+
+
 
 
 
@@ -5959,6 +6187,8 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
       readonly s Result = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t RuntimeMaxUSec = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t RuntimeRandomizedExtraUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly s Slice = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -6012,7 +6242,11 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedCPUs = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedCPUs = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly ay AllowedMemoryNodes = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly ay StartupAllowedMemoryNodes = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly b IOAccounting = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
@@ -6095,6 +6329,8 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
       readonly a(iiqq) SocketBindAllow = [\&.\&.\&.];
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly a(iiqq) SocketBindDeny = [\&.\&.\&.];
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly (bas) RestrictNetworkInterfaces = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s KillMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -6120,6 +6356,10 @@ node /org/freedesktop/systemd1/unit/session_2d1_2escope {
 .if n \{\
 .RE
 .\}
+
+
+
+
 
 
 

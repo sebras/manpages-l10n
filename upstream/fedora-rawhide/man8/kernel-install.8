@@ -1,5 +1,5 @@
 '\" t
-.TH "KERNEL\-INSTALL" "8" "" "systemd 249" "kernel-install"
+.TH "KERNEL\-INSTALL" "8" "" "systemd 250" "kernel-install"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -234,6 +234,21 @@ If
 is used,
 \fI$KERNEL_INSTALL_VERBOSE=1\fR
 will be set for the plugins\&. They may output additional logs in this case\&.
+.PP
+If
+\fIMACHINE_ID=\fR
+is set and not empty, it will be used as
+\fIMACHINE\-ID\fR, overriding any automatic detection attempts\&. The value must be a valid machine ID (32 hexadecimal characters)\&.
+.PP
+\fIKERNEL_INSTALL_MACHINE_ID=\fR
+is set for the plugins to the desired
+\fIMACHINE\-ID\fR
+\(en either 32 hexadecimal characters or the special value
+"Default"\&.
+.PP
+\fIKERNEL_INSTALL_BOOT_ROOT=\fR
+is set for the plugins to the root directory (mount point, usually) of the hierarchy where boot\-loader entries, kernel images, and associated resources should be placed\&. Can be overriden by setting
+\fIBOOT_ROOT=\fR\&.
 .SH "EXIT STATUS"
 .PP
 If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code otherwise\&.
@@ -244,12 +259,14 @@ If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code
 Drop\-in files which are executed by kernel\-install\&.
 .RE
 .PP
-/etc/kernel/cmdline /proc/cmdline
+/usr/lib/kernel/cmdline /etc/kernel/cmdline /proc/cmdline
 .RS 4
 Read by
 90\-loaderentry\&.install\&. The content of the file
 /etc/kernel/cmdline
 specifies the kernel command line to use\&. If that file does not exist,
+/usr/lib/kernel/cmdline
+is used\&. If that also does not exist,
 /proc/cmdline
 is used\&.
 .RE
@@ -266,14 +283,24 @@ which implement boot attempt counting with a counter embedded in the entry file 
 /etc/machine\-id
 .RS 4
 The content of this file specifies the machine identification
-\fIMACHINE\-ID\fR\&. If it cannot read
-/etc/machine\-id, kernel\-install will use "Linux" as the machine ID instead\&.
+\fIMACHINE\-ID\fR\&. If
+/etc/machine\-id
+cannot be read or is temporary (backed by a file on
+\fBtmpfs\fR),
+\fBkernel\-install\fR
+will use
+"Default"
+instead\&.
 .RE
 .PP
 /etc/os\-release /usr/lib/os\-release
 .RS 4
-The content of the file specifies the operating system title
-\fIPRETTY_NAME\fR\&.
+Read by
+90\-loaderentry\&.install\&. If available,
+\fIPRETTY_NAME\fR
+is read from these files and used as the title of the boot menu entry\&. Otherwise,
+"Linux \fIKERNEL\-VERSION\fR"
+will be used\&.
 .RE
 .SH "SEE ALSO"
 .PP
