@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2022 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,5 +33,5 @@ for distribution in $distributions; do
 		echo -n "$distribution: "
 		msgfmt -cv -o /dev/null $tmppo
 	fi
+	rm -f $tmppo
 done
-rm -f $tmppo
