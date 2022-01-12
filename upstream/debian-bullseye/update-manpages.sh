@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2022      Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,9 +66,3 @@ if [ -f links.txt ]; then
 	LC_ALL=C sort links.txt > tmp.links
 	mv tmp.links links.txt
 fi
-
-# Special case for init.8, because the manpage contains
-# a syntax error, so that the manpage cannot be translated
-# with po4a. The bug has been reported upstream.
-# https://savannah.nongnu.org/bugs/?55678
-sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" man8/init.8
