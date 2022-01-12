@@ -24,11 +24,24 @@ mkdir man1 man2 man3 man4 man5 man6 man7 man8
 while read package; do
 	mkdir tmp
 
+	# First try the backport link
 	# Download HTML page and discover the correct link
-	echo "Downloading and updating package '$package'"
-	url=$(wget --quiet -O - "http://packages.debian.org/bullseye/amd64/$package/download" |
+	echo -n "Downloading and updating package '$package' from "
+	url=$(wget --quiet -O - "http://packages.debian.org/bullseye-backports/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+
+	if [ -z $url ]; then
+	    # Next (if necessary) try the stable link
+	    # Download HTML page and discover the correct link
+	    # echo "Downloading and updating package '$package'"
+	    echo "stable"
+	    url=$(wget --quiet -O - "http://packages.debian.org/bullseye/amd64/$package/download" |
+	    grep "http://ftp.de.debian.org/debian/pool/" |
+	    sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	else
+	    echo "stable-backports"
+	fi
 	wget --quiet --directory-prefix=tmp/downloads "$url"
 
 
