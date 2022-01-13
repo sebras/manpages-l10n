@@ -19,16 +19,18 @@
 # Determine all languages
 cd ../po
 MT_LANGLIST=$(find . -maxdepth 1 -type d | grep -v scripts | grep -v "^\.$" | sed 's/\.\///' | sort)
-cd -
+cd - > /dev/null
 
 # Determine all currently supported distributions
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
 
-. ./setup-$tlang.inc
-
 echo -n "Processing: "
 for tlang in $MT_LANGLIST; do
     echo -n "$tlang "
+
+    . ./setup-$tlang.inc
+
+    # Supersede inc file - we want the date of the untranslated.txt, not the one from this run
     timestamp=$(stat --format="%y" ../po/$tlang/untranslated.txt)
 
     cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
