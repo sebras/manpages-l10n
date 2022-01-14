@@ -1,5 +1,5 @@
 '\" t
-.TH "USERDBCTL" "1" "" "systemd 249" "userdbctl"
+.TH "USERDBCTL" "1" "" "systemd 250" "userdbctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -73,6 +73,19 @@ show only the most important fields\&. Various modes also do not show password h
 to view all fields, including any authentication fields\&.
 .RE
 .PP
+\fB\-\-json=\fR\fIFORMAT\fR
+.RS 4
+Selects JSON out mode (like
+\fB\-\-output=json\fR) and selects the precise display mode\&. Takes one of
+"pretty"
+or
+"short"\&. If
+"pretty"
+human\-friendly whitespace and newlines are inserted in the output to make the JSON data more readable\&. If
+"short"
+all superfluous whitespace is suppressed\&.
+.RE
+.PP
 \fB\-\-service=\fR\fISERVICE\fR[:\fISERVICE\&...\fR], \fB\-s\fR \fISERVICE\fR:\fISERVICE\&...\fR
 .RS 4
 Controls which services to query for users/groups\&. Takes a list of one or more service names, separated by
@@ -124,6 +137,18 @@ this synthesizing is turned off\&.
 This option is short for
 \fB\-\-with\-nss=no\fR
 \fB\-\-synthesize=no\fR\&. Use this option to show only records that are natively defined as JSON user or group records, with all NSS/glibc compatibility and all implicit synthesis turned off\&.
+.RE
+.PP
+\fB\-\-multiplexer=\fR\fIBOOL\fR
+.RS 4
+Controls whether to do lookups via the multiplexer service (if specified as true, the default) or do lookups in the client (if specified as false)\&. Using the multiplexer service is typically preferable, since it runs in a locked down sandbox\&.
+.RE
+.PP
+\fB\-\-chain\fR
+.RS 4
+When used with the
+\fBssh\-authorized\-keys\fR
+command, this will allow passing an additional command line after the user name that is chain executed after the lookup completed\&. This allows chaining multiple tools that show SSH authorized keys\&.
 .RE
 .PP
 \fB\-\-no\-pager\fR
@@ -188,7 +213,7 @@ List all services currently providing user/group definitions to the system\&. Se
 .PP
 \fBssh\-authorized\-keys\fR
 .RS 4
-This operation is not a public, user\-facing interface\&. It is used to allow the SSH daemon to pick up authorized keys from user records, see below\&.
+Show SSH authorized keys for this account\&. This command is intended to be used to allow the SSH daemon to pick up authorized keys from user records, see below\&.
 .RE
 .SH "WELL\-KNOWN SERVICES"
 .PP
@@ -280,6 +305,29 @@ AuthorizedKeysCommandUser root
 .if n \{\
 .RE
 .\}
+.PP
+Sometimes it\*(Aqs useful to allow chain invocation of another program to list SSH authorized keys\&. By using the
+\fB\-\-chain\fR
+such a tool may be chain executed by
+\fBuserdbctl ssh\-authorized\-keys\fR
+once a lookup completes (regardless if an SSH key was found or not)\&. Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&...
+AuthorizedKeysCommand /usr/bin/userdbctl ssh\-authorized\-keys %u \-\-chain /usr/bin/othertool %u
+AuthorizedKeysCommandUser root
+\&...
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The above will first query the userdb database for SSH keys, and then chain execute
+\fB/usr/bin/othertool\fR
+to also be queried\&.
 .SH "EXIT STATUS"
 .PP
 On success, 0 is returned, a non\-zero failure code otherwise\&.

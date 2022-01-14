@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 249" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 250" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -93,26 +93,56 @@ The following keys are accepted:
 .PP
 \fIMACAddress=\fR
 .RS 4
-A whitespace\-separated list of hardware addresses\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. See the example below\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
-.sp
-Example:
-.sp
-.if n \{\
+A whitespace\-separated list of hardware addresses\&. The acceptable formats are:
+.PP
+\fBcolon\-delimited hexadecimal\fR
 .RS 4
-.\}
-.nf
-MACAddress=01:23:45:67:89:ab 00\-11\-22\-33\-44\-55 AABB\&.CCDD\&.EEFF
-.fi
-.if n \{\
+Each field must be one byte\&. E\&.g\&.
+"12:34:56:78:90:ab"
+or
+"AA:BB:CC:DD:EE:FF"\&.
 .RE
-.\}
+.PP
+\fBhyphen\-delimited hexadecimal\fR
+.RS 4
+Each field must be one byte\&. E\&.g\&.
+"12\-34\-56\-78\-90\-ab"
+or
+"AA\-BB\-CC\-DD\-EE\-FF"\&.
+.RE
+.PP
+\fBdot\-delimited hexadecimal\fR
+.RS 4
+Each field must be two bytes\&. E\&.g\&.
+"1234\&.5678\&.90ab"
+or
+"AABB\&.CCDD\&.EEFF"\&.
+.RE
+.PP
+\fBIPv4 address format\fR
+.RS 4
+E\&.g\&.
+"127\&.0\&.0\&.1"
+or
+"192\&.168\&.0\&.1"\&.
+.RE
+.PP
+\fBIPv6 address format\fR
+.RS 4
+E\&.g\&.
+"2001:0db8:85a3::8a2e:0370:7334"
+or
+"::1"\&.
+.RE
+.sp
+The total length of each MAC address must be 4 (for IPv4 tunnel), 6 (for Ethernet), 16 (for IPv6 tunnel), or 20 (for InfiniBand)\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&. Defaults to unset\&.
 .RE
 .PP
 \fIPermanentMACAddress=\fR
 .RS 4
 A whitespace\-separated list of hardware\*(Aqs permanent addresses\&. While
 \fIMACAddress=\fR
-matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
+matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal, or IPv4 or IPv6 address format\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&. Defaults to unset\&.
 .RE
 .PP
 \fIPath=\fR
@@ -289,6 +319,12 @@ Takes a boolean\&. If set to true, the driver retrieves all multicast packets fr
 \fIPromiscuous=\fR
 .RS 4
 Takes a boolean\&. If set to true, promiscuous mode of the interface is enabled\&. Defaults to unset\&.
+.sp
+If this is set to false for the underlying link of a
+"passthru"
+mode MACVLAN/MACVTAP, the virtual interface will be created with the
+"nopromisc"
+flag set\&.
 .RE
 .PP
 \fIUnmanaged=\fR
@@ -302,7 +338,7 @@ This is useful for preventing later matching network files from interfering with
 .PP
 \fIGroup=\fR
 .RS 4
-Link groups are similar to port ranges found in managed switches\&. When network interfaces are added to a numbered group, operations on all the interfaces from that group can be performed at once\&. Takes an unsigned integer in the range 0\&...4294967295\&. Defaults to unset\&.
+Link groups are similar to port ranges found in managed switches\&. When network interfaces are added to a numbered group, operations on all the interfaces from that group can be performed at once\&. Takes an unsigned integer in the range 0\&...2147483647\&. Defaults to unset\&.
 .RE
 .PP
 \fIRequiredForOnline=\fR
@@ -368,9 +404,9 @@ managing the link administrative state\&. Specifically, this controls how
 changes the network device\*(Aqs
 "IFF_UP"
 flag, which is sometimes controlled by system administrators by running e\&.g\&.,
-\fBip set dev eth0 up\fR
+\fBip link set dev eth0 up\fR
 or
-\fBip set dev eth0 down\fR, and can also be changed with
+\fBip link set dev eth0 down\fR, and can also be changed with
 \fBnetworkctl up eth0\fR
 or
 \fBnetworkctl down eth0\fR\&.
@@ -430,17 +466,17 @@ The [SR\-IOV] section accepts the following keys\&. Specify several [SR\-IOV] se
 .PP
 \fIVirtualFunction=\fR
 .RS 4
-Specifies a Virtual Function (VF), lightweight PCIe function designed solely to move data in and out\&. Takes an unsigned integer in the range 0\&...2147483646\&. This option is compulsory\&.
+Specifies a Virtual Function (VF), lightweight PCIe function designed solely to move data in and out\&. Takes an integer in the range 0\&...2147483646\&. This option is compulsory\&.
 .RE
 .PP
 \fIVLANId=\fR
 .RS 4
-Specifies VLAN ID of the virtual function\&. Takes an unsigned integer in the range 1\&...4095\&.
+Specifies VLAN ID of the virtual function\&. Takes an integer in the range 1\&...4095\&.
 .RE
 .PP
 \fIQualityOfService=\fR
 .RS 4
-Specifies quality of service of the virtual function\&. Takes an unsigned integer in the range 1\&...4294967294\&.
+Specifies quality of service of the virtual function\&. Takes an integer in the range 1\&...4294967294\&.
 .RE
 .PP
 \fIVLANProtocol=\fR
@@ -535,8 +571,13 @@ and when DHCPv4 autoconfiguration has been unsuccessful for some time\&. (IPv4 l
 Defaults to
 \fBno\fR
 when
-\fIBridge=yes\fR
-is set, and
+\fIKeepMaster=\fR
+or
+\fIBridge=\fR
+is set or when the specified
+\fIMACVLAN=\fR/\fIMACVTAP=\fR
+has
+\fIMode=passthru\fR, or
 \fBipv6\fR
 otherwise\&.
 .RE
@@ -630,55 +671,11 @@ Table=1234
 .\}
 .RE
 .PP
-\fIIPv6Token=\fR
-.RS 4
-Specifies an optional address generation mode for the Stateless Address Autoconfiguration (SLAAC)\&. Supported modes are
-"prefixstable"
-and
-"static"\&.
-.sp
-When the mode is set to
-"static", an IPv6 address must be specified after a colon (":"), and the lower bits of the supplied address are combined with the upper bits of a prefix received in a Router Advertisement (RA) message to form a complete address\&. Note that if multiple prefixes are received in an RA message, or in multiple RA messages, addresses will be formed from each of them using the supplied address\&. This mode implements SLAAC but uses a static interface identifier instead of an identifier generated by using the EUI\-64 algorithm\&. Because the interface identifier is static, if Duplicate Address Detection detects that the computed address is a duplicate (in use by another node on the link), then this mode will fail to provide an address for that prefix\&. If an IPv6 address without mode is specified, then
-"static"
-mode is assumed\&.
-.sp
-When the mode is set to
-"prefixstable"
-the
-\m[blue]\fBRFC 7217\fR\m[]\&\s-2\u[1]\d\s+2
-algorithm for generating interface identifiers will be used\&. This mode can optionally take an IPv6 address separated with a colon (":")\&. If an IPv6 address is specified, then an interface identifier is generated only when a prefix received in an RA message matches the supplied address\&.
-.sp
-If no address generation mode is specified (which is the default), or a received prefix does not match any of the addresses provided in
-"prefixstable"
-mode, then the EUI\-64 algorithm will be used to form an interface identifier for that prefix\&. This mode is also SLAAC, but with a potentially stable interface identifier which does not directly map to the interface\*(Aqs hardware address\&.
-.sp
-Note that the
-"prefixstable"
-algorithm uses both the interface name and MAC address as input to the hash to compute the interface identifier, so if either of those are changed the resulting interface identifier (and address) will change, even if the prefix received in the RA message has not changed\&.
-.sp
-This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&.
-.sp
-Examples:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-IPv6Token=::1a:2b:3c:4d
-IPv6Token=static:::1a:2b:3c:4d
-IPv6Token=prefixstable
-IPv6Token=prefixstable:2002:da8:1::
-.fi
-.if n \{\
-.RE
-.\}
-.RE
-.PP
 \fILLMNR=\fR
 .RS 4
 Takes a boolean or
 "resolve"\&. When true, enables
-\m[blue]\fBLink\-Local Multicast Name Resolution\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBLink\-Local Multicast Name Resolution\fR\m[]\&\s-2\u[1]\d\s+2
 on the link\&. When set to
 "resolve", only resolution is enabled, but not host registration and announcement\&. Defaults to true\&. This setting is read by
 \fBsystemd-resolved.service\fR(8)\&.
@@ -688,7 +685,7 @@ on the link\&. When set to
 .RS 4
 Takes a boolean or
 "resolve"\&. When true, enables
-\m[blue]\fBMulticast DNS\fR\m[]\&\s-2\u[3]\d\s+2
+\m[blue]\fBMulticast DNS\fR\m[]\&\s-2\u[2]\d\s+2
 support on the link\&. When set to
 "resolve", only resolution is enabled, but not host or service registration and announcement\&. Defaults to false\&. This setting is read by
 \fBsystemd-resolved.service\fR(8)\&.
@@ -698,12 +695,12 @@ support on the link\&. When set to
 .RS 4
 Takes a boolean or
 "opportunistic"\&. When true, enables
-\m[blue]\fBDNS\-over\-TLS\fR\m[]\&\s-2\u[4]\d\s+2
+\m[blue]\fBDNS\-over\-TLS\fR\m[]\&\s-2\u[3]\d\s+2
 support on the link\&. When set to
 "opportunistic", compatibility with non\-DNS\-over\-TLS servers is increased, by automatically turning off DNS\-over\-TLS servers in this case\&. This option defines a per\-interface setting for
 \fBresolved.conf\fR(5)\*(Aqs global
 \fIDNSOverTLS=\fR
-option\&. Defaults to false\&. This setting is read by
+option\&. Defaults to unset, and the global setting will be used\&. This setting is read by
 \fBsystemd-resolved.service\fR(8)\&.
 .RE
 .PP
@@ -711,12 +708,12 @@ option\&. Defaults to false\&. This setting is read by
 .RS 4
 Takes a boolean or
 "allow\-downgrade"\&. When true, enables
-\m[blue]\fBDNSSEC\fR\m[]\&\s-2\u[5]\d\s+2
+\m[blue]\fBDNSSEC\fR\m[]\&\s-2\u[4]\d\s+2
 DNS validation support on the link\&. When set to
 "allow\-downgrade", compatibility with non\-DNSSEC capable networks is increased, by automatically turning off DNSSEC in this case\&. This option defines a per\-interface setting for
 \fBresolved.conf\fR(5)\*(Aqs global
 \fIDNSSEC=\fR
-option\&. Defaults to false\&. This setting is read by
+option\&. Defaults to unset, and the global setting will be used\&. This setting is read by
 \fBsystemd-resolved.service\fR(8)\&.
 .RE
 .PP
@@ -754,7 +751,7 @@ setting permits propagation only to the nearest connected bridge,
 permits propagation across Two\-Port MAC Relays, but not any other bridges, and
 "customer\-bridge"
 permits propagation until a customer bridge is reached\&. For details about these concepts, see
-\m[blue]\fBIEEE 802\&.1AB\-2016\fR\m[]\&\s-2\u[6]\d\s+2\&. Note that configuring this setting to true is equivalent to
+\m[blue]\fBIEEE 802\&.1AB\-2016\fR\m[]\&\s-2\u[5]\d\s+2\&. Note that configuring this setting to true is equivalent to
 "nearest\-bridge", the recommended and most restricted level of propagation\&. See
 \fILLDP=\fR
 above for an option to enable LLDP reception\&.
@@ -787,7 +784,9 @@ If the specified address is
 \fIGateway=\fR
 .RS 4
 The gateway address, which must be in the format described in
-\fBinet_pton\fR(3)\&. This is a short\-hand for a [Route] section only containing a Gateway key\&. This option may be specified more than once\&.
+\fBinet_pton\fR(3)\&. This is a short\-hand for a [Route] section only containing a
+\fIGateway=\fR
+key\&. This option may be specified more than once\&.
 .RE
 .PP
 \fIDNS=\fR
@@ -846,7 +845,7 @@ net\&.ipv4\&.ip_forward
 and
 net\&.ipv6\&.conf\&.all\&.forwarding
 sysctl options of the network interface (see
-\m[blue]\fBip\-sysctl\&.txt\fR\m[]\&\s-2\u[7]\d\s+2
+\m[blue]\fBip\-sysctl\&.txt\fR\m[]\&\s-2\u[6]\d\s+2
 for details about sysctl options)\&. Defaults to
 "no"\&.
 .sp
@@ -880,7 +879,7 @@ are now deprecated\&. Please use one of the values in the above\&.
 \fIIPv6PrivacyExtensions=\fR
 .RS 4
 Configures use of stateless temporary addresses that change over time (see
-\m[blue]\fBRFC 4941\fR\m[]\&\s-2\u[8]\d\s+2, Privacy Extensions for Stateless Address Autoconfiguration in IPv6)\&. Takes a boolean or the special values
+\m[blue]\fBRFC 4941\fR\m[]\&\s-2\u[7]\d\s+2, Privacy Extensions for Stateless Address Autoconfiguration in IPv6)\&. Takes a boolean or the special values
 "prefer\-public"
 and
 "kernel"\&. When true, enables the privacy extensions and prefers temporary addresses over public addresses\&. When
@@ -896,7 +895,7 @@ Takes a boolean\&. Controls IPv6 Router Advertisement (RA) reception support for
 Further settings for the IPv6 RA support may be configured in the [IPv6AcceptRA] section, see below\&.
 .sp
 Also see
-\m[blue]\fBip\-sysctl\&.txt\fR\m[]\&\s-2\u[7]\d\s+2
+\m[blue]\fBip\-sysctl\&.txt\fR\m[]\&\s-2\u[6]\d\s+2
 in the kernel documentation regarding
 "accept_ra", but note that systemd\*(Aqs setting of
 \fB1\fR
@@ -931,7 +930,7 @@ Takes a boolean\&. When true, the kernel does not consider loopback addresses as
 \fIIPv4ProxyARP=\fR
 .RS 4
 Takes a boolean\&. Configures proxy ARP for IPv4\&. Proxy ARP is the technique in which one host, usually a router, answers ARP requests intended for another machine\&. By "faking" its identity, the router accepts responsibility for routing packets to the "real" destination\&. See
-\m[blue]\fBRFC 1027\fR\m[]\&\s-2\u[9]\d\s+2\&. When unset, the kernel\*(Aqs default will be used\&.
+\m[blue]\fBRFC 1027\fR\m[]\&\s-2\u[8]\d\s+2\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIIPv6ProxyNDP=\fR
@@ -943,33 +942,44 @@ Takes a boolean\&. Configures proxy NDP for IPv6\&. Proxy NDP (Neighbor Discover
 \fIIPv6ProxyNDPAddress=\fR
 .RS 4
 An IPv6 address, for which Neighbour Advertisement messages will be proxied\&. This option may be specified more than once\&. systemd\-networkd will add the
-\fBIPv6ProxyNDPAddress=\fR
-entries to the kernel\*(Aqs IPv6 neighbor proxy table\&. This option implies
-\fBIPv6ProxyNDP=yes\fR
+\fIIPv6ProxyNDPAddress=\fR
+entries to the kernel\*(Aqs IPv6 neighbor proxy table\&. This setting implies
+\fIIPv6ProxyNDP=yes\fR
 but has no effect if
-\fBIPv6ProxyNDP\fR
+\fIIPv6ProxyNDP=\fR
 has been set to false\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIIPv6SendRA=\fR
 .RS 4
-Whether to enable or disable Router Advertisement sending on a link\&. Takes a boolean value\&. When enabled, prefixes configured in [IPv6Prefix] sections and routes configured in [IPv6RoutePrefix] sections are distributed as defined in the [IPv6SendRA] section\&. If
-\fIDHCPv6PrefixDelegation=\fR
+Whether to enable or disable Router Advertisement sending on a link\&. Takes a boolean value\&. When enabled, prefixes configured in [IPv6Prefix] sections and routes configured in the [IPv6RoutePrefix] sections are distributed as defined in the [IPv6SendRA] section\&. If
+\fIDHCPPrefixDelegation=\fR
 is enabled, then the delegated prefixes are also distributed\&. See
-\fIDHCPv6PrefixDelegation=\fR
-setting and the [IPv6SendRA], [IPv6Prefix], [IPv6RoutePrefix], and [DHCPv6PrefixDelegation] sections for more configuration options\&.
+\fIDCHPPrefixDelegation=\fR
+setting and the [IPv6SendRA], [IPv6Prefix], [IPv6RoutePrefix], and [DHCPPrefixDelegation] sections for more configuration options\&.
 .RE
 .PP
-\fIDHCPv6PrefixDelegation=\fR
+\fIDHCPPrefixDelegation=\fR
 .RS 4
-Takes a boolean value\&. When enabled, requests prefixes using a DHCPv6 client configured on another link\&. By default, an address within each delegated prefix will be assigned, and the prefixes will be announced through IPv6 Router Advertisement when
+Takes a boolean value\&. When enabled, requests subnet prefixes acquired by a DHCPv6 client, or by a DHCPv4 client through the 6RD option configured on another link\&. By default, an address within each delegated prefix will be assigned, and the prefixes will be announced through IPv6 Router Advertisement when
 \fIIPv6SendRA=\fR
-is enabled\&. Such default settings can be configured in [DHCPv6PrefixDelegation] section\&. Defaults to disabled\&.
+is enabled\&. Such default settings can be configured in the [DHCPPrefixDelegation] section\&. Defaults to disabled\&.
 .RE
 .PP
 \fIIPv6MTUBytes=\fR
 .RS 4
 Configures IPv6 maximum transmission unit (MTU)\&. An integer greater than or equal to 1280 bytes\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIKeepMaster=\fR
+.RS 4
+Takes a boolean value\&. When enabled, the current master interface index will not be changed, and
+\fIBatmanAdvanced=\fR,
+\fIBond=\fR,
+\fIBridge=\fR, and
+\fIVRF=\fR
+settings are ignored\&. This may be useful when a netdev with a master interface is created by another program, e\&.g\&.
+\fBsystemd-nspawn\fR(1)\&. Defaults to false\&.
 .RE
 .PP
 \fIBatmanAdvanced=\fR, \fIBond=\fR, \fIBridge=\fR, \fIVRF=\fR
@@ -978,9 +988,9 @@ The name of the B\&.A\&.T\&.M\&.A\&.N\&. Advanced, bond, bridge, or VRF interfac
 \fBsystemd.netdev\fR(5)\&.
 .RE
 .PP
-\fIIPVLAN=\fR, \fIIPVTAP=\fR, \fIL2TP=\fR, \fIMACsec=\fR, \fIMACVLAN=\fR, \fIMACVTAP=\fR, \fITunnel=\fR, \fIVLAN=\fR, \fIVXLAN=\fR, \fIXfrm=\fR
+\fIIPoIB=\fR, \fIIPVLAN=\fR, \fIIPVTAP=\fR, \fIL2TP=\fR, \fIMACsec=\fR, \fIMACVLAN=\fR, \fIMACVTAP=\fR, \fITunnel=\fR, \fIVLAN=\fR, \fIVXLAN=\fR, \fIXfrm=\fR
 .RS 4
-The name of an IPVLAN, IPVTAP, L2TP, MACsec, MACVLAN, MACVTAP, tunnel, VLAN, VXLAN, or Xfrm to be created on the link\&. See
+The name of an IPoIB, IPVLAN, IPVTAP, L2TP, MACsec, MACVLAN, MACVTAP, tunnel, VLAN, VXLAN, or Xfrm to be created on the link\&. See
 \fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .PP
@@ -990,8 +1000,7 @@ Takes a boolean\&. Specifies the new active slave\&. The
 "ActiveSlave="
 option is only valid for following modes:
 "active\-backup",
-"balance\-alb"
-and
+"balance\-alb", and
 "balance\-tlb"\&. Defaults to false\&.
 .RE
 .PP
@@ -1001,22 +1010,21 @@ Takes a boolean\&. Specifies which slave is the primary device\&. The specified 
 "PrimarySlave="
 option is only valid for following modes:
 "active\-backup",
-"balance\-alb"
-and
+"balance\-alb", and
 "balance\-tlb"\&. Defaults to false\&.
 .RE
 .PP
 \fIConfigureWithoutCarrier=\fR
 .RS 4
-Takes a boolean\&. Allows networkd to configure a specific link even if it has no carrier\&. Defaults to false\&. If
-\fBIgnoreCarrierLoss=\fR
-is not explicitly set, it will default to this value\&.
+Takes a boolean\&. Allows networkd to configure a specific link even if it has no carrier\&. Defaults to false\&. If enabled, and the
+\fIIgnoreCarrierLoss=\fR
+setting is not explicitly set, then it is enabled as well\&.
 .RE
 .PP
 \fIIgnoreCarrierLoss=\fR
 .RS 4
-Takes a boolean\&. Allows networkd to retain both the static and dynamic configuration of the interface even if its carrier is lost\&. When unset, the value specified with
-\fBConfigureWithoutCarrier=\fR
+Takes a boolean or a timespan\&. When true, networkd retains both the static and dynamic configuration of the interface even if its carrier is lost\&. When a timespan is specified, networkd waits for the specified timespan, and ignores the carrier loss if the link regain its carrier within the timespan\&. Setting a finite timespan may be useful for a wireless interface connecting to a network which has multiple access points with the same SSID, or an interface which is reset on changing MTU\&. When unset, the value specified with
+\fIConfigureWithoutCarrier=\fR
 is used\&.
 .sp
 When
@@ -1055,7 +1063,7 @@ An [Address] section accepts the following keys\&. Specify several [Address] sec
 .PP
 \fIAddress=\fR
 .RS 4
-As in the [Network] section\&. This key is mandatory\&. Each [Address] section can contain one
+As in the [Network] section\&. This setting is mandatory\&. Each [Address] section can contain one
 \fIAddress=\fR
 setting\&.
 .RE
@@ -1064,7 +1072,7 @@ setting\&.
 .RS 4
 The peer address in a point\-to\-point connection\&. Accepts the same format as the
 \fIAddress=\fR
-key\&.
+setting\&.
 .RE
 .PP
 \fIBroadcast=\fR
@@ -1077,7 +1085,7 @@ setting\&. If set to false, then the broadcast address will not be set\&. Defaul
 .PP
 \fILabel=\fR
 .RS 4
-An address label\&.
+Specifies the label for the IPv4 address\&. The label must be a 7\-bit ASCII string with a length of 1\&...15 characters\&. Defaults to unset\&.
 .RE
 .PP
 \fIPreferredLifetime=\fR
@@ -1098,7 +1106,7 @@ The scope of the address, which can be
 "link"
 (only valid on this device, will not traverse a gateway) or
 "host"
-(only valid within the device itself, e\&.g\&. 127\&.0\&.0\&.1) or an unsigned integer in the range 0\&...255\&. Defaults to
+(only valid within the device itself, e\&.g\&. 127\&.0\&.0\&.1) or an integer in the range 0\&...255\&. Defaults to
 "global"\&.
 .RE
 .PP
@@ -1112,7 +1120,7 @@ is false\&.
 \fIHomeAddress=\fR
 .RS 4
 Takes a boolean\&. Designates this address the "home address" as defined in
-\m[blue]\fBRFC 6275\fR\m[]\&\s-2\u[10]\d\s+2\&. Supported only on IPv6\&. Defaults to false\&.
+\m[blue]\fBRFC 6275\fR\m[]\&\s-2\u[9]\d\s+2\&. Supported only on IPv6\&. Defaults to false\&.
 .RE
 .PP
 \fIDuplicateAddressDetection=\fR
@@ -1120,19 +1128,19 @@ Takes a boolean\&. Designates this address the "home address" as defined in
 Takes one of
 "ipv4",
 "ipv6",
-"both",
+"both", or
 "none"\&. When
 "ipv4", performs IPv4 Address Conflict Detection\&. See
-\m[blue]\fBRFC 5227\fR\m[]\&\s-2\u[11]\d\s+2\&. When
+\m[blue]\fBRFC 5227\fR\m[]\&\s-2\u[10]\d\s+2\&. When
 "ipv6", performs IPv6 Duplicate Address Detection\&. See
-\m[blue]\fBRFC 4862\fR\m[]\&\s-2\u[12]\d\s+2\&. Defaults to
+\m[blue]\fBRFC 4862\fR\m[]\&\s-2\u[11]\d\s+2\&. Defaults to
 "ipv6"\&.
 .RE
 .PP
 \fIManageTemporaryAddress=\fR
 .RS 4
 Takes a boolean\&. If true the kernel manage temporary addresses created from this one as template on behalf of Privacy Extensions
-\m[blue]\fBRFC 3041\fR\m[]\&\s-2\u[13]\d\s+2\&. For this to become active, the use_tempaddr sysctl setting has to be set to a value greater than zero\&. The given address needs to have a prefix length of 64\&. This flag allows using privacy extensions in a manually configured network, just like if stateless auto\-configuration was active\&. Defaults to false\&.
+\m[blue]\fBRFC 3041\fR\m[]\&\s-2\u[12]\d\s+2\&. For this to become active, the use_tempaddr sysctl setting has to be set to a value greater than zero\&. The given address needs to have a prefix length of 64\&. This flag allows using privacy extensions in a manually configured network, just like if stateless auto\-configuration was active\&. Defaults to false\&.
 .RE
 .PP
 \fIAddPrefixRoute=\fR
@@ -1167,22 +1175,22 @@ The link layer address (MAC address or IP address) of the neighbor\&.
 .SH "[IPV6ADDRESSLABEL] SECTION OPTIONS"
 .PP
 An [IPv6AddressLabel] section accepts the following keys\&. Specify several [IPv6AddressLabel] sections to configure several address labels\&. IPv6 address labels are used for address selection\&. See
-\m[blue]\fBRFC 3484\fR\m[]\&\s-2\u[14]\d\s+2\&. Precedence is managed by userspace, and only the label itself is stored in the kernel\&.
+\m[blue]\fBRFC 3484\fR\m[]\&\s-2\u[13]\d\s+2\&. Precedence is managed by userspace, and only the label itself is stored in the kernel\&.
 .PP
 \fILabel=\fR
 .RS 4
-The label for the prefix, an unsigned integer in the range 0\(en4294967294\&. 0xffffffff is reserved\&. This setting is mandatory\&.
+The label for the prefix, an unsigned integer in the range 0\&...4294967294\&. 0xffffffff is reserved\&. This setting is mandatory\&.
 .RE
 .PP
 \fIPrefix=\fR
 .RS 4
 IPv6 prefix is an address with a prefix length, separated by a slash
 "/"
-character\&. This key is mandatory\&.
+character\&. This setting is mandatory\&.
 .RE
 .SH "[ROUTINGPOLICYRULE] SECTION OPTIONS"
 .PP
-An [RoutingPolicyRule] section accepts the following keys\&. Specify several [RoutingPolicyRule] sections to configure several rules\&.
+An [RoutingPolicyRule] section accepts the following settings\&. Specify several [RoutingPolicyRule] sections to configure several rules\&.
 .PP
 \fITypeOfService=\fR
 .RS 4
@@ -1201,7 +1209,7 @@ Specifies the destination address prefix to match\&. Possibly followed by a slas
 .PP
 \fIFirewallMark=\fR
 .RS 4
-Specifies the iptables firewall mark value to match (a number between 1 and 4294967295)\&. Optionally, the firewall mask (also a number between 1 and 4294967295) can be suffixed with a slash ("/"), e\&.g\&.,
+Specifies the iptables firewall mark value to match (a number in the range 1\&...4294967295)\&. Optionally, the firewall mask (also a number between 1\&...4294967295) can be suffixed with a slash ("/"), e\&.g\&.,
 "7/255"\&.
 .RE
 .PP
@@ -1221,7 +1229,7 @@ in
 .RS 4
 Specifies the priority of this rule\&.
 \fIPriority=\fR
-is an unsigned integer in the range 0\&...4294967295\&. Higher number means lower priority, and rules get processed in order of increasing number\&. Defaults to unset, and the kernel will pick a value dynamically\&.
+is an integer in the range 0\&...4294967295\&. Higher number means lower priority, and rules get processed in order of increasing number\&. Defaults to unset, and the kernel will pick a value dynamically\&.
 .RE
 .PP
 \fIIncomingInterface=\fR
@@ -1295,6 +1303,14 @@ in the range 0\&...128 and rejects routing decisions that have a prefix length o
 or less\&. Defaults to unset\&.
 .RE
 .PP
+\fISuppressInterfaceGroup=\fR
+.RS 4
+Takes an integer in the range 0\&...2147483647 and rejects routing decisions that have an interface with the same group id\&. It has the same meaning as
+\fBsuppress_ifgroup\fR
+in
+\fBip rule\fR\&. Defaults to unset\&.
+.RE
+.PP
 \fIType=\fR
 .RS 4
 Specifies Routing Policy Database (RPDB) rule type\&. Takes one of
@@ -1305,11 +1321,11 @@ or
 .RE
 .SH "[NEXTHOP] SECTION OPTIONS"
 .PP
-The [NextHop] section is used to manipulate entries in the kernel\*(Aqs "nexthop" tables\&. The [NextHop] section accepts the following keys\&. Specify several [NextHop] sections to configure several hops\&.
+The [NextHop] section is used to manipulate entries in the kernel\*(Aqs "nexthop" tables\&. The [NextHop] section accepts the following settings\&. Specify several [NextHop] sections to configure several hops\&.
 .PP
 \fIId=\fR
 .RS 4
-The id of the next hop\&. Takes an unsigned integer in the range 1\&...4294967295\&. If left unspecified, then automatically chosen by kernel\&.
+The id of the next hop\&. Takes an integer in the range 1\&...4294967295\&. If unspecified, then automatically chosen by kernel\&.
 .RE
 .PP
 \fIGateway=\fR
@@ -1352,7 +1368,7 @@ Takes a whitespace separated list of nexthop IDs\&. Each ID must be in the range
 .RE
 .SH "[ROUTE] SECTION OPTIONS"
 .PP
-The [Route] section accepts the following keys\&. Specify several [Route] sections to configure several routes\&.
+The [Route] section accepts the following settings\&. Specify several [Route] sections to configure several routes\&.
 .PP
 \fIGateway=\fR
 .RS 4
@@ -1390,7 +1406,7 @@ The metric of the route\&. Takes an unsigned integer in the range 0\&...42949672
 \fIIPv6Preference=\fR
 .RS 4
 Specifies the route preference as defined in
-\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[15]\d\s+2
+\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[14]\d\s+2
 for Router Discovery messages\&. Which can be one of
 "low"
 the route has a lowest priority,
@@ -1576,21 +1592,11 @@ Takes a boolean\&. When true enables TTL propagation at Label Switched Path (LSP
 \fIMTUBytes=\fR
 .RS 4
 The maximum transmission unit in bytes to set for the route\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&.
-.sp
-Note that if IPv6 is enabled on the interface, and the MTU is chosen below 1280 (the minimum MTU for IPv6) it will automatically be increased to this value\&.
-.RE
-.PP
-\fIIPServiceType=\fR
-.RS 4
-Takes string;
-"CS6"
-or
-"CS4"\&. Used to set IP service type to CS6 (network control) or CS4 (Realtime)\&. Defaults to CS6\&.
 .RE
 .PP
 \fITCPAdvertisedMaximumSegmentSize=\fR
 .RS 4
-Specifies the Path MSS (in bytes) hints given on TCP layer\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&. An unsigned integer in the range 1\(en4294967294\&. When unset, the kernel\*(Aqs default will be used\&.
+Specifies the Path MSS (in bytes) hints given on TCP layer\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&. An unsigned integer in the range 1\&...4294967294\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIMultiPathRoute=\fR\fI\fIaddress\fR\fR\fI[@\fR\fI\fIname\fR\fR\fI] [\fR\fI\fIweight\fR\fR\fI]\fR
@@ -1623,7 +1629,7 @@ Use this value for the hostname which is sent to the DHCP server, instead of mac
 \fIMUDURL=\fR
 .RS 4
 When configured, the specified Manufacturer Usage Description (MUD) URL will be sent to the DHCPv4 server\&. Takes a URL of length up to 255 characters\&. A superficial verification that the string is a valid URL will be performed\&. DHCPv4 clients are intended to have at most one MUD URL associated with them\&. See
-\m[blue]\fBRFC\ \&8520\fR\m[]\&\s-2\u[16]\d\s+2\&.
+\m[blue]\fBRFC 8520\fR\m[]\&\s-2\u[15]\d\s+2\&.
 .sp
 MUD is an embedded software standard defined by the IETF that allows IoT device makers to advertise device specifications, including the intended communication patterns for their device when it connects to the network\&. The network can then use this to author a context\-specific access policy, so the device functions only within those parameters\&.
 .RE
@@ -1677,7 +1683,7 @@ The DHCP Identity Association Identifier (IAID) for the interface, a 32\-bit uns
 \fIAnonymize=\fR
 .RS 4
 Takes a boolean\&. When true, the options sent to the DHCP server will follow the
-\m[blue]\fBRFC 7844\fR\m[]\&\s-2\u[17]\d\s+2
+\m[blue]\fBRFC 7844\fR\m[]\&\s-2\u[16]\d\s+2
 (Anonymity Profiles for DHCP Clients) to minimize disclosure of identifying information\&. Defaults to false\&.
 .sp
 This option should only be set to true when
@@ -1714,7 +1720,7 @@ Send an arbitrary raw option in the DHCPv4 request\&. Takes a DHCP option number
 "uint32",
 "ipv4address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .PP
 \fISendVendorOption=\fR
@@ -1725,7 +1731,27 @@ Send an arbitrary vendor option in the DHCPv4 request\&. Takes a DHCP option num
 "uint32",
 "ipv4address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+.RE
+.PP
+\fIIPServiceType=\fR
+.RS 4
+Takes one of the special values
+"none",
+"CS6", or
+"CS4"\&. When
+"none"
+no IP service type is set to the packet sent from the DHCPv4 client\&. When
+"CS6"
+(network control) or
+"CS4"
+(realtime), the corresponding service type will be set\&. Defaults to
+"CS6"\&.
+.RE
+.PP
+\fILabel=\fR
+.RS 4
+Specifies the label for the IPv4 address received from the DHCP server\&. The label must be a 7\-bit ASCII string with a length of 1\&...15 characters\&. Defaults to unset\&.
 .RE
 .PP
 \fIUseDNS=\fR
@@ -1768,6 +1794,11 @@ When true (the default), the SIP servers received from the DHCP server will be c
 When true, the interface maximum transmission unit from the DHCP server will be used on the current link\&. If
 \fIMTUBytes=\fR
 is set, then this setting is ignored\&. Defaults to false\&.
+.sp
+Note, some drivers will reset the interfaces if the MTU is changed\&. For such interfaces, please try to use
+\fIIgnoreCarrierLoss=\fR
+with a short timespan, e\&.g\&.
+"3 seconds"\&.
 .RE
 .PP
 \fIUseHostname=\fR
@@ -1809,7 +1840,7 @@ scope will be used\&. For anything else, scope defaults to
 .PP
 \fIRouteMetric=\fR
 .RS 4
-Set the routing metric for routes specified by the DHCP server\&. Takes an unsigned integer in the range 0\&...4294967295\&. Defaults to 1024\&.
+Set the routing metric for routes specified by the DHCP server (including the prefix route added for the specified prefix)\&. Takes an unsigned integer in the range 0\&...4294967295\&. Defaults to 1024\&.
 .RE
 .PP
 \fIRouteTable=\fR\fI\fInum\fR\fR
@@ -1839,12 +1870,21 @@ is used\&.
 When true, the timezone received from the DHCP server will be set as timezone of the local system\&. Defaults to false\&.
 .RE
 .PP
+\fIUse6RD=\fR
+.RS 4
+When true, subnets of the received IPv6 prefix are assigned to downstream interfaces which enables
+\fIDHCPPrefixDelegation=\fR\&. See also
+\fIDHCPPrefixDelegation=\fR
+in the [Network] section, the [DHCPPrefixDelegation] section, and
+\m[blue]\fBRFC 5969\fR\m[]\&\s-2\u[18]\d\s+2\&. Defaults to false\&.
+.RE
+.PP
 \fIFallbackLeaseLifetimeSec=\fR
 .RS 4
 Allows to set DHCPv4 lease lifetime when DHCPv4 server does not send the lease lifetime\&. Takes one of
 "forever"
 or
-"infinity"\&. The latter means that the address never expires\&. Defaults to unset\&.
+"infinity"\&. If specified, the acquired address never expires\&. Defaults to unset\&.
 .RE
 .PP
 \fIRequestBroadcast=\fR
@@ -1866,7 +1906,8 @@ Set the port from which the DHCP client packets originate\&.
 .PP
 \fIDenyList=\fR
 .RS 4
-A whitespace\-separated list of IPv4 addresses\&. DHCP offers from servers in the list are rejected\&. Note that if
+A whitespace\-separated list of IPv4 addresses\&. Each address can optionally take a prefix length after
+"/"\&. DHCP offers from servers in the list are rejected\&. Note that if
 \fIAllowList=\fR
 is configured then
 \fIDenyList=\fR
@@ -1875,7 +1916,8 @@ is ignored\&.
 .PP
 \fIAllowList=\fR
 .RS 4
-A whitespace\-separated list of IPv4 addresses\&. DHCP offers from servers in the list are accepted\&.
+A whitespace\-separated list of IPv4 addresses\&. Each address can optionally take a prefix length after
+"/"\&. DHCP offers from servers in the list are accepted\&.
 .RE
 .PP
 \fISendRelease=\fR
@@ -1885,12 +1927,12 @@ When true, the DHCPv4 client sends a DHCP release packet when it stops\&. Defaul
 .PP
 \fISendDecline=\fR
 .RS 4
-A boolean\&. When
-"true", the DHCPv4 client receives the IP address from the DHCP server\&. After a new IP is received, the DHCPv4 client performs IPv4 Duplicate Address Detection\&. If duplicate use is detected, the DHCPv4 client rejects the IP by sending a
+A boolean\&. When true,
+\fBsystemd\-networkd\fR
+performs IPv4 Duplicate Address Detection to the acquired address by the DHCPv4 client\&. If duplicate is detected, the DHCPv4 client rejects the address by sending a
 \fBDHCPDECLINE\fR
-packet and tries to obtain an IP address again\&. See
-\m[blue]\fBRFC 5224\fR\m[]\&\s-2\u[11]\d\s+2\&. Defaults to
-"unset"\&.
+packet to the DHCP server, and tries to obtain an IP address again\&. See
+\m[blue]\fBRFC 5227\fR\m[]\&\s-2\u[10]\d\s+2\&. Defaults to false\&.
 .RE
 .SH "[DHCPV6] SECTION OPTIONS"
 .PP
@@ -1917,13 +1959,13 @@ Send an arbitrary vendor option in the DHCPv6 request\&. Takes an enterprise ide
 "ipv4address",
 "ipv6address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .PP
 \fIUserClass=\fR
 .RS 4
 A DHCPv6 client can use User Class option to identify the type or category of user or applications it represents\&. The information contained in this option is a string that represents the user class of which the client is a member\&. Each class sets an identifying string of information to be used by the DHCP service to classify clients\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Takes a whitespace\-separated list of strings\&. Note that currently
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Takes a whitespace\-separated list of strings\&. Note that currently
 \fBNUL\fR
 bytes are not allowed\&.
 .RE
@@ -1937,7 +1979,7 @@ A DHCPv6 client can use VendorClass option to identify the vendor that manufactu
 .RS 4
 Takes an IPv6 address with prefix length in the same format as the
 \fIAddress=\fR
-in the [Network] section\&. The DHCPv6 client will include a prefix hint in the DHCPv6 solicitation sent to the server\&. The prefix length must be in the range 1\(en128\&. Defaults to unset\&.
+in the [Network] section\&. The DHCPv6 client will include a prefix hint in the DHCPv6 solicitation sent to the server\&. The prefix length must be in the range 1\&...128\&. Defaults to unset\&.
 .RE
 .PP
 \fIUseAddress=\fR
@@ -1945,48 +1987,69 @@ in the [Network] section\&. The DHCPv6 client will include a prefix hint in the 
 When true (the default), the IP addresses provided by the DHCPv6 server will be assigned\&.
 .RE
 .PP
+\fIUseDelegatedPrefix=\fR
+.RS 4
+When true (the default), the client will request the DHCPv6 server to delegate prefixes\&. If the server provides prefixes to be delegated, then subnets of the prefixes are assigned to the interfaces which enables
+\fIDHCPPrefixDelegation=\fR\&. See also the
+\fIDHCPPrefixDelegation=\fR
+setting in the [Network] section, settings in the [DHCPPrefixDelegation] section, and
+\m[blue]\fBRFC 8415\fR\m[]\&\s-2\u[19]\d\s+2\&.
+.RE
+.PP
 \fIUseDNS=\fR, \fIUseNTP=\fR, \fIUseHostname=\fR, \fIUseDomains=\fR
 .RS 4
 As in the [DHCPv4] section\&.
 .RE
 .PP
-\fIForceDHCPv6PDOtherInformation=\fR
-.RS 4
-Takes a boolean that enforces DHCPv6 stateful mode when the \*(AqOther information\*(Aq bit is set in Router Advertisement messages\&. By default setting only the \*(AqO\*(Aq bit in Router Advertisements makes DHCPv6 request network information in a stateless manner using a two\-message Information Request and Information Reply message exchange\&.
-\m[blue]\fBRFC 7084\fR\m[]\&\s-2\u[19]\d\s+2, requirement WPD\-4, updates this behavior for a Customer Edge router so that stateful DHCPv6 Prefix Delegation is also requested when only the \*(AqO\*(Aq bit is set in Router Advertisements\&. This option enables such a CE behavior as it is impossible to automatically distinguish the intention of the \*(AqO\*(Aq bit otherwise\&. By default this option is set to false, enable it if no prefixes are delegated when the device should be acting as a CE router\&.
-.RE
-.PP
 \fIWithoutRA=\fR
 .RS 4
 Allows DHCPv6 client to start without router advertisements\*(Aqs managed or other address configuration flag\&. Takes one of
+"no",
 "solicit"
 or
-"information\-request"\&. Defaults to unset\&.
+"information\-request"\&. If this is not specified,
+"solicit"
+is used when
+\fIDHCPPrefixDelegation=\fR
+is enabled and
+\fIUplinkInterface=:self\fR
+is specified in the [DHCPPrefixDelegation] section\&. Otherwise, defaults to
+"no", and the DHCPv6 client will be started when an RA is received\&. See also the
+\fIDHCPv6Client=\fR
+setting in the [IPv6AcceptRA] section\&.
 .RE
+.SH "[DHCPPREFIXDELEGATION] SECTION OPTIONS"
 .PP
-\fIRapidCommit=\fR
+The [DHCPPrefixDelegation] section configures subnet prefixes of the delegated prefixes acquired by a DHCPv6 client, or by a DHCPv4 client through the 6RD option on another interface\&. The settings in this section are used only when the
+\fIDHCPPrefixDelegation=\fR
+setting in the [Network] section is enabled\&.
+.PP
+\fIUplinkInterface=\fR
 .RS 4
-Takes a boolean\&. The DHCPv6 client can obtain configuration parameters from a DHCPv6 server through a rapid two\-message exchange (solicit and reply)\&. When the rapid commit option is enabled by both the DHCPv6 client and the DHCPv6 server, the two\-message exchange is used, rather than the default four\-message exchange (solicit, advertise, request, and reply)\&. The two\-message exchange provides faster client configuration and is beneficial in environments in which networks are under a heavy load\&. See
-\m[blue]\fBRFC 3315\fR\m[]\&\s-2\u[20]\d\s+2
-for details\&. Defaults to true\&.
+Specifies the name or the index of the uplink interface, or one of the special values
+":self"
+and
+":auto"\&. When
+":self", the interface itself is considered the uplink interface, and
+\fIWithoutRA=solicit\fR
+is implied if the setting is not explicitly specified\&. When
+":auto", the first link which acquired prefixes to be delegated from the DHCPv6 or DHCPv4 server is selected\&. Defaults to
+":auto"\&.
 .RE
-.SH "[DHCPV6PREFIXDELEGATION] SECTION OPTIONS"
-.PP
-The [DHCPv6PrefixDelegation] section configures delegated prefixes assigned by DHCPv6 server\&. The settings in this section are used only when
-\fIDHCPv6PrefixDelegation=\fR
-setting is enabled\&.
 .PP
 \fISubnetId=\fR
 .RS 4
 Configure a specific subnet ID on the interface from a (previously) received prefix delegation\&. You can either set "auto" (the default) or a specific subnet ID (as defined in
-\m[blue]\fBRFC 4291\fR\m[]\&\s-2\u[21]\d\s+2, section 2\&.5\&.4), in which case the allowed value is hexadecimal, from 0 to 0x7fffffffffffffff inclusive\&.
+\m[blue]\fBRFC 4291\fR\m[]\&\s-2\u[20]\d\s+2, section 2\&.5\&.4), in which case the allowed value is hexadecimal, from 0 to 0x7fffffffffffffff inclusive\&.
 .RE
 .PP
 \fIAnnounce=\fR
 .RS 4
 Takes a boolean\&. When enabled, and
 \fIIPv6SendRA=\fR
-in [Network] section is enabled, the delegated prefixes are distributed through the IPv6 Router Advertisement\&. Defaults to yes\&.
+in [Network] section is enabled, the delegated prefixes are distributed through the IPv6 Router Advertisement\&. This setting will be ignored when the
+\fIDHCPPrefixDelegation=\fR
+setting is enabled on the upstream interface\&. Defaults to yes\&.
 .RE
 .PP
 \fIAssign=\fR
@@ -1998,9 +2061,11 @@ setting below\&. Defaults to yes\&.
 .PP
 \fIToken=\fR
 .RS 4
-Specifies an optional address generation mode for assigning an address in each delegated prefix\&. Takes an IPv6 address\&. When set, the lower bits of the supplied address is combined with the upper bits of each delegatad prefix received from the WAN interface by the DHCPv6 Prefix Delegation to form a complete address\&. When
+Specifies an optional address generation mode for assigning an address in each delegated prefix\&. This accepts the same syntax as
+\fIToken=\fR
+in the [IPv6AcceptRA] section\&. If
 \fIAssign=\fR
-is disabled, this setting is ignored\&. When unset, the EUI\-64 algorithm will be used to form addresses\&. Defaults to unset\&.
+is set to false, then this setting will be ignored\&. Defaults to unset, which means the EUI\-64 algorithm will be used\&.
 .RE
 .PP
 \fIManageTemporaryAddress=\fR
@@ -2010,13 +2075,75 @@ As in the [Address] section, but defaults to true\&.
 .PP
 \fIRouteMetric=\fR
 .RS 4
-The metric of the route to the delegated prefix subnet\&. Takes an unsigned integer in the range 0\&...4294967295\&. When unset or set to 0, the kernel\*(Aqs default value is used\&.
+The metric of the route to the delegated prefix subnet\&. Takes an unsigned integer in the range 0\&...4294967295\&. When set to 0, the kernel\*(Aqs default value is used\&. Defaults to 256\&.
 .RE
 .SH "[IPV6ACCEPTRA] SECTION OPTIONS"
 .PP
 The [IPv6AcceptRA] section configures the IPv6 Router Advertisement (RA) client, if it is enabled with the
 \fIIPv6AcceptRA=\fR
 setting described above:
+.PP
+\fIToken=\fR
+.RS 4
+Specifies an optional address generation mode for the Stateless Address Autoconfiguration (SLAAC)\&. The following values are supported:
+.PP
+\fBeui64\fR
+.RS 4
+The EUI\-64 algorithm will be used to generate an address for that prefix\&. Only supported by Ethernet or InfiniBand interfaces\&.
+.RE
+.PP
+\fBstatic:\fR\fB\fIADDRESS\fR\fR
+.RS 4
+An IPv6 address must be specified after a colon (":"), and the lower bits of the supplied address are combined with the upper bits of a prefix received in a Router Advertisement (RA) message to form a complete address\&. Note that if multiple prefixes are received in an RA message, or in multiple RA messages, addresses will be formed from each of them using the supplied address\&. This mode implements SLAAC but uses a static interface identifier instead of an identifier generated by using the EUI\-64 algorithm\&. Because the interface identifier is static, if Duplicate Address Detection detects that the computed address is a duplicate (in use by another node on the link), then this mode will fail to provide an address for that prefix\&. If an IPv6 address without mode is specified, then
+"static"
+mode is assumed\&.
+.RE
+.PP
+\fBprefixstable[:\fR\fB\fIADDRESS\fR\fR\fB][,\fR\fB\fIUUID\fR\fR\fB]\fR
+.RS 4
+The algorithm specified in
+\m[blue]\fBRFC 7217\fR\m[]\&\s-2\u[21]\d\s+2
+will be used to generate interface identifiers\&. This mode can optionally take an IPv6 address separated with a colon (":")\&. If an IPv6 address is specified, then an interface identifier is generated only when a prefix received in an RA message matches the supplied address\&.
+.sp
+This mode can also optionally take a non\-null UUID in the format which
+\fBsd_id128_from_string()\fR
+accepts, e\&.g\&.
+"86b123b969ba4b7eb8b3d8605123525a"
+or
+"86b123b9\-69ba\-4b7e\-b8b3\-d8605123525a"\&. If a UUID is specified, the value is used as the secret key to generate interface identifiers\&. If not specified, then an application specific ID generated with the system\*(Aqs machine\-ID will be used as the secret key\&. See
+\fBsd-id128\fR(3),
+\fBsd_id128_from_string\fR(3), and
+\fBsd_id128_get_machine\fR(3),
+.sp
+Note that the
+"prefixstable"
+algorithm uses both the interface name and MAC address as input to the hash to compute the interface identifier, so if either of those are changed the resulting interface identifier (and address) will be changed, even if the prefix received in the RA message has not been changed\&.
+.RE
+.sp
+If no address generation mode is specified (which is the default), or a received prefix does not match any of the addresses provided in
+"prefixstable"
+mode, then the EUI\-64 algorithm will be used for Ethernet or InfiniBand interfaces, otherwise
+"prefixstable"
+will be used to form an interface identifier for that prefix\&.
+.sp
+This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&.
+.sp
+Examples:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Token=eui64
+Token=::1a:2b:3c:4d
+Token=static:::1a:2b:3c:4d
+Token=prefixstable
+Token=prefixstable:2002:da8:1::
+.fi
+.if n \{\
+.RE
+.\}
+.RE
 .PP
 \fIUseDNS=\fR
 .RS 4
@@ -2058,6 +2185,21 @@ The table identifier for the routes received in the Router Advertisement (a numb
 Set the routing metric for the routes received in the Router Advertisement\&. Takes an unsigned integer in the range 0\&...4294967295\&. Defaults to 1024\&.
 .RE
 .PP
+\fIUseMTU=\fR
+.RS 4
+Takes a boolean\&. When true, the MTU received in the Router Advertisement will be used\&. Defaults to true\&.
+.RE
+.PP
+\fIUseGateway=\fR
+.RS 4
+When true (the default), the router address will be configured as the default gateway\&.
+.RE
+.PP
+\fIUseRoutePrefix=\fR
+.RS 4
+When true (the default), the routes corresponding to the route prefixes received in the Router Advertisement will be configured\&.
+.RE
+.PP
 \fIUseAutonomousPrefix=\fR
 .RS 4
 When true (the default), the autonomous prefix received in the Router Advertisement will be used and take precedence over any statically configured ones\&.
@@ -2070,12 +2212,14 @@ When true (the default), the onlink prefix received in the Router Advertisement 
 .PP
 \fIRouterDenyList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 router addresses\&. Any information advertised by the listed router is ignored\&.
+A whitespace\-separated list of IPv6 router addresses\&. Each address can optionally take a prefix length after
+"/"\&. Any information advertised by the listed router is ignored\&.
 .RE
 .PP
 \fIRouterAllowList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 router addresses\&. Only information advertised by the listed router is accepted\&. Note that if
+A whitespace\-separated list of IPv6 router addresses\&. Each address can optionally take a prefix length after
+"/"\&. Only information advertised by the listed router is accepted\&. Note that if
 \fIRouterAllowList=\fR
 is configured then
 \fIRouterDenyList=\fR
@@ -2084,12 +2228,14 @@ is ignored\&.
 .PP
 \fIPrefixDenyList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 prefixes\&. IPv6 prefixes supplied via router advertisements in the list are ignored\&.
+A whitespace\-separated list of IPv6 prefixes\&. Each prefix can optionally take its prefix length after
+"/"\&. IPv6 prefixes supplied via router advertisements in the list are ignored\&.
 .RE
 .PP
 \fIPrefixAllowList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 prefixes\&. IPv6 prefixes supplied via router advertisements in the list are allowed\&. Note that if
+A whitespace\-separated list of IPv6 prefixes\&. Each prefix can optionally take its prefix length after
+"/"\&. IPv6 prefixes supplied via router advertisements in the list are allowed\&. Note that if
 \fIPrefixAllowList=\fR
 is configured then
 \fIPrefixDenyList=\fR
@@ -2098,12 +2244,14 @@ is ignored\&.
 .PP
 \fIRouteDenyList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 route prefixes\&. IPv6 route prefixes supplied via router advertisements in the list are ignored\&.
+A whitespace\-separated list of IPv6 route prefixes\&. Each prefix can optionally take its prefix length after
+"/"\&. IPv6 route prefixes supplied via router advertisements in the list are ignored\&.
 .RE
 .PP
 \fIRouteAllowList=\fR
 .RS 4
-A whitespace\-separated list of IPv6 route prefixes\&. IPv6 route prefixes supplied via router advertisements in the list are allowed\&. Note that if
+A whitespace\-separated list of IPv6 route prefixes\&. Each prefix can optionally take its prefix length after
+"/"\&. IPv6 route prefixes supplied via router advertisements in the list are allowed\&. Note that if
 \fIRouteAllowList=\fR
 is configured then
 \fIRouteDenyList=\fR
@@ -2113,9 +2261,12 @@ is ignored\&.
 \fIDHCPv6Client=\fR
 .RS 4
 Takes a boolean, or the special value
-"always"\&. When true or
-"always", the DHCPv6 client will be started when the RA has the managed or other information flag\&. If set to
-"always", the DHCPv6 client will also be started in managed mode when neither managed nor other information flag is set in the RA\&. Defaults to true\&.
+"always"\&. When true, the DHCPv6 client will be started when the RA has the managed or other information flag\&. If set to
+"always", the DHCPv6 client will be started in managed mode when an RA is received, even if neither managed nor other information flag is set in the RA\&. This will be ignored when
+\fIWithoutRA=\fR
+in the [DHCPv6] section is enabled, or
+\fIUplinkInterface=:self\fR
+in the [DHCPPrefixDelegation] section is specified\&. Defaults to true\&.
 .RE
 .SH "[DHCPSERVER] SECTION OPTIONS"
 .PP
@@ -2145,11 +2296,11 @@ Control the default and maximum DHCP lease time to pass to clients\&. These sett
 .PP
 \fIUplinkInterface=\fR
 .RS 4
-Specifies name or index of uplink interface, or one of the special values
+Specifies the name or the index of the uplink interface, or one of the special values
 ":none"
 and
-":auto"\&. When emitting DNS, NTP, or SIP servers are enabled but no servers are specified, the servers configured in the uplink interface will be emitted\&. When
-":auto", the link which has default gateway with higher priority will be automatically selected\&. When
+":auto"\&. When emitting DNS, NTP, or SIP servers is enabled but no servers are specified, the servers configured in the uplink interface will be emitted\&. When
+":auto", the link which has a default gateway with the highest priority will be automatically selected\&. When
 ":none", no uplink interface will be selected\&. Defaults to
 ":auto"\&.
 .RE
@@ -2181,12 +2332,23 @@ and
 \fIDNS=\fR\&.
 .RE
 .PP
-\fIEmitRouter=\fR
+\fIEmitRouter=\fR, \fIRouter=\fR
 .RS 4
-Similar to the
-\fIEmitDNS=\fR
-setting described above, this setting configures whether the DHCP lease should contain the router option\&. The same syntax, propagation semantics and defaults apply as for
-\fIEmitDNS=\fR\&.
+The
+\fIEmitRouter=\fR
+setting takes a boolean value, and configures whether the DHCP lease should contain the router option\&. The
+\fIRouter=\fR
+setting takes an IPv4 address, and configures the router address to be emitted\&. When the
+\fIRouter=\fR
+setting is not specified, then the server address will be used for the router option\&. When the
+\fIEmitRouter=\fR
+setting is disabled, the
+\fIRouter=\fR
+setting will be ignored\&. The
+\fIEmitRouter=\fR
+setting defaults to true, and the
+\fIRouter=\fR
+setting defaults to unset\&.
 .RE
 .PP
 \fIEmitTimezone=\fR, \fITimezone=\fR
@@ -2211,7 +2373,7 @@ Send a raw option with value via DHCPv4 server\&. Takes a DHCP option number, da
 "ipv4address",
 "ipv6address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .PP
 \fISendVendorOption=\fR
@@ -2222,7 +2384,7 @@ Send a vendor option with value via DHCPv4 server\&. Takes a DHCP option number,
 "uint32",
 "ipv4address", or
 "string"\&. Special characters in the data string may be escaped using
-\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[18]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
+\m[blue]\fBC\-style escapes\fR\m[]\&\s-2\u[17]\d\s+2\&. This setting can be specified multiple times\&. If an empty string is specified, then all options specified earlier are cleared\&. Defaults to unset\&.
 .RE
 .PP
 \fIBindToInterface=\fR
@@ -2231,7 +2393,7 @@ Takes a boolean value\&. When
 "yes", DHCP server socket will be bound to its network interface and all socket communication will be restricted to this interface\&. Defaults to
 "yes", except if
 \fIRelayTarget=\fR
-is used (see below), in which case it defaults defaults to
+is used (see below), in which case it defaults to
 "no"\&.
 .RE
 .PP
@@ -2298,7 +2460,7 @@ is set to
 .PP
 \fIRouterLifetimeSec=\fR
 .RS 4
-Takes a timespan\&. Configures the IPv6 router lifetime in seconds\&. When set to 0, the host is not acting as a router\&. Defaults to 30 minutes\&.
+Takes a timespan\&. Configures the IPv6 router lifetime in seconds\&. The value must be 0 seconds, or between 4 seconds and 9000 seconds\&. When set to 0, the host is not acting as a router\&. Defaults to 1800 seconds (30 minutes)\&.
 .RE
 .PP
 \fIRouterPreference=\fR
@@ -2316,9 +2478,22 @@ and
 added as synonyms for
 "medium"
 just to make configuration easier\&. See
-\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[15]\d\s+2
+\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[14]\d\s+2
 for details\&. Defaults to
 "medium"\&.
+.RE
+.PP
+\fIUplinkInterface=\fR
+.RS 4
+Specifies the name or the index of the uplink interface, or one of the special values
+":none"
+and
+":auto"\&. When emitting DNS servers or search domains is enabled but no servers are specified, the servers configured in the uplink interface will be emitted\&. When
+":auto", the value specified to the same setting in the [DHCPPrefixDelegation] section will be used if
+\fIDHCPPrefixDelegation=\fR
+is enabled, otherwise the link which has a default gateway with the highest priority will be automatically selected\&. When
+":none", no uplink interface will be selected\&. Defaults to
+":auto"\&.
 .RE
 .PP
 \fIEmitDNS=\fR, \fIDNS=\fR
@@ -2331,7 +2506,9 @@ is true\&.
 also takes special value
 "_link_local"; in that case the IPv6 link local address is distributed\&. If
 \fIDNS=\fR
-is empty, DNS servers are read from the [Network] section\&. If the [Network] section does not contain any DNS servers either, DNS servers from the uplink with the highest priority default route are used\&. When
+is empty, DNS servers are read from the [Network] section\&. If the [Network] section does not contain any DNS servers either, DNS servers from the uplink interface specified in
+\fIUplinkInterface=\fR
+will be used\&. When
 \fIEmitDNS=\fR
 is false, no DNS server information is sent in Router Advertisement messages\&.
 \fIEmitDNS=\fR
@@ -2344,7 +2521,9 @@ A list of DNS search domains distributed via Router Advertisement messages when
 \fIEmitDomains=\fR
 is true\&. If
 \fIDomains=\fR
-is empty, DNS search domains are read from the [Network] section\&. If the [Network] section does not contain any DNS search domains either, DNS search domains from the uplink with the highest priority default route are used\&. When
+is empty, DNS search domains are read from the [Network] section\&. If the [Network] section does not contain any DNS search domains either, DNS search domains from the uplink interface specified in
+\fIUplinkInterface=\fR
+will be used\&. When
 \fIEmitDomains=\fR
 is false, no DNS search domain information is sent in Router Advertisement messages\&.
 \fIEmitDomains=\fR
@@ -2356,7 +2535,7 @@ defaults to true\&.
 Lifetime in seconds for the DNS server addresses listed in
 \fIDNS=\fR
 and search domains listed in
-\fIDomains=\fR\&.
+\fIDomains=\fR\&. Defaults to 3600 seconds (one hour)\&.
 .RE
 .SH "[IPV6PREFIX] SECTION OPTIONS"
 .PP
@@ -2382,14 +2561,23 @@ character\&. Use multiple [IPv6Prefix] sections to configure multiple IPv6 prefi
 .RS 4
 Preferred and valid lifetimes for the prefix measured in seconds\&.
 \fIPreferredLifetimeSec=\fR
-defaults to 604800 seconds (one week) and
+defaults to 1800 seconds (30 minutes) and
 \fIValidLifetimeSec=\fR
-defaults to 2592000 seconds (30 days)\&.
+defaults to 3600 seconds (one hour)\&.
 .RE
 .PP
 \fIAssign=\fR
 .RS 4
 Takes a boolean\&. When true, adds an address from the prefix\&. Default to false\&.
+.RE
+.PP
+\fIToken=\fR
+.RS 4
+Specifies an optional address generation mode for assigning an address in each prefix\&. This accepts the same syntax as
+\fIToken=\fR
+in the [IPv6AcceptRA] section\&. If
+\fIAssign=\fR
+is set to false, then this setting will be ignored\&. Defaults to unset, which means the EUI\-64 algorithm will be used\&.
 .RE
 .PP
 \fIRouteMetric=\fR
@@ -2401,7 +2589,7 @@ is false\&.
 .SH "[IPV6ROUTEPREFIX] SECTION OPTIONS"
 .PP
 One or more [IPv6RoutePrefix] sections contain the IPv6 prefix routes that are announced via Router Advertisements\&. See
-\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[15]\d\s+2
+\m[blue]\fBRFC 4191\fR\m[]\&\s-2\u[14]\d\s+2
 for further details\&.
 .PP
 \fIRoute=\fR
@@ -2415,7 +2603,7 @@ character\&. Use multiple [IPv6PrefixRoutes] sections to configure multiple IPv6
 .RS 4
 Lifetime for the route prefix measured in seconds\&.
 \fILifetimeSec=\fR
-defaults to 604800 seconds (one week)\&.
+defaults to 3600 seconds (one hour)\&.
 .RE
 .SH "[BRIDGE] SECTION OPTIONS"
 .PP
@@ -2586,7 +2774,27 @@ The bitrate of CAN device in bits per second\&. The usual SI prefixes (K, M) wit
 Optional sample point in percent with one decimal (e\&.g\&.
 "75%",
 "87\&.5%") or permille (e\&.g\&.
-"875‰")\&.
+"875‰")\&. This will be ignored when
+\fIBitRate=\fR
+is unspecified\&.
+.RE
+.PP
+\fITimeQuantaNSec=\fR, \fIPropagationSegment=\fR, \fIPhaseBufferSegment1=\fR, \fIPhaseBufferSegment2=\fR, \fISyncJumpWidth=\fR
+.RS 4
+Specifies the time quanta, propagation segment, phase buffer segment 1 and 2, and the synchronization jump width, which allow to define the CAN bit\-timing in a hardware independent format as proposed by the Bosch CAN 2\&.0 Specification\&.
+\fITimeQuantaNSec=\fR
+takes a timespan in nanoseconds\&.
+\fIPropagationSegment=\fR,
+\fIPhaseBufferSegment1=\fR,
+\fIPhaseBufferSegment2=\fR, and
+\fISyncJumpWidth=\fR
+take number of time quantum specified in
+\fITimeQuantaNSec=\fR
+and must be an unsigned integer in the range 0\&...4294967295\&. These settings except for
+\fISyncJumpWidth=\fR
+will be ignored when
+\fIBitRate=\fR
+is specified\&.
 .RE
 .PP
 \fIDataBitRate=\fR, \fIDataSamplePoint=\fR
@@ -2598,6 +2806,13 @@ and
 keys\&.
 .RE
 .PP
+\fIDataTimeQuantaNSec=\fR, \fIDataPropagationSegment=\fR, \fIDataPhaseBufferSegment1=\fR, \fIDataPhaseBufferSegment2=\fR, \fIDataSyncJumpWidth=\fR
+.RS 4
+Specifies the time quanta, propagation segment, phase buffer segment 1 and 2, and the synchronization jump width for the data phase, if CAN\-FD is used\&. These settings are analogous to the
+\fITimeQuantaNSec=\fR
+or related settings\&.
+.RE
+.PP
 \fIFDMode=\fR
 .RS 4
 Takes a boolean\&. When
@@ -2605,7 +2820,9 @@ Takes a boolean\&. When
 \fIDataBitRate=\fR
 and
 \fIDataSamplePoint=\fR
-keys\&.
+keys, or
+\fIDataTimeQuanta=\fR
+and related settings\&.
 .RE
 .PP
 \fIFDNonISO=\fR
@@ -2630,8 +2847,12 @@ will turn the automatic restart off\&. By default automatic restart is disabled\
 .PP
 \fITermination=\fR
 .RS 4
-Takes a boolean\&. When
-"yes", the termination resistor will be selected for the bias network\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean or a termination resistor value in ohm in the range 0\&...65535\&. When
+"yes", the termination resistor is set to 120 ohm\&. When
+"no"
+or
+"0"
+is set, the termination resistor is disabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITripleSampling=\fR
@@ -2650,6 +2871,52 @@ Takes a boolean\&. When
 .RS 4
 Takes a boolean\&. When
 "yes", listen\-only mode is enabled\&. When the interface is in listen\-only mode, the interface neither transmit CAN frames nor send ACK bit\&. Listen\-only mode is important to debug CAN networks without interfering with the communication or acknowledge the CAN frame\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fILoopback=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", loopback mode is enabled\&. When the loopback mode is enabled, the interface treats messages transmitted by itself as received messages\&. The loopback mode is important to debug CAN networks\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIOneShot=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", one\-shot mode is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIPresumeAck=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", the interface will ignore missing CAN ACKs\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIClassicDataLengthCode=\fR
+.RS 4
+Takes a boolean\&. When
+"yes", the interface will handle the 4bit data length code (DLC)\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.SH "[IPOIB] SECTION OPTIONS"
+.PP
+The [IPoIB] section manages the IP over Infiniband and accepts the following keys:
+.PP
+\fIMode=\fR
+.RS 4
+Takes one of the special values
+"datagram"
+or
+"connected"\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.sp
+When
+"datagram", the Infiniband unreliable datagram (UD) transport is used, and so the interface MTU is equal to the IB L2 MTU minus the IPoIB encapsulation header (4 bytes)\&. For example, in a typical IB fabric with a 2K MTU, the IPoIB MTU will be 2048 \- 4 = 2044 bytes\&.
+.sp
+When
+"connected", the Infiniband reliable connected (RC) transport is used\&. Connected mode takes advantage of the connected nature of the IB transport and allows an MTU up to the maximal IP packet size of 64K, which reduces the number of IP packets needed for handling large UDP datagrams, TCP segments, etc and increases the performance for large messages\&.
+.RE
+.PP
+\fIIgnoreUserspaceMulticastGroup=\fR
+.RS 4
+Takes an boolean value\&. When true, the kernel ignores multicast groups handled by userspace\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
 .RE
 .SH "[QDISC] SECTION OPTIONS"
 .PP
@@ -2698,7 +2965,7 @@ Specifies the chosen delay to be added to the packets outgoing to the network in
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the maximum number of packets the qdisc may hold queued at a time\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to 1000\&.
+Specifies the maximum number of packets the qdisc may hold queued at a time\&. An unsigned integer in the range 0\&...4294967294\&. Defaults to 1000\&.
 .RE
 .PP
 \fILossRate=\fR
@@ -2832,7 +3099,7 @@ Configures the major number of unique identifier of the qdisc, known as the hand
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\&...4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .SH "[STOCHASTICFAIRNESSQUEUEING] SECTION OPTIONS"
 .PP
@@ -2901,7 +3168,7 @@ Configures the major number of unique identifier of the qdisc, known as the hand
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the hard limit on the number of packets in the FIFO queue\&. The size limit prevents overflow in case the kernel is unable to dequeue packets as quickly as it receives them\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the hard limit on the number of packets in the FIFO queue\&. The size limit prevents overflow in case the kernel is unable to dequeue packets as quickly as it receives them\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\&...4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .SH "[PFIFOHEADDROP] SECTION OPTIONS"
 .PP
@@ -2963,14 +3230,185 @@ or a class identifier\&. The class identifier is specified as the major and mino
 Configures the major number of unique identifier of the qdisc, known as the handle\&. Takes a hexadecimal number in the range 0x1\(en0xffff\&. Defaults to unset\&.
 .RE
 .PP
-\fIOverheadBytes=\fR
-.RS 4
-Specifies that bytes to be addeded to the size of each packet\&. Bytes may be negative\&. Takes an integer in the range from \-64 to 256\&. Defaults to unset and kernel\*(Aqs default is used\&.
-.RE
-.PP
 \fIBandwidth=\fR
 .RS 4
 Specifies the shaper bandwidth\&. When suffixed with K, M, or G, the specified size is parsed as Kilobits, Megabits, or Gigabits, respectively, to the base of 1000\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIAutoRateIngress=\fR
+.RS 4
+Takes a boolean value\&. Enables automatic capacity estimation based on traffic arriving at this qdisc\&. This is most likely to be useful with cellular links, which tend to change quality randomly\&. If this setting is enabled, the
+\fIBandwidth=\fR
+setting is used as an initial estimate\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIOverheadBytes=\fR
+.RS 4
+Specifies that bytes to be addeded to the size of each packet\&. Bytes may be negative\&. Takes an integer in the range \-64\&...256\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIMPUBytes=\fR
+.RS 4
+Rounds each packet (including overhead) up to the specified bytes\&. Takes an integer in the range 1\&...256\&. Defaults to unset and kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fICompensationMode=\fR
+.RS 4
+Takes one of
+"none",
+"atm", or
+"ptm"\&. Specifies the compensation mode for overhead calculation\&. When
+"none", no compensation is taken into account\&. When
+"atm", enables the compensation for ATM cell framing, which is normally found on ADSL links\&. When
+"ptm", enables the compensation for PTM encoding, which is normally found on VDSL2 links and uses a 64b/65b encoding scheme\&. Defaults to unset and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIUseRawPacketSize=\fR
+.RS 4
+Takes a boolean value\&. When true, the packet size reported by the Linux kernel will be used, instead of the underlying IP packet size\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIFlowIsolationMode=\fR
+.RS 4
+CAKE places packets from different flows into different queues, then packets from each queue are delivered fairly\&. This specifies whether the fairness is based on source address, destination address, individual flows, or any combination of those\&. The available values are:
+.PP
+\fBnone\fR
+.RS 4
+The flow isolation is disabled, and all traffic passes through a single queue\&.
+.RE
+.PP
+\fBsrc\-host\fR
+.RS 4
+Flows are defined only by source address\&. Equivalnet to the
+"srchost"
+option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBdst\-host\fR
+.RS 4
+Flows are defined only by destination address\&. Equivalnet to the
+"srchost"
+option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBhosts\fR
+.RS 4
+Flows are defined by source\-destination host pairs\&. Equivalent to the same option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBflows\fR
+.RS 4
+Flows are defined by the entire 5\-tuple of source address, destination address, transport protocol, source port and destination port\&. Equivalent to the same option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBdual\-src\-host\fR
+.RS 4
+Flows are defined by the 5\-tuple (see
+"flows"
+in the above), and fairness is applied first over source addresses, then over individual flows\&. Equivalnet to the
+"dual\-srchost"
+option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBdual\-dst\-host\fR
+.RS 4
+Flows are defined by the 5\-tuple (see
+"flows"
+in the above), and fairness is applied first over destination addresses, then over individual flows\&. Equivalnet to the
+"dual\-dsthost"
+option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.PP
+\fBtriple\fR
+.RS 4
+Flows are defined by the 5\-tuple (see
+"flows"), and fairness is applied over source and destination addresses, and also over individual flows\&. Equivalnet to the
+"triple\-isolate"
+option for
+\fBtc qdisc\fR
+command\&. See also
+\fBtc-cake\fR(8)\&.
+.RE
+.sp
+Defaults to unset and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fINAT=\fR
+.RS 4
+Takes a boolean value\&. When true, CAKE performs a NAT lookup before applying flow\-isolation rules, to determine the true addresses and port numbers of the packet, to improve fairness between hosts inside the NAT\&. This has no practical effect when
+\fIFlowIsolationMode=\fR
+is
+"none"
+or
+"flows", or if NAT is performed on a different host\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIPriorityQueueingPreset=\fR
+.RS 4
+CAKE divides traffic into
+"tins", and each tin has its own independent set of flow\-isolation queues, bandwidth threshold, and priority\&. This specifies the preset of tin profiles\&. The available values are:
+.PP
+\fBbesteffort\fR
+.RS 4
+Disables priority queueing by placing all traffic in one tin\&.
+.RE
+.PP
+\fBprecedence\fR
+.RS 4
+Enables priority queueing based on the legacy interpretation of TOS
+"Precedence"
+field\&. Use of this preset on the modern Internet is firmly discouraged\&.
+.RE
+.PP
+\fBdiffserv8\fR
+.RS 4
+Enables priority queueing based on the Differentiated Service ("DiffServ") field with eight tins: Background Traffic, High Throughput, Best Effort, Video Streaming, Low Latency Transactions, Interactive Shell, Minimum Latency, and Network Control\&.
+.RE
+.PP
+\fBdiffserv4\fR
+.RS 4
+Enables priority queueing based on the Differentiated Service ("DiffServ") field with four tins: Background Traffic, Best Effort, Streaming Media, and Latency Sensitive\&.
+.RE
+.PP
+\fBdiffserv3\fR
+.RS 4
+Enables priority queueing based on the Differentiated Service ("DiffServ") field with three tins: Background Traffic, Best Effort, and Latency Sensitive\&.
+.RE
+.sp
+Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIFirewallMark=\fR
+.RS 4
+Takes an integer in the range 1\&...4294967295\&. When specified, firewall\-mark\-based overriding of CAKE\*(Aqs tin selection is enabled\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fIWash=\fR
+.RS 4
+Takes a boolean value\&. When true, CAKE clears the DSCP fields, except for ECN bits, of any packet passing through CAKE\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
+.RE
+.PP
+\fISplitGSO=\fR
+.RS 4
+Takes a boolean value\&. When true, CAKE will split General Segmentation Offload (GSO) super\-packets into their on\-the\-wire components and dequeue them individually\&. Defaults to unset, and the kernel\*(Aqs default is used\&.
 .RE
 .SH "[CONTROLLEDDELAY] SECTION OPTIONS"
 .PP
@@ -2993,7 +3431,7 @@ Configures the major number of unique identifier of the qdisc, known as the hand
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\&...4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .PP
 \fITargetSec=\fR
@@ -3074,7 +3512,7 @@ Configures the major number of unique identifier of the qdisc, known as the hand
 .PP
 \fIBands=\fR
 .RS 4
-Specifies the number of bands\&. An unsigned integer in the range 1\(en16\&. This value has to be at least large enough to cover the strict bands specified through the
+Specifies the number of bands\&. An unsigned integer in the range 1\&...16\&. This value has to be at least large enough to cover the strict bands specified through the
 \fIStrictBands=\fR
 and bandwidth\-sharing bands specified in
 \fIQuantumBytes=\fR\&.
@@ -3082,7 +3520,7 @@ and bandwidth\-sharing bands specified in
 .PP
 \fIStrictBands=\fR
 .RS 4
-Specifies the number of bands that should be created in strict mode\&. An unsigned integer in the range 1\(en16\&.
+Specifies the number of bands that should be created in strict mode\&. An unsigned integer in the range 1\&...16\&.
 .RE
 .PP
 \fIQuantumBytes=\fR
@@ -3390,7 +3828,7 @@ Configures the major number of unique identifier of the qdisc, known as the hand
 .PP
 \fIPacketLimit=\fR
 .RS 4
-Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\(en4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
+Specifies the hard limit on the queue size in number of packets\&. When this limit is reached, incoming packets are dropped\&. An unsigned integer in the range 0\&...4294967294\&. Defaults to unset and kernel\*(Aqs default is used\&.
 .RE
 .SH "[QUICKFAIRQUEUEING] SECTION OPTIONS"
 .PP
@@ -3444,7 +3882,7 @@ option has to be enabled, see the [Bridge] section in
 .PP
 \fIVLAN=\fR
 .RS 4
-The VLAN ID allowed on the port\&. This can be either a single ID or a range M\-N\&. VLAN IDs are valid from 1 to 4094\&.
+The VLAN ID allowed on the port\&. This can be either a single ID or a range M\-N\&. Takes an integer in the range 1\&...4094\&.
 .RE
 .PP
 \fIEgressUntagged=\fR
@@ -3538,7 +3976,7 @@ Name=enp2s0
 
 [Network]
 IPv6SendRA=yes
-DHCPv6PrefixDelegation=yes
+DHCPPrefixDelegation=yes
 .fi
 .if n \{\
 .RE
@@ -3601,13 +4039,13 @@ and
 "wlp3s0"
 to it\&. The bridge will have the specified static address and network assigned, and a default route via the specified gateway will be added\&. The specified DNS server will be added to the global list of DNS resolvers\&.
 .PP
-\fBExample\ \&5.\ \&\fR
+\fBExample\ \&5.\ \&Bridge port with VLAN forwarding\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# /etc/systemd/network/20\-bridge\-slave\-interface\-vlan\&.network
+# /etc/systemd/network/25\-bridge\-slave\-interface\-1\&.network
 [Match]
 Name=enp2s0
 
@@ -3830,6 +4268,7 @@ MACVTAP=macvtap\-test
 # /etc/systemd/network/27\-xfrm\&.netdev
 [NetDev]
 Name=xfrm0
+Kind=xfrm
 
 [Xfrm]
 InterfaceId=7
@@ -3871,109 +4310,109 @@ device\&.
 \fBsystemd-resolved.service\fR(8)
 .SH "NOTES"
 .IP " 1." 4
-RFC 7217
-.RS 4
-\%https://tools.ietf.org/html/rfc7217
-.RE
-.IP " 2." 4
 Link-Local Multicast Name Resolution
 .RS 4
 \%https://tools.ietf.org/html/rfc4795
 .RE
-.IP " 3." 4
+.IP " 2." 4
 Multicast DNS
 .RS 4
 \%https://tools.ietf.org/html/rfc6762
 .RE
-.IP " 4." 4
+.IP " 3." 4
 DNS-over-TLS
 .RS 4
 \%https://tools.ietf.org/html/rfc7858
 .RE
-.IP " 5." 4
+.IP " 4." 4
 DNSSEC
 .RS 4
 \%https://tools.ietf.org/html/rfc4033
 .RE
-.IP " 6." 4
+.IP " 5." 4
 IEEE 802.1AB-2016
 .RS 4
 \%https://standards.ieee.org/findstds/standard/802.1AB-2016.html
 .RE
-.IP " 7." 4
+.IP " 6." 4
 ip-sysctl.txt
 .RS 4
 \%https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
 .RE
-.IP " 8." 4
+.IP " 7." 4
 RFC 4941
 .RS 4
 \%https://tools.ietf.org/html/rfc4941
 .RE
-.IP " 9." 4
+.IP " 8." 4
 RFC 1027
 .RS 4
 \%https://tools.ietf.org/html/rfc1027
 .RE
-.IP "10." 4
+.IP " 9." 4
 RFC 6275
 .RS 4
 \%https://tools.ietf.org/html/rfc6275
 .RE
-.IP "11." 4
+.IP "10." 4
 RFC 5227
 .RS 4
 \%https://tools.ietf.org/html/rfc5227
 .RE
-.IP "12." 4
+.IP "11." 4
 RFC 4862
 .RS 4
 \%https://tools.ietf.org/html/rfc4862
 .RE
-.IP "13." 4
+.IP "12." 4
 RFC 3041
 .RS 4
 \%https://tools.ietf.org/html/rfc3041
 .RE
-.IP "14." 4
+.IP "13." 4
 RFC 3484
 .RS 4
 \%https://tools.ietf.org/html/rfc3484
 .RE
-.IP "15." 4
+.IP "14." 4
 RFC 4191
 .RS 4
 \%https://tools.ietf.org/html/rfc4191
 .RE
-.IP "16." 4
-RFC\ \&8520
+.IP "15." 4
+RFC 8520
 .RS 4
 \%https://tools.ietf.org/html/rfc8520
 .RE
-.IP "17." 4
+.IP "16." 4
 RFC 7844
 .RS 4
 \%https://tools.ietf.org/html/rfc7844
 .RE
-.IP "18." 4
+.IP "17." 4
 C-style escapes
 .RS 4
 \%https://en.wikipedia.org/wiki/Escape_sequences_in_C#Table_of_escape_sequences
 .RE
-.IP "19." 4
-RFC 7084
+.IP "18." 4
+RFC 5969
 .RS 4
-\%https://tools.ietf.org/html/rfc7084
+\%https://tools.ietf.org/html/rfc5969
+.RE
+.IP "19." 4
+RFC 8415
+.RS 4
+\%https://www.rfc-editor.org/rfc/rfc8415.html#section-6.3
 .RE
 .IP "20." 4
-RFC 3315
-.RS 4
-\%https://tools.ietf.org/html/rfc3315#section-17.2.1
-.RE
-.IP "21." 4
 RFC 4291
 .RS 4
 \%https://tools.ietf.org/html/rfc4291#section-2.5.4
+.RE
+.IP "21." 4
+RFC 7217
+.RS 4
+\%https://tools.ietf.org/html/rfc7217
 .RE
 .IP "22." 4
 RFC 1542

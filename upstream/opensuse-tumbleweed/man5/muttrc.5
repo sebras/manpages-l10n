@@ -360,7 +360,10 @@ The first matching \fBmbox-hook\fP applies.
 .
 .PP
 .nf
-\fBmailboxes\fP [[\fB-poll\fP | \fB-nopoll\fP] [[\fB-label\fP \fIlabel\fP] | \fB-nolabel\fP] \fIfilename\fP] [ ... ]
+\fBmailboxes\fP [[\fB-notify\fP | \fB-nonotify\fP]
+           [\fB-poll\fP | \fB-nopoll\fP]
+           [[\fB-label\fP \fIlabel\fP] | \fB-nolabel\fP]
+           \fIfilename\fP] [ ... ]
 \fBunmailboxes\fP [ \fB*\fP | \fIfilename\fP ... ]
 .fi
 .IP
@@ -2419,6 +2422,8 @@ Default: yes
 .IP
 This variable controls whether or not attachments on outgoing messages
 are saved along with the main body of your message.
+.IP
+Note: $fcc_before_send forces the default (set) behavior of this option.
 
 
 .TP
@@ -2450,7 +2455,11 @@ Default: no
 When this variable is \fIset\fP, FCCs will be stored unencrypted and
 unsigned, even when the actual message is encrypted and/or
 signed.
+.IP
+Note: $fcc_before_send forces the default (unset) behavior of this option.
 (PGP only)
+.IP
+See also $pgp_self_encrypt, $smime_self_encrypt.
 
 
 .TP
@@ -2662,15 +2671,18 @@ otherwise $mime_forward_decode is used instead.
 .TP
 .B forward_decrypt
 .nf
-Type: boolean
+Type: quadoption
 Default: yes
 .fi
 .IP
-Controls the handling of encrypted messages when forwarding a message.
-When \fIset\fP, the outer layer of encryption is stripped off.  This
-variable is only used if $mime_forward is \fIset\fP and
-$mime_forward_decode is \fIunset\fP.
-(PGP only)
+This quadoption controls the handling of encrypted messages when
+forwarding or attaching a message.  When set to or answered
+\(lqyes\(rq, the outer layer of encryption is stripped off.
+.IP
+This variable is used if $mime_forward is \fIset\fP and
+$mime_forward_decode is \fIunset\fP.  It is also used when
+attaching a message via \fB<attach\-message>\fP in the compose
+menu.  (PGP only)
 
 
 .TP
@@ -3646,6 +3658,17 @@ a \(lqmbox-hook\(rq command.
 
 
 .TP
+.B local_date_header
+.nf
+Type: boolean
+Default: yes
+.fi
+.IP
+If \fIset\fP, convert the date in the Date header of sent emails into local
+(sender's) timezone.
+
+
+.TP
 .B list_reply
 .nf
 Type: quadoption
@@ -3936,6 +3959,72 @@ This is the string displayed in the \(lqattachment\(rq menu for
 attachments of type \fBmessage/rfc822\fP.  For a full listing of defined
 \fBprintf(3)\fP\-like sequences see the section on $index_format.
 
+
+.TP
+.B message_id_format
+.nf
+Type: string
+Default: \(lq<%z@%f>\(rq
+.fi
+.IP
+This variable describes the format of the Message\-ID generated
+when sending messages.  Mutt 2.0 introduced a more compact
+format, but this variable allows the ability to choose your own
+format.  The value may end in \(lq|\(rq to invoke an external filter.
+See formatstrings-filters.
+.IP
+Please note that the Message\-ID value follows a strict syntax,
+and you are responsible for ensuring correctness if you change
+this from the default.  In particular, the value must follow the
+syntax in RFC 5322: \(lq\fB\(rq<\(rq id\-left \(rq@\(rq id\-right \(rq>\(rq\fP\(rq.  No
+spaces are allowed, and \fBid\-left\fP should follow the
+dot\-atom\-text syntax in the RFC.  The \fBid\-right\fP should
+generally be left at %f.
+.IP
+The old Message\-ID format can be used by setting this to:
+\(lq\fB<%Y%02m%02d%02H%02M%02S.G%c%p@%f>\fP\(rq
+.IP
+The following \fBprintf(3)\fP\-style sequences are understood:
+.RS
+.PD 0
+.TP
+%c 
+step counter looping from \(lqA\(rq to \(lqZ\(rq
+.TP
+%d 
+current day of the month (GMT)
+.TP
+%f 
+$hostname
+.TP
+%H 
+current hour using a 24\-hour clock (GMT)
+.TP
+%m 
+current month number (GMT)
+.TP
+%M 
+current minute of the hour (GMT)
+.TP
+%p 
+pid of the running mutt process
+.TP
+%r 
+3 bytes of pseudorandom data encoded in Base64
+.TP
+%S 
+current second of the minute (GMT)
+.TP
+%x 
+1 byte of pseudorandom data hex encoded (example: '1b')
+.TP
+%Y 
+current year using 4 digits (GMT)
+.TP
+%z 
+4 byte timestamp + 8 bytes of pseudorandom data encoded in Base64
+.RE
+.PD 1
 
 .TP
 .B meta_key
@@ -6174,7 +6263,7 @@ names relative to the previous name. Here's an example:
 .B sidebar_sort_method
 .nf
 Type: sort order
-Default: order
+Default: unsorted
 .fi
 .IP
 Specifies how to sort mailbox entries in the sidebar.  By default, the
@@ -6973,6 +7062,37 @@ order (example: \(lq\fBset sort_browser=reverse\-date\fP\(rq).
 
 
 .TP
+.B sort_browser_mailboxes
+.nf
+Type: sort order
+Default: unsorted
+.fi
+.IP
+Specifies how to sort entries in the mailbox browser.  By default, the
+entries are unsorted, displayed in the same order as listed
+in the \(lqmailboxes\(rq command.  Valid values:
+.RS
+.PD 0
+.TP
+\(hy alpha (alphabetically)
+.TP
+\(hy count
+.TP
+\(hy date
+.TP
+\(hy size
+.TP
+\(hy unread
+.TP
+\(hy unsorted
+.RE
+.PD 1
+.IP
+You may optionally use the \(lqreverse\-\(rq prefix to specify reverse sorting
+order (example: \(lq\fBset sort_browser_mailboxes=reverse\-alpha\fP\(rq).
+
+
+.TP
 .B sort_re
 .nf
 Type: boolean
@@ -7197,6 +7317,19 @@ If \fIset\fP (the default), mutt will not automatically accept a server
 certificate whose host name does not match the host used in your folder
 URL. You should only unset this for particular known hosts, using
 the \fB<account-hook>\fP function.
+
+
+.TP
+.B ssl_verify_host_override
+.nf
+Type: string
+Default: \(lq\(rq
+.fi
+.IP
+Defines an alternate host name to verify the server certificate against.
+This should not be set unless you are sure what you are doing, but it
+might be useful for connection to a .onion host without a properly
+configured host name in the certificate.  See $ssl_verify_host.
 
 
 .TP
@@ -7453,7 +7586,7 @@ Type: boolean
 Default: yes
 .fi
 .IP
-Affects the \fB~b\fP and \fB~h\fP search operations described in
+Affects the \fB~b\fP, \fB~B\fP, and \fB~h\fP search operations described in
 section \(lqpatterns\(rq.  If \fIset\fP, the headers and body/attachments of
 messages to be searched are decoded before searching. If \fIunset\fP,
 messages are searched as they appear in the folder.
