@@ -21,9 +21,6 @@ cd ../po
 MT_LANGLIST=$(find . -maxdepth 1 -type d | grep -v scripts | grep -v "^\.$" | sed 's/\.\///' | sort)
 cd - > /dev/null
 
-# Determine all currently supported distributions
-distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
-
 echo -n "Processing: "
 for tlang in $MT_LANGLIST; do
     echo -n "$tlang "
@@ -34,9 +31,6 @@ for tlang in $MT_LANGLIST; do
     timestamp=$(stat --format="%y" ../po/$tlang/untranslated.txt)
 
     cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
-    for distribution in $distributions; do
-	echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-$tlang.html
-    done
 
     cat >> untranslated-$tlang.html <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
