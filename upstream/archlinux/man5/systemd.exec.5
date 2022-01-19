@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.EXEC" "5" "" "systemd 249" "systemd.exec"
+.TH "SYSTEMD\&.EXEC" "5" "" "systemd 250" "systemd.exec"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -128,6 +128,27 @@ instances\&.
 The following settings may be used to change a service\*(Aqs view of the filesystem\&. Please note that the paths must be absolute and must not contain a
 "\&.\&."
 path component\&.
+.PP
+\fIExecSearchPath=\fR
+.RS 4
+Takes a colon separated list of absolute paths relative to which the executable used by the
+\fIExec*=\fR
+(e\&.g\&.
+\fIExecStart=\fR,
+\fIExecStop=\fR, etc\&.) properties can be found\&.
+\fIExecSearchPath=\fR
+overrides
+\fI$PATH\fR
+if
+\fI$PATH\fR
+is not supplied by the user through
+\fIEnvironment=\fR,
+\fIEnvironmentFile=\fR
+or
+\fIPassEnvironment=\fR\&. Assigning an empty string removes previous assignments and setting
+\fIExecSearchPath=\fR
+to a value multiple times will append to the previous setting\&.
+.RE
 .PP
 \fIWorkingDirectory=\fR
 .RS 4
@@ -531,6 +552,13 @@ Each mount definition may be prefixed with
 .sp
 These settings may be used more than once, each usage appends to the unit\*(Aqs list of image paths\&. If the empty string is assigned, the entire list of mount paths defined prior to this is reset\&.
 .sp
+Each image must carry a
+/usr/lib/extension\-release\&.d/extension\-release\&.IMAGE
+file, with the appropriate metadata which matches
+\fIRootImage=\fR/\fIRootDirectory=\fR
+or the host\&. See:
+\fBos-release\fR(5)\&.
+.sp
 When
 \fIDevicePolicy=\fR
 is set to
@@ -809,7 +837,9 @@ These options are only available for system services and are not supported for s
 \fISELinuxContext=\fR
 .RS 4
 Set the SELinux security context of the executed process\&. If set, this will override the automated domain transition\&. However, the policy still needs to authorize the transition\&. This directive is ignored if SELinux is disabled\&. If prefixed by
-"\-", all errors will be ignored\&. This does not affect commands prefixed with
+"\-", failing to set the SELinux security context will be ignored, but it\*(Aqs still possible that the subsequent
+\fBexecve()\fR
+may fail if the policy doesn\*(Aqt allow the transition for the non\-overridden context\&. This does not affect commands prefixed with
 "+"\&. See
 \fBsetexeccon\fR(3)
 for details\&.
@@ -1232,12 +1262,13 @@ policy we expect a single NUMA node\&.
 .PP
 \fIIOSchedulingClass=\fR
 .RS 4
-Sets the I/O scheduling class for executed processes\&. Takes an integer between 0 and 3 or one of the strings
-\fBnone\fR,
+Sets the I/O scheduling class for executed processes\&. Takes one of the strings
 \fBrealtime\fR,
 \fBbest\-effort\fR
 or
-\fBidle\fR\&. If the empty string is assigned to this option, all prior assignments to both
+\fBidle\fR\&. The kernel\*(Aqs default scheduling class is
+\fBbest\-effort\fR
+at a priority of 4\&. If the empty string is assigned to this option, all prior assignments to both
 \fIIOSchedulingClass=\fR
 and
 \fIIOSchedulingPriority=\fR
@@ -1252,7 +1283,7 @@ Sets the I/O scheduling priority for executed processes\&. Takes an integer betw
 \fIIOSchedulingClass=\fR
 and
 \fIIOSchedulingPriority=\fR
-have no effect\&. See
+have no effect\&. For the kernel\*(Aqs default scheduling class (\fBbest\-effort\fR) this defaults to 4\&. See
 \fBioprio_set\fR(2)
 for details\&.
 .RE
@@ -1471,21 +1502,33 @@ to manage one or more runtime directories for the unit and bind their lifetime t
 due to lack of privileges, and to make sure the runtime directory is cleaned up automatically after use\&. For runtime directories that require more complex or different configuration or lifetime guarantees, please consider using
 \fBtmpfiles.d\fR(5)\&.
 .sp
+\fIRuntimeDirectory=\fR,
+\fIStateDirectory=\fR,
+\fICacheDirectory=\fR
+and
+\fILogsDirectory=\fR
+optionally support a second parameter, separated by
+":"\&. The second parameter will be interpreted as a destination path that will be created as a symlink to the directory\&. The symlinks will be created after any
+\fIBindPaths=\fR
+or
+\fITemporaryFileSystem=\fR
+options have been set up, to make ephemeral symlinking possible\&. The same source can have multiple symlinks, by using the same first parameter, but a different second parameter\&.
+.PP
 The directories defined by these options are always created under the standard paths used by systemd (/var/,
 /run/,
 /etc/, \&...)\&. If the service needs directories in a different location, a different mechanism has to be used to create them\&.
-.sp
+.PP
 \fBtmpfiles.d\fR(5)
 provides functionality that overlaps with these options\&. Using these options is recommended, because the lifetime of the directories is tied directly to the lifetime of the unit, and it is not necessary to ensure that the
 tmpfiles\&.d
 configuration is executed before the unit is started\&.
-.sp
+.PP
 To remove any of the directories created by these settings, use the
 \fBsystemctl clean \&...\fR
 command on the relevant units, see
 \fBsystemctl\fR(1)
 for details\&.
-.sp
+.PP
 Example: if a system service unit has the following,
 .sp
 .if n \{\
@@ -1512,7 +1555,7 @@ are owned by the user and group specified in
 \fIUser=\fR
 and
 \fIGroup=\fR, and removed when the service is stopped\&.
-.sp
+.PP
 Example: if a system service unit has the following,
 .sp
 .if n \{\
@@ -1533,6 +1576,27 @@ is set with
 "STATE_DIRECTORY"
 is set with
 "/var/lib/aaa/bbb:/var/lib/ccc"\&.
+.PP
+Example: if a system service unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RuntimeDirectory=foo:bar foo:baz
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+the service manager creates
+/run/foo
+(if it does not exist), and
+/run/bar
+plus
+/run/baz
+as symlinks to
+/run/foo\&.
 .RE
 .PP
 \fIRuntimeDirectoryMode=\fR, \fIStateDirectoryMode=\fR, \fICacheDirectoryMode=\fR, \fILogsDirectoryMode=\fR, \fIConfigurationDirectoryMode=\fR
@@ -1760,13 +1824,15 @@ or
 /dev/sda, system memory
 /dev/mem, system ports
 /dev/port
-and others\&. This is useful to securely turn off physical device access by the executed process\&. Defaults to false\&. Enabling this option will install a system call filter to block low\-level I/O system calls that are grouped in the
+and others\&. This is useful to turn off physical device access by the executed process\&. Defaults to false\&.
+.sp
+Enabling this option will install a system call filter to block low\-level I/O system calls that are grouped in the
 \fI@raw\-io\fR
-set, will also remove
+set, remove
 \fBCAP_MKNOD\fR
 and
 \fBCAP_SYS_RAWIO\fR
-from the capability bounding set for the unit (see above), and set
+from the capability bounding set for the unit, and set
 \fIDevicePolicy=closed\fR
 (see
 \fBsystemd.resource-control\fR(5)
@@ -1789,6 +1855,11 @@ is implied\&.
 Note that the implementation of this setting might be impossible (for example if mount namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
 .sp
 This option is only available for system services and is not supported for services running in per\-user instances of the service manager\&.
+.sp
+When access to some but not all devices must be possible, the
+\fIDeviceAllow=\fR
+setting might be used instead\&. See
+\fBsystemd.resource-control\fR(5)\&.
 .RE
 .PP
 \fIPrivateNetwork=\fR
@@ -2082,6 +2153,144 @@ address family should be included in the configured allow list as it is frequent
 logging\&.
 .RE
 .PP
+\fIRestrictFileSystems=\fR
+.RS 4
+Restricts the set of filesystems processes of this unit can open files on\&. Takes a space\-separated list of filesystem names\&. Any filesystem listed is made accessible to the unit\*(Aqs processes, access to filesystem types not listed is prohibited (allow\-listing)\&. If the first character of the list is
+"~", the effect is inverted: access to the filesystems listed is prohibited (deny\-listing)\&. If the empty string is assigned, access to filesystems is not restricted\&.
+.sp
+If you specify both types of this option (i\&.e\&. allow\-listing and deny\-listing), the first encountered will take precedence and will dictate the default action (allow access to the filesystem or deny it)\&. Then the next occurrences of this option will add or delete the listed filesystems from the set of the restricted filesystems, depending on its type and the default action\&.
+.sp
+Example: if a unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RestrictFileSystems=ext4 tmpfs
+RestrictFileSystems=ext2 ext4
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then access to
+\fBext4\fR,
+\fBtmpfs\fR, and
+\fBext2\fR
+is allowed and access to other filesystems is denied\&.
+.sp
+Example: if a unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RestrictFileSystems=ext4 tmpfs
+RestrictFileSystems=~ext4
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then only access
+\fBtmpfs\fR
+is allowed\&.
+.sp
+Example: if a unit has the following,
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+RestrictFileSystems=~ext4 tmpfs
+RestrictFileSystems=ext4
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+then only access to
+\fBtmpfs\fR
+is denied\&.
+.sp
+As the number of possible filesystems is large, predefined sets of filesystems are provided\&. A set starts with
+"@"
+character, followed by name of the set\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&3.\ \&Currently predefined filesystem sets
+.TS
+allbox tab(:);
+lB lB.
+T{
+Set
+T}:T{
+Description
+T}
+.T&
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l.
+T{
+@basic\-api
+T}:T{
+Basic filesystem API\&.
+T}
+T{
+@auxiliary\-api
+T}:T{
+Auxiliary filesystem API\&.
+T}
+T{
+@common\-block
+T}:T{
+Common block device filesystems\&.
+T}
+T{
+@historical\-block
+T}:T{
+Historical block device filesystems\&.
+T}
+T{
+@network
+T}:T{
+Well\-known network filesystems\&.
+T}
+T{
+@privileged\-api
+T}:T{
+Privileged filesystem API\&.
+T}
+T{
+@temporary
+T}:T{
+Temporary filesystems: tmpfs, ramfs\&.
+T}
+T{
+@known
+T}:T{
+All known filesystems defined by the kernel\&. This list is defined statically in systemd based on a kernel
+                version that was available when this systemd version was released\&. It will become progressively more
+                out\-of\-date as the kernel is updated\&.
+T}
+.TE
+.sp 1
+Use
+\fBsystemd-analyze\fR(1)\*(Aqs
+\fBfilesystems\fR
+command to retrieve a list of filesystems defined on the local system\&.
+.sp
+Note that this setting might not be supported on some systems (for example if the LSM eBPF hook is not enabled in the underlying kernel or if not using the unified control group hierarchy)\&. In that case this setting has no effect\&.
+.RE
+.PP
 \fIRestrictNamespaces=\fR
 .RS 4
 Restricts access to Linux namespace functionality for the processes of this unit\&. For details about Linux namespaces, see
@@ -2373,7 +2582,7 @@ character, followed by name of the set\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&3.\ \&Currently predefined system call sets
+.B Table\ \&4.\ \&Currently predefined system call sets
 .TS
 allbox tab(:);
 lB lB.
@@ -2693,7 +2902,10 @@ See
 for details about environment variables\&.
 .sp
 Note that environment variables are not suitable for passing secrets (such as passwords, key material, \&...) to service processes\&. Environment variables set for a unit are exposed to unprivileged clients via D\-Bus IPC, and generally not understood as being data that requires protection\&. Moreover, environment variables are propagated down the process tree, including across security boundaries (such as setuid/setgid executables), and hence might leak to processes that should not have access to the secret data\&. Use
-\fILoadCredential=\fR
+\fILoadCredential=\fR,
+\fILoadCredentialEncrypted=\fR
+or
+\fISetCredentialEncrypted=\fR
 (see below) to pass data to unit processes securely\&.
 .RE
 .PP
@@ -3261,6 +3473,12 @@ before and after execution\&. Defaults to
 "no"\&.
 .RE
 .PP
+\fITTYRows=\fR, \fITTYColumns=\fR
+.RS 4
+Configure the size of the TTY specified with
+\fITTYPath=\fR\&. If unset or set to the empty string, the kernel default is used\&.
+.RE
+.PP
 \fITTYVTDisallocate=\fR
 .RS 4
 If the terminal device specified with
@@ -3270,7 +3488,7 @@ is a virtual console terminal, try to deallocate the TTY before and after execut
 .RE
 .SH "CREDENTIALS"
 .PP
-\fILoadCredential=\fR\fIID\fR[:\fIPATH\fR]
+\fILoadCredential=\fR\fIID\fR[:\fIPATH\fR], \fILoadCredentialEncrypted=\fR\fIID\fR[:\fIPATH\fR]
 .RS 4
 Pass a credential to the unit\&. Credentials are limited\-size binary or textual objects that may be passed to unit processes\&. They are primarily used for passing cryptographic keys (both public and private) or certificates, user account information or identity information from host to services\&. The data is accessible from the unit\*(Aqs processes via the file system, at a read\-only location that (if possible and permitted) is backed by non\-swappable memory\&. The data is only accessible to the user associated with the unit, via the
 \fIUser=\fR/\fIDynamicUser=\fR
@@ -3287,6 +3505,15 @@ stream socket in the file system a connection is made to it (only once at unit s
 environment variable, which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
 \fBNUL\fR
 bytes\&. If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way do declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
+.sp
+The
+\fILoadCredentialEncrypted=\fR
+setting is identical to
+\fILoadCredential=\fR, except that the credential data is decrypted before being passed on to the executed processes\&. Specifically, the referenced path should refer to a file or socket with an encrypted credential, as implemented by
+\fBsystemd-creds\fR(1)\&. This credential is loaded, decrypted and then passed to the application in decrypted plaintext form, in the same way a regular credential specified via
+\fILoadCredential=\fR
+would be\&. A credential configured this way may encrypted with a secret key derived from the system\*(Aqs TPM2 security chip, or with a secret key stored in
+/var/lib/systemd/credentials\&.secret, or with both\&. Using encrypted credentials improves security as credentials are not stored in plaintext and only decrypted into plaintext the moment a service requiring them is started\&. Moreover, credentials may be bound to the local hardware and installations, so that they cannot easily be analyzed offline\&.
 .sp
 The credential files/IPC sockets must be accessible to the service manager, but don\*(Aqt have to be directly accessible to the unit\*(Aqs processes: the credential data is read and copied into separate, read\-only copies for the unit that are accessible to appropriately privileged processes\&. This is particularly useful in combination with
 \fIDynamicUser=\fR
@@ -3322,7 +3549,7 @@ is requested for a unit
 "foobar\&.service"\&. This functionality is useful for using a single listening socket to serve credentials to multiple consumers\&.
 .RE
 .PP
-\fISetCredential=\fR\fIID\fR:\fIVALUE\fR
+\fISetCredential=\fR\fIID\fR:\fIVALUE\fR, \fISetCredentialEncrypted=\fR\fIID\fR:\fIVALUE\fR
 .RS 4
 The
 \fISetCredential=\fR
@@ -3336,6 +3563,19 @@ to embed a newline, or
 to embed a
 \fBNUL\fR
 byte)\&.
+.sp
+The
+\fISetCredentialEncrypted=\fR
+setting is identical to
+\fISetCredential=\fR
+but expects an encrypted credential in literal form as value\&. This allows embedding confidential credentials securely directly in unit files\&. Use
+\fBsystemd-creds\fR(1)\*(Aq
+\fB\-p\fR
+switch to generate suitable
+\fISetCredentialEncrypted=\fR
+lines directly from plaintext credentials\&. For further details see
+\fILoadCredentialEncrypted=\fR
+above\&.
 .sp
 If a credential of the same ID is listed in both
 \fILoadCredential=\fR
@@ -3486,7 +3726,7 @@ If the same environment variable is set by multiple of these sources, the later 
 \fIUnsetEnvironment=\fR
 are removed from the compiled environment variable list, immediately before it is passed to the executed process\&.
 .PP
-The general philosophy is to expose a small curated list of environment variables to processes\&. Services started by the system manager (PID 1) will be started, without additional service\-specific configuration, with just a few environment variables\&. The user manager inherits environment variables as any other system service, but in addition may receive additional environment variables from PAM, and, typically, additional imported variables when the user starts a graphical session\&. It is recommended to keep the environment blocks in both the system and user managers managers lean\&. Importing all variables inherited by the graphical session or by one of the user shells is strongly discouraged\&.
+The general philosophy is to expose a small curated list of environment variables to processes\&. Services started by the system manager (PID 1) will be started, without additional service\-specific configuration, with just a few environment variables\&. The user manager inherits environment variables as any other system service, but in addition may receive additional environment variables from PAM, and, typically, additional imported variables when the user starts a graphical session\&. It is recommended to keep the environment blocks in both the system and user managers lean\&. Importing all variables inherited by the graphical session or by one of the user shells is strongly discouraged\&.
 .PP
 Hint:
 \fBsystemd\-run \-P env\fR
@@ -3658,7 +3898,7 @@ processes, and encodes the service "result"\&. Currently, the following values a
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&4.\ \&Defined \fI$SERVICE_RESULT\fR values
+.B Table\ \&5.\ \&Defined \fI$SERVICE_RESULT\fR values
 .TS
 allbox tab(:);
 lB lB.
@@ -3752,7 +3992,7 @@ is
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&5.\ \&Summary of possible service result variable values
+.B Table\ \&6.\ \&Summary of possible service result variable values
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3922,7 +4162,7 @@ The following basic service exit codes are defined by the C library\&.
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&6.\ \&Basic C library exit codes
+.B Table\ \&7.\ \&Basic C library exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -3960,7 +4200,7 @@ The following service exit codes are defined by the
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&7.\ \&LSB service exit codes
+.B Table\ \&8.\ \&LSB service exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -4029,7 +4269,7 @@ The LSB specification suggests that error codes 200 and above are reserved for i
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&8.\ \&systemd\-specific exit codes
+.B Table\ \&9.\ \&systemd\-specific exit codes
 .TS
 allbox tab(:);
 lB lB lB.
@@ -4041,6 +4281,7 @@ T}:T{
 Description
 T}
 .T&
+l l l
 l l l
 l l l
 l l l
@@ -4377,6 +4618,13 @@ T}:T{
 T}:T{
 Failed to set up unit\*(Aqs credentials\&. See \fILoadCredential=\fR and \fISetCredential=\fR above\&.
 T}
+T{
+245
+T}:T{
+\fBEXIT_BPF\fR
+T}:T{
+Failed to apply BPF restrictions\&. See \fIRestrictFileSystems=\fR above\&.
+T}
 .TE
 .sp 1
 .PP
@@ -4386,7 +4634,7 @@ Finally, the BSD operating systems define a set of exit codes, typically defined
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&9.\ \&BSD exit codes
+.B Table\ \&10.\ \&BSD exit codes
 .TS
 allbox tab(:);
 lB lB lB.

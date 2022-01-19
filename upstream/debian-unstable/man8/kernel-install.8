@@ -1,5 +1,5 @@
 '\" t
-.TH "KERNEL\-INSTALL" "8" "" "systemd 249" "kernel-install"
+.TH "KERNEL\-INSTALL" "8" "" "systemd 250" "kernel-install"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -77,7 +77,7 @@ add \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/ \fIKERN
 .RE
 .\}
 .sp
-Three default plugins execute the following operations in this case:
+Two default plugins execute the following operations in this case:
 .sp
 .RS 4
 .ie n \{\
@@ -87,12 +87,10 @@ Three default plugins execute the following operations in this case:
 .sp -1
 .IP \(bu 2.3
 .\}
-00\-entry\-directory\&.install
-creates the directory
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
-if
-$BOOT/\fIMACHINE\-ID\fR/
-already exists\&.
+\fBkernel\-install\fR
+creates
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR, if enabled (see
+\fI$KERNEL_INSTALL_LAYOUT=\fR)\&.
 .RE
 .sp
 .RS 4
@@ -122,11 +120,8 @@ for the
 copies
 \fIKERNEL\-IMAGE\fR
 to
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/linux\&. If an
-\fIINITRD\-FILE\fR
-is provided, it also copies
-\fIINITRD\-FILE\fR
-to
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/linux\&. If
+\fIINITRD\-FILE\fRs are provided, it also copies them to
 $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL_VERSION\fR/\fIINITRD\-FILE\fR\&. It also creates a boot loader entry according to the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 in
@@ -139,9 +134,9 @@ or
 (if the former is missing), or "Linux
 \fIKERNEL\-VERSION\fR", if unset\&.
 .sp
-If the entry directory
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
-does not exist, this plugin does nothing\&.
+If
+\fI$KERNEL_INSTALL_LAYOUT=\fR
+is not "bls", this plugin does nothing\&.
 .RE
 .RE
 .PP
@@ -197,6 +192,20 @@ for this kernel again\&.
 removes the file
 $BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&.
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fBkernel\-install\fR
+removes
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR, if enabled (see
+\fI$KERNEL_INSTALL_LAYOUT=\fR)\&.
+.RE
 .RE
 .SH "THE \FI$BOOT\FR PARTITION"
 .PP
@@ -234,6 +243,53 @@ If
 is used,
 \fI$KERNEL_INSTALL_VERBOSE=1\fR
 will be set for the plugins\&. They may output additional logs in this case\&.
+.PP
+If
+\fIMACHINE_ID=\fR
+is set and not empty, it will be used as
+\fIMACHINE\-ID\fR, overriding any automatic detection attempts\&. The value must be a valid machine ID (32 hexadecimal characters)\&.
+.PP
+\fIKERNEL_INSTALL_MACHINE_ID=\fR
+is set for the plugins to the desired
+\fIMACHINE\-ID\fR
+\(en either 32 hexadecimal characters or the special value
+"Default"\&.
+.PP
+\fIKERNEL_INSTALL_BOOT_ROOT=\fR
+is set for the plugins to the root directory (mount point, usually) of the hierarchy where boot\-loader entries, kernel images, and associated resources should be placed\&. Can be overridden by setting
+\fIBOOT_ROOT=\fR\&.
+.PP
+\fIKERNEL_INSTALL_LAYOUT=bls|other|\&.\&.\&.\fR
+specifies the installation layout\&. Defaults to
+\fBbls\fR
+if
+$BOOT/\fIMACHINE\-ID\fR
+exists, or
+\fBother\fR
+otherwise\&. Additional layout names may be defined by convention\&. If a plugin uses a special layout, it\*(Aqs encouraged to declare its own layout name and configure
+\fIlayout=\fR
+in
+install\&.conf
+upon initial installation\&.
+.PP
+bls
+.RS 4
+Standard
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
+layout, compatible with
+\fBsystemd-boot\fR(7): entries in
+$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR[+\fITRIES\fR]\&.conf, kernel and initrds under
+$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+.sp
+Provided by
+90\-loaderentry\&.install\&.
+.RE
+.PP
+other
+.RS 4
+Some other layout not understood natively by
+\fBkernel\-install\fR\&.
+.RE
 .SH "EXIT STATUS"
 .PP
 If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code otherwise\&.
@@ -244,12 +300,14 @@ If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code
 Drop\-in files which are executed by kernel\-install\&.
 .RE
 .PP
-/etc/kernel/cmdline /proc/cmdline
+/usr/lib/kernel/cmdline /etc/kernel/cmdline /proc/cmdline
 .RS 4
 Read by
 90\-loaderentry\&.install\&. The content of the file
 /etc/kernel/cmdline
 specifies the kernel command line to use\&. If that file does not exist,
+/usr/lib/kernel/cmdline
+is used\&. If that also does not exist,
 /proc/cmdline
 is used\&.
 .RE
@@ -266,14 +324,49 @@ which implement boot attempt counting with a counter embedded in the entry file 
 /etc/machine\-id
 .RS 4
 The content of this file specifies the machine identification
-\fIMACHINE\-ID\fR\&. If it cannot read
-/etc/machine\-id, kernel\-install will use "Linux" as the machine ID instead\&.
+\fIMACHINE\-ID\fR\&. If
+/etc/machine\-id
+cannot be read or is temporary (backed by a file on
+\fBtmpfs\fR),
+\fBkernel\-install\fR
+will use
+"Default"
+instead\&.
+.RE
+.PP
+/etc/machine\-info
+.RS 4
+If this file contains the
+\fIKERNEL_INSTALL_MACHINE_ID\fR
+variable,
+\fBkernel\-install\fR
+will use it as
+\fIMACHINE\-ID\fR
+instead of the contents of
+/etc/machine\-id\&. If the variable is not found in
+/etc/machine\-info,
+\fBkernel\-install\fR
+will try to save the machine ID it uses to install to
+\fI$BOOT\fR
+to this file\&.
 .RE
 .PP
 /etc/os\-release /usr/lib/os\-release
 .RS 4
-The content of the file specifies the operating system title
-\fIPRETTY_NAME\fR\&.
+Read by
+90\-loaderentry\&.install\&. If available,
+\fIPRETTY_NAME\fR
+is read from these files and used as the title of the boot menu entry\&. Otherwise,
+"Linux \fIKERNEL\-VERSION\fR"
+will be used\&.
+.RE
+.PP
+/usr/lib/kernel/install\&.conf /etc/kernel/install\&.conf
+.RS 4
+Configuration options for
+\fBkernel\-install\fR, as a series of
+\fIKEY=\fR\fIVALUE\fR
+assignments, compatible with shell syntax\&. See the Environment variables section for supported keys\&.
 .RE
 .SH "SEE ALSO"
 .PP

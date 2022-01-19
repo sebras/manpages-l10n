@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2010-2019 Dr. Tobias Quathamer <toddy@debian.org>
+#             2022      Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,11 +25,24 @@ mkdir man1 man2 man3 man4 man5 man6 man7 man8
 while read package; do
 	mkdir tmp
 
+	# First try the backport link
 	# Download HTML page and discover the correct link
-	echo "Downloading and updating package '$package'"
-	url=$(wget --quiet -O - "http://packages.debian.org/bullseye/amd64/$package/download" |
+	echo -n "Downloading and updating package '$package' from "
+	url=$(wget --quiet -O - "http://packages.debian.org/bullseye-backports/amd64/$package/download" |
 	grep "http://ftp.de.debian.org/debian/pool/" |
 	sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+
+	if [ -z $url ]; then
+	    # Next (if necessary) try the stable link
+	    # Download HTML page and discover the correct link
+	    # echo "Downloading and updating package '$package'"
+	    echo "stable"
+	    url=$(wget --quiet -O - "http://packages.debian.org/bullseye/amd64/$package/download" |
+	    grep "http://ftp.de.debian.org/debian/pool/" |
+	    sed -e "s,.*\(http://ftp.de.debian.org/debian/pool/[^\"]*\).*,\1,")
+	else
+	    echo "stable-backports"
+	fi
 	wget --quiet --directory-prefix=tmp/downloads "$url"
 
 
@@ -52,9 +66,3 @@ if [ -f links.txt ]; then
 	LC_ALL=C sort links.txt > tmp.links
 	mv tmp.links links.txt
 fi
-
-# Special case for init.8, because the manpage contains
-# a syntax error, so that the manpage cannot be translated
-# with po4a. The bug has been reported upstream.
-# https://savannah.nongnu.org/bugs/?55678
-sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" man8/init.8

@@ -1,5 +1,5 @@
 '\" t
-.TH "RESOLVED\&.CONF" "5" "" "systemd 249" "resolved.conf"
+.TH "RESOLVED\&.CONF" "5" "" "systemd 250" "resolved.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -173,7 +173,7 @@ Site\-private DNS zones generally conflict with DNSSEC operation, unless a negat
 mode is selected, it is attempted to detect site\-private DNS zones using top\-level domains (TLDs) that are not known by the DNS root server\&. This logic does not work in all private zone setups\&.
 .sp
 Defaults to
-"allow\-downgrade"\&.
+"no"\&.
 .RE
 .PP
 \fIDNSOverTLS=\fR
@@ -181,7 +181,7 @@ Defaults to
 Takes a boolean argument or
 "opportunistic"\&. If true all connections to the server will be encrypted\&. Note that this mode requires a DNS server that supports DNS\-over\-TLS and has a valid certificate\&. If the hostname was specified in
 \fIDNS=\fR
-by using the format format
+by using the format
 "address#server_name"
 it is used to validate its certificate and also to enable Server Name Indication (SNI) when opening a TLS connection\&. Otherwise the certificate is checked against the server\*(Aqs IP\&. If the DNS server does not support DNS\-over\-TLS all DNS requests will fail\&.
 .sp
@@ -205,7 +205,8 @@ settings\&. For system DNS servers (see above), only the global
 \fIDNSOverTLS=\fR
 setting is in effect\&. For per\-link DNS servers the per\-link setting is in effect, unless it is unset in which case the global setting is used instead\&.
 .sp
-Defaults to off\&.
+Defaults to
+"no"\&.
 .RE
 .PP
 \fICache=\fR
@@ -235,11 +236,13 @@ Takes a boolean argument or one of
 "udp"
 and
 "tcp"\&. If
-"udp", a DNS stub resolver will listen for UDP requests on address 127\&.0\&.0\&.53 port 53\&. If
-"tcp", the stub will listen for TCP requests on the same address and port\&. If
+"udp", a DNS stub resolver will listen for UDP requests on addresses 127\&.0\&.0\&.53 and 127\&.0\&.0\&.54, port 53\&. If
+"tcp", the stub will listen for TCP requests on the same addresses and port\&. If
 "yes"
 (the default), the stub listens for both UDP and TCP requests\&. If
 "no", the stub listener is disabled\&.
+.sp
+The DNS stub resolver on 127\&.0\&.0\&.53 provides the full feature set of the local resolver, which includes offering LLMNR/MulticastDNS resolution\&. The DNS stub resolver on 127\&.0\&.0\&.54 provides a more limited resolver, that operates in "proxy" mode only, i\&.e\&. it will pass most DNS messages relatively unmodified to the current upstream DNS servers and back, but not try to process the messages locally, and hence does not validate DNSSEC, or offer up LLMNR/MulticastDNS\&. (It will translate to DNS\-over\-TLS communication if needed however\&.)
 .sp
 Note that the DNS stub listener is turned off implicitly when its listening address and port are already in use\&.
 .RE

@@ -1,4 +1,4 @@
-.TH LOGROTATE 8 "3.18.1" "Linux" "System Administrator's Manual"
+.TH LOGROTATE 8 "3.19.0" "Linux" "System Administrator's Manual"
 .\" Per groff_man(7), the TQ macro should be copied from an-ext.tmac when
 .\" not running under groff.  That's not quite right; not all groff
 .\" installations include this macro.  So bring it in with another name
@@ -51,7 +51,7 @@ a config file.
 If no command line arguments are given, \fBlogrotate\fR will print
 version and copyright information, along with a short usage summary.  If
 any errors occur while rotating logs, \fBlogrotate\fR will exit with
-non-zero status.
+non-zero status, although the state file will be updated.
 
 .SH OPTIONS
 
@@ -75,6 +75,8 @@ if \fBlogrotate\fR is being run as a different user for various sets of
 log files.  To prevent parallel execution \fBlogrotate\fR by default
 acquires a lock on the state file, if it cannot be acquired \fBlogrotate\fR
 will exit with value 3.  The default state file is \fI/var/lib/logrotate/status\fR.
+If \fI/dev/null\fR is given as the state file, then \fBlogrotate\fR will
+not try to write the state file.
 
 .TP
 \fB\-\-skip-state-lock\fR
@@ -203,6 +205,11 @@ Please use wildcards with caution.  If you specify *, \fBlogrotate\fR will
 rotate all files, including previously rotated ones.  A way around this
 is to use the \fBolddir\fR directive or a more exact wildcard (such as *.log).
 
+Please note, by default when using \fBsystemd\fR(1), the option
+\fIProtectSystem=full\fR is set in the \fIlogrotate.service\fR file.
+This prevents \fBlogrotate\fR from modifying logs in \fI/etc\fR
+and \fI/usr\fR.
+
 Here is more information on the directives which may be included in
 a \fBlogrotate\fR configuration file:
 
@@ -251,8 +258,9 @@ that are directly or indirectly in control of non-privileged users.
 .TP
 \fBhourly\fR
 Log files are rotated every hour.  Note that usually \fBlogrotate\fR is
-configured to be run by cron daily.  You have to change this configuration
-and run \fBlogrotate\fR hourly to be able to really rotate logs hourly.
+configured to be run by cron daily (or by \fIlogrotate.timer\fR when using
+\fBsystemd\fR(1)).  You have to change this configuration and run
+\fBlogrotate\fR hourly to be able to really rotate logs hourly.
 
 .TP
 \fBdaily\fR
@@ -280,7 +288,7 @@ Log files are rotated if the current year is not the same as the last rotation.
 \fBsize \fIsize\fR
 Log files are rotated only if they grow bigger than \fIsize\fR bytes.  If
 \fIsize\fR is followed by \fIk\fR, the size is assumed to be in kilobytes.
-If the \fIM\fR is used, the size is in megabytes, and if \fIG\fR is used, the
+If \fIM\fR is used, the size is in megabytes, and if \fIG\fR is used, the
 size is in gigabytes. So \fIsize 100\fR, \fIsize 100k\fR, \fIsize 100M\fR and
 \fIsize 100G\fR are all valid.  This option is mutually exclusive with the time
 interval options, and it causes log files to be rotated without regard for the
@@ -464,6 +472,16 @@ Do not use \fBshred\fR when deleting old log files.  See also \fBshred\fR.
 \fBshredcycles\fR \fIcount\fR
 Asks GNU \fBshred\fR(1) to overwrite log files \fBcount\fR times before
 deletion.  Without this option, \fBshred\fR's default will be used.
+
+.TP
+\fBallowhardlink\fR
+Rotate files with multiple hard links; this is off by default.  The target file
+might get emptied, e.g. with \fBshred\fR or \fBcopytruncate\fR.  Use with
+caution, especially when the log files are rotated as root.
+
+.TP
+\fBnoallowhardlink\fR
+Do not rotate files with multiple hard links.  See also \fBallowhardlink\fR.
 
 .SS Compression
 
@@ -721,7 +739,7 @@ The script inherits some traits from the \fBlogrotate\fR process, including
 stderr, stdout, the current directory, the environment, and the umask.
 Scripts are run as the invoking user and group, irrespective of any \fBsu\fR
 directive.  If the \fB\-\-log\fR flag was specified, file descriptor 3 is the
-log file.
+log file.  The current working directory is unspecified.
 
 .SH USER AND GROUP
 

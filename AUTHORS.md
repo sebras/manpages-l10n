@@ -138,6 +138,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Aymeric Nys <aymeric AT nnx POINT com>
 * Bastien Scher <bastien0705@gmail.com>
 * Bernard Siaud
+* bubu <bubub@no-log.org>
 * carmie
 * Cédric Boutillier <cedric.boutillier@gmail.com>
 * Cédric Lucantis <omer@no-log.org>
@@ -252,7 +253,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Markus Kaufmann <markus.kaufmann@gmx.de>
 * Markus Schmitt <fw@math.uni-sb.de>
 * Martin Eberhard Schauer <Martin.E.Schauer@gmx.de>
-* Martin Okrslar <okrslar@informatik.uni-muenchen.de>
 * Martin Schmitt <martin@schmitt.li>
 * Martin Schulze <joey@infodrom.org>
 * Michaela Hohenner <mhohenne@techfak.uni-bielefeld.de>
@@ -338,6 +338,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Indonesian:
 
+* Andika Triwidada <andika@gmail.com>
 * Decy Sophan Aryanto <decy.sophan@upg.siemens.co.id>
 * I Made Wiryana <mwiryana@gunadarma.ac.id>
 * Johan Efendi <johan-efendi@iname.com>
@@ -401,7 +402,6 @@ of Linux manpages. The list is sorted alphabetically.
 * Leszek Krupiński <d@z.pl>
 * Łukasz Kowalczyk <lukow@tempac.okwf.fuw.edu.pl>
 * Maciej Wojciechowski <wojciech@staszic.waw.pl>
-* Marcin Garski <mgarski@post.pl>
 * Marcin Mazurek <mazek@capella.ae.poznan.pl>
 * Michał Górny <zrchos+manpagespl@gmail.com>
 * Michał Kułach <michal.kulach@gmail.com>

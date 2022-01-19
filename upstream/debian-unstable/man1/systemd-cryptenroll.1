@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-CRYPTENROLL" "1" "" "systemd 249" "systemd-cryptenroll"
+.TH "SYSTEMD\-CRYPTENROLL" "1" "" "systemd 250" "systemd-cryptenroll"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -72,7 +72,7 @@ TPM2 security devices
 .sp -1
 .IP "  4." 4.2
 .\}
-Recovery keys\&. These are similar to regular passphrases, however are randomly generated on the computer and thus generally have higher entropy than user chosen passphrases\&. Their character set has been designed to ensure they are easy to type in, while having high entropy\&. They may also be scanned off screen using QR codes\&. Recovery keys may be used for unlocking LUKS2 volumes wherever passphrases are accepted\&. They are intended to be used in combination with an enrolled hardware security token, as a recovery option when the token is lost\&.
+Regular passphrases
 .RE
 .sp
 .RS 4
@@ -83,7 +83,7 @@ Recovery keys\&. These are similar to regular passphrases, however are randomly 
 .sp -1
 .IP "  5." 4.2
 .\}
-Regular passphrases
+Recovery keys\&. These are similar to regular passphrases, however are randomly generated on the computer and thus generally have higher entropy than user\-chosen passphrases\&. Their character set has been designed to ensure they are easy to type in, while having high entropy\&. They may also be scanned off screen using QR codes\&. Recovery keys may be used for unlocking LUKS2 volumes wherever passphrases are accepted\&. They are intended to be used in combination with an enrolled hardware security token, as a recovery option when the token is lost\&.
 .RE
 .PP
 In addition, the tool may be used to enumerate currently enrolled security tokens and wipe a subset of them\&. The latter may be combined with the enrollment operation of a new security token, in order to update or replace enrollments\&.
@@ -110,7 +110,7 @@ in one call, see below\&.
 .PP
 \fB\-\-recovery\-key\fR
 .RS 4
-Enroll a recovery key\&. Recovery keys are most identical to passphrases, but are computer generated instead of human chosen, and thus have a guaranteed high entropy\&. The key uses a character set that is easy to type in, and may be scanned off screen via a QR code\&.
+Enroll a recovery key\&. Recovery keys are mostly identical to passphrases, but are computer\-generated instead of being chosen by a human, and thus have a guaranteed high entropy\&. The key uses a character set that is easy to type in, and may be scanned off screen via a QR code\&.
 .RE
 .PP
 \fB\-\-pkcs11\-token\-uri=\fR\fIURI\fR
@@ -282,6 +282,8 @@ l l
 l l
 l l
 l l
+l l
+l l
 l l.
 T{
 0
@@ -306,7 +308,7 @@ T}
 T{
 4
 T}:T{
-Boot loader; changes on boot loader updates
+Boot loader; changes on boot loader updates\&. The shim project will measure the PE binary it chain loads into this PCR\&.
 T}
 T{
 5
@@ -321,15 +323,26 @@ T}
 T{
 7
 T}:T{
-Secure boot state; changes when UEFI SecureBoot mode is enabled/disabled
+Secure boot state; changes when UEFI SecureBoot mode is enabled/disabled, or firmware certificates (PK, KEK, db, dbx, \&...) changes\&. The shim project will measure most of its (non\-MOK) certificates and SBAT data into this PCR\&.
 T}
 T{
 8
 T}:T{
-\fBsd-boot\fR(7) measures the kernel command line in this PCR\&.
+\fBsd-boot\fR(7) measures the kernel command line into this PCR\&.
+T}
+T{
+10
+T}:T{
+The IMA project measures its runtime state into this PCR\&.
+T}
+T{
+14
+T}:T{
+The shim project measures its "MOK" certificates and hashes into this PCR\&.
 T}
 .TE
 .sp 1
+For most applications it should be sufficient to bind against PCR 7 (and possibly PCR 14, if shim/MOK is desired), as this includes measurements of the trusted certificates (and possibly hashes) that are used to validate all components of the boot process up to and including the OS kernel\&. In order to simplify firmware and OS version updates it\*(Aqs typically not advisable to include PCRs such as 0 and 2 in the binding of the enrollment, since the program code they cover should already be protected indirectly through the certificates measured into PCR 7\&. Validation through these certificates is typically preferable over validation through direct measurements as it is less brittle in context of OS/firmware updates: the measurements will change on every update, but code signatures likely will validate against pre\-existing certificates\&.
 .RE
 .PP
 \fB\-\-wipe\-slot=\fR [SLOT...]

@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.RESOLVE1" "5" "" "systemd 249" "org.freedesktop.resolve1"
+.TH "ORG\&.FREEDESKTOP\&.RESOLVE1" "5" "" "systemd 250" "org.freedesktop.resolve1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -435,16 +435,30 @@ The four methods above accept and return a 64\-bit flags value\&. In most cases 
 .RS 4
 .\}
 .nf
-#define SD_RESOLVED_DNS           (UINT64_C(1) << 0)
-#define SD_RESOLVED_LLMNR_IPV4    (UINT64_C(1) << 1)
-#define SD_RESOLVED_LLMNR_IPV6    (UINT64_C(1) << 2)
-#define SD_RESOLVED_MDNS_IPV4     (UINT64_C(1) << 3)
-#define SD_RESOLVED_MDNS_IPV6     (UINT64_C(1) << 4)
-#define SD_RESOLVED_NO_CNAME      (UINT64_C(1) << 5)
-#define SD_RESOLVED_NO_TXT        (UINT64_C(1) << 6)
-#define SD_RESOLVED_NO_ADDRESS    (UINT64_C(1) << 7)
-#define SD_RESOLVED_NO_SEARCH     (UINT64_C(1) << 8)
-#define SD_RESOLVED_AUTHENTICATED (UINT64_C(1) << 9)
+#define SD_RESOLVED_DNS               (UINT64_C(1) <<  0)
+#define SD_RESOLVED_LLMNR_IPV4        (UINT64_C(1) <<  1)
+#define SD_RESOLVED_LLMNR_IPV6        (UINT64_C(1) <<  2)
+#define SD_RESOLVED_MDNS_IPV4         (UINT64_C(1) <<  3)
+#define SD_RESOLVED_MDNS_IPV6         (UINT64_C(1) <<  4)
+#define SD_RESOLVED_NO_CNAME          (UINT64_C(1) <<  5)
+#define SD_RESOLVED_NO_TXT            (UINT64_C(1) <<  6)
+#define SD_RESOLVED_NO_ADDRESS        (UINT64_C(1) <<  7)
+#define SD_RESOLVED_NO_SEARCH         (UINT64_C(1) <<  8)
+#define SD_RESOLVED_AUTHENTICATED     (UINT64_C(1) <<  9)
+#define SD_RESOLVED_NO_VALIDATE       (UINT64_C(1) << 10)
+#define SD_RESOLVED_NO_SYNTHESIZE     (UINT64_C(1) << 11)
+#define SD_RESOLVED_NO_CACHE          (UINT64_C(1) << 12)
+#define SD_RESOLVED_NO_ZONE           (UINT64_C(1) << 13)
+#define SD_RESOLVED_NO_TRUST_ANCHOR   (UINT64_C(1) << 14)
+#define SD_RESOLVED_NO_NETWORK        (UINT64_C(1) << 15)
+#define SD_RESOLVED_REQUIRE_PRIMARY   (UINT64_C(1) << 16)
+#define SD_RESOLVED_CLAMP_TTL         (UINT64_C(1) << 17)
+#define SD_RESOLVED_CONFIDENTIAL      (UINT64_C(1) << 18)
+#define SD_RESOLVED_SYNTHETIC         (UINT64_C(1) << 19)
+#define SD_RESOLVED_FROM_CACHE        (UINT64_C(1) << 20)
+#define SD_RESOLVED_FROM_ZONE         (UINT64_C(1) << 21)
+#define SD_RESOLVED_FROM_TRUST_ANCHOR (UINT64_C(1) << 22)
+#define SD_RESOLVED_FROM_NETWORK      (UINT64_C(1) << 23)
         
 .fi
 .if n \{\
@@ -463,7 +477,7 @@ The NO_CNAME flag controls whether CNAME/DNAME resource records shall be followe
 .PP
 The NO_TXT and NO_ADDRESS flags only influence operation of the
 \fBResolveService()\fR
-method\&. They are only defined for input, not output\&. If NO_TXT set, the DNS\-SD TXT RR look\-up is not done in the same operation\&. If NO_ADDRESS is specified, the hostnames discovered are not implicitly translated to their addresses\&.
+method\&. They are only defined for input, not output\&. If NO_TXT is set, the DNS\-SD TXT RR look\-up is not done in the same operation\&. If NO_ADDRESS is set, the discovered hostnames are not implicitly translated to their addresses\&.
 .PP
 The NO_SEARCH flag turns off the search domain logic\&. It is only defined for input in
 \fBResolveHostname()\fR\&. When specified, single\-label hostnames are not qualified using defined search domains, if any are configured\&. Note that
@@ -475,7 +489,19 @@ The AUTHENTICATED bit is defined only in the output flags of the four functions\
 or data from
 /etc/hosts\&. Moreover, it is set for all LLMNR or mDNS RRs which originate from the local host\&. Applications that require authenticated RR data for operation should check this flag before trusting the data\&. Note that
 systemd\-resolved
-will never return invalidated data, hence this flag simply allows to discern the cases where data is known to be trustable, or where there is proof that the data is "rightfully" unauthenticated (which includes cases where the underlying protocol or server does not support authenticating data)\&.
+will never return invalidated data, hence this flag simply allows to discern the cases where data is known to be trusted, or where there is proof that the data is "rightfully" unauthenticated (which includes cases where the underlying protocol or server does not support authenticating data)\&.
+.PP
+NO_VALIDATE can be set to disable validation via DNSSEC even if it would normally be used\&.
+.PP
+The next four flags allow disabling certain sources during resolution\&. NO_SYNTHESIZE disables synthetic records, e\&.g\&. the local host name, see section SYNTHETIC RECORDS in
+\fBsystemd-resolved.service\fR(8)
+for more information\&. NO_CACHE disables the use of the cache of previously resolved records\&. NO_ZONE disables answers using locally registered public LLMNR/mDNS resource records\&. NO_TRUST_ANCHOR disables answers using locally configured trust anchors\&. NO_NETWORK requires all answers to be provided without using the network, i\&.e\&. either from local sources or the cache\&.
+.PP
+With REQUIRE_PRIMARY the request must be answered from a "primary" answer, i\&.e\&. not from resource records acquired as a side\-effect of a previous transaction\&.
+.PP
+With CLAMP_TTL, if reply is answered from cache, the TTLs will be adjusted by age of cache entry\&.
+.PP
+The next six bits flags are used in output and provide information about the source of the answer\&. CONFIDENTIAL means the query was resolved via encrypted channels or never left this system\&. FROM_SYNTHETIC means the query was (at least partially) synthesized\&. FROM_CACHE means the query was answered (at least partially) using the cache\&. FROM_ZONE means the query was answered (at least partially) using LLMNR/mDNS\&. FROM_TRUST_ANCHOR means the query was answered (at least partially) using local trust anchors\&. FROM_NETWORK means the query was answered (at least partially) using the network\&.
 .RE
 .SS "Properties"
 .PP

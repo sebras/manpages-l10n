@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 249" "systemd-system.conf"
+.TH "SYSTEMD\-SYSTEM\&.CONF" "5" "" "systemd 250" "systemd-system.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -130,13 +130,24 @@ Configure the hardware watchdog at runtime and at reboot\&. Takes a timeout valu
 "min",
 "h",
 "d",
-"w")\&. If
+"w"), or the special strings
+"off"
+or
+"default"\&. If set to
+"off"
+(alternatively:
+"0") the watchdog logic is disabled: no watchdog device is opened, configured, or pinged\&. If set to the special string
+"default"
+the watchdog is opened and pinged in regular intervals, but the timeout is not changed from the default\&. If set to any other time value the watchdog timeout is configured to the specified value (or a value close to it, depending on hardware capabilities)\&.
+.sp
+If
 \fIRuntimeWatchdogSec=\fR
-is set to a non\-zero value, the watchdog hardware (/dev/watchdog
+is set to a non\-zero value, the watchdog hardware (/dev/watchdog0
 or the path specified with
 \fIWatchdogDevice=\fR
 or the kernel option
 \fIsystemd\&.watchdog\-device=\fR) will be programmed to automatically reboot the system if it is not contacted within the specified timeout interval\&. The system manager will ensure to contact it at least once in half the specified timeout interval\&. This feature requires a hardware watchdog device to be present, as it is commonly the case in embedded and server systems\&. Not all hardware watchdogs allow configuration of all possible reboot timeout values, in which case the closest available timeout is picked\&.
+.sp
 \fIRebootWatchdogSec=\fR
 may be used to configure the hardware watchdog when the system is asked to reboot\&. It works as a safety net to ensure that the reboot takes place even if a clean reboot attempt times out\&. Note that the
 \fIRebootWatchdogSec=\fR
@@ -157,6 +168,7 @@ unit\&. By default
 defaults to 0 (off), and
 \fIRebootWatchdogSec=\fR
 to 10min\&.
+.sp
 \fIKExecWatchdogSec=\fR
 may be used to additionally enable the watchdog when kexec is being executed rather than when rebooting\&. Note that if the kernel does not reset the watchdog on kexec (depending on the specific hardware and/or driver), in this case the watchdog might not get disabled after kexec succeeds and thus the system might get rebooted, unless
 \fIRuntimeWatchdogSec=\fR
@@ -164,13 +176,15 @@ is also enabled at the same time\&. For this reason it is recommended to enable
 \fIKExecWatchdogSec=\fR
 only if
 \fIRuntimeWatchdogSec=\fR
-is also enabled\&. These settings have no effect if a hardware watchdog is not available\&.
+is also enabled\&.
+.sp
+These settings have no effect if a hardware watchdog is not available\&.
 .RE
 .PP
 \fIWatchdogDevice=\fR
 .RS 4
 Configure the hardware watchdog device that the runtime and shutdown watchdog timers will open and use\&. Defaults to
-/dev/watchdog\&. This setting has no effect if a hardware watchdog is not available\&.
+/dev/watchdog0\&. This setting has no effect if a hardware watchdog is not available\&.
 .RE
 .PP
 \fICapabilityBoundingSet=\fR
@@ -440,6 +454,15 @@ setting\&. See
 for details\&. Note that this default is not used for services that have
 \fIDelegate=\fR
 turned on\&.
+.RE
+.PP
+\fIDefaultOOMScoreAdjust=\fR
+.RS 4
+Configures the default OOM score adjustments of processes run by the service manager\&. This defaults to unset (meaning the forked off processes inherit the service manager\*(Aqs OOM score adjustment value), except if the service manager is run for an unprivileged user, in which case this defaults to the service manager\*(Aqs OOM adjustment value plus 100 (this makes service processes slightly more likely to be killed under memory pressure than the manager itself)\&. This may be used to pick a global default for the per\-unit
+\fIOOMScoreAdjust=\fR
+setting\&. See
+\fBsystemd.exec\fR(5)
+for details\&. Note that this setting has no effect on the OOM score adjustment value of the service manager process itself, it retains the original value set during its invocation\&.
 .RE
 .SH "SPECIFIERS"
 .PP
