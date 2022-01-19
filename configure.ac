@@ -128,6 +128,7 @@ AC_CONFIG_FILES([
     po/ro/Makefile
     po/sr/Makefile
     po/sv/Makefile
+    po/vi/Makefile
 ])
 
 AC_OUTPUT
