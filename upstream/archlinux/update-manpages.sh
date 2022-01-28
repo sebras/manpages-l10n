@@ -63,3 +63,10 @@ if [ -f links.txt ]; then
 	LC_ALL=C sort links.txt > tmp.links
 	mv tmp.links links.txt
 fi
+
+	# Special case for grub-mknetdir.1. This file contains an unprintable
+	# character (detected as "\v") which po4a can't handle.
+	# See https://savannah.gnu.org/bugs/?58936
+	if [ -f ./man1/grub-mknetdir.1 ]; then
+	  sed -i -e "s|Prepares|Prepares|" ./man1/grub-mknetdir.1
+	fi
