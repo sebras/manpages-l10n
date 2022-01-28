@@ -1,5 +1,5 @@
 '\" t
-.TH "CRYPTTAB" "5" "" "systemd 249" "crypttab"
+.TH "CRYPTTAB" "5" "" "systemd 250" "crypttab"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -637,6 +637,13 @@ separated list of numeric TPM2 PCR (i\&.e\&. "Platform Configuration Register") 
 writes it there\&. If not used (and no metadata in the LUKS2 JSON token header defines it), defaults to a list of a single entry: PCR 7\&. Assign an empty string to encode a policy that binds the key to no PCRs, making the key accessible to local programs regardless of the current PCR state\&.
 .RE
 .PP
+\fBtoken\-timeout=\fR
+.RS 4
+Specifies how long to wait at most for configured security devices (i\&.e\&. FIDO2, PKCS#11, TPM2) to show up\&. Takes a time value in seconds (but other time units may be specified too, see
+\fBsystemd.time\fR(7)
+for supported formats)\&. Defaults to 30s\&. Once the specified timeout elapsed authentication via password is attempted\&. Note that this timeout applies to waiting for the security device to show up \(em it does not apply to the PIN prompt for the device (should one be needed) or similar\&. Pass 0 to turn off the time\-out and wait forever\&.
+.RE
+.PP
 \fBtry\-empty\-password=\fR
 .RS 4
 Takes a boolean argument\&. If enabled, right before asking the user for a password it is first attempted to unlock the volume with an empty password\&. This is useful for systems that are initialized with an encrypted volume with only an empty password set, which shall be replaced with a suitable password during first boot, but after activation\&.
@@ -644,7 +651,7 @@ Takes a boolean argument\&. If enabled, right before asking the user for a passw
 .PP
 \fBx\-systemd\&.device\-timeout=\fR
 .RS 4
-Specifies how long systemd should wait for a device to show up before giving up on the entry\&. The argument is a time in seconds or explicitly specified units of
+Specifies how long systemd should wait for a block device to show up before giving up on the entry\&. The argument is a time in seconds or explicitly specified units of
 "s",
 "min",
 "h",
@@ -751,6 +758,8 @@ to add it in the LUKS2 volume:
 .RS 4
 .\}
 .nf
+# SPDX\-License\-Identifier: CC0\-1\&.0
+
 # Destroy any old key on the Yubikey (careful!)
 ykman piv reset
 
@@ -818,6 +827,8 @@ extension for unlocking an encrypted volume\&. Here\*(Aqs an example how to set 
 .RS 4
 .\}
 .nf
+# SPDX\-License\-Identifier: CC0\-1\&.0
+
 # Enroll the security token in the LUKS2 volume\&. Replace /dev/sdXn by the
 # partition to use (e\&.g\&. /dev/sda1)\&.
 sudo systemd\-cryptenroll \-\-fido2\-device=auto /dev/sdXn
@@ -842,6 +853,8 @@ The TPM2 logic allows using any TPM2 chip supported by the Linux kernel for unlo
 .RS 4
 .\}
 .nf
+# SPDX\-License\-Identifier: CC0\-1\&.0
+
 # Enroll the TPM2 security chip in the LUKS2 volume, and bind it to PCR 7
 # only\&. Replace /dev/sdXn by the partition to use (e\&.g\&. /dev/sda1)\&.
 sudo systemd\-cryptenroll \-\-tpm2\-device=auto \-\-tpm2\-pcrs=7 /dev/sdXn

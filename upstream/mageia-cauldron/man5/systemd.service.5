@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 249" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 250" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,11 +39,10 @@ Additional options are listed in
 \fBsystemd.kill\fR(5), which define the way the processes of the service are terminated, and in
 \fBsystemd.resource-control\fR(5), which configure resource control settings for the processes of the service\&.
 .PP
-If a service is requested under a certain name but no unit configuration file is found, systemd looks for a SysV init script by the same name (with the
-\&.service
-suffix removed) and dynamically creates a service unit from that script\&. This is useful for compatibility with SysV\&. Note that this compatibility is quite comprehensive but not 100%\&. For details about the incompatibilities, see the
-\m[blue]\fBIncompatibilities with SysV\fR\m[]\&\s-2\u[1]\d\s+2
-document\&.
+If SysV init compat is enabled, systemd automatically creates service units that wrap SysV init scripts (the service name is the same as the name of the script, with a
+"\&.service"
+suffix added); see
+\fBsystemd-sysv-generator\fR(8)\&.
 .PP
 The
 \fBsystemd-run\fR(1)
@@ -167,7 +166,10 @@ in the template unit, and either define your own per\-template slice unit file t
 .RE
 .SH "OPTIONS"
 .PP
-Service files must include a [Service] section, which carries information about the service and the process it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
+Service unit files may include [Unit] and [Install] sections, which are described in
+\fBsystemd.unit\fR(5)\&.
+.PP
+Service unit files must include a [Service] section, which carries information about the service and the process it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
 \fBsystemd.exec\fR(5),
 \fBsystemd.kill\fR(5)
 and
@@ -937,6 +939,15 @@ within the interval specified until the service shutdown is achieved by
 \fBsd_notify\fR(3))\&.
 .RE
 .PP
+\fIRuntimeRandomizedExtraSec=\fR
+.RS 4
+This option modifies
+\fIRuntimeMaxSec=\fR
+by increasing the maximum runtime by an evenly distributed duration between 0 and the specified value (in seconds)\&. If
+\fIRuntimeMaxSec=\fR
+is unspecified, then this feature will be disabled\&.
+.RE
+.PP
 \fIWatchdogSec=\fR
 .RS 4
 Configures the watchdog timeout for a service\&. The watchdog is activated when the start\-up is completed\&. The service must call
@@ -1376,7 +1387,7 @@ is not set, it will be implicitly set to
 \fIUSBFunctionDescriptors=\fR
 .RS 4
 Configure the location of a file containing
-\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[1]\d\s+2
 descriptors, for implementation of USB gadget functions\&. This is used only in conjunction with a socket unit with
 \fIListenUSBFunction=\fR
 configured\&. The contents of this file are written to the
@@ -1420,8 +1431,8 @@ for details\&.
 .RE
 .PP
 Check
-\fBsystemd.exec\fR(5)
-and
+\fBsystemd.unit\fR(5),
+\fBsystemd.exec\fR(5), and
 \fBsystemd.kill\fR(5)
 for more settings\&.
 .SH "COMMAND LINES"
@@ -1849,11 +1860,6 @@ for details on how you can influence the way systemd terminates the service\&.
 \fBsystemd-run\fR(1)
 .SH "NOTES"
 .IP " 1." 4
-Incompatibilities with SysV
-.RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/Incompatibilities
-.RE
-.IP " 2." 4
 USB FunctionFS
 .RS 4
 \%https://www.kernel.org/doc/Documentation/usb/functionfs.txt

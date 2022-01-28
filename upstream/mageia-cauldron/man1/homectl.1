@@ -1,5 +1,5 @@
 '\" t
-.TH "HOMECTL" "1" "" "systemd 249" "homectl"
+.TH "HOMECTL" "1" "" "systemd 250" "homectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -342,13 +342,19 @@ Takes a file system path\&. Specifies the shell binary to execute on terminal lo
 /bin/bash\&.
 .RE
 .PP
-\fB\-\-setenv=\fR\fIVARIABLE\fR=\fIVALUE\fR
+\fB\-\-setenv=\fR\fIVARIABLE\fR[=\fIVALUE\fR]
 .RS 4
-Takes an environment variable assignment to set for all user processes\&. Note that a number of other settings also result in environment variables to be set for the user, including
+Takes an environment variable assignment to set for all user processes\&. May be used multiple times to set multiple environment variables\&. When
+"="
+and
+\fIVALUE\fR
+are omitted, the value of the variable with the same name in the program environment will be used\&.
+.sp
+Note that a number of other settings also result in environment variables to be set for the user, including
 \fB\-\-email=\fR,
 \fB\-\-timezone=\fR
 and
-\fB\-\-language=\fR\&. May be used multiple times to set multiple environment variables\&.
+\fB\-\-language=\fR\&.
 .RE
 .PP
 \fB\-\-timezone=\fR\fITIMEZONE\fR
@@ -522,8 +528,15 @@ configures the time which has to pass after the password as expired until the us
 .PP
 \fB\-\-disk\-size=\fR\fIBYTES\fR
 .RS 4
-Either takes a size in bytes as argument (possibly using the usual K, M, G, \&... suffixes for 1024 base values), or a percentage value and configures the disk space to assign to the user\&. If a percentage value is specified (i\&.e\&. the argument suffixed with
-"%") it is taken relative to the available disk space of the backing file system\&. If the LUKS2 backend is used this configures the size of the loopback file and file system contained therein\&. For the other storage backends configures disk quota using the filesystem\*(Aqs native quota logic, if available\&. If not specified, defaults to 85% of the available disk space for the LUKS2 backend and to no quota for the others\&.
+Either takes a size in bytes as argument (possibly using the usual K, M, G, \&... suffixes for 1024 base values), a percentage value, or the special strings
+"min"
+or
+"max", and configures the disk space to assign to the user\&. If a percentage value is specified (i\&.e\&. the argument suffixed with
+"%") it is taken relative to the available disk space of the backing file system\&. If specified as
+"min"
+assigns the minimal disk space permitted by the constraints of the backing file system and other limits, when specified as
+"max"
+assigns the maximum disk space available\&. If the LUKS2 backend is used this configures the size of the loopback file and file system contained therein\&. For the other storage backends configures disk quota using the filesystem\*(Aqs native quota logic, if available\&. If not specified, defaults to 85% of the available disk space for the LUKS2 backend and to no quota for the others\&.
 .RE
 .PP
 \fB\-\-access\-mode=\fR\fIMODE\fR
@@ -613,6 +626,11 @@ for the other storage mechanisms\&. Not defined for the
 storage mechanism\&. To use LUKS2 storage on a regular block device (for example a USB stick) pass the path to the block device here\&. Specifying the path to a directory here when using LUKS2 storage is not allowed\&. Similar, specifying the path to a regular file or device node is not allowed if any of the other storage backends are used\&.
 .RE
 .PP
+\fB\-\-drop\-caches=\fR\fIBOOL\fR
+.RS 4
+Automatically flush OS file system caches on logout\&. This is useful in combination with the fscrypt storage backend to ensure the OS does not keep decrypted versions of the files and directories in memory (and accessible) after logout\&. This option is also supported on other backends, but should not bring any benefit there\&. Defaults to off, except if the selected storage backend is fscrypt, where it defaults to on\&. Note that flushing OS caches will negatively influence performance of the OS shortly after logout\&.
+.RE
+.PP
 \fB\-\-fs\-type=\fR\fITYPE\fR
 .RS 4
 When LUKS2 storage is used configures the file system type to use inside the home directory LUKS2 container\&. One of
@@ -642,11 +660,45 @@ controls what happens when the home directory is active,
 controls what happens when it becomes inactive, i\&.e\&. whether to trim/allocate the storage when deactivating the home directory\&. This option defaults to on, to ensure disk space is minimized while a user is not logged in\&.
 .RE
 .PP
+\fB\-\-luks\-extra\-mount\-options=\fR\fIOPTIONS\fR
+.RS 4
+Takes a string containing additional mount options to use when mounting the LUKS volume\&. If specified, this string will be appended to the default, built\-in mount options\&.
+.RE
+.PP
 \fB\-\-luks\-cipher=\fR\fICIPHER\fR, \fB\-\-luks\-cipher\-mode=\fR\fIMODE\fR, \fB\-\-luks\-volume\-key\-size=\fR\fIBITS\fR, \fB\-\-luks\-pbkdf\-type=\fR\fITYPE\fR, \fB\-\-luks\-pbkdf\-hash\-algorithm=\fR\fIALGORITHM\fR, \fB\-\-luks\-pbkdf\-time\-cost=\fR\fISECONDS\fR, \fB\-\-luks\-pbkdf\-memory\-cost=\fR\fIBYTES\fR, \fB\-\-luks\-pbkdf\-parallel\-threads=\fR\fITHREADS\fR
 .RS 4
 Configures various cryptographic parameters for the LUKS2 storage mechanism\&. See
 \fBcryptsetup\fR(8)
 for details on the specific attributes\&.
+.RE
+.PP
+\fB\-\-auto\-resize\-mode=\fR
+.RS 4
+Configures whether to automatically grow and/or shrink the backing file system on login and logout\&. Takes one of the strings
+"off",
+"grow",
+"shrink\-and\-grow"\&. Only applies to the LUKS2 backend currently, and if the btrfs file system is used inside it (since only then online growing/shrinking of the file system is supported)\&. Defaults to
+"shrink\-and\-grow", if LUKS2/btrfs is used, otherwise is off\&. If set to
+"off"
+no automatic shrinking/growing during login or logout is done\&. If set to
+"grow"
+the home area is grown to the size configured via
+\fB\-\-disk\-size=\fR
+should it currently be smaller\&. If it already matches the configured size or is larger no operation is executed\&. If set to
+"shrink\-and\-grow"
+the home area is also resized to the minimal size used disk space and file system constraints permit, during logout\&. This mode thus ensures that while a home area is activated it is sized to the configured size, but while deactivated it is compacted taking up only the minimal space possible\&. Note that if the system is powered off abnormally or if the user otherwise not logged out cleanly the shrinking operation will not take place, and the user has to re\-login/logout again before it is executed again\&.
+.RE
+.PP
+\fB\-\-rebalance\-weight=\fR
+.RS 4
+Configures the weight parameter for the free disk space rebalancing logic\&. Only applies to the LUKS2 backend (since for the LUKS2 backend disk space is allocated from a per\-user loopback file system instead of immediately from a common pool like the other backends do it)\&. In regular intervals free disk space in the active home areas and their backing storage is redistributed among them, taking the weight value configured here into account\&. Expects an integer in the range 1\&...10000, or the special string
+"off"\&. If not specified defaults to 100\&. The weight is used to scale free space made available to the home areas: a home area with a weight of 200 will get twice the free space as one with a weight of 100; a home area with a weight of 50 will get half of that\&. The backing file system will be assigned space for a weight of 20\&. If set to
+"off"
+no automatic free space distribution is done for this home area\&. Note that resizing the home area explicitly (with
+\fBhomectl resize\fR
+see below) will implicitly turn off the automatic rebalancing\&. To reenable the automatic rebalancing use
+\fB\-\-rebalance\-weight=\fR
+with an empty parameter\&.
 .RE
 .PP
 \fB\-\-nosuid=\fR\fIBOOL\fR, \fB\-\-nodev=\fR\fIBOOL\fR, \fB\-\-noexec=\fR\fIBOOL\fR
@@ -666,11 +718,16 @@ is off\&. For details about these mount options see
 \fBmount\fR(8)\&.
 .RE
 .PP
-\fB\-\-cifs\-domain=\fR\fIDOMAIN\fR, \fB\-\-cifs\-user\-name=\fR\fIUSER\fR, \fB\-\-cifs\-service=\fR\fISERVICE\fR
+\fB\-\-cifs\-domain=\fR\fIDOMAIN\fR, \fB\-\-cifs\-user\-name=\fR\fIUSER\fR, \fB\-\-cifs\-service=\fR\fISERVICE\fR, \fB\-\-cifs\-extra\-mount\-options=\fR\fIOPTIONS\fR
 .RS 4
 Configures the Windows File Sharing (CIFS) domain and user to associate with the home directory/user account, as well as the file share ("service") to mount as directory\&. The latter is used when
 "cifs"
-storage is selected\&.
+storage is selected\&. The file share should be specified in format
+"//\fIhost\fR/\fIshare\fR/\fIdirectory/\&...\fR"\&. The directory part is optional \(em if not specified the home directory will be placed in the top\-level directory of the share\&. The
+\fB\-\-cifs\-extra\-mount\-options=\fR
+setting allows specifying additional mount options when mounting the share, see
+\fBmount.cifs\fR(8)
+for details\&.
 .RE
 .PP
 \fB\-\-stop\-delay=\fR\fISECS\fR
@@ -774,7 +831,11 @@ the home directory may be grown while the user is logged in, and on the latter a
 "subvolume",
 "directory",
 "fscrypt"
-storage mechanisms are used, resizing will change file system quota\&.
+storage mechanisms are used, resizing will change file system quota\&. The size parameter may make use of the usual suffixes B, K, M, G, T (to the base of 1024)\&. The special strings
+"min"
+and
+"max"
+may be specified in place of a numeric size value, for minimizing or maximizing disk space assigned to the home area, taking constraints of the file system, disk usage inside the home area and on the backing storage into account\&.
 .RE
 .PP
 \fBlock\fR \fIUSER\fR
@@ -812,6 +873,13 @@ and related file systems are unmounted\&.
 \fBwith\fR \fIUSER\fR \fICOMMAND\&...\fR
 .RS 4
 Activate the specified user\*(Aqs home directory, run the specified command (under the caller\*(Aqs identity, not the specified user\*(Aqs) and deactivate the home directory afterwards again (unless the user is logged in otherwise)\&. This command is useful for running privileged backup scripts and such, but requires authentication with the user\*(Aqs credentials in order to be able to unlock the user\*(Aqs home directory\&.
+.RE
+.PP
+\fBrebalance\fR
+.RS 4
+Rebalance free disk space between active home areas and the backing storage\&. See
+\fB\-\-rebalance\-weight=\fR
+above\&. This executes no operation unless there\*(Aqs at least one active LUKS2 home area that has disk space rebalancing enabled\&. This operation is synchronous: it will only complete once disk space is rebalanced according to the rebalancing weights\&. Note that rebalancing also takes place automatically in the background in regular intervals\&. Use this command to synchronously ensure disk space is properly redistributed before initiating an operation requiring large amounts of disk space\&.
 .RE
 .SH "EXIT STATUS"
 .PP

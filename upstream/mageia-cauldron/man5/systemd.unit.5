@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 249" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 250" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -841,7 +841,7 @@ dependency cannot be specified directly\&.
 \fIUpholds=\fR
 .RS 4
 Configures dependencies similar to
-\fIWants=\fR, but as long a this unit is up, all units listed in
+\fIWants=\fR, but as long as this unit is up, all units listed in
 \fIUpholds=\fR
 are started whenever found to be inactive or failed, and no job is queued for them\&. While a
 \fIWants=\fR
@@ -1741,7 +1741,28 @@ and
 ">"\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR, \fIAssertOSRelease=\fR
+\fIConditionMemoryPressure=\fR, \fIConditionCPUPressure=\fR, \fIConditionIOPressure=\fR
+.RS 4
+Verify that the overall system (memory, CPU or IO) pressure is below or equal to a threshold\&. This setting takes a threshold value as argument\&. It can be specified as a simple percentage value, suffixed with
+"%", in which case the pressure will be measured as an average over the last five minutes before the attempt to start the unit is performed\&. Alternatively, the average timespan can also be specified using
+"/"
+as a separator, for example:
+"10%/1min"\&. The supported timespans match what the kernel provides, and are limited to
+"10sec",
+"1min"
+and
+"5min"\&. The
+"full"
+PSI will be checked first, and if not found
+"some"
+will be checked\&. For more details, see the documentation on
+\m[blue]\fBPSI (Pressure Stall Information)\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.sp
+Optionally, the threshold value can be prefixed with the slice unit under which the pressure will be checked, followed by a
+":"\&. If the slice unit is not specified, the overall system pressure will be measured, instead of a particular cgroup\*(Aqs\&.
+.RE
+.PP
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR, \fIAssertOSRelease=\fR, \fIAssertMemoryPressure=\fR, \fIAssertCPUPressure=\fR, \fIAssertIOPressure=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
@@ -2497,7 +2518,7 @@ Now, after running
 all services will have acquired an
 \fIOnFailure=\fR
 dependency on
-failure\-handler@%N\&.service\&. The template instance units will also have gained the dependency which results in the creation of a recursive dependency chain\&. We can break the chain by disabling the drop\-in for the template instance units via a symlink to
+failure\-handler@%N\&.service\&. The template instance units will also have gained the dependency which results in the creation of a recursive dependency chain\&. systemd will try to detect these recursive dependency chains where a template unit directly and recursively depends on itself and will remove such dependencies automatically if it finds them\&. If systemd doesn\*(Aqt detect the recursive dependency chain, we can break the chain ourselves by disabling the drop\-in for the template instance units via a symlink to
 /dev/null:
 .sp
 .if n \{\
@@ -2544,4 +2565,9 @@ failure\-handler@failure\-handler\&.service\&.
 Interface Portability and Stability Promise
 .RS 4
 \%https://systemd.io/PORTABILITY_AND_STABILITY/
+.RE
+.IP " 2." 4
+PSI (Pressure Stall Information)
+.RS 4
+\%https://www.kernel.org/doc/html/latest/accounting/psi.html
 .RE

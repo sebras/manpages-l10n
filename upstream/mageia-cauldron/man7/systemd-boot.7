@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-BOOT" "7" "" "systemd 249" "systemd-boot"
+.TH "SYSTEMD\-BOOT" "7" "" "systemd 250" "systemd-boot"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -25,7 +25,7 @@ systemd-boot, sd-boot \- A simple UEFI boot manager
 .PP
 \fBsystemd\-boot\fR
 (short:
-\fBsd\-boot\fR) is a simple UEFI boot manager\&. It provides a graphical menu to select the entry to boot and an editor for the kernel command line\&.
+\fBsd\-boot\fR) is a simple UEFI boot manager\&. It provides a textual menu to select the entry to boot and an editor for the kernel command line\&.
 \fBsystemd\-boot\fR
 supports systems with UEFI firmware only\&.
 .PP
@@ -208,6 +208,9 @@ itself\&.
 .PP
 \fBkernel-install\fR(8)
 may be used to copy kernel images onto the ESP or the Extended Boot Loader Partition and to generate description files compliant with the Boot Loader Specification\&.
+.PP
+\fBsystemd-stub\fR(7)
+may be used as UEFI boot stub for executed kernels, which is useful to show graphical boot splashes before transitioning into the Linux world\&. It is also capable of automatically picking up auxiliary credential files (for boot parameterization) and system extension images, as companion files to the booted kernel images\&.
 .SH "KEY BINDINGS"
 .PP
 The following keys may be used in the boot menu:
@@ -242,19 +245,19 @@ Increase the timeout before default entry is booted
 Decrease the timeout
 .RE
 .PP
-v
+r
 .RS 4
-Show systemd\-boot, UEFI, and firmware versions
+Change screen resolution, skipping any unsupported modes\&.
 .RE
 .PP
-P
+R
+.RS 4
+Reset screen resolution to firmware or configuration file default\&.
+.RE
+.PP
+p
 .RS 4
 Print status
-.RE
-.PP
-Q
-.RS 4
-Quit
 .RE
 .PP
 h, ?, F1
@@ -262,9 +265,16 @@ h, ?, F1
 Show a help screen
 .RE
 .PP
-Ctrl+l
+f
 .RS 4
-Reprint the screen
+Reboot into firmware interface\&.
+.sp
+For compatibility with the keybindings of several firmware implementations this operation may also be reached with
+F2,
+F10,
+Del
+and
+Esc\&.
 .RE
 .PP
 The following keys may be pressed during bootup or in the boot menu to directly boot a specific entry:
@@ -342,26 +352,42 @@ or
 /boot/efi/
 during OS runtime\&. It also processes files on the Extended Boot Loader partition which is typically mounted to
 /boot/, if it exists\&.
+.PP
 \fBsystemd\-boot\fR
 reads runtime configuration such as the boot timeout and default entry from
 /loader/loader\&.conf
 on the ESP (in combination with data read from EFI variables)\&. See
-\fBloader.conf\fR(5)\&. Boot entry description files following the
+\fBloader.conf\fR(5)\&.
+.PP
+Boot entry description files following the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 are read from
 /loader/entries/
-on the ESP and the Extended Boot Loader partition\&. Unified kernel boot entries following the
+on the ESP and the Extended Boot Loader partition\&.
+.PP
+Unified kernel boot entries following the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
 are read from
 /EFI/Linux/
-on the ESP and the Extended Boot Loader partition\&. Optionally, a random seed for early boot entropy pool provisioning is stored in
+on the ESP and the Extended Boot Loader partition\&.
+.PP
+Optionally, a random seed for early boot entropy pool provisioning is stored in
 /loader/random\-seed
 in the ESP\&.
+.PP
+During initialization,
+\fBsd\-boot\fR
+automatically loads all driver files placed in the
+/EFI/systemd/drivers/
+directory of the ESP\&. The files placed there must have an extension of the EFI architecture ID followed by
+\&.efi
+(e\&.g\&. for x86\-64 this means a suffix of
+x64\&.efi)\&. This may be used to automatically load file system drivers and similar, to extend the native firmware support\&.
 .SH "EFI VARIABLES"
 .PP
 The following EFI variables are defined, set and read by
 \fBsystemd\-boot\fR, under the vendor UUID
-"4a67b082\-0a4c\-41cf\-b6c7\-440b29bb8c4f", for communication between the OS and the boot loader:
+"4a67b082\-0a4c\-41cf\-b6c7\-440b29bb8c4f", for communication between the boot loader and the OS:
 .PP
 \fILoaderBootCountPath\fR
 .RS 4
@@ -555,6 +581,7 @@ when a boot loader entry is first created\&.
 \fBsystemd-bless-boot.service\fR(8),
 \fBsystemd-boot-system-token.service\fR(8),
 \fBkernel-install\fR(8),
+\fBsystemd-stub\fR(7),
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2,
 \m[blue]\fBBoot Loader Interface\fR\m[]\&\s-2\u[2]\d\s+2
 .SH "NOTES"
