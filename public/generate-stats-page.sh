@@ -246,21 +246,23 @@ EOF_TABLE
   echo "$cname_intotal1" >> untranslated-$tlang.html
   (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-$tlang.html
   echo "$cname_intotal2" >> untranslated-$tlang.html
-  echo "</div>" >> untranslated-$tlang.html
-  echo "</div>" >> untranslated-$tlang.html
-  echo "</body>" >> untranslated-$tlang.html
-  echo "</html>" >> untranslated-$tlang.html
 
-  # The new approach
-  if [ -e untranslated-$tlang.2.html ]; then
-      cat untranslated-$tlang.2.html > untranslated-new-$tlang.html
-  fi
 done
+
+echo "</div>" >> untranslated-$tlang.html
+echo "</div>" >> untranslated-$tlang.html
+echo "</body>" >> untranslated-$tlang.html
+echo "</html>" >> untranslated-$tlang.html
 
 echo "</div>" >> index-$tlang.html
 echo "</body>" >> index-$tlang.html
 echo "</html>" >> index-$tlang.html
 echo ""
+
+# The new approach
+  if [ -r untranslated-$tlang.2.html ]; then
+      cat untranslated-$tlang.2.html > untranslated-new-$tlang.html
+  fi
 done
 
 rm $tmppo
