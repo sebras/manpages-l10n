@@ -260,8 +260,8 @@ echo "</html>" >> index-$tlang.html
 echo ""
 
 # The new approach
-  if [ -r untranslated-$tlang.2.html ]; then
-      cat untranslated-$tlang.2.html > untranslated-new-$tlang.html
+  if [ -r untranslated-$tlang.2.htm ]; then
+      cat untranslated-$tlang.2.htm > untranslated-new-$tlang.html
   fi
 done
 

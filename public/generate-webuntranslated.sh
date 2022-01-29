@@ -25,7 +25,7 @@ echo -n "Processing: "
 for tlang in $MT_LANGLIST; do
     echo -n "$tlang "
     #htmlfile=untranslated-$tlang.html
-    htmlfile=untranslated-$tlang.2.html
+    htmlfile=untranslated-$tlang.2.htm
 
     . ./setup-$tlang.inc
 
