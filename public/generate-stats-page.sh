@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
-# Copyright © 2019,2020 Helge Kreutzmann <debian@helgefjell.de>
+# Copyright © 2019,2020,2022 Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +22,11 @@ rm -f *html
 # Determine distribution names from upstream directory.
 distributions=$(find ../upstream -maxdepth 1 -type d | cut -d/ -f3 | LC_ALL=C sort)
 distribution_count=$(echo "$distributions" | wc --words)
+
+# Determine list of languages
+cd ../po
+languages=$(find . -maxdepth 1 -type d | grep -v scripts | grep -v "^\.$" | sed 's/\.\///' | sort)
+cd - > /dev/null
 
 # Use a tempfile for stats generation
 tmppo=$(mktemp)
@@ -96,7 +101,7 @@ cat > index.html <<-END_OF_HEADER
   </html>
 END_OF_HEADER
 
-for tlang in cs da de el es fa fi fr hu id it nb nl mk pl pt_BR ro sr sv vi; do
+for tlang in $languages; do
     echo $tlang
 
 # Determine manpage section names
