@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_EVENT_ADD_INOTIFY" "3" "" "systemd 249" "sd_event_add_inotify"
+.TH "SD_EVENT_ADD_INOTIFY" "3" "" "systemd 250" "sd_event_add_inotify"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,7 +20,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-sd_event_add_inotify, sd_event_source_get_inotify_mask, sd_event_inotify_handler_t \- Add an "inotify" file system inode event source to an event loop
+sd_event_add_inotify, sd_event_add_inotify_fd, sd_event_source_get_inotify_mask, sd_event_inotify_handler_t \- Add an "inotify" file system inode event source to an event loop
 .SH "SYNOPSIS"
 .sp
 .ft B
@@ -38,6 +38,8 @@ typedef struct sd_event_source sd_event_source;
 .BI "typedef int (*sd_event_inotify_handler_t)(sd_event_source\ *" "s" ", const\ struct\ inotify_event\ *" "event" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_add_inotify('u
 .BI "int sd_event_add_inotify(sd_event\ *" "event" ", sd_event_source\ **" "source" ", const\ char\ *" "path" ", uint32_t\ " "mask" ", sd_event_inotify_handler_t\ " "handler" ", void\ *" "userdata" ");"
+.HP \w'int\ sd_event_add_inotify_fd('u
+.BI "int sd_event_add_inotify_fd(sd_event\ *" "event" ", sd_event_source\ **" "source" ", int\ " "fd" ", uint32_t\ " "mask" ", sd_event_inotify_handler_t\ " "handler" ", void\ *" "userdata" ");"
 .HP \w'int\ sd_event_source_get_inotify_mask('u
 .BI "int sd_event_source_get_inotify_mask(sd_event_source\ *" "source" ", uint32_t\ *" "mask" ");"
 .SH "DESCRIPTION"
@@ -65,6 +67,12 @@ parameter specifies which types of inode events to watch specifically\&. It must
 \fBIN_CLOSE_WRITE\fR, \&... flags\&. See
 \fBinotify\fR(7)
 for further information\&.
+.PP
+\fBsd_event_add_inotify_fd()\fR
+is identical to
+\fBsd_event_add_inotify()\fR, except that it takes a file descriptor to an inode (possibly an
+\fBO_PATH\fR
+one, but any other will do too) instead of a path in the file system\&.
 .PP
 If multiple event sources are installed for the same inode the backing inotify watch descriptor is automatically shared\&. The mask parameter may contain any flag defined by the inotify API, with the exception of
 \fBIN_MASK_ADD\fR\&.
@@ -143,6 +151,19 @@ The event loop has been created in a different process\&.
 .RS 4
 The passed event source is not an inotify process event source\&.
 .RE
+.PP
+\fB\-EBADF\fR
+.RS 4
+The passed file descriptor is not valid\&.
+.RE
+.PP
+\fB\-ENOSYS\fR
+.RS 4
+\fBsd_event_add_inotify_fd()\fR
+was called without
+/proc/
+mounted\&.
+.RE
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&A simple program that uses inotify to monitor one or two directories\fR
@@ -151,6 +172,8 @@ The passed event source is not an inotify process event source\&.
 .RS 4
 .\}
 .nf
+/* SPDX\-License\-Identifier: CC0\-1\&.0 */
+
 #include <stdio\&.h>
 #include <string\&.h>
 #include <sys/inotify\&.h>

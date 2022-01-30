@@ -24,15 +24,17 @@ cd - > /dev/null
 echo -n "Processing: "
 for tlang in $MT_LANGLIST; do
     echo -n "$tlang "
+    #htmlfile=untranslated-$tlang.html
+    htmlfile=untranslated-$tlang.2.htm
 
     . ./setup-$tlang.inc
 
     # Supersede inc file - we want the date of the untranslated.txt, not the one from this run
     timestamp=$(stat --format="%y" ../po/$tlang/untranslated.txt)
 
-    cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
+    cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > $htmlfile
 
-    cat >> untranslated-$tlang.html <<-EOF_TABLE
+    cat >> $htmlfile <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
     <thead class="thead-dark">
       <tr>
@@ -52,10 +54,10 @@ EOF_TABLE
 	previous_package="$package"
 	fi
 	if [ "$previous_package" != "$package" ]; then
-	    echo "<tr>" >> untranslated-$tlang.html
-	    echo "<td>$previous_package</td>" >> untranslated-$tlang.html
-	    echo "<td>$manpages</td>" >> untranslated-$tlang.html
-	    echo "</tr>" >> untranslated-$tlang.html
+	    echo "<tr>" >> $htmlfile
+	    echo "<td>$previous_package</td>" >> $htmlfile
+	    echo "<td>$manpages</td>" >> $htmlfile
+	    echo "</tr>" >> $htmlfile
 	    previous_package="$package"
 	    manpages="$manpage"
 	else
@@ -63,21 +65,20 @@ EOF_TABLE
 	fi
     done < ../po/$tlang/untranslated.txt
 
-    echo "</tbody>" >> untranslated-$tlang.html
-    echo "</table>" >> untranslated-$tlang.html
+    echo "</tbody>" >> $htmlfile
+    echo "</table>" >> $htmlfile
 
-    echo '<div class="alert alert-primary" role="alert">' >> untranslated-$tlang.html
-    echo "$cname_intotal1" >> untranslated-$tlang.html
-    (wc -l  ../po/$tlang/untranslated.txt | cut -d" " -f1) >> untranslated-$tlang.html
-    echo "$cname_intotal2" >> untranslated-$tlang.html
-    echo "</div>" >> untranslated-$tlang.html
+    echo '<div class="alert alert-primary" role="alert">' >> $htmlfile
+    echo "$cname_intotal1" >> $htmlfile
+    (wc -l  ../po/$tlang/untranslated.txt | cut -d" " -f1) >> $htmlfile
+    echo "$cname_intotal2" >> $htmlfile
+    echo "</div>" >> $htmlfile
+
+    echo "</div>" >> $htmlfile
+    echo "</body>" >> $htmlfile
+    echo "</html>" >> $htmlfile
+
+    echo "</div>" >> $htmlfile
+    echo "</body>" >> $htmlfile
+    echo "</html>" >> $htmlfile
 done
-
-echo "</div>" >> untranslated-$tlang.html
-echo "</body>" >> untranslated-$tlang.html
-echo "</html>" >> untranslated-$tlang.html
-
-echo "</div>" >> index-$tlang.html
-echo "</body>" >> index-$tlang.html
-echo "</html>" >> index-$tlang.html
-echo ""

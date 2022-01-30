@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 249" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 250" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -542,10 +542,13 @@ template unit file is used\&.
 Change to the specified working directory before invoking the process in the container\&. Expects an absolute path in the container\*(Aqs file system namespace\&.
 .RE
 .PP
-\fB\-E \fR\fB\fINAME\fR\fR\fB=\fR\fB\fIVALUE\fR\fR, \fB\-\-setenv=\fR\fB\fINAME\fR\fR\fB=\fR\fB\fIVALUE\fR\fR
+\fB\-E \fR\fB\fINAME\fR\fR\fB[=\fR\fB\fIVALUE\fR\fR\fB]\fR, \fB\-\-setenv=\fR\fB\fINAME\fR\fR\fB[=\fR\fB\fIVALUE\fR\fR\fB]\fR
 .RS 4
-Specifies an environment variable assignment to pass to the init process in the container, in the format
-"NAME=VALUE"\&. This may be used to override the default variables or to set additional variables\&. This parameter may be used more than once\&.
+Specifies an environment variable to pass to the init process in the container\&. This may be used to override the default variables or to set additional variables\&. It may be used more than once to set multiple variables\&. When
+"="
+and
+\fIVALUE\fR
+are omitted, the value of the variable with the same name in the program environment will be used\&.
 .RE
 .PP
 \fB\-u\fR, \fB\-\-user=\fR
@@ -585,6 +588,18 @@ systemd\-nspawn waits for the
 "READY=1"
 message from the init process in the container before sending its own to systemd\&. For more details about notifications see
 \fBsd_notify\fR(3)\&.
+.RE
+.PP
+\fB\-\-suppress\-sync=\fR
+.RS 4
+Expects a boolean argument\&. If true, turns off any form of on\-disk file system synchronization for the container payload\&. This means all system calls such as
+\fBsync\fR(2),
+\fBfsync()\fR,
+\fBsyncfs()\fR, \&... will execute no operation, and the
+\fBO_SYNC\fR/\fBO_DSYNC\fR
+flags to
+\fBopen\fR(2)
+and related calls will be made unavailable\&. This is potentially dangerous, as assumed data integrity guarantees to the container payload are not actually enforced (i\&.e\&. data assumed to have been written to disk might be lost if the system is shut down abnormally)\&. However, this can dramatically improve container runtime performance \(en as long as these guarantees are not required or desirable, for example because any data written by the container is of temporary, redundant nature, or just an intermediary artifact that will be further processed and finalized by a later step in a pipeline\&. Defaults to false\&.
 .RE
 .SS "System Identity Options"
 .PP
@@ -1364,21 +1379,27 @@ Bind mount a file or directory from the host into the container\&. Takes one of:
 "+"
 character\&. If so, the source path is taken relative to the image\*(Aqs root directory\&. This permits setting up bind mounts within the container image\&. The source path may be specified as empty string, in which case a temporary directory below the host\*(Aqs
 /var/tmp/
-directory is used\&. It is automatically removed when the container is shut down\&. Mount options are comma\-separated and currently, only
+directory is used\&. It is automatically removed when the container is shut down\&. The
+\fB\-\-bind\-ro=\fR
+option creates read\-only bind mounts\&. Backslash escapes are interpreted, so
+"\e:"
+may be used to embed colons in either path\&. This option may be specified multiple times for creating multiple independent bind mount points\&.
+.sp
+Mount options are comma\-separated\&.
 \fBrbind\fR
 and
 \fBnorbind\fR
-are allowed, controlling whether to create a recursive or a regular bind mount\&. Defaults to "rbind"\&. Backslash escapes are interpreted, so
-"\e:"
-may be used to embed colons in either path\&. This option may be specified multiple times for creating multiple independent bind mount points\&. The
-\fB\-\-bind\-ro=\fR
-option creates read\-only bind mounts\&.
+control whether to create a recursive or a regular bind mount\&. Defaults to "rbind"\&.
+\fBidmap\fR
+and
+\fBnoidmap\fR
+control if the bind mount should use filesystem id mappings\&. Using this option requires support by the source filesystem for id mappings\&. Defaults to "noidmap"\&.
 .sp
 Note that when this option is used in combination with
 \fB\-\-private\-users\fR, the resulting mount points will be owned by the
 \fBnobody\fR
 user\&. That\*(Aqs because the mount and its files and directories continue to be owned by the relevant host users and groups, which do not exist in the container, and thus show up under the wildcard UID 65534 (nobody)\&. If such bind mounts are created, it is recommended to make them read\-only, using
-\fB\-\-bind\-ro=\fR\&.
+\fB\-\-bind\-ro=\fR\&. Alternatively you can use the "idmap" mount option to map the filesystem ids\&.
 .RE
 .PP
 \fB\-\-bind\-user=\fR

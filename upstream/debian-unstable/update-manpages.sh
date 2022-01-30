@@ -53,8 +53,9 @@ if [ -f links.txt ]; then
 	mv tmp.links links.txt
 fi
 
-# Special case for init.8, because the manpage contains
-# a syntax error, so that the manpage cannot be translated
-# with po4a. The bug has been reported upstream.
-# https://savannah.nongnu.org/bugs/?55678
-sed -i -e "s|\\\fB/run/initctl\\\f\\\P, closed. This may be used to make sure init is not|\\\fB/run/initctl\\\fP, closed. This may be used to make sure init is not|" man8/init.8
+	# Special case for grub-mknetdir.1. This file contains an unprintable
+	# character (detected as "\v") which po4a can't handle.
+	# See https://savannah.gnu.org/bugs/?58936
+	if [ -f ./man1/grub-mknetdir.1 ]; then
+	  sed -i -e "s|Prepares|Prepares|" ./man1/grub-mknetdir.1
+	fi
