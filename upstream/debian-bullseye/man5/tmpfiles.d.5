@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 247" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 250" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,8 +61,8 @@ c+    /dev/char\-device\-to\-[re]create           mode user group \-           m
 b     /dev/block\-device\-to\-create              mode user group \-           major:minor
 b+    /dev/block\-device\-to\-[re]create          mode user group \-           major:minor
 C     /target/to/create                        \-    \-    \-     \-           /source/to/copy
-x     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
-X     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
+x     /path\-or\-glob/to/ignore/recursively      \-    \-    \-     \-           \-
+X     /path\-or\-glob/to/ignore                  \-    \-    \-     \-           \-
 r     /empty/dir/to/remove                     \-    \-    \-     \-           \-
 R     /dir/to/remove/recursively               \-    \-    \-     \-           \-
 z     /path\-or\-glob/to/adjust/mode             mode user group \-           \-
@@ -149,13 +149,13 @@ in
 bearing the same filename\&.
 .SH "CONFIGURATION FILE FORMAT"
 .PP
-The configuration format is one line per path containing type, path, mode, ownership, age, and argument fields:
+The configuration format is one line per path, containing type, path, mode, ownership, age, and argument fields\&. The lines are separated by newlines, the fields by whitespace:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-#Type Path        Mode User Group Age Argument
+#Type Path        Mode User Group Age Argument\&...
 d     /run/user   0755 root root  10d \-
 L     /tmp/foobar \-    \-    \-     \-   /dev/null
 .fi
@@ -163,10 +163,11 @@ L     /tmp/foobar \-    \-    \-     \-   /dev/null
 .RE
 .\}
 .PP
-Fields may be enclosed within quotes and contain C\-style escapes\&.
+Fields may contain C\-style escapes\&. With the exception of the seventh field (the "argument") all fields may be enclosed in quotes\&. Note that any whitespace found in the line after the beginning of the argument field will be considered part of the argument field\&. To begin the argument field with a whitespace character, use C\-style escapes (e\&.g\&.
+"\ex20")\&.
 .SS "Type"
 .PP
-The type consists of a single letter and optionally an exclamation mark ("!") and/or minus sign ("\-")\&.
+The type consists of a single letter and optionally an exclamation mark ("!") minus sign ("\-"), and/or equals sign ("=")\&.
 .PP
 The following line types are understood:
 .PP
@@ -460,6 +461,8 @@ w\- /proc/sys/vm/swappiness \- \- \- \- 10
 .RE
 .\}
 .PP
+If the equals sign ("=") is used, the file types of existing objects in the specified path are checked, and removed if they do not match\&. This includes any implicitly created parent directories (which can be either directories or directory symlinks)\&. For example, if there is a FIFO in place of one of the parent path components it will be replaced with a directory\&.
+.PP
 Note that for all line types that result in creation of any kind of file node (i\&.e\&.
 \fIf\fR/\fIF\fR,
 \fId\fR/\fID\fR/\fIv\fR/\fIq\fR/\fIQ\fR,
@@ -547,9 +550,43 @@ and
 "\-", no automatic clean\-up is done\&.
 .PP
 If the age field starts with a tilde character
-"~", the clean\-up is only applied to files and directories one level inside the directory specified, but not the files and directories immediately inside it\&.
+"~", clean\-up is only applied to files and directories one level inside the directory specified, but not the files and directories immediately inside it\&.
 .PP
-The age of a file system entry is determined from its last modification timestamp (mtime), its last access timestamp (atime), and (except for directories) its last status change timestamp (ctime)\&. Any of these three (or two) values will prevent cleanup if it is more recent than the current time minus the age field\&.
+The age of a file system entry is determined from its last modification timestamp (mtime), its last access timestamp (atime), and (except for directories) its last status change timestamp (ctime)\&. By default, any of these three (or two) values will prevent cleanup if it is more recent than the current time minus the age field\&. To restrict the deletion based on particular type of file timestamps, the age\-by argument can be used\&.
+.PP
+The age\-by argument overrides the timestamp types to be used for the age check\&. It can be specified by prefixing the age argument with a sequence of characters to specify the timestamp types and a colon (":"):
+"\fIage\-by\fR\&.\&.\&.:\fIcleanup\-age\fR"\&. The argument can consist of
+\fBa\fR
+(\fBA\fR
+for directories),
+\fBb\fR
+(\fBB\fR
+for directories),
+\fBc\fR
+(\fBC\fR
+for directories), or
+\fBm\fR
+(\fBM\fR
+for directories)\&. Those respectively indicate access, creation, last status change, and last modification time of a file system entry\&. The lower\-case letter signifies that the given timestamp type should be considered for files, while the upper\-case letter signifies that the given timestamp type should be considered for directories\&. See
+\fBstatx\fR(2)
+file timestamp fields for more details about timestamp types\&.
+.PP
+If not specified, the age\-by field defaults to
+\fBabcmABM\fR, i\&.e\&. by default all file timestamps are taken into consideration, with the exception of the last status change timestamp (ctime) for directories\&. This is because the aging logic itself will alter the ctime whenever it deletes a file inside it\&. To ensure that running the aging logic does not feed back into the next iteration of itself, ctime for directories is ignored by default\&.
+.PP
+For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# Files created and modified, and directories accessed more than
+# an hour ago in "/tmp/foo/bar", are subject to time\-based cleanup\&.
+d /tmp/foo/bar \- \- \- \- bmA:1h \-
+.fi
+.if n \{\
+.RE
+.\}
 .PP
 Note that while the aging algorithm is run a \*(Aqshared\*(Aq BSD file lock (see
 \fBflock\fR(2)) is taken on each directory the algorithm descends into (and each directory below that, and so on)\&. If the aging algorithm finds a lock is already taken on some directory, it (and everything below it) is skipped\&. Applications may use this to temporarily exclude certain directory subtrees from the aging algorithm: the applications can take a BSD file lock themselves, and as long as they keep it aging of the directory and everything below it is disabled\&.
@@ -619,6 +656,8 @@ l l l
 l l l
 l l l
 l l l
+l l l
+l l l
 l l l.
 T{
 "%a"
@@ -626,6 +665,13 @@ T}:T{
 Architecture
 T}:T{
 A short string identifying the architecture of the local system\&. A string such as \fBx86\fR, \fBx86\-64\fR or \fBarm64\fR\&. See the architectures defined for \fIConditionArchitecture=\fR in \fBsystemd.unit\fR(5) for a full list\&.
+T}
+T{
+"%A"
+T}:T{
+Operating system image version
+T}:T{
+The operating system image version identifier of the running system, as read from the \fIIMAGE_VERSION=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%b"
@@ -696,6 +742,13 @@ T}:T{
 Machine ID
 T}:T{
 The machine ID of the running system, formatted as string\&. See \fBmachine-id\fR(5) for more information\&.
+T}
+T{
+"%M"
+T}:T{
+Operating system image identifier
+T}:T{
+The operating system image identifier of the running system, as read from the \fIIMAGE_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
 T}
 T{
 "%o"

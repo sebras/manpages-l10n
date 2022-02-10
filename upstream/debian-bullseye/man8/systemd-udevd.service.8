@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-UDEVD\&.SERVICE" "8" "" "systemd 247" "systemd-udevd.service"
+.TH "SYSTEMD\-UDEVD\&.SERVICE" "8" "" "systemd 250" "systemd-udevd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -58,9 +58,9 @@ Limit the number of events executed in parallel\&.
 .PP
 \fB\-e\fR, \fB\-\-exec\-delay=\fR
 .RS 4
-Delay the execution of
-\fIRUN\fR
-instructions by the given number of seconds\&. This option might be useful when debugging system crashes during coldplug caused by loading non\-working kernel modules\&.
+Delay the execution of each
+\fIRUN{\fR\fI\fIprogram\fR\fR\fI}\fR
+parameter by the given number of seconds\&. This option might be useful when debugging system crashes during coldplug caused by loading non\-working kernel modules\&.
 .RE
 .PP
 \fB\-t\fR, \fB\-\-event\-timeout=\fR
@@ -115,9 +115,9 @@ Limit the number of events executed in parallel\&.
 .PP
 \fIudev\&.exec_delay=\fR, \fIrd\&.udev\&.exec_delay=\fR
 .RS 4
-Delay the execution of
-\fIRUN\fR
-instructions by the given number of seconds\&. This option might be useful when debugging system crashes during coldplug caused by loading non\-working kernel modules\&.
+Delay the execution of each
+\fIRUN{\fR\fI\fIprogram\fR\fR\fI}\fR
+parameter by the given number of seconds\&. This option might be useful when debugging system crashes during coldplug caused by loading non\-working kernel modules\&.
 .RE
 .PP
 \fIudev\&.event_timeout=\fR, \fIrd\&.udev\&.event_timeout=\fR
@@ -161,6 +161,74 @@ systemd\-udevd\&.service)\&.
 Note that selecting a specific scheme is not sufficient to fully stabilize interface naming: the naming is generally derived from driver attributes exposed by the kernel\&. As the kernel is updated, previously missing attributes
 systemd\-udevd\&.service
 is checking might appear, which affects older name derivation algorithms, too\&.
+.RE
+.PP
+\fInet\&.ifname\-policy=\fR\fI\fIpolicy1\fR\fR\fI[,\fR\fI\fIpolicy2\fR\fR\fI,\&...][,\fR\fI\fIMAC\fR\fR\fI]\fR
+.RS 4
+Specifies naming policies applied when renaming network interfaces\&. Takes a list of policies and an optional MAC address separated with comma\&. Each policy value must be one of the policies understood by the
+\fINamePolicy=\fR
+setting in \&.link files, e\&.g\&.
+"onboard"
+or
+"path"\&. See
+\fBsystemd.link\fR(5)
+for more details\&. When the MAC address is specified, the policies are applied to the interface which has the address\&. When no MAC address is specified, the policies are applied to all interfaces\&. This kernel command line argument can be specified multiple times\&.
+.sp
+This argument is not directly read by
+\fBsystemd\-udevd\fR, but is instead converted to a \&.link file by
+\fBsystemd-network-generator.service\fR(8)\&. For this argument to take effect,
+systemd\-network\-generator\&.service
+must be enabled\&.
+.sp
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+net\&.ifname\-policy=keep,kernel,path,slot,onboard,01:23:45:67:89:ab
+net\&.ifname\-policy=keep,kernel,path,slot,onboard,mac
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This is mostly equivalent to creating the following \&.link files:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# 91\-name\-policy\-with\-mac\&.link
+[Match]
+MACAddress=01:23:45:67:89:ab
+
+[Link]
+NamePolicy=keep kernel path slot onboard
+AlternativeNamePolicy=path slot onboard
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# 92\-name\-policy\-for\-all\&.link
+[Match]
+OriginalName=*
+
+[Link]
+NamePolicy=keep kernel path slot onboard mac
+AlternativeNamePolicy=path slot onboard mac
+.fi
+.if n \{\
+.RE
+.\}
+.sp
 .RE
 .SH "SEE ALSO"
 .PP

@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 247" "org.freedesktop.login1"
+.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 250" "org.freedesktop.login1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -53,6 +53,7 @@ node /org/freedesktop/login1 {
       ListUsers(out a(uso) users);
       ListSeats(out a(so) seats);
       ListInhibitors(out a(ssssuu) inhibitors);
+      @org\&.freedesktop\&.systemd1\&.Privileged("true")
       CreateSession(in  u uid,
                     in  u pid,
                     in  s service,
@@ -75,6 +76,7 @@ node /org/freedesktop/login1 {
                     out s seat_id,
                     out u vtnr,
                     out b existing);
+      @org\&.freedesktop\&.systemd1\&.Privileged("true")
       ReleaseSession(in  s session_id);
       ActivateSession(in  s session_id);
       ActivateSessionOnSeat(in  s session_id,
@@ -99,12 +101,19 @@ node /org/freedesktop/login1 {
                    in  b interactive);
       FlushDevices(in  b interactive);
       PowerOff(in  b interactive);
+      PowerOffWithFlags(in  t flags);
       Reboot(in  b interactive);
+      RebootWithFlags(in  t flags);
       Halt(in  b interactive);
+      HaltWithFlags(in  t flags);
       Suspend(in  b interactive);
+      SuspendWithFlags(in  t flags);
       Hibernate(in  b interactive);
+      HibernateWithFlags(in  t flags);
       HybridSleep(in  b interactive);
+      HybridSleepWithFlags(in  t flags);
       SuspendThenHibernate(in  b interactive);
+      SuspendThenHibernateWithFlags(in  t flags);
       CanPowerOff(out s result);
       CanReboot(out s result);
       CanHalt(out s result);
@@ -333,6 +342,13 @@ node /org/freedesktop/login1 {
 
 
 
+
+
+
+
+
+
+
 .SS "Methods"
 .PP
 \fBGetSession()\fR
@@ -440,7 +456,40 @@ results in the system entering a hybrid\-sleep mode, i\&.e\&. the system is both
 \fBSuspendThenHibernate()\fR
 results in the system being suspended, then later woken using an RTC timer and hibernated\&. The only argument is the polkit interactivity boolean
 \fIinteractive\fR
-(see below)\&. The main purpose of these calls is that they enforce polkit policy and hence allow powering off/rebooting/suspending/hibernating even by unprivileged users\&. They also enforce inhibition locks\&. UIs should expose these calls as the primary mechanism to poweroff/reboot/suspend/hibernate the machine\&.
+(see below)\&. The main purpose of these calls is that they enforce polkit policy and hence allow powering off/rebooting/suspending/hibernating even by unprivileged users\&. They also enforce inhibition locks for non\-privileged users\&. UIs should expose these calls as the primary mechanism to poweroff/reboot/suspend/hibernate the machine\&. Methods
+\fBPowerOffWithFlags()\fR,
+\fBRebootWithFlags()\fR,
+\fBHaltWithFlags()\fR,
+\fBSuspendWithFlags()\fR,
+\fBHibernateWithFlags()\fR,
+\fBHybridSleepWithFlags()\fR
+and
+\fBSuspendThenHibernateWithFlags()\fR
+add
+\fIflags\fR
+to allow for extendability, defined as follows:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define SD_LOGIND_ROOT_CHECK_INHIBITORS  (UINT64_C(1) << 0)
+#define SD_LOGIND_KEXEC_REBOOT           (UINT64_C(1) << 1)
+      
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+When the
+\fIflags\fR
+is 0 then these methods behave just like the versions without flags\&. When
+\fBSD_LOGIND_ROOT_CHECK_INHIBITORS\fR
+(0x01) is set, active inhibitors are honoured for privileged users too\&. When
+\fBSD_LOGIND_KEXEC_REBOOT\fR
+(0x02) is set, then
+\fBRebootWithFlags()\fR
+perform kexec reboot if kexec kernel is loaded\&.
 .PP
 \fBSetRebootParameter()\fR
 sets a parameter for a subsequent reboot operation\&. See the description of
@@ -1415,7 +1464,7 @@ polkit
 .IP " 2." 4
 Inhibitor Locks
 .RS 4
-\%http://www.freedesktop.org/wiki/Software/systemd/inhibit
+\%https://www.freedesktop.org/wiki/Software/systemd/inhibit
 .RE
 .IP " 3." 4
 XDG Basedir Specification

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 247" "systemd.service"
+.TH "SYSTEMD\&.SERVICE" "5" "" "systemd 250" "systemd.service"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -39,11 +39,10 @@ Additional options are listed in
 \fBsystemd.kill\fR(5), which define the way the processes of the service are terminated, and in
 \fBsystemd.resource-control\fR(5), which configure resource control settings for the processes of the service\&.
 .PP
-If a service is requested under a certain name but no unit configuration file is found, systemd looks for a SysV init script by the same name (with the
-\&.service
-suffix removed) and dynamically creates a service unit from that script\&. This is useful for compatibility with SysV\&. Note that this compatibility is quite comprehensive but not 100%\&. For details about the incompatibilities, see the
-\m[blue]\fBIncompatibilities with SysV\fR\m[]\&\s-2\u[1]\d\s+2
-document\&.
+If SysV init compat is enabled, systemd automatically creates service units that wrap SysV init scripts (the service name is the same as the name of the script, with a
+"\&.service"
+suffix added); see
+\fBsystemd-sysv-generator\fR(8)\&.
 .PP
 The
 \fBsystemd-run\fR(1)
@@ -167,7 +166,10 @@ in the template unit, and either define your own per\-template slice unit file t
 .RE
 .SH "OPTIONS"
 .PP
-Service files must include a [Service] section, which carries information about the service and the process it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
+Service unit files may include [Unit] and [Install] sections, which are described in
+\fBsystemd.unit\fR(5)\&.
+.PP
+Service unit files must include a [Service] section, which carries information about the service and the process it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
 \fBsystemd.exec\fR(5),
 \fBsystemd.kill\fR(5)
 and
@@ -376,6 +378,48 @@ or
 for long\-running services\&.)
 .RE
 .PP
+\fIExitType=\fR
+.RS 4
+Specifies when the manager should consider the service to be finished\&. One of
+\fBmain\fR
+or
+\fBcgroup\fR:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If set to
+\fBmain\fR
+(the default), the service manager will consider the unit stopped when the main process, which is determined according to the
+\fIType=\fR, exits\&. Consequently, it cannot be used with
+\fIType=\fR\fBoneshot\fR\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If set to
+\fBcgroup\fR, the service will be considered running as long as at least one process in the cgroup has not exited\&.
+.RE
+.sp
+It is generally recommended to use
+\fIExitType=\fR\fBmain\fR
+when a service has a known forking model and a main process can reliably be determined\&.
+\fIExitType=\fR
+\fBcgroup\fR
+is meant for applications whose forking model is not known ahead of time and which might not have a specific main process\&. It is well suited for transient or automatically generated services, such as graphical applications inside of a desktop environment\&.
+.RE
+.PP
 \fIRemainAfterExit=\fR
 .RS 4
 Takes a boolean value that specifies whether the service shall be considered active even when all its processes exited\&. Defaults to
@@ -400,6 +444,12 @@ is set to
 \fBforking\fR\&. The path specified typically points to a file below
 /run/\&. If a relative path is specified it is hence prefixed with
 /run/\&. The service manager will read the PID of the main process of the service from this file after start\-up of the service\&. The service manager will not write to the file configured here, although it will remove the file after the service has shut down if it still exists\&. The PID file does not need to be owned by a privileged user, but if it is owned by an unprivileged user additional safety restrictions are enforced: the file may not be a symlink to a file owned by a different user (neither directly nor indirectly), and the PID file must refer to a process already belonging to the service\&.
+.sp
+Note that PID files should be avoided in modern projects\&. Use
+\fBType=notify\fR
+or
+\fBType=simple\fR
+where possible, which does not require use of PID files to determine the main process of a service and avoids needless forking\&.
 .RE
 .PP
 \fIBusName=\fR
@@ -889,6 +939,15 @@ within the interval specified until the service shutdown is achieved by
 \fBsd_notify\fR(3))\&.
 .RE
 .PP
+\fIRuntimeRandomizedExtraSec=\fR
+.RS 4
+This option modifies
+\fIRuntimeMaxSec=\fR
+by increasing the maximum runtime by an evenly distributed duration between 0 and the specified value (in seconds)\&. If
+\fIRuntimeMaxSec=\fR
+is unspecified, then this feature will be disabled\&.
+.RE
+.PP
 \fIWatchdogSec=\fR
 .RS 4
 Configures the watchdog timeout for a service\&. The watchdog is activated when the start\-up is completed\&. The service must call
@@ -938,13 +997,48 @@ Takes one of
 \fBalways\fR\&. If set to
 \fBno\fR
 (the default), the service will not be restarted\&. If set to
-\fBon\-success\fR, it will be restarted only when the service process exits cleanly\&. In this context, a clean exit means an exit code of 0, or one of the signals
+\fBon\-success\fR, it will be restarted only when the service process exits cleanly\&. In this context, a clean exit means any of the following:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+exit code of 0;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+for types other than
+\fIType=oneshot\fR, one of the signals
 \fBSIGHUP\fR,
 \fBSIGINT\fR,
-\fBSIGTERM\fR
-or
-\fBSIGPIPE\fR, and additionally, exit statuses and signals specified in
-\fISuccessExitStatus=\fR\&. If set to
+\fBSIGTERM\fR, or
+\fBSIGPIPE\fR;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+exit statuses and signals specified in
+\fISuccessExitStatus=\fR\&.
+.RE
+.sp
+If set to
 \fBon\-failure\fR, the service will be restarted when the process exits with a non\-zero exit code, is terminated by a signal (including on core dump, but excluding the aforementioned four signals), when an operation (such as service reload) times out, and when the configured watchdog timeout is triggered\&. If set to
 \fBon\-abnormal\fR, the service will be restarted when the process is terminated by a signal (including on core dump, excluding the aforementioned four signals), when an operation times out, or when the watchdog timeout is triggered\&. If set to
 \fBon\-abort\fR, the service will be restarted only if the service process exits due to an uncaught signal not specified as a clean exit status\&. If set to
@@ -955,7 +1049,7 @@ or
 .nr an-no-space-flag 1
 .nr an-break-flag 1
 .br
-.B Table\ \&2.\ \&Exit causes and the effect of the \fIRestart=\fR settings on them
+.B Table\ \&2.\ \&Exit causes and the effect of the \fIRestart=\fR settings
 .TS
 allbox tab(:);
 lB lB lB lB lB lB lB lB.
@@ -1093,7 +1187,8 @@ is an alternative choice\&.
 .PP
 \fISuccessExitStatus=\fR
 .RS 4
-Takes a list of exit status definitions that, when returned by the main service process, will be considered successful termination, in addition to the normal successful exit status 0 and the signals
+Takes a list of exit status definitions that, when returned by the main service process, will be considered successful termination, in addition to the normal successful exit status 0 and, except for
+\fIType=oneshot\fR, the signals
 \fBSIGHUP\fR,
 \fBSIGINT\fR,
 \fBSIGTERM\fR, and
@@ -1292,7 +1387,7 @@ is not set, it will be implicitly set to
 \fIUSBFunctionDescriptors=\fR
 .RS 4
 Configure the location of a file containing
-\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBUSB FunctionFS\fR\m[]\&\s-2\u[1]\d\s+2
 descriptors, for implementation of USB gadget functions\&. This is used only in conjunction with a socket unit with
 \fIListenUSBFunction=\fR
 configured\&. The contents of this file are written to the
@@ -1336,8 +1431,8 @@ for details\&.
 .RE
 .PP
 Check
-\fBsystemd.exec\fR(5)
-and
+\fBsystemd.unit\fR(5),
+\fBsystemd.exec\fR(5), and
 \fBsystemd.kill\fR(5)
 for more settings\&.
 .SH "COMMAND LINES"
@@ -1354,7 +1449,8 @@ options\&.
 Multiple command lines may be concatenated in a single directive by separating them with semicolons (these semicolons must be passed as separate words)\&. Lone semicolons may be escaped as
 "\e;"\&.
 .PP
-Each command line is split on whitespace, with the first item being the command to execute, and the subsequent items being the arguments\&. Double quotes ("\&...") and single quotes (\*(Aq\&...\*(Aq) may be used to wrap a whole item (the opening quote may appear only at the beginning or after whitespace that is not quoted, and the closing quote must be followed by whitespace or the end of line), in which case everything until the next matching quote becomes part of the same argument\&. Quotes themselves are removed\&. C\-style escapes are also supported\&. The table below contains the list of known escape patterns\&. Only escape patterns which match the syntax in the table are allowed; other patterns may be added in the future and unknown patterns will result in a warning\&. In particular, any backslashes should be doubled\&. Finally, a trailing backslash ("\e") may be used to merge lines\&.
+Each command line is unquoted using the rules described in "Quoting" section in
+\fBsystemd.syntax\fR(7)\&. The first item becomes the command to execute, and the subsequent items the arguments\&.
 .PP
 This syntax is inspired by shell syntax, but only the meta\-characters and expansions described in the following paragraphs are understood, and the expansion of variables is different\&. Specifically, redirection using
 "<",
@@ -1504,101 +1600,6 @@ with five arguments:
 "&",
 ";", and
 "ls"\&.
-.sp
-.it 1 an-trap
-.nr an-no-space-flag 1
-.nr an-break-flag 1
-.br
-.B Table\ \&3.\ \&C escapes supported in command lines and environment variables
-.TS
-allbox tab(:);
-lB lB.
-T{
-Literal
-T}:T{
-Actual value
-T}
-.T&
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l
-l l.
-T{
-"\ea"
-T}:T{
-bell
-T}
-T{
-"\eb"
-T}:T{
-backspace
-T}
-T{
-"\ef"
-T}:T{
-form feed
-T}
-T{
-"\en"
-T}:T{
-newline
-T}
-T{
-"\er"
-T}:T{
-carriage return
-T}
-T{
-"\et"
-T}:T{
-tab
-T}
-T{
-"\ev"
-T}:T{
-vertical tab
-T}
-T{
-"\e\e"
-T}:T{
-backslash
-T}
-T{
-"\e""
-T}:T{
-double quotation mark
-T}
-T{
-"\e\*(Aq"
-T}:T{
-single quotation mark
-T}
-T{
-"\es"
-T}:T{
-space
-T}
-T{
-"\ex\fIxx\fR"
-T}:T{
-character number \fIxx\fR in hexadecimal encoding
-T}
-T{
-"\e\fInnn\fR"
-T}:T{
-character number \fInnn\fR in octal encoding
-T}
-.TE
-.sp 1
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&2.\ \&Simple service\fR
@@ -1859,11 +1860,6 @@ for details on how you can influence the way systemd terminates the service\&.
 \fBsystemd-run\fR(1)
 .SH "NOTES"
 .IP " 1." 4
-Incompatibilities with SysV
-.RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/Incompatibilities
-.RE
-.IP " 2." 4
 USB FunctionFS
 .RS 4
 \%https://www.kernel.org/doc/Documentation/usb/functionfs.txt

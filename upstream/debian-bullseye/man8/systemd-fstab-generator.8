@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-FSTAB\-GENERATOR" "8" "" "systemd 247" "systemd-fstab-generator"
+.TH "SYSTEMD\-FSTAB\-GENERATOR" "8" "" "systemd 250" "systemd-fstab-generator"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -72,9 +72,31 @@ is honored by both the main system and the initrd\&.
 .PP
 \fIroot=\fR
 .RS 4
-Takes the root filesystem to mount in the initrd\&.
-\fIroot=\fR
-is honored by the initrd\&.
+Configures the operating system\*(Aqs root filesystem to mount when running in the initrd\&. This accepts a device node path (usually
+/dev/disk/by\-uuid/\&...
+or
+/dev/disk/by\-label/\&...
+or similar), or the special values
+"gpt\-auto"
+and
+"tmpfs"\&.
+.sp
+Use
+"gpt\-auto"
+to explicitly request automatic root file system discovery via
+\fBsystemd-gpt-auto-generator\fR(8)\&.
+.sp
+Use
+"tmpfs"
+in order to mount a
+\fBtmpfs\fR(5)
+file system as root file system of the OS\&. This is useful in combination with
+\fImount\&.usr=\fR
+(see below) in order to combine a volatile root file system with a separate, immutable
+/usr/
+file system\&. Also see
+\fIsystemd\&.volatile=\fR
+below\&.
 .RE
 .PP
 \fIrootfstype=\fR
@@ -211,6 +233,24 @@ mounted, and are able to automatically populate
 /var/
 in case of
 "systemd\&.volatile=yes"\&.
+.sp
+Also see
+\fIroot=tmpfs\fR
+above, for a method to combine a
+"tmpfs"
+file system with a regular
+/usr/
+file system (as configured via
+\fImount\&.usr=\fR)\&. The main distinction between
+\fIsystemd\&.volatile=yes\fR, and
+\fIroot=tmpfs\fR
+in combination
+\fImount\&.usr=\fR
+is that the former operates on top of a regular root file system and temporarily obstructs the files and directories above its
+/usr/
+subdirectory, while the latter does not hide any files, but simply mounts a unpopulated tmpfs as root file system and combines it with a user picked
+/usr/
+file system\&.
 .RE
 .PP
 \fIsystemd\&.swap\fR
@@ -225,4 +265,5 @@ Takes a boolean argument or enables the option if specified without an argument\
 \fBsystemd.mount\fR(5),
 \fBsystemd.swap\fR(5),
 \fBsystemd-cryptsetup-generator\fR(8),
+\fBsystemd-gpt-auto-generator\fR(8),
 \fBkernel-command-line\fR(7)

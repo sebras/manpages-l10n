@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.SOCKET" "5" "" "systemd 247" "systemd.socket"
+.TH "SYSTEMD\&.SOCKET" "5" "" "systemd 250" "systemd.socket"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -86,7 +86,7 @@ All network sockets allocated through
 units are allocated in the host\*(Aqs network namespace (see
 \fBnetwork_namespaces\fR(7))\&. This does not mean however that the service activated by a configured socket unit has to be part of the host\*(Aqs network namespace as well\&. It is supported and even good practice to run services in their own network namespace (for example through
 \fIPrivateNetwork=\fR, see
-\fBsystemd.exec\fR(5)), receiving only the sockets configured through socket\-activation from the host\*(Aqs namespace\&. In such a set\-up communication within the host\*(Aqs network namespace is only permitted through the activation sockets passed in while all sockets allocated from the service code itself will be associated with the service\*(Aqs own namespace, and thus possibly subject to a a much more restrictive configuration\&.
+\fBsystemd.exec\fR(5)), receiving only the sockets configured through socket\-activation from the host\*(Aqs namespace\&. In such a set\-up communication within the host\*(Aqs network namespace is only permitted through the activation sockets passed in while all sockets allocated from the service code itself will be associated with the service\*(Aqs own namespace, and thus possibly subject to a restrictive configuration\&.
 .SH "AUTOMATIC DEPENDENCIES"
 .SS "Implicit Dependencies"
 .PP
@@ -187,7 +187,10 @@ option\&.
 .RE
 .SH "OPTIONS"
 .PP
-Socket files must include a [Socket] section, which carries information about the socket or FIFO it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
+Socket unit files may include [Unit] and [Install] sections, which are described in
+\fBsystemd.unit\fR(5)\&.
+.PP
+Socket unit files must include a [Socket] section, which carries information about the socket or FIFO it supervises\&. A number of options that may be used in this section are shared with other unit types\&. These options are documented in
 \fBsystemd.exec\fR(5)
 and
 \fBsystemd.kill\fR(5)\&. The options specific to the [Socket] section of socket units are the following:
@@ -403,6 +406,11 @@ environment variable will contain the remote IP address, and
 \fIREMOTE_PORT\fR
 will contain the remote port\&. This is the same as the format used by CGI\&. For
 \fBSOCK_RAW\fR, the port is the IP protocol\&.
+.sp
+It is recommended to set
+\fICollectMode=inactive\-or\-failed\fR
+for service instances activated via
+\fIAccept=yes\fR, to ensure that failed connection services are cleaned up and released from memory, and do not accumulate\&.
 .RE
 .PP
 \fIWritable=\fR
@@ -579,10 +587,7 @@ for details\&.
 .RS 4
 Takes a boolean argument\&. When true, systemd will attempt to figure out the SELinux label used for the instantiated service from the information handed by the peer over the network\&. Note that only the security level is used from the information provided by the peer\&. Other parts of the resulting SELinux context originate from either the target binary that is effectively triggered by socket unit or from the value of the
 \fISELinuxContext=\fR
-option\&. This configuration option only affects sockets with
-\fIAccept=\fR
-mode set to
-"yes"\&. Also note that this option is useful only when MLS/MCS SELinux policy is deployed\&. Defaults to
+option\&. This configuration option applies only when activated service is passed in single socket file descriptor, i\&.e\&. service instances that have standard input connected to a socket or services triggered by exactly one socket unit\&. Also note that this option is useful only when MLS/MCS SELinux policy is deployed\&. Defaults to
 "false"\&.
 .RE
 .PP
@@ -760,7 +765,7 @@ suffix\&.
 .PP
 \fITriggerLimitIntervalSec=\fR, \fITriggerLimitBurst=\fR
 .RS 4
-Configures a limit on how often this socket unit my be activated within a specific time interval\&. The
+Configures a limit on how often this socket unit may be activated within a specific time interval\&. The
 \fITriggerLimitIntervalSec=\fR
 may be used to configure the length of the time interval in the usual time units
 "us",
@@ -777,8 +782,8 @@ sockets (thus by default permitting 200 activations per 2s), and 20 otherwise (2
 .RE
 .PP
 Check
-\fBsystemd.exec\fR(5)
-and
+\fBsystemd.unit\fR(5),
+\fBsystemd.exec\fR(5), and
 \fBsystemd.kill\fR(5)
 for more settings\&.
 .SH "SEE ALSO"

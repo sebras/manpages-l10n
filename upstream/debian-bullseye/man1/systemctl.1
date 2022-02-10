@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMCTL" "1" "" "systemd 247" "systemctl"
+.TH "SYSTEMCTL" "1" "" "systemd 250" "systemctl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -49,6 +49,13 @@ and
 \fB\-\-state=\fR
 if those options are specified\&.
 .sp
+Note that this command does not show unit templates, but only instances of unit templates\&. Units templates that aren\*(Aqt instantiated are not runnable, and will thus never show up in the output of this command\&. Specifically this means that
+foo@\&.service
+will never be shown in this list \(em unless instantiated, e\&.g\&. as
+foo@bar\&.service\&. Use
+\fBlist\-unit\-files\fR
+(see below) for listing installed unit template files\&.
+.sp
 Produces output similar to
 .sp
 .if n \{\
@@ -71,7 +78,6 @@ SUB    = The low\-level unit activation state, values depend on unit type\&.
 
 123 loaded units listed\&. Pass \-\-all to see loaded but inactive units, too\&.
 To show all installed unit files use \*(Aqsystemctl list\-unit\-files\*(Aq\&.
-            
 .fi
 .if n \{\
 .RE
@@ -246,20 +252,21 @@ Jan 12 10:46:45 example\&.com bluetoothd[8900]: gatt\-time\-server: Input/output
 .RE
 .\}
 .sp
-The dot ("●") uses color on supported terminals to summarize the unit state at a glance\&. White indicates an
+The dot ("●") uses color on supported terminals to summarize the unit state at a glance\&. Along with its color, its shape varies according to its state:
 "inactive"
 or
+"maintenance"
+is a white circle ("○"),
+"active"
+is a green dot ("●"),
 "deactivating"
-state\&. Red indicates a
+is a white dot,
 "failed"
 or
 "error"
-state and green indicates an
-"active",
+is a red cross ("\(mu"), and
 "reloading"
-or
-"activating"
-state\&.
+is a green clockwise circle arrow ("↻")\&.
 .sp
 The "Loaded:" line in the output will show
 "loaded"
@@ -506,6 +513,66 @@ Example:
 \fBsystemctl set\-property avahi\-daemon\&.service IPAddressDeny=\fR
 .RE
 .PP
+\fBbind\fR \fIUNIT\fR \fIPATH\fR [\fIPATH\fR]
+.RS 4
+Bind\-mounts a file or directory from the host into the specified unit\*(Aqs mount namespace\&. The first path argument is the source file or directory on the host, the second path argument is the destination file or directory in the unit\*(Aqs mount namespace\&. When the latter is omitted, the destination path in the unit\*(Aqs mount namespace is the same as the source path on the host\&. When combined with the
+\fB\-\-read\-only\fR
+switch, a ready\-only bind mount is created\&. When combined with the
+\fB\-\-mkdir\fR
+switch, the destination path is first created before the mount is applied\&.
+.sp
+Note that this option is currently only supported for units that run within a mount namespace (e\&.g\&.: with
+\fBRootImage=\fR,
+\fBPrivateMounts=\fR, etc\&.)\&. This command supports bind\-mounting directories, regular files, device nodes,
+\fBAF_UNIX\fR
+socket nodes, as well as FIFOs\&. The bind mount is ephemeral, and it is undone as soon as the current unit process exists\&. Note that the namespace mentioned here, where the bind mount will be added to, is the one where the main service process runs\&. Other processes (those exececuted by
+\fBExecReload=\fR,
+\fBExecStartPre=\fR, etc\&.) run in distinct namespaces\&.
+.RE
+.PP
+\fBmount\-image\fR \fIUNIT\fR \fIIMAGE\fR [\fIPATH\fR [\fIPARTITION_NAME\fR:\fIMOUNT_OPTIONS\fR]]
+.RS 4
+Mounts an image from the host into the specified unit\*(Aqs mount namespace\&. The first path argument is the source image on the host, the second path argument is the destination directory in the unit\*(Aqs mount namespace (i\&.e\&. inside
+\fBRootImage=\fR/\fBRootDirectory=\fR)\&. The following argument, if any, is interpreted as a colon\-separated tuple of partition name and comma\-separated list of mount options for that partition\&. The format is the same as the service
+\fBMountImages=\fR
+setting\&. When combined with the
+\fB\-\-read\-only\fR
+switch, a ready\-only mount is created\&. When combined with the
+\fB\-\-mkdir\fR
+switch, the destination path is first created before the mount is applied\&.
+.sp
+Note that this option is currently only supported for units that run within a mount namespace (i\&.e\&. with
+\fBRootImage=\fR,
+\fBPrivateMounts=\fR, etc\&.)\&. Note that the namespace mentioned here where the image mount will be added to, is the one where the main service process runs\&. Note that the namespace mentioned here, where the bind mount will be added to, is the one where the main service process runs\&. Other processes (those exececuted by
+\fBExecReload=\fR,
+\fBExecStartPre=\fR, etc\&.) run in distinct namespaces\&.
+.sp
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+systemctl mount\-image foo\&.service /tmp/img\&.raw /var/lib/image root:ro,nosuid
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+systemctl mount\-image \-\-mkdir bar\&.service /tmp/img\&.raw /var/lib/baz/img
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.RE
+.PP
 \fBservice\-log\-level\fR \fISERVICE\fR [\fILEVEL\fR]
 .RS 4
 If the
@@ -608,6 +675,10 @@ state of a unit it also resets various other per\-unit properties: the start rat
 List unit files installed on the system, in combination with their enablement state (as reported by
 \fBis\-enabled\fR)\&. If one or more
 \fIPATTERN\fRs are specified, only unit files whose name matches one of them are shown (patterns matching unit file system paths are not supported)\&.
+.sp
+Unlike
+\fBlist\-units\fR
+this command will list template units in addition to explicitly instantiated units\&.
 .RE
 .PP
 \fBenable \fR\fB\fIUNIT\fR\fR\fB\&...\fR, \fBenable \fR\fB\fIPATH\fR\fR\fB\&...\fR
@@ -721,9 +792,7 @@ If the unit carries no install information, it will be silently ignored by this 
 must be the real unit name, any alias names are ignored silently\&.
 .sp
 For more information on the preset policy format, see
-\fBsystemd.preset\fR(5)\&. For more information on the concept of presets, please consult the
-\m[blue]\fBPreset\fR\m[]\&\s-2\u[1]\d\s+2
-document\&.
+\fBsystemd.preset\fR(5)\&.
 .RE
 .PP
 \fBpreset\-all\fR
@@ -1036,11 +1105,13 @@ Set one or more systemd manager environment variables, as specified on the comma
 Unset one or more systemd manager environment variables\&. If only a variable name is specified, it will be removed regardless of its value\&. If a variable and a value are specified, the variable is only removed if it has the specified value\&.
 .RE
 .PP
-\fBimport\-environment\fR [\fIVARIABLE\&...\fR]
+\fBimport\-environment\fR \fIVARIABLE\&...\fR
 .RS 4
 Import all, one or more environment variables set on the client into the systemd manager environment block\&. If a list of environment variable names is passed, client\-side values are then imported into the manager\*(Aqs environment block\&. If any names are not valid environment variable names or have invalid values according to the rules described above, an error is raised\&. If no arguments are passed, the entire environment block inherited by the
 \fBsystemctl\fR
 process is imported\&. In this mode, any inherited invalid environment variables are quietly ignored\&.
+.sp
+Importing of the full inherited environment block (calling this command without any arguments) is deprecated\&. A shell will set dozens of variables which only make sense locally and are only meant for processes which are descendants of the shell\&. Such variables in the global environment block are confusing to other processes\&.
 .RE
 .SS "Manager State Commands"
 .PP
@@ -1496,7 +1567,7 @@ command, limit display to properties specified in the argument\&. The argument s
 .sp
 For the manager itself,
 \fBsystemctl\ \&show\fR
-will show all available properties\&. Those properties are documented in
+will show all available properties, most of which are derived or closely match the options described in
 \fBsystemd-system.conf\fR(5)\&.
 .sp
 Properties for units vary by unit type, so showing any unit (even a non\-existent one) is a way to list properties pertaining to this type\&. Similarly, showing any job will list properties pertaining to all jobs\&. Properties for units are documented in
@@ -1704,11 +1775,35 @@ When used with the
 command, if no units were killed, the operation results in an error\&.
 .RE
 .PP
-\fB\-i\fR, \fB\-\-ignore\-inhibitors\fR
+\fB\-\-check\-inhibitors=\fR
 .RS 4
-When system shutdown or a sleep state is requested, ignore inhibitor locks\&. Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (unless privileged) and a list of active locks is printed\&. However, if
-\fB\-\-ignore\-inhibitors\fR
-is specified, the established locks are ignored and not shown, and the operation attempted anyway, possibly requiring additional privileges\&.
+When system shutdown or sleep state is request, this option controls how to deal with inhibitor locks\&. It takes one of
+"auto",
+"yes"
+or
+"no"\&. Defaults to
+"auto", which will behave like
+"yes"
+for interactive invocations (i\&.e\&. from a TTY) and
+"no"
+for non\-interactive invocations\&.
+"yes"
+will let the request respect inhibitor locks\&.
+"no"
+will let the request ignore inhibitor locks\&.
+.sp
+Applications can establish inhibitor locks to avoid that certain important operations (such as CD burning or suchlike) are interrupted by system shutdown or a sleep state\&. Any user may take these locks and privileged users may override these locks\&. If any locks are taken, shutdown and sleep state requests will normally fail (unless privileged) and a list of active locks is printed\&. However, if
+"no"
+is specified or
+"auto"
+is specified on a non\-interactive requests, the established locks are ignored and not shown, and the operation attempted anyway, possibly requiring additional privileges\&. May be overridden by
+\fB\-\-force\fR\&.
+.RE
+.PP
+\fB\-i\fR
+.RS 4
+Shortcut for
+\fB\-\-check\-inhibitors=no\fR\&.
 .RE
 .PP
 \fB\-\-dry\-run\fR
@@ -1832,6 +1927,12 @@ When used with
 or
 \fBSIGSTOP\fR\&. If omitted, defaults to
 \fBSIGTERM\fR\&.
+.sp
+The special value
+"help"
+will list the known values and the program will exit immediately, and the special value
+"list"
+will list known values along with the numerical signal numbers and the program will exit immediately\&.
 .RE
 .PP
 \fB\-\-what=\fR
@@ -1993,21 +2094,57 @@ or
 .PP
 \fB\-\-timestamp=\fR
 .RS 4
-Takes one of
-"pretty"
-(the default),
-"us",
-"\(mcs",
-"utc"\&. Changes the format of printed timestamps\&.
-"pretty":
+Change the format of printed timestamps\&. The following values may be used:
+.PP
+\fBpretty\fR (this is the default)
+.RS 4
 "Day YYYY\-MM\-DD HH:MM:SS TZ"
-"us"
-or
-"\(mcs":
+.RE
+.PP
+\fBus\fR, \fB\(mcs\fR
+.RS 4
 "Day YYYY\-MM\-DD HH:MM:SS\&.UUUUUU TZ"
-"utc":
+.RE
+.PP
+\fButc\fR
+.RS 4
 "Day YYYY\-MM\-DD HH:MM:SS UTC"
-"us+utc" or "\(mcs+utc": "Day YYYY\-MM\-DD HH:MM:SS\&.UUUUUU UTC".RE
+.RE
+.PP
+\fBus+utc\fR, \fB\(mcs+utc\fR
+.RS 4
+"Day YYYY\-MM\-DD HH:MM:SS\&.UUUUUU UTC"
+.RE
+.RE
+.PP
+\fB\-\-mkdir\fR
+.RS 4
+When used with
+\fBbind\fR, creates the destination file or directory before applying the bind mount\&. Note that even though the name of this option suggests that it is suitable only for directories, this option also creates the destination file node to mount over if the object to mount is not a directory, but a regular file, device node, socket or FIFO\&.
+.RE
+.PP
+\fB\-\-marked\fR
+.RS 4
+Only allowed with
+\fBreload\-or\-restart\fR\&. Enqueues restart jobs for all units that have the
+"needs\-restart"
+mark, and reload jobs for units that have the
+"needs\-reload"
+mark\&. When a unit marked for reload does not support reload, restart will be queued\&. Those properties can be set using
+\fBset\-property Marks\fR\&.
+.sp
+Unless
+\fB\-\-no\-block\fR
+is used,
+\fBsystemctl\fR
+will wait for the queued jobs to finish\&.
+.RE
+.PP
+\fB\-\-read\-only\fR
+.RS 4
+When used with
+\fBbind\fR, creates a read\-only bind mount\&.
+.RE
 .PP
 \fB\-H\fR, \fB\-\-host=\fR
 .RS 4
@@ -2020,7 +2157,18 @@ Execute the operation remotely\&. Specify a hostname, or a username and hostname
 .PP
 \fB\-M\fR, \fB\-\-machine=\fR
 .RS 4
-Execute operation on a local container\&. Specify a container name to connect to\&.
+Execute operation on a local container\&. Specify a container name to connect to, optionally prefixed by a user name to connect as and a separating
+"@"
+character\&. If the special string
+"\&.host"
+is used in place of the container name, a connection to the local system is made (which is useful to connect to a specific user\*(Aqs user bus:
+"\-\-user \-\-machine=lennart@\&.host")\&. If the
+"@"
+syntax is not used, the connection is made as root user\&. If the
+"@"
+syntax is used either the left hand side or the right hand side may be omitted (but not both) in which case the local user name and
+"\&.host"
+are implied\&.
 .RE
 .PP
 \fB\-\-no\-pager\fR
@@ -2028,9 +2176,11 @@ Execute operation on a local container\&. Specify a container name to connect to
 Do not pipe output into a pager\&.
 .RE
 .PP
-\fB\-\-no\-legend\fR
+\fB\-\-legend=\fR\fIBOOL\fR
 .RS 4
-Do not print the legend, i\&.e\&. column headers and the footer with hints\&.
+Enable or disable printing of the legend, i\&.e\&. column headers and the footer with hints\&. The legend is printed by default, unless disabled with
+\fB\-\-quiet\fR
+or similar\&.
 .RE
 .PP
 \fB\-h\fR, \fB\-\-help\fR
@@ -2048,7 +2198,7 @@ On success, 0 is returned, a non\-zero failure code otherwise\&.
 .PP
 \fBsystemctl\fR
 uses the return codes defined by LSB, as defined in
-\m[blue]\fBLSB 3\&.0\&.0\fR\m[]\&\s-2\u[2]\d\s+2\&.
+\m[blue]\fBLSB 3\&.0\&.0\fR\m[]\&\s-2\u[1]\d\s+2\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -2128,6 +2278,66 @@ are present or if it is set to an empty string or if their execution failed, sys
 \fBnano\fR(1),
 \fBvim\fR(1),
 \fBvi\fR(1)\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LEVEL\fR
+.RS 4
+The maximum log level of emitted messages (messages with a higher log level, i\&.e\&. less important ones, will be suppressed)\&. Either one of (in order of decreasing importance)
+\fBemerg\fR,
+\fBalert\fR,
+\fBcrit\fR,
+\fBerr\fR,
+\fBwarning\fR,
+\fBnotice\fR,
+\fBinfo\fR,
+\fBdebug\fR, or an integer in the range 0\&...7\&. See
+\fBsyslog\fR(3)
+for more information\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_COLOR\fR
+.RS 4
+A boolean\&. If true, messages written to the tty will be colored according to priority\&.
+.sp
+This setting is only useful when messages are written directly to the terminal, because
+\fBjournalctl\fR(1)
+and other tools that display logs will color messages based on the log level on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TIME\fR
+.RS 4
+A boolean\&. If true, console log messages will be prefixed with a timestamp\&.
+.sp
+This setting is only useful when messages are written directly to the terminal or a file, because
+\fBjournalctl\fR(1)
+and other tools that display logs will attach timestamps based on the entry metadata on their own\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_LOCATION\fR
+.RS 4
+A boolean\&. If true, messages will be prefixed with a filename and line number in the source code where the message originates\&.
+.sp
+Note that the log location is often attached as metadata to journal entries anyway\&. Including it directly in the message text can nevertheless be convenient when debugging programs\&.
+.RE
+.PP
+\fI$SYSTEMD_LOG_TARGET\fR
+.RS 4
+The destination for log messages\&. One of
+\fBconsole\fR
+(log to the attached tty),
+\fBconsole\-prefixed\fR
+(log to the attached tty but with prefixes encoding the log level and "facility", see
+\fBsyslog\fR(3),
+\fBkmsg\fR
+(log to the kernel circular log buffer),
+\fBjournal\fR
+(log to the journal),
+\fBjournal\-or\-kmsg\fR
+(log to the journal if available, and to kmsg otherwise),
+\fBauto\fR
+(determine the appropriate log target automatically, the default),
+\fBnull\fR
+(disable log output)\&.
 .RE
 .PP
 \fI$SYSTEMD_PAGER\fR
@@ -2227,9 +2437,12 @@ instead\&.
 .PP
 \fI$SYSTEMD_COLORS\fR
 .RS 4
-The value must be a boolean\&. Controls whether colorized output should be generated\&. This can be specified to override the decision that
+Takes a boolean argument\&. When true,
 \fBsystemd\fR
-makes based on
+and related utilities will use colors in their output, otherwise the output will be monochrome\&. Additionally, the variable can take one of the following special values:
+"16",
+"256"
+to restrict the use of colors to the base 16 or 256 ANSI colors, respectively\&. This can be specified to override the automatic decision based on
 \fI$TERM\fR
 and what the console is connected to\&.
 .RE
@@ -2257,11 +2470,6 @@ and other conditions\&.
 \fBglob\fR(7)
 .SH "NOTES"
 .IP " 1." 4
-Preset
-.RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/Preset
-.RE
-.IP " 2." 4
 LSB 3.0.0
 .RS 4
 \%http://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/iniscrptact.html
