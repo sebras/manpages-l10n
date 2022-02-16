@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright © 2021 Dr. Helge Kreutzmann <debian@helgefjell.de>
+# Copyright © 2021,2022 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,4 +16,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 cd ../upstream
-for i in $(grep -Rl "\.Sh" *); do basename $i; done | sort -u | tr "\n" "|" | sed 's/|$/ /'|sed 's/|/ | /g'
+for i in $(grep -Rl "\.Sh" *); do fn=$(basename $i); dn=$(basename $(dirname $i)); echo "$dn/$fn"."po" ; done | sort -u
