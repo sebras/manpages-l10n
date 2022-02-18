@@ -78,8 +78,8 @@ echo "erstellt." >> "$addendum"
 # Special case for manpages which use mdoc syntax
 if [ $ismdoc ]; then
     # MDOC File
-    cat license.add.mdoc >> "$addendum"
+    cat license-mdoc.add >> "$addendum"
 else
     # Groff file
-    cat license.add >> "$addendum"
+    cat license-groff.add >> "$addendum"
 fi
