@@ -16,4 +16,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 cd ../upstream
-for i in $(grep -Rl "\.Sh" *); do fn=$(basename $i); dn=$(basename $(dirname $i)); echo "$dn/$fn"."po" ; done | sort -u
+for i in $(grep -Rl "\.Sh NAME" *); do fn=$(basename $i); dn=$(basename $(dirname $i)); echo "$dn/$fn"."po" ; done | sort -u
