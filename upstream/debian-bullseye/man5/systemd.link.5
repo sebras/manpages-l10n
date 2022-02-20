@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.LINK" "5" "" "systemd 247" "systemd.link"
+.TH "SYSTEMD\&.LINK" "5" "" "systemd 250" "systemd.link"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -47,6 +47,27 @@ take precedence over files with the same name in
 /dev/null
 disables the configuration file entirely (it is "masked")\&.
 .PP
+Along with the link file
+foo\&.link, a "drop\-in" directory
+foo\&.link\&.d/
+may exist\&. All files with the suffix
+"\&.conf"
+from this directory will be merged in the alphanumeric order and parsed after the main file itself has been parsed\&. This is useful to alter or add configuration settings, without having to modify the main configuration file\&. Each drop\-in file must have appropriate section headers\&.
+.PP
+In addition to
+/etc/systemd/network, drop\-in
+"\&.d"
+directories can be placed in
+/lib/systemd/network
+or
+/run/systemd/network
+directories\&. Drop\-in files in
+/etc/
+take precedence over those in
+/run/
+which in turn take precedence over those in
+/lib/\&. Drop\-in files under any of these directories take precedence over the main link file wherever located\&.
+.PP
 The link file contains a [Match] section, which determines if a given link file may be applied to a given device, as well as a [Link] section specifying how the device should be configured\&. The first (in lexical order) of the link files that matches a given device is applied\&. Note that a default file
 99\-default\&.link
 is shipped by the system\&. Any user\-supplied
@@ -78,26 +99,56 @@ The following keys are accepted:
 .PP
 \fIMACAddress=\fR
 .RS 4
-A whitespace\-separated list of hardware addresses\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. See the example below\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
-.sp
-Example:
-.sp
-.if n \{\
+A whitespace\-separated list of hardware addresses\&. The acceptable formats are:
+.PP
+\fBcolon\-delimited hexadecimal\fR
 .RS 4
-.\}
-.nf
-MACAddress=01:23:45:67:89:ab 00\-11\-22\-33\-44\-55 AABB\&.CCDD\&.EEFF
-.fi
-.if n \{\
+Each field must be one byte\&. E\&.g\&.
+"12:34:56:78:90:ab"
+or
+"AA:BB:CC:DD:EE:FF"\&.
 .RE
-.\}
+.PP
+\fBhyphen\-delimited hexadecimal\fR
+.RS 4
+Each field must be one byte\&. E\&.g\&.
+"12\-34\-56\-78\-90\-ab"
+or
+"AA\-BB\-CC\-DD\-EE\-FF"\&.
+.RE
+.PP
+\fBdot\-delimited hexadecimal\fR
+.RS 4
+Each field must be two bytes\&. E\&.g\&.
+"1234\&.5678\&.90ab"
+or
+"AABB\&.CCDD\&.EEFF"\&.
+.RE
+.PP
+\fBIPv4 address format\fR
+.RS 4
+E\&.g\&.
+"127\&.0\&.0\&.1"
+or
+"192\&.168\&.0\&.1"\&.
+.RE
+.PP
+\fBIPv6 address format\fR
+.RS 4
+E\&.g\&.
+"2001:0db8:85a3::8a2e:0370:7334"
+or
+"::1"\&.
+.RE
+.sp
+The total length of each MAC address must be 4 (for IPv4 tunnel), 6 (for Ethernet), 16 (for IPv6 tunnel), or 20 (for InfiniBand)\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&. Defaults to unset\&.
 .RE
 .PP
 \fIPermanentMACAddress=\fR
 .RS 4
 A whitespace\-separated list of hardware\*(Aqs permanent addresses\&. While
 \fIMACAddress=\fR
-matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&.
+matches the device\*(Aqs current MAC address, this matches the device\*(Aqs permanent MAC address, which may be different from the current one\&. Use full colon\-, hyphen\- or dot\-delimited hexadecimal, or IPv4 or IPv6 address format\&. This option may appear more than once, in which case the lists are merged\&. If the empty string is assigned to this option, the list of hardware addresses defined prior to this is reset\&. Defaults to unset\&.
 .RE
 .PP
 \fIPath=\fR
@@ -118,12 +169,21 @@ of the device itself\&. If the list is prefixed with a "!", the test is inverted
 \fIType=\fR
 .RS 4
 A whitespace\-separated list of shell\-style globs matching the device type, as exposed by
-\fBnetworkctl status\fR\&. If the list is prefixed with a "!", the test is inverted\&.
+\fBnetworkctl list\fR\&. If the list is prefixed with a "!", the test is inverted\&. Some valid values are
+"ether",
+"loopback",
+"wlan",
+"wwan"\&. Valid types are named either from the udev
+"DEVTYPE"
+attribute, or
+"ARPHRD_"
+macros in
+linux/if_arp\&.h, so this is not comprehensive\&.
 .RE
 .PP
 \fIProperty=\fR
 .RS 4
-A whitespace\-separated list of udev property name with its value after a equal ("=")\&. If multiple properties are specified, the test results are ANDed\&. If the list is prefixed with a "!", the test is inverted\&. If a value contains white spaces, then please quote whole key and value pair\&. If a value contains quotation, then please escape the quotation with
+A whitespace\-separated list of udev property names with their values after equals sign ("=")\&. If multiple properties are specified, the test results are ANDed\&. If the list is prefixed with a "!", the test is inverted\&. If a value contains white spaces, then please quote whole key and value pair\&. If a value contains quotation, then please escape the quotation with
 "\e"\&.
 .sp
 Example: if a \&.link file has the following:
@@ -187,6 +247,15 @@ for details\&. When prefixed with an exclamation mark ("!"), the result is negat
 .RS 4
 Checks whether the system is running on a specific architecture\&. See
 \fIConditionArchitecture=\fR
+in
+\fBsystemd.unit\fR(5)
+for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
+.RE
+.PP
+\fIFirmware=\fR
+.RS 4
+Checks whether the system is running on a machine with the specified firmware\&. See
+\fIConditionFirmware=\fR
 in
 \fBsystemd.unit\fR(5)
 for details\&. When prefixed with an exclamation mark ("!"), the result is negated\&. If an empty string is assigned, then previously assigned value is cleared\&.
@@ -329,14 +398,29 @@ A space\-separated list of policies by which the interface\*(Aqs alternative nam
 The alternative interface name to use\&. This option can be specified multiple times\&. If the empty string is assigned to this option, the list is reset, and all prior assignments have no effect\&. If the kernel does not support the alternative names, then this setting will be ignored\&.
 .RE
 .PP
+\fITransmitQueues=\fR
+.RS 4
+Specifies the device\*(Aqs number of transmit queues\&. An integer in the range 1\&...4096\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIReceiveQueues=\fR
+.RS 4
+Specifies the device\*(Aqs number of receive queues\&. An integer in the range 1\&...4096\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fITransmitQueueLength=\fR
+.RS 4
+Specifies the transmit queue length of the device in number of packets\&. An unsigned integer in the range 0\&...4294967294\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
 \fIMTUBytes=\fR
 .RS 4
-The maximum transmission unit in bytes to set for the device\&. The usual suffixes K, M, G, are supported and are understood to the base of 1024\&.
+The maximum transmission unit in bytes to set for the device\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&.
 .RE
 .PP
 \fIBitsPerSecond=\fR
 .RS 4
-The speed to set for the device, the value is rounded down to the nearest Mbps\&. The usual suffixes K, M, G, are supported and are understood to the base of 1000\&.
+The speed to set for the device, the value is rounded down to the nearest Mbps\&. The usual suffixes K, M, G are supported and are understood to the base of 1000\&.
 .RE
 .PP
 \fIDuplex=\fR
@@ -356,7 +440,9 @@ Note that if autonegotiation is enabled, speed and duplex settings are read\-onl
 .PP
 \fIWakeOnLan=\fR
 .RS 4
-The Wake\-on\-LAN policy to set for the device\&. The supported values are:
+The Wake\-on\-LAN policy to set for the device\&. Takes the special value
+"off"
+which disables Wake\-on\-LAN, or space separated list of the following words:
 .PP
 \fBphy\fR
 .RS 4
@@ -390,16 +476,34 @@ Wake on receipt of a magic packet\&.
 .PP
 \fBsecureon\fR
 .RS 4
-Enable secureon(tm) password for MagicPacket(tm)\&.
-.RE
-.PP
-\fBoff\fR
-.RS 4
-Never wake\&.
+Enable SecureOn password for MagicPacket\&. Implied when
+\fIWakeOnLanPassword=\fR
+is specified\&. If specified without
+\fIWakeOnLanPassword=\fR
+option, then the password is read from the credential
+"\fILINK\fR\&.link\&.wol\&.password"
+(e\&.g\&.,
+"60\-foo\&.link\&.wol\&.password"), and if the credential not found, then read from
+"wol\&.password"\&. See
+\fILoadCredential=\fR/\fISetCredential=\fR
+in
+\fBsystemd.exec\fR(1)
+for details\&. The password in the credential, must be 6 bytes in hex format with each byte separated by a colon (":") like an Ethernet MAC address, e\&.g\&.,
+"aa:bb:cc:dd:ee:ff"\&.
 .RE
 .sp
-Defaults to
-\fBoff\fR\&.
+Defaults to unset, and the device\*(Aqs default will be used\&. This setting can be specified multiple times\&. If an empty string is assigned, then the all previous assignments are cleared\&.
+.RE
+.PP
+\fIWakeOnLanPassword=\fR
+.RS 4
+Specifies the SecureOn password for MagicPacket\&. Takes an absolute path to a regular file or an
+\fBAF_UNIX\fR
+stream socket, or the plain password\&. When a path to a regular file is specified, the password is read from it\&. When an
+\fBAF_UNIX\fR
+stream socket is specified, a connection is made to it and the password is read from it\&. The password must be 6 bytes in hex format with each byte separated by a colon (":") like an Ethernet MAC address, e\&.g\&.,
+"aa:bb:cc:dd:ee:ff"\&. This implies
+\fIWakeOnLan=secureon\fR\&. Defaults to unset, and the current value will not be changed\&.
 .RE
 .PP
 \fIPort=\fR
@@ -572,92 +676,148 @@ By default this is unset, i\&.e\&. all possible modes will be advertised\&. This
 .PP
 \fIReceiveChecksumOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the hardware offload for checksumming of ingress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, hardware offload for checksumming of ingress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITransmitChecksumOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the hardware offload for checksumming of egress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, hardware offload for checksumming of egress network packets is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITCPSegmentationOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the TCP Segmentation Offload (TSO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, TCP Segmentation Offload (TSO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITCP6SegmentationOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the TCP6 Segmentation Offload (tx\-tcp6\-segmentation) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, TCP6 Segmentation Offload (tx\-tcp6\-segmentation) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIGenericSegmentationOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the Generic Segmentation Offload (GSO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, Generic Segmentation Offload (GSO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIGenericReceiveOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the Generic Receive Offload (GRO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, Generic Receive Offload (GRO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIGenericReceiveOffloadHardware=\fR
+.RS 4
+Takes a boolean\&. If set to true, hardware accelerated Generic Receive Offload (GRO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fILargeReceiveOffload=\fR
 .RS 4
-Takes a boolean\&. If set to true, the Large Receive Offload (LRO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, Large Receive Offload (LRO) is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fIRxChannels=\fR
+\fIReceiveVLANCTAGHardwareAcceleration=\fR
 .RS 4
-Sets the number of receive channels (a number between 1 and 4294967295) \&.
+Takes a boolean\&. If set to true, receive VLAN CTAG hardware acceleration is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fITxChannels=\fR
+\fITransmitVLANCTAGHardwareAcceleration=\fR
 .RS 4
-Sets the number of transmit channels (a number between 1 and 4294967295)\&.
+Takes a boolean\&. If set to true, transmit VLAN CTAG hardware acceleration is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fIOtherChannels=\fR
+\fIReceiveVLANCTAGFilter=\fR
 .RS 4
-Sets the number of other channels (a number between 1 and 4294967295)\&.
+Takes a boolean\&. If set to true, receive filtering on VLAN CTAGs is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fICombinedChannels=\fR
+\fITransmitVLANSTAGHardwareAcceleration=\fR
 .RS 4
-Sets the number of combined set channels (a number between 1 and 4294967295)\&.
+Takes a boolean\&. If set to true, transmit VLAN STAG HW acceleration is enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fIRxBufferSize=\fR
+\fINTupleFilter=\fR
 .RS 4
-Takes an integer\&. Specifies the maximum number of pending packets in the NIC receive buffer\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. If set to true, receive N\-tuple filters and actions are enabled\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
-\fIRxMiniBufferSize=\fR
+\fIRxChannels=\fR, \fITxChannels=\fR, \fIOtherChannels=\fR, \fICombinedChannels=\fR
 .RS 4
-Takes an integer\&. Specifies the maximum number of pending packets in the NIC mini receive buffer\&. When unset, the kernel\*(Aqs default will be used\&.
+Specifies the number of receive, transmit, other, or combined channels, respectively\&. Takes an unsigned integer in the range 1\&...4294967295 or
+"max"\&. If set to
+"max", the advertised maximum value of the hardware will be used\&. When unset, the number will not be changed\&. Defaults to unset\&.
 .RE
 .PP
-\fIRxJumboBufferSize=\fR
+\fIRxBufferSize=\fR, \fIRxMiniBufferSize=\fR, \fIRxJumboBufferSize=\fR, \fITxBufferSize=\fR
 .RS 4
-Takes an integer\&. Specifies the maximum number of pending packets in the NIC jumbo receive buffer\&. When unset, the kernel\*(Aqs default will be used\&.
-.RE
-.PP
-\fITxBufferSize=\fR
-.RS 4
-Takes an integer\&. Specifies the maximum number of pending packets in the NIC transmit buffer\&. When unset, the kernel\*(Aqs default will be used\&.
+Specifies the maximum number of pending packets in the NIC receive buffer, mini receive buffer, jumbo receive buffer, or transmit buffer, respectively\&. Takes an unsigned integer in the range 1\&...4294967295 or
+"max"\&. If set to
+"max", the advertised maximum value of the hardware will be used\&. When unset, the number will not be changed\&. Defaults to unset\&.
 .RE
 .PP
 \fIRxFlowControl=\fR
 .RS 4
-Takes a boolean\&. When set, enables the receive flow control, also known as the ethernet receive PAUSE message (generate and send ethernet PAUSE frames)\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. When set, enables receive flow control, also known as the ethernet receive PAUSE message (generate and send ethernet PAUSE frames)\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fITxFlowControl=\fR
 .RS 4
-Takes a boolean\&. When set, enables the transmit flow control, also known as the ethernet transmit PAUSE message (respond to received ethernet PAUSE frames)\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. When set, enables transmit flow control, also known as the ethernet transmit PAUSE message (respond to received ethernet PAUSE frames)\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIAutoNegotiationFlowControl=\fR
 .RS 4
-Takes a boolean\&. When set, the auto negotiation enables the interface to exchange state advertisements with the connected peer so that the two devices can agree on the ethernet PAUSE configuration\&. When unset, the kernel\*(Aqs default will be used\&.
+Takes a boolean\&. When set, auto negotiation enables the interface to exchange state advertisements with the connected peer so that the two devices can agree on the ethernet PAUSE configuration\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIGenericSegmentOffloadMaxBytes=\fR
+.RS 4
+Specifies the maximum size of a Generic Segment Offload (GSO) packet the device should accept\&. The usual suffixes K, M, G are supported and are understood to the base of 1024\&. An unsigned integer in the range 1\&...65536\&. Defaults to unset\&.
+.RE
+.PP
+\fIGenericSegmentOffloadMaxSegments=\fR
+.RS 4
+Specifies the maximum number of Generic Segment Offload (GSO) segments the device should accept\&. An unsigned integer in the range 1\&...65535\&. Defaults to unset\&.
+.RE
+.PP
+\fIUseAdaptiveRxCoalesce=\fR, \fIUseAdaptiveTxCoalesce=\fR
+.RS 4
+Boolean properties that, when set, enable/disable adaptive Rx/Tx coalescing if the hardware supports it\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIRxCoalesceSec=\fR, \fIRxCoalesceIrqSec=\fR, \fIRxCoalesceLowSec=\fR, \fIRxCoalesceHighSec=\fR, \fITxCoalesceSec=\fR, \fITxCoalesceIrqSec=\fR, \fITxCoalesceLowSec=\fR, \fITxCoalesceHighSec=\fR
+.RS 4
+These properties configure the delay before Rx/Tx interrupts are generated after a packet is sent/received\&. The
+"Irq"
+properties come into effect when the host is servicing an IRQ\&. The
+"Low"
+and
+"High"
+properties come into effect when the packet rate drops below the low packet rate threshold or exceeds the high packet rate threshold respectively if adaptive Rx/Tx coalescing is enabled\&. When unset, the kernel\*(Aqs defaults will be used\&.
+.RE
+.PP
+\fIRxMaxCoalescedFrames=\fR, \fIRxMaxCoalescedIrqFrames=\fR, \fIRxMaxCoalescedLowFrames=\fR, \fIRxMaxCoalescedHighFrames=\fR, \fITxMaxCoalescedFrames=\fR, \fITxMaxCoalescedIrqFrames=\fR, \fITxMaxCoalescedLowFrames=\fR, \fITxMaxCoalescedHighFrames=\fR
+.RS 4
+These properties configure the maximum number of frames that are sent/received before a Rx/Tx interrupt is generated\&. The
+"Irq"
+properties come into effect when the host is servicing an IRQ\&. The
+"Low"
+and
+"High"
+properties come into effect when the packet rate drops below the low packet rate threshold or exceeds the high packet rate threshold respectively if adaptive Rx/Tx coalescing is enabled\&. When unset, the kernel\*(Aqs defaults will be used\&.
+.RE
+.PP
+\fICoalescePacketRateLow=\fR, \fICoalescePacketRateHigh=\fR
+.RS 4
+These properties configure the low and high packet rate (expressed in packets per second) threshold respectively and are used to determine when the corresponding coalescing settings for low and high packet rates come into effect if adaptive Rx/Tx coalescing is enabled\&. If unset, the kernel\*(Aqs defaults will be used\&.
+.RE
+.PP
+\fICoalescePacketRateSampleIntervalSec=\fR
+.RS 4
+Configures how often to sample the packet rate used for adaptive Rx/Tx coalescing\&. This property cannot be zero\&. This lowest time granularity supported by this property is seconds\&. Partial seconds will be rounded up before being passed to the kernel\&. If unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIStatisticsBlockCoalesceSec=\fR
+.RS 4
+How long to delay driver in\-memory statistics block updates\&. If the driver does not have an in\-memory statistic block, this property is ignored\&. This property cannot be zero\&. If unset, the kernel\*(Aqs default will be used\&.
 .RE
 .SH "EXAMPLES"
 .PP

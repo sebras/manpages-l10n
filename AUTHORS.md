@@ -341,6 +341,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Andika Triwidada <andika@gmail.com>
 * Decy Sophan Aryanto <decy.sophan@upg.siemens.co.id>
 * I Made Wiryana <mwiryana@gunadarma.ac.id>
+* I. Musthafa <i.musthafa66@gmail.com>
 * Johan Efendi <johan-efendi@iname.com>
 * Priyadi Iman Nurcahyo <priyadi@priyadi.id.org>
 * Rachman M. Heryanto <manz@ibm.net>

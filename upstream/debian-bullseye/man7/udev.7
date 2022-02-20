@@ -1,5 +1,5 @@
 '\" t
-.TH "UDEV" "7" "" "systemd 247" "udev"
+.TH "UDEV" "7" "" "systemd 250" "udev"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -61,12 +61,12 @@ A rule consists of a comma\-separated list of one or more key\-operator\-value e
 .PP
 "=="
 .RS 4
-Compare for equality\&.
+Compare for equality\&. (The specified key has the specified value\&.)
 .RE
 .PP
 "!="
 .RS 4
-Compare for inequality\&.
+Compare for inequality\&. (The specified key doesn\*(Aqt have the specified value, or the specified key is not present at all\&.)
 .RE
 .PP
 "="
@@ -90,7 +90,7 @@ Assign a value to a key finally; disallow any later changes\&.
 .RE
 .SS "Values"
 .PP
-Values are written as double quoted strings, such as ("string")\&. To include a quotation mark (") in the value, precede it by a backslash (\e")\&. Any other occurrences of a character followed by a backslash are not further unescaped\&. That is, "\et\en" is treated as four characters: backslash, lowercase t, backslash, lowercase n\&.
+Values are written as double quoted strings, such as ("string")\&. To include a quotation mark (") in the value, precede it by a backslash (\e")\&. Any other occurrences of a backslash followed by a character are not unescaped\&. That is, "\et\en" is treated as four characters: backslash, lowercase t, backslash, lowercase n\&.
 .PP
 The string can be prefixed with a lowercase e (e"string\en") to mark the string as
 \m[blue]\fBC\-style escaped\fR\m[]\&\s-2\u[1]\d\s+2\&. For example, e"string\en" is parsed as 7 characters: 6 lowercase letters and a newline\&. This can be useful for writing special characters when a kernel driver requires them\&.
@@ -117,6 +117,11 @@ Match the devpath of the event device\&.
 Match the name of the event device\&.
 .RE
 .PP
+\fIKERNELS\fR
+.RS 4
+Search the devpath upwards for a matching device name\&.
+.RE
+.PP
 \fINAME\fR
 .RS 4
 Match the name of a network interface\&. It can be used once the NAME key has been set in one of the preceding rules\&.
@@ -132,29 +137,14 @@ Match the name of a symlink targeting the node\&. It can be used once a SYMLINK 
 Match the subsystem of the event device\&.
 .RE
 .PP
-\fIDRIVER\fR
-.RS 4
-Match the driver name of the event device\&. Only set this key for devices which are bound to a driver at the time the event is generated\&.
-.RE
-.PP
-\fIATTR{\fR\fI\fIfilename\fR\fR\fI}\fR
-.RS 4
-Match sysfs attribute values of the event device\&. Trailing whitespace in the attribute values is ignored unless the specified match value itself contains trailing whitespace\&.
-.RE
-.PP
-\fISYSCTL{\fR\fI\fIkernel parameter\fR\fR\fI}\fR
-.RS 4
-Match a kernel parameter value\&.
-.RE
-.PP
-\fIKERNELS\fR
-.RS 4
-Search the devpath upwards for a matching device name\&.
-.RE
-.PP
 \fISUBSYSTEMS\fR
 .RS 4
 Search the devpath upwards for a matching device subsystem name\&.
+.RE
+.PP
+\fIDRIVER\fR
+.RS 4
+Match the driver name of the event device\&. Only set this key for devices which are bound to a driver at the time the event is generated\&.
 .RE
 .PP
 \fIDRIVERS\fR
@@ -162,16 +152,25 @@ Search the devpath upwards for a matching device subsystem name\&.
 Search the devpath upwards for a matching device driver name\&.
 .RE
 .PP
+\fIATTR{\fR\fI\fIfilename\fR\fR\fI}\fR
+.RS 4
+Match sysfs attribute value of the event device\&.
+.sp
+Trailing whitespace in the attribute values is ignored unless the specified match value itself contains trailing whitespace\&.
+.RE
+.PP
 \fIATTRS{\fR\fI\fIfilename\fR\fR\fI}\fR
 .RS 4
 Search the devpath upwards for a device with matching sysfs attribute values\&. If multiple
 \fIATTRS\fR
-matches are specified, all of them must match on the same device\&. Trailing whitespace in the attribute values is ignored unless the specified match value itself contains trailing whitespace\&.
+matches are specified, all of them must match on the same device\&.
+.sp
+Trailing whitespace in the attribute values is ignored unless the specified match value itself contains trailing whitespace\&.
 .RE
 .PP
-\fITAGS\fR
+\fISYSCTL{\fR\fI\fIkernel parameter\fR\fR\fI}\fR
 .RS 4
-Search the devpath upwards for a device with matching tag\&.
+Match a kernel parameter value\&.
 .RE
 .PP
 \fIENV{\fR\fI\fIkey\fR\fR\fI}\fR
@@ -205,6 +204,11 @@ Unknown keys will never match\&.
 \fITAG\fR
 .RS 4
 Match against a device tag\&.
+.RE
+.PP
+\fITAGS\fR
+.RS 4
+Search the devpath upwards for a device with matching tag\&.
 .RE
 .PP
 \fITEST{\fR\fI\fIoctal mode mask\fR\fR\fI}\fR
@@ -348,7 +352,7 @@ or
 "program"
 and
 "builtin"
-types described below use a single list, so clearing the list with
+types described below share a common list, so clearing the list with
 ":="
 and
 "="
@@ -467,7 +471,16 @@ Specify the priority of the created symlinks\&. Devices with higher priorities o
 .PP
 \fBstring_escape=\fR\fB\fInone|replace\fR\fR
 .RS 4
-Usually, control and other possibly unsafe characters are replaced in strings used for device naming\&. The mode of replacement can be specified with this option\&.
+When
+"replace", possibly unsafe characters in strings assigned to
+\fINAME\fR,
+\fISYMLINK\fR, and
+\fIENV{\fR\fI\fIkey\fR\fR\fI}\fR
+are replaced\&. When
+"none", no replacement is performed\&. When unset, the replacement is performed for
+\fINAME\fR,
+\fISYMLINK\fR, but not for
+\fIENV{\fR\fI\fIkey\fR\fR\fI}\fR\&. Defaults to unset\&.
 .RE
 .PP
 \fBstatic_node=\fR
@@ -492,6 +505,34 @@ Disable the watching of a device node with inotify\&.
 Set the flag (sticky bit) on the udev database entry of the event device\&. Device properties are then kept in the database even when
 \fBudevadm info \-\-cleanup\-db\fR
 is called\&. This option can be useful in certain cases (e\&.g\&. Device Mapper devices) for persisting device state on the transition from initramfs\&.
+.RE
+.PP
+\fBlog_level=\fR\fB\fIlevel\fR\fR
+.RS 4
+Takes a log level name like
+"debug"
+or
+"info", or a special value
+"reset"\&. When a log level name is specified, the maximum log level is changed to that level\&. When
+"reset"
+is set, then the previously specified log level is revoked\&. Defaults to the log level of the main process of
+\fBsystemd\-udevd\fR\&.
+.sp
+This may be useful when debugging events for certain devices\&. Note that the log level is applied when the line including this rule is processed\&. So, for debugging, it is recommended that this is specified at earlier place, e\&.g\&., the first line of
+00\-debug\&.rules\&.
+.sp
+Example for debugging uevent processing for network interfaces\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/udev/rules\&.d/00\-debug\-net\&.rules
+SUBSYSTEM=="net", OPTIONS="log_level=debug"
+.fi
+.if n \{\
+.RE
+.\}
 .RE
 .RE
 .PP

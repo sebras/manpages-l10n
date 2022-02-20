@@ -1,5 +1,5 @@
 '\" t
-.TH "FILE\-HIERARCHY" "7" "" "systemd 247" "file-hierarchy"
+.TH "FILE\-HIERARCHY" "7" "" "systemd 250" "file-hierarchy"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -116,7 +116,7 @@ is accessible to other users of the system, it is essential that files and subdi
 .RS 4
 A
 "tmpfs"
-file system for system packages to place runtime data in\&. This directory is flushed on boot, and generally writable for privileged programs only\&. Always writable\&.
+file system for system packages to place runtime data, socket files, and similar\&. This directory is flushed on boot, and generally writable for privileged programs only\&. Always writable\&.
 .RE
 .PP
 /run/log/
@@ -213,7 +213,7 @@ Similar to
 .PP
 /var/
 .RS 4
-Persistent, variable system data\&. Must be writable\&. This directory might be pre\-populated with vendor\-supplied data, but applications should be able to reconstruct necessary files and directories in this subhierarchy should they be missing, as the system might start up without this directory being populated\&. Persistency is recommended, but optional, to support ephemeral systems\&. This directory might become available or writable only very late during boot\&. Components that are required to operate during early boot hence shall not unconditionally rely on this directory\&.
+Persistent, variable system data\&. Writable during normal system operation\&. This directory might be pre\-populated with vendor\-supplied data, but applications should be able to reconstruct necessary files and directories in this subhierarchy should they be missing, as the system might start up without this directory being populated\&. Persistency is recommended, but optional, to support ephemeral systems\&. This directory might become available or writable only very late during boot\&. Components that are required to operate during early boot hence shall not unconditionally rely on this directory\&.
 .RE
 .PP
 /var/cache/
@@ -375,7 +375,8 @@ Resources shared between multiple packages, such as fonts or artwork\&. Usually,
 \fI$XDG_DATA_HOME\fR
 set, it should use the directory specified in it instead of this directory\&.
 .RE
-.SH "UNPRIVILEGED WRITE ACCESS"
+.SH "WRITE ACCESS"
+.SS "Unprivileged Write Access"
 .PP
 Unprivileged processes generally lack write access to most of the hierarchy\&.
 .PP
@@ -424,6 +425,28 @@ and
 \fBPROT_EXEC\fR
 in
 \fBmmap\fR(2)\&.
+.SS "Lack of Write Access on Read\-Only Systems and during System Recovery"
+.PP
+As noted above, some systems operate with the
+/usr
+and
+/etc
+hierarchies mounted read\-only, possibly only allowing write access during package upgrades\&. Other part of the hierarchy are generally mounted read\-write (in particular
+/var
+and
+/var/tmp), but may be read\-only when the kernel remounts the file system read\-only in response to errors, or when the system is booted read\-only for recovery purposes\&. To the extent reasonable, applications should be prepared to execute without write access, so that for example, failure to save non\-essential data to
+/var/cache/
+or failure to create a custom log file under
+/var/log
+does not prevent the application from running\&.
+.PP
+The
+/run/
+directory is available since the earliest boot and is always writable\&. It should be used for any runtime data and sockets, so that write access to e\&.g\&.
+/etc
+or
+/var
+is not needed\&.
 .SH "NODE TYPES"
 .PP
 Unix file systems support different types of file nodes, including regular files, directories, symlinks, character and block device nodes, sockets and FIFOs\&.

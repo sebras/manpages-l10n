@@ -1,5 +1,13 @@
 # Changelog for manpages-l10n
 
+## Version 4.13
+*Sun Feb 20 19:45:00 CET 2022*
+
+* New language: Vietnamese
+* New distribution: Fedora 36
+* Fix addendum creation for mdoc based files
+* Updated many translations
+
 ## Version 4.12.1
 *Sun Dec 19 11:24:00 CET 2021*
 
