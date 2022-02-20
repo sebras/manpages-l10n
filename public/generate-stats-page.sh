@@ -112,13 +112,6 @@ manpage_sections=$(find ../po/$tlang/man* -maxdepth 1 -type d | cut -d/ -f4 | LC
 # Create the index file
 cat index-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > index-$tlang.html
 
-# Create an overview of untranslated manpages
-cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > untranslated-$tlang.html
-
-for distribution in $distributions; do
-  echo "<p><a class=\"btn btn-primary\" href=\"#$distribution\">$distribution</a></p>" >> untranslated-$tlang.html
-done
-
 # Set up files for each distribution
 for distribution in $distributions; do
   echo "<p><a class=\"btn btn-primary\" href=\"$distribution-$tlang.html\">$distribution</a></p>" >> index-$tlang.html
@@ -205,63 +198,9 @@ EOF_TABLE
   echo "</body>" >> $distribution-$tlang.html
   echo "</html>" >> $distribution-$tlang.html
 
-  # Create an overview of untranslated manpages
-  echo "<h2 id=\"$distribution\">$distribution</h2>" >> untranslated-$tlang.html
-
-  cat >> untranslated-$tlang.html <<-EOF_TABLE
-  <table class="table table-striped table-bordered table-sm">
-    <thead class="thead-dark">
-      <tr>
-        <th scope="col" width="25%">$cname_packet</th>
-        <th scope="col" width="75%">$Handbuchseiten</th>
-      </tr>
-    </thead>
-    <tbody>
-EOF_TABLE
-
-  previous_package=""
-  while read line; do
-    package=$(echo "$line" | cut -d":" -f1)
-    manpage=$(echo "$line" | cut -d":" -f2)
-    # Special case: If this is the first line, previous_package is empty.
-    if [ -z "$previous_package" ]; then
-      previous_package="$package"
-    fi
-    if [ "$previous_package" != "$package" ]; then
-      echo "<tr>" >> untranslated-$tlang.html
-      echo "<td>$previous_package</td>" >> untranslated-$tlang.html
-      echo "<td>$manpages</td>" >> untranslated-$tlang.html
-      echo "</tr>" >> untranslated-$tlang.html
-      previous_package="$package"
-      manpages="$manpage"
-    else
-      manpages="$manpages $manpage"
-    fi
-  done < ../upstream/$distribution/untranslated.txt
-
-  echo "</tbody>" >> untranslated-$tlang.html
-  echo "</table>" >> untranslated-$tlang.html
-
-  echo '<div class="alert alert-primary" role="alert">' >> untranslated-$tlang.html
-  echo "$cname_intotal1" >> untranslated-$tlang.html
-  (wc -l  ../upstream/$distribution/untranslated.txt | cut -d" " -f1) >> untranslated-$tlang.html
-  echo "$cname_intotal2" >> untranslated-$tlang.html
-
-done
-
-echo "</div>" >> untranslated-$tlang.html
-echo "</div>" >> untranslated-$tlang.html
-echo "</body>" >> untranslated-$tlang.html
-echo "</html>" >> untranslated-$tlang.html
-
-echo "</div>" >> index-$tlang.html
-echo "</body>" >> index-$tlang.html
-echo "</html>" >> index-$tlang.html
-echo ""
-
 # The new approach
   if [ -r untranslated-$tlang.2.htm ]; then
-      cat untranslated-$tlang.2.htm > untranslated-new-$tlang.html
+      cat untranslated-$tlang.2.htm > untranslated-$tlang.html
   fi
 done
 
