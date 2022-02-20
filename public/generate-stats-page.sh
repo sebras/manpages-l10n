@@ -198,6 +198,13 @@ EOF_TABLE
   echo "</body>" >> $distribution-$tlang.html
   echo "</html>" >> $distribution-$tlang.html
 
+done
+
+echo "</div>" >> index-$tlang.html
+echo "</body>" >> index-$tlang.html
+echo "</html>" >> index-$tlang.html
+echo ""
+
 # The new approach
   if [ -r untranslated-$tlang.2.htm ]; then
       cat untranslated-$tlang.2.htm > untranslated-$tlang.html
