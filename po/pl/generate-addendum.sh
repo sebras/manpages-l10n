@@ -44,10 +44,10 @@ echo >> "$addendum"
 # Special case for manpages which use mdoc syntax
 if [ $ismdoc ]; then
     # MDOC File
-    echo ".Sh T◈UMACZENIE" >> "$addendum"
+    echo ".Sh TŁUMACZENIE" >> "$addendum"
 else
     # Groff file
-    echo ".SH T◈UMACZENIE" >> "$addendum"
+    echo ".SH TŁUMACZENIE" >> "$addendum"
 fi
 echo "Autorami polskiego tłumaczenia niniejszej strony podręcznika są:" >> "$addendum"
 

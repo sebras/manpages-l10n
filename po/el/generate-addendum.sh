@@ -44,10 +44,10 @@ echo >> "$addendum"
 # Special case for manpages which use mdoc syntax
 if [ $ismdoc ]; then
     # MDOC File
-    echo ".Sh META◈PA◈H" >> "$addendum"
+    echo ".Sh ΜΕΤΑΦΡΑΣΗ" >> "$addendum"
 else
     # Groff file
-    echo ".SH META◈PA◈H" >> "$addendum"
+    echo ".SH ΜΕΤΑΦΡΑΣΗ" >> "$addendum"
 fi
 echo "Η ελληνική μετάφραση αυτής της σελίδας εγχειριδίου δημιουργήθηκε από την" >> "$addendum"
 
