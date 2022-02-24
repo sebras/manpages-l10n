@@ -39,14 +39,15 @@ number_translators=$(echo "$translators" | wc -l)
 
 # Output of common header
 echo "PO4A-HEADER:mode=after;position=^\.(TH|Dt);beginboundary=FakePo4aBoundary" > "$addendum"
-echo >> "$addendum"
 
 # Special case for manpages which use mdoc syntax
 if [ $ismdoc ]; then
     # MDOC File
+    echo ".Pp" >> "$addendum"
     echo ".Sh TRADUCTION" >> "$addendum"
 else
     # Groff file
+    echo ".PP" >> "$addendum"
     echo ".SH TRADUCTION" >> "$addendum"
 fi
 echo "La traduction française de cette page de manuel a été créée par" >> "$addendum"
