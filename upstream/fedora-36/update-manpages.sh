@@ -75,3 +75,7 @@ rm "$cpio_archive"
 	if [ -f ./man1/grub2-mknetdir.1 ]; then
 	  sed -i -e "s|Prepares|Prepares|" ./man1/grub2-mknetdir.1
 	fi
+	
+	# Remove some files due to licensing issues
+	rm -f ./man1/hpcdtoppm.1
+	rm -f ./man1/zipgrep.1
