@@ -97,7 +97,6 @@ else
 	-M "utf-8" \
 	-p "$pofile" \
 	-a "$addendum" \
-	-a "license.add" \
 	-L UTF-8 \
 	-l "$localized";
 fi
