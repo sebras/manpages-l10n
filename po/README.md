@@ -30,7 +30,7 @@ If you create a new language, remember to complete the following steps:
    langmail="English <debian-l10n-english@lists.debian.org>"
 ```
 
-* Copy and adapt license.add, translate-dates.pl and generate-addendum.sh.
+* Copy and adapt license-groff.add, license-mdoc.add, translate-dates.pl and generate-addendum.sh.
 
 * If addenda does not (yet) work, create the file _noaddendum_ in the language
   directory.
