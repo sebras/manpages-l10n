@@ -2,7 +2,7 @@
 \\$2 \(laURL: \\$1 \(ra\\$3
 ..
 .if \n[.g] .mso www.tmac
-.TH SSCONVERT 1 "2011-11-04" "gnumeric" "GNOME"
+.TH SSCONVERT 1 "2020-04-19" "gnumeric" "GNOME"
 .SH NAME
 ssconvert \- a command line spreadsheet format converter
 
@@ -31,13 +31,28 @@ starting with two dashes (`--').
 .B \-\-recalc
 Recalculate all cells before writing the result.
 .TP
+.B \-\-set \fICELL=CONTENTS\fR
+Set the value of \fICELL\fR to \fICONTENTS\fR.  To
+put an expression in a cell, add an extra =, for example \-\-set "A11==A10+1".
+This option may be repeated as many times as needed.  The workbook will be
+recalculated after all cells have been set, provided that the workbook is
+set for automatic recalculation.  If not, recalculation can be forced
+with \-\-recalc.
+.TP
+.B \-v, \-\-verbose
+Be slightly more verbose about what is going on.
+.TP
 .B \-\-list\-exporters
 List the available exporters (file formats that can be written).
 .TP
 .B \-T, \-\-export\-type=\fIID\fR
 Specify which exporter to use; see below for a list. This is only
 necessary when the right format does not follow from the output file
-name.
+name.  The list of available export formats can be generated using the
+\-\-list\-exporters option.  However, when image export is requested
+using the \-\-export\-graphs option, the list of image formats should be
+consulted instead.  That list can be generated using the
+\-\-list\-image\-formats option.
 .TP
 .B \-O, \-\-export\-options=\fIoptionsstring\fR
 Specify parameters for the chosen exporter.
@@ -46,12 +61,20 @@ by spaces.
 The parameter names and values allowed are specific to the exporter and are
 documented below. Multiple parameters can be specified
 .TP
+.B \-\-export\-graphs
+Export the graphs (or charts) inside the input spreadsheet to
+numbered image files (SVG by default).  The list of available image
+formats can be printed with \-\-list\-image-formats
+.TP
 .B \-\-list\-importers
 List the available importers (file formats that can be read).
 .B \-I, \-\-import\-type=\fIID\fR
 Specify which importer to use; see below for a list. This is only
 necessary when the right format does not follow from the input file
 name.
+.TP
+.B \-\-list\-image\-formats
+List the available image formats for graph export
 .TP
 .B \-E, \-\-import\-encoding=\fISTRING\fR
 Specify an encoding for imported content.
@@ -65,12 +88,13 @@ workbook.  The merge will be aborted if there are name conflicts.
 .B \-S, \-\-export\-file\-per\-sheet
 Export a file for each sheet if the exporter only supports one sheet at a
 time.  The output filename is treated as a template in which sheet number
-is substituted for %n and/or sheet name is substituted for %s.  If there
-are not substitutions, a default of ".%s" is added.
+is substituted for %n, sheet name is substituted for %s, and sheet object
+name is substituted for %o in case of graph export.  If there are no
+substitutions, a default of ".%n" is added.
 
 .SS "Help options"
 .TP
-.B \-v, \-\-version
+.B \-\-version
 Display ssconvert's version.
 .TP
 .B \-h, \-\-help, \-\-usage
@@ -227,9 +251,13 @@ Mixed Integer Linear Programming (MILP) solver
 .TP
 .B sheet
 Name of the workbook sheet to operate on.
-You can specify several sheets by repeating this option. If this option is not given the active
-sheet (i. e. the sheet that was active when the file was saved) is used.
+You can specify several sheets by repeating this option.
 This is ignored if the \fBobject\fR option is given.
+
+.TP
+.B active-sheet
+Select the active sheet to operate on.  The value for this option is
+irrelevant, but the equal sign is mandatory.
 
 .TP
 .B object
@@ -247,13 +275,17 @@ size of the graph.
 .\" paper_size_table[] are supported.
 
 .SH OPTIONS FOR THE CONFIGURABLE TEXT (*.txt) EXPORTER
-.\" Cf. "g_object_class_install_property" calls in src/stf-export.c 
+.\" Cf. "g_object_class_install_property" calls in src/stf-export.c
 
 .TP
 .B sheet
 Name of the workbook sheet to operate on.
-You can specify several sheets by repeating this option. If this option is not given the active
-sheet (i. e. the sheet that was active when the file was saved) is used.
+You can specify several sheets by repeating this option.
+
+.TP
+.B active-sheet
+Select the active sheet to operate on.  The value for this option is
+irrelevant, but the equal sign is mandatory.
 
 .TP
 .B eol
@@ -314,7 +346,7 @@ Acceptable values:
 When does data need to be quoted?
 "\fBnever\fR",
 "\fBauto\fR" (puts quotes where needed), or
-"\fBalways\fR". Defaults to "\fBnever\fR".
+"\fBalways\fR". Defaults to "\fBauto\fR".
 
 .TP
 .B quoting-on-whitespace
@@ -349,6 +381,16 @@ To convert an Excel format file \fIstatfuns.xls\fR to a text file,
 specifying the semicolon as the separator character:
 .PP
 \fBssconvert\fR \fB-O 'separator=; format=raw'\fR \fIsamples/excel/statfuns.xls\fR \fIstatfuns.txt\fR
+.PP
+To export the charts from the input file \fIinput.gnumeric\fR to numbered
+SVG files:
+.PP
+\fBssconvert\fR \fB\-\-export\-graphs\fR \fIinput.gnumeric\fR \fI'output.%n.svg'\fR
+.PP
+To export the charts from the input file \fIinput.gnumeric\fR to numbered
+PNG files:
+.PP
+\fBssconvert\fR \fB\-\-export\-type=png\fR \fB\-\-export\-graphs\fR \fIinput.gnumeric\fR \fI'output.%n.png'\fR
 .PP
 
 .SH LICENSE
