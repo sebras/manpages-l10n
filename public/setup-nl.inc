@@ -14,3 +14,9 @@ cname_severalpagesuntranslated="bestanden zijn niet volledig vertaald."
 
 cname_intotal1="Totaal zijn "
 cname_intotal2=" bestanden niet volledig vertaald."
+
+cname_webtitle="Nederlandse vertaling van man pages"
+cname_overviewlink="Overzicht"
+# For overview of (untranslated) pages
+cname_nottranslated="List of files which are not translated into Dutch"
+cname_explanation="The following pages are translated into some other language(s), but not into Dutch"

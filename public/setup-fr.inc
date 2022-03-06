@@ -14,3 +14,9 @@ cname_severalpagesuntranslated="fichiers ne sont pas complètement traduits."
 
 cname_intotal1="Au total, "
 cname_intotal2=" ne sont pas complètement traduits."
+
+cname_webtitle="Traduction française des pages de manuel"
+cname_overviewlink="Aperçu"
+# For overview of (untranslated) pages
+cname_nottranslated="List of files which are not translated into French"
+cname_explanation="The following pages are translated into some other language(s), but not into French"

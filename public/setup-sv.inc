@@ -14,3 +14,9 @@ cname_severalpagesuntranslated="files are not completely translated."
 
 cname_intotal1="Totally "
 cname_intotal2=" files are not translated."
+
+cname_webtitle="Swedish translation of manual pages"
+cname_overviewlink="Swedish overview"
+# For overview of (untranslated) pages
+cname_nottranslated="List of files which are not translated into Swedish"
+cname_explanation="The following pages are translated into some other language(s), but not into Swedish"

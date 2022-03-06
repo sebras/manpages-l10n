@@ -14,3 +14,9 @@ cname_severalpagesuntranslated="pliki/plików nie w pełni przetłumaczonych."
 
 cname_intotal1="W sumie "
 cname_intotal2=" plików jest nieprzetłumaczonych."
+
+cname_webtitle="Polskie tłumaczenie stron podręcznika systemowego"
+cname_overviewlink="Przegląd dla języka polskiego"
+# For overview of (untranslated) pages
+cname_nottranslated="Lista plików nieprzetłumaczonych na język polski"
+cname_explanation="Następujące podręczniki nie są przetłumaczone na polski, ale ich tłumaczenie istnieje w przynajmniej jednym innym języku"
