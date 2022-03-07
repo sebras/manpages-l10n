@@ -78,6 +78,7 @@ cat > index.html <<-END_OF_HEADER
         <li><a href="index-sr.html">The Serbian translation</a></li>
         <li><a href="index-es.html">The Spanish translation</a></li>
         <li><a href="index-sv.html">The Swedish translation</a></li>
+        <li><a href="index-uk.html">The Ukrainian translation</a></li>
         <li><a href="index-vi.html">The Vietnamese translation</a></li>
       </ul>
       <p>
