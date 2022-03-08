@@ -32,6 +32,7 @@ language_list=(
     '"Polish"     pl'
     '"Romanian"   ro'
     '"Spanish"    es'
+    '"Ukrainian"  uk'
 )
 
 # Generate AUTHORS file
