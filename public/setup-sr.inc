@@ -8,6 +8,7 @@ cname_missing_strings="Translations until 80%"
 cname_statistics="Statistics"
 cname_packet="Package"
 cname_manpages="Man pages"
+cname_date="Date"
 
 cname_onepageuntranslated="1 file is not completely translated."
 cname_severalpagesuntranslated="files are not completely translated."

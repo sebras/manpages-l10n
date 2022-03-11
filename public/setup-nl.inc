@@ -8,6 +8,7 @@ cname_missing_strings="Vertalingen tot 80%"
 cname_statistics="Statistiek"
 cname_packet="Pakket"
 cname_manpages="Man Pagina's"
+cname_date="Tijd"
 
 cname_onepageuntranslated="1 bestand is niet volledig vertaald."
 cname_severalpagesuntranslated="bestanden zijn niet volledig vertaald."

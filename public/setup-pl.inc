@@ -8,6 +8,7 @@ cname_missing_strings="Pozostało do osiągnięcia 80%"
 cname_statistics="Statystyki"
 cname_packet="Pakiet"
 cname_manpages="Strony podręcznika"
+cname_date="Aktualność"
 
 cname_onepageuntranslated="1 plik jest nie w pełni przetłumaczony."
 cname_severalpagesuntranslated="pliki/plików nie w pełni przetłumaczonych."
