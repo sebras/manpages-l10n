@@ -32,7 +32,7 @@ for tlang in $MT_LANGLIST; do
     # Supersede inc file - we want the date of the untranslated.txt, not the one from this run
     timestamp=$(stat --format="%y" ../po/$tlang/untranslated.txt)
 
-    cat untranslated-$tlang.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' > $htmlfile
+    cat untranslated.stub | awk -vTS="$timestamp" '{sub("TIMESTAMP",TS); print $0}' | awk -vUT="$cname_webtitle" '{sub("UTITLE",UT); print $0}' | awk -vUL="$cname_nottranslated" '{sub("ULISTE",UL); print $0}' | awk -vUE="$cname_explanation" '{sub("UEXPLANATION",UE); print $0}' | awk -vUO="$cname_overviewlink" '{sub("UOVERVIEW",UO); print $0}'  | awk -vUD="$cname_date" '{sub("UDATE",UD); print $0}' | awk -vUK="$tlang" '{sub("xx",UK); print $0}'  > $htmlfile
 
     cat >> $htmlfile <<-EOF_TABLE
   <table class="table table-striped table-bordered table-sm">
