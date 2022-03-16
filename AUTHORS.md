@@ -491,4 +491,5 @@ of Linux manpages. The list is sorted alphabetically.
 ## Ukrainian:
 
 * Andrij Mizyk <andmizyk@gmail.com>
+* Olex Denkin <ks_alexandr@ukr.net>
 * Yuri Chornoivan <yurchor@ukr.net>
