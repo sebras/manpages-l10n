@@ -2,22 +2,22 @@
 timestamp=$(TZ='Europe/Madrid' date "+%d %m %Y, %H:%M")
 
 # Name of Columns
-cname_name="Name"
-cname_percent="Percent"
-cname_missing_strings="Translations until 80%"
-cname_statistics="Statistics"
-cname_packet="Package"
-cname_manpages="Man pages"
-cname_date="Date"
+cname_name="Nombre"
+cname_percent="Porcentaje"
+cname_missing_strings="Traducciones pendientes para completar el 80%."
+cname_statistics="Estadísticas"
+cname_packet="Paquete"
+cname_manpages="Páginas de manual"
+cname_date="Fecha"
 
-cname_onepageuntranslated="1 file is not completely translated."
-cname_severalpagesuntranslated="files are not completely translated."
+cname_onepageuntranslated="1 archivo no está totalemente traducido."
+cname_severalpagesuntranslated="archivos no están totalemente traducidos."
 
-cname_intotal1="Totally "
-cname_intotal2=" files are not translated."
+cname_intotal1="Totalmente "
+cname_intotal2=" archivos sin traducir."
 
-cname_webtitle="Spanish translation of manual pages"
-cname_overviewlink="Spnaish overview"
+cname_webtitle="Traducción de páginas de manual al español"
+cname_overviewlink="Estado de las traducciones al español"
 # For overview of (untranslated) pages
-cname_nottranslated="List of files which are not translated into Spanish"
-cname_explanation="The following pages are translated into some other language(s), but not into Spanish"
+cname_nottranslated="Lista de páginas sin traducir al castellano"
+cname_explanation="Estas páginas de manual no están traducidas al español pero sí en algún otro idioma."
