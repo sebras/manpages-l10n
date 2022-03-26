@@ -13,8 +13,8 @@ cname_date="Fecha"
 cname_onepageuntranslated="1 archivo no está totalemente traducido."
 cname_severalpagesuntranslated="archivos no están totalemente traducidos."
 
-cname_intotal1="Totalmente "
-cname_intotal2=" archivos sin traducir."
+cname_intotal1="Totalmente"
+cname_intotal2="archivos sin traducir."
 
 cname_webtitle="Traducción de páginas de manual al español"
 cname_overviewlink="Estado de las traducciones al español"
