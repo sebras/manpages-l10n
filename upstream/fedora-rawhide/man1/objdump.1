@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "OBJDUMP 1"
-.TH OBJDUMP 1 "2022-01-19" "binutils-2.37" "GNU Development Tools"
+.TH OBJDUMP 1 "2022-03-10" "binutils-2.38" "GNU Development Tools"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -171,6 +171,8 @@ objdump [\fB\-a\fR|\fB\-\-archive\-headers\fR]
          \fB\-\-dwarf\fR[=rawline,=decodedline,=info,=abbrev,=pubnames,=aranges,=macro,=frames,=frames\-interp,=str,=str\-offsets,=loc,=Ranges,=pubtypes,=trace_info,=trace_abbrev,=trace_aranges,=gdb_index,=addr,=cu_index,=links]]
         [\fB\-WK\fR|\fB\-\-dwarf=follow\-links\fR]
         [\fB\-WN\fR|\fB\-\-dwarf=no\-follow\-links\fR]
+        [\fB\-wD\fR|\fB\-\-dwarf=use\-debuginfod\fR]
+        [\fB\-wE\fR|\fB\-\-dwarf=do\-not\-use\-debuginfod\fR]
         [\fB\-L\fR|\fB\-\-process\-links\fR]
         [\fB\-\-ctf=\fR\fIsection\fR]
         [\fB\-G\fR|\fB\-\-stabs\fR]
@@ -900,9 +902,9 @@ Display the raw contents of a \fB.debug_frame\fR section.
 .el .IP "\f(CWF\fR" 4
 .IX Item "F"
 .PD 0
-.ie n .IP """=frame\-interp""" 4
-.el .IP "\f(CW=frame\-interp\fR" 4
-.IX Item "=frame-interp"
+.ie n .IP """=frames\-interp""" 4
+.el .IP "\f(CW=frames\-interp\fR" 4
+.IX Item "=frames-interp"
 .PD
 Display the interpreted contents of a \fB.debug_frame\fR section.
 .ie n .IP """g""" 4
@@ -962,6 +964,13 @@ chosen when configuring the binutils via the
 \&\fB\-\-enable\-follow\-debug\-links=yes\fR or
 \&\fB\-\-enable\-follow\-debug\-links=no\fR options.  If these are not
 used then the default is to enable the following of debug links.
+.Sp
+Note \- if support for the debuginfod protocol was enabled when the
+binutils were built then this option will also include an attempt to
+contact any debuginfod servers mentioned in the \fI\s-1DEBUGINFOD_URLS\s0\fR
+environment variable.  This could take some time to resolve.  This
+behaviour can be disabled via the \fB=do\-not\-use\-debuginfod\fR debug
+option.
 .ie n .IP """N""" 4
 .el .IP "\f(CWN\fR" 4
 .IX Item "N"
@@ -971,6 +980,26 @@ used then the default is to enable the following of debug links.
 .IX Item "=no-follow-links"
 .PD
 Disables the following of links to separate debug info files.
+.ie n .IP """D""" 4
+.el .IP "\f(CWD\fR" 4
+.IX Item "D"
+.PD 0
+.ie n .IP """=use\-debuginfod""" 4
+.el .IP "\f(CW=use\-debuginfod\fR" 4
+.IX Item "=use-debuginfod"
+.PD
+Enables contacting debuginfod servers if there is a need to follow
+debug links.  This is the default behaviour.
+.ie n .IP """E""" 4
+.el .IP "\f(CWE\fR" 4
+.IX Item "E"
+.PD 0
+.ie n .IP """=do\-not\-use\-debuginfod""" 4
+.el .IP "\f(CW=do\-not\-use\-debuginfod\fR" 4
+.IX Item "=do-not-use-debuginfod"
+.PD
+Disables contacting debuginfod servers when there is a need to follow
+debug links.
 .ie n .IP """l""" 4
 .el .IP "\f(CWl\fR" 4
 .IX Item "l"
@@ -1124,15 +1153,24 @@ This can be used in conjunction with \fB\-\-dwarf\-depth\fR.
 .IP "\fB\-\-dwarf\-check\fR" 4
 .IX Item "--dwarf-check"
 Enable additional checks for consistency of Dwarf information.
-.IP "\fB\-\-ctf=\fR\fIsection\fR" 4
-.IX Item "--ctf=section"
+.IP "\fB\-\-ctf[=\fR\fIsection\fR\fB]\fR" 4
+.IX Item "--ctf[=section]"
 Display the contents of the specified \s-1CTF\s0 section.  \s-1CTF\s0 sections themselves
 contain many subsections, all of which are displayed in order.
-.IP "\fB\-\-ctf\-parent=\fR\fIsection\fR" 4
-.IX Item "--ctf-parent=section"
-Specify the name of another section from which the \s-1CTF\s0 dictionary can inherit
-types.  (If none is specified, we assume the \s-1CTF\s0 dictionary inherits types
-from the default-named member of the archive contained within this section.)
+.Sp
+By default, display the name of the section named \fI.ctf\fR, which is the
+name emitted by \fBld\fR.
+.IP "\fB\-\-ctf\-parent=\fR\fImember\fR" 4
+.IX Item "--ctf-parent=member"
+If the \s-1CTF\s0 section contains ambiguously-defined types, it will consist
+of an archive of many \s-1CTF\s0 dictionaries, all inheriting from one
+dictionary containing unambiguous types.  This member is by default
+named \fI.ctf\fR, like the section containing it, but it is possible to
+change this name using the \f(CW\*(C`ctf_link_set_memb_name_changer\*(C'\fR
+function at link time.  When looking at \s-1CTF\s0 archives that have been
+created by a linker that uses the name changer to rename the parent
+archive member, \fB\-\-ctf\-parent\fR can be used to specify the name
+used for the parent.
 .IP "\fB\-G\fR" 4
 .IX Item "-G"
 .PD 0
@@ -1301,7 +1339,7 @@ user.
 .IP "\fB\-\-unicode=\fR\fI[default|invalid|locale|escape|hex|highlight]\fR" 4
 .IX Item "--unicode=[default|invalid|locale|escape|hex|highlight]"
 .PD
-Controls the display of \s-1UTF\-8\s0 encoded mulibyte characters in strings.
+Controls the display of \s-1UTF\-8\s0 encoded multibyte characters in strings.
 The default (\fB\-\-unicode=default\fR) is to give them no special
 treatment.  The \fB\-\-unicode=locale\fR option displays the sequence
 in the current locale, which may or may not support them.  The options
@@ -1364,7 +1402,7 @@ with a backslash.  The \fIfile\fR may itself contain additional
 \&\fBnm\fR\|(1), \fBreadelf\fR\|(1), and the Info entries for \fIbinutils\fR.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright (c) 1991\-2021 Free Software Foundation, Inc.
+Copyright (c) 1991\-2022 Free Software Foundation, Inc.
 .PP
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the \s-1GNU\s0 Free Documentation License, Version 1.3
