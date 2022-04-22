@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 250" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 251" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -131,7 +131,7 @@ is asked through D\-Bus to load
 dbus\-org\&.freedesktop\&.network1\&.service, it\*(Aqll load
 systemd\-networkd\&.service\&. As another example,
 default\&.target
-\(em the default system target started at boot \(em is commonly symlinked (aliased) to either
+\(em the default system target started at boot \(em is commonly aliased to either
 multi\-user\&.target
 or
 graphical\&.target
@@ -152,7 +152,7 @@ Aliases obey the following restrictions: a unit of a certain type ("\&.service",
 "alias@inst\&.service") may be a symlink to different template (e\&.g\&.
 "template@inst\&.service")\&. In that case, just this specific instance is aliased, while other instances of the template (e\&.g\&.
 "alias@foo\&.service",
-"alias@bar\&.service") are not aliased\&. Those rule preserve the requirement that the instance (if any) is always uniquely defined for a given unit and all its aliases\&.
+"alias@bar\&.service") are not aliased\&. Those rules preserve the requirement that the instance (if any) is always uniquely defined for a given unit and all its aliases\&. The target of alias symlink must point to a valid unit file location, i\&.e\&. the symlink target name must match the symlink source name as described, and the destination path must be in one of the unit search paths, see UNIT FILE LOAD PATH section below for more details\&. Note that the target file may not exist, i\&.e\&. the symlink may be dangling\&.
 .PP
 Unit files may specify aliases through the
 \fIAlias=\fR
@@ -184,16 +184,22 @@ to the unit\&. Similar functionality exists for
 type dependencies as well, the directory suffix is
 \&.requires/
 in this case\&. This functionality is useful to hook units into the start\-up of other units, without having to modify their unit files\&. For details about the semantics of
-\fIWants=\fR, see below\&. The preferred way to create symlinks in the
+\fIWants=\fR
+and
+\fIRequires=\fR, see below\&. The preferred way to create symlinks in the
 \&.wants/
 or
 \&.requires/
-directory of a unit file is by embedding the dependency in [Install] section of the target unit, and creating the symlink in the file system with the
+directories is by specifying the dependency in [Install] section of the target unit, and creating the symlink in the file system with the
 \fBenable\fR
 or
 \fBpreset\fR
 commands of
-\fBsystemctl\fR(1)\&.
+\fBsystemctl\fR(1)\&. The target can be a normal unit (either plain or a specific instance of a template unit)\&. In case when the source unit is a template, the target can also be a template, in which case the instance will be "propagated" to the target unit to form a valid unit instance\&. The target of symlinks in
+\&.wants/
+or
+\&.requires/
+must thus point to a valid unit file location, i\&.e\&. the symlink target name must satisfy the described requirements, and the destination path must be in one of the unit search paths, see UNIT FILE LOAD PATH section below for more details\&. Note that the target file may not exist, i\&.e\&. the symlink may be dangling\&.
 .PP
 Along with a unit file
 foo\&.service, a "drop\-in" directory
@@ -486,12 +492,12 @@ T{
 $XDG_RUNTIME_DIR/systemd/user\&.control
 T}:
 T{
-/run/systemd/transient
+$XDG_RUNTIME_DIR/systemd/transient
 T}:T{
 Dynamic configuration for transient units
 T}
 T{
-/run/systemd/generator\&.early
+$XDG_RUNTIME_DIR/systemd/generator\&.early
 T}:T{
 Generated units with high priority (see \fIearly\-dir\fR in \fBsystemd.generator\fR(7))
 T}
@@ -578,9 +584,37 @@ systemd\-analyze \-\-user unit\-paths
 .PP
 Moreover, additional units might be loaded into systemd from directories not on the unit load path by creating a symlink pointing to a unit file in the directories\&. You can use
 \fBsystemctl link\fR
-for this operation\&. See
-\fBsystemctl\fR(1)
-for its usage and precaution\&.
+for this; see
+\fBsystemctl\fR(1)\&. The file system where the linked unit files are located must be accessible when systemd is started (e\&.g\&. anything underneath
+/home/
+or
+/var/
+is not allowed, unless those directories are located on the root file system)\&.
+.PP
+It is important to distinguish "linked unit files" from "unit file aliases": any symlink where the symlink
+\fItarget\fR
+is within the unit load path becomes an alias: the source name and the target file name must satisfy specific constraints listed above in the discussion of aliases, but the symlink target doesn\*(Aqt have to exist, and in fact the symlink target path is not used, except to check whether the target is within the unit load path\&. In constrast, a symlink which goes outside of the unit load path signifies a linked unit file\&. The symlink is followed when loading the file, but the destination name is otherwise unused (and may even not be a valid unit file name)\&. For example, symlinks
+/etc/systemd/system/alias1\&.service
+→
+service1\&.service,
+/etc/systemd/system/alias2\&.service
+→
+/usr/lib/systemd/service1\&.service,
+/etc/systemd/system/alias3\&.service
+→
+/etc/systemd/system/service1\&.service
+are all valid aliases and
+service1\&.service
+will have four names, even if the unit file is located at
+/run/systemd/system/service1\&.service\&. In contrast, a symlink
+/etc/systemd/system/link1\&.service
+→
+\&.\&./link1_service_file
+means that
+link1\&.service
+is a "linked unit" and the contents of
+/etc/systemd/link1_service_file
+provide its configuration\&.
 .SH "UNIT GARBAGE COLLECTION"
 .PP
 The system and service manager loads a unit\*(Aqs configuration automatically when a unit is referenced for the first time\&. It will automatically unload the unit configuration and state again when the unit is not needed anymore ("garbage collection")\&. A unit may be referenced through a number of different mechanisms:
@@ -753,7 +787,7 @@ directory accompanying the unit file\&.
 If this unit gets activated, the units listed will be activated as well\&. If one of the other units fails to activate, and an ordering dependency
 \fIAfter=\fR
 on the failing unit is set, this unit will not be started\&. Besides, with or without specifying
-\fIAfter=\fR, this unit will be stopped if one of the other units is explicitly stopped\&.
+\fIAfter=\fR, this unit will be stopped (or restarted) if one of the other units is explicitly stopped (or restarted)\&.
 .sp
 Often, it is a better choice to use
 \fIWants=\fR
@@ -1962,28 +1996,25 @@ This option may be used more than once, or a space\-separated list of unit names
 or
 \&.requires/
 directory of each of the listed units when this unit is installed by
-\fBsystemctl enable\fR\&. This has the effect that a dependency of type
+\fBsystemctl enable\fR\&. This has the effect of a dependency of type
 \fIWants=\fR
 or
 \fIRequires=\fR
-is added from the listed unit to the current unit\&. The primary result is that the current unit will be started when the listed unit is started\&. See the description of
+being added from the listed unit to the current unit\&. The primary result is that the current unit will be started when the listed unit is started, see the description of
 \fIWants=\fR
 and
 \fIRequires=\fR
 in the [Unit] section for details\&.
 .sp
-\fBWantedBy=foo\&.service\fR
-in a service
-bar\&.service
-is mostly equivalent to
-\fBAlias=foo\&.service\&.wants/bar\&.service\fR
-in the same file\&. In case of template units,
+In case of template units listing non template units, the listing unit must have
+\fIDefaultInstance=\fR
+set, or
 \fBsystemctl enable\fR
-must be called with an instance name, and this instance will be added to the
+must be called with an instance name\&. The instance (default or specified) will be added to the
 \&.wants/
 or
 \&.requires/
-list of the listed unit\&. E\&.g\&.
+list of the listed unit\&. For example,
 \fBWantedBy=getty\&.target\fR
 in a service
 getty@\&.service
@@ -1992,7 +2023,17 @@ will result in
 creating a
 getty\&.target\&.wants/getty@tty2\&.service
 link to
-getty@\&.service\&.
+getty@\&.service\&. This also applies to listing specific instances of templated units: this specific instance will gain the dependency\&. A template unit may also list a template unit, in which case a generic dependency will be added where each instance of the listing unit will have a dependency on an instance of the listed template with the same instance value\&. For example,
+\fBWantedBy=container@\&.target\fR
+in a service
+monitor@\&.service
+will result in
+\fBsystemctl enable monitor@\&.service\fR
+creating a
+container@\&.target\&.wants/monitor@\&.service
+link to
+monitor@\&.service, which applies to all instances of
+container@\&.target\&.
 .RE
 .PP
 \fIAlso=\fR
@@ -2066,6 +2107,10 @@ l l l
 l l l
 l l l
 l l l
+l l l
+l l l
+l l l
+l l l
 l l l.
 T{
 "%a"
@@ -2101,6 +2146,13 @@ T}:T{
 Cache directory root
 T}:T{
 This is either /var/cache (for the system manager) or the path "$XDG_CACHE_HOME" resolves to (for user managers)\&.
+T}
+T{
+"%d"
+T}:T{
+Credentials directory
+T}:T{
+This is the value of the "$CREDENTIALS_DIRECTORY" environment variable if available\&. See section "Credentials" in \fBsystemd.exec\fR(5) for more information\&.
 T}
 T{
 "%E"
@@ -2238,6 +2290,13 @@ T}:T{
 Same as "%p", but with escaping undone\&.
 T}
 T{
+"%R"
+T}:T{
+Pretty host name
+T}:T{
+The pretty hostname of the running system at the point in time the unit configuration is loaded, as read from the \fIPRETTY_HOSTNAME=\fR field of /etc/machine\-info\&. If not set, resolves to the short hostname\&. See \fBmachine-info\fR(5) for more information\&.
+T}
+T{
 "%s"
 T}:T{
 User shell
@@ -2310,6 +2369,20 @@ T}:T{
 Operating system variant ID
 T}:T{
 The operating system variant identifier of the running system, as read from the \fIVARIANT_ID=\fR field of /etc/os\-release\&. If not set, resolves to an empty string\&. See \fBos-release\fR(5) for more information\&.
+T}
+T{
+"%y"
+T}:T{
+The path to the fragment
+T}:T{
+This is the path where the main part of the unit file is located\&. For linked unit files, the real path outside of the unit search directories is used\&. For units that don\*(Aqt have a fragment file, this specifier will raise an error\&.
+T}
+T{
+"%Y"
+T}:T{
+The directory of the fragment
+T}:T{
+This is the directory part of "%y"\&.
 T}
 T{
 "%%"

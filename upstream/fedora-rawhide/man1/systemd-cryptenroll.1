@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-CRYPTENROLL" "1" "" "systemd 250" "systemd-cryptenroll"
+.TH "SYSTEMD\-CRYPTENROLL" "1" "" "systemd 251" "systemd-cryptenroll"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -326,7 +326,7 @@ T}:T{
 Secure boot state; changes when UEFI SecureBoot mode is enabled/disabled, or firmware certificates (PK, KEK, db, dbx, \&...) changes\&. The shim project will measure most of its (non\-MOK) certificates and SBAT data into this PCR\&.
 T}
 T{
-8
+12
 T}:T{
 \fBsd-boot\fR(7) measures the kernel command line into this PCR\&.
 T}
@@ -343,6 +343,20 @@ T}
 .TE
 .sp 1
 For most applications it should be sufficient to bind against PCR 7 (and possibly PCR 14, if shim/MOK is desired), as this includes measurements of the trusted certificates (and possibly hashes) that are used to validate all components of the boot process up to and including the OS kernel\&. In order to simplify firmware and OS version updates it\*(Aqs typically not advisable to include PCRs such as 0 and 2 in the binding of the enrollment, since the program code they cover should already be protected indirectly through the certificates measured into PCR 7\&. Validation through these certificates is typically preferable over validation through direct measurements as it is less brittle in context of OS/firmware updates: the measurements will change on every update, but code signatures likely will validate against pre\-existing certificates\&.
+.RE
+.PP
+\fB\-\-tpm2\-with\-pin=\fR\fIBOOL\fR
+.RS 4
+When enrolling a TPM2 device, controls whether to require the user to enter a PIN when unlocking the volume in addition to PCR binding, based on TPM2 policy authentication\&. Defaults to
+"no"\&. Despite being called PIN, any character can be used, not just numbers\&.
+.sp
+Note that incorrect PIN entry when unlocking increments the TPM dictionary attack lockout mechanism, and may lock out users for a prolonged time, depending on its configuration\&. The lockout mechanism is a global property of the TPM,
+\fBsystemd\-cryptenroll\fR
+does not control or configure the lockout mechanism\&. You may use tpm2\-tss tools to inspect or configure the dictionary attack lockout, with
+\fBtpm2_getcap\fR(1)
+and
+\fBtpm2_dictionarylockout\fR(1)
+commands, respectively\&.
 .RE
 .PP
 \fB\-\-wipe\-slot=\fR [SLOT...]

@@ -7,6 +7,9 @@ mkfs.xfs \- construct an XFS filesystem
 .B \-b
 .I block_size_options
 ] [
+.B \-c
+.I config_file_options
+] [
 .B \-m
 .I global_metadata_options
 ] [
@@ -121,6 +124,10 @@ If the size of the block or sector is not specified, the default sizes
 .PP
 Many feature options allow an optional argument of 0 or 1, to explicitly
 disable or enable the functionality.
+
+The correctness of the crc32c checksum implementation will be tested
+before formatting the filesystem.
+If the test fails, the format will abort.
 .SH OPTIONS
 Options may be specified either on the command line or in a configuration file.
 Not all command line options can be specified in configuration files; only the
@@ -155,6 +162,7 @@ The configuration options will be sourced from the file specified by the
 option string.
 This option can be use either an absolute or relative path to the configuration
 file to be read.
+Sample configuration files can be found in /usr/share/xfsprogs/mkfs.
 .RE
 .PP
 .PD 0
@@ -568,22 +576,15 @@ can be allocated to inodes. The default
 is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
 for filesystems over 50TB.
 .IP
-In the default inode allocation mode, inode blocks are chosen such
-that inode numbers will not exceed 32 bits, which restricts the inode
-blocks to the lower portion of the filesystem. The data block
-allocator will avoid these low blocks to accommodate the specified
-maxpct, so a high value may result in a filesystem with nothing but
-inodes in a significant portion of the lower blocks of the filesystem.
-(This restriction is not present when the filesystem is mounted with
-the
-.I "inode64"
-option on 64-bit platforms).
-.IP
 Setting the value to 0 means that essentially all of the filesystem
-can become inode blocks, subject to inode32 restrictions.
+can become inode blocks (subject to possible
+.B inode32
+mount option restrictions, see
+.BR xfs (5)
+for details.)
 .IP
 This value can be modified with
-.IR xfs_growfs(8) .
+.BR xfs_growfs (8).
 .TP
 .BI align[= value ]
 This is used to specify that inode allocation is or is not aligned. The

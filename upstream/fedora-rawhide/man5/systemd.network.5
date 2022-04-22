@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 250" "systemd.network"
+.TH "SYSTEMD\&.NETWORK" "5" "" "systemd 251" "systemd.network"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -173,6 +173,21 @@ attribute, or
 "ARPHRD_"
 macros in
 linux/if_arp\&.h, so this is not comprehensive\&.
+.RE
+.PP
+\fIKind=\fR
+.RS 4
+A whitespace\-separated list of shell\-style globs matching the device kind, as exposed by
+\fBnetworkctl status \fR\fB\fIINTERFACE\fR\fR
+or
+\fBip \-d link show \fR\fB\fIINTERFACE\fR\fR\&. If the list is prefixed with a "!", the test is inverted\&. Some valid values are
+"bond",
+"bridge",
+"gre",
+"tun",
+"veth"\&. Valid kinds are given by netlink\*(Aqs
+"IFLA_INFO_KIND"
+attribute, so this is not comprehensive\&.
 .RE
 .PP
 \fIProperty=\fR
@@ -961,9 +976,9 @@ setting and the [IPv6SendRA], [IPv6Prefix], [IPv6RoutePrefix], and [DHCPPrefixDe
 .PP
 \fIDHCPPrefixDelegation=\fR
 .RS 4
-Takes a boolean value\&. When enabled, requests subnet prefixes acquired by a DHCPv6 client, or by a DHCPv4 client through the 6RD option configured on another link\&. By default, an address within each delegated prefix will be assigned, and the prefixes will be announced through IPv6 Router Advertisement when
+Takes a boolean value\&. When enabled, requests subnet prefixes on another link via the DHCPv6 protocol or via the 6RD option in the DHCPv4 protocol\&. An address within each delegated prefix will be assigned, and the prefixes will be announced through IPv6 Router Advertisement if
 \fIIPv6SendRA=\fR
-is enabled\&. Such default settings can be configured in the [DHCPPrefixDelegation] section\&. Defaults to disabled\&.
+is enabled\&. This behaviour can be configured in the [DHCPPrefixDelegation] section\&. Defaults to disabled\&.
 .RE
 .PP
 \fIIPv6MTUBytes=\fR
@@ -988,9 +1003,9 @@ The name of the B\&.A\&.T\&.M\&.A\&.N\&. Advanced, bond, bridge, or VRF interfac
 \fBsystemd.netdev\fR(5)\&.
 .RE
 .PP
-\fIIPoIB=\fR, \fIIPVLAN=\fR, \fIIPVTAP=\fR, \fIL2TP=\fR, \fIMACsec=\fR, \fIMACVLAN=\fR, \fIMACVTAP=\fR, \fITunnel=\fR, \fIVLAN=\fR, \fIVXLAN=\fR, \fIXfrm=\fR
+\fIIPoIB=\fR, \fIIPVLAN=\fR, \fIIPVTAP=\fR, \fIMACsec=\fR, \fIMACVLAN=\fR, \fIMACVTAP=\fR, \fITunnel=\fR, \fIVLAN=\fR, \fIVXLAN=\fR, \fIXfrm=\fR
 .RS 4
-The name of an IPoIB, IPVLAN, IPVTAP, L2TP, MACsec, MACVLAN, MACVTAP, tunnel, VLAN, VXLAN, or Xfrm to be created on the link\&. See
+The name of an IPoIB, IPVLAN, IPVTAP, MACsec, MACVLAN, MACVTAP, tunnel, VLAN, VXLAN, or Xfrm to be created on the link\&. See
 \fBsystemd.netdev\fR(5)\&. This option may be specified more than once\&.
 .RE
 .PP
@@ -1055,7 +1070,14 @@ implies
 "dhcp"
 and
 "static"\&. Defaults to
-"no"\&.
+"dhcp\-on\-stop"
+when
+\fBsystemd\-networkd\fR
+is running in initrd,
+"yes"
+when the root filesystem is a network filesystem, and
+"no"
+otherwise\&.
 .RE
 .SH "[ADDRESS] SECTION OPTIONS"
 .PP
@@ -1134,7 +1156,12 @@ Takes one of
 \m[blue]\fBRFC 5227\fR\m[]\&\s-2\u[10]\d\s+2\&. When
 "ipv6", performs IPv6 Duplicate Address Detection\&. See
 \m[blue]\fBRFC 4862\fR\m[]\&\s-2\u[11]\d\s+2\&. Defaults to
-"ipv6"\&.
+"ipv4"
+for IPv4 link\-local addresses,
+"ipv6"
+for IPv6 addresses, and
+"none"
+otherwise\&.
 .RE
 .PP
 \fIManageTemporaryAddress=\fR
@@ -1498,8 +1525,10 @@ if
 \fIType=\fR
 is
 "broadcast",
-"multicast", or
-"anycast"\&. In other cases, defaults to
+"multicast",
+"anycast", or direct
+"unicast"
+routes\&. In other cases, defaults to
 "global"\&. The value is not used for IPv6\&.
 .RE
 .PP
@@ -2311,13 +2340,19 @@ and
 takes a boolean\&. Configures whether the DHCP leases handed out to clients shall contain DNS server information\&. Defaults to
 "yes"\&. The DNS servers to pass to clients may be configured with the
 \fIDNS=\fR
-option, which takes a list of IPv4 addresses\&. If the
+option, which takes a list of IPv4 addresses, or special value
+"_server_address"
+which will be converted to the address used by the DHCP server\&.
+.sp
+If the
 \fIEmitDNS=\fR
 option is enabled but no servers configured, the servers are automatically propagated from an "uplink" interface that has appropriate servers set\&. The "uplink" interface is determined by the default route of the system with the highest priority\&. Note that this information is acquired at the time the lease is handed out, and does not take uplink interfaces into account that acquire DNS server information at a later point\&. If no suitable uplink interface is found the DNS server data from
 /etc/resolv\&.conf
 is used\&. Also, note that the leases are not refreshed if the uplink network configuration changes\&. To ensure clients regularly acquire the most current uplink DNS server information, it is thus advisable to shorten the DHCP lease time via
 \fIMaxLeaseTimeSec=\fR
 described above\&.
+.sp
+This setting can be specified multiple times\&. If an empty string is specified, then all DNS servers specified earlier are cleared\&.
 .RE
 .PP
 \fIEmitNTP=\fR, \fINTP=\fR, \fIEmitSIP=\fR, \fISIP=\fR, \fIEmitPOP3=\fR, \fIPOP3=\fR, \fIEmitSMTP=\fR, \fISMTP=\fR, \fIEmitLPR=\fR, \fILPR=\fR
@@ -2364,6 +2399,35 @@ or
 symlink\&.
 .RE
 .PP
+\fIBootServerAddress=\fR
+.RS 4
+Takes an IPv4 address of the boot server used by e\&.g\&. PXE boot systems\&. When specified, this address is sent in the
+\fBsiaddr\fR
+field of the DHCP message header\&. See
+\m[blue]\fBRFC 2131\fR\m[]\&\s-2\u[22]\d\s+2
+for more details\&. Defaults to unset\&.
+.RE
+.PP
+\fIBootServerName=\fR
+.RS 4
+Takes a name of the boot server used by e\&.g\&. PXE boot systems\&. When specified, this name is sent in the DHCP option 66 ("TFTP server name")\&. See
+\m[blue]\fBRFC 2132\fR\m[]\&\s-2\u[23]\d\s+2
+for more details\&. Defaults to unset\&.
+.sp
+Note that typically setting one of
+\fIBootServerName=\fR
+or
+\fIBootServerAddress=\fR
+is sufficient, but both can be set too, if desired\&.
+.RE
+.PP
+\fIBootFilename=\fR
+.RS 4
+Takes a path or URL to a file loaded by e\&.g\&. a PXE boot loader\&. When specified, this path is sent in the DHCP option 67 ("Bootfile name")\&. See
+\m[blue]\fBRFC 2132\fR\m[]\&\s-2\u[23]\d\s+2
+for more details\&. Defaults to unset\&.
+.RE
+.PP
 \fISendOption=\fR
 .RS 4
 Send a raw option with value via DHCPv4 server\&. Takes a DHCP option number, data type and data ("\fIoption\fR:\fItype\fR:\fIvalue\fR")\&. The option number is an integer in the range 1\&...254\&. The type takes one of
@@ -2401,7 +2465,7 @@ is used (see below), in which case it defaults to
 .RS 4
 Takes an IPv4 address, which must be in the format described in
 \fBinet_pton\fR(3)\&. Turns this DHCP server into a DHCP relay agent\&. See
-\m[blue]\fBRFC 1542\fR\m[]\&\s-2\u[22]\d\s+2\&. The address is the address of DHCP server or another relay agent to forward DHCP messages to and from\&.
+\m[blue]\fBRFC 1542\fR\m[]\&\s-2\u[24]\d\s+2\&. The address is the address of DHCP server or another relay agent to forward DHCP messages to and from\&.
 .RE
 .PP
 \fIRelayAgentCircuitId=\fR
@@ -2540,7 +2604,7 @@ and search domains listed in
 .SH "[IPV6PREFIX] SECTION OPTIONS"
 .PP
 One or more [IPv6Prefix] sections contain the IPv6 prefixes that are announced via Router Advertisements\&. See
-\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[23]\d\s+2
+\m[blue]\fBRFC 4861\fR\m[]\&\s-2\u[25]\d\s+2
 for further details\&.
 .PP
 \fIAddressAutoconfiguration=\fR, \fIOnLink=\fR
@@ -2637,6 +2701,11 @@ Takes a boolean\&. Configures whether MAC address learning is enabled for this p
 \fIHairPin=\fR
 .RS 4
 Takes a boolean\&. Configures whether traffic may be sent back out of the port on which it was received\&. When this flag is false, then the bridge will not forward traffic back out of the receiving port\&. When unset, the kernel\*(Aqs default will be used\&.
+.RE
+.PP
+\fIIsolated=\fR
+.RS 4
+Takes a boolean\&. Configures whether this port is isolated or not\&. Within a bridge, isolated ports can only communicate with non\-isolated ports\&. When set to true, this port can only communicate with other ports whose Isolated setting is false\&. When set to false, this port can communicate with any other ports\&. When unset, the kernel\*(Aqs default will be used\&.
 .RE
 .PP
 \fIUseBPDU=\fR
@@ -3279,7 +3348,7 @@ The flow isolation is disabled, and all traffic passes through a single queue\&.
 .PP
 \fBsrc\-host\fR
 .RS 4
-Flows are defined only by source address\&. Equivalnet to the
+Flows are defined only by source address\&. Equivalent to the
 "srchost"
 option for
 \fBtc qdisc\fR
@@ -3289,8 +3358,8 @@ command\&. See also
 .PP
 \fBdst\-host\fR
 .RS 4
-Flows are defined only by destination address\&. Equivalnet to the
-"srchost"
+Flows are defined only by destination address\&. Equivalent to the
+"dsthost"
 option for
 \fBtc qdisc\fR
 command\&. See also
@@ -3317,7 +3386,7 @@ command\&. See also
 .RS 4
 Flows are defined by the 5\-tuple (see
 "flows"
-in the above), and fairness is applied first over source addresses, then over individual flows\&. Equivalnet to the
+in the above), and fairness is applied first over source addresses, then over individual flows\&. Equivalent to the
 "dual\-srchost"
 option for
 \fBtc qdisc\fR
@@ -3329,7 +3398,7 @@ command\&. See also
 .RS 4
 Flows are defined by the 5\-tuple (see
 "flows"
-in the above), and fairness is applied first over destination addresses, then over individual flows\&. Equivalnet to the
+in the above), and fairness is applied first over destination addresses, then over individual flows\&. Equivalent to the
 "dual\-dsthost"
 option for
 \fBtc qdisc\fR
@@ -3340,7 +3409,7 @@ command\&. See also
 \fBtriple\fR
 .RS 4
 Flows are defined by the 5\-tuple (see
-"flows"), and fairness is applied over source and destination addresses, and also over individual flows\&. Equivalnet to the
+"flows"), and fairness is applied over source and destination addresses, and also over individual flows\&. Equivalent to the
 "triple\-isolate"
 option for
 \fBtc qdisc\fR
@@ -3949,18 +4018,35 @@ This will enable DHCPv4 and DHCPv6 on all interfaces with names starting with
 "en"
 (i\&.e\&. ethernet interfaces)\&.
 .PP
-\fBExample\ \&3.\ \&IPv6 Prefix Delegation\fR
+\fBExample\ \&3.\ \&IPv6 Prefix Delegation (DHCPv6 PD)\fR
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-# /etc/systemd/network/55\-ipv6\-pd\-upstream\&.network
+# /etc/systemd/network/55\-dhcpv6\-pd\-upstream\&.network
 [Match]
 Name=enp1s0
 
 [Network]
 DHCP=ipv6
+
+# The below setting is optional, to also assign an address in the delegated prefix
+# to the upstream interface\&. If not necessary, then comment out the line below and
+# the [DHCPPrefixDelegation] section\&.
+DHCPPrefixDelegation=yes
+
+# If the upstream network provides Router Advertisement with Managed bit set,
+# then comment out the line below and WithoutRA= setting in the [DHCPv6] section\&.
+IPv6AcceptRA=no
+
+[DHCPv6]
+WithoutRA=solicit
+
+[DHCPPrefixDelegation]
+UplinkInterface=:self
+SubnetId=0
+Announce=no
 .fi
 .if n \{\
 .RE
@@ -3970,13 +4056,22 @@ DHCP=ipv6
 .RS 4
 .\}
 .nf
-# /etc/systemd/network/56\-ipv6\-pd\-downstream\&.network
+# /etc/systemd/network/55\-dhcpv6\-pd\-downstream\&.network
 [Match]
 Name=enp2s0
 
 [Network]
-IPv6SendRA=yes
 DHCPPrefixDelegation=yes
+IPv6SendRA=yes
+
+# It is expected that the host is acting as a router\&. So, usually it is not
+# necessary to receive Router Advertisement from other hosts in the downstream network\&.
+IPv6AcceptRA=no
+
+[DHCPPrefixDelegation]
+UplinkInterface=enp1s0
+SubnetId=1
+Announce=yes
 .fi
 .if n \{\
 .RE
@@ -3984,7 +4079,58 @@ DHCPPrefixDelegation=yes
 .PP
 This will enable DHCPv6\-PD on the interface enp1s0 as an upstream interface where the DHCPv6 client is running and enp2s0 as a downstream interface where the prefix is delegated to\&. The delegated prefixes are distributed by IPv6 Router Advertisement on the downstream network\&.
 .PP
-\fBExample\ \&4.\ \&A bridge with two enslaved links\fR
+\fBExample\ \&4.\ \&IPv6 Prefix Delegation (DHCPv4 6RD)\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/55\-dhcpv4\-6rd\-upstream\&.network
+[Match]
+Name=enp1s0
+
+[Network]
+DHCP=ipv4
+
+# When DHCPv4\-6RD is used, the upstream network does not support IPv6\&.
+# Hence, it is not necessary to wait for Router Advertisement, which is enabled by default\&.
+IPv6AcceptRA=no
+
+[DHCPv4]
+Use6RD=yes
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# /etc/systemd/network/55\-dhcpv4\-6rd\-downstream\&.network
+[Match]
+Name=enp2s0
+
+[Network]
+DHCPPrefixDelegation=yes
+IPv6SendRA=yes
+
+# It is expected that the host is acting as a router\&. So, usually it is not
+# necessary to receive Router Advertisement from other hosts in the downstream network\&.
+IPv6AcceptRA=no
+
+[DHCPPrefixDelegation]
+UplinkInterface=enp1s0
+SubnetId=1
+Announce=yes
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This will enable DHCPv4\-6RD on the interface enp1s0 as an upstream interface where the DHCPv4 client is running and enp2s0 as a downstream interface where the prefix is delegated to\&. The delegated prefixes are distributed by IPv6 Router Advertisement on the downstream network\&.
+.PP
+\fBExample\ \&5.\ \&A bridge with two enslaved links\fR
 .sp
 .if n \{\
 .RS 4
@@ -4039,7 +4185,7 @@ and
 "wlp3s0"
 to it\&. The bridge will have the specified static address and network assigned, and a default route via the specified gateway will be added\&. The specified DNS server will be added to the global list of DNS resolvers\&.
 .PP
-\fBExample\ \&5.\ \&Bridge port with VLAN forwarding\fR
+\fBExample\ \&6.\ \&Bridge port with VLAN forwarding\fR
 .sp
 .if n \{\
 .RS 4
@@ -4070,7 +4216,7 @@ EgressUntagged=300\-400
 This overrides the configuration specified in the previous example for the interface
 "enp2s0", and enables VLAN on that bridge port\&. VLAN IDs 1\-32, 42, 100\-400 will be allowed\&. Packets tagged with VLAN IDs 42, 300\-400 will be untagged when they leave on this interface\&. Untagged packets which arrive on this interface will be assigned VLAN ID 42\&.
 .PP
-\fBExample\ \&6.\ \&Various tunnels\fR
+\fBExample\ \&7.\ \&Various tunnels\fR
 .sp
 .if n \{\
 .RS 4
@@ -4151,7 +4297,7 @@ This will bring interface
 "ens1"
 up and create an IPIP tunnel, a SIT tunnel, a GRE tunnel, and a VTI tunnel using it\&.
 .PP
-\fBExample\ \&7.\ \&A bond device\fR
+\fBExample\ \&8.\ \&A bond device\fR
 .sp
 .if n \{\
 .RS 4
@@ -4215,7 +4361,7 @@ This will create a bond device
 "bond1"
 and enslave the two devices with MAC addresses 52:54:00:e9:64:41 and 52:54:00:e9:64:42 to it\&. IPv6 DHCP will be used to acquire an address\&.
 .PP
-\fBExample\ \&8.\ \&Virtual Routing and Forwarding (VRF)\fR
+\fBExample\ \&9.\ \&Virtual Routing and Forwarding (VRF)\fR
 .PP
 Add the
 "bond1"
@@ -4237,7 +4383,7 @@ VRF=vrf1
 .RE
 .\}
 .PP
-\fBExample\ \&9.\ \&MacVTap\fR
+\fBExample\ \&10.\ \&MacVTap\fR
 .PP
 This brings up a network interface
 "macvtap\-test"
@@ -4259,7 +4405,7 @@ MACVTAP=macvtap\-test
 .RE
 .\}
 .PP
-\fBExample\ \&10.\ \&A Xfrm interface with physical underlying device\&.\fR
+\fBExample\ \&11.\ \&A Xfrm interface with physical underlying device\&.\fR
 .sp
 .if n \{\
 .RS 4
@@ -4415,11 +4561,21 @@ RFC 7217
 \%https://tools.ietf.org/html/rfc7217
 .RE
 .IP "22." 4
+RFC 2131
+.RS 4
+\%https://www.rfc-editor.org/rfc/rfc2131.html
+.RE
+.IP "23." 4
+RFC 2132
+.RS 4
+\%https://www.rfc-editor.org/rfc/rfc2132.html
+.RE
+.IP "24." 4
 RFC 1542
 .RS 4
 \%https://tools.ietf.org/html/rfc1542
 .RE
-.IP "23." 4
+.IP "25." 4
 RFC 4861
 .RS 4
 \%https://tools.ietf.org/html/rfc4861

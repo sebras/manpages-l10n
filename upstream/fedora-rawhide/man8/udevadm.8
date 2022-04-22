@@ -1,5 +1,5 @@
 '\" t
-.TH "UDEVADM" "8" "" "systemd 250" "udevadm"
+.TH "UDEVADM" "8" "" "systemd 251" "udevadm"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -252,10 +252,11 @@ Suppress error logging in triggering events\&.
 .PP
 \fB\-t\fR, \fB\-\-type=\fR\fB\fITYPE\fR\fR
 .RS 4
-Trigger a specific type of devices\&. Valid types are:
-\fBdevices\fR,
-\fBsubsystems\fR\&. The default value is
-\fBdevices\fR\&.
+Trigger a specific type of devices\&. Valid types are
+"all",
+"devices", and
+"subsystems"\&. The default value is
+"devices"\&.
 .RE
 .PP
 \fB\-c\fR, \fB\-\-action=\fR\fB\fIACTION\fR\fR
@@ -272,6 +273,15 @@ Type of event to be triggered\&. Possible actions are
 "help"
 can be used to list the possible actions\&. The default value is
 "change"\&.
+.RE
+.PP
+\fB\-\-prioritized\-subsystem=\fR\fB\fISUBSYSTEM\fR\fI[,\fISUBSYSTEM\fR\&...]\fR\fR
+.RS 4
+Takes a comma separated list of subsystems\&. When triggering events for devices, the devices from the specified subsystems and their parents are triggered first\&. For example, if
+\fB\-\-prioritized\-subsystem=block,net\fR, then firstly all block devices and their parents are triggered, in the next all network devices and their parents are triggered, and lastly the other devices are triggered\&. This option can be specified multiple times, and in that case the lists of the subsystems will be merged\&. That is,
+\fB\-\-prioritized\-subsystem=block \-\-prioritized\-subsystem=net\fR
+is equivalent to
+\fB\-\-prioritized\-subsystem=block,net\fR\&.
 .RE
 .PP
 \fB\-s\fR, \fB\-\-subsystem\-match=\fR\fB\fISUBSYSTEM\fR\fR
@@ -322,6 +332,36 @@ Trigger events for devices with a matching device path\&. When this option is sp
 \fB\-b\fR, \fB\-\-parent\-match=\fR\fB\fISYSPATH\fR\fR
 .RS 4
 Trigger events for all children of a given device\&. When this option is specified more than once, then each matching result is ORed, that is, all children of each specified device are triggered\&.
+.RE
+.PP
+\fB\-\-initialized\-match\fR, \fB\-\-initialized\-nomatch\fR
+.RS 4
+When
+\fB\-\-initialized\-match\fR
+is specified, trigger events for devices that are already initialized by
+\fBsystemd\-udevd\fR, and skip devices that are not initialized yet\&.
+.sp
+When
+\fB\-\-initialized\-nomatch\fR
+is specified, trigger events for devices that are not initialized by
+\fBsystemd\-udevd\fR
+yet, and skip devices that are already initialized\&.
+.sp
+Here, initialized devices are those for which at least one udev rule already completed execution \(en for any action but
+"remove"
+\(em that set a property or other device setting (and thus has an entry in the udev device database)\&. Devices are no longer considered initialized if a
+"remove"
+action is seen for them (which removes their entry in the udev device database)\&. Note that devices that have no udev rules are never considered initialized, but might still be announced via the sd\-device API (or similar)\&. Typically, it is thus essential that applications which intend to use such a match, make sure a suitable udev rule is installed that sets at least one property on devices that shall be matched\&.
+.sp
+WARNING:
+\fB\-\-initialized\-nomatch\fR
+can potentially save a significant amount of time compared to re\-triggering all devices in the system and e\&.g\&. can be used to optimize boot time\&. However, this is not safe to be used in a boot sequence in general\&. Especially, when udev rules for a device depend on its parent devices (e\&.g\&.
+"ATTRS"
+or
+"IMPORT{parent}"
+keys, see
+\fBudev\fR(7)
+for more details), the final state of the device becomes easily unstable with this option\&.
 .RE
 .PP
 \fB\-w\fR, \fB\-\-settle\fR
@@ -492,7 +532,7 @@ Filter udev events by tag\&. Only udev events with a given tag attached will pas
 .RS 4
 Print a short help text and exit\&.
 .RE
-.SS "udevadm test [\fIoptions\fR] [\fIdevpath\fR]"
+.SS "udevadm test [\fIoptions\fR] [\fIdevpath\fR|\fIfile\fR|\fIunit\fR]"
 .PP
 Simulate a udev event run for the given device, and print debug output\&.
 .PP
@@ -525,7 +565,7 @@ Specify when udevadm should resolve names of users and groups\&. When set to
 .RS 4
 Print a short help text and exit\&.
 .RE
-.SS "udevadm test\-builtin [\fIoptions\fR] [\fIcommand\fR] [\fIdevpath\fR]"
+.SS "udevadm test\-builtin [\fIoptions\fR] [\fIcommand\fR] [\fIdevpath\fR|\fIfile\fR|\fIunit\fR]"
 .PP
 Run a built\-in command
 \fICOMMAND\fR
