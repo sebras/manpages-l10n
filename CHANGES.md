@@ -1,5 +1,11 @@
 # Changelog for manpages-l10n
 
+## Version 4.14.0
+*Wed May 04 19:51:00 CEST 2022*
+
+* New language: Ukrainian
+* Updated many translations
+
 ## Version 4.13
 *Sun Feb 20 19:45:00 CET 2022*
 
