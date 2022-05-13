@@ -927,6 +927,16 @@ over these per\-process limits, as they apply to services as a whole, may be alt
 is a more powerful (and working) replacement for
 \fILimitRSS=\fR\&.
 .sp
+Note that
+\fILimitNPROC=\fR
+will limit the number of processes from one (real) UID and not the number of processes started (forked) by the service\&. Therefore the limit is cumulative for all processes running under the same UID\&. Please also note that the
+\fILimitNPROC=\fR
+will not be enforced if the service is running as root (and not dropping privileges)\&. Due to these limitations,
+\fITasksMax=\fR
+(see
+\fBsystemd.resource-control\fR(5)) is typically a better choice than
+\fILimitNPROC=\fR\&.
+.sp
 Resource limits not configured explicitly for a unit default to the value configured in the various
 \fIDefaultLimitCPU=\fR,
 \fIDefaultLimitFSIZE=\fR, \&... options available in
@@ -3302,11 +3312,13 @@ for details)\&. This is particularly useful for large data configured with these
 .nf
 \&...
 StandardInput=data
-StandardInputData=SWNrIHNpdHplIGRhIHVuJyBlc3NlIEtsb3BzLAp1ZmYgZWVtYWwga2xvcHAncy4KSWNrIGtpZWtl \e
-                  LCBzdGF1bmUsIHd1bmRyZSBtaXIsCnVmZiBlZW1hbCBqZWh0IHNlIHVmZiBkaWUgVMO8ci4KTmFu \e
-                  dSwgZGVuayBpY2ssIGljayBkZW5rIG5hbnUhCkpldHogaXNzZSB1ZmYsIGVyc2NodCB3YXIgc2Ug \e
-                  enUhCkljayBqZWhlIHJhdXMgdW5kIGJsaWNrZSDigJQKdW5kIHdlciBzdGVodCBkcmF1w59lbj8g \e
-                  SWNrZSEK
+StandardInputData=V2XigLJyZSBubyBzdHJhbmdlcnMgdG8gbG92ZQpZb3Uga25vdyB0aGUgcnVsZXMgYW5kIHNvIGRv \e
+                  IEkKQSBmdWxsIGNvbW1pdG1lbnQncyB3aGF0IEnigLJtIHRoaW5raW5nIG9mCllvdSB3b3VsZG4n \e
+                  dCBnZXQgdGhpcyBmcm9tIGFueSBvdGhlciBndXkKSSBqdXN0IHdhbm5hIHRlbGwgeW91IGhvdyBJ \e
+                  J20gZmVlbGluZwpHb3R0YSBtYWtlIHlvdSB1bmRlcnN0YW5kCgpOZXZlciBnb25uYSBnaXZlIHlv \e
+                  dSB1cApOZXZlciBnb25uYSBsZXQgeW91IGRvd24KTmV2ZXIgZ29ubmEgcnVuIGFyb3VuZCBhbmQg \e
+                  ZGVzZXJ0IHlvdQpOZXZlciBnb25uYSBtYWtlIHlvdSBjcnkKTmV2ZXIgZ29ubmEgc2F5IGdvb2Ri \e
+                  eWUKTmV2ZXIgZ29ubmEgdGVsbCBhIGxpZSBhbmQgaHVydCB5b3UK
 \&...
 .fi
 .if n \{\
@@ -3544,23 +3556,40 @@ The
 \fILoadCredential=\fR
 setting takes a textual ID to use as name for a credential plus a file system path, separated by a colon\&. The ID must be a short ASCII string suitable as filename in the filesystem, and may be chosen freely by the user\&. If the specified path is absolute it is opened as regular file and the credential data is read from it\&. If the absolute path refers to an
 \fBAF_UNIX\fR
-stream socket in the file system a connection is made to it (only once at unit start\-up) and the credential data read from the connection, providing an easy IPC integration point for dynamically providing credentials from other services\&. If the specified path is not absolute and itself qualifies as valid credential identifier it is understood to refer to a credential that the service manager itself received via the
-\fI$CREDENTIALS_DIRECTORY\fR
-environment variable, which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
-\fBNUL\fR
-bytes\&. If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way do declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&. Alternatively, if the path is a directory, every file in that directory will be loaded as a separate credential\&. The ID for each credential will be the provided ID suffixed with
+stream socket in the file system a connection is made to it (only once at unit start\-up) and the credential data read from the connection, providing an easy IPC integration point for dynamically transferring credentials from other services\&.
+.sp
+If the specified path is not absolute and itself qualifies as valid credential identifier it is attempted to find a credential that the service manager itself received under the specified name \(em which may be used to propagate credentials from an invoking environment (e\&.g\&. a container manager that invoked the service manager) into a service\&. If no matching system credential is found, the directories
+/etc/credstore/,
+/run/credstore/
+and
+/usr/lib/credstore/
+are searched for files under the credential\*(Aqs name \(em which hence are recommended locations for credential data on disk\&. If
+\fILoadCredentialEncrypted=\fR
+is used
+/run/credstore\&.encrypted/,
+/etc/credstore\&.encrypted/, and
+/usr/lib/credstore\&.encrypted/
+are searched as well\&.
+.sp
+If the file system path is omitted it is chosen identical to the credential name, i\&.e\&. this is a terse way to declare credentials to inherit from the service manager into a service\&. This option may be used multiple times, each time defining an additional credential to pass to the unit\&.
+.sp
+If an absolute path referring to a directory is specified, every file in that directory (recursively) will be loaded as a separate credential\&. The ID for each credential will be the provided ID suffixed with
 "_$FILENAME"
 (e\&.g\&.,
 "Key_file1")\&. When loading from a directory, symlinks will be ignored\&.
 .sp
+The contents of the file/socket may be arbitrary binary or textual data, including newline characters and
+\fBNUL\fR
+bytes\&.
+.sp
 The
 \fILoadCredentialEncrypted=\fR
 setting is identical to
-\fILoadCredential=\fR, except that the credential data is decrypted before being passed on to the executed processes\&. Specifically, the referenced path should refer to a file or socket with an encrypted credential, as implemented by
-\fBsystemd-creds\fR(1)\&. This credential is loaded, decrypted and then passed to the application in decrypted plaintext form, in the same way a regular credential specified via
+\fILoadCredential=\fR, except that the credential data is decrypted and authenticated before being passed on to the executed processes\&. Specifically, the referenced path should refer to a file or socket with an encrypted credential, as implemented by
+\fBsystemd-creds\fR(1)\&. This credential is loaded, decrypted, authenticated and then passed to the application in plaintext form, in the same way a regular credential specified via
 \fILoadCredential=\fR
-would be\&. A credential configured this way may encrypted with a secret key derived from the system\*(Aqs TPM2 security chip, or with a secret key stored in
-/var/lib/systemd/credentials\&.secret, or with both\&. Using encrypted credentials improves security as credentials are not stored in plaintext and only decrypted into plaintext the moment a service requiring them is started\&. Moreover, credentials may be bound to the local hardware and installations, so that they cannot easily be analyzed offline\&.
+would be\&. A credential configured this way may be symmetrically encrypted/authenticated with a secret key derived from the system\*(Aqs TPM2 security chip, or with a secret key stored in
+/var/lib/systemd/credentials\&.secret, or with both\&. Using encrypted and authenticated credentials improves security as credentials are not stored in plaintext and only authenticated and decrypted into plaintext the moment a service requiring them is started\&. Moreover, credentials may be bound to the local hardware and installations, so that they cannot easily be analyzed offline, or be generated externally\&.
 .sp
 The credential files/IPC sockets must be accessible to the service manager, but don\*(Aqt have to be directly accessible to the unit\*(Aqs processes: the credential data is read and copied into separate, read\-only copies for the unit that are accessible to appropriately privileged processes\&. This is particularly useful in combination with
 \fIDynamicUser=\fR
@@ -3570,9 +3599,26 @@ In order to reference the path a credential may be read from within a
 \fIExecStart=\fR
 command line use
 "${CREDENTIALS_DIRECTORY}/mycred", e\&.g\&.
-"ExecStart=cat ${CREDENTIALS_DIRECTORY}/mycred"\&.
+"ExecStart=cat ${CREDENTIALS_DIRECTORY}/mycred"\&. In order to reference the path a credential may be read from within a
+\fIEnvironment=\fR
+line use
+"%d/mycred", e\&.g\&.
+"Environment=MYCREDPATH=%d/mycred"\&.
 .sp
 Currently, an accumulated credential size limit of 1 MB per unit is enforced\&.
+.sp
+The service manager itself may receive system credentials that can be propagated to services from a hosting container manager or VM hypervisor\&. See the
+\m[blue]\fBContainer Interface\fR\m[]\&\s-2\u[14]\d\s+2
+documentation for details about the former\&. For the latter, use the
+\fBqemu\fR
+"fw_cfg"
+node
+"opt/io\&.systemd\&.credentials/"\&. Example qemu switch:
+"\-fw_cfg name=opt/io\&.systemd\&.credentials/mycred,string=supersecret"\&. They may also be specified on the kernel command line using the
+"systemd\&.set_credential="
+switch (see
+\fBsystemd\fR(1)) and from the UEFI firmware environment via
+\fBsystemd-stub\fR(7)\&.
 .sp
 If referencing an
 \fBAF_UNIX\fR
@@ -3594,6 +3640,10 @@ in case the credential
 "credx"
 is requested for a unit
 "foobar\&.service"\&. This functionality is useful for using a single listening socket to serve credentials to multiple consumers\&.
+.sp
+For further information see
+\m[blue]\fBSystem and Service Credentials\fR\m[]\&\s-2\u[15]\d\s+2
+documentation\&.
 .RE
 .PP
 \fISetCredential=\fR\fIID\fR:\fIVALUE\fR, \fISetCredentialEncrypted=\fR\fIID\fR:\fIVALUE\fR
@@ -4277,7 +4327,7 @@ T}
 .sp 1
 .PP
 The following service exit codes are defined by the
-\m[blue]\fBLSB specification\fR\m[]\&\s-2\u[14]\d\s+2\&.
+\m[blue]\fBLSB specification\fR\m[]\&\s-2\u[16]\d\s+2\&.
 .sp
 .it 1 an-trap
 .nr an-no-space-flag 1
@@ -5045,6 +5095,16 @@ Base64
 \%https://tools.ietf.org/html/rfc2045#section-6.8
 .RE
 .IP "14." 4
+Container Interface
+.RS 4
+\%https://systemd.io/CONTAINER_INTERFACE
+.RE
+.IP "15." 4
+System and Service Credentials
+.RS 4
+\%https://systemd.io/CREDENTIALS
+.RE
+.IP "16." 4
 LSB specification
 .RS 4
 \%https://refspecs.linuxbase.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html

@@ -2,12 +2,12 @@
 .\"     Title: smb.conf
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 03/15/2022
+.\"      Date: 05/08/2022
 .\"    Manual: File Formats and Conventions
-.\"    Source: Samba 4.15.6
+.\"    Source: Samba 4.16.1
 .\"  Language: English
 .\"
-.TH "SMB\&.CONF" "5" "03/15/2022" "Samba 4\&.15\&.6" "File Formats and Conventions"
+.TH "SMB\&.CONF" "5" "05/08/2022" "Samba 4\&.16\&.1" "File Formats and Conventions"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -150,7 +150,7 @@ parameter means access will be permitted as the default guest user (specified el
 .\}
 .nf
 	\fI[aprinter]\fR
-	\m[blue]\fBpath = /usr/spool/public\fR\m[]
+	\m[blue]\fBpath = /var/tmp\fR\m[]
 	\m[blue]\fBread only = yes\fR\m[]
 	\m[blue]\fBprintable = yes\fR\m[]
 	\m[blue]\fBguest ok = yes\fR\m[]
@@ -294,7 +294,7 @@ Typically the path specified is that of a world\-writeable spool directory with 
 .\}
 .nf
 \fI[printers]\fR
-\m[blue]\fBpath = /usr/spool/public\fR\m[]
+\m[blue]\fBpath = /var/tmp\fR\m[]
 \m[blue]\fBguest ok = yes\fR\m[]
 \m[blue]\fBprintable = yes\fR\m[]
 .fi
@@ -308,7 +308,7 @@ All aliases given for a printer in the printcap file are legitimate printer name
 .RS 4
 .\}
 .nf
-alias|alias|alias|alias\&.\&.\&.    
+alias|alias|alias|alias\&.\&.\&.
 .fi
 .if n \{\
 .RE
@@ -3094,6 +3094,8 @@ Sometimes the timestamps in the log messages are needed with a resolution of hig
 .sp
 Note that the parameter
 \m[blue]\fBdebug timestamp\fR\m[]
+or
+\m[blue]\fBdebug syslog format\fR\m[]
 must be on for this to have an effect\&.
 .sp
 Default:
@@ -3127,6 +3129,19 @@ parameter\&.
 .sp
 Default:
 \fI\fIdebug prefix timestamp\fR\fR\fI = \fR\fIno\fR\fI \fR
+.RE
+
+debug syslog format (G)
+.PP
+.RS 4
+With this option enabled, debug messages are printed in a single\-line format like that traditionally produced by syslog\&. The timestamp consists of an abbreviated month, space\-padded date, and time including seconds\&. This is followed by the hostname and the program name, with the process\-ID in square brackets\&.
+.sp
+If
+\m[blue]\fBdebug hires timestamp\fR\m[]
+is also enabled then an RFC5424 timestamp is used instead\&.
+.sp
+Default:
+\fI\fIdebug syslog format\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
 debug uid (G)
@@ -3597,13 +3612,13 @@ dns forwarder (G)
 .RS 4
 This option specifies the list of DNS servers that DNS requests will be forwarded to if they can not be handled by Samba itself\&.
 .sp
-The DNS forwarder is only used if the internal DNS server in Samba is used\&.
+The DNS forwarder is only used if the internal DNS server in Samba is used\&. Port numbers can be appended by separating them from the address by using a colon (\*(Aq:\*(Aq)\&. When specifying a port, IPv6 addresses must be enclosed in square brackets (\*(Aq[\*(Aq and \*(Aq]\*(Aq)\&. IPv6 forwarder addresses with no port specified, don\*(Aqt need the square brackets, and default to port 53\&.
 .sp
 Default:
 \fI\fIdns forwarder\fR\fR\fI = \fR\fI\fR\fI \fR
 .sp
 Example:
-\fI\fIdns forwarder\fR\fR\fI = \fR\fI192\&.168\&.0\&.1 192\&.168\&.0\&.2\fR\fI \fR
+\fI\fIdns forwarder\fR\fR\fI = \fR\fI192\&.168\&.0\&.1 192\&.168\&.0\&.2 ::1 [2001:db8::1] [2001:db8:1:2::1]:54 \fR\fI \fR
 .RE
 
 dns proxy (G)
@@ -3628,7 +3643,7 @@ dns update command (G)
 This option sets the command that is called when there are DNS updates\&. It should update the local machines DNS names using TSIG\-GSS\&.
 .sp
 Default:
-\fI\fIdns update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.15\&.6/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
+\fI\fIdns update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.16\&.1/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIdns update command\fR\fR\fI = \fR\fI/usr/local/sbin/dnsupdate\fR\fI \fR
@@ -3968,6 +3983,36 @@ Default:
 .sp
 Example:
 \fI\fIelasticsearch:address\fR\fR\fI = \fR\fIneedle\&.haystack\&.samba\&.org\fR\fI \fR
+.RE
+
+elasticsearch:ignore unknown attribute (G)
+.PP
+.RS 4
+Ignore unknown Spotlight attributes in search queries\&. An example query using the unsupported attribute
+"kMDItemTopic"
+would be
+kMDItemTopic=="hotstuff"\&. By default any query using such a type would completely fail\&. By enabling this option, if the type match is a subexpression of a larger expression, then this subexpression is just ignored\&.
+.sp
+Default:
+\fI\fIelasticsearch:ignore unknown attribute\fR\fR\fI = \fR\fIno\fR\fI \fR
+.sp
+Example:
+\fI\fIelasticsearch:ignore unknown attribute\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
+elasticsearch:ignore unknown type (G)
+.PP
+.RS 4
+Ignore unknown Spotlight types in search queries\&. An example query using the unsupported type
+"public\&.calendar\-event"
+would be
+kMDItemContentType=="public\&.calendar\-event"\&. By default any query using such a type would completely fail\&. By enabling this option, if the type match is a subexpression of a larger expression, then this subexpression is just ignored\&.
+.sp
+Default:
+\fI\fIelasticsearch:ignore unknown type\fR\fR\fI = \fR\fIno\fR\fI \fR
+.sp
+Example:
+\fI\fIelasticsearch:ignore unknown type\fR\fR\fI = \fR\fIyes\fR\fI \fR
 .RE
 
 elasticsearch:index (S)
@@ -4611,7 +4656,7 @@ gpo update command (G)
 This option sets the command that is called to apply GPO policies\&. The samba\-gpupdate script applies System Access and Kerberos Policies to the KDC\&. System Access policies set minPwdAge, maxPwdAge, minPwdLength, and pwdProperties in the samdb\&. Kerberos Policies set kdc:service ticket lifetime, kdc:user ticket lifetime, and kdc:renewal lifetime in smb\&.conf\&.
 .sp
 Default:
-\fI\fIgpo update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.15\&.6/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
+\fI\fIgpo update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.16\&.1/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIgpo update command\fR\fR\fI = \fR\fI/usr/local/sbin/gpoupdate\fR\fI \fR
@@ -5348,6 +5393,17 @@ Example:
 \fI\fIiprint server\fR\fR\fI = \fR\fIMYCUPSSERVER\fR\fI \fR
 .RE
 
+kdc enable fast (G)
+.PP
+.RS 4
+With the Samba 4\&.16 the embedded Heimdal KDC brings support for RFC6113 FAST, which wasn\*(Aqt available in older Samba versions\&.
+.sp
+This option is mostly for testing and currently only applies if the embedded Heimdal KDC is used\&.
+.sp
+Default:
+\fI\fIkdc enable fast\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
 keepalive (G)
 .PP
 .RS 4
@@ -5497,18 +5553,19 @@ Default:
 kernel share modes (S)
 .PP
 .RS 4
-This parameter controls whether SMB share modes are translated into UNIX flocks\&.
+This parameter controls whether SMB share modes are translated into file system specific sharemode calls\&.
 .sp
-Kernel share modes provide a minimal level of interoperability with local UNIX processes and NFS operations by preventing access with flocks corresponding to the SMB share modes\&. Generally, it is very desirable to leave this enabled\&.
+Kernel share modes provide a minimal level of interoperability with local UNIX processes and NFS operations by preventing access corresponding to the SMB share modes\&. This requires a file system specific VFS module with proper support\&.
 .sp
 Note that in order to use SMB2 durable file handles on a share, you have to turn kernel share modes off\&.
 .sp
 This parameter defaults to
+\fBno\fR\&. Setting it to
 \fByes\fR
-and is translated to a no\-op on systems that do not have the necessary kernel flock support\&.
+requires a file system module that supports file system sharemodes, otherwise attempts to access files will fail with a sharing violation\&.
 .sp
 Default:
-\fI\fIkernel share modes\fR\fR\fI = \fR\fIyes\fR\fI \fR
+\fI\fIkernel share modes\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
 kpasswd port (G)
@@ -6049,14 +6106,7 @@ can be set to one of two values:
 .RE
 Please note that this parameter does only affect
 \fIrpc\fR
-methods\&. To enable the LDAPv3 StartTLS extended operation (RFC2830) for
-\fIads\fR, set
-\m[blue]\fBldap ssl = start tls\fR\m[]
-\fIand\fR
-\m[blue]\fBldap ssl ads = yes\fR\m[]\&. See
-smb\&.conf(5)
-for more information on
-\m[blue]\fBldap ssl ads\fR\m[]\&.
+methods\&.
 .sp
 Default:
 \fI\fIldap ssl\fR\fR\fI = \fR\fIstart tls\fR\fI \fR
@@ -10332,328 +10382,6 @@ Default:
 \fI\fIrpc big endian\fR\fR\fI = \fR\fIno\fR\fI \fR
 .RE
 
-rpc_daemon:DAEMON (G)
-.PP
-.RS 4
-Defines whether to use the embedded code or start a separate daemon for the defined rpc services\&. The rpc_daemon prefix must be followed by the server name, and a value\&.
-.sp
-Two possible values are currently supported:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-		disabled
-		fork
-	
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-The classic method is to run rpc services as internal daemons embedded in smbd, therefore the external daemons are
-\fIdisabled\fR
-by default\&.
-.sp
-Choosing the
-\fIfork\fR
-option will cause samba to fork a separate process for each daemon configured this way\&. Each daemon may in turn fork a number of children used to handle requests from multiple smbds and direct tcp/ip connections (if the Endpoint Mapper is enabled)\&. Communication with smbd happens over named pipes and require that said pipes are forward to the external daemon (see
-\m[blue]\fBrpc_server\fR\m[])\&.
-.sp
-Forked RPC Daemons support dynamically forking children to handle connections\&. The heuristics about how many children to keep around and how fast to allow them to fork and also how many clients each child is allowed to handle concurrently is defined by parametrical options named after the daemon\&. Five options are currently supported:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-		prefork_min_children
-		prefork_max_children
-		prefork_spawn_rate
-		prefork_max_allowed_clients
-		prefork_child_min_life
-	
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-To set one of these options use the following syntax:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-	daemonname:prefork_min_children = 5
-	
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Samba includes separate daemons for spoolss, lsarpc/lsass, netlogon, samr, FSRVP and mdssvc(Spotlight)\&. Currently five daemons are available and they are called:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-		epmd
-		lsasd
-		spoolssd
-		fssd
-		mdssd
-	
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Example:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-	rpc_daemon:spoolssd = fork
-	
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Default:
-\fI\fIrpc_daemon:DAEMON\fR\fR\fI = \fR\fIdisabled\fR\fI \fR
-.RE
-
-rpc_server:SERVER (G)
-.PP
-.RS 4
-With this option you can define if a rpc service should be running internal/embedded in smbd or should be redirected to an external daemon like Samba4, the endpoint mapper daemon, the spoolss daemon or the new LSA service daemon\&. The rpc_server prefix must be followed by the pipe name, and a value\&.
-.sp
-This option can be set for each available rpc service in Samba\&. The following list shows all available pipe names services you can modify with this option\&.
-.RS
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-epmapper \- Endpoint Mapper
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-winreg \- Remote Registry Service
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-srvsvc \- Remote Server Services
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-lsarpc \- Local Security Authority
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-samr \- Security Account Management
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-netlogon \- Netlogon Remote Protocol
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-netdfs \- Settings for Distributed File System
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-dssetup \- Active Directory Setup
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-wkssvc \- Workstation Services
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-spoolss \- Network Printing Spooler
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-svcctl \- Service Control
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-ntsvcs \- Plug and Play Services
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-eventlog \- Event Logger
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-initshutdown \- Init Shutdown Service
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-mdssvc \- Spotlight
-.RE
-.sp
-.RE
-Three possible values currently supported are:
-embedded
-external
-disabled
-.sp
-The classic method is to run every pipe as an internal function
-\fIembedded\fR
-in smbd\&. The defaults may vary depending on the service\&.
-.sp
-Choosing the
-\fIexternal\fR
-option allows one to run a separate daemon or even a completely independent (3rd party) server capable of interfacing with samba via the MS\-RPC interface over named pipes\&.
-.sp
-Currently in Samba3 we support four daemons, spoolssd, epmd, lsasd and mdssd\&. These daemons can be enabled using the
-\fIrpc_daemon\fR
-option\&. For spoolssd you have to enable the daemon and proxy the named pipe with:
-.sp
-Examples:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-			rpc_daemon:lsasd = fork
-			rpc_server:lsarpc = external
-			rpc_server:samr = external
-			rpc_server:netlogon = external
-
-			rpc_server:spoolss = external
-			rpc_server:epmapper = disabled
-
-			rpc_daemon:mdssd = fork
-			rpc_server:mdssvc = external
-		
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-There is one special option which allows you to enable rpc services to listen for ncacn_ip_tcp connections too\&. Currently this is only used for testing and doesn\*(Aqt scale!
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-			rpc_server:tcpip = yes
-		
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Default:
-\fI\fIrpc_server:SERVER\fR\fR\fI = \fR\fIembedded\fR\fI \fR
-.RE
-
 rpc server dynamic port range (G)
 .PP
 .RS 4
@@ -10691,6 +10419,28 @@ Default:
 \fI\fIrpc server port\fR\fR\fI = \fR\fI0\fR\fI \fR
 .RE
 
+rpc start on demand helpers (G)
+.PP
+.RS 4
+This global parameter determines if
+samba\-dcerpcd
+should be started on demand to service named pipe (np) DCE\-RPC requests from
+smbd
+or
+winbindd\&. This is the normal case where no startup scripts have been modified to start
+samba\-dcerpcd
+as a daemon\&.
+.sp
+If
+samba\-dcerpcd
+is started as a daemon or via a system service manager such as systemd, this parameter MUST be set to "no", otherwise
+samba\-dcerpcd
+will fail to start\&.
+.sp
+Default:
+\fI\fIrpc start on demand helpers\fR\fR\fI = \fR\fIyes\fR\fI \fR
+.RE
+
 samba kcc command (G)
 .PP
 .RS 4
@@ -10701,7 +10451,7 @@ samba_kcc
 was installed in a non\-default location\&.
 .sp
 Default:
-\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.15\&.6/source4/scripting/bin/samba_kcc\fR\fI \fR
+\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.16\&.1/source4/scripting/bin/samba_kcc\fR\fI \fR
 .sp
 Example:
 \fI\fIsamba kcc command\fR\fR\fI = \fR\fI/usr/local/bin/kcc\fR\fI \fR
@@ -12378,7 +12128,7 @@ This option sets the command that for updating servicePrincipalName names from
 spn_update_list\&.
 .sp
 Default:
-\fI\fIspn update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.15\&.6/source4/scripting/bin/samba_spnupdate\fR\fI \fR
+\fI\fIspn update command\fR\fR\fI = \fR\fI/home/iurt/rpmbuild/BUILD/samba\-4\&.16\&.1/source4/scripting/bin/samba_spnupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIspn update command\fR\fR\fI = \fR\fI/usr/local/sbin/spnupdate\fR\fI \fR
@@ -12486,52 +12236,12 @@ Samba must be configured and built with Spotlight support\&.
 .sp -1
 .IP \(bu 2.3
 .\}
-The
-\fImdssvc\fR
-RPC service must be enabled, see below\&.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
 Tracker integration must be setup and the share must be indexed by Tracker\&.
 .RE
 .sp
 .RE
 For a detailed set of instructions please see
 https://wiki\&.samba\&.org/index\&.php/Spotlight\&.
-.sp
-The Spotlight RPC service can either be enabled as embedded RPC service:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-\fI[Global]\fR
-\m[blue]\fBrpc_server:mdsvc = embedded\fR\m[]
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-Or it can be run in a separate RPC service daemon:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-\fI[Global]\fR
-\m[blue]\fBrpc_server:mdssd = fork\fR\m[]
-\m[blue]\fBrpc_server:mdsvc = external\fR\m[]
-.fi
-.if n \{\
-.RE
-.\}
 .sp
 Default:
 \fI\fIspotlight\fR\fR\fI = \fR\fIno\fR\fI \fR
@@ -13244,7 +12954,7 @@ username map script (G)
 .RS 4
 This script is a mutually exclusive alternative to the
 \m[blue]\fBusername map\fR\m[]
-parameter\&. This parameter specifies and external program or script that must accept a single command line option (the username transmitted in the authentication request) and return a line on standard output (the name to which the account should mapped)\&. In this way, it is possible to store username map tables in an LDAP directory services\&.
+parameter\&. This parameter specifies an external program or script that must accept a single command line option (the username transmitted in the authentication request) and return a line on standard output (the name to which the account should mapped)\&. In this way, it is possible to store username map tables in an LDAP directory services\&.
 .sp
 Default:
 \fI\fIusername map script\fR\fR\fI = \fR\fI\fR\fI \fR
@@ -14250,7 +13960,7 @@ and
 special sections make life for an administrator easy, but the various combinations of default attributes can be tricky\&. Take extreme care when designing these sections\&. In particular, ensure that the permissions on spool directories are correct\&.
 .SH "VERSION"
 .PP
-This man page is part of version 4\&.15\&.6 of the Samba suite\&.
+This man page is part of version 4\&.16\&.1 of the Samba suite\&.
 .SH "SEE ALSO"
 .PP
 \fBsamba\fR(7),
