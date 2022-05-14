@@ -494,4 +494,5 @@ of Linux manpages. The list is sorted alphabetically.
 * Andriy Rysin <arysin@gmail.com>
 * lxlalexlxl <lxlalexlxl@ukr.net>
 * Olex Denkin <ks_alexandr@ukr.net>
+* Sergey Poznyakoff <gray@gnu.org>
 * Yuri Chornoivan <yurchor@ukr.net>
