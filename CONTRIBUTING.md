@@ -112,7 +112,8 @@ contact [Mario Blättermann](mailto:mario.blaettermann@gmail.com) to get it into
 manpages-l10n. Besides the .po file creation, the script creates - if needed - a
 template and updates the compendium templates in templates/common/ and the compendium
 files for your language in po/*your_language_code*/common. The script never affects
-other languages than your own.
+other languages than your own. Note: Remember to run `git add <file>`
+after you have created and/or updated the new file before you make the `git push` command.
 
 
 ### Fill and use the compendium
