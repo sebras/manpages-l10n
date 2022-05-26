@@ -23,7 +23,7 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PTHREAD_MUTEXATTR_SETROBUST 3 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_MUTEXATTR_SETROBUST 3 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pthread_mutexattr_getrobust, pthread_mutexattr_setrobust
 \- get and set the robustness attribute of a mutex attributes object
@@ -33,7 +33,7 @@ pthread_mutexattr_getrobust, pthread_mutexattr_setrobust
 .PP
 .BI "int pthread_mutexattr_getrobust(const pthread_mutexattr_t *" attr ,
 .BI "                                int *" robustness ");"
-.BI "int pthread_mutexattr_setrobust(const pthread_mutexattr_t *" attr ,
+.BI "int pthread_mutexattr_setrobust(pthread_mutexattr_t *" attr ,
 .BI "                                int " robustness ");"
 .fi
 .PP
@@ -46,14 +46,11 @@ Feature Test Macro Requirements for glibc (see
 .PP
 .BR pthread_mutexattr_getrobust (),
 .BR pthread_mutexattr_setrobust ():
-.br
-.RS 4
-.ad l
-_POSIX_C_SOURCE >= 200809L
+.nf
+    _POSIX_C_SOURCE >= 200809L
 .\" FIXME .
 .\" But see https://sourceware.org/bugzilla/show_bug.cgi?id=22125
-.RE
-.ad
+.fi
 .SH DESCRIPTION
 The
 .BR pthread_mutexattr_getrobust ()
@@ -184,7 +181,8 @@ and
 were also defined.
 .PP
 These GNU-specific APIs, which first appeared in glibc 2.4,
-are nowadays obsolete and should not be used in new programs.
+are nowadays obsolete and should not be used in new programs;
+since glibc 2.34 these APIs are marked as deprecated.
 .SH EXAMPLES
 The program below demonstrates the use of the robustness attribute of a
 mutex attributes object.
@@ -238,17 +236,16 @@ main(int argc, char *argv[])
     int s;
 
     pthread_mutexattr_init(&attr);
-                                /* initialize the attributes object */
-    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
-                               /* set robustness */
 
-    pthread_mutex_init(&mtx, &attr);   /* initialize the mutex */
+    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+
+    pthread_mutex_init(&mtx, &attr);
 
     pthread_create(&thr, NULL, original_owner_thread, NULL);
 
     sleep(2);
 
-    /* "original_owner_thread" should have exited by now */
+    /* "original_owner_thread" should have exited by now. */
 
     printf("[main] Attempting to lock the robust mutex.\en");
     s = pthread_mutex_lock(&mtx);
@@ -283,7 +280,7 @@ main(int argc, char *argv[])
 .BR pthread_mutex_lock (3),
 .BR pthreads (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

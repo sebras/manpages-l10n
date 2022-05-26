@@ -8,7 +8,7 @@
 .\"
 .\" 2007-12-30, mtk, Convert function prototypes to modern C syntax
 .\"
-.TH RPC 3 2020-11-01 "" "Linux Programmer's Manual"
+.TH RPC 3 2021-03-22 "" "Linux Programmer's Manual"
 .SH NAME
 rpc \- library routines for remote procedure calls
 .SH SYNOPSIS AND DESCRIPTION
@@ -26,17 +26,17 @@ Finally, the procedure call returns to the client.
 .PP
 To take use of these routines, include the header file
 .IR "<rpc/rpc.h>" .
-
+.PP
 The prototypes below make use of the following types:
 .PP
 .RS 4
 .EX
 .BI "typedef int " bool_t ;
 .PP
-.BI "typedef bool_t (*" xdrproc_t ") (XDR *, void *, ...);"
+.BI "typedef bool_t (*" xdrproc_t ")(XDR *, void *, ...);"
 .PP
-.BI "typedef bool_t (*" resultproc_t ") (caddr_t " resp ,
-.BI "                                struct sockaddr_in *" raddr );
+.BI "typedef bool_t (*" resultproc_t ")(caddr_t " resp ,
+.BI "                               struct sockaddr_in *" raddr );
 .EE
 .RE
 .PP
@@ -70,8 +70,8 @@ information with each remote procedure call.
 This is the default authentication used by RPC.
 .PP
 .nf
-.BI "AUTH *authunix_create(char *" host ", int " uid ", int " gid ,
-.BI "                      int " len ", int *" aup_gids );
+.BI "AUTH *authunix_create(char *" host ", uid_t " uid ", gid_t " gid ,
+.BI "                      int " len ", gid_t *" aup_gids );
 .fi
 .IP
 Create and return an RPC authentication handle that contains
@@ -100,7 +100,7 @@ with the appropriate parameters.
 .nf
 .BI "int callrpc(char *" host ", unsigned long " prognum ,
 .BI "            unsigned long " versnum ", unsigned long " procnum ,
-.BI "            xdrproc_t " inproc ", char *" in ,
+.BI "            xdrproc_t " inproc ", const char *" in ,
 .BI "            xdrproc_t " outproc ", char *" out );
 .fi
 .IP
@@ -216,8 +216,8 @@ If the RPC library opened the associated socket, it will close it also.
 Otherwise, the socket remains open.
 .PP
 .nf
-.BI "CLIENT *clnt_create(char *" host ", unsigned long " prog ,
-.BI "                    unsigned long " vers ", char *" proto );
+.BI "CLIENT *clnt_create(const char *" host ", unsigned long " prog ,
+.BI "                    unsigned long " vers ", const char *" proto );
 .fi
 .IP
 Generic client creation routine.
@@ -264,7 +264,8 @@ will be ignored in all future calls.
 .IP
 .in +4n
 .EX
-\fBCLGET_SERVER_ADDR\fP  \fIstruct sockaddr_in \fP // get server\(aqs address
+\fBCLGET_SERVER_ADDR\fP  \fIstruct sockaddr_in\fP
+                // get server\(aqs address
 .EE
 .in
 .IP
@@ -304,7 +305,7 @@ handle to the structure at address
 .IR errp .
 .PP
 .nf
-.BI "void clnt_pcreateerror(char *" s );
+.BI "void clnt_pcreateerror(const char *" s );
 .fi
 .IP
 Print a message to standard error indicating why a client RPC
@@ -331,7 +332,7 @@ Used after
 .BR callrpc ().
 .PP
 .nf
-.BI "clnt_perror(CLIENT *" clnt ", char *" s );
+.BI "clnt_perror(CLIENT *" clnt ", const char *" s );
 .fi
 .IP
 Print a message to standard error indicating why an RPC call failed;
@@ -344,7 +345,7 @@ Used after
 .BR clnt_call ().
 .PP
 .nf
-.BI "char *clnt_spcreateerror(char *" s );
+.BI "char *clnt_spcreateerror(const char *" s );
 .fi
 .IP
 Like
@@ -382,7 +383,7 @@ returns pointer to static data, but the
 result will not get overwritten on each call.
 .PP
 .nf
-.BI "char *clnt_sperror(CLIENT *" rpch ", char *" s );
+.BI "char *clnt_sperror(CLIENT *" rpch ", const char *" s );
 .fi
 .IP
 Like
@@ -600,7 +601,7 @@ See also
 .PP
 .nf
 .BI "bool_t pmap_set(unsigned long " prognum ", unsigned long " versnum ,
-.BI "                unsigned int " protocol ", unsigned short " port );
+.BI "                int " protocol ", unsigned short " port );
 .fi
 .IP
 A user interface to the
@@ -780,7 +781,7 @@ This interface is obsoleted by
 .nf
 .BI "bool_t svc_register(SVCXPRT *" xprt ", unsigned long " prognum ,
 .BI "                    unsigned long " versnum ,
-.BI "                    void (*" dispatch ")(svc_req *, SVCXPRT *),"
+.BI "                    void (*" dispatch ")(struct svc_req *, SVCXPRT *),"
 .BI "                    unsigned long " protocol );
 .fi
 .IP
@@ -893,7 +894,8 @@ Called when the desired program is not registered with the RPC package.
 Service implementors usually do not need this routine.
 .PP
 .nf
-.BI "void svcerr_progvers(SVCXPRT *" xprt );
+.BI "void svcerr_progvers(SVCXPRT *" xprt ", unsigned long " low_vers ,
+.BI "                     unsigned long " high_vers );
 .fi
 .IP
 Called when the desired version of a program is not registered
@@ -1104,113 +1106,80 @@ Service implementors usually do not need this routine.
 For an explanation of the terms used in this section, see
 .BR attributes (7).
 .ad l
+.nh
 .TS
 allbox;
-lbw35 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
 .BR auth_destroy (),
 .BR authnone_create (),
-.br
 .BR authunix_create (),
-.br
 .BR authunix_create_default (),
-.br
 .BR callrpc (),
 .BR clnt_broadcast (),
-.br
 .BR clnt_call (),
 .BR clnt_destroy (),
-.br
 .BR clnt_create (),
 .BR clnt_control (),
-.br
 .BR clnt_freeres (),
 .BR clnt_geterr (),
-.br
 .BR clnt_pcreateerror (),
 .BR clnt_perrno (),
-.br
 .BR clnt_perror (),
-.br
 .BR clnt_spcreateerror (),
-.br
 .BR clnt_sperrno (),
 .BR clnt_sperror (),
-.br
 .BR clntraw_create (),
 .BR clnttcp_create (),
-.br
 .BR clntudp_create (),
-.br
 .BR clntudp_bufcreate (),
-.br
 .BR get_myaddress (),
 .BR pmap_getmaps (),
-.br
 .BR pmap_getport (),
 .BR pmap_rmtcall (),
-.br
 .BR pmap_set (),
 .BR pmap_unset (),
-.br
 .BR registerrpc (),
 .BR svc_destroy (),
-.br
 .BR svc_freeargs (),
 .BR svc_getargs (),
-.br
 .BR svc_getcaller (),
 .BR svc_getreqset (),
-.br
 .BR svc_getreq (),
 .BR svc_register (),
-.br
 .BR svc_run (),
 .BR svc_sendreply (),
-.br
 .BR svc_unregister (),
 .BR svcerr_auth (),
-.br
 .BR svcerr_decode (),
 .BR svcerr_noproc (),
-.br
 .BR svcerr_noprog (),
 .BR svcerr_progvers (),
-.br
 .BR svcerr_systemerr (),
 .BR svcerr_weakauth (),
-.br
 .BR svcfd_create (),
 .BR svcraw_create (),
-.br
 .BR svctcp_create (),
-.br
 .BR svcudp_bufcreate (),
-.br
 .BR svcudp_create (),
 .BR xdr_accepted_reply (),
-.br
 .BR xdr_authunix_parms (),
-.br
 .BR xdr_callhdr (),
-.br
 .BR xdr_callmsg (),
 .BR xdr_opaque_auth (),
-.br
 .BR xdr_pmap (),
 .BR xdr_pmaplist (),
-.br
 .BR xdr_rejected_reply (),
-.br
 .BR xdr_replymsg (),
-.br
 .BR xprt_register (),
 .BR xprt_unregister ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
 .ad
+.sp 1
 .SH SEE ALSO
 .\" We don't have an rpc_secure.3 page in the set at the moment -- MTK, 19 Sep 05
 .\" .BR rpc_secure (3),
@@ -1230,7 +1199,7 @@ rpcgen Programming Guide
 RFC\ 1050, Sun Microsystems, Inc.,
 USC-ISI.
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

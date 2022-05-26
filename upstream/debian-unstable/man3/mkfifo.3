@@ -25,7 +25,7 @@
 .\"
 .\" changed section from 2 to 3, aeb, 950919
 .\"
-.TH MKFIFO 3 2020-08-13 "GNU" "Linux Programmer's Manual"
+.TH MKFIFO 3 2021-08-27 "GNU" "Linux Programmer's Manual"
 .SH NAME
 mkfifo, mkfifoat \- make a FIFO special file (a named pipe)
 .SH SYNOPSIS
@@ -34,7 +34,7 @@ mkfifo, mkfifoat \- make a FIFO special file (a named pipe)
 .B #include <sys/stat.h>
 .PP
 .BI "int mkfifo(const char *" pathname ", mode_t " mode );
-
+.PP
 .BR "#include <fcntl.h>           " "/* Definition of AT_* constants */"
 .B #include <sys/stat.h>
 .PP
@@ -47,18 +47,12 @@ Feature Test Macro Requirements for glibc (see
 .RE
 .PP
 .BR mkfifoat ():
-.PD 0
-.ad l
-.RS 4
-.TP 4
-Since glibc 2.10:
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Before glibc 2.10:
-_ATFILE_SOURCE
-.RE
-.ad
-.PD
+.nf
+    Since glibc 2.10:
+        _POSIX_C_SOURCE >= 200809L
+    Before glibc 2.10:
+        _ATFILE_SOURCE
+.fi
 .SH DESCRIPTION
 .BR mkfifo ()
 makes a FIFO special file with name \fIpathname\fP.
@@ -117,19 +111,34 @@ If
 is absolute, then
 .I dirfd
 is ignored.
+.PP
+See
+.BR openat (2)
+for an explanation of the need for
+.BR mkfifoat ().
 .SH RETURN VALUE
 On success
 .BR mkfifo ()
 and
 .BR mkfifoat ()
 return 0.
-In the case of an error, \-1 is returned (in which case, \fIerrno\fP
-is set appropriately).
+On error, \-1 is returned and
+.I errno
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EACCES
 One of the directories in \fIpathname\fP did not allow search
 (execute) permission.
+.TP
+.B EBADF
+.RB ( mkfifoat ())
+.I pathname
+is relative but
+.I dirfd
+is neither
+.B AT_FDCWD
+nor a valid file descriptor.
 .TP
 .B EDQUOT
 The user's quota of disk blocks or inodes on the filesystem has been
@@ -160,21 +169,15 @@ The directory or filesystem has no room for the new file.
 A component used as a directory in \fIpathname\fP is not, in fact, a
 directory.
 .TP
-.B EROFS
-\fIpathname\fP refers to a read-only filesystem.
-.PP
-The following additional errors can occur for
-.BR mkfifoat ():
-.TP
-.B EBADF
-.I dirfd
-is not a valid file descriptor.
-.TP
 .B ENOTDIR
+.RB ( mkfifoat ())
 .I pathname
-is a relative path and
+is a relative pathname and
 .I dirfd
 is a file descriptor referring to a file other than a directory.
+.TP
+.B EROFS
+\fIpathname\fP refers to a read-only filesystem.
 .SH VERSIONS
 .BR mkfifoat ()
 was added to glibc in version 2.4.
@@ -184,9 +187,11 @@ available on Linux since kernel 2.6.16.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw20 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
@@ -194,6 +199,9 @@ T{
 .BR mkfifoat ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
+.ad
+.sp 1
 .SH CONFORMING TO
 .BR mkfifo ():
 POSIX.1-2001, POSIX.1-2008.
@@ -210,7 +218,7 @@ POSIX.1-2008.
 .BR write (2),
 .BR fifo (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

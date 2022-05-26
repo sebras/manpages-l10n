@@ -22,15 +22,22 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PIDFD_OPEN 2 2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH PIDFD_OPEN 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pidfd_open \- obtain a file descriptor that refers to a process
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int pidfd_open(pid_t " pid ", unsigned int " flags );
+.BI "int syscall(SYS_pidfd_open, pid_t " pid ", unsigned int " flags );
 .fi
+.PP
+.IR Note :
+glibc provides no wrapper for
+.BR pidfd_open (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR pidfd_open ()
@@ -42,20 +49,29 @@ the close-on-exec flag is set on the file descriptor.
 .PP
 The
 .I flags
-argument is reserved for future use;
-currently, this argument must be specified as 0.
+argument either has the value 0, or contains the following flag:
+.TP
+.BR PIDFD_NONBLOCK " (since Linux 5.10)"
+.\" commit 4da9af0014b51c8b015ed8c622440ef28912efe6
+Return a nonblocking file descriptor.
+If the process referred to by the file descriptor has not yet terminated,
+then an attempt to wait on the file descriptor using
+.BR waitid (2)
+will immediately return the error
+.BR EAGAIN
+rather than blocking.
 .SH RETURN VALUE
 On success,
 .BR pidfd_open ()
 returns a file descriptor (a nonnegative integer).
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EINVAL
 .I flags
-is not 0.
+is not valid.
 .TP
 .B EINVAL
 .I pid
@@ -88,9 +104,6 @@ first appeared in Linux 5.3.
 .BR pidfd_open ()
 is Linux specific.
 .SH NOTES
-Currently, there is no glibc wrapper for this system call; call it using
-.BR syscall (2).
-.PP
 The following code sequence can be used to obtain a file descriptor
 for the child of
 .BR fork (2):
@@ -182,6 +195,11 @@ A PID file descriptor can be used as the argument of
 .BR setns (2)
 in order to move into one or more of the same namespaces as the process
 referred to by the file descriptor.
+.IP \(bu
+A PID file descriptor can be used as the argument of
+.BR process_madvise (2)
+in order to provide advice on the memory usage patterns of the process
+referred to by the file descriptor.
 .PP
 The
 .BR pidfd_open ()
@@ -266,12 +284,13 @@ main(int argc, char *argv[])
 .BR pidfd_getfd (2),
 .BR pidfd_send_signal (2),
 .BR poll (2),
+.BR process_madvise (2),
 .BR select (2),
 .BR setns (2),
 .BR waitid (2),
 .BR epoll (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

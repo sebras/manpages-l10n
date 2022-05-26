@@ -25,12 +25,13 @@
 .\" %%%LICENSE_END
 .\"
 .\"
-.TH IOCTL_USERFAULTFD 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH IOCTL_USERFAULTFD 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 ioctl_userfaultfd \- create a file descriptor for handling page faults in user
 space
 .SH SYNOPSIS
 .nf
+.BR "#include <linux/userfaultfd.h>" "  /* Definition of " UFFD* " constants */"
 .B #include <sys/ioctl.h>
 .PP
 .BI "int ioctl(int " fd ", int " cmd ", ...);"
@@ -173,7 +174,7 @@ when the faulting process unmaps virtual memory either explicitly with
 or implicitly during either
 .BR mmap (2)
 or
-.BR mremap (2).
+.BR mremap (2),
 the userfaultfd monitor will receive an event of type
 .BR UFFD_EVENT_UNMAP .
 .TP
@@ -208,6 +209,11 @@ signal will be sent to the faulting process.
 Applications using this
 feature will not require the use of a userfaultfd monitor for processing
 memory accesses to the regions registered with userfaultfd.
+.TP
+.BR UFFD_FEATURE_THREAD_ID " (since Linux 4.14)"
+If this feature bit is set,
+.I uffd_msg.pagefault.feat.ptid
+will be set to the faulted thread ID for each page-fault message.
 .PP
 The returned
 .I ioctls
@@ -229,13 +235,18 @@ operation is supported.
 The
 .B UFFDIO_UNREGISTER
 operation is supported.
+.TP
+.B 1 << _UFFDIO_WRITEPROTECT
+The
+.B UFFDIO_WRITEPROTECT
+operation is supported.
 .PP
 This
 .BR ioctl (2)
 operation returns 0 on success.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .TP
 .B EFAULT
@@ -317,9 +328,6 @@ Track page faults on missing pages.
 .B UFFDIO_REGISTER_MODE_WP
 Track page faults on write-protected pages.
 .PP
-Currently, the only supported mode is
-.BR UFFDIO_REGISTER_MODE_MISSING .
-.PP
 If the operation is successful, the kernel modifies the
 .I ioctls
 bit-mask field to indicate which
@@ -333,7 +341,7 @@ This
 operation returns 0 on success.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .\" FIXME Is the following error list correct?
 .\"
@@ -386,7 +394,7 @@ This
 operation returns 0 on success.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .TP
 .B EINVAL
@@ -438,6 +446,16 @@ operation:
 .TP
 .B UFFDIO_COPY_MODE_DONTWAKE
 Do not wake up the thread that waits for page-fault resolution
+.TP
+.B UFFDIO_COPY_MODE_WP
+Copy the page with read-only permission.
+This allows the user to trap the next write to the page,
+which will block and generate another write-protect userfault message.
+This is used only when both
+.B UFFDIO_REGISTER_MODE_MISSING
+and
+.B UFFDIO_REGISTER_MODE_WP
+modes are enabled for the registered range.
 .PP
 The
 .I copy
@@ -466,7 +484,7 @@ operation returns 0 on success.
 In this case, the entire area was copied.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .TP
 .B EAGAIN
@@ -570,7 +588,7 @@ operation returns 0 on success.
 In this case, the entire area was zeroed.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .TP
 .B EAGAIN
@@ -636,7 +654,7 @@ This
 operation returns 0 on success.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 Possible errors include:
 .TP
 .B EINVAL
@@ -649,6 +667,74 @@ field of the
 structure was not a multiple of the system page size; or
 .I len
 was zero; or the specified range was otherwise invalid.
+.SS UFFDIO_WRITEPROTECT (Since Linux 5.7)
+Write-protect or write-unprotect a userfaultfd-registered memory range
+registered with mode
+.BR UFFDIO_REGISTER_MODE_WP .
+.PP
+The
+.I argp
+argument is a pointer to a
+.I uffdio_range
+structure as shown below:
+.PP
+.in +4n
+.EX
+struct uffdio_writeprotect {
+    struct uffdio_range range; /* Range to change write permission*/
+    __u64 mode;                /* Mode to change write permission */
+};
+.EE
+.in
+.PP
+There are two mode bits that are supported in this structure:
+.TP
+.B UFFDIO_WRITEPROTECT_MODE_WP
+When this mode bit is set,
+the ioctl will be a write-protect operation upon the memory range specified by
+.IR range .
+Otherwise it will be a write-unprotect operation upon the specified range,
+which can be used to resolve a userfaultfd write-protect page fault.
+.TP
+.B UFFDIO_WRITEPROTECT_MODE_DONTWAKE
+When this mode bit is set,
+do not wake up any thread that waits for
+page-fault resolution after the operation.
+This can be specified only if
+.B UFFDIO_WRITEPROTECT_MODE_WP
+is not specified.
+.PP
+This
+.BR ioctl (2)
+operation returns 0 on success.
+On error, \-1 is returned and
+.I errno
+is set to indicate the error.
+Possible errors include:
+.TP
+.B EINVAL
+The
+.I start
+or the
+.I len
+field of the
+.I ufdio_range
+structure was not a multiple of the system page size; or
+.I len
+was zero; or the specified range was otherwise invalid.
+.TP
+.B EAGAIN
+The process was interrupted; retry this call.
+.TP
+.B ENOENT
+The range specified in
+.I range
+is not valid.
+For example, the virtual address does not exist,
+or not registered with userfaultfd write-protect mode.
+.TP
+.B EFAULT
+Encountered a generic fault during processing.
 .SH RETURN VALUE
 See descriptions of the individual operations, above.
 .SH ERRORS
@@ -687,10 +773,10 @@ See
 .BR mmap (2),
 .BR userfaultfd (2)
 .PP
-.IR Documentation/admin-guide/mm/userfaultfd.rst
+.IR Documentation/admin\-guide/mm/userfaultfd.rst
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

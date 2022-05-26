@@ -23,16 +23,16 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH TIMER_CREATE 2 2020-11-01 Linux "Linux Programmer's Manual"
+.TH TIMER_CREATE 2 2021-03-22 Linux "Linux Programmer's Manual"
 .SH NAME
 timer_create \- create a POSIX per-process timer
 .SH SYNOPSIS
 .nf
-.B  #include <signal.h>
+.BR "#include <signal.h>" "           /* Definition of " SIGEV_* " constants */"
 .B  #include <time.h>
 .PP
-.BI "int timer_create(clockid_t " clockid ", struct sigevent *" sevp ,
-.BI "                 timer_t *" timerid );
+.BI "int timer_create(clockid_t " clockid ", struct sigevent *restrict " sevp ,
+.BI "                 timer_t *restrict " timerid );
 .fi
 .PP
 Link with \fI\-lrt\fP.
@@ -43,7 +43,9 @@ Feature Test Macro Requirements for glibc (see
 .RE
 .PP
 .BR timer_create ():
-_POSIX_C_SOURCE\ >=\ 199309L
+.nf
+    _POSIX_C_SOURCE >= 199309L
+.fi
 .SH DESCRIPTION
 .BR timer_create ()
 creates a new per-process interval timer.
@@ -405,7 +407,7 @@ handler(int sig, siginfo_t *si, void *uc)
 {
     /* Note: calling printf() from a signal handler is not safe
        (and should not be done in production programs), since
-       printf() is not async\-signal\-safe; see signal-safety(7).
+       printf() is not async\-signal\-safe; see signal\-safety(7).
        Nevertheless, we use printf() here as a simple way of
        showing that the handler was called. */
 
@@ -430,7 +432,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    /* Establish handler for timer signal */
+    /* Establish handler for timer signal. */
 
     printf("Establishing handler for signal %d\en", SIG);
     sa.sa_flags = SA_SIGINFO;
@@ -439,7 +441,7 @@ main(int argc, char *argv[])
     if (sigaction(SIG, &sa, NULL) == \-1)
         errExit("sigaction");
 
-    /* Block timer signal temporarily */
+    /* Block timer signal temporarily. */
 
     printf("Blocking signal %d\en", SIG);
     sigemptyset(&mask);
@@ -447,7 +449,7 @@ main(int argc, char *argv[])
     if (sigprocmask(SIG_SETMASK, &mask, NULL) == \-1)
         errExit("sigprocmask");
 
-    /* Create the timer */
+    /* Create the timer. */
 
     sev.sigev_notify = SIGEV_SIGNAL;
     sev.sigev_signo = SIG;
@@ -457,7 +459,7 @@ main(int argc, char *argv[])
 
     printf("timer ID is %#jx\en", (uintmax_t) timerid);
 
-    /* Start the timer */
+    /* Start the timer. */
 
     freq_nanosecs = atoll(argv[2]);
     its.it_value.tv_sec = freq_nanosecs / 1000000000;
@@ -469,13 +471,13 @@ main(int argc, char *argv[])
          errExit("timer_settime");
 
     /* Sleep for a while; meanwhile, the timer may expire
-       multiple times */
+       multiple times. */
 
     printf("Sleeping for %d seconds\en", atoi(argv[1]));
     sleep(atoi(argv[1]));
 
     /* Unlock the timer signal, so that timer notification
-       can be delivered */
+       can be delivered. */
 
     printf("Unblocking signal %d\en", SIG);
     if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == \-1)
@@ -500,7 +502,7 @@ main(int argc, char *argv[])
 .BR signal (7),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

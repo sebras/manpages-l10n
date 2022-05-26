@@ -37,7 +37,7 @@
 .\" 2007-07-10, mtk, Added an example program.
 .\" 2008-11-18, mtk, document MAP_STACK
 .\"
-.TH MMAP 2 2020-12-21 "Linux" "Linux Programmer's Manual"
+.TH MMAP 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mmap, munmap \- map or unmap files or devices into memory
 .SH SYNOPSIS
@@ -254,7 +254,7 @@ restrictions.
 If the memory region specified by
 .I addr
 and
-.I len
+.I length
 overlaps pages of any existing mapping(s), then the overlapped
 part of the existing mapping(s) will be discarded.
 If the specified address cannot be used,
@@ -310,9 +310,9 @@ at which point touching the "guard" page will result in a
 signal.
 .TP
 .BR MAP_HUGETLB " (since Linux 2.6.32)"
-Allocate the mapping using "huge pages."
+Allocate the mapping using "huge" pages.
 See the Linux kernel source file
-.I Documentation/admin-guide/mm/hugetlbpage.rst
+.I Documentation/admin\-guide/mm/hugetlbpage.rst
 for further information, as well as NOTES, below.
 .TP
 .BR MAP_HUGE_2MB ", " MAP_HUGE_1GB " (since Linux 3.8)"
@@ -400,6 +400,11 @@ private writable mappings.
 Populate (prefault) page tables for a mapping.
 For a file mapping, this causes read-ahead on the file.
 This will help to reduce blocking on page faults later.
+The
+.BR mmap ()
+call doesn't fail if the mapping cannot be populated (for example, due
+to limitations on the number of mapped huge pages when using
+.BR MAP_HUGETLB ).
 .BR MAP_POPULATE
 is supported for private mappings only since Linux 2.6.23.
 .TP
@@ -497,14 +502,14 @@ On error, the value
 .IR "(void\ *)\ \-1" )
 is returned, and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .PP
 On success,
 .BR munmap ()
 returns 0.
 On failure, it returns \-1, and
 .I errno
-is set to indicate the cause of the error (probably to
+is set to indicate the error (probably to
 .BR EINVAL ).
 .SH ERRORS
 .TP
@@ -563,7 +568,7 @@ was 0.
 .I flags
 contained none of
 .BR MAP_PRIVATE ,
-.B MAP_SHARED
+.BR MAP_SHARED ,
 or
 .BR MAP_SHARED_VALIDATE .
 .TP
@@ -623,6 +628,18 @@ was mounted no-exec.
 The operation was prevented by a file seal; see
 .BR fcntl (2).
 .TP
+.B EPERM
+The
+.B MAP_HUGETLB
+flag was specified, but the caller was not privileged (did not have the
+.B CAP_IPC_LOCK
+capability)
+and is not a member of the
+.I sysctl_hugetlb_shm_group
+group; see the description of
+.I /proc/sys/vm/sysctl_hugetlb_shm_group
+in
+.TP
 .B ETXTBSY
 .B MAP_DENYWRITE
 was set but the object specified by
@@ -643,9 +660,11 @@ of the page size, see NOTES.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw18 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
@@ -653,6 +672,9 @@ T{
 .BR munmap ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
+.ad
+.sp 1
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008, SVr4, 4.4BSD.
 .\" SVr4 documents additional error codes ENXIO and ENODEV.
@@ -1020,7 +1042,7 @@ B.O. Gallmeister, POSIX.4, O'Reilly, pp. 128\(en129 and 389\(en391.
 .\" Repeat after me: private read-only mappings are 100% equivalent to
 .\" shared read-only mappings. No ifs, buts, or maybes. -- Linus
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

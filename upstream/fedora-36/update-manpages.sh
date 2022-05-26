@@ -22,7 +22,7 @@ rm -rf man* links.txt untranslated.txt
 mkdir man0p man1 man1p man2 man3 man3p man4 man5 man6 man7 man8
 
 cpio_archive=$(mktemp)
-mirror="https://ftp.fau.de/fedora/linux/development/36/Everything/x86_64/os/Packages/"
+mirror="https://ftp.fau.de/fedora/linux/releases/36/Everything/x86_64/os/Packages/"
 
 # Process packages
 while read package; do

@@ -7,7 +7,7 @@
 .\" Heavily based on glibc documentation
 .\" Polished, added docs, removed glibc doc bug, 2002-07-20, aeb
 .\"
-.TH MALLOC_HOOK 3 2020-11-01 "GNU" "Linux Programmer's Manual"
+.TH MALLOC_HOOK 3 2021-03-22 "GNU" "Linux Programmer's Manual"
 .SH NAME
 __malloc_hook, __malloc_initialize_hook,
 __memalign_hook, __free_hook, __realloc_hook,
@@ -16,19 +16,19 @@ __after_morecore_hook \- malloc debugging variables
 .nf
 .B "#include <malloc.h>"
 .PP
-.BI "void *(*__malloc_hook)(size_t " size ", const void *" caller );
+.BI "void *(*volatile __malloc_hook)(size_t " size ", const void *" caller );
 .PP
-.BI "void *(*__realloc_hook)(void *" ptr ", size_t " size \
+.BI "void *(*volatile __realloc_hook)(void *" ptr ", size_t " size \
 ", const void *" caller );
 .PP
-.BI "void *(*__memalign_hook)(size_t " alignment ", size_t " size ,
+.BI "void *(*volatile __memalign_hook)(size_t " alignment ", size_t " size ,
 .BI "                         const void *" caller );
 .PP
-.BI "void (*__free_hook)(void *" ptr ", const void *" caller );
+.BI "void (*volatile __free_hook)(void *" ptr ", const void *" caller );
 .PP
 .B "void (*__malloc_initialize_hook)(void);"
 .PP
-.B "void (*__after_morecore_hook)(void);"
+.B "void (*volatile __after_morecore_hook)(void);"
 .fi
 .SH DESCRIPTION
 The GNU C library lets you modify the behavior of
@@ -98,15 +98,15 @@ Here is a short example of how to use these variables.
 #include <stdio.h>
 #include <malloc.h>
 
-/* Prototypes for our hooks.  */
+/* Prototypes for our hooks */
 static void my_init_hook(void);
 static void *my_malloc_hook(size_t, const void *);
 
-/* Variables to save original hooks. */
+/* Variables to save original hooks */
 static void *(*old_malloc_hook)(size_t, const void *);
 
-/* Override initializing hook from the C library. */
-void (*__malloc_initialize_hook) (void) = my_init_hook;
+/* Override initializing hook from the C library */
+void (*__malloc_initialize_hook)(void) = my_init_hook;
 
 static void
 my_init_hook(void)
@@ -129,7 +129,7 @@ my_malloc_hook(size_t size, const void *caller)
     /* Save underlying hooks */
     old_malloc_hook = __malloc_hook;
 
-    /* printf() might call malloc(), so protect it too. */
+    /* printf() might call malloc(), so protect it too */
     printf("malloc(%zu) called from %p returns %p\en",
             size, caller, result);
 
@@ -145,7 +145,7 @@ my_malloc_hook(size_t size, const void *caller)
 .BR mcheck (3),
 .BR mtrace (3)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

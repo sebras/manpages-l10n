@@ -9,15 +9,15 @@
 .\"
 .\" 2008, mtk, various edits
 .\"
-.TH GETCPU 2 2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH GETCPU 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 getcpu \- determine CPU and NUMA node on which the calling thread is running
 .SH SYNOPSIS
 .nf
-.B #include <linux/getcpu.h>
+.BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
+.B #include <sched.h>
 .PP
-.BI "int getcpu(unsigned *" cpu ", unsigned *" node \
-", struct getcpu_cache *" tcache );
+.BI "int getcpu(unsigned int *" cpu ", unsigned int *" node );
 .fi
 .SH DESCRIPTION
 The
@@ -37,10 +37,6 @@ or
 .I node
 is NULL nothing is written to the respective pointer.
 .PP
-The third argument to this system call is nowadays unused,
-and should be specified as NULL
-unless portability to Linux 2.6.23 or earlier is required (see NOTES).
-.PP
 The information placed in
 .I cpu
 is guaranteed to be current only at the time of the call:
@@ -59,7 +55,7 @@ is no longer current by the time the call returns.
 On success, 0 is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EFAULT
@@ -82,16 +78,31 @@ The intention of
 .BR getcpu ()
 is to allow programs to make optimizations with per-CPU data
 or for NUMA optimization.
+.\"
+.SS C library/kernel differences
+The kernel system call has a third argument:
+.PP
+.in +4n
+.nf
+.BI "int getcpu(unsigned int *" cpu ", unsigned int *" node ,
+.BI "           struct getcpu_cache *" tcache );
+.fi
+.in
 .PP
 The
 .I tcache
-argument is unused since Linux 2.6.24.
+argument is unused since Linux 2.6.24,
+and (when invoking the system call directly)
+should be specified as NULL,
+unless portability to Linux 2.6.23 or earlier is required.
+.PP
 .\" commit 4307d1e5ada595c87f9a4d16db16ba5edb70dcb1
 .\" Author: Ingo Molnar <mingo@elte.hu>
 .\" Date:   Wed Nov 7 18:37:48 2007 +0100
 .\" x86: ignore the sys_getcpu() tcache parameter
-In earlier kernels,
-if this argument was non-NULL,
+In Linux 2.6.23 and earlier, if the
+.I tcache
+argument was non-NULL,
 then it specified a pointer to a caller-allocated buffer in thread-local
 storage that was used to provide a caching mechanism for
 .BR getcpu ().
@@ -141,7 +152,7 @@ migrating threads between CPUs, and so the argument is now ignored.
 .BR cpuset (7),
 .BR vdso (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

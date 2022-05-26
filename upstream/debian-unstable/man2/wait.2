@@ -46,44 +46,37 @@
 .\" 2005-05-10, mtk, __W* flags can't be used with waitid()
 .\" 2008-07-04, mtk, removed erroneous text about SA_NOCLDSTOP
 .\"
-.TH WAIT 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH WAIT 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 wait, waitpid, waitid \- wait for process to change state
 .SH SYNOPSIS
-.B #include <sys/types.h>
-.br
+.nf
 .B #include <sys/wait.h>
 .PP
 .BI "pid_t wait(int *" "wstatus" );
-.PP
 .BI "pid_t waitpid(pid_t " pid ", int *" wstatus ", int " options );
 .PP
 .BI "int waitid(idtype_t " idtype ", id_t " id \
 ", siginfo_t *" infop ", int " options );
                 /* This is the glibc and POSIX interface; see
                    NOTES for information on the raw system call. */
+.fi
 .PP
 .RS -4
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .RE
 .PP
-.ad l
-.PD 0
 .BR waitid ():
-.RS 4
-Since glibc 2.26:
-_XOPEN_SOURCE >= 500 ||
+.nf
+    Since glibc 2.26:
+        _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200809L
 .\"    (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED)
-    _POSIX_C_SOURCE\ >=\ 200809L
-.br
-Glibc 2.25 and earlier:
-    _XOPEN_SOURCE
-        || /* Since glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
-        || /* Glibc versions <= 2.19: */ _BSD_SOURCE
-.RE
-.PD
-.ad
+    Glibc 2.25 and earlier:
+        _XOPEN_SOURCE
+            || /* Since glibc 2.12: */ _POSIX_C_SOURCE >= 200809L
+            || /* Glibc <= 2.19: */ _BSD_SOURCE
+.fi
 .SH DESCRIPTION
 All of these system calls are used to wait for state changes
 in a child of the calling process, and obtain information
@@ -397,7 +390,7 @@ not all implementations follow the POSIX.1 specification on this point.
 .SH RETURN VALUE
 .BR wait ():
 on success, returns the process ID of the terminated child;
-on error, \-1 is returned.
+on failure, \-1 is returned.
 .PP
 .BR waitpid ():
 on success, returns the process ID of the child whose state has changed;
@@ -406,7 +399,7 @@ if
 was specified and one or more child(ren) specified by
 .I pid
 exist, but have not yet changed state, then 0 is returned.
-On error, \-1 is returned.
+On failure, \-1 is returned.
 .PP
 .BR waitid ():
 returns 0 on success or
@@ -415,16 +408,21 @@ if
 was specified and no child(ren) specified by
 .I id
 has yet changed state;
-on error, \-1 is returned.
+on failure, \-1 is returned.
 .\" FIXME As reported by Vegard Nossum, if infop is NULL, then waitid()
 .\" returns the PID of the child.  Either this is a bug, or it is intended
 .\" behavior that needs to be documented.  See my Jan 2009 LKML mail
 .\" "waitid() return value strangeness when infop is NULL".
 .PP
-Each of these calls sets
+On failure, each of these calls sets
 .I errno
-to an appropriate value in the case of an error.
+to indicate the error.
 .SH ERRORS
+.TP
+.B EAGAIN
+The PID file descriptor specified in
+.I id
+is nonblocking and the process that it refers to has not terminated.
 .TP
 .B ECHILD
 (for
@@ -462,6 +460,15 @@ was caught; see
 The
 .I options
 argument was invalid.
+.TP
+.B ESRCH
+(for
+.BR wait ()
+or
+.BR waitpid ())
+.I pid
+is equal to
+.BR INT_MIN .
 .SH CONFORMING TO
 SVr4, 4.3BSD, POSIX.1-2001.
 .SH NOTES
@@ -716,7 +723,7 @@ main(int argc, char *argv[])
 .BR credentials (7),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

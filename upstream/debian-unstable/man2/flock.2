@@ -32,13 +32,15 @@
 .\" FIXME Maybe document LOCK_MAND, LOCK_RW, LOCK_READ, LOCK_WRITE
 .\" which only have effect for SAMBA.
 .\"
-.TH FLOCK 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH FLOCK 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 flock \- apply or remove an advisory lock on an open file
 .SH SYNOPSIS
+.nf
 .B #include <sys/file.h>
 .PP
 .BI "int flock(int " fd ", int " operation );
+.fi
 .SH DESCRIPTION
 Apply or remove an advisory lock on the open file specified by
 .IR fd .
@@ -113,7 +115,7 @@ mode in which the file was opened.
 On success, zero is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EBADF
@@ -237,6 +239,31 @@ see the discussion of the
 .I "local_lock"
 option in
 .BR nfs (5).
+.SS CIFS details
+In Linux kernels up to 5.4,
+.BR flock ()
+is not propagated over SMB.
+A file with such locks will not appear locked for remote clients.
+.PP
+Since Linux 5.5,
+.BR flock ()
+locks are emulated with SMB byte-range locks on the entire file.
+Similarly to NFS, this means that
+.BR fcntl (2)
+and
+.BR flock ()
+locks interact with one another.
+Another important side-effect is that the locks are not advisory anymore:
+any IO on a locked file will always fail with
+.BR EACCES
+when done from a separate file descriptor.
+This difference originates from the design of locks in the SMB protocol,
+which provides mandatory locking semantics.
+.PP
+Remote and mandatory locking semantics may vary with SMB protocol, mount options and server type.
+See
+.BR mount.cifs (8)
+for additional information.
 .SH SEE ALSO
 .BR flock (1),
 .BR close (2),
@@ -253,7 +280,7 @@ in the Linux kernel source tree
 .RI ( Documentation/locks.txt
 in older kernels)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

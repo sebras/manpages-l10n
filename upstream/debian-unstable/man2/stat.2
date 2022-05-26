@@ -36,25 +36,24 @@
 .\" 2007-06-08 mtk: Added example program
 .\" 2007-07-05 mtk: Added details on underlying system call interfaces
 .\"
-.TH STAT 2 2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH STAT 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 stat, fstat, lstat, fstatat \- get file status
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
 .B #include <sys/stat.h>
-.B #include <unistd.h>
 .PP
-.BI "int stat(const char *" pathname ", struct stat *" statbuf );
+.BI "int stat(const char *restrict " pathname ,
+.BI "         struct stat *restrict " statbuf );
 .BI "int fstat(int " fd ", struct stat *" statbuf );
-.BI "int lstat(const char *" pathname ", struct stat *" statbuf );
-
-.BR "#include <fcntl.h>           " "/* Definition of AT_* constants */"
+.BI "int lstat(const char *restrict " pathname ,
+.BI "         struct stat *restrict " statbuf );
+.PP
+.BR "#include <fcntl.h>           " "/* Definition of " AT_* " constants */"
 .B #include <sys/stat.h>
 .PP
-.BI "int fstatat(int " dirfd ", const char *" pathname ", struct stat *" \
-statbuf ,
-.BI "            int " flags );
+.BI "int fstatat(int " dirfd ", const char *restrict " pathname ,
+.BI "         struct stat *restrict " statbuf ", int " flags );
 .fi
 .PP
 .RS -4
@@ -62,29 +61,22 @@ Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .RE
 .PP
-.ad l
 .BR lstat ():
-.RS 4
-/* glibc 2.19 and earlier */ _BSD_SOURCE
-    || /* Since glibc 2.20 */ _DEFAULT_SOURCE
-    || _XOPEN_SOURCE\ >=\ 500
-.\"   _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
-    || /* Since glibc 2.10: */ _POSIX_C_SOURCE\ >=\ 200112L
-.RE
+.nf
+    /* Since glibc 2.20 */ _DEFAULT_SOURCE
+        || _XOPEN_SOURCE >= 500
+.\"   _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED
+        || /* Since glibc 2.10: */ _POSIX_C_SOURCE >= 200112L
+        || /* Glibc 2.19 and earlier */ _BSD_SOURCE
+.fi
 .PP
 .BR fstatat ():
-.ad l
-.RS 4
-.PD 0
-.TP 4
-Since glibc 2.10:
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Before glibc 2.10:
-_ATFILE_SOURCE
-.RE
-.PD
-.ad
+.nf
+    Since glibc 2.10:
+        _POSIX_C_SOURCE >= 200809L
+    Before glibc 2.10:
+        _ATFILE_SOURCE
+.fi
 .SH DESCRIPTION
 These functions return information about a file, in the buffer pointed to by
 .IR statbuf .
@@ -375,7 +367,7 @@ for an explanation of the need for
 On success, zero is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EACCES
@@ -389,8 +381,22 @@ in the path prefix of
 .I fd
 is not a valid open file descriptor.
 .TP
+.B EBADF
+.RB ( fstatat ())
+.I pathname
+is relative but
+.I dirfd
+is neither
+.B AT_FDCWD
+nor a valid file descriptor.
+.TP
 .B EFAULT
 Bad address.
+.TP
+.B EINVAL
+.RB ( fstatat ())
+Invalid flag specified in
+.IR flags .
 .TP
 .B ELOOP
 Too many symbolic links encountered while traversing the path.
@@ -419,6 +425,13 @@ A component of the path prefix of
 .I pathname
 is not a directory.
 .TP
+.B ENOTDIR
+.RB ( fstatat ())
+.I pathname
+is relative and
+.I dirfd
+is a file descriptor referring to a file other than a directory.
+.TP
 .B EOVERFLOW
 .I pathname
 or
@@ -435,25 +448,8 @@ an application compiled on a 32-bit platform without
 calls
 .BR stat ()
 on a file whose size exceeds
-.I (1<<31)-1
+.I (1<<31)\-1
 bytes.
-.PP
-The following additional errors can occur for
-.BR fstatat ():
-.TP
-.B EBADF
-.I dirfd
-is not a valid file descriptor.
-.TP
-.B EINVAL
-Invalid flag specified in
-.IR flags .
-.TP
-.B ENOTDIR
-.I pathname
-is relative and
-.I dirfd
-is a file descriptor referring to a file other than a directory.
 .SH VERSIONS
 .BR fstatat ()
 was added to Linux in kernel 2.6.16;
@@ -718,7 +714,7 @@ main(int argc, char *argv[])
 .BR inode (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

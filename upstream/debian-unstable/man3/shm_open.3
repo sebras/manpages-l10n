@@ -22,19 +22,18 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH SHM_OPEN 3 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH SHM_OPEN 3 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 shm_open, shm_unlink \- create/open or unlink POSIX shared memory objects
 .SH SYNOPSIS
+.nf
 .B #include <sys/mman.h>
-.br
 .BR "#include <sys/stat.h>" "        /* For mode constants */"
-.br
 .BR "#include <fcntl.h>" "           /* For O_* constants */"
 .PP
 .BI "int shm_open(const char *" name ", int " oflag ", mode_t " mode );
-.PP
 .BI "int shm_unlink(const char *" name );
+.fi
 .PP
 Link with \fI\-lrt\fP.
 .SH DESCRIPTION
@@ -156,7 +155,7 @@ of
 is analogous to
 .BR unlink (2):
 it removes a shared memory object name, and, once all processes
-have unmapped the object, de-allocates and
+have unmapped the object, deallocates and
 destroys the contents of the associated memory region.
 After a successful
 .BR shm_unlink (),
@@ -171,18 +170,13 @@ was specified, in which case a new, distinct object is created).
 On success,
 .BR shm_open ()
 returns a file descriptor (a nonnegative integer).
-On failure,
-.BR shm_open ()
-returns \-1.
+On success,
 .BR shm_unlink ()
-returns 0 on success, or \-1 on error.
+returns 0.
+On failure, both functions return \-1 and set
+.I errno
+to indicate the error.
 .SH ERRORS
-On failure,
-.I errno
-is set to indicate the cause of the error.
-Values which may appear in
-.I errno
-include the following:
 .TP
 .B EACCES
 Permission to
@@ -249,9 +243,11 @@ These functions are provided in glibc 2.2 and later.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw24 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
@@ -259,6 +255,8 @@ T{
 .BR shm_unlink ()
 T}	Thread safety	MT-Safe locale
 .TE
+.hy
+.ad
 .sp 1
 .SH CONFORMING TO
 POSIX.1-2001, POSIX.1-2008.
@@ -370,7 +368,7 @@ main(int argc, char *argv[])
     char *shmpath = argv[1];
 
     /* Create shared memory object and set its size to the size
-       of our structure */
+       of our structure. */
 
     int fd = shm_open(shmpath, O_CREAT | O_EXCL | O_RDWR,
                       S_IRUSR | S_IWUSR);
@@ -380,7 +378,7 @@ main(int argc, char *argv[])
     if (ftruncate(fd, sizeof(struct shmbuf)) == \-1)
         errExit("ftruncate");
 
-    /* Map the object into the caller\(aqs address space */
+    /* Map the object into the caller\(aqs address space. */
 
     struct shmbuf *shmp = mmap(NULL, sizeof(*shmp),
                                PROT_READ | PROT_WRITE,
@@ -388,7 +386,7 @@ main(int argc, char *argv[])
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
-    /* Initialize semaphores as process-shared, with value 0 */
+    /* Initialize semaphores as process\-shared, with value 0. */
 
     if (sem_init(&shmp\->sem1, 1, 0) == \-1)
         errExit("sem_init\-sem1");
@@ -396,18 +394,18 @@ main(int argc, char *argv[])
         errExit("sem_init\-sem2");
 
     /* Wait for \(aqsem1\(aq to be posted by peer before touching
-       shared memory */
+       shared memory. */
 
     if (sem_wait(&shmp\->sem1) == \-1)
         errExit("sem_wait");
 
-    /* Convert data in shared memory into upper case */
+    /* Convert data in shared memory into upper case. */
 
     for (int j = 0; j < shmp\->cnt; j++)
         shmp\->buf[j] = toupper((unsigned char) shmp\->buf[j]);
 
-    /* Post \(aqsem2\(aq to tell the to tell peer that it can now
-       access the modified data in shared memory */
+    /* Post \(aqsem2\(aq to tell the peer that it can now
+       access the modified data in shared memory. */
 
     if (sem_post(&shmp\->sem2) == \-1)
         errExit("sem_post");
@@ -465,7 +463,7 @@ main(int argc, char *argv[])
     }
 
     /* Open the existing shared memory object and map it
-       into the caller\(aqs address space */
+       into the caller\(aqs address space. */
 
     int fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == \-1)
@@ -477,23 +475,23 @@ main(int argc, char *argv[])
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
-    /* Copy data into the shared memory object */
+    /* Copy data into the shared memory object. */
 
     shmp\->cnt = len;
     memcpy(&shmp\->buf, string, len);
 
-    /* Tell peer that it can now access shared memory */
+    /* Tell peer that it can now access shared memory. */
 
     if (sem_post(&shmp\->sem1) == \-1)
         errExit("sem_post");
 
     /* Wait until peer says that it has finished accessing
-       the shared memory */
+       the shared memory. */
 
     if (sem_wait(&shmp\->sem2) == \-1)
         errExit("sem_wait");
 
-    /* Write modified data in shared memory to standard output */
+    /* Write modified data in shared memory to standard output. */
 
     write(STDOUT_FILENO, &shmp\->buf, len);
     write(STDOUT_FILENO, "\en", 1);
@@ -515,7 +513,7 @@ main(int argc, char *argv[])
 .BR umask (2),
 .BR shm_overview (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

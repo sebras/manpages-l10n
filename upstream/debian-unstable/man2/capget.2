@@ -13,15 +13,26 @@
 .\"     64-bit capability sets in kernel 2.6.2[45].
 .\" Modified 2009-01-26, andi kleen
 .\"
-.TH CAPGET 2 2020-02-09 "Linux" "Linux Programmer's Manual"
+.TH CAPGET 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 capget, capset \- set/get capabilities of thread(s)
 .SH SYNOPSIS
-.B #include <sys/capability.h>
+.nf
+.BR "#include <linux/capability.h>" " /* Definition of " CAP_* " and"
+.BR "                                 _LINUX_CAPABILITY_*" " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int capget(cap_user_header_t " hdrp ", cap_user_data_t " datap );
+.BI "int syscall(SYS_capget, cap_user_header_t " hdrp ,
+.BI "            cap_user_data_t " datap );
+.BI "int syscall(SYS_capset, cap_user_header_t " hdrp ,
+.BI "            const cap_user_data_t " datap );
+.fi
 .PP
-.BI "int capset(cap_user_header_t " hdrp ", const cap_user_data_t " datap );
+.IR Note :
+glibc provides no wrappers for these system calls,
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 These two system calls are the raw kernel interface for getting and
 setting thread capabilities.
@@ -36,7 +47,7 @@ The portable interfaces are
 .BR cap_set_proc (3)
 and
 .BR cap_get_proc (3);
-if possible, you should use those interfaces in applications.
+if possible, you should use those interfaces in applications; see NOTES.
 .\"
 .SS Current details
 Now that you have been warned, some current kernel details.
@@ -113,7 +124,7 @@ For
 .BR capget ()
 calls, one can probe the capabilities of any process by specifying its
 process ID with the
-.I hdrp->pid
+.I hdrp\->pid
 field value.
 .PP
 For details on the data, see
@@ -128,7 +139,7 @@ asynchronously setting the capabilities of another.
 That is, on kernels that have VFS capabilities support, when calling
 .BR capset (),
 the only permitted values for
-.I hdrp->pid
+.I hdrp\->pid
 are 0 or, equivalently, the value returned by
 .BR gettid (2).
 .\"
@@ -166,7 +177,7 @@ to all members of the process group whose ID is \-\fIpid\fP.
 On success, zero is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .PP
 The calls fail with the error
 .BR EINVAL ,
@@ -247,7 +258,7 @@ library and is available here:
 .BR gettid (2),
 .BR capabilities (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

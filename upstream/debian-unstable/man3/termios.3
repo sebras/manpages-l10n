@@ -37,7 +37,7 @@
 .\"     Enhanced the discussion of "raw" mode for cfmakeraw().
 .\"     Document CMSPAR.
 .\"
-.TH TERMIOS 3 2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH TERMIOS 3 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 termios, tcgetattr, tcsetattr, tcsendbreak, tcdrain, tcflush, tcflow,
 cfmakeraw, cfgetospeed, cfgetispeed, cfsetispeed, cfsetospeed, cfsetspeed \-
@@ -48,28 +48,21 @@ get and set terminal attributes, line control, get and set baud rate
 .B #include <unistd.h>
 .PP
 .BI "int tcgetattr(int " fd ", struct termios *" termios_p );
-.PP
 .BI "int tcsetattr(int " fd ", int " optional_actions ,
 .BI "              const struct termios *" termios_p );
 .PP
 .BI "int tcsendbreak(int " fd ", int " duration );
-.PP
 .BI "int tcdrain(int " fd );
-.PP
 .BI "int tcflush(int " fd ", int " queue_selector );
-.PP
 .BI "int tcflow(int " fd ", int " action );
 .PP
 .BI "void cfmakeraw(struct termios *" termios_p );
 .PP
 .BI "speed_t cfgetispeed(const struct termios *" termios_p );
-.PP
 .BI "speed_t cfgetospeed(const struct termios *" termios_p );
 .PP
 .BI "int cfsetispeed(struct termios *" termios_p ", speed_t " speed );
-.PP
 .BI "int cfsetospeed(struct termios *" termios_p ", speed_t " speed );
-.PP
 .BI "int cfsetspeed(struct termios *" termios_p ", speed_t " speed );
 .fi
 .PP
@@ -80,10 +73,12 @@ Feature Test Macro Requirements for glibc (see
 .PP
 .BR cfsetspeed (),
 .BR cfmakeraw ():
+.nf
     Since glibc 2.19:
         _DEFAULT_SOURCE
     Glibc 2.19 and earlier:
         _BSD_SOURCE
+.fi
 .SH DESCRIPTION
 The termios functions describe a general terminal interface that is
 provided to control asynchronous communications ports.
@@ -336,7 +331,8 @@ Ignore modem control lines.
 .TP
 .B LOBLK
 (not in POSIX) Block output from a noncurrent shell layer.
-For use by \fBshl\fP (shell layers).  (Not implemented on Linux.)
+For use by \fBshl\fP (shell layers).
+(Not implemented on Linux.)
 .TP
 .B CIBAUD
 (not in POSIX) Mask for input speeds.
@@ -950,24 +946,76 @@ to by \fItermios_p\fP to \fIspeed\fP, which must be one of these constants:
 	B57600
 	B115200
 	B230400
+	B460800
+	B500000
+	B576000
+	B921600
+	B1000000
+	B1152000
+	B1500000
+	B2000000
 .ft P
 .fi
 .PP
-The zero baud rate, \fBB0\fP,
+These constants are additionally supported on the SPARC architecture:
+.PP
+.nf
+.ft B
+	B76800
+	B153600
+	B307200
+	B614400
+.ft P
+.fi
+.PP
+These constants are additionally supported on non-SPARC architectures:
+.PP
+.nf
+.ft B
+	B2500000
+	B3000000
+	B3500000
+	B4000000
+.ft P
+.fi
+.PP
+Due to differences between architectures, portable applications should check
+if a particular
+.BI B nnn
+constant is defined prior to using it.
+.PP
+The zero baud rate,
+.BR B0 ,
 is used to terminate the connection.
 If B0 is specified, the modem control lines shall no longer be asserted.
 Normally, this will disconnect the line.
-\fBCBAUDEX\fP is a mask
+.B CBAUDEX
+is a mask
 for the speeds beyond those defined in POSIX.1 (57600 and above).
-Thus, \fBB57600\fP & \fBCBAUDEX\fP is nonzero.
+Thus,
+.BR B57600 " & " CBAUDEX
+is nonzero.
+.PP
+Setting the baud rate to a value other than those defined by
+.BI B nnn
+constants is possible via the
+.B TCSETS2
+ioctl; see
+.BR ioctl_tty (2).
 .PP
 .BR cfgetispeed ()
-returns the input baud rate stored in the \fItermios\fP structure.
+returns the input baud rate stored in the
+.I termios
+structure.
 .PP
 .BR cfsetispeed ()
-sets the input baud rate stored in the \fItermios\fP structure to
+sets the input baud rate stored in the
+.I termios
+structure to
 .IR speed ,
-which must be specified as one of the \fBBnnn\fP constants listed above for
+which must be specified as one of the
+.BI B nnn
+constants listed above for
 .BR cfsetospeed ().
 If the input baud rate is set to zero, the input baud rate will be
 equal to the output baud rate.
@@ -1007,9 +1055,10 @@ For an explanation of the terms used in this section, see
 .BR attributes (7).
 .nh
 .ad l
+.nh
 .TS
 allbox;
-lbw36 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
@@ -1027,6 +1076,9 @@ T{
 .BR cfsetspeed ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
+.ad
+.sp 1
 .\" FIXME: The markings are different from that in the glibc manual.
 .\" markings in glibc manual are more detailed:
 .\"
@@ -1036,7 +1088,6 @@ T}	Thread safety	MT-Safe
 .\" glibc manual says /bsd indicate the preceding marker only applies
 .\" when the underlying kernel is a BSD kernel.
 .\" So, it is safety in Linux kernel.
-.ad
 .hy
 .SH CONFORMING TO
 .BR tcgetattr (),
@@ -1058,8 +1109,14 @@ and
 are nonstandard, but available on the BSDs.
 .SH NOTES
 UNIX\ V7 and several later systems have a list of baud rates
-where after the fourteen values B0, ..., B9600 one finds the
-two constants EXTA, EXTB ("External A" and "External B").
+where after the values
+.BR B0
+through
+.B B9600
+one finds the two constants
+.BR EXTA ,
+.B EXTB
+("External A" and "External B").
 Many systems extend the list with much higher baud rates.
 .PP
 The effect of a nonzero \fIduration\fP with
@@ -1107,7 +1164,7 @@ mask).
 .BR ioctl_tty (2),
 .BR setserial (8)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

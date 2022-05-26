@@ -37,7 +37,7 @@
 .\" 2005-03-11, mtk, modified pselect() text (it is now a system
 .\"     call in 2.6.16.
 .\"
-.TH SELECT 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH SELECT 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
 synchronous I/O multiplexing
@@ -45,17 +45,19 @@ synchronous I/O multiplexing
 .nf
 .B #include <sys/select.h>
 .PP
-.BI "int select(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
-.BI "           fd_set *" exceptfds ", struct timeval *" timeout );
+.BI "int select(int " nfds ", fd_set *restrict " readfds ,
+.BI "           fd_set *restrict " writefds ", fd_set *restrict " exceptfds ,
+.BI "           struct timeval *restrict " timeout );
 .PP
 .BI "void FD_CLR(int " fd ", fd_set *" set );
 .BI "int  FD_ISSET(int " fd ", fd_set *" set );
 .BI "void FD_SET(int " fd ", fd_set *" set );
 .BI "void FD_ZERO(fd_set *" set );
 .PP
-.BI "int pselect(int " nfds ", fd_set *" readfds ", fd_set *" writefds ,
-.BI "            fd_set *" exceptfds ", const struct timespec *" timeout ,
-.BI "            const sigset_t *" sigmask );
+.BI "int pselect(int " nfds ", fd_set *restrict " readfds ,
+.BI "           fd_set *restrict " writefds ", fd_set *restrict " exceptfds ,
+.BI "           const struct timespec *restrict " timeout ,
+.BI "           const sigset_t *restrict " sigmask );
 .fi
 .PP
 .RS -4
@@ -64,8 +66,22 @@ Feature Test Macro Requirements for glibc (see
 .RE
 .PP
 .BR pselect ():
-_POSIX_C_SOURCE\ >=\ 200112L
+.nf
+    _POSIX_C_SOURCE >= 200112L
+.fi
 .SH DESCRIPTION
+.BR "WARNING" :
+.BR select ()
+can monitor only file descriptors numbers that are less than
+.BR FD_SETSIZE
+(1024)\(eman unreasonably low limit for many modern applications\(emand
+this limitation will not change.
+All modern applications should instead use
+.BR poll (2)
+or
+.BR epoll (7),
+which do not suffer this limitation.
+.PP
 .BR select ()
 allows a program to monitor multiple file descriptors,
 waiting until one or more of the file descriptors become "ready"
@@ -76,15 +92,6 @@ perform a corresponding I/O operation (e.g.,
 or a sufficiently small
 .BR write (2))
 without blocking.
-.PP
-.BR select ()
-can monitor only file descriptors numbers that are less than
-.BR FD_SETSIZE ;
-.BR poll (2)
-and
-.BR epoll (7)
-do not have this limitation.
-See BUGS.
 .\"
 .SS File descriptor sets
 The principal arguments of
@@ -104,12 +111,6 @@ to indicate which file descriptors are currently "ready".
 Thus, if using
 .BR select ()
 within a loop, the sets \fImust be reinitialized\fP before each call.
-The implementation of the
-.I fd_set
-arguments as value-result arguments is a design error that is avoided in
-.BR poll (2)
-and
-.BR epoll (7).
 .PP
 The contents of a file descriptor set can be manipulated
 using the following macros:
@@ -651,6 +652,13 @@ or
 .BR epoll (7)
 instead.
 .PP
+The implementation of the
+.I fd_set
+arguments as value-result arguments is a design error that is avoided in
+.BR poll (2)
+and
+.BR epoll (7).
+.PP
 According to POSIX,
 .BR select ()
 should check all specified file descriptors in the three file descriptor sets,
@@ -759,7 +767,7 @@ main(void)
 For a tutorial with discussion and examples, see
 .BR select_tut (2).
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

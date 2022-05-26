@@ -35,7 +35,7 @@
 .\"     (bsdgroups versus sysvgroups, and the effect of the parent
 .\"     directory's set-group-ID mode bit).
 .\"
-.TH CHOWN 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH CHOWN 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 chown, fchown, lchown, fchownat \- change ownership of a file
 .SH SYNOPSIS
@@ -45,7 +45,7 @@ chown, fchown, lchown, fchownat \- change ownership of a file
 .BI "int chown(const char *" pathname ", uid_t " owner ", gid_t " group );
 .BI "int fchown(int " fd ", uid_t " owner ", gid_t " group );
 .BI "int lchown(const char *" pathname ", uid_t " owner ", gid_t " group );
-
+.PP
 .BR "#include <fcntl.h>           " "/* Definition of AT_* constants */"
 .B #include <unistd.h>
 .PP
@@ -60,28 +60,20 @@ Feature Test Macro Requirements for glibc (see
 .PP
 .BR fchown (),
 .BR lchown ():
-.PD 0
-.ad l
-.RS 4
-/* Since glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
-    || _XOPEN_SOURCE\ >=\ 500
-.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
-    || /* Glibc versions <= 2.19: */ _BSD_SOURCE
-.RE
+.nf
+    /* Since glibc 2.12: */ _POSIX_C_SOURCE >= 200809L
+        || _XOPEN_SOURCE >= 500
+.\"    || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED
+        || /* Glibc <= 2.19: */ _BSD_SOURCE
+.fi
 .PP
 .BR fchownat ():
-.PD 0
-.ad l
-.RS 4
-.TP 4
-Since glibc 2.10:
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Before glibc 2.10:
-_ATFILE_SOURCE
-.RE
-.ad
-.PD
+.nf
+    Since glibc 2.10:
+        _POSIX_C_SOURCE >= 200809L
+    Before glibc 2.10:
+        _ATFILE_SOURCE
+.fi
 .SH DESCRIPTION
 These system calls change the owner and group of a file.
 The
@@ -226,7 +218,7 @@ for an explanation of the need for
 On success, zero is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 Depending on the filesystem,
 errors other than those listed below can be returned.
@@ -240,9 +232,32 @@ Search permission is denied on a component of the path prefix.
 (See also
 .BR path_resolution (7).)
 .TP
+.B EBADF
+.RB ( fchown ())
+.I fd
+is not a valid open file descriptor.
+.TP
+.B EBADF
+.RB ( fchownat ())
+.I pathname
+is relative but
+.I dirfd
+is neither
+.B AT_FDCWD
+nor a valid file descriptor.
+.TP
 .B EFAULT
 .I pathname
 points outside your accessible address space.
+.TP
+.B EINVAL
+.RB ( fchownat ())
+Invalid flag specified in
+.IR flags .
+.TP
+.B EIO
+.RB ( fchown ())
+A low-level I/O error occurred while modifying the inode.
 .TP
 .B ELOOP
 Too many symbolic links were encountered in resolving
@@ -261,6 +276,13 @@ Insufficient kernel memory was available.
 .B ENOTDIR
 A component of the path prefix is not a directory.
 .TP
+.B ENOTDIR
+.RB ( fchownat ())
+.I pathname
+is relative and
+.I dirfd
+is a file descriptor referring to a file other than a directory.
+.TP
 .B EPERM
 The calling process did not have the required permissions
 (see above) to change owner and/or group.
@@ -272,47 +294,6 @@ The file is marked immutable or append-only.
 .TP
 .B EROFS
 The named file resides on a read-only filesystem.
-.PP
-The general errors for
-.BR fchown ()
-are listed below:
-.TP
-.B EBADF
-.I fd
-is not a valid open file descriptor.
-.TP
-.B EIO
-A low-level I/O error occurred while modifying the inode.
-.TP
-.B ENOENT
-See above.
-.TP
-.B EPERM
-See above.
-.TP
-.B EROFS
-See above.
-.PP
-The same errors that occur for
-.BR chown ()
-can also occur for
-.BR fchownat ().
-The following additional errors can occur for
-.BR fchownat ():
-.TP
-.B EBADF
-.I dirfd
-is not a valid file descriptor.
-.TP
-.B EINVAL
-Invalid flag specified in
-.IR flags .
-.TP
-.B ENOTDIR
-.I pathname
-is relative and
-.I dirfd
-is a file descriptor referring to a file other than a directory.
 .SH VERSIONS
 .BR fchownat ()
 was added to Linux in kernel 2.6.16;
@@ -501,7 +482,7 @@ main(int argc, char *argv[])
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

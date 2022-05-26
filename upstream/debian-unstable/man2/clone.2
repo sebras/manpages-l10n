@@ -39,7 +39,7 @@
 .\" 2008-11-19, mtk, document CLONE_NEWIPC
 .\" 2008-11-19, Jens Axboe, mtk, document CLONE_IO
 .\"
-.TH CLONE 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH CLONE 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 clone, __clone2, clone3 \- create a child process
 .SH SYNOPSIS
@@ -56,13 +56,19 @@ clone, __clone2, clone3 \- create a child process
 .PP
 /* For the prototype of the raw clone() system call, see NOTES */
 .PP
-.BI "long clone3(struct clone_args *" cl_args ", size_t " size );
+.BR "#include <linux/sched.h>" "    /* Definition of " "struct clone_args" " */"
+.BR "#include <sched.h>" "          /* Definition of " CLONE_* " constants */"
+.BR "#include <sys/syscall.h>" "    /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
+.PP
+.BI "long syscall(SYS_clone3, struct clone_args *" cl_args ", size_t " size );
 .fi
 .PP
 .IR Note :
-There is not yet a glibc wrapper for
-.BR clone3 ();
-see NOTES.
+glibc provides no wrapper for
+.BR clone3 (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 These system calls
 create a new ("child") process, in a manner similar to
@@ -183,11 +189,11 @@ is a structure of the following form:
 struct clone_args {
     u64 flags;        /* Flags bit mask */
     u64 pidfd;        /* Where to store PID file descriptor
-                         (\fIpid_t *\fP) */
+                         (\fIint *\fP) */
     u64 child_tid;    /* Where to store child TID,
                          in child\(aqs memory (\fIpid_t *\fP) */
     u64 parent_tid;   /* Where to store child TID,
-                         in parent\(aqs memory (\fIint *\fP) */
+                         in parent\(aqs memory (\fIpid_t *\fP) */
     u64 exit_signal;  /* Signal to deliver to parent on
                          child termination */
     u64 stack;        /* Pointer to lowest byte of stack */
@@ -250,14 +256,16 @@ and the fields in the
 .I clone_args
 argument supplied to
 .BR clone3 ():
-.RS
+.RS 4
 .TS
 lb lb lb
 l l l
 li li l.
 clone()	clone3()	Notes
 	\fIcl_args\fP field
-flags & \(ti0xff	flags	For most flags; details below
+flags & \(ti0xff	flags	T{
+For most flags; details below
+T}
 parent_tid	pidfd	See CLONE_PIDFD
 child_tid	child_tid	See CLONE_CHILD_SETTID
 parent_tid	parent_tid	See CLONE_PARENT_SETTID
@@ -325,7 +333,7 @@ should be set is defined by
 which cannot be larger than the number of currently nested PID namespaces.
 .PP
 To create a process with the following PIDs in a PID namespace hierarchy:
-.RS
+.RS 4
 .TS
 lb lb lb
 l l l.
@@ -359,7 +367,7 @@ set_tid_size = 2;
 .in
 .PP
 The PID in the PID namespaces outside the two innermost PID namespaces
-will be selected the same way as any other PID is selected.
+is selected the same way as any other PID is selected.
 .PP
 The
 .I set_tid
@@ -434,7 +442,7 @@ in the child's memory.
 The store operation completes before the clone call
 returns control to user space in the child process.
 (Note that the store operation may not have completed before the clone call
-returns in the parent process, which will be relevant if the
+returns in the parent process, which is relevant if the
 .BR CLONE_VM
 flag is also employed.)
 .TP
@@ -813,7 +821,7 @@ which is signaled when the child terminates, so that
 if
 .B CLONE_PARENT
 is set, then the parent of the calling process, rather than the
-calling process itself, will be signaled.
+calling process itself, is signaled.
 .IP
 The
 .B CLONE_PARENT
@@ -967,7 +975,7 @@ mask must also include
 .B CLONE_VM
 if
 .B CLONE_SIGHAND
-is specified
+is specified.
 .TP
 .BR CLONE_STOPPED " (since Linux 2.6.0)"
 .\" Precisely: Linux 2.6.0-test2
@@ -1129,7 +1137,7 @@ signals and the signals that are pending for the calling thread.
 .IP
 If a process-directed signal is delivered to a thread group,
 and the thread group has installed a handler for the signal, then
-the handler will be invoked in exactly one, arbitrarily selected
+the handler is invoked in exactly one, arbitrarily selected
 member of the thread group that has not blocked the signal.
 If multiple threads in a group are waiting to accept the same signal using
 .BR sigwaitinfo (2),
@@ -1185,7 +1193,7 @@ processes do not affect the other, as with
 If the
 .BR CLONE_VM
 flag is specified and the
-.BR CLONE_VM
+.BR CLONE_VFORK
 flag is not specified,
 then any alternate signal stack that was established by
 .BR sigaltstack (2)
@@ -1196,9 +1204,9 @@ is cleared in the child process.
 On success, the thread ID of the child process is returned
 in the caller's thread of execution.
 On failure, \-1 is returned
-in the caller's context, no child process will be created, and
+in the caller's context, no child process is created, and
 .I errno
-will be set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EAGAIN
@@ -1416,7 +1424,7 @@ was an invalid.
 .TP
 .BR EINVAL " (AArch64 only, Linux 4.6 and earlier)"
 .I stack
-was not aligned to a 126-bit boundary.
+was not aligned to a 128-bit boundary.
 .TP
 .B ENOMEM
 Cannot allocate sufficient memory to allocate a task structure for the
@@ -1538,11 +1546,6 @@ intended to be portable.
 One use of these systems calls
 is to implement threads: multiple flows of control in a program that
 run concurrently in a shared address space.
-.PP
-Glibc does not provide a wrapper for
-.BR clone3 ();
-call it using
-.BR syscall (2).
 .PP
 Note that the glibc
 .BR clone ()
@@ -1830,12 +1833,12 @@ childFunc(void *arg)
 {
     struct utsname uts;
 
-    /* Change hostname in UTS namespace of child */
+    /* Change hostname in UTS namespace of child. */
 
     if (sethostname(arg, strlen(arg)) == \-1)
         errExit("sethostname");
 
-    /* Retrieve and display hostname */
+    /* Retrieve and display hostname. */
 
     if (uname(&uts) == \-1)
         errExit("uname");
@@ -1865,7 +1868,7 @@ main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
-    /* Allocate memory to be used for the stack of the child */
+    /* Allocate memory to be used for the stack of the child. */
 
     stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, \-1, 0);
@@ -1875,7 +1878,7 @@ main(int argc, char *argv[])
     stackTop = stack + STACK_SIZE;  /* Assume stack grows downward */
 
     /* Create child that has its own UTS namespace;
-       child commences execution in childFunc() */
+       child commences execution in childFunc(). */
 
     pid = clone(childFunc, stackTop, CLONE_NEWUTS | SIGCHLD, argv[1]);
     if (pid == \-1)
@@ -1918,7 +1921,7 @@ main(int argc, char *argv[])
 .BR namespaces (7),
 .BR pthreads (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

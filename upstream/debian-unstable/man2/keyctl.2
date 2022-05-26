@@ -25,27 +25,25 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH KEYCTL 2 2020-11-01 Linux "Linux Key Management Calls"
+.TH KEYCTL 2 2021-08-27 Linux "Linux Key Management Calls"
 .SH NAME
 keyctl \- manipulate the kernel's key management facility
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
-.B #include <keyutils.h>
-.PP
-.BI "long keyctl(int " operation ", ...);"
-
-.B "/* For direct call via syscall(2): */"
-.B #include <asm/unistd.h>
-.B #include <linux/keyctl.h>
+.BR "#include <linux/keyctl.h>" "     /* Definition of " KEY* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
 .B #include <unistd.h>
 .PP
-.BI "long syscall(__NR_keyctl, int " operation ", __kernel_ulong_t " arg2 ,
-.BI "             __kernel_ulong_t " arg3 ", __kernel_ulong_t " arg4 ,
-.BI "             __kernel_ulong_t " arg5 );
+.BI "long syscall(SYS_keyctl, int " operation ", unsigned long " arg2 ,
+.BI "             unsigned long " arg3 ", unsigned long " arg4 ,
+.BI "             unsigned long " arg5 );
 .fi
 .PP
-No glibc wrapper is provided for this system call; see NOTES.
+.IR Note :
+glibc provides no wrapper for
+.BR keyctl (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 .BR keyctl ()
 allows user-space programs to perform key manipulation.
@@ -939,27 +937,27 @@ otherwise the user-specific keyring.
 .TP
 .BR KEY_REQKEY_DEFL_THREAD_KEYRING
 Use the thread-specific keyring
-.RB ( thread-keyring (7))
+.RB ( thread\-keyring (7))
 as the new default keyring.
 .TP
 .BR KEY_REQKEY_DEFL_PROCESS_KEYRING
 Use the process-specific keyring
-.RB ( process-keyring (7))
+.RB ( process\-keyring (7))
 as the new default keyring.
 .TP
 .BR KEY_REQKEY_DEFL_SESSION_KEYRING
 Use the session-specific keyring
-.RB ( session-keyring (7))
+.RB ( session\-keyring (7))
 as the new default keyring.
 .TP
 .BR KEY_REQKEY_DEFL_USER_KEYRING
 Use the UID-specific keyring
-.RB ( user-keyring (7))
+.RB ( user\-keyring (7))
 as the new default keyring.
 .TP
 .BR KEY_REQKEY_DEFL_USER_SESSION_KEYRING
 Use the UID-specific session keyring
-.RB ( user-session-keyring (7))
+.RB ( user\-session\-keyring (7))
 as the new default keyring.
 .TP
 .BR KEY_REQKEY_DEFL_REQUESTOR_KEYRING " (since Linux 2.6.29)"
@@ -1100,7 +1098,7 @@ that was created as a consequence of a call to
 For further information, see
 .BR request_key (2)
 and the kernel source file
-.IR Documentation/security/keys-request-key.txt .
+.IR Documentation/security/keys\-request\-key.txt .
 .IP
 The arguments
 .IR arg3 ,
@@ -1356,7 +1354,7 @@ via the function
 .BR KEYCTL_GET_PERSISTENT " (since Linux 3.13)"
 .\" commit f36f8c75ae2e7d4da34f4c908cebdb4aa42c977e
 Get the persistent keyring
-.RB ( persistent-keyring (7))
+.RB ( persistent\-keyring (7))
 for a specified user and link it to a specified keyring.
 .IP
 The user ID is specified in
@@ -1495,7 +1493,7 @@ parameters of the KDF operation to be applied:
 .EX
 struct keyctl_kdf_params {
     char *hashname;     /* Hash algorithm name */
-    char *otherinfo;    /* SP800-56A OtherInfo */
+    char *otherinfo;    /* SP800\-56A OtherInfo */
     __u32 otherinfolen; /* Length of otherinfo data */
     __u32 __spare[8];   /* Reserved */
 };
@@ -1659,7 +1657,7 @@ Zero.
 .PP
 On error, \-1 is returned, and
 .I errno
-is set appropriately to indicate the error.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EACCES
@@ -1746,6 +1744,8 @@ was
 and the size of the description in
 .IR arg4
 (including the terminating null byte) exceeded 4096 bytes.
+.TP
+.B EINVAL
 size of the string (including the terminating null byte) specified in
 .I arg3
 (the key type)
@@ -1952,10 +1952,12 @@ This system call first appeared in Linux 2.6.10.
 .SH CONFORMING TO
 This system call is a nonstandard Linux extension.
 .SH NOTES
-No wrapper for this system call is provided in glibc.
 A wrapper is provided in the
 .IR libkeyutils
 library.
+(The accompanying package provides the
+.I <keyutils.h>
+header file.)
 When employing the wrapper in that library, link with
 .IR \-lkeyutils .
 However, rather than using this system call directly,
@@ -2013,7 +2015,7 @@ $ \fBcat /tmp/key_instantiate.log\fP
 Time: Mon Nov  7 13:06:47 2016
 
 Command line arguments:
-  argv[0]:            /sbin/request-key
+  argv[0]:            /sbin/request\-key
   operation:          create
   key_to_instantiate: 20d035bf
   UID:                1000
@@ -2143,7 +2145,7 @@ main(int argc, char *argv[])
     fprintf(fp, "\en");
 
     /*
-     * Assume the authority to instantiate the key named in argv[2]
+     * Assume the authority to instantiate the key named in argv[2].
      */
     if (keyctl(KEYCTL_ASSUME_AUTHORITY, key_to_instantiate) == \-1) {
         fprintf(fp, "KEYCTL_ASSUME_AUTHORITY failed: %s\en",
@@ -2152,7 +2154,7 @@ main(int argc, char *argv[])
     }
 
     /*
-     * Fetch the description of the key that is to be instantiated
+     * Fetch the description of the key that is to be instantiated.
      */
     if (keyctl(KEYCTL_DESCRIBE, key_to_instantiate,
                 dbuf, sizeof(dbuf)) == \-1) {
@@ -2164,7 +2166,7 @@ main(int argc, char *argv[])
 
     /*
      * Fetch the payload of the authorization key, which is
-     * actually the callout data given to request_key()
+     * actually the callout data given to request_key().
      */
     akp_size = keyctl(KEYCTL_READ, KEY_SPEC_REQKEY_AUTH_KEY,
                       auth_key_payload, sizeof(auth_key_payload));
@@ -2289,7 +2291,7 @@ The kernel source files under
 (or, before Linux 4.13, in the file
 .IR Documentation/security/keys.txt ).
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

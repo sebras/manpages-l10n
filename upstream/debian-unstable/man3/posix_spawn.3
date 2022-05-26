@@ -28,22 +28,23 @@
 .\"     POSIX 1003.1-2004 documentation
 .\"     (http://www.opengroup.org/onlinepubs/009695399)
 .\"
-.TH POSIX_SPAWN 3 2020-11-01 "GNU" "Linux Programmer's Manual"
+.TH POSIX_SPAWN 3 2021-03-22 "GNU" "Linux Programmer's Manual"
 .SH NAME
 posix_spawn, posix_spawnp \- spawn a process
 .SH SYNOPSIS
 .nf
 .B #include <spawn.h>
 .PP
-.BI "int posix_spawn(pid_t *" pid ", const char *" path ,
-.BI "                const posix_spawn_file_actions_t *" file_actions ,
-.BI "                const posix_spawnattr_t *" attrp ,
-.BI "                char *const " argv[] ", char *const " envp[] );
-.PP
-.BI "int posix_spawnp(pid_t *" pid ", const char *" file ,
-.BI "                 const posix_spawn_file_actions_t *" file_actions ,
-.BI "                 const posix_spawnattr_t *" attrp ,
-.BI "                 char *const " argv[] ", char *const " envp[] );
+.BI "int posix_spawn(pid_t *restrict " pid ", const char *restrict " path ,
+.BI "                const posix_spawn_file_actions_t *restrict " file_actions ,
+.BI "                const posix_spawnattr_t *restrict " attrp ,
+.BI "                char *const " argv [restrict],
+.BI "                char *const " envp [restrict]);
+.BI "int posix_spawnp(pid_t *restrict " pid ", const char *restrict " file ,
+.BI "                const posix_spawn_file_actions_t *restrict " file_actions ,
+.BI "                const posix_spawnattr_t *restrict " attrp ,
+.BI "                char *const " argv [restrict],
+.BI "                char *const " envp [restrict]);
 .fi
 .SH DESCRIPTION
 The
@@ -217,7 +218,6 @@ is used if the caller requests it,
 or if there is no cleanup expected in the child before it
 .BR exec (3)s
 the requested file.
-.PP
 .SS pre-exec() step: housekeeping
 In between the
 .BR fork()
@@ -515,13 +515,13 @@ and
 .BR posix_spawnp ()
 functions fail only in the case where the underlying
 .BR fork (2),
-.BR vfork (2)
+.BR vfork (2),
 or
 .BR clone (2)
 call fails;  in these cases, these functions return an error number,
 which will be one of the errors described for
 .BR fork (2),
-.BR vfork (2)
+.BR vfork (2),
 or
 .BR clone (2).
 .PP
@@ -721,7 +721,7 @@ main(int argc, char *argv[])
         case \(aqc\(aq:       /* \-c: close standard output in child */
 
             /* Create a file actions object and add a "close"
-               action to it */
+               action to it. */
 
             s = posix_spawn_file_actions_init(&file_actions);
             if (s != 0)
@@ -738,7 +738,7 @@ main(int argc, char *argv[])
         case \(aqs\(aq:       /* \-s: block all signals in child */
 
             /* Create an attributes object and add a "set signal mask"
-               action to it */
+               action to it. */
 
             s = posix_spawnattr_init(&attr);
             if (s != 0)
@@ -767,7 +767,7 @@ main(int argc, char *argv[])
     if (s != 0)
         errExitEN(s, "posix_spawn");
 
-    /* Destroy any objects that we created earlier */
+    /* Destroy any objects that we created earlier. */
 
     if (attrp != NULL) {
         s = posix_spawnattr_destroy(attrp);
@@ -783,7 +783,7 @@ main(int argc, char *argv[])
 
     printf("PID of child: %jd\en", (intmax_t) child_pid);
 
-    /* Monitor status of the child until it terminates */
+    /* Monitor status of the child until it terminates. */
 
     do {
         s = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
@@ -844,7 +844,7 @@ main(int argc, char *argv[])
 Base Definitions volume of POSIX.1-2001,
 .I http://www.opengroup.org/unix/online.html
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -23,7 +23,7 @@
 .\" <http://www.gnu.org/licenses/>.
 .\" %%%LICENSE_END
 .\"
-.TH MLOCK 2 2020-04-11 "Linux" "Linux Programmer's Manual"
+.TH MLOCK 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 mlock, mlock2, munlock, mlockall, munlockall \- lock and unlock memory
 .SH SYNOPSIS
@@ -31,7 +31,7 @@ mlock, mlock2, munlock, mlockall, munlockall \- lock and unlock memory
 .B #include <sys/mman.h>
 .PP
 .BI "int mlock(const void *" addr ", size_t " len );
-.BI "int mlock2(const void *" addr ", size_t " len ", int " flags );
+.BI "int mlock2(const void *" addr ", size_t " len ", unsigned int " flags );
 .BI "int munlock(const void *" addr ", size_t " len );
 .PP
 .BI "int mlockall(int " flags );
@@ -108,7 +108,7 @@ memory range can be moved to external swap space again by the kernel.
 .BR mlockall ()
 locks all pages mapped into the address space of the
 calling process.
-This includes the pages of the code, data and stack
+This includes the pages of the code, data, and stack
 segment, as well as shared libraries, user space kernel data, shared
 memory, and memory-mapped files.
 All mapped pages are guaranteed
@@ -178,9 +178,68 @@ calling process.
 On success, these system calls return 0.
 On error, \-1 is returned,
 .I errno
-is set appropriately, and no changes are made to any locks in the
+is set to indicate the error,
+and no changes are made to any locks in the
 address space of the process.
 .SH ERRORS
+.\"SVr4 documents an additional EAGAIN error code.
+.TP
+.B EAGAIN
+.RB ( mlock (),
+.BR mlock2 (),
+and
+.BR munlock ())
+Some or all of the specified address range could not be locked.
+.TP
+.B EINVAL
+.RB ( mlock (),
+.BR mlock2 (),
+and
+.BR munlock ())
+The result of the addition
+.IR addr + len
+was less than
+.IR addr
+(e.g., the addition may have resulted in an overflow).
+.TP
+.B EINVAL
+.RB ( mlock2 ())
+Unknown \fIflags\fP were specified.
+.TP
+.B EINVAL
+.RB ( mlockall ())
+Unknown \fIflags\fP were specified or
+.B MCL_ONFAULT
+was specified without either
+.B MCL_FUTURE
+or
+.BR MCL_CURRENT .
+.TP
+.B EINVAL
+(Not on Linux)
+.I addr
+was not a multiple of the page size.
+.TP
+.B ENOMEM
+.RB ( mlock (),
+.BR mlock2 (),
+and
+.BR munlock ())
+Some of the specified address range does not correspond to mapped
+pages in the address space of the process.
+.TP
+.B ENOMEM
+.RB ( mlock (),
+.BR mlock2 (),
+and
+.BR munlock ())
+Locking or unlocking a region would result in the total number of
+mappings with distinct attributes (e.g., locked versus unlocked)
+exceeding the allowed maximum.
+.\" I.e., the number of VMAs would exceed the 64kB maximum
+(For example, unlocking a range in the middle of a currently locked
+mapping would result in three mappings:
+two locked mappings at each end and an unlocked mapping in the middle.)
 .TP
 .B ENOMEM
 (Linux 2.6.9 and later) the caller had a nonzero
@@ -206,63 +265,9 @@ half of RAM.
 The caller is not privileged, but needs privilege
 .RB ( CAP_IPC_LOCK )
 to perform the requested operation.
-.\"SVr4 documents an additional EAGAIN error code.
-.PP
-For
-.BR mlock (),
-.BR mlock2 (),
-and
-.BR munlock ():
-.TP
-.B EAGAIN
-Some or all of the specified address range could not be locked.
-.TP
-.B EINVAL
-The result of the addition
-.IR addr + len
-was less than
-.IR addr
-(e.g., the addition may have resulted in an overflow).
-.TP
-.B EINVAL
-(Not on Linux)
-.I addr
-was not a multiple of the page size.
-.TP
-.B ENOMEM
-Some of the specified address range does not correspond to mapped
-pages in the address space of the process.
-.TP
-.B ENOMEM
-Locking or unlocking a region would result in the total number of
-mappings with distinct attributes (e.g., locked versus unlocked)
-exceeding the allowed maximum.
-.\" I.e., the number of VMAs would exceed the 64kB maximum
-(For example, unlocking a range in the middle of a currently locked
-mapping would result in three mappings:
-two locked mappings at each end and an unlocked mapping in the middle.)
-.PP
-For
-.BR mlock2 ():
-.TP
-.B EINVAL
-Unknown \fIflags\fP were specified.
-.PP
-For
-.BR mlockall ():
-.TP
-.B EINVAL
-Unknown \fIflags\fP were specified or
-.B MCL_ONFAULT
-was specified without either
-.B MCL_FUTURE
-or
-.BR MCL_CURRENT .
-.PP
-For
-.BR munlockall ():
 .TP
 .B EPERM
+.RB ( munlockall ())
 (Linux 2.6.8 and earlier) The caller was not privileged
 .RB ( CAP_IPC_LOCK ).
 .SH VERSIONS
@@ -270,6 +275,11 @@ For
 is available since Linux 4.4;
 glibc support was added in version 2.27.
 .SH CONFORMING TO
+.BR mlock (),
+.BR munlock (),
+.BR mlockall (),
+and
+.BR munlockall ():
 POSIX.1-2001, POSIX.1-2008, SVr4.
 .PP
 .BR mlock2 ()
@@ -497,7 +507,7 @@ resource limit is encountered.
 .BR proc (5),
 .BR capabilities (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

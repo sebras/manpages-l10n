@@ -28,24 +28,34 @@
 .\"   Derived from 'readdir.2'.
 .\" Modified Tue Oct 22 08:11:14 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
 .\"
-.TH GETDENTS 2  2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH GETDENTS 2  2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 getdents, getdents64 \- get directory entries
 .SH SYNOPSIS
 .nf
-.BI "long getdents(unsigned int " fd ", struct linux_dirent *" dirp ,
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
+.PP
+.BI "long syscall(SYS_getdents, unsigned int " fd \
+", struct linux_dirent *" dirp ,
 .BI "             unsigned int " count );
 .PP
-.BR "#define _GNU_SOURCE" "        /* See feature_test_macros(7) */"
+.BR "#define _GNU_SOURCE" "           /* See feature_test_macros(7) */"
 .BR "#include <dirent.h>"
 .PP
 .BI "ssize_t getdents64(int " fd ", void *" dirp ", size_t " count );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for
-.BR getdents ();
-see NOTES.
+glibc provides no wrapper for
+.BR getdents (),
+necessitating the use of
+.BR syscall (2).
+.PP
+.IR Note :
+There is no definition of
+.I struct linux_dirent
+in glibc; see NOTES.
 .SH DESCRIPTION
 These are not the interfaces you are interested in.
 Look at
@@ -76,7 +86,7 @@ struct linux_dirent {
     unsigned long  d_ino;     /* Inode number */
     unsigned long  d_off;     /* Offset to next \fIlinux_dirent\fP */
     unsigned short d_reclen;  /* Length of this \fIlinux_dirent\fP */
-    char           d_name[];  /* Filename (null-terminated) */
+    char           d_name[];  /* Filename (null\-terminated) */
                       /* length is actually (d_reclen \- 2 \-
                          offsetof(struct linux_dirent, d_name)) */
     /*
@@ -173,11 +183,11 @@ structures of the following type:
 .in +4n
 .EX
 struct linux_dirent64 {
-    ino64_t        d_ino;    /* 64-bit inode number */
-    off64_t        d_off;    /* 64-bit offset to next structure */
+    ino64_t        d_ino;    /* 64\-bit inode number */
+    off64_t        d_off;    /* 64\-bit offset to next structure */
     unsigned short d_reclen; /* Size of this dirent */
     unsigned char  d_type;   /* File type */
-    char           d_name[]; /* Filename (null-terminated) */
+    char           d_name[]; /* Filename (null\-terminated) */
 };
 .EE
 .in
@@ -186,7 +196,7 @@ On success, the number of bytes read is returned.
 On end of directory, 0 is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EBADF
@@ -211,13 +221,13 @@ SVr4.
 Library support for
 .BR getdents64 ()
 was added in glibc 2.30;
-there is no glibc wrapper for
-.BR getdents ().
-Calling
+Glibc does not provide a wrapper for
+.BR getdents ();
+call
 .BR getdents ()
 (or
 .BR getdents64 ()
-on earlier glibc versions) requires the use of
+on earlier glibc versions) using
 .BR syscall (2).
 In that case you will need to define the
 .I linux_dirent
@@ -242,7 +252,7 @@ program on an ext2 directory:
 .in +4n
 .EX
 .RB "$" " ./a.out /testfs/"
---------------- nread=120 ---------------
+-\-\-\-\-\-\-\-\-\-\-\-\-\-\- nread=120 \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
 inode#    file type  d_reclen  d_off   d_name
        2  directory    16         12  .
        2  directory    16         24  ..
@@ -326,7 +336,7 @@ main(int argc, char *argv[])
 .BR readdir (3),
 .BR inode (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

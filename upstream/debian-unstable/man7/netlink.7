@@ -7,7 +7,7 @@
 .\" Based on the original comments from Alexey Kuznetsov
 .\" Modified 2005-12-27 by Hasso Tepper <hasso@estpak.ee>
 .\" $Id: netlink.7,v 1.8 2000/06/22 13:23:00 ak Exp $
-.TH NETLINK  7 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH NETLINK  7 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 netlink \- communication between kernel and user space (AF_NETLINK)
 .SH SYNOPSIS
@@ -45,7 +45,7 @@ The currently assigned netlink families are:
 .BR NETLINK_ROUTE
 Receives routing and link updates and may be used to modify the routing
 tables (both IPv4 and IPv6), IP addresses, link parameters,
-neighbor setups, queueing disciplines, traffic classes and
+neighbor setups, queueing disciplines, traffic classes, and
 packet classifiers (see
 .BR rtnetlink (7)).
 .TP
@@ -102,7 +102,7 @@ Access to FIB lookup from user space.
 .BR NETLINK_CONNECTOR " (since Linux 2.6.14)"
 Kernel connector.
 See
-.I Documentation/driver-api/connector.rst
+.I Documentation/driver\-api/connector.rst
 (or
 .IR /Documentation/connector/connector.*
 .\" commit baa293e9544bea71361950d071579f0e4d5713ed
@@ -190,12 +190,25 @@ message signals an error and the payload contains an
 structure,
 .B NLMSG_DONE
 message terminates a multipart message.
+Error messages get the
+original request appened, unless the user requests to cap the
+error message, and get extra error data if requested.
 .PP
 .in +4n
 .EX
 struct nlmsgerr {
     int error;        /* Negative errno or 0 for acknowledgements */
     struct nlmsghdr msg;  /* Message header that caused the error */
+    /*
+     * followed by the message contents unless NETLINK_CAP_ACK was set
+     * or the ACK indicates success (error == 0).
+     * For example Generic Netlink message with attributes.
+     * message length is aligned with NLMSG_ALIGN()
+     */
+    /*
+     * followed by TLVs defined in enum nlmsgerr_attrs
+     * if NETLINK_EXT_ACK was set
+     */
 };
 .EE
 .in
@@ -205,39 +218,56 @@ appropriate manual pages for that, for example,
 .BR rtnetlink (7)
 for
 .BR NETLINK_ROUTE .
+.nh
+.ad l
 .TS
 tab(:);
 l s
-lB l.
+lB lx.
 Standard flag bits in \fInlmsg_flags\fP
 _
-NLM_F_REQUEST:Must be set on all request messages.
+NLM_F_REQUEST:T{
+Must be set on all request messages.
+T}
 NLM_F_MULTI:T{
 The message is part of a multipart message terminated by
 .BR NLMSG_DONE .
 T}
-NLM_F_ACK:Request for an acknowledgment on success.
-NLM_F_ECHO:Echo this request.
+NLM_F_ACK:T{
+Request for an acknowledgement on success.
+T}
+NLM_F_ECHO:T{
+Echo this request.
+T}
 .TE
+.ad
+.hy
 .\" No right adjustment for text blocks in tables
+.nh
+.ad l
 .TS
 tab(:);
 l s
-lB l.
+lB lx.
 Additional flag bits for GET requests
 _
-NLM_F_ROOT:Return the complete table instead of a single entry.
+NLM_F_ROOT:T{
+Return the complete table instead of a single entry.
+T}
 NLM_F_MATCH:T{
 Return all entries matching criteria passed in message content.
 Not implemented yet.
 T}
-NLM_F_ATOMIC:Return an atomic snapshot of the table.
+NLM_F_ATOMIC:T{
+Return an atomic snapshot of the table.
+T}
 NLM_F_DUMP:T{
 Convenience macro; equivalent to
-.br
 (NLM_F_ROOT|NLM_F_MATCH).
 T}
 .TE
+.ad
+.hy
 .\" FIXME NLM_F_ATOMIC is not used anymore?
 .PP
 Note that
@@ -245,17 +275,29 @@ Note that
 requires the
 .B CAP_NET_ADMIN
 capability or an effective UID of 0.
+.nh
+.ad l
 .TS
 tab(:);
 l s
-lB l.
+lB lx.
 Additional flag bits for NEW requests
 _
-NLM_F_REPLACE:Replace existing matching object.
-NLM_F_EXCL:Don't replace if the object already exists.
-NLM_F_CREATE:Create object if it doesn't already exist.
-NLM_F_APPEND:Add to the end of the object list.
+NLM_F_REPLACE:T{
+Replace existing matching object.
+T}
+NLM_F_EXCL:T{
+Don't replace if the object already exists.
+T}
+NLM_F_CREATE:T{
+Create object if it doesn't already exist.
+T}
+NLM_F_APPEND:T{
+Add to the end of the object list.
+T}
 .TE
+.ad
+.hy
 .PP
 .I nlmsg_seq
 and
@@ -286,7 +328,7 @@ For reliable transfer the sender can request an
 acknowledgement from the receiver by setting the
 .B NLM_F_ACK
 flag.
-An acknowledgment is an
+An acknowledgement is an
 .B NLMSG_ERROR
 packet with the error field set to 0.
 The application must generate acknowledgements for
@@ -393,7 +435,6 @@ and
 .BR NETLINK_SELINUX
 groups allow other users to receive messages.
 No groups allow other users to send messages.
-.PP
 .SS Socket options
 To set or get a netlink socket option, call
 .BR getsockopt (2)
@@ -463,14 +504,14 @@ The
 .I nsid
 is sent to user space via an ancillary data.
 .TP
-.BR NETLINK_CAP_ACK " (since Linux 4.2)"
+.BR NETLINK_CAP_ACK " (since Linux 4.3)"
 .\"	commit 0a6a3a23ea6efde079a5b77688541a98bf202721
 .\"	Author: Christophe Ricard <christophe.ricard@gmail.com>
-The kernel may fail to allocate the necessary room for the acknowledgment
+The kernel may fail to allocate the necessary room for the acknowledgement
 message back to user space.
 This option trims off the payload of the original netlink message.
 The netlink message header is still included, so the user can guess from the
-sequence number which message triggered the acknowledgment.
+sequence number which message triggered the acknowledgement.
 .SH VERSIONS
 The socket interface to netlink first appeared Linux 2.2.
 .PP
@@ -579,7 +620,7 @@ information about libnl
 .PP
 RFC 3549 "Linux Netlink as an IP Services Protocol"
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

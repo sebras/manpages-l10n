@@ -37,16 +37,14 @@
 .\"	Changed wording and placement of sentence regarding attachment
 .\"		of segments marked for destruction
 .\"
-.TH SHMOP 2 2020-04-11 "Linux" "Linux Programmer's Manual"
+.TH SHMOP 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 shmat, shmdt \- System V shared memory operations
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
 .B #include <sys/shm.h>
 .PP
 .BI "void *shmat(int " shmid ", const void *" shmaddr ", int " shmflg );
-.PP
 .BI "int shmdt(const void *" shmaddr );
 .fi
 .SH DESCRIPTION
@@ -171,19 +169,16 @@ returns the address of the attached shared memory segment; on error,
 .I (void\ *)\ \-1
 is returned, and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .PP
 On success,
 .BR shmdt ()
 returns 0; on error \-1 is returned, and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .SH ERRORS
-When
 .BR shmat ()
-fails,
-.I errno
-is set to one of the following:
+can fail with one of the following errors:
 .TP
 .B EACCES
 The calling process does not have the required permissions for
@@ -211,11 +206,8 @@ was NULL.
 .B ENOMEM
 Could not allocate memory for the descriptor or for the page tables.
 .PP
-When
 .BR shmdt ()
-fails,
-.I errno
-is set as follows:
+can fail with one of the following errors:
 .TP
 .B EINVAL
 There is no shared memory segment attached at
@@ -332,10 +324,14 @@ Hello, world
 .in
 .\"
 .SS Program source: svshm_string.h
-The following header file is included by the "reader" and "writer" programs.
+The following header file is included by the "reader" and "writer" programs:
 .PP
 .in +4n
 .EX
+/* svshm_string.h
+
+   Licensed under GNU General Public License v2 or later.
+*/
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -386,23 +382,23 @@ main(int argc, char *argv[])
     char *addr;
 
     /* Create shared memory and semaphore set containing one
-       semaphore */
+       semaphore. */
 
     shmid = shmget(IPC_PRIVATE, MEM_SIZE, IPC_CREAT | 0600);
     if (shmid == \-1)
         errExit("shmget");
 
     semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600);
-    if (shmid == \-1)
-        errExit("shmget");
+    if (semid == \-1)
+        errExit("semget");
 
-    /* Attach shared memory into our address space */
+    /* Attach shared memory into our address space. */
 
     addr = shmat(shmid, NULL, SHM_RDONLY);
     if (addr == (void *) \-1)
         errExit("shmat");
 
-    /* Initialize semaphore 0 in set with value 1 */
+    /* Initialize semaphore 0 in set with value 1. */
 
     arg.val = 1;
     if (semctl(semid, 0, SETVAL, arg) == \-1)
@@ -410,7 +406,7 @@ main(int argc, char *argv[])
 
     printf("shmid = %d; semid = %d\en", shmid, semid);
 
-    /* Wait for semaphore value to become 0 */
+    /* Wait for semaphore value to become 0. */
 
     sop.sem_num = 0;
     sop.sem_op = 0;
@@ -419,11 +415,11 @@ main(int argc, char *argv[])
     if (semop(semid, &sop, 1) == \-1)
         errExit("semop");
 
-    /* Print the string from shared memory */
+    /* Print the string from shared memory. */
 
     printf("%s\en", addr);
 
-    /* Remove shared memory and semaphore set */
+    /* Remove shared memory and semaphore set. */
 
     if (shmctl(shmid, IPC_RMID, NULL) == \-1)
         errExit("shmctl");
@@ -470,7 +466,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    /* Get object IDs from command\-line */
+    /* Get object IDs from command\-line. */
 
     shmid = atoi(argv[1]);
     semid = atoi(argv[2]);
@@ -484,7 +480,7 @@ main(int argc, char *argv[])
 
     memcpy(addr, argv[3], len);
 
-    /* Decrement semaphore to 0 */
+    /* Decrement semaphore to 0. */
 
     sop.sem_num = 0;
     sop.sem_op = \-1;
@@ -506,7 +502,7 @@ main(int argc, char *argv[])
 .BR shm_overview (7),
 .BR sysvipc (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

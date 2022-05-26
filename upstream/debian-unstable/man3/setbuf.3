@@ -45,21 +45,20 @@
 .\" Correction,  2000-03-03, Andreas Jaeger <aj@suse.de>
 .\" Added return value for setvbuf, aeb,
 .\"
-.TH SETBUF 3  2019-03-06 "Linux" "Linux Programmer's Manual"
+.TH SETBUF 3  2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 setbuf, setbuffer, setlinebuf, setvbuf \- stream buffering operations
 .SH SYNOPSIS
 .nf
 .B #include <stdio.h>
 .PP
-.BI "void setbuf(FILE *" stream ", char *" buf );
+.BI "int setvbuf(FILE *restrict " stream ", char *restrict " buf ,
+.BI "            int " mode ", size_t " size );
 .PP
-.BI "void setbuffer(FILE *" stream ", char *" buf ", size_t "  size );
-.PP
+.BI "void setbuf(FILE *restrict " stream ", char *restrict " buf );
+.BI "void setbuffer(FILE *restrict " stream ", char *restrict " buf ,
+.BI "            size_t "  size );
 .BI "void setlinebuf(FILE *" stream );
-.PP
-.BI "int setvbuf(FILE *" stream ", char *" buf ", int " mode \
-", size_t " size );
 .fi
 .PP
 .RS -4
@@ -69,17 +68,19 @@ Feature Test Macro Requirements for glibc (see
 .PP
 .BR setbuffer (),
 .BR setlinebuf ():
+.nf
     Since glibc 2.19:
         _DEFAULT_SOURCE
     Glibc 2.19 and earlier:
         _BSD_SOURCE
+.fi
 .SH DESCRIPTION
 The three types of buffering available are unbuffered, block buffered, and
 line buffered.
 When an output stream is unbuffered, information appears on
 the destination file or terminal as soon as written; when it is block
-buffered many characters are saved up and written as a block; when it is
-line buffered characters are saved up until a newline is output or input is
+buffered, many characters are saved up and written as a block; when it is
+line buffered, characters are saved up until a newline is output or input is
 read from any stream attached to a terminal device (typically \fIstdin\fP).
 The function
 .BR fflush (3)
@@ -165,25 +166,44 @@ The other functions do not return a value.
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw23 lb lb
+lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
 .BR setbuf (),
 .BR setbuffer (),
-.br
 .BR setlinebuf (),
 .BR setvbuf ()
 T}	Thread safety	MT-Safe
 .TE
+.hy
+.ad
+.sp 1
 .SH CONFORMING TO
 The
 .BR setbuf ()
 and
 .BR setvbuf ()
 functions conform to C89 and C99.
+.SH NOTES
+POSIX notes
+.\" https://www.austingroupbugs.net/view.php?id=397#c799
+.\" 0000397: setbuf and errno
+that the value of
+.I errno
+is unspecified after a call to
+.BR setbuf ()
+and further notes that, since the value of
+.I errno
+is not required to be unchanged after a successful call to
+.BR setbuf (),
+applications should instead use
+.BR setvbuf ()
+in order to detect errors.
 .SH BUGS
 .\" The
 .\" .BR setbuffer ()
@@ -209,7 +229,7 @@ int
 main(void)
 {
     char buf[BUFSIZ];
-    setbuf(stdin, buf);
+    setbuf(stdout, buf);
     printf("Hello, world!\en");
     return 0;
 }
@@ -224,7 +244,7 @@ main(void)
 .BR printf (3),
 .BR puts (3)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

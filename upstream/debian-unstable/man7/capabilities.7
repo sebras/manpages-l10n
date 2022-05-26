@@ -45,7 +45,7 @@
 .\"     other capabilities where the permitted or inheritable bit is set.
 .\" 2011-09-07, mtk/Serge hallyn: Add CAP_SYSLOG
 .\"
-.TH CAPABILITIES 7 2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH CAPABILITIES 7 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 capabilities \- overview of Linux capabilities
 .SH DESCRIPTION
@@ -205,11 +205,21 @@ the filesystem or any of the supplementary GIDs of the calling process.
 .B CAP_IPC_LOCK
 .\" FIXME . As at Linux 3.2, there are some strange uses of this capability
 .\" in other places; they probably should be replaced with something else.
+.PD 0
+.RS
+.IP * 2
 Lock memory
 .RB ( mlock (2),
 .BR mlockall (2),
 .BR mmap (2),
+.BR shmctl (2));
+.IP *
+Allocate memory using huge pages
+.RB ( memfd_create (2),
+.BR mmap (2),
 .BR shmctl (2)).
+.PD 0
+.RE
 .TP
 .B CAP_IPC_OWNER
 Bypass permission checks for operations on System V IPC objects.
@@ -322,7 +332,7 @@ performance monitoring functionality from the overloaded
 .BR CAP_SYS_ADMIN
 capability.
 See also the kernel source file
-.IR Documentation/admin-guide/perf-security.rst .
+.IR Documentation/admin\-guide/perf\-security.rst .
 .TP
 .B CAP_SETGID
 .RS
@@ -339,6 +349,12 @@ write a group ID mapping in a user namespace (see
 .TP
 .BR CAP_SETFCAP " (since Linux 2.6.24)"
 Set arbitrary capabilities on a file.
+.IP
+.\" commit db2e718a47984b9d71ed890eb2ea36ecf150de18
+Since Linux 5.12, this capability is
+also needed to map user ID 0 in a new user namespace; see
+.BR user_namespaces (7)
+for details.
 .TP
 .B CAP_SETPCAP
 If file capabilities are supported (i.e., since Linux 2.6.24):
@@ -456,7 +472,7 @@ I/O scheduling classes;
 forge PID when passing socket credentials via UNIX domain sockets;
 .IP *
 exceed
-.IR /proc/sys/fs/file-max ,
+.IR /proc/sys/fs/file\-max ,
 the system-wide limit on the number of open files,
 in system calls that open files (e.g.,
 .BR accept (2),
@@ -749,7 +765,7 @@ via a UNIX domain socket (see
 .BR unix (7));
 .IP *
 override the
-.I /proc/sys/fs/pipe-size-max
+.I /proc/sys/fs/pipe\-size\-max
 limit when setting the capacity of a pipe using the
 .B F_SETPIPE_SZ
 .BR fcntl (2)
@@ -758,11 +774,11 @@ command;
 use
 .BR F_SETPIPE_SZ
 to increase the capacity of a pipe above the limit specified by
-.IR /proc/sys/fs/pipe-max-size ;
+.IR /proc/sys/fs/pipe\-max\-size ;
 .IP *
 override
-.I /proc/sys/fs/mqueue/queues_max,
-.I /proc/sys/fs/mqueue/msg_max,
+.IR /proc/sys/fs/mqueue/queues_max ,
+.IR /proc/sys/fs/mqueue/msg_max ,
 and
 .I /proc/sys/fs/mqueue/msgsize_max
 limits when creating POSIX message queues (see
@@ -1445,10 +1461,10 @@ back into the thread's inheritable set in the future.
 In kernels before 2.6.25, the capability bounding set is a system-wide
 attribute that affects all threads on the system.
 The bounding set is accessible via the file
-.IR /proc/sys/kernel/cap-bound .
+.IR /proc/sys/kernel/cap\-bound .
 (Confusingly, this bit mask parameter is expressed as a
 signed decimal number in
-.IR /proc/sys/kernel/cap-bound .)
+.IR /proc/sys/kernel/cap\-bound .)
 .PP
 Only the
 .B init
@@ -1481,7 +1497,7 @@ and filesystem user IDs (using
 .BR setresuid (2),
 or similar):
 .IP 1. 3
-If one or more of the real, effective or saved set user IDs
+If one or more of the real, effective, or saved set user IDs
 was previously 0, and as a result of the UID changes all of these IDs
 have a nonzero value,
 then all capabilities are cleared from the permitted, effective, and ambient
@@ -1809,7 +1825,7 @@ since no thread ever has
 in either of these cases:
 .IP * 2
 In the pre-2.6.25 implementation the system-wide capability bounding set,
-.IR /proc/sys/kernel/cap-bound ,
+.IR /proc/sys/kernel/cap\-bound ,
 always masks out the
 .B CAP_SETPCAP
 capability, and this can not be changed
@@ -1853,7 +1869,7 @@ created on the system.
 .I include/linux/capability.h
 in the Linux kernel source tree
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

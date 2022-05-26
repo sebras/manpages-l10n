@@ -35,7 +35,7 @@
 .\" Modified 2002-08-05, Michael Kerrisk
 .\" Modified 2004-10-31, Andries Brouwer
 .\"
-.TH GETHOSTBYNAME 3 2020-12-21 "" "Linux Programmer's Manual"
+.TH GETHOSTBYNAME 3 2021-03-22 "" "Linux Programmer's Manual"
 .SH NAME
 gethostbyname, gethostbyaddr, sethostent, gethostent, endhostent,
 h_errno,
@@ -46,20 +46,17 @@ gethostent_r \- get network host entry
 .SH SYNOPSIS
 .nf
 .B #include <netdb.h>
+.PP
 .B extern int h_errno;
 .PP
 .BI "struct hostent *gethostbyname(const char *" name );
-
-.BR "#include <sys/socket.h>" "       /* for AF_INET */"
 .BI "struct hostent *gethostbyaddr(const void *" addr ,
 .BI "                              socklen_t " len ", int " type );
 .PP
 .BI "void sethostent(int " stayopen );
-.PP
 .B void endhostent(void);
 .PP
 .BI "void herror(const char *" s );
-.PP
 .BI "const char *hstrerror(int " err );
 .PP
 /* System V/POSIX extension */
@@ -68,21 +65,27 @@ gethostent_r \- get network host entry
 /* GNU extensions */
 .BI "struct hostent *gethostbyname2(const char *" name ", int " af );
 .PP
-.B "int gethostent_r("
-.BI "        struct hostent *" ret ", char *" buf ", size_t " buflen ,
-.BI "        struct hostent **" result ", int *" h_errnop );
+.BI "int gethostent_r(struct hostent *restrict " ret ,
+.BI "                 char *restrict " buf ", size_t " buflen ,
+.BI "                 struct hostent **restrict " result ,
+.BI "                 int *restrict " h_errnop );
 .PP
-.BI "int gethostbyaddr_r(const void *" addr ", socklen_t " len ", int " type ,
-.BI "        struct hostent *" ret ", char *" buf ", size_t " buflen ,
-.BI "        struct hostent **" result ", int *" h_errnop );
-.PP
-.BI "int gethostbyname_r(const char *" name ,
-.BI "        struct hostent *" ret ", char *" buf ", size_t " buflen ,
-.BI "        struct hostent **" result ", int *" h_errnop );
-.PP
-.BI "int gethostbyname2_r(const char *" name ", int " af,
-.BI "        struct hostent *" ret ", char *" buf ", size_t " buflen ,
-.BI "        struct hostent **" result ", int *" h_errnop );
+.BI "int gethostbyaddr_r(const void *restrict " addr ", socklen_t " len \
+", int " type ,
+.BI "                 struct hostent *restrict " ret ,
+.BI "                 char *restrict " buf ", size_t " buflen ,
+.BI "                 struct hostent **restrict " result ,
+.BI "                 int *restrict " h_errnop );
+.BI "int gethostbyname_r(const char *restrict " name ,
+.BI "                 struct hostent *restrict " ret ,
+.BI "                 char *restrict " buf ", size_t " buflen ,
+.BI "                 struct hostent **restrict " result ,
+.BI "                 int *restrict " h_errnop );
+.BI "int gethostbyname2_r(const char *restrict " name ", int " af,
+.BI "                 struct hostent *restrict " ret ,
+.BI "                 char *restrict " buf ", size_t " buflen ,
+.BI "                 struct hostent **restrict " result ,
+.BI "                 int *restrict " h_errnop );
 .fi
 .PP
 .RS -4
@@ -90,54 +93,38 @@ Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .RE
 .PP
-.PD 0
-.ad l
 .BR gethostbyname2 (),
 .BR gethostent_r (),
 .BR gethostbyaddr_r (),
 .BR gethostbyname_r (),
 .BR gethostbyname2_r ():
-.RS 4
-.TP 4
-Since glibc 2.19:
-_DEFAULT_SOURCE
-.TP 4
-Glibc versions up to and including 2.19:
-_BSD_SOURCE || _SVID_SOURCE
-.RE
-.PD
+.nf
+    Since glibc 2.19:
+        _DEFAULT_SOURCE
+    Glibc up to and including 2.19:
+        _BSD_SOURCE || _SVID_SOURCE
+.fi
 .PP
-.PD 0
 .BR herror (),
 .BR hstrerror ():
-.RS 4
-.TP 4
-Since glibc 2.19:
-_DEFAULT_SOURCE
-.TP 4
-Glibc 2.8 to 2.19:
-_BSD_SOURCE || _SVID_SOURCE
-.TP
-Before glibc 2.8:
-none
-.RE
-.PD
+.nf
+    Since glibc 2.19:
+        _DEFAULT_SOURCE
+    Glibc 2.8 to 2.19:
+        _BSD_SOURCE || _SVID_SOURCE
+    Before glibc 2.8:
+        none
+.fi
 .PP
-.PD 0
 .BR h_errno :
-.RS 4
-.TP 4
-Since glibc 2.19
-_DEFAULT_SOURCE || _POSIX_C_SOURCE < 200809L
-.TP 4
-Glibc 2.12 to 2.19:
-_BSD_SOURCE || _SVID_SOURCE || _POSIX_C_SOURCE < 200809L
-.TP
-Before glibc 2.12:
-none
-.RE
-.ad b
-.PD
+.nf
+    Since glibc 2.19
+        _DEFAULT_SOURCE || _POSIX_C_SOURCE < 200809L
+    Glibc 2.12 to 2.19:
+        _BSD_SOURCE || _SVID_SOURCE || _POSIX_C_SOURCE < 200809L
+    Before glibc 2.12:
+        none
+.fi
 .SH DESCRIPTION
 The
 .BR gethostbyname* (),
@@ -200,7 +187,9 @@ for the given host address \fIaddr\fP of length \fIlen\fP and address type
 Valid address types are
 .B AF_INET
 and
-.BR AF_INET6 .
+.BR AF_INET6
+(defined in
+.IR <sys/socket.h> ).
 The host address argument is a pointer to a struct of a type depending
 on the address type, for example a \fIstruct in_addr *\fP (probably
 obtained via a call to
@@ -339,53 +328,47 @@ name service switch configuration
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
+.ad l
+.nh
 .TS
 allbox;
-lbw18 lb lbw29
+lb lb lbx
 l l l.
 Interface	Attribute	Value
 T{
 .BR gethostbyname ()
 T}	Thread safety	T{
 MT-Unsafe race:hostbyname env
-.br
 locale
 T}
 T{
 .BR gethostbyaddr ()
 T}	Thread safety	T{
 MT-Unsafe race:hostbyaddr env
-.br
 locale
 T}
 T{
 .BR sethostent (),
-.br
 .BR endhostent (),
-.br
 .BR gethostent_r ()
 T}	Thread safety	T{
 MT-Unsafe race:hostent env
-.br
 locale
 T}
 T{
 .BR herror (),
-.br
 .BR hstrerror ()
 T}	Thread safety	MT-Safe
 T{
 .BR gethostent ()
 T}	Thread safety	T{
 MT-Unsafe race:hostent
-.br
 race:hostentbuf env locale
 T}
 T{
 .BR gethostbyname2 ()
 T}	Thread safety	T{
 MT-Unsafe race:hostbyname2
-.br
 env locale
 T}
 T{
@@ -394,6 +377,8 @@ T{
 .BR gethostbyname2_r ()
 T}	Thread safety	MT-Safe env locale
 .TE
+.hy
+.ad
 .sp 1
 In the above table,
 .I hostent
@@ -548,7 +533,7 @@ that are expressed in hexadecimal.
 .BR named (8)
 .\" .BR resolv+ (8)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

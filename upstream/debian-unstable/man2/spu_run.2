@@ -23,19 +23,23 @@
 .\" 2007-09-28, updates for newer kernels, added example
 .\"             by Jeremy Kerr <jk@ozlabs.org>
 .\"
-.TH SPU_RUN 2 2020-11-01 Linux "Linux Programmer's Manual"
+.TH SPU_RUN 2 2021-03-22 Linux "Linux Programmer's Manual"
 .SH NAME
 spu_run \- execute an SPU context
 .SH SYNOPSIS
 .nf
-.B #include <sys/spu.h>
+.BR "#include <sys/spu.h>" "          /* Definition of " SPU_* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int spu_run(int " fd ", unsigned int *" npc \
-", unsigned int *" event ");"
+.BI "int spu_run(int " fd ", uint32_t *" npc ", uint32_t *" event );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for this system call; see NOTES.
+glibc provides no wrapper for
+.BR spu_run (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR spu_run ()
@@ -107,9 +111,9 @@ On success,
 returns the value of the
 .I spu_status
 register.
-On error, it returns \-1 and sets
+On failure, it returns \-1 and sets
 .I errno
-to one of the error codes listed below.
+is set to indicate the error.
 .PP
 The
 .I spu_status
@@ -196,9 +200,6 @@ This call is Linux-specific and implemented only by the PowerPC
 architecture.
 Programs using this system call are not portable.
 .SH NOTES
-Glibc does not provide a wrapper for this system call; call it using
-.BR syscall (2).
-Note however, that
 .BR spu_run ()
 is meant to be used from libraries that implement a more abstract
 interface to SPUs, not to be used from regular applications.
@@ -232,8 +233,9 @@ int main(void)
     if (context == \-1)
         handle_error("spu_create");
 
-    /* write a \(aqstop 0x1234\(aq instruction to the SPU\(aqs
-     * local store memory
+    /*
+     * Write a \(aqstop 0x1234\(aq instruction to the SPU\(aqs
+     * local store memory.
      */
     instruction = 0x00001234;
 
@@ -242,9 +244,10 @@ int main(void)
         handle_error("open");
     write(fd, &instruction, sizeof(instruction));
 
-    /* set npc to the starting instruction address of the
+    /*
+     * set npc to the starting instruction address of the
      * SPU program. Since we wrote the instruction at the
-     * start of the mem file, the entry point will be 0x0
+     * start of the mem file, the entry point will be 0x0.
      */
     npc = 0;
 
@@ -252,7 +255,8 @@ int main(void)
     if (spu_status == \-1)
         handle_error("open");
 
-    /* we should see a status code of 0x1234002:
+    /*
+     * We should see a status code of 0x1234002:
      *   0x00000002 (spu was stopped due to stop\-and\-signal)
      * | 0x12340000 (the stop\-and\-signal code)
      */
@@ -269,7 +273,7 @@ int main(void)
 .BR capabilities (7),
 .BR spufs (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

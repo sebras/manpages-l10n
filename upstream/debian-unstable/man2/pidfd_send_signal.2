@@ -22,16 +22,26 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH PIDFD_SEND_SIGNAL 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH PIDFD_SEND_SIGNAL 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 pidfd_send_signal \- send a signal to a process specified by a file descriptor
 .SH SYNOPSIS
 .nf
-.B "#include <signal.h>"
+.BR "#include <linux/signal.h>" "     /* Definition of " SIG* " constants */"
+.BR "#include <signal.h>" "           /* Definition of " SI_* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int pidfd_send_signal(int " pidfd ", int " sig ", siginfo_t *" info ,
+.BI "int syscall(SYS_pidfd_send_signal, int " pidfd ", int " sig \
+", siginfo_t *" info ,
 .BI "                      unsigned int " flags );
 .fi
+.PP
+.IR Note :
+glibc provides no wrapper for
+.BR pidfd_send_signal (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR pidfd_send_signal ()
@@ -93,7 +103,7 @@ On success,
 returns 0.
 On error, \-1 is returned and
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EBADF
@@ -133,9 +143,6 @@ first appeared in Linux 5.1.
 .BR pidfd_send_signal ()
 is Linux specific.
 .SH NOTES
-Currently, there is no glibc wrapper for this system call; call it using
-.BR syscall (2).
-.\"
 .SS PID file descriptors
 The
 .I pidfd
@@ -214,7 +221,7 @@ main(int argc, char *argv[])
     sig = atoi(argv[2]);
 
     /* Obtain a PID file descriptor by opening the /proc/PID directory
-       of the target process */
+       of the target process. */
 
     snprintf(path, sizeof(path), "/proc/%s", argv[1]);
 
@@ -225,7 +232,7 @@ main(int argc, char *argv[])
     }
 
     /* Populate a \(aqsiginfo_t\(aq structure for use with
-       pidfd_send_signal() */
+       pidfd_send_signal(). */
 
     memset(&info, 0, sizeof(info));
     info.si_code = SI_QUEUE;
@@ -235,7 +242,7 @@ main(int argc, char *argv[])
     info.si_pid = getpid();
     info.si_value.sival_int = 1234;
 
-    /* Send the signal */
+    /* Send the signal. */
 
     if (pidfd_send_signal(pidfd, sig, &info, 0) == \-1) {
         perror("pidfd_send_signal");
@@ -254,7 +261,7 @@ main(int argc, char *argv[])
 .BR pid_namespaces (7),
 .BR signal (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

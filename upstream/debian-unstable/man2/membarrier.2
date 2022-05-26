@@ -22,19 +22,26 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH MEMBARRIER 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH MEMBARRIER 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 membarrier \- issue memory barriers on a set of threads
 .SH SYNOPSIS
 .nf
 .PP
-.B #include <linux/membarrier.h>
+.BR "#include <linux/membarrier.h>" \
+" /* Definition of " MEMBARRIER_* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int membarrier(int " cmd ", unsigned int " flags ", int " cpu_id );
+.BI "int syscall(SYS_membarrier, int " cmd ", unsigned int " flags \
+", int " cpu_id );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for this system call; see NOTES.
+glibc provides no wrapper for
+.BR membarrier (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR membarrier ()
@@ -249,7 +256,7 @@ operations return zero.
 On error, \-1 is returned,
 and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .PP
 For a given command, with
 .I flags
@@ -322,9 +329,6 @@ Examples where
 .BR membarrier ()
 can be useful include implementations
 of Read-Copy-Update libraries and garbage collectors.
-.PP
-Glibc does not provide a wrapper for this system call; call it using
-.BR syscall (2).
 .SH EXAMPLES
 Assuming a multithreaded application where "fast_path()" is executed
 very frequently, and where "slow_path()" is executed infrequently, the
@@ -354,7 +358,7 @@ slow_path(int *read_a)
 }
 
 int
-main(int argc, char **argv)
+main(int argc, char *argv[])
 {
     int read_a, read_b;
 
@@ -440,7 +444,7 @@ slow_path(int *read_a)
 }
 
 int
-main(int argc, char **argv)
+main(int argc, char *argv[])
 {
     int read_a, read_b;
 
@@ -469,7 +473,7 @@ main(int argc, char **argv)
 .EE
 .in
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

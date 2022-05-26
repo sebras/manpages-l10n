@@ -22,17 +22,24 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH ARCH_PRCTL 2 2020-04-11 "Linux" "Linux Programmer's Manual"
+.TH ARCH_PRCTL 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 arch_prctl \- set architecture-specific thread state
 .SH SYNOPSIS
 .nf
-.B #include <asm/prctl.h>
-.B #include <sys/prctl.h>
+.BR "#include <asm/prctl.h>" "        /* Definition of " ARCH_* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int arch_prctl(int " code ", unsigned long " addr );
-.BI "int arch_prctl(int " code ", unsigned long *" addr );
+.BI "int syscall(SYS_arch_prctl, int " code ", unsigned long " addr );
+.BI "int syscall(SYS_arch_prctl, int " code ", unsigned long *" addr );
 .fi
+.PP
+.IR Note :
+glibc provides no wrapper for
+.BR arch_prctl (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 .BR arch_prctl ()
 sets architecture-specific process or thread state.
@@ -133,13 +140,13 @@ points to an unmapped address or is outside the process address space.
 .I code
 is not a valid subcommand.
 .TP
-.B EPERM
-.I addr
-is outside the process address space.
-.TP
 .B ENODEV
 .B ARCH_SET_CPUID
 was requested, but the underlying hardware does not support CPUID faulting.
+.TP
+.B EPERM
+.I addr
+is outside the process address space.
 .\" .SH AUTHOR
 .\" Man page written by Andi Kleen.
 .SH CONFORMING TO
@@ -174,11 +181,6 @@ and
 in the same thread is dangerous, as they may overwrite each other's
 TLS entries.
 .PP
-As of version 2.7, glibc provides no prototype for
-.BR arch_prctl ().
-You have to declare it yourself for now.
-This may be fixed in future glibc versions.
-.PP
 .I FS
 may be already used by the threading library.
 Programs that use
@@ -192,7 +194,7 @@ directly are very likely to crash.
 .PP
 AMD X86-64 Programmer's manual
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

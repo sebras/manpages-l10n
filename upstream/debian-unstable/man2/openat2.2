@@ -21,22 +21,26 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH OPENAT2 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH OPENAT2 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 openat2 \- open and possibly create a file (extended)
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
-.B #include <sys/stat.h>
-.B #include <fcntl.h>
-.B #include <linux/openat2.h>
+.BR "#include <fcntl.h>" \
+"          /* Definition of " O_* " and " S_* " constants */"
+.BR "#include <linux/openat2.h>" "  /* Definition of " RESOLVE_* " constants */"
+.BR "#include <sys/syscall.h>" "    /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "long openat2(int " dirfd ", const char *" pathname ,
-.BI "            struct open_how *" how ", size_t " size );
+.BI "long syscall(SYS_openat2, int " dirfd ", const char *" pathname ,
+.BI "             struct open_how *" how ", size_t " size );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for this system call; see NOTES.
+glibc provides no wrapper for
+.BR openat2 (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR openat2 ()
@@ -385,6 +389,17 @@ This may occur if, for example,
 a system pathname that is used by an application is modified
 (e.g., in a new distribution release)
 so that a pathname component (now) contains a bind mount.
+.TP
+.B RESOLVE_CACHED
+Make the open operation fail unless all path components are already present
+in the kernel's lookup cache.
+If any kind of revalidation or I/O is needed to satisfy the lookup,
+.BR openat2 ()
+fails with the error
+.B EAGAIN .
+This is useful in providing a fast-path open that can be performed without
+resorting to thread offload, or other mechanisms that an application might
+use to offload slower operations.
 .RE
 .IP
 If any bits other than those listed above are set in
@@ -394,7 +409,7 @@ an error is returned.
 On success, a new file descriptor is returned.
 On error, \-1 is returned, and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 The set of errors returned by
 .BR openat2 ()
@@ -420,6 +435,15 @@ race condition or potential attack).
 The caller may choose to retry the
 .BR openat2 ()
 call.
+.TP
+.B EAGAIN
+.BR RESOLVE_CACHED
+was set, and the open operation cannot be performed using only cached
+information.
+The caller should retry without
+.B RESOLVE_CACHED
+set in
+.I how.resolve .
 .TP
 .B EINVAL
 An unknown flag or invalid value was specified in
@@ -476,9 +500,6 @@ The semantics of
 were modeled after FreeBSD's
 .BR O_BENEATH .
 .SH NOTES
-Glibc does not provide a wrapper for this system call; call it using
-.BR syscall (2).
-.\"
 .SS Extensibility
 In order to allow for future extensibility,
 .BR openat2 ()
@@ -582,7 +603,7 @@ which doesn't produce an error of
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

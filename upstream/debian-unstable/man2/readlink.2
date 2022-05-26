@@ -41,21 +41,21 @@
 .\" 2011-09-20, Guillem Jover <guillem@hadrons.org>:
 .\"     Added text on dynamically allocating buffer + example program
 .\"
-.TH READLINK 2 2020-06-09 "Linux" "Linux Programmer's Manual"
+.TH READLINK 2 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 readlink, readlinkat \- read value of a symbolic link
 .SH SYNOPSIS
 .nf
 .B #include <unistd.h>
 .PP
-.BI "ssize_t readlink(const char *" pathname ", char *" buf \
-", size_t " bufsiz );
-
-.BR "#include <fcntl.h>           " "/* Definition of AT_* constants */"
+.BI "ssize_t readlink(const char *restrict " pathname ", char *restrict " buf ,
+.BI "                 size_t " bufsiz );
+.PP
+.BR "#include <fcntl.h>            " "/* Definition of " AT_* " constants */"
 .B #include <unistd.h>
 .PP
-.BI "ssize_t readlinkat(int " dirfd ", const char *" pathname ,
-.BI "                   char *" buf ", size_t " bufsiz );
+.BI "ssize_t readlinkat(int " dirfd ", const char *restrict " pathname ,
+.BI "                 char *restrict " buf ", size_t " bufsiz );
 .PP
 .fi
 .RS -4
@@ -63,27 +63,20 @@ Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .RE
 .PP
-.ad l
 .BR readlink ():
-.RS 4
-_XOPEN_SOURCE\ >=\ 500 || _POSIX_C_SOURCE\ >=\ 200112L
-.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
-    || /* Glibc versions <= 2.19: */ _BSD_SOURCE
-.RE
+.nf
+    _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L
+.\"    || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED
+        || /* Glibc <= 2.19: */ _BSD_SOURCE
+.fi
 .PP
 .BR readlinkat ():
-.PD 0
-.ad l
-.RS 4
-.TP 4
-Since glibc 2.10:
-_POSIX_C_SOURCE\ >=\ 200809L
-.TP
-Before glibc 2.10:
-_ATFILE_SOURCE
-.RE
-.ad b
-.PD
+.nf
+    Since glibc 2.10:
+        _POSIX_C_SOURCE >= 200809L
+    Before glibc 2.10:
+        _ATFILE_SOURCE
+.fi
 .SH DESCRIPTION
 .BR readlink ()
 places the contents of the symbolic link
@@ -93,7 +86,7 @@ in the buffer
 which has size
 .IR bufsiz .
 .BR readlink ()
-does not append a null byte to
+does not append a terminating null byte to
 .IR buf .
 It will (silently) truncate the contents (to a length of
 .I bufsiz
@@ -167,6 +160,15 @@ Search permission is denied for a component of the path prefix.
 (See also
 .BR path_resolution (7).)
 .TP
+.B EBADF
+.RB ( readlinkat ())
+.I pathname
+is relative but
+.I dirfd
+is neither
+.B AT_FDCWD
+nor a valid file descriptor.
+.TP
 .B EFAULT
 .I buf
 extends outside the process's allocated address space.
@@ -202,15 +204,9 @@ Insufficient kernel memory was available.
 .TP
 .B ENOTDIR
 A component of the path prefix is not a directory.
-.PP
-The following additional errors can occur for
-.BR readlinkat ():
-.TP
-.B EBADF
-.I dirfd
-is not a valid file descriptor.
 .TP
 .B ENOTDIR
+.RB ( readlinkat ())
 .I pathname
 is relative and
 .I dirfd
@@ -332,6 +328,8 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    /* Print only \(aqnbytes\(aq of \(aqbuf\(aq, as it doesn't contain a terminating
+       null byte (\(aq\e0\(aq). */
     printf("\(aq%s\(aq points to \(aq%.*s\(aq\en", argv[1], (int) nbytes, buf);
 
     /* If the return value was equal to the buffer size, then the
@@ -356,7 +354,7 @@ main(int argc, char *argv[])
 .BR path_resolution (7),
 .BR symlink (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

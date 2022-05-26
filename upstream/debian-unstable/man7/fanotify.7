@@ -22,7 +22,7 @@
 .\" Formatted or processed versions of this manual, if unaccompanied by
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
-.TH FANOTIFY 7 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH FANOTIFY 7 2021-08-27 "Linux" "Linux Programmer's Manual"
 .SH NAME
 fanotify \- monitoring filesystem events
 .SH DESCRIPTION
@@ -57,7 +57,7 @@ system call creates and initializes an fanotify notification group
 and returns a file descriptor referring to it.
 .PP
 An fanotify notification group is a kernel-internal object that holds
-a list of files, directories, filesystems, and mount points for which
+a list of files, directories, filesystems, and mounts for which
 events shall be created.
 .PP
 For each entry in an fanotify notification group, two bit masks exist: the
@@ -67,20 +67,20 @@ mask and the
 mask.
 The mark mask defines file activities for which an event shall be created.
 The ignore mask defines activities for which no event shall be generated.
-Having these two types of masks permits a filesystem, mount point, or
+Having these two types of masks permits a filesystem, mount, or
 directory to be marked for receiving events, while at the same time
-ignoring events for specific objects under a mount point or directory.
+ignoring events for specific objects under a mount or directory.
 .PP
 The
 .BR fanotify_mark (2)
-system call adds a file, directory, filesystem or mount point to a
+system call adds a file, directory, filesystem, or mount to a
 notification group and specifies which events
 shall be reported (or ignored), or removes or modifies such an entry.
 .PP
 A possible usage of the ignore mask is for a file cache.
 Events of interest for a file cache are modification of a file and closing
 of the same.
-Hence, the cached directory or mount point is to be marked to receive these
+Hence, the cached directory or mount is to be marked to receive these
 events.
 After receiving the first event informing that a file has been modified,
 the corresponding cache entry will be invalidated.
@@ -147,7 +147,7 @@ influences what data structures are returned to the event listener for each
 event.
 Events reported to a group initialized with one of these flags will
 use file handles to identify filesystem objects instead of file descriptors.
-.TP
+.PP
 After a successful
 .BR read (2),
 the read buffer contains one or more of the following structures:
@@ -589,6 +589,15 @@ to deny the file operation.
 If access is denied, the requesting application call will receive an
 .BR EPERM
 error.
+Additionally, if the notification group has been created with the
+.B FAN_ENABLE_AUDIT
+flag, then the
+.B FAN_AUDIT
+flag can be set in the
+.I response
+field.
+In that case, the audit subsystem will log information about the access
+decision to the audit logs.
 .\"
 .SS Closing the fanotify file descriptor
 When all file descriptors referring to the fanotify notification group are
@@ -755,7 +764,7 @@ The two example programs below demonstrate the usage of the fanotify API.
 The first program is an example of fanotify being
 used with its event object information passed in the form of a file
 descriptor.
-The program marks the mount point passed as a command-line argument and
+The program marks the mount passed as a command-line argument and
 waits for events of type
 .B FAN_OPEN_PERM
 and
@@ -800,7 +809,7 @@ Listening for events stopped.
 #include <sys/fanotify.h>
 #include <unistd.h>
 
-/* Read all available fanotify events from the file descriptor \(aqfd\(aq */
+/* Read all available fanotify events from the file descriptor \(aqfd\(aq. */
 
 static void
 handle_events(int fd)
@@ -813,11 +822,11 @@ handle_events(int fd)
     char procfd_path[PATH_MAX];
     struct fanotify_response response;
 
-    /* Loop while events can be read from fanotify file descriptor */
+    /* Loop while events can be read from fanotify file descriptor. */
 
     for (;;) {
 
-        /* Read some events */
+        /* Read some events. */
 
         len = read(fd, buf, sizeof(buf));
         if (len == \-1 && errno != EAGAIN) {
@@ -825,20 +834,20 @@ handle_events(int fd)
             exit(EXIT_FAILURE);
         }
 
-        /* Check if end of available data reached */
+        /* Check if end of available data reached. */
 
         if (len <= 0)
             break;
 
-        /* Point to the first event in the buffer */
+        /* Point to the first event in the buffer. */
 
         metadata = buf;
 
-        /* Loop over all events in the buffer */
+        /* Loop over all events in the buffer. */
 
         while (FAN_EVENT_OK(metadata, len)) {
 
-            /* Check that run\-time and compile\-time structures match */
+            /* Check that run\-time and compile\-time structures match. */
 
             if (metadata\->vers != FANOTIFY_METADATA_VERSION) {
                 fprintf(stderr,
@@ -852,24 +861,24 @@ handle_events(int fd)
 
             if (metadata\->fd >= 0) {
 
-                /* Handle open permission event */
+                /* Handle open permission event. */
 
                 if (metadata\->mask & FAN_OPEN_PERM) {
                     printf("FAN_OPEN_PERM: ");
 
-                    /* Allow file to be opened */
+                    /* Allow file to be opened. */
 
                     response.fd = metadata\->fd;
                     response.response = FAN_ALLOW;
                     write(fd, &response, sizeof(response));
                 }
 
-                /* Handle closing of writable file event */
+                /* Handle closing of writable file event. */
 
                 if (metadata\->mask & FAN_CLOSE_WRITE)
                     printf("FAN_CLOSE_WRITE: ");
 
-                /* Retrieve and print pathname of the accessed file */
+                /* Retrieve and print pathname of the accessed file. */
 
                 snprintf(procfd_path, sizeof(procfd_path),
                          "/proc/self/fd/%d", metadata\->fd);
@@ -883,12 +892,12 @@ handle_events(int fd)
                 path[path_len] = \(aq\e0\(aq;
                 printf("File %s\en", path);
 
-                /* Close the file descriptor of the event */
+                /* Close the file descriptor of the event. */
 
                 close(metadata\->fd);
             }
 
-            /* Advance to next event */
+            /* Advance to next event. */
 
             metadata = FAN_EVENT_NEXT(metadata, len);
         }
@@ -903,7 +912,7 @@ main(int argc, char *argv[])
     nfds_t nfds;
     struct pollfd fds[2];
 
-    /* Check mount point is supplied */
+    /* Check mount point is supplied. */
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s MOUNT\en", argv[0]);
@@ -912,7 +921,7 @@ main(int argc, char *argv[])
 
     printf("Press enter key to terminate.\en");
 
-    /* Create the file descriptor for accessing the fanotify API */
+    /* Create the file descriptor for accessing the fanotify API. */
 
     fd = fanotify_init(FAN_CLOEXEC | FAN_CLASS_CONTENT | FAN_NONBLOCK,
                        O_RDONLY | O_LARGEFILE);
@@ -924,7 +933,7 @@ main(int argc, char *argv[])
     /* Mark the mount for:
        \- permission events before opening files
        \- notification events after closing a write\-enabled
-         file descriptor */
+         file descriptor. */
 
     if (fanotify_mark(fd, FAN_MARK_ADD | FAN_MARK_MOUNT,
                       FAN_OPEN_PERM | FAN_CLOSE_WRITE, AT_FDCWD,
@@ -933,21 +942,17 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    /* Prepare for polling */
+    /* Prepare for polling. */
 
     nfds = 2;
 
-    /* Console input */
-
-    fds[0].fd = STDIN_FILENO;
+    fds[0].fd = STDIN_FILENO;       /* Console input */
     fds[0].events = POLLIN;
 
-    /* Fanotify input */
-
-    fds[1].fd = fd;
+    fds[1].fd = fd;                 /* Fanotify input */
     fds[1].events = POLLIN;
 
-    /* This is the loop to wait for incoming events */
+    /* This is the loop to wait for incoming events. */
 
     printf("Listening for events.\en");
 
@@ -964,7 +969,7 @@ main(int argc, char *argv[])
         if (poll_num > 0) {
             if (fds[0].revents & POLLIN) {
 
-                /* Console input is available: empty stdin and quit */
+                /* Console input is available: empty stdin and quit. */
 
                 while (read(STDIN_FILENO, &buf, 1) > 0 && buf != \(aq\en\(aq)
                     continue;
@@ -973,7 +978,7 @@ main(int argc, char *argv[])
 
             if (fds[1].revents & POLLIN) {
 
-                /* Fanotify events are available */
+                /* Fanotify events are available. */
 
                 handle_events(fd);
             }
@@ -1064,7 +1069,7 @@ $ \fBmkdir \-p /home/user/testdir\fP          # In another terminal
 #define BUF_SIZE 256
 
 int
-main(int argc, char **argv)
+main(int argc, char *argv[])
 {
     int fd, ret, event_fd, mount_fd;
     ssize_t len, path_len;
@@ -1111,7 +1116,7 @@ main(int argc, char **argv)
 
     printf("Listening for events.\en");
 
-    /* Read events from the event queue into a buffer */
+    /* Read events from the event queue into a buffer. */
 
     len = read(fd, events_buf, sizeof(events_buf));
     if (len == \-1 && errno != EAGAIN) {
@@ -1119,7 +1124,7 @@ main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* Process all events within the buffer */
+    /* Process all events within the buffer. */
 
     for (metadata = (struct fanotify_event_metadata *) events_buf;
             FAN_EVENT_OK(metadata, len);
@@ -1127,14 +1132,14 @@ main(int argc, char **argv)
         fid = (struct fanotify_event_info_fid *) (metadata + 1);
         file_handle = (struct file_handle *) fid\->handle;
 
-        /* Ensure that the event info is of the correct type */
+        /* Ensure that the event info is of the correct type. */
 
         if (fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_FID ||
             fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_DFID) {
             file_name = NULL;
         } else if (fid\->hdr.info_type == FAN_EVENT_INFO_TYPE_DFID_NAME) {
-            file_name = file_handle->f_handle +
-                        file_handle->handle_bytes;
+            file_name = file_handle\->f_handle +
+                        file_handle\->handle_bytes;
         } else {
             fprintf(stderr, "Received unexpected event info type.\en");
             exit(EXIT_FAILURE);
@@ -1170,7 +1175,7 @@ main(int argc, char **argv)
         snprintf(procfd_path, sizeof(procfd_path), "/proc/self/fd/%d",
                 event_fd);
 
-        /* Retrieve and print the path of the modified dentry */
+        /* Retrieve and print the path of the modified dentry. */
 
         path_len = readlink(procfd_path, path, sizeof(path) \- 1);
         if (path_len == \-1) {
@@ -1197,7 +1202,7 @@ main(int argc, char **argv)
             }
         }
 
-        /* Close associated file descriptor for this event */
+        /* Close associated file descriptor for this event. */
 
         close(event_fd);
     }
@@ -1212,7 +1217,7 @@ main(int argc, char **argv)
 .BR fanotify_mark (2),
 .BR inotify (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

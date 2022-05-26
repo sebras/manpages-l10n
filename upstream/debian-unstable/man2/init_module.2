@@ -24,24 +24,25 @@
 .\" the source, must acknowledge the copyright and authors of this work.
 .\" %%%LICENSE_END
 .\"
-.TH INIT_MODULE 2 2017-09-15 "Linux" "Linux Programmer's Manual"
+.TH INIT_MODULE 2 2021-03-22 "Linux" "Linux Programmer's Manual"
 .SH NAME
 init_module, finit_module \- load a kernel module
 .SH SYNOPSIS
 .nf
-.BI "int init_module(void *" module_image ", unsigned long " len ,
-.BI "                const char *" param_values );
+.BR "#include <linux/module.h>" "    /* Definition of " MODULE_* " constants */"
+.BR "#include <sys/syscall.h>" "     /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int finit_module(int " fd ", const char *" param_values ,
-.BI "                 int " flags );
+.BI "int syscall(SYS_init_module, void *" module_image ", unsigned long " len ,
+.BI "            const char *" param_values );
+.BI "int syscall(SYS_finit_module, int " fd ", const char *" param_values ,
+.BI "            int " flags );
 .fi
 .PP
 .IR Note :
-glibc provides no header file declaration of
-.BR init_module ()
-and no wrapper function for
-.BR finit_module ();
-see NOTES.
+glibc provides no wrappers for these system calls,
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 .BR init_module ()
 loads an ELF image into kernel space,
@@ -155,7 +156,7 @@ as expected for malformed modules.
 On success, these system calls return 0.
 On error, \-1 is returned and
 .I errno
-is set appropriately.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .BR EBADMSG " (since Linux 3.7)"
@@ -273,11 +274,6 @@ manually declare the interface in your code;
 alternatively, you can invoke the system call using
 .BR syscall (2).
 .PP
-Glibc does not provide a wrapper for
-.BR finit_module ();
-call it using
-.BR syscall (2).
-.PP
 Information about currently loaded modules can be found in
 .IR /proc/modules
 and in the file trees under the per-module subdirectories under
@@ -357,7 +353,7 @@ the rest of the module.
 .BR lsmod (8),
 .BR modprobe (8)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

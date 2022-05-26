@@ -32,7 +32,7 @@
 .\" Modified 2001-12-13, joey, aeb
 .\" Modified 2004-11-16, mtk
 .\"
-.TH CTIME 3 2020-12-21 "" "Linux Programmer's Manual"
+.TH CTIME 3 2021-03-22 "" "Linux Programmer's Manual"
 .SH NAME
 asctime, ctime, gmtime, localtime, mktime, asctime_r, ctime_r, gmtime_r,
 localtime_r \- transform date and time to broken-down time or ASCII
@@ -41,16 +41,18 @@ localtime_r \- transform date and time to broken-down time or ASCII
 .B #include <time.h>
 .PP
 .BI "char *asctime(const struct tm *" tm );
-.BI "char *asctime_r(const struct tm *" tm ", char *" buf );
+.BI "char *asctime_r(const struct tm *restrict " tm ", char *restrict " buf );
 .PP
 .BI "char *ctime(const time_t *" timep );
-.BI "char *ctime_r(const time_t *" timep ", char *" buf );
+.BI "char *ctime_r(const time_t *restrict " timep ", char *restrict " buf );
 .PP
 .BI "struct tm *gmtime(const time_t *" timep );
-.BI "struct tm *gmtime_r(const time_t *" timep ", struct tm *" result );
+.BI "struct tm *gmtime_r(const time_t *restrict " timep ,
+.BI "                    struct tm *restrict " result );
 .PP
 .BI "struct tm *localtime(const time_t *" timep );
-.BI "struct tm *localtime_r(const time_t *" timep ", struct tm *" result );
+.BI "struct tm *localtime_r(const time_t *restrict " timep ,
+.BI "                    struct tm *restrict " result );
 .PP
 .BI "time_t mktime(struct tm *" tm );
 .fi
@@ -59,17 +61,15 @@ localtime_r \- transform date and time to broken-down time or ASCII
 Feature Test Macro Requirements for glibc (see
 .BR feature_test_macros (7)):
 .RE
-.ad l
 .PP
 .BR asctime_r (),
 .BR ctime_r (),
 .BR gmtime_r (),
 .BR localtime_r ():
-.RS
-_POSIX_C_SOURCE
-    || /* Glibc versions <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
-.RE
-.ad
+.nf
+    _POSIX_C_SOURCE
+        || /* Glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.fi
 .SH DESCRIPTION
 The
 .BR ctime (),
@@ -309,11 +309,11 @@ expressed as a value of type
 On error,
 .BR mktime ()
 returns the value
-.IR "(time_t)\ -1" .
+.IR "(time_t)\ \-1" .
 The remaining functions return NULL on error.
 On error,
 .I errno
-is set to indicate the cause of the error.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EOVERFLOW
@@ -322,22 +322,26 @@ The result cannot be represented.
 For an explanation of the terms used in this section, see
 .BR attributes (7).
 .ad l
+.nh
 .TS
 allbox;
-lbw14 lb lbw31
+lb lb lbx
 l l l.
 Interface	Attribute	Value
 T{
 .BR asctime ()
-T}	Thread safety	MT-Unsafe race:asctime locale
+T}	Thread safety	T{
+MT-Unsafe race:asctime locale
+T}
 T{
 .BR asctime_r ()
-T}	Thread safety	MT-Safe locale
+T}	Thread safety	T{
+MT-Safe locale
+T}
 T{
 .BR ctime ()
 T}	Thread safety	T{
 MT-Unsafe race:tmbuf
-.br
 race:asctime env locale
 T}
 T{
@@ -345,13 +349,19 @@ T{
 .BR gmtime_r (),
 .BR localtime_r (),
 .BR mktime ()
-T}	Thread safety	MT-Safe env locale
+T}	Thread safety	T{
+MT-Safe env locale
+T}
 T{
 .BR gmtime (),
 .BR localtime ()
-T}	Thread safety	MT-Unsafe race:tmbuf env locale
+T}	Thread safety	T{
+MT-Unsafe race:tmbuf env locale
+T}
 .TE
+.hy
 .ad
+.sp 1
 .SH CONFORMING TO
 POSIX.1-2001.
 C89 and C99 specify
@@ -371,6 +381,12 @@ as obsolete,
 recommending the use of
 .BR strftime (3)
 instead.
+.PP
+POSIX doesn't specify the parameters of
+.BR ctime_r ()
+to be
+.IR restrict ;
+that is specific to glibc.
 .SH NOTES
 The four functions
 .BR asctime (),
@@ -409,6 +425,7 @@ The glibc version of \fIstruct tm\fP has additional fields
 .PP
 .in +4n
 .EX
+long tm_gmtoff;           /* Seconds east of UTC */
 const char *tm_zone;      /* Timezone abbreviation */
 .EE
 .in
@@ -444,7 +461,7 @@ should be called before
 .BR tzset (3),
 .BR time (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,

@@ -1,5 +1,5 @@
 '\" t
-.TH "KERNEL\-INSTALL" "8" "" "systemd 250" "kernel-install"
+.TH "KERNEL\-INSTALL" "8" "" "systemd 251" "kernel-install"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -35,7 +35,7 @@ here\&. It will usually be one of
 /boot/efi/, see below\&.
 .PP
 \fBkernel\-install\fR
-will execute the files located in the directory
+will run the executable files ("plugins") located in the directory
 /usr/lib/kernel/install\&.d/
 and the local administration directory
 /etc/kernel/install\&.d/\&. All files are collectively sorted and executed in lexical order, regardless of the directory in which they live\&. However, files with identical filenames replace each other\&. Files in
@@ -48,7 +48,7 @@ with the same name as an executable in
 /dev/null, disables the executable entirely\&. Executables must have the extension
 "\&.install"; other extensions are ignored\&.
 .PP
-An executable should return
+An executable placed in these directories should return
 \fB0\fR
 on success\&. It may also return
 \fB77\fR
@@ -59,23 +59,29 @@ The following commands are understood:
 .PP
 \fBadd \fR\fB\fIKERNEL\-VERSION\fR\fR\fB \fR\fB\fIKERNEL\-IMAGE\fR\fR\fB [\fR\fB\fIINITRD\-FILE\fR\fR\fB \&.\&.\&.]\fR
 .RS 4
-This command expects a kernel version string and a path to a kernel image file as arguments\&.
+This command expects a kernel version string and a path to a kernel image file as arguments\&. Optionally, one or more initial RAM disk images may be specified as well (note that plugins might generate additional ones)\&.
 \fBkernel\-install\fR
-calls the executables from
+calls the executable files from
 /usr/lib/kernel/install\&.d/*\&.install
 and
 /etc/kernel/install\&.d/*\&.install
-with the following arguments:
+(i\&.e\&. the plugins) with the following arguments:
 .sp
 .if n \{\
 .RS 4
 .\}
 .nf
-add \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/ \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR \&.\&.\&.]
+add \fIKERNEL\-VERSION\fR $BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR/ \fIKERNEL\-IMAGE\fR [\fIINITRD\-FILE\fR \&.\&.\&.]
 .fi
 .if n \{\
 .RE
 .\}
+.sp
+The third argument directly refers to the path where to place kernel images, initial RAM disk images and other resources for
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
+Type #1 entries (the "entry directory")\&. If other boot loader schemes are used the parameter may be ignored\&. The
+\fIENTRY\-TOKEN\fR
+string is typically the machine ID and is supposed to identify the local installation on the system\&. For details see below\&.
 .sp
 Two default plugins execute the following operations in this case:
 .sp
@@ -89,8 +95,8 @@ Two default plugins execute the following operations in this case:
 .\}
 \fBkernel\-install\fR
 creates
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR, if enabled (see
-\fI$KERNEL_INSTALL_LAYOUT=\fR)\&.
+$BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR, if enabled (see
+\fI$KERNEL_INSTALL_LAYOUT\fR)\&.
 .RE
 .sp
 .RS 4
@@ -120,12 +126,12 @@ for the
 copies
 \fIKERNEL\-IMAGE\fR
 to
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/linux\&. If
+$BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR/linux\&. If
 \fIINITRD\-FILE\fRs are provided, it also copies them to
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL_VERSION\fR/\fIINITRD\-FILE\fR\&. It also creates a boot loader entry according to the
+$BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL_VERSION\fR/\fIINITRD\-FILE\fR\&. It also creates a boot loader entry according to the
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
-in
-$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&. The title of the entry is the
+(Type #1) in
+$BOOT/loader/entries/\fIENTRY\-TOKEN\fR\-\fIKERNEL\-VERSION\fR\&.conf\&. The title of the entry is the
 \fIPRETTY_NAME\fR
 parameter specified in
 /etc/os\-release
@@ -135,7 +141,7 @@ or
 \fIKERNEL\-VERSION\fR", if unset\&.
 .sp
 If
-\fI$KERNEL_INSTALL_LAYOUT=\fR
+\fI$KERNEL_INSTALL_LAYOUT\fR
 is not "bls", this plugin does nothing\&.
 .RE
 .RE
@@ -152,7 +158,7 @@ with the following arguments:
 .RS 4
 .\}
 .nf
-remove \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+remove \fIKERNEL\-VERSION\fR $BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR/
 .fi
 .if n \{\
 .RE
@@ -160,9 +166,9 @@ remove \fIKERNEL\-VERSION\fR $BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
 .sp
 Afterwards,
 \fBkernel\-install\fR
-removes the directory
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
-and its contents\&.
+removes the entry directory
+$BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR/
+and its contents, if it exists\&.
 .sp
 Two default plugins execute the following operations in this case:
 .sp
@@ -190,22 +196,15 @@ for this kernel again\&.
 .\}
 90\-loaderentry\&.install
 removes the file
-$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR\&.conf\&.
+$BOOT/loader/entries/\fIENTRY\-TOKEN\fR\-\fIKERNEL\-VERSION\fR\&.conf\&.
 .RE
-.sp
+.RE
+.PP
+\fBinspect\fR
 .RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBkernel\-install\fR
-removes
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR, if enabled (see
-\fI$KERNEL_INSTALL_LAYOUT=\fR)\&.
-.RE
+Shows the various paths and parameters configured or auto\-detected\&. In particular shows the values of the various
+\fI$KERNEL_INSTALL_*\fR
+environment variables listed below\&.
 .RE
 .SH "THE \FI$BOOT\FR PARTITION"
 .PP
@@ -221,7 +220,7 @@ determines the location of this partition by checking
 in turn\&. The first location where
 $BOOT/loader/entries/
 or
-$BOOT/$MACHINE_ID/
+$BOOT/\fIENTRY\-TOKEN\fR/
 exists is used\&.
 .SH "OPTIONS"
 .PP
@@ -236,6 +235,11 @@ Output additional information about operations being performed\&.
 .RS 4
 Print a short help text and exit\&.
 .RE
+.PP
+\fB\-\-version\fR
+.RS 4
+Print a short version string and exit\&.
+.RE
 .SH "ENVIRONMENT VARIABLES"
 .PP
 If
@@ -245,43 +249,64 @@ is used,
 will be set for the plugins\&. They may output additional logs in this case\&.
 .PP
 If
-\fIMACHINE_ID=\fR
-is set and not empty, it will be used as
+\fI$MACHINE_ID\fR
+is set and not empty when
+\fBkernel\-install\fR
+is invoked, it will be used as
 \fIMACHINE\-ID\fR, overriding any automatic detection attempts\&. The value must be a valid machine ID (32 hexadecimal characters)\&.
 .PP
-\fIKERNEL_INSTALL_MACHINE_ID=\fR
+\fI$KERNEL_INSTALL_MACHINE_ID\fR
 is set for the plugins to the desired
 \fIMACHINE\-ID\fR
-\(en either 32 hexadecimal characters or the special value
-"Default"\&.
+to use\&. It\*(Aqs always a 128bit ID, and typically the ID from
+/etc/machine\-id
+or the one passed in via
+\fI$MACHINE_ID\fR\&. (If no machine ID was specified via these methods it might be generated randomly by
+\fBkernel\-install\fR, in which case it only applies to this invocation\&.)
 .PP
-\fIKERNEL_INSTALL_BOOT_ROOT=\fR
-is set for the plugins to the root directory (mount point, usually) of the hierarchy where boot\-loader entries, kernel images, and associated resources should be placed\&. Can be overridden by setting
-\fIBOOT_ROOT=\fR\&.
+\fI$KERNEL_INSTALL_ENTRY_TOKEN\fR
+is set for the plugins to the desired entry "token" to use\&. It\*(Aqs an identifier that shall be used to identify the local installation, and is often the machine ID, i\&.e\&. same as
+\fI$KERNEL_INSTALL_MACHINE_ID\fR, but might also be a different type of identifier, for example a fixed string or the
+\fIID=\fR,
+\fIIMAGE_ID=\fR
+values from
+/etc/os\-release\&. The string passed here will be used to name Boot Loader Specification entries, or the directories the kernel image and initial RAM disk images are placed into\&. Note that while oftentimes
+\fI$KERNEL_INSTALL_ENTRY_TOKEN\fR
+and
+\fI$KERNEL_INSTALL_MACHINE_ID\fR
+are set to the same value, the latter is guaranteed to be a valid 32 character ID in lowercase hexadecimals while the former can be any short string\&. The entry token to use is read from
+/etc/kernel/entry\-token, if it exists\&. Otherwise a few possible candidates below the
+\fI$BOOT\fR
+are searched for Boot Loader Specification Type 1 entry directories, and if found the entry token is derived from that\&. If that is not successful the machine ID is used as fallback\&.
 .PP
-\fIKERNEL_INSTALL_LAYOUT=bls|other|\&.\&.\&.\fR
-specifies the installation layout\&. Defaults to
+\fI$KERNEL_INSTALL_BOOT_ROOT\fR
+is set for the plugins to the absolute path of the root directory (mount point, usually) of the hierarchy where boot loader entries, kernel images, and associated resources should be placed\&. This usually is the path where the XBOOTLDR partition or the ESP (EFI System Partition) are mounted, and also conceptually referred to as
+\fI$BOOT\fR\&. Can be overridden by setting
+\fI$BOOT_ROOT\fR\&.
+.PP
+\fI$KERNEL_INSTALL_LAYOUT=bls|other|\&.\&.\&.\fR
+is set for the plugins to specify the installation layout\&. Defaults to
 \fBbls\fR
 if
-$BOOT/\fIMACHINE\-ID\fR
+$BOOT/\fIENTRY\-TOKEN\fR
 exists, or
 \fBother\fR
 otherwise\&. Additional layout names may be defined by convention\&. If a plugin uses a special layout, it\*(Aqs encouraged to declare its own layout name and configure
 \fIlayout=\fR
 in
 install\&.conf
-upon initial installation\&.
+upon initial installation\&. The following values are currently understood:
 .PP
 bls
 .RS 4
 Standard
 \m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2
-layout, compatible with
+Type #1 layout, compatible with
 \fBsystemd-boot\fR(7): entries in
-$BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR[+\fITRIES\fR]\&.conf, kernel and initrds under
-$BOOT/\fIMACHINE\-ID\fR/\fIKERNEL\-VERSION\fR/
+$BOOT/loader/entries/\fIENTRY\-TOKEN\fR\-\fIKERNEL\-VERSION\fR[+\fITRIES\fR]\&.conf, kernel and initrds under
+$BOOT/\fIENTRY\-TOKEN\fR/\fIKERNEL\-VERSION\fR/
 .sp
-Provided by
+Implemented by
 90\-loaderentry\&.install\&.
 .RE
 .PP
@@ -290,6 +315,15 @@ other
 Some other layout not understood natively by
 \fBkernel\-install\fR\&.
 .RE
+.PP
+\fI$KERNEL_INSTALL_INITRD_GENERATOR\fR
+is set for plugins to select the initrd generator\&. This may be configured as
+\fIinitrd_generator=\fR
+in
+install\&.conf\&. See below\&.
+.PP
+\fI$KERNEL_INSTALL_STAGING_AREA\fR
+is set for plugins to a path to a directory\&. Plugins may drop files in that directory, and they will be installed as part of the loader entry, based on the file name and extension\&.
 .SH "EXIT STATUS"
 .PP
 If every executable returns 0 or 77, 0 is returned, and a non\-zero failure code otherwise\&.
@@ -321,41 +355,24 @@ $BOOT/loader/entries/\fIMACHINE\-ID\fR\-\fIKERNEL\-VERSION\fR+\fITRIES\fR\&.conf
 which implement boot attempt counting with a counter embedded in the entry file name\&.
 .RE
 .PP
+/etc/kernel/entry\-token
+.RS 4
+If this file exists it is read and used as "entry token" for this system, i\&.e\&. is used for naming Boot Loader Specification entries, see
+\fI$KERNEL_INSTALL_ENTRY_TOKEN\fR
+above for details\&.
+.RE
+.PP
 /etc/machine\-id
 .RS 4
 The content of this file specifies the machine identification
-\fIMACHINE\-ID\fR\&. If
-/etc/machine\-id
-cannot be read or is temporary (backed by a file on
-\fBtmpfs\fR),
-\fBkernel\-install\fR
-will use
-"Default"
-instead\&.
-.RE
-.PP
-/etc/machine\-info
-.RS 4
-If this file contains the
-\fIKERNEL_INSTALL_MACHINE_ID\fR
-variable,
-\fBkernel\-install\fR
-will use it as
-\fIMACHINE\-ID\fR
-instead of the contents of
-/etc/machine\-id\&. If the variable is not found in
-/etc/machine\-info,
-\fBkernel\-install\fR
-will try to save the machine ID it uses to install to
-\fI$BOOT\fR
-to this file\&.
+\fIMACHINE\-ID\fR\&.
 .RE
 .PP
 /etc/os\-release /usr/lib/os\-release
 .RS 4
 Read by
 90\-loaderentry\&.install\&. If available,
-\fIPRETTY_NAME\fR
+\fIPRETTY_NAME=\fR
 is read from these files and used as the title of the boot menu entry\&. Otherwise,
 "Linux \fIKERNEL\-VERSION\fR"
 will be used\&.
@@ -366,7 +383,10 @@ will be used\&.
 Configuration options for
 \fBkernel\-install\fR, as a series of
 \fIKEY=\fR\fIVALUE\fR
-assignments, compatible with shell syntax\&. See the Environment variables section for supported keys\&.
+assignments, compatible with shell syntax\&. This currently supports two keys:
+\fIlayout=\fR
+and
+\fIinitrd_generator=\fR, for details see the Environment variables section above\&.
 .RE
 .SH "SEE ALSO"
 .PP

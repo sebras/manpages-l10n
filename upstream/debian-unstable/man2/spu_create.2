@@ -22,20 +22,25 @@
 .\" 2007-07-10, some polishing by mtk
 .\" 2007-09-28, updates for newer kernels by Jeremy Kerr <jk@ozlabs.org>
 .\"
-.TH SPU_CREATE 2 2020-12-21 Linux "Linux Programmer's Manual"
+.TH SPU_CREATE 2 2021-03-22 Linux "Linux Programmer's Manual"
 .SH NAME
 spu_create \- create a new spu context
 .SH SYNOPSIS
 .nf
-.B #include <sys/types.h>
-.B #include <sys/spu.h>
+.BR "#include <sys/spu.h>" "          /* Definition of " SPU_* " constants */"
+.BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
+.B #include <unistd.h>
 .PP
-.BI "int spu_create(const char *" pathname ", int " flags ", mode_t " mode ","
-.BI "               int " neighbor_fd ");"
+.BI "int syscall(SYS_spu_create, const char *" pathname \
+", unsigned int " flags ,
+.BI "            mode_t " mode ", int " neighbor_fd );
 .fi
 .PP
 .IR Note :
-There is no glibc wrapper for this system call; see NOTES.
+glibc provides no wrapper for
+.BR spu_create (),
+necessitating the use of
+.BR syscall (2).
 .SH DESCRIPTION
 The
 .BR spu_create ()
@@ -173,9 +178,9 @@ is used within the SPU scheduling algorithm.
 On success,
 .BR spu_create ()
 returns a new file descriptor.
-On error, \-1 is returned, and
+On failure, \-1 is returned, and
 .I errno
-is set to one of the error codes listed below.
+is set to indicate the error.
 .SH ERRORS
 .TP
 .B EACCES
@@ -259,9 +264,6 @@ This call is Linux-specific and implemented only on the PowerPC
 architecture.
 Programs using this system call are not portable.
 .SH NOTES
-Glibc does not provide a wrapper for this system call; call it using
-.BR syscall (2).
-Note however, that
 .BR spu_create ()
 is meant to be used from libraries that implement a more abstract
 interface to SPUs, not to be used from regular applications.
@@ -288,7 +290,7 @@ for an example of the use of
 .BR capabilities (7),
 .BR spufs (7)
 .SH COLOPHON
-This page is part of release 5.10 of the Linux
+This page is part of release 5.13 of the Linux
 .I man-pages
 project.
 A description of the project,
