@@ -431,6 +431,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Florentina Mușat <florentina.musat.28@gmail.com>
 * Laurențiu Buzdugan <lbuz@rolix.org>
 * Mihai Cristescu <mihai.cristescu@gmail.com>
+* Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>
 
 
 ## Spanish:
@@ -493,6 +494,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Andrij Mizyk <andmizyk@gmail.com>
 * Andriy Rysin <arysin@gmail.com>
 * lxlalexlxl <lxlalexlxl@ukr.net>
+* Maxim V. Dziumanenko <mvd@mylinux.com.ua>
 * Olex Denkin <ks_alexandr@ukr.net>
 * Sergey Poznyakoff <gray@gnu.org>
 * Yuri Chornoivan <yurchor@ukr.net>
