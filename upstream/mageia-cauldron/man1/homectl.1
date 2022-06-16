@@ -1,5 +1,5 @@
 '\" t
-.TH "HOMECTL" "1" "" "systemd 250" "homectl"
+.TH "HOMECTL" "1" "" "systemd 251" "homectl"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -405,6 +405,25 @@ extension (for example: the YubiKey 5 series), as supported with the
 option below\&. Both mechanisms are similarly powerful, though FIDO2 is the more modern technology\&. PKCS#11/PIV tokens have the benefit of being recognizable before authentication and hence can be used for implying the user identity to use for logging in, which FIDO2 does not allow\&. PKCS#11/PIV devices generally require initialization (i\&.e\&. storing a private/public key pair on them, see example below) before they can be used; FIDO2 security tokens generally do not required that, and work out of the box\&.
 .RE
 .PP
+\fB\-\-fido2\-credential\-algorithm=\fR\fISTRING\fR
+.RS 4
+Specify COSE algorithm used in credential generation\&. The default value is
+"es256"\&. Supported values are
+"es256",
+"rs256"
+and
+"eddsa"\&.
+.sp
+"es256"
+denotes ECDSA over NIST P\-256 with SHA\-256\&.
+"rs256"
+denotes 2048\-bit RSA with PKCS#1\&.5 padding and SHA\-256\&.
+"eddsa"
+denotes EDDSA over Curve25519 with SHA\-512\&.
+.sp
+Note that your authenticator may not support some algorithms\&.
+.RE
+.PP
 \fB\-\-fido2\-device=\fR\fIPATH\fR
 .RS 4
 Takes a path to a Linux
@@ -665,11 +684,18 @@ controls what happens when it becomes inactive, i\&.e\&. whether to trim/allocat
 Takes a string containing additional mount options to use when mounting the LUKS volume\&. If specified, this string will be appended to the default, built\-in mount options\&.
 .RE
 .PP
-\fB\-\-luks\-cipher=\fR\fICIPHER\fR, \fB\-\-luks\-cipher\-mode=\fR\fIMODE\fR, \fB\-\-luks\-volume\-key\-size=\fR\fIBITS\fR, \fB\-\-luks\-pbkdf\-type=\fR\fITYPE\fR, \fB\-\-luks\-pbkdf\-hash\-algorithm=\fR\fIALGORITHM\fR, \fB\-\-luks\-pbkdf\-time\-cost=\fR\fISECONDS\fR, \fB\-\-luks\-pbkdf\-memory\-cost=\fR\fIBYTES\fR, \fB\-\-luks\-pbkdf\-parallel\-threads=\fR\fITHREADS\fR
+\fB\-\-luks\-cipher=\fR\fICIPHER\fR, \fB\-\-luks\-cipher\-mode=\fR\fIMODE\fR, \fB\-\-luks\-volume\-key\-size=\fR\fIBYTES\fR, \fB\-\-luks\-pbkdf\-type=\fR\fITYPE\fR, \fB\-\-luks\-pbkdf\-hash\-algorithm=\fR\fIALGORITHM\fR, \fB\-\-luks\-pbkdf\-time\-cost=\fR\fISECONDS\fR, \fB\-\-luks\-pbkdf\-memory\-cost=\fR\fIBYTES\fR, \fB\-\-luks\-pbkdf\-parallel\-threads=\fR\fITHREADS\fR
 .RS 4
 Configures various cryptographic parameters for the LUKS2 storage mechanism\&. See
 \fBcryptsetup\fR(8)
 for details on the specific attributes\&.
+.sp
+Note that
+\fBhomectl\fR
+uses bytes for key size, like
+/proc/crypto, but
+\fBcryptsetup\fR(8)
+uses bits\&.
 .RE
 .PP
 \fB\-\-auto\-resize\-mode=\fR
@@ -976,6 +1002,13 @@ and
 "cat"
 is equivalent to passing
 \fB\-\-no\-pager\fR\&.
+.sp
+Note: if
+\fI$SYSTEMD_PAGERSECURE\fR
+is not set,
+\fI$SYSTEMD_PAGER\fR
+(as well as
+\fI$PAGER\fR) will be silently ignored\&.
 .RE
 .PP
 \fI$SYSTEMD_LESS\fR

@@ -1,5 +1,5 @@
 '\" t
-.TH "LOADER\&.CONF" "5" "" "systemd 250" "loader.conf"
+.TH "LOADER\&.CONF" "5" "" "systemd 251" "loader.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -25,20 +25,23 @@ loader.conf \- Configuration file for systemd\-boot
 .PP
 \fIESP\fR/loader/loader\&.conf,
 \fIESP\fR/loader/entries/*\&.conf
+\fIXBOOTLDR\fR/loader/entries/*\&.conf
 .SH "DESCRIPTION"
 .PP
 \fBsystemd-boot\fR(7)
 will read
-\fIESP\fR/loader/loader\&.conf
-and any files with the
+\fIESP\fR/loader/loader\&.conf, and any files with the
 "\&.conf"
 extension under
 \fIESP\fR/loader/entries/
-on the EFI system partition (ESP)\&.
+on the EFI system partition (ESP), and
+\fIXBOOTLDR\fR/loader/entries/
+on the extended boot loader partition (XBOOTLDR) as defined by
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
 .PP
-Each configuration file must consist of an option name, followed by whitespace, and the option value\&.
+Each of these configuration files must consist of series of newline (i\&.e\&. ASCII code 10) separated lines, each consisting of an option name, followed by whitespace, and the option value\&.
 "#"
-may be used to start a comment line\&. Empty and comment lines are ignored\&.
+may be used to start a comment line\&. Empty and comment lines are ignored\&. The files use UTF\-8 encoding\&.
 .PP
 Boolean arguments may be written as
 "yes"/"y"/"true"/"t"/"on"/"1"
@@ -46,9 +49,16 @@ or
 "no"/"n"/"false"/"f"/"off"/"0"\&.
 .SH "OPTIONS"
 .PP
-The following configuration options in
+The configuration options supported by
+\fIESP\fR/loader/entries/*\&.conf
+and
+\fIXBOOTLDR\fR/loader/entries/*\&.conf
+files are defined as part of the
+\m[blue]\fBBoot Loader Specification\fR\m[]\&\s-2\u[1]\d\s+2\&.
+.PP
+The following configuration are supported by the
 loader\&.conf
-are understood:
+configuration file:
 .PP
 default
 .RS 4
@@ -114,7 +124,7 @@ If set to
 "menu\-hidden"
 or
 "0"
-no menu is shown and the default entry will be booted immediately\&. The menu can be shown by pressing and holding a key before systemd\-boot is launched\&. Setting this to
+(the default) no menu is shown and the default entry will be booted immediately\&. The menu can be shown by pressing and holding a key before systemd\-boot is launched\&. Setting this to
 "menu\-force"
 disables the timeout while always showing the menu\&.
 .RE
@@ -171,6 +181,29 @@ f
 key\&.
 .RE
 .PP
+beep
+.RS 4
+Takes a boolean argument\&. If timeout enabled beep every second, otherwise beep n times when n\-th entry in boot menu is selected (default disabled)\&. Currently, only x86 is supported, where it uses the PC speaker\&.
+.RE
+.PP
+reboot\-for\-bitlocker
+.RS 4
+Caveat: This feature is experimental, and is likely to be changed (or removed in its current form) in a future version of systemd\&.
+.sp
+Work around BitLocker requiring a recovery key when the boot loader was updated (disabled by default)\&.
+.sp
+Try to detect BitLocker encrypted drives along with an active TPM\&. If both are found and Windows Boot Manager is selected in the boot menu, set the
+"BootNext"
+EFI variable and restart the system\&. The firmware will then start Windows Boot Manager directly, leaving the TPM PCRs in expected states so that Windows can unseal the encryption key\&. This allows systemd\-boot to be updated without having to provide the recovery key for BitLocker drive unlocking\&.
+.sp
+Note that the PCRs that Windows uses can be configured with the
+"Configure TPM platform validation profile for native UEFI firmware configurations"
+group policy under
+"Computer Configuration\eAdministrative Templates\eWindows Components\eBitLocker Drive Encryption"\&. When secure boot is enabled, changing this to PCRs
+"0,2,7,11"
+should be safe\&. The TPM key protector needs to be removed and then added back for the PCRs on an already encrypted drive to change\&. If PCR 4 is not measured, this setting can be disabled to speed up booting into Windows\&.
+.RE
+.PP
 random\-seed\-mode
 .RS 4
 Takes one of
@@ -195,7 +228,7 @@ is not set\&. This mode is useful in environments where protection against OS im
 to initialize both the random seed file in the ESP and the system token EFI variable\&.
 .sp
 See
-\m[blue]\fBRandom Seeds\fR\m[]\&\s-2\u[1]\d\s+2
+\m[blue]\fBRandom Seeds\fR\m[]\&\s-2\u[2]\d\s+2
 for further information\&.
 .RE
 .SH "EXAMPLE"
@@ -223,6 +256,11 @@ will be selected by default\&. If more than one entry matches, the one with the 
 \fBbootctl\fR(1)
 .SH "NOTES"
 .IP " 1." 4
+Boot Loader Specification
+.RS 4
+\%https://systemd.io/BOOT_LOADER_SPECIFICATION
+.RE
+.IP " 2." 4
 Random Seeds
 .RS 4
 \%https://systemd.io/RANDOM_SEEDS

@@ -1,8 +1,5 @@
 .\" Man page generated from reStructuredText.
 .
-.TH "BTRFS" "5" "Apr 27, 2022" "5.17" "BTRFS"
-.SH NAME
-btrfs \- topics about the BTRFS filesystem (mount options, supported file attributes and other)
 .
 .nr rst2man-indent-level 0
 .
@@ -30,6 +27,9 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
+.TH "BTRFS" "5" "Jun 06, 2022" "5.18.1" "BTRFS"
+.SH NAME
+btrfs \- topics about the BTRFS filesystem (mount options, supported file attributes and other)
 .SH DESCRIPTION
 .sp
 This document describes topics related to BTRFS that are not specific to the
@@ -62,9 +62,7 @@ seeding device
 .IP 13. 4
 raid56 status and recommended practices
 .IP 14. 4
-storage model
-.IP 15. 4
-hardware considerations
+storage model, hardware considerations
 .UNINDENT
 .SH MOUNT OPTIONS
 .sp
@@ -232,7 +230,7 @@ at the cost of potential partial writes, in case the write is interrupted
 .sp
 Enable data checksumming for newly created files.
 \fIDatasum\fP implies \fIdatacow\fP, ie. the normal mode of operation. All files created
-under \fInodatasum\fP inherit the "no checksums" property, however there\(aqs no
+under \fInodatasum\fP inherit the \(dqno checksums\(dq property, however there\(aqs no
 corresponding file attribute (see \fBchattr(1)\fP).
 .sp
 \fBNOTE:\fP
@@ -847,7 +845,7 @@ To create and activate a swapfile run the following commands:
 .UNINDENT
 .sp
 Please note that the UUID returned by the \fImkswap\fP utility identifies the swap
-"filesystem" and because it\(aqs stored in a file, it\(aqs not generally visible and
+\(dqfilesystem\(dq and because it\(aqs stored in a file, it\(aqs not generally visible and
 usable as an identifier unlike if it was on a block device.
 .sp
 The file will appear in \fI/proc/swaps\fP:
@@ -1249,13 +1247,16 @@ access the compressed data like bootloaders.
 .SH FILESYSTEM EXCLUSIVE OPERATIONS
 .sp
 There are several operations that affect the whole filesystem and cannot be run
-in parallel. Attempt to start one while another is running will fail.
+in parallel. Attempt to start one while another is running will fail (see
+exceptions below).
 .sp
 Since kernel 5.10 the currently running operation can be obtained from
 \fI/sys/fs/UUID/exclusive_operation\fP with following values and operations:
 .INDENT 0.0
 .IP \(bu 2
 balance
+.IP \(bu 2
+balance paused (since 5.17)
 .IP \(bu 2
 device add
 .IP \(bu 2
@@ -1272,6 +1273,10 @@ none
 .sp
 Enqueuing is supported for several btrfs subcommands so they can be started
 at once and then serialized.
+.sp
+There\(aqs an exception when a paused balance allows to start a device add
+operation as they don\(aqt really collide and this can be used to add more space
+for the balance to finish.
 .SH FILESYSTEM LIMITS
 .INDENT 0.0
 .TP
@@ -1287,17 +1292,17 @@ can exceed the limits (NAME_MAX), there\(aqs no content validation at \fBsymlink
 creation.
 .TP
 .B maximum number of inodes
-2^64^ but depends on the available metadata space as the inodes are created
+2\s-2\u64\d\s0 but depends on the available metadata space as the inodes are created
 dynamically
 .TP
 .B inode numbers
 minimum number: 256 (for subvolumes), regular files and directories: 257
 .TP
 .B maximum file length
-inherent limit of btrfs is 2^64^ (16 EiB) but the linux VFS limit is 2^63^ (8 EiB)
+inherent limit of btrfs is 2\s-2\u64\d\s0 (16 EiB) but the linux VFS limit is 2\s-2\u63\d\s0 (8 EiB)
 .TP
 .B maximum number of subvolumes
-the subvolume ids can go up to 2^64^ but the number of actual subvolumes
+the subvolume ids can go up to 2\s-2\u64\d\s0 but the number of actual subvolumes
 depends on the available metadata space, the space consumed by all subvolume
 metadata includes bookkeeping of shared extents can be large (MiB, GiB)
 .TP
@@ -1441,6 +1446,8 @@ to set various zone sizes.
 all devices must have the same zone size
 .IP \(bu 2
 maximum zone size is 8GiB
+.IP \(bu 2
+minimum zone size is 4MiB
 .IP \(bu 2
 mixing zoned and non\-zoned devices is possible, the zone writes are emulated,
 but this is namely for testing
@@ -1649,8 +1656,8 @@ Multiple profiles:                 yes (data, metadata)
 .SH SEEDING DEVICE
 .sp
 The COW mechanism and multiple devices under one hood enable an interesting
-concept, called a seeding device: extending a read\-only filesystem on a single
-device filesystem with another device that captures all writes. For example
+concept, called a seeding device: extending a read\-only filesystem on a
+device with another device that captures all writes. For example
 imagine an immutable golden image of an operating system enhanced with another
 device that allows to use the data from the golden image and normal operation.
 This idea originated on CD\-ROMs with base OS and allowing to use them for live
@@ -1663,9 +1670,9 @@ will not allow any writes, except adding a new device by \fBbtrfs device add\fP\
 Then the filesystem can be remounted as read\-write.
 .sp
 Given that the filesystem on the seeding device is always recognized as
-read\-only, it can be used to seed multiple filesystems, at the same time. The
-UUID that is normally attached to a device is automatically changed to a random
-UUID on each mount.
+read\-only, it can be used to seed multiple filesystems from one device at the
+same time. The UUID that is normally attached to a device is automatically
+changed to a random UUID on each mount.
 .sp
 Once the seeding device is mounted, it needs the writable device. After adding
 it, something like \fBremount \-o remount,rw /path\fP makes the filesystem at
@@ -1676,10 +1683,10 @@ Alternatively, deleting the seeding device from the filesystem can turn it into
 a normal filesystem, provided that the writable device can also contain all the
 data from the seeding device.
 .sp
-The seeding device flag can be cleared again by \fBbtrfstune \-f \-s 0\fP, eg.
+The seeding device flag can be cleared again by \fBbtrfstune \-f \-S 0\fP, eg.
 allowing to update with newer data but please note that this will invalidate
 all existing filesystems that use this particular seeding device. This works
-for some use cases, not for others, and a forcing flag to the command is
+for some use cases, not for others, and the forcing flag to the command is
 mandatory to avoid accidental mistakes.
 .sp
 Example how to create and use one seeding device:
@@ -1690,13 +1697,15 @@ Example how to create and use one seeding device:
 .ft C
 # mkfs.btrfs /dev/sda
 # mount /dev/sda /mnt/mnt1
-# ... fill mnt1 with data
+\&... fill mnt1 with data
 # umount /mnt/mnt1
+
 # btrfstune \-S 1 /dev/sda
+
 # mount /dev/sda /mnt/mnt1
-# btrfs device add /dev/sdb /mnt
+# btrfs device add /dev/sdb /mnt/mnt1
 # mount \-o remount,rw /mnt/mnt1
-# ... /mnt/mnt1 is now writable
+\&... /mnt/mnt1 is now writable
 .ft P
 .fi
 .UNINDENT
@@ -1747,6 +1756,58 @@ the label is copied from the seeding device and can be changed by \fBbtrfs files
 .IP \(bu 2
 each new mount of the seeding device gets a new random UUID
 .UNINDENT
+.SS Chained seeding devices
+.sp
+Though it\(aqs not recommended and is rather an obscure and untested use case,
+chaining seeding devices is possible. In the first example, the writable device
+\fI/dev/sdb\fP can be turned onto another seeding device again, depending on the
+unchanged seeding device \fI/dev/sda\fP\&. Then using \fI/dev/sdb\fP as the primary
+seeding device it can be extended with another writable device, say \fI/dev/sdd\fP,
+and it continues as before as a simple tree structure on devices.
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+# mkfs.btrfs /dev/sda
+# mount /dev/sda /mnt/mnt1
+\&... fill mnt1 with data
+# umount /mnt/mnt1
+
+# btrfstune \-S 1 /dev/sda
+
+# mount /dev/sda /mnt/mnt1
+# btrfs device add /dev/sdb /mnt/mnt1
+# mount \-o remount,rw /mnt/mnt1
+\&... /mnt/mnt1 is now writable
+# umount /mnt/mnt1
+
+# btrfstune \-S 1 /dev/sdb
+
+# mount /dev/sdb /mnt/mnt1
+# btrfs device add /dev/sdc /mnt
+# mount \-o remount,rw /mnt/mnt1
+\&... /mnt/mnt1 is now writable
+# umount /mnt/mnt1
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+As a result we have:
+.INDENT 0.0
+.IP \(bu 2
+\fIsda\fP is a single seeding device, with its initial contents
+.IP \(bu 2
+\fIsdb\fP is a seeding device but requires \fIsda\fP, the contents are from the time
+when \fIsdb\fP is made seeding, ie. contents of \fIsda\fP with any later changes
+.IP \(bu 2
+\fIsdc\fP last writable, can be made a seeding one the same way as was \fIsdb\fP,
+preserving its contents and depending on \fIsda\fP and \fIsdb\fP
+.UNINDENT
+.sp
+As long as the seeding devices are unmodified and available, they can be used
+to start another branch.
 .SH RAID56 STATUS AND RECOMMENDED PRACTICES
 .sp
 The RAID56 feature provides striping and parity over several devices, same as
@@ -1784,8 +1845,19 @@ degrade the performance. The workaround is to start it on each device
 separately. Due to that the device stats may not match the actual state and
 some errors might get reported multiple times.
 .sp
-The \fIwrite hole\fP problem.
-.SH STORAGE MODEL
+The \fIwrite hole\fP problem. An unclean shutdown could leave a partially written
+stripe in a state where the some stripe ranges and the parity are from the old
+writes and some are new. The information which is which is not tracked. Write
+journal is not implemented. Alternatively a full read\-modify\-write would make
+sure that a full stripe is always written, avoiding the write hole completely,
+but performance in that case turned out to be too bad for use.
+.sp
+The striping happens on all available devices (at the time the chunks were
+allocated), so in case a new device is added it may not be utilized
+immediately and would require a rebalance. A fixed configured stripe width is
+not implemented.
+.SH STORAGE MODEL, HARDWARE CONSIDERATIONS
+.SS Storage model
 .sp
 \fIA storage model is a model that captures key physical aspects of data
 structure in a data store. A filesystem is the logical structure organizing
@@ -1827,7 +1899,7 @@ updates are grouped, into a generation, written on the device, serialized by
 the flush command and then the super block is written ending the generation.
 All logical links among metadata comprising a consistent view of the data may
 not cross the generation boundary.
-.SS WHEN THINGS GO WRONG
+.SS When things go wrong
 .sp
 \fBNo or partial atomicity of block reads/writes (1)\fP
 .INDENT 0.0
@@ -1885,12 +1957,11 @@ atomic write would not corrupt the checksum. It\(aqs likely that after reading
 such block the data inside would not be consistent with the rest. To rule that
 out there\(aqs embedded block number in the metadata block. It\(aqs the logical
 block number because this is what the logical structure expects and verifies.
-.SH HARDWARE CONSIDERATIONS
 .sp
 The following is based on information publicly available, user feedback,
 community discussions or bug report analyses. It\(aqs not complete and further
 research is encouraged when in doubt.
-.SS MAIN MEMORY
+.SS Main memory
 .sp
 The data structures and raw data blocks are temporarily stored in computer
 memory before they get written to the device. It is critical that memory is
@@ -1927,11 +1998,11 @@ What to do:
 run \fImemtest\fP, note that sometimes memory errors happen only when the system
 is under heavy load that the default memtest cannot trigger
 .IP \(bu 2
-memory errors may appear as filesystem going read\-only due to "pre write"
+memory errors may appear as filesystem going read\-only due to \(dqpre write\(dq
 check, that verify meta data before they get written but fail some basic
 consistency checks
 .UNINDENT
-.SS DIRECT MEMORY ACCESS (DMA)
+.SS Direct memory access (DMA)
 .sp
 Another class of errors is related to DMA (direct memory access) performed
 by device drivers. While this could be considered a software error, the
@@ -1951,7 +2022,7 @@ use up\-to\-date kernel (recent releases or maintained long term support version
 .IP \(bu 2
 as this may be caused by faulty drivers, keep the systems up\-to\-date
 .UNINDENT
-.SS ROTATIONAL DISKS (HDD)
+.SS Rotational disks (HDD)
 .sp
 Rotational HDDs typically fail at the level of individual sectors or small clusters.
 Read failures are caught on the levels below the filesystem and are returned to
@@ -1976,7 +2047,7 @@ What to do:
 .IP \(bu 2
 check \fBsmartctl\fP for potential issues
 .UNINDENT
-.SS SOLID STATE DRIVES (SSD)
+.SS Solid state drives (SSD)
 .sp
 The mechanism of information storage is different from HDDs and this affects
 the failure mode as well. The data are stored in cells grouped in large blocks
@@ -1994,7 +2065,7 @@ it\(aqs possible with HDDs.
 .sp
 There are several technologies of the memory cells with different
 characteristics and price. The lifetime is directly affected by the type and
-frequency of data written.  Writing "too much" distinct data (e.g. encrypted)
+frequency of data written.  Writing \(dqtoo much\(dq distinct data (e.g. encrypted)
 may render the internal deduplication ineffective and lead to a lot of rewrites
 and increased wear of the memory cells.
 .sp
@@ -2005,7 +2076,7 @@ but there are some that exhibit similar behaviour:
 expensive SSD will use more durable memory cells and is optimized for
 reliability and high load
 .IP \(bu 2
-cheap SSD is projected for a lower load ("desktop user") and is optimized for
+cheap SSD is projected for a lower load (\(dqdesktop user\(dq) and is optimized for
 cost, it may employ the optimizations and/or extended error reporting
 partially or not at all
 .UNINDENT
@@ -2056,7 +2127,7 @@ run \fBsmartctl\fP or self\-tests to look for potential issues
 .IP \(bu 2
 keep the firmware up\-to\-date
 .UNINDENT
-.SS NVM EXPRESS, NON\-VOLATILE MEMORY (NVMe)
+.SS NVM express, non\-volatile memory (NVMe)
 .sp
 NVMe is a type of persistent memory usually connected over a system bus (PCIe)
 or similar interface and the speeds are an order of magnitude faster than SSD.
@@ -2080,7 +2151,7 @@ physical connection of the device. You may want to run self\-tests (using
 .IP \(bu 2
 \fI\%https://www.smartmontools.org/wiki/NVMe_Support\fP
 .UNINDENT
-.SS DRIVE FIRMWARE
+.SS Drive firmware
 .sp
 Firmware is technically still software but embedded into the hardware. As all
 software has bugs, so does firmware. Storage devices can update the firmware
@@ -2098,7 +2169,7 @@ updating firmware can be risky on itself
 .IP \(bu 2
 use up\-to\-date kernel (recent releases or maintained long term support versions)
 .UNINDENT
-.SS SD FLASH CARDS
+.SS SD flash cards
 .sp
 There are a lot of devices with low power consumption and thus using storage
 media based on low power consumption too, typically flash memory stored on
@@ -2112,7 +2183,7 @@ software) and prone to bugs that manifest as hardware errors.
 Adding redundancy like using DUP profiles for both data and metadata can help
 in some cases but a full backup might be the best option once problems appear
 and replacing the card could be required as well.
-.SS HARDWARE AS THE MAIN SOURCE OF FILESYSTEM CORRUPTIONS
+.SS Hardware as the main source of filesystem corruptions
 .sp
 \fBIf you use unreliable hardware and don\(aqt know about that, don\(aqt blame the
 filesystem when it tells you.\fP

@@ -1,5 +1,5 @@
 '\" t
-.TH "UDEVADM" "8" "" "systemd 250" "udevadm"
+.TH "UDEVADM" "8" "" "systemd 251" "udevadm"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -38,6 +38,10 @@ udevadm \- udev management tool
 \fBudevadm test \fR\fB[options]\fR\fB \fR\fB\fIdevpath\fR\fR
 .HP \w'\fBudevadm\ test\-builtin\ \fR\fB[options]\fR\fB\ \fR\fB\fIcommand\fR\fR\fB\ \fR\fB\fIdevpath\fR\fR\ 'u
 \fBudevadm test\-builtin \fR\fB[options]\fR\fB \fR\fB\fIcommand\fR\fR\fB \fR\fB\fIdevpath\fR\fR
+.HP \w'\fBudevadm\ wait\ \fR\fB[options]\fR\fB\ \fR\fB\fIdevice|syspath\fR\fR\ 'u
+\fBudevadm wait \fR\fB[options]\fR\fB \fR\fB\fIdevice|syspath\fR\fR
+.HP \w'\fBudevadm\ lock\ \fR\fB[options]\fR\fB\ \fR\fB\fIcommand\fR\fR\ 'u
+\fBudevadm lock \fR\fB[options]\fR\fB \fR\fB\fIcommand\fR\fR
 .SH "DESCRIPTION"
 .PP
 \fBudevadm\fR
@@ -137,6 +141,11 @@ query\&.
 Print all sysfs properties of the specified device that can be used in udev rules to match the specified device\&. It prints all devices along the chain, up to the root of sysfs that can be used in udev rules\&.
 .RE
 .PP
+\fB\-t\fR, \fB\-\-tree\fR
+.RS 4
+Display a sysfs tree\&. This recursively iterates through the sysfs hierarchy and displays it in a tree structure\&. If a path is specified only the subtree below and its parent directories are shown\&. This will show both device and subsystem items\&.
+.RE
+.PP
 \fB\-x\fR, \fB\-\-export\fR
 .RS 4
 Print output as key/value pairs\&. Values are enclosed in single quotes\&. This takes effects only when
@@ -199,11 +208,49 @@ l l
 l l
 l l
 l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
 l l.
 T{
 "P:"
 T}:T{
 Device path in /sys/
+T}
+T{
+"M:"
+T}:T{
+Device name in /sys/ (i\&.e\&. the last component of "P:")
+T}
+T{
+"R:"
+T}:T{
+Device number in /sys/ (i\&.e\&. the numeric suffix of the last component of "P:")
+T}
+T{
+"U:"
+T}:T{
+Kernel subsystem
+T}
+T{
+"T:"
+T}:T{
+Kernel device type within subsystem
+T}
+T{
+"D:"
+T}:T{
+Kernel device node major/minor
+T}
+T{
+"I:"
+T}:T{
+Network interface index
 T}
 T{
 "N:"
@@ -219,6 +266,16 @@ T{
 "S:"
 T}:T{
 Device node symlink
+T}
+T{
+"Q:"
+T}:T{
+Block device sequence number (DISKSEQ)
+T}
+T{
+"V:"
+T}:T{
+Attached driver
 T}
 T{
 "E:"
@@ -252,10 +309,11 @@ Suppress error logging in triggering events\&.
 .PP
 \fB\-t\fR, \fB\-\-type=\fR\fB\fITYPE\fR\fR
 .RS 4
-Trigger a specific type of devices\&. Valid types are:
-\fBdevices\fR,
-\fBsubsystems\fR\&. The default value is
-\fBdevices\fR\&.
+Trigger a specific type of devices\&. Valid types are
+"all",
+"devices", and
+"subsystems"\&. The default value is
+"devices"\&.
 .RE
 .PP
 \fB\-c\fR, \fB\-\-action=\fR\fB\fIACTION\fR\fR
@@ -272,6 +330,15 @@ Type of event to be triggered\&. Possible actions are
 "help"
 can be used to list the possible actions\&. The default value is
 "change"\&.
+.RE
+.PP
+\fB\-\-prioritized\-subsystem=\fR\fB\fISUBSYSTEM\fR\fI[,\fISUBSYSTEM\fR\&...]\fR\fR
+.RS 4
+Takes a comma separated list of subsystems\&. When triggering events for devices, the devices from the specified subsystems and their parents are triggered first\&. For example, if
+\fB\-\-prioritized\-subsystem=block,net\fR, then firstly all block devices and their parents are triggered, in the next all network devices and their parents are triggered, and lastly the other devices are triggered\&. This option can be specified multiple times, and in that case the lists of the subsystems will be merged\&. That is,
+\fB\-\-prioritized\-subsystem=block \-\-prioritized\-subsystem=net\fR
+is equivalent to
+\fB\-\-prioritized\-subsystem=block,net\fR\&.
 .RE
 .PP
 \fB\-s\fR, \fB\-\-subsystem\-match=\fR\fB\fISUBSYSTEM\fR\fR
@@ -322,6 +389,32 @@ Trigger events for devices with a matching device path\&. When this option is sp
 \fB\-b\fR, \fB\-\-parent\-match=\fR\fB\fISYSPATH\fR\fR
 .RS 4
 Trigger events for all children of a given device\&. When this option is specified more than once, then each matching result is ORed, that is, all children of each specified device are triggered\&.
+.RE
+.PP
+\fB\-\-initialized\-match\fR, \fB\-\-initialized\-nomatch\fR
+.RS 4
+When
+\fB\-\-initialized\-match\fR
+is specified, trigger events for devices that are already initialized by
+\fBsystemd\-udevd\fR, and skip devices that are not initialized yet\&.
+.sp
+When
+\fB\-\-initialized\-nomatch\fR
+is specified, trigger events for devices that are not initialized by
+\fBsystemd\-udevd\fR
+yet, and skip devices that are already initialized\&.
+.sp
+Typically, it is essential that applications which intend to use such a match, make sure a suitable udev rule is installed that sets at least one property on devices that shall be matched\&. See also Initialized Devices section below for more details\&.
+.sp
+WARNING:
+\fB\-\-initialized\-nomatch\fR
+can potentially save a significant amount of time compared to re\-triggering all devices in the system and e\&.g\&. can be used to optimize boot time\&. However, this is not safe to be used in a boot sequence in general\&. Especially, when udev rules for a device depend on its parent devices (e\&.g\&.
+"ATTRS"
+or
+"IMPORT{parent}"
+keys, see
+\fBudev\fR(7)
+for more details), the final state of the device becomes easily unstable with this option\&.
 .RE
 .PP
 \fB\-w\fR, \fB\-\-settle\fR
@@ -492,7 +585,7 @@ Filter udev events by tag\&. Only udev events with a given tag attached will pas
 .RS 4
 Print a short help text and exit\&.
 .RE
-.SS "udevadm test [\fIoptions\fR] [\fIdevpath\fR]"
+.SS "udevadm test [\fIoptions\fR] [\fIdevpath\fR|\fIfile\fR|\fIunit\fR]"
 .PP
 Simulate a udev event run for the given device, and print debug output\&.
 .PP
@@ -525,7 +618,7 @@ Specify when udevadm should resolve names of users and groups\&. When set to
 .RS 4
 Print a short help text and exit\&.
 .RE
-.SS "udevadm test\-builtin [\fIoptions\fR] [\fIcommand\fR] [\fIdevpath\fR]"
+.SS "udevadm test\-builtin [\fIoptions\fR] [\fIcommand\fR] [\fIdevpath\fR|\fIfile\fR|\fIunit\fR]"
 .PP
 Run a built\-in command
 \fICOMMAND\fR
@@ -552,7 +645,167 @@ can be used to list the possible actions\&. The default value is
 .RS 4
 Print a short help text and exit\&.
 .RE
+.SS "udevadm wait [\fIoptions\fR] [\fIdevice|syspath\fR] \&..."
+.PP
+Wait for devices or device symlinks being created and initialized by
+\fBsystemd\-udevd\fR\&. Each device path must start with
+"/dev/"
+or
+"/sys/", e\&.g\&.
+"/dev/sda",
+"/dev/disk/by\-path/pci\-0000:3c:00\&.0\-nvme\-1\-part1",
+"/sys/devices/pci0000:00/0000:00:1f\&.6/net/eth0", or
+"/sys/class/net/eth0"\&. This can take multiple devices\&. This may be useful for waiting for devices being processed by
+\fBsystemd\-udevd\fR
+after e\&.g\&. partitioning or formatting the devices\&.
+.PP
+\fB\-t\fR, \fB\-\-timeout=\fR\fB\fISECONDS\fR\fR
+.RS 4
+Maximum number of seconds to wait for the specified devices or device symlinks being created, initialized, or removed\&. The default value is
+"infinity"\&.
+.RE
+.PP
+\fB\-\-initialized=\fR\fB\fIBOOL\fR\fR
+.RS 4
+Check if
+\fBsystemd\-udevd\fR
+initialized devices\&. Defaults to true\&. When false, the command only checks if the specified devices exist\&. Set false to this setting if there is no udev rules for the specified devices, as the devices will never be considered as initialized in that case\&. See Initialized Devices section below for more details\&.
+.RE
+.PP
+\fB\-\-removed\fR
+.RS 4
+When specified, the command wait for devices being removed instead of created or initialized\&. If this is specified,
+\fB\-\-initialized=\fR
+will be ignored\&.
+.RE
+.PP
+\fB\-\-settle\fR
+.RS 4
+When specified, also watches the udev event queue, and wait for all queued events being processed by
+\fBsystemd\-udevd\fR\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.SS "udevadm lock [\fIoptions\fR] [\fIcommand\fR] \&..."
+.PP
+\fBudevadm lock\fR
+takes an (advisory) exclusive lock(s) on a block device (or multiple thereof), as per
+\m[blue]\fBLocking Block Device Access\fR\m[]\&\s-2\u[1]\d\s+2
+and invokes a program with the lock(s) taken\&. When the invoked program exits the lock(s) are automatically released\&.
+.PP
+This tool is in particular useful to ensure that
+\fBsystemd-udevd.service\fR(8)
+does not probe a block device while changes are made to it, for example partitions created or file systems formatted\&. Note that many tools that interface with block devices natively support taking relevant locks, see for example
+\fBsfdisk\fR(8)\*(Aqs
+\fB\-\-lock\fR
+switch\&.
+.PP
+The command expects at least one block device specified via
+\fB\-\-device=\fR
+or
+\fB\-\-backing=\fR, and a command line to execute as arguments\&.
+.PP
+\fB\-\-device=\fR\fB\fIDEVICE\fR\fR, \fB\-d \fR\fB\fIDEVICE\fR\fR
+.RS 4
+Takes a path to a device node of the device to lock\&. This switch may be used multiple times (and in combination with
+\fB\-\-backing=\fR) in order to lock multiple devices\&. If a partition block device node is specified the containing "whole" block device is automatically determined and used for the lock, as per the specification\&. If multiple devices are specified, they are deduplicated, sorted by the major/minor of their device nodes and then locked in order\&.
+.sp
+This switch must be used at least once, to specify at least one device to lock\&. (Alternatively, use
+\fB\-\-backing=\fR, see below\&.)
+.RE
+.PP
+\fB\-\-backing=\fR\fB\fIPATH\fR\fR, \fB\-b \fR\fB\fIPATH\fR\fR
+.RS 4
+If a path to a device node is specified, identical to
+\fB\-\-device=\fR\&. However, this switch alternatively accepts a path to a regular file or directory, in which case the block device of the file system the file/directory resides on is automatically determined and used as if it was specified with
+\fB\-\-device=\fR\&.
+.RE
+.PP
+\fB\-\-timeout=\fR\fB\fISECS\fR\fR, \fB\-t \fR\fB\fISECS\fR\fR
+.RS 4
+Specifies how long to wait at most until all locks can be taken\&. Takes a value in seconds, or in the usual supported time units, see
+\fBsystemd.time\fR(7)\&. If specified as zero the lock is attempted and if not successful the invocation will immediately fail\&. If passed as
+"infinity"
+(the default) the invocation will wait indefinitely until the lock can be acquired\&. If the lock cannot be taken in the specified time the specified command will not be executed and the invocation will fail\&.
+.RE
+.PP
+\fB\-\-print\fR, \fB\-p\fR
+.RS 4
+Instead of locking the specified device(s) and executing a command, just print the device path(s) that would be locked, and execute no command\&. This command is useful to determine the "whole" block device in case a partition block device is specified\&. The devices will be sorted by their device node major number as primary ordering key and the minor number as secondary ordering key (i\&.e\&. they are shown in the order they\*(Aqd be locked)\&. Note that the number of lines printed here can be less than the the number of
+\fB\-\-device=\fR
+and
+\fB\-\-backing=\fR
+switches specified in case these resolve to the same "whole" devices\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print a short help text and exit\&.
+.RE
+.SH "INITIALIZED DEVICES"
+.PP
+Initialized devices are those for which at least one udev rule already completed execution \(en for any action but
+"remove"
+\(em that set a property or other device setting (and thus has an entry in the udev device database)\&. Devices are no longer considered initialized if a
+"remove"
+action is seen for them (which removes their entry in the udev device database)\&. Note that devices that have no udev rules are never considered initialized, but might still be announced via the sd\-device API (or similar)\&.
+.SH "EXAMPLE"
+.PP
+\fBExample\ \&1.\ \&Format a File System\fR
+.PP
+Take a lock on the backing block device while creating a file system, to ensure that
+\fBsystemd\-udevd\fR
+doesn\*(Aqt probe or announce the new superblock before it is comprehensively written:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# udevadm lock \-\-device=/dev/sda1 mkfs\&.ext4 /dev/sda1
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&2.\ \&Format a RAID File System\fR
+.PP
+Similar, but take locks on multiple devices at once:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# udevadm lock \-\-device=/dev/sda1 \-\-device=/dev/sdb1 mkfs\&.btrfs /dev/sda1 /dev/sdb1
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+\fBExample\ \&3.\ \&Copy in a File System\fR
+.PP
+Take a lock on the backing block device while copying in a prepared file system image, to ensure that
+\fBsystemd\-udevd\fR
+doesn\*(Aqt probe or announce the new superblock before it is fully written:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+# udevadm lock \-d /dev/sda1 dd if=fs\&.raw of=/dev/sda1
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .PP
 \fBudev\fR(7),
 \fBsystemd-udevd.service\fR(8)
+.SH "NOTES"
+.IP " 1." 4
+Locking Block Device Access
+.RS 4
+\%https://systemd.io/BLOCK_DEVICE_LOCKING
+.RE

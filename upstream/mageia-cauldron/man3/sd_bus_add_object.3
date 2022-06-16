@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_BUS_ADD_OBJECT" "3" "" "systemd 250" "sd_bus_add_object"
+.TH "SD_BUS_ADD_OBJECT" "3" "" "systemd 251" "sd_bus_add_object"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -415,7 +415,7 @@ Mark this vtable method or property entry so that the user data pointer passed t
 .PP
 \fBSD_BUS_VTABLE_CAPABILITY(\fR\fB\fIcapability\fR\fR\fB)\fR
 .RS 4
-Access to this vtable entry will be allowed if the calling proccess has the capability
+Access to this vtable entry will be allowed if the calling process has the capability
 \fIcapability\fR, as described in
 \fBsd_bus_query_sender_privilege\fR(3)\&. If used for
 \fBSD_BUS_VTABLE_START()\fR, provides a default for all entries in the array\&. If not specified, either for an individual entry or the whole array,
@@ -467,6 +467,14 @@ Note that this page describes checks implemented in the D\-Bus client\&. The D\-
 
 #define _cleanup_(f) __attribute__((cleanup(f)))
 
+#define check(x) ({                             \e
+  int r = (x);                                  \e
+  errno = r < 0 ? \-r : 0;                       \e
+  printf(#x ": %m\en");                          \e
+  if (r < 0)                                    \e
+    return EXIT_FAILURE;                        \e
+  })
+
 typedef struct object {
   char *name;
   uint32_t number;
@@ -474,6 +482,16 @@ typedef struct object {
 
 static int method(sd_bus_message *m, void *userdata, sd_bus_error *error) {
   printf("Got called with userdata=%p\en", userdata);
+
+  if (sd_bus_message_is_method_call(m,
+                                    "org\&.freedesktop\&.systemd\&.VtableExample",
+                                    "Method4"))
+    return 1;
+
+  const char *string;
+  check(sd_bus_message_read(m, "s", &string));
+  check(sd_bus_reply_method_return(m, "s", string));
+
   return 1;
 }
 
@@ -522,14 +540,6 @@ static const sd_bus_vtable vtable[] = {
         SD_BUS_VTABLE_END
 };
 
-#define check(x) ({                             \e
-  int r = x;                                    \e
-  errno = r < 0 ? \-r : 0;                       \e
-  printf(#x ": %m\en");                          \e
-  if (r < 0)                                    \e
-    return EXIT_FAILURE;                        \e
-  })
-
 int main(int argc, char **argv) {
   _cleanup_(sd_bus_flush_close_unrefp) sd_bus *bus = NULL;
 
@@ -538,16 +548,22 @@ int main(int argc, char **argv) {
   object object = { \&.number = 666 };
   check((object\&.name = strdup("name")) != NULL);
 
-  check(sd_bus_add_object_vtable(bus, NULL, "/object",
+  check(sd_bus_add_object_vtable(bus, NULL,
+                                 "/org/freedesktop/systemd/VtableExample",
                                  "org\&.freedesktop\&.systemd\&.VtableExample",
                                  vtable,
                                  &object));
+
+  check(sd_bus_request_name(bus,
+                            "org\&.freedesktop\&.systemd\&.VtableExample",
+                            0));
 
   for (;;) {
     check(sd_bus_wait(bus, UINT64_MAX));
     check(sd_bus_process(bus, NULL));
   }
 
+  check(sd_bus_release_name(bus, "org\&.freedesktop\&.systemd\&.VtableExample"));
   free(object\&.name);
 
   return 0;

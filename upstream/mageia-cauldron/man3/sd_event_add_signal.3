@@ -1,5 +1,5 @@
 '\" t
-.TH "SD_EVENT_ADD_SIGNAL" "3" "" "systemd 250" "sd_event_add_signal"
+.TH "SD_EVENT_ADD_SIGNAL" "3" "" "systemd 251" "sd_event_add_signal"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -50,16 +50,23 @@ parameter, and the event source object is returned in the
 parameter\&. The
 \fIsignal\fR
 parameter specifies the numeric signal to be handled (see
-\fBsignal\fR(7))\&. The
+\fBsignal\fR(7))\&.
+.PP
+The
 \fIhandler\fR
-parameter must reference a function to call when the signal is received or be
+parameter is a function to call when the signal is received or
 \fBNULL\fR\&. The handler function will be passed the
 \fIuserdata\fR
 pointer, which may be chosen freely by the caller\&. The handler also receives a pointer to a
 signalfd_siginfo
 structure containing information about the received signal\&. See
 \fBsignalfd\fR(2)
-for further information\&.
+for further information\&. The handler may return negative to signal an error (see below), other return values are ignored\&. If
+\fIhandler\fR
+is
+\fBNULL\fR, a default handler that calls
+\fBsd_event_exit\fR(3)
+will be used\&.
 .PP
 Only a single handler may be installed for a specific signal\&. The signal must be blocked in all threads before this function is called (using
 \fBsigprocmask\fR(2)
@@ -67,9 +74,10 @@ or
 \fBpthread_sigmask\fR(3))\&.
 .PP
 By default, the event source is enabled permanently (\fBSD_EVENT_ON\fR), but this may be changed with
-\fBsd_event_source_set_enabled\fR(3)\&. If the handler function returns a negative error code, it will be disabled after the invocation, even if the
+\fBsd_event_source_set_enabled\fR(3)\&. If the handler function returns a negative error code, it will either be disabled after the invocation, even if the
 \fBSD_EVENT_ON\fR
-mode was requested before\&.
+mode was requested before, or it will cause the loop to terminate, see
+\fBsd_event_source_set_exit_on_failure\fR(3)\&.
 .PP
 To destroy an event source object use
 \fBsd_event_source_unref\fR(3), but note that the event source is only removed from the event loop when all references to the event source are dropped\&. To make sure an event source does not fire anymore, even if it is still referenced, disable the event source using

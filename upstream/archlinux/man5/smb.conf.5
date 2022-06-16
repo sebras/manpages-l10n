@@ -2,12 +2,12 @@
 .\"     Title: smb.conf
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
-.\"      Date: 05/09/2022
+.\"      Date: 06/13/2022
 .\"    Manual: File Formats and Conventions
-.\"    Source: Samba 4.16.1
+.\"    Source: Samba 4.16.2
 .\"  Language: English
 .\"
-.TH "SMB\&.CONF" "5" "05/09/2022" "Samba 4\&.16\&.1" "File Formats and Conventions"
+.TH "SMB\&.CONF" "5" "06/13/2022" "Samba 4\&.16\&.2" "File Formats and Conventions"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -3643,7 +3643,7 @@ dns update command (G)
 This option sets the command that is called when there are DNS updates\&. It should update the local machines DNS names using TSIG\-GSS\&.
 .sp
 Default:
-\fI\fIdns update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.1/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
+\fI\fIdns update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.2/source4/scripting/bin/samba_dnsupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIdns update command\fR\fR\fI = \fR\fI/usr/local/sbin/dnsupdate\fR\fI \fR
@@ -4656,7 +4656,7 @@ gpo update command (G)
 This option sets the command that is called to apply GPO policies\&. The samba\-gpupdate script applies System Access and Kerberos Policies to the KDC\&. System Access policies set minPwdAge, maxPwdAge, minPwdLength, and pwdProperties in the samdb\&. Kerberos Policies set kdc:service ticket lifetime, kdc:user ticket lifetime, and kdc:renewal lifetime in smb\&.conf\&.
 .sp
 Default:
-\fI\fIgpo update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.1/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
+\fI\fIgpo update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.2/source4/scripting/bin/samba\-gpupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIgpo update command\fR\fR\fI = \fR\fI/usr/local/sbin/gpoupdate\fR\fI \fR
@@ -4899,6 +4899,12 @@ hosts allow = 150\&.203\&.15\&.0/255\&.255\&.255\&.0
 Example 3: allow a couple of hosts
 .sp
 hosts allow = lapland, arvidsjaur
+.sp
+Example 4: allow only hosts in NIS netgroup "foonet", but deny access from one particular host
+.sp
+hosts allow = @foonet
+.sp
+hosts deny = pirate
 .if n \{\
 .sp
 .\}
@@ -5363,7 +5369,13 @@ This is a list of users that should not be allowed to login to this service\&. T
 \fIparanoid\fR
 check to absolutely ensure an improper setting does not breach your security\&.
 .sp
-A name starting with a \*(Aq@\*(Aq is interpreted UNIX group\&.
+A name starting with a \*(Aq@\*(Aq is interpreted as an NIS netgroup first (if your system supports NIS), and then as a UNIX group if the name was not found in the NIS netgroup database\&.
+.sp
+A name starting with \*(Aq+\*(Aq is interpreted only by looking in the UNIX group database via the NSS getgrnam() interface\&. A name starting with \*(Aq&\*(Aq is interpreted only by looking in the NIS netgroup database (this requires NIS to be working on your system)\&. The characters \*(Aq+\*(Aq and \*(Aq&\*(Aq may be used at the start of the name in either order so the value
+\fI+&group\fR
+means check the UNIX group database, followed by the NIS netgroup database, and the value
+\fI&+group\fR
+means check the NIS netgroup database, followed by the UNIX group database (the same as the \*(Aq@\*(Aq prefix)\&.
 .sp
 The current servicename is substituted for
 \fI%S\fR\&. This is useful in the [homes] section\&.
@@ -10451,7 +10463,7 @@ samba_kcc
 was installed in a non\-default location\&.
 .sp
 Default:
-\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.1/source4/scripting/bin/samba_kcc\fR\fI \fR
+\fI\fIsamba kcc command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.2/source4/scripting/bin/samba_kcc\fR\fI \fR
 .sp
 Example:
 \fI\fIsamba kcc command\fR\fR\fI = \fR\fI/usr/local/bin/kcc\fR\fI \fR
@@ -12128,7 +12140,7 @@ This option sets the command that for updating servicePrincipalName names from
 spn_update_list\&.
 .sp
 Default:
-\fI\fIspn update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.1/source4/scripting/bin/samba_spnupdate\fR\fI \fR
+\fI\fIspn update command\fR\fR\fI = \fR\fI/build/samba/src/samba\-4\&.16\&.2/source4/scripting/bin/samba_spnupdate\fR\fI \fR
 .sp
 Example:
 \fI\fIspn update command\fR\fR\fI = \fR\fI/usr/local/sbin/spnupdate\fR\fI \fR
@@ -12863,6 +12875,10 @@ sys = @system
 .sp
 You can have as many mappings as you like in a username map file\&.
 .sp
+If your system supports the NIS NETGROUP option then the netgroup database is checked before the
+/etc/group
+database for matching groups\&.
+.sp
 You can map Windows usernames that have spaces in them by using double quotes around the name\&. For example:
 .sp
 .if n \{\
@@ -13114,7 +13130,7 @@ Default:
 valid users (S)
 .PP
 .RS 4
-This is a list of users that should be allowed to login to this service\&. Names starting with an \*(Aq@\*(Aq are interpreted using the same rules as described in the
+This is a list of users that should be allowed to login to this service\&. Names starting with \*(Aq@\*(Aq, \*(Aq+\*(Aq and \*(Aq&\*(Aq are interpreted using the same rules as described in the
 \fIinvalid users\fR
 parameter\&.
 .sp
@@ -13588,7 +13604,7 @@ and
 nss_winbind\&.so
 modules for UNIX services\&.
 .sp
-Please note that setting this parameter to + can cause problems with group membership at least on glibc systems, as the character + was used as a special character for NIS in /etc/group\&.
+Please note that setting this parameter to + causes problems with group membership at least on glibc systems, as the character + is used as a special character for NIS in /etc/group\&.
 .sp
 Default:
 \fI\fIwinbind separator\fR\fR\fI = \fR\fI\e\fR\fI \fR
@@ -13960,7 +13976,7 @@ and
 special sections make life for an administrator easy, but the various combinations of default attributes can be tricky\&. Take extreme care when designing these sections\&. In particular, ensure that the permissions on spool directories are correct\&.
 .SH "VERSION"
 .PP
-This man page is part of version 4\&.16\&.1 of the Samba suite\&.
+This man page is part of version 4\&.16\&.2 of the Samba suite\&.
 .SH "SEE ALSO"
 .PP
 \fBsamba\fR(7),

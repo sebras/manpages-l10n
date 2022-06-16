@@ -241,14 +241,24 @@ using the values in
 has been set with an error value before\&. Otherwise, it will return immediately\&. If the strings in
 \fIe\fR
 were set using
-\fBsd_bus_error_set_const()\fR, they will be shared\&. Otherwise, they will be copied\&. Returns a converted
-\fIerrno\fR\-like, negative error code or
-\fB0\fR\&. Before this call,
+\fBsd_bus_error_set_const()\fR, they will be shared\&. Otherwise, they will be copied\&. Before this call,
 \fIdst\fR
 must be unset, i\&.e\&. either freshly initialized with
 \fBNULL\fR
 or reset using
 \fBsd_bus_error_free()\fR\&.
+.PP
+\fBsd_bus_error_copy()\fR
+generally returns
+\fB0\fR
+or a negative
+\fIerrno\fR\-like value based on the input parameter
+\fIe\fR:
+\fB0\fR
+if it was unset and a negative integer if it was set to some error, similarly to
+\fBsd_bus_error_set()\fR\&. It may however also return an error generated internally, for example
+\fB\-ENOMEM\fR
+if a memory allocation fails\&.
 .PP
 \fBsd_bus_error_move()\fR
 is similar to
@@ -304,6 +314,14 @@ will destroy resources held by
 \fBfree\fR(3)d by the caller if necessary\&. The function may also be called safely on unset errors (error structures with both fields set to
 \fBNULL\fR), in which case it performs no operation\&. This call will reset the error structure after freeing the data, so that all fields are set to
 \fBNULL\fR\&. The structure may be reused afterwards\&.
+.SH "REFERENCE OWNERSHIP"
+.PP
+sd_bus_error
+is not reference\-counted\&. Users should destroy resources held by it by calling
+\fBsd_bus_error_free()\fR\&. Usually, error structures are allocated on the stack or passed in as function parameters, but they may also be allocated dynamically, in which case it is the duty of the caller to
+\fBfree\fR(3)
+the memory held by the structure itself after freeing its contents with
+\fBsd_bus_error_free()\fR\&.
 .SH "RETURN VALUE"
 .PP
 The functions
@@ -324,7 +342,9 @@ and
 when the specified error value is
 \fB0\fR, and a negative errno\-like value corresponding to the
 \fIerror\fR
-parameter otherwise\&. If an error occurs internally, one of the negative error values listed below will be returned\&.
+parameter otherwise\&. If an error occurs internally, one of the negative error values listed below will be returned\&. This allows those functions to be conveniently used in a
+\fBreturn\fR
+statement, see the example below\&.
 .PP
 \fBsd_bus_error_get_errno()\fR
 returns
@@ -339,7 +359,9 @@ otherwise\&.
 \fBsd_bus_error_copy()\fR
 and
 \fBsd_bus_error_move()\fR
-return a negative error value converted from the source error, and zero if the error has not been set\&.
+return a negative error value converted from the source error, and zero if the error has not been set\&. This allows those functions to be conveniently used in a
+\fBreturn\fR
+statement, see the example below\&.
 .PP
 \fBsd_bus_error_is_set()\fR
 returns a non\-zero value when
@@ -357,21 +379,13 @@ is non\-\fBNULL\fR
 and the
 \fIname\fR
 field is equal to one of the given names, zero otherwise\&.
-.SH "REFERENCE OWNERSHIP"
-.PP
-sd_bus_error
-is not reference counted\&. Users should destroy resources held by it by calling
-\fBsd_bus_error_free()\fR\&. Usually, error structures are allocated on the stack or passed in as function parameters, but they may also be allocated dynamically, in which case it is the duty of the caller to
-\fBfree\fR(3)
-the memory held by the structure itself after freeing its contents with
-\fBsd_bus_error_free()\fR\&.
 .SS "Errors"
 .PP
-Returned errors may indicate the following problems:
+Return value may indicate the following problems in the invocation of the function itself:
 .PP
 \fB\-EINVAL\fR
 .RS 4
-Error was already set in
+Error was already set in the
 sd_bus_error
 structure when one the error\-setting functions was called\&.
 .RE
@@ -380,6 +394,54 @@ structure when one the error\-setting functions was called\&.
 .RS 4
 Memory allocation failed\&.
 .RE
+.PP
+On success,
+\fBsd_bus_error_set()\fR,
+\fBsd_bus_error_setf()\fR,
+\fBsd_bus_error_set_const()\fR,
+\fBsd_bus_error_set_errno()\fR,
+\fBsd_bus_error_set_errnof()\fR,
+\fBsd_bus_error_set_errnofv()\fR,
+\fBsd_bus_error_copy()\fR, and
+\fBsd_bus_error_move()\fR
+will return a negative converted
+\fIerrno\fR\-style value, or
+\fB0\fR
+if the error parameter is
+\fBNULL\fR
+or unset\&. D\-Bus errors are converted to the integral
+\fIerrno\fR\-style value, and the mapping mechanism is extensible, see the discussion above\&. This effectively means that almost any negative
+\fIerrno\fR\-style value can be returned\&.
+.SH "EXAMPLES"
+.PP
+\fBExample\ \&1.\ \&Using the negative return value to propagate an error\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/* SPDX\-License\-Identifier: CC0\-1\&.0 */
+
+#include <errno\&.h>
+#include <string\&.h>
+#include <unistd\&.h>
+#include <sd\-bus\&.h>
+
+int writer_with_negative_errno_return(int fd, sd_bus_error *error) {
+  const char *message = "Hello, World!\en";
+
+  ssize_t n = write(fd, message, strlen(message));
+  if (n >= 0)
+    return n; /* On success, return the number of bytes written, possibly 0\&. */
+
+  /* On error, initialize the error structure, and also propagate the errno
+   * value that write(2) set for us\&. */
+  return sd_bus_error_set_errnof(error, errno, "Failed to write to fd %i: %m", fd);
+}
+.fi
+.if n \{\
+.RE
+.\}
 .SH "NOTES"
 .PP
 These APIs are implemented as a shared library, which can be compiled and linked to with the

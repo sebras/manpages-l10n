@@ -27,7 +27,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "BTRFS-PROPERTY" "8" "May 04, 2022" "5.17" "BTRFS"
+.TH "BTRFS-PROPERTY" "8" "Jun 09, 2022" "5.18.1" "BTRFS"
 .SH NAME
 btrfs-property \- get/set/list properties for given filesystem object
 .SH SYNOPSIS
@@ -37,69 +37,86 @@ btrfs-property \- get/set/list properties for given filesystem object
 .sp
 \fBbtrfs property\fP is used to get/set/list property for given filesystem object.
 The object can be an inode (file or directory), subvolume or the whole
-filesystem.  See the description of \fBget\fP subcommand for more information about
-both btrfs object and property.
+filesystem.
 .sp
-\fB*btrfs property\fP provides an unified and user\-friendly method to tune different
+\fBbtrfs property\fP provides an unified and user\-friendly method to tune different
 btrfs properties instead of using the traditional method like \fBchattr(1)\fP or
 \fBlsattr(1)\fP\&.
-.SH SUBCOMMAND
+.SS Object types
+.sp
+A property might apply to several object types so in some cases it\(aqs necessary
+to specify that explicity, however it\(aqs not needed in the most common case of
+files and directories.
+.sp
+The subcommands take parameter \fI\-t\fP, use first letter as a shortcut (\fIf/s/d/i\fP)
+of the type:
+.INDENT 0.0
+.IP \(bu 2
+filesystem
+.IP \(bu 2
+subvolume
+.IP \(bu 2
+device
+.IP \(bu 2
+inode (file or directory)
+.UNINDENT
+.SS Inode properties
 .INDENT 0.0
 .TP
-.B get [\-t <type>] <object> [<name>]
-get property from a btrfs \fIobject\fP of given \fItype\fP
-.sp
-A btrfs object, which is set by \fIobject\fP, can be a btrfs filesystem
-itself, a btrfs subvolume, an inode (file or directory) inside btrfs,
-or a device on which a btrfs exists.
-.sp
-The option \fI\-t\fP can be used to explicitly
-specify what type of object you meant. This is only needed when a
-property could be set for more then one object type.
-.sp
-Possible types are \fIs[ubvol]\fP, \fIf[ilesystem]\fP, \fIi[node]\fP and \fId[evice]\fP, where
-the first lettes is a shortcut.
-.sp
-Set the name of property by \fIname\fP\&. If no \fIname\fP is specified,
-all properties for the given object are printed. \fIname\fP is one of
-the following:
+.B compression
+compression algorithm set for an inode (it\(aqs not possible to set the
+compression level this way), possible values:
 .INDENT 7.0
+.IP \(bu 2
+\fIlzo\fP
+.IP \(bu 2
+\fIzlib\fP
+.IP \(bu 2
+\fIzstd\fP
+.IP \(bu 2
+\fIno\fP or \fInone\fP \- disable compresssion (equivalent to \fBchattr +m\fP)
+.IP \(bu 2
+\fI""\fP (empty string) \- set the default value
+.INDENT 2.0
+.INDENT 3.5
+.sp
+\fBNOTE:\fP
+.INDENT 0.0
+.INDENT 3.5
+This has changed in version 5.18 of btrfs\-progs and
+requires kernel 5.14 or newer to work.
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.UNINDENT
+.SS Subvolume properties
+.INDENT 0.0
 .TP
 .B ro
 read\-only flag of subvolume: true or false. Please also see section \fISUBVOLUME FLAGS\fP
 in \fBbtrfs\-subvolume(8)\fP for possible implications regarding incremental send.
+.UNINDENT
+.SS Filesystem properties
+.INDENT 0.0
 .TP
 .B label
 label of the filesystem. For an unmounted filesystem, provide a path to a block
 device as object. For a mounted filesystem, specify a mount point.
+.UNINDENT
+.SH SUBCOMMAND
+.INDENT 0.0
 .TP
-.B compression
-compression algorithm set for an inode, possible values: \fIlzo\fP, \fIzlib\fP, \fIzstd\fP\&.
-To disable compression use \fIno\fP or \fInone\fP\&. Empty value resets the
-property and sets a default value.
-\&.. note:
-.INDENT 7.0
-.INDENT 3.5
-.sp
-.nf
-.ft C
-This has changed in version 5.18 of btrfs\-progs and
-requires kernel 5.14 or newer to work.
-.ft P
-.fi
-.UNINDENT
-.UNINDENT
-.UNINDENT
+.B get [\-t <type>] <object> [<name>]
+Read value of a property \fIname\fP of btrfs \fIobject\fP of given \fItype\fP,
+empty \fIname\fP will read all of them
 .TP
 .B list [\-t <type>] <object>
-Lists available properties with their descriptions for the given object.
-.sp
-See the description of \fBget\fP subcommand for the meaning of each option.
+List available properties with their descriptions for the given object.
 .TP
 .B set [\-f] [\-t <type>] <object> <name> <value>
-Sets a property on a btrfs object.
-.sp
-See the description of \fBget\fP subcommand for the meaning of each option.
+Set \fIvalue\fP of property \fIname\fP on a given btrfs object.
 .sp
 \fBOptions\fP
 .INDENT 7.0
@@ -107,6 +124,41 @@ See the description of \fBget\fP subcommand for the meaning of each option.
 .B  \-f
 Force the change. Changing some properties may involve safety checks or
 additional changes that depend on the properties semantics.
+.UNINDENT
+.UNINDENT
+.SH EXAMPLES
+.sp
+Set compression on a file:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ touch file1
+$ btrfs prop get file1
+[ empty output ]
+$ btrfs prop set file1 compression zstd
+$ btrfs prop get file1
+compression=zstd
+.ft P
+.fi
+.UNINDENT
+.UNINDENT
+.sp
+Make a writeable subvolume read\-only:
+.INDENT 0.0
+.INDENT 3.5
+.sp
+.nf
+.ft C
+$ btrfs subvol create subvol1
+[ fill subvol1 with data ]
+$ btrfs prop get subvol1
+ro=false
+$ btrfs prop set subvol1 ro true
+ro=true
+.ft P
+.fi
 .UNINDENT
 .UNINDENT
 .SH EXIT STATUS

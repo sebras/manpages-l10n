@@ -1,4 +1,4 @@
-.TH iptables-extensions 8 "" "iptables 1.8.7" "iptables 1.8.7"
+.TH iptables-extensions 8 "" "iptables 1.8.8" "iptables 1.8.8"
 .SH NAME
 iptables-extensions \(em list of extensions in the standard iptables distribution
 .SH SYNOPSIS
@@ -512,7 +512,7 @@ list of packet types.  Packet types are:
 [\fB!\fP] \fB\-\-dccp\-option\fP \fInumber\fP
 Match if DCCP option set.
 .SS devgroup
-Match device group of a packets incoming/outgoing interface.
+Match device group of a packet's incoming/outgoing interface.
 .TP
 [\fB!\fP] \fB\-\-src\-group\fP \fIname\fP
 Match device group of incoming device
@@ -1370,6 +1370,17 @@ This module matches Stream Control Transmission Protocol headers.
 The flag letter in upper case indicates that the flag is to match if set,
 in the lower case indicates to match if unset.
 
+Match types:
+.TP
+all
+Match if all given chunk types are present and flags match.
+.TP
+any
+Match if any of the given chunk types is present with given flags.
+.TP
+only
+Match if only the given chunk types are present with given flags and none are missing.
+
 Chunk types: DATA INIT INIT_ACK SACK HEARTBEAT HEARTBEAT_ACK ABORT SHUTDOWN SHUTDOWN_ACK ERROR COOKIE_ECHO COOKIE_ACK ECN_ECNE ECN_CWR SHUTDOWN_COMPLETE ASCONF ASCONF_ACK FORWARD_TSN
 
 chunk type            available flags      
@@ -2078,7 +2089,7 @@ should be modified (and all future packets in this connection will
 also be mangled), and rules should cease being examined.  It takes the
 following options:
 .TP
-\fB\-\-to\-destination\fP [\fIipaddr\fP[\fB\-\fP\fIipaddr\fP]][\fB:\fP\fIport\fP[\fB\-\fP\fIport\fP]]
+\fB\-\-to\-destination\fP [\fIipaddr\fP[\fB\-\fP\fIipaddr\fP]][\fB:\fP\fIport\fP[\fB\-\fP\fIport\fP[\fB/\fIbaseport\fP]]]
 which can specify a single new destination IP address, an inclusive
 range of IP addresses. Optionally a port range,
 if the rule also specifies one of the following protocols:
@@ -2086,17 +2097,14 @@ if the rule also specifies one of the following protocols:
 If no port range is specified, then the destination port will never be
 modified. If no IP address is specified then only the destination port
 will be modified.
-In Kernels up to 2.6.10 you can add several \-\-to\-destination options. For
-those kernels, if you specify more than one destination address, either via an
-address range or multiple \-\-to\-destination options, a simple round-robin (one
-after another in cycle) load balancing takes place between these addresses.
-Later Kernels (>= 2.6.11-rc1) don't have the ability to NAT to multiple ranges
-anymore.
+If \fBbaseport\fP is given, the difference of the original destination port and
+its value is used as offset into the mapping port range. This allows to create
+shifted portmap ranges and is available since kernel version 4.18.
+For a single port or \fIbaseport\fP, a service name as listed in
+\fB/etc/services\fP may be used.
 .TP
 \fB\-\-random\fP
-If option
-\fB\-\-random\fP
-is used then port mapping will be randomized (kernel >= 2.6.22).
+Randomize source port mapping (kernel >= 2.6.22).
 .TP
 \fB\-\-persistent\fP
 Gives a client the same source-/destination-address for each connection.
@@ -2317,6 +2325,9 @@ Log options from the IP/IPv6 packet header.
 .TP
 \fB\-\-log\-uid\fP
 Log the userid of the process which generated the packet.
+.TP
+\fB\-\-log\-macdecode\fP
+Log MAC addresses and protocol.
 .SS MARK
 This target is used to set the Netfilter mark value associated with the packet.
 It can, for example, be used in conjunction with routing based on fwmark (needs
@@ -2368,17 +2379,11 @@ if the rule also specifies one of the following protocols:
 \fBtcp\fP, \fBudp\fP, \fBdccp\fP or \fBsctp\fP.
 .TP
 \fB\-\-random\fP
-Randomize source port mapping
-If option
-\fB\-\-random\fP
-is used then port mapping will be randomized (kernel >= 2.6.21).
+Randomize source port mapping (kernel >= 2.6.21).
 Since kernel 5.0, \fB\-\-random\fP is identical to \fB\-\-random-fully\fP.
 .TP
 \fB\-\-random-fully\fP
-Full randomize source port mapping
-If option
-\fB\-\-random-fully\fP
-is used then port mapping will be fully randomized (kernel >= 3.13).
+Fully randomize source port mapping (kernel >= 3.13).
 .TP
 IPv6 support available since Linux kernels >= 3.7.
 .SS NETMAP
@@ -2496,11 +2501,10 @@ This specifies a destination port or range of ports to use: without
 this, the destination port is never altered.  This is only valid
 if the rule also specifies one of the following protocols:
 \fBtcp\fP, \fBudp\fP, \fBdccp\fP or \fBsctp\fP.
+For a single port, a service name as listed in \fB/etc/services\fP may be used.
 .TP
 \fB\-\-random\fP
-If option
-\fB\-\-random\fP
-is used then port mapping will be randomized (kernel >= 2.6.22).
+Randomize source port mapping (kernel >= 2.6.22).
 .TP
 IPv6 support available starting Linux kernels >= 3.7.
 .SS REJECT (IPv6-specific)
@@ -2689,22 +2693,12 @@ If no port range is specified, then source ports below 512 will be
 mapped to other ports below 512: those between 512 and 1023 inclusive
 will be mapped to ports below 1024, and other ports will be mapped to
 1024 or above. Where possible, no port alteration will occur.
-In Kernels up to 2.6.10, you can add several \-\-to\-source options. For those
-kernels, if you specify more than one source address, either via an address
-range or multiple \-\-to\-source options, a simple round-robin (one after another
-in cycle) takes place between these addresses.
-Later Kernels (>= 2.6.11-rc1) don't have the ability to NAT to multiple ranges
-anymore.
 .TP
 \fB\-\-random\fP
-If option
-\fB\-\-random\fP
-is used then port mapping will be randomized through a hash-based algorithm (kernel >= 2.6.21).
+Randomize source port mapping through a hash-based algorithm (kernel >= 2.6.21).
 .TP
 \fB\-\-random-fully\fP
-If option
-\fB\-\-random-fully\fP
-is used then port mapping will be fully randomized through a PRNG (kernel >= 3.14).
+Fully randomize source port mapping through a PRNG (kernel >= 3.14).
 .TP
 \fB\-\-persistent\fP
 Gives a client the same source-/destination-address for each connection.
