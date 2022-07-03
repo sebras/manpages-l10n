@@ -181,7 +181,7 @@ The `hooks` directory currently contains the `pre-commit` script, which will che
 To 'install' this hook, run from the root folder of the project:
 
 ~~~
-ln -s hooks/pre-commit ../../.git/hooks/pre-commit
+ln -s ../../hooks/pre-commit .git/hooks/pre-commit
 ~~~
 
 ### Automatic composing of [DONE] messages using git hooks
