@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "X509V3_GET_D2I 3SSL"
-.TH X509V3_GET_D2I 3SSL "2022-06-24" "3.0.4" "OpenSSL"
+.TH X509V3_GET_D2I 3SSL "2022-07-24" "3.0.5" "OpenSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -156,7 +156,7 @@ X509_REVOKED_get0_extensions \- X509 extension decode and encode functions
 \&                     int crit, unsigned long flags);
 \&
 \& void *X509V3_EXT_d2i(X509_EXTENSION *ext);
-\& X509_EXTENSION *X509V3_EXT_i2d(int ext_nid, int crit, void *ext);
+\& X509_EXTENSION *X509V3_EXT_i2d(int ext_nid, int crit, void *ext_struc);
 \&
 \& void *X509_get_ext_d2i(const X509 *x, int nid, int *crit, int *idx);
 \& int X509_add1_ext_i2d(X509 *x, int nid, void *value, int crit,
@@ -178,7 +178,7 @@ X509_REVOKED_get0_extensions \- X509 extension decode and encode functions
 .IX Header "DESCRIPTION"
 \&\fBX509V3_get_d2i()\fR looks for an extension with \s-1OID\s0 \fInid\fR in the extensions
 \&\fIx\fR and, if found, decodes it. If \fIidx\fR is \s-1NULL\s0 then only one
-occurrence of an extension is permissible otherwise the first extension after
+occurrence of an extension is permissible, otherwise the first extension after
 index \fI*idx\fR is returned and \fI*idx\fR updated to the location of the extension.
 If \fIcrit\fR is not \s-1NULL\s0 then \fI*crit\fR is set to a status value: \-2 if the
 extension occurs multiple times (this is only returned if \fIidx\fR is \s-1NULL\s0),
@@ -194,24 +194,24 @@ to \fIflags\fR.
 \&\fIext\fR and returns a pointer to an extension specific structure or \s-1NULL\s0
 if the extension could not be decoded (invalid syntax or not supported).
 .PP
-\&\fBX509V3_EXT_i2d()\fR encodes the extension specific structure \fIext\fR
+\&\fBX509V3_EXT_i2d()\fR encodes the extension specific structure \fIext_struc\fR
 with \s-1OID\s0 \fIext_nid\fR and criticality \fIcrit\fR.
 .PP
 \&\fBX509_get_ext_d2i()\fR and \fBX509_add1_ext_i2d()\fR operate on the extensions of
-certificate \fIx\fR, they are otherwise identical to \fBX509V3_get_d2i()\fR and
-\&\fBX509V3_add_i2d()\fR.
+certificate \fIx\fR. They are otherwise identical to \fBX509V3_get_d2i()\fR and
+\&\fBX509V3_add1_i2d()\fR.
 .PP
 \&\fBX509_CRL_get_ext_d2i()\fR and \fBX509_CRL_add1_ext_i2d()\fR operate on the extensions
-of \s-1CRL\s0 \fIcrl\fR, they are otherwise identical to \fBX509V3_get_d2i()\fR and
-\&\fBX509V3_add_i2d()\fR.
+of \s-1CRL\s0 \fIcrl\fR. They are otherwise identical to \fBX509V3_get_d2i()\fR and
+\&\fBX509V3_add1_i2d()\fR.
 .PP
 \&\fBX509_REVOKED_get_ext_d2i()\fR and \fBX509_REVOKED_add1_ext_i2d()\fR operate on the
-extensions of \fBX509_REVOKED\fR structure \fIr\fR (i.e for \s-1CRL\s0 entry extensions),
-they are otherwise identical to \fBX509V3_get_d2i()\fR and \fBX509V3_add_i2d()\fR.
+extensions of \fBX509_REVOKED\fR structure \fIr\fR (i.e for \s-1CRL\s0 entry extensions).
+They are otherwise identical to \fBX509V3_get_d2i()\fR and \fBX509V3_add1_i2d()\fR.
 .PP
 \&\fBX509_get0_extensions()\fR, \fBX509_CRL_get0_extensions()\fR and
-\&\fBX509_REVOKED_get0_extensions()\fR return a stack of all the extensions
-of a certificate a \s-1CRL\s0 or a \s-1CRL\s0 entry respectively.
+\&\fBX509_REVOKED_get0_extensions()\fR return a \s-1STACK\s0 of all the extensions
+of a certificate, a \s-1CRL\s0 or a \s-1CRL\s0 entry respectively.
 .SH "NOTES"
 .IX Header "NOTES"
 In almost all cases an extension can occur at most once and multiple
@@ -220,31 +220,34 @@ occurrences is an error. Therefore, the \fIidx\fR parameter is usually \s-1NULL.
 The \fIflags\fR parameter may be one of the following values.
 .PP
 \&\fBX509V3_ADD_DEFAULT\fR appends a new extension only if the extension does
-not already exist. An error is returned if the extension does already
-exist.
+not exist. An error is returned if the extension exists.
 .PP
 \&\fBX509V3_ADD_APPEND\fR appends a new extension, ignoring whether the extension
-already exists.
+exists.
 .PP
-\&\fBX509V3_ADD_REPLACE\fR replaces an extension if it exists otherwise appends
-a new extension.
+\&\fBX509V3_ADD_REPLACE\fR replaces an existing extension. If the extension does
+not exist, appends a new extension.
 .PP
-\&\fBX509V3_ADD_REPLACE_EXISTING\fR replaces an existing extension if it exists
-otherwise returns an error.
+\&\fBX509V3_ADD_REPLACE_EXISTING\fR replaces an existing extension. If the
+extension does not exist, returns an error.
 .PP
 \&\fBX509V3_ADD_KEEP_EXISTING\fR appends a new extension only if the extension does
-not already exist. An error \fBis not\fR returned if the extension does already
-exist.
+not exist. An error is \fBnot\fR returned if the extension exists.
 .PP
-\&\fBX509V3_ADD_DELETE\fR extension \fInid\fR is deleted: no new extension is added.
+\&\fBX509V3_ADD_DELETE\fR deletes and frees an existing extension. If the extension
+does not exist, returns an error. No new extension is added.
 .PP
-If \fBX509V3_ADD_SILENT\fR is ored with \fIflags\fR: any error returned will not
-be added to the error queue.
+If \fBX509V3_ADD_SILENT\fR is bitwise ORed with \fIflags\fR: any error returned
+will not be added to the error queue.
 .PP
 The function \fBX509V3_get_d2i()\fR and its variants
 will return \s-1NULL\s0 if the extension is not
 found, occurs multiple times or cannot be decoded. It is possible to
 determine the precise reason by checking the value of \fI*crit\fR.
+.PP
+The function \fBX509V3_add1_i2d()\fR and its variants allocate \fBX509_EXTENSION\fR
+objects on \s-1STACK\s0 \fI*x\fR depending on \fIflags\fR. The \fBX509_EXTENSION\fR objects
+must be explicitly freed using \fBX509_EXTENSION_free()\fR.
 .SH "SUPPORTED EXTENSIONS"
 .IX Header "SUPPORTED EXTENSIONS"
 The following sections contain a list of all supported extensions

@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "PROVIDER-STOREMGMT 7SSL"
-.TH PROVIDER-STOREMGMT 7SSL "2022-06-24" "3.0.4" "OpenSSL"
+.TH PROVIDER-STOREMGMT 7SSL "2022-07-24" "3.0.5" "OpenSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -189,13 +189,13 @@ All \*(L"functions\*(R" mentioned here are passed as function pointers between
 All these \*(L"functions\*(R" have a corresponding function type definition named
 \&\fBOSSL_FUNC_{name}_fn\fR, and a helper function to retrieve the function pointer
 from a \fB\s-1OSSL_DISPATCH\s0\fR element named \fBOSSL_get_{name}\fR.
-For example, the \*(L"function\*(R" \fBOSSL_FUNC_store_load()\fR has these:
+For example, the \*(L"function\*(R" \fBOSSL_FUNC_store_attach()\fR has these:
 .PP
 .Vb 4
-\& typedef void *(OSSL_OSSL_FUNC_store_load_fn)(void *provctx,
-\&                                              const OSSL_PARAM params[]);
-\& static ossl_inline OSSL_OSSL_FUNC_store_load_fn
-\&     OSSL_OSSL_FUNC_store_load(const OSSL_DISPATCH *opf);
+\& typedef void *(OSSL_FUNC_store_attach_fn)(void *provctx,
+\&                                           OSSL_CORE_BIO * bio);
+\& static ossl_inline OSSL_FUNC_store_attach_fn
+\&     OSSL_FUNC_store_attach(const OSSL_DISPATCH *opf);
 .Ve
 .PP
 \&\fB\s-1OSSL_DISPATCH\s0\fR arrays are indexed by numbers that are provided as macros
@@ -244,6 +244,15 @@ be called.
 further loading.
 .PP
 \&\fBOSSL_FUNC_store_close()\fR frees the provider side context \fIctx\fR.
+.PP
+When a provider-native object is created by a store manager it would be unsuitable
+for direct use with a foreign provider. The export function allows for
+exporting the object to that foreign provider if the foreign provider
+supports the type of the object and provides an import function.
+.PP
+\&\fBOSSL_FUNC_store_export_object()\fR should export the object of size \fIobjref_sz\fR
+referenced by \fIobjref\fR as an \fB\s-1OSSL_PARAM\s0\fR array and pass that to the
+\&\fIexport_cb\fR as well as the given \fIexport_cbarg\fR.
 .SS "Load Parameters"
 .IX Subsection "Load Parameters"
 .ie n .IP """expect"" (\fB\s-1OSSL_STORE_PARAM_EXPECT\s0\fR) <integer>" 4
@@ -315,7 +324,7 @@ search for a certificate by issuer+serial, both the \*(L"issuer\*(R" and the
 The \s-1STORE\s0 interface was introduced in OpenSSL 3.0.
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright 2020\-2021 The OpenSSL Project Authors. All Rights Reserved.
+Copyright 2020\-2022 The OpenSSL Project Authors. All Rights Reserved.
 .PP
 Licensed under the Apache License 2.0 (the \*(L"License\*(R").  You may not use
 this file except in compliance with the License.  You can obtain a copy
