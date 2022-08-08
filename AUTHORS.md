@@ -136,6 +136,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Amand Tihon <amand@alrj.org>
 * arne
 * Aymeric Nys <aymeric AT nnx POINT com>
+* Baptiste Mélès <baptiste.meles@ens.fr>
 * Bastien Scher <bastien0705@gmail.com>
 * Bernard Siaud
 * bubu <bubub@no-log.org>
