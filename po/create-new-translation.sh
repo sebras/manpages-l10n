@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright © 2018-2019 Dr. Tobias Quathamer <toddy@debian.org>
-#             2021 Dr. Helge Kreutzmann <debian@helgefejll.de>
+#             2021,2022 Dr. Helge Kreutzmann <debian@helgefejll.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,6 +48,12 @@ potfile=../../templates/$mandir/$manpage.pot
 # Create the template
 cd ../../templates
 ./generate-one-template.sh $manpage
+returncode=$(echo $?)
+
+if [ $returncode != 0 ]; then
+    exit 16
+fi
+
 # Update common templates
 ./create-common-templates.sh
 cd ../po/$lcode
