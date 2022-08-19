@@ -203,7 +203,9 @@ BindReadOnlyPaths=/dev/log /run/systemd/journal/socket /run/systemd/journal/stdo
 .RE
 .\}
 
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIRootImage=\fR
@@ -616,7 +618,9 @@ or the host\&. See:
 .sp
 Note that usage from user units requires overlayfs support in unprivileged user namespaces, which was first introduced in kernel v5\&.11\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .SH "USER/GROUP IDENTITY"
 .PP
@@ -732,7 +736,9 @@ in combination with
 .RE
 .SH "CAPABILITIES"
 .PP
-These options are only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+These options are only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .PP
 \fICapabilityBoundingSet=\fR
 .RS 4
@@ -897,7 +903,7 @@ The value may be prefixed by
 .RS 4
 Set soft and hard limits on various resources for executed processes\&. See
 \fBsetrlimit\fR(2)
-for details on the resource limit concept\&. Resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value, or as colon\-separated pair
+for details on the process resource limit concept\&. Process resource limits may be specified in two formats: either as single value to set a specific soft and hard limit to the same value, or as colon\-separated pair
 \fBsoft:hard\fR
 to set both limits individually (e\&.g\&.
 "LimitAS=4G:16G")\&. Use the string
@@ -952,37 +958,41 @@ user@\&.service\&. After making such changes, make sure to restart the user\*(Aq
 .B Table\ \&1.\ \&Resource limit directives, their equivalent ulimit shell commands and the unit used
 .TS
 allbox tab(:);
-lB lB lB.
+lB lB lB lB.
 T{
 Directive
 T}:T{
 \fBulimit\fR equivalent
 T}:T{
 Unit
+T}:T{
+Notes
 T}
 .T&
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l
-l l l.
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l
+l l l l.
 T{
 LimitCPU=
 T}:T{
 ulimit \-t
 T}:T{
 Seconds
+T}:T{
+\-
 T}
 T{
 LimitFSIZE=
@@ -990,6 +1000,8 @@ T}:T{
 ulimit \-f
 T}:T{
 Bytes
+T}:T{
+\-
 T}
 T{
 LimitDATA=
@@ -997,6 +1009,8 @@ T}:T{
 ulimit \-d
 T}:T{
 Bytes
+T}:T{
+Don\*(Aqt use\&. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered\&. To limit memory use, see \fIMemoryMax=\fR in \fBsystemd.resource-control\fR(5)\&.
 T}
 T{
 LimitSTACK=
@@ -1004,6 +1018,8 @@ T}:T{
 ulimit \-s
 T}:T{
 Bytes
+T}:T{
+\-
 T}
 T{
 LimitCORE=
@@ -1011,6 +1027,8 @@ T}:T{
 ulimit \-c
 T}:T{
 Bytes
+T}:T{
+\-
 T}
 T{
 LimitRSS=
@@ -1018,6 +1036,8 @@ T}:T{
 ulimit \-m
 T}:T{
 Bytes
+T}:T{
+Don\*(Aqt use\&. No effect on Linux\&.
 T}
 T{
 LimitNOFILE=
@@ -1025,6 +1045,8 @@ T}:T{
 ulimit \-n
 T}:T{
 Number of File Descriptors
+T}:T{
+Don\*(Aqt use\&. Be careful when raising the soft limit above 1024, since \fBselect()\fR cannot function with file descriptors above 1023 on Linux\&. Nowadays, the hard limit defaults to 524288, a very high value compared to historical defaults\&. Typically applications should increase their soft limit to the hard limit on their own, if they are OK with working with file descriptors above 1023, i\&.e\&. do not use \fBselect()\fR\&. Note that file descriptors are nowadays accounted like any other form of memory, thus there should not be any need to lower the hard limit\&. Use \fIMemoryMax=\fR to control overall service memory use, including file descriptor memory\&.
 T}
 T{
 LimitAS=
@@ -1032,6 +1054,8 @@ T}:T{
 ulimit \-v
 T}:T{
 Bytes
+T}:T{
+Don\*(Aqt use\&. This limits the allowed address range, not memory use! Defaults to unlimited and should not be lowered\&. To limit memory use, see \fIMemoryMax=\fR in \fBsystemd.resource-control\fR(5)\&.
 T}
 T{
 LimitNPROC=
@@ -1039,6 +1063,8 @@ T}:T{
 ulimit \-u
 T}:T{
 Number of Processes
+T}:T{
+This limit is enforced based on the number of processes belonging to the user\&. Typically it\*(Aqs better to track processes per service, i\&.e\&. use \fITasksMax=\fR, see \fBsystemd.resource-control\fR(5)\&.
 T}
 T{
 LimitMEMLOCK=
@@ -1046,6 +1072,8 @@ T}:T{
 ulimit \-l
 T}:T{
 Bytes
+T}:T{
+\-
 T}
 T{
 LimitLOCKS=
@@ -1053,6 +1081,8 @@ T}:T{
 ulimit \-x
 T}:T{
 Number of Locks
+T}:T{
+\-
 T}
 T{
 LimitSIGPENDING=
@@ -1060,6 +1090,8 @@ T}:T{
 ulimit \-i
 T}:T{
 Number of Queued Signals
+T}:T{
+\-
 T}
 T{
 LimitMSGQUEUE=
@@ -1067,6 +1099,8 @@ T}:T{
 ulimit \-q
 T}:T{
 Bytes
+T}:T{
+\-
 T}
 T{
 LimitNICE=
@@ -1074,6 +1108,8 @@ T}:T{
 ulimit \-e
 T}:T{
 Nice Level
+T}:T{
+\-
 T}
 T{
 LimitRTPRIO=
@@ -1081,13 +1117,17 @@ T}:T{
 ulimit \-r
 T}:T{
 Realtime Priority
+T}:T{
+\-
 T}
 T{
 LimitRTTIME=
 T}:T{
-No equivalent
+ulimit \-R
 T}:T{
 Microseconds
+T}:T{
+\-
 T}
 .TE
 .sp 1
@@ -1404,7 +1444,9 @@ It is recommended to enable this setting for all long\-running services (in part
 is set\&. This setting cannot ensure protection in all cases\&. In general it has the same limitations as
 \fIReadOnlyPaths=\fR, see below\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIRuntimeDirectory=\fR, \fIStateDirectory=\fR, \fICacheDirectory=\fR, \fILogsDirectory=\fR, \fIConfigurationDirectory=\fR
@@ -1769,7 +1811,9 @@ ExecPaths=/usr/sbin/my_daemon /lib /lib64
 .RE
 .\}
 .sp
-These options are only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+These options are only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fITemporaryFileSystem=\fR
@@ -1807,7 +1851,9 @@ except for
 /var/lib/systemd
 or its contents\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIPrivateTmp=\fR
@@ -1847,7 +1893,9 @@ is added\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if mount namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIPrivateDevices=\fR
@@ -1893,7 +1941,9 @@ is implied\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if mount namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .sp
 When access to some but not all devices must be possible, the
 \fIDeviceAllow=\fR
@@ -1928,7 +1978,9 @@ When this option is used on a socket unit any sockets bound on behalf of this un
 \fIJoinsNamespaceOf=\fR
 to listen on sockets inside of network namespaces of other services\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fINetworkNamespacePath=\fR
@@ -1947,7 +1999,9 @@ configured, as otherwise the network namespace of those units is reused\&.
 .sp
 When this option is used on a socket unit any sockets bound on behalf of this unit will be bound within the specified network namespace\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIPrivateIPC=\fR
@@ -1970,7 +2024,9 @@ for the details\&.
 .sp
 Note that the implementation of this setting might be impossible (for example if IPC namespaces are not available), and the unit should be written in a way that does not solely rely on this setting for security\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIIPCNamespacePath=\fR
@@ -1987,7 +2043,9 @@ or
 \fIIPCNamespacePath=\fR
 configured, as otherwise the network namespace of those units is reused\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIPrivateUsers=\fR
@@ -2037,7 +2095,9 @@ is set),
 \fINoNewPrivileges=yes\fR
 is implied\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIProtectClock=\fR
@@ -2061,7 +2121,9 @@ is set),
 \fINoNewPrivileges=yes\fR
 is implied\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIProtectKernelTunables=\fR
@@ -2094,7 +2156,9 @@ is set,
 \fIMountAPIVFS=yes\fR
 is implied\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIProtectKernelModules=\fR
@@ -2118,7 +2182,9 @@ is set),
 \fINoNewPrivileges=yes\fR
 is implied\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIProtectKernelLogs=\fR
@@ -2140,7 +2206,9 @@ is set),
 \fINoNewPrivileges=yes\fR
 is implied\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIProtectControlGroups=\fR
@@ -2521,7 +2589,9 @@ Other file system namespace unit settings \(em
 \fIInaccessiblePaths=\fR,
 \fIReadWritePaths=\fR, \&... \(em also enable file system namespacing in a fashion equivalent to this option\&. Hence it is primarily useful to explicitly request this behaviour if none of the other settings are used\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .PP
 \fIMountFlags=\fR
@@ -2557,7 +2627,9 @@ mount propagation for units, as this means temporary mounts (such as removable m
 Usually, it is best to leave this setting unmodified, and use higher level file system namespacing options instead, in particular
 \fIPrivateMounts=\fR, see above\&.
 .sp
-This option is only available for system services, or for services running in per\-user instances of the service manager when unprivileged user namespaces are available\&.
+This option is only available for system services, or for services running in per\-user instances of the service manager when
+\fIPrivateUsers=\fR
+is enabled\&.
 .RE
 .SH "SYSTEM CALL FILTERING"
 .PP
@@ -3248,7 +3320,17 @@ for writing text to stderr will not work\&. To mitigate this use the construct
 \fBecho "hello" >&2\fR
 instead, which is mostly equivalent and avoids this pitfall\&.
 .sp
-This setting defaults to the value set with
+If
+\fIStandardInput=\fR
+is set to one of
+\fBtty\fR,
+\fBtty\-force\fR,
+\fBtty\-fail\fR,
+\fBsocket\fR, or
+\fBfd:\fR\fB\fIname\fR\fR, this setting defaults to
+\fBinherit\fR\&.
+.sp
+In other cases, this setting defaults to the value set with
 \fIDefaultStandardOutput=\fR
 in
 \fBsystemd-system.conf\fR(5), which defaults to
@@ -4229,7 +4311,7 @@ T}
 .PP
 \fI$MONITOR_SERVICE_RESULT\fR, \fI$MONITOR_EXIT_CODE\fR, \fI$MONITOR_EXIT_STATUS\fR, \fI$MONITOR_INVOCATION_ID\fR, \fI$MONITOR_UNIT\fR
 .RS 4
-Only defined for the service unit type\&. Those environment variable are passed to all
+Only defined for the service unit type\&. Those environment variables are passed to all
 \fIExecStart=\fR
 and
 \fIExecStartPre=\fR
@@ -4252,7 +4334,7 @@ processes\&. Variables
 \fI$MONITOR_INVOCATION_ID\fR
 and
 \fI$MONITOR_UNIT\fR
-are set to the invocaton id and unit name of the service which triggered the dependency\&.
+are set to the invocation id and unit name of the service which triggered the dependency\&.
 .sp
 Note that when multiple services trigger the same unit, those variables will be
 \fInot\fR
