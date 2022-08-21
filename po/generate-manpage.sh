@@ -85,7 +85,6 @@ if [ -f noaddendum ]; then
 	-M "utf-8" \
 	-p "$pofile" \
 	-L UTF-8 \
-        -o untranslated=URL \
 	-l "$localized";
 else
     po4a-translate \
@@ -99,7 +98,6 @@ else
 	-p "$pofile" \
 	-a "$addendum" \
 	-L UTF-8 \
-        -o untranslated=URL \
 	-l "$localized";
 fi
 
