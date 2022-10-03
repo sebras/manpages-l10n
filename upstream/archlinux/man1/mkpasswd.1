@@ -1,100 +1,93 @@
-.TH MKPASSWD 1 "22 August 1994"
+.TH MKPASSWD 1 "2019-12-30" "Marco d'Itri" "Debian GNU/Linux"
 .SH NAME
-mkpasswd \- generate new password, optionally apply it to a user
+mkpasswd \- Overfeatured front end to crypt(3)
 .SH SYNOPSIS
 .B mkpasswd
-.I
-[
-.I args
-]
-[
-.I user
-]
-.SH INTRODUCTION
+.I PASSWORD
+.RI [ SALT ]
+.SH DESCRIPTION
 .B mkpasswd
-generates passwords and can apply them automatically to users.
-mkpasswd is based on the code from Chapter 23 of the O'Reilly book
-"Exploring Expect".
-.SH USAGE
-With no arguments,
-.B mkpasswd
-returns a new password.
-
-	mkpasswd
-
-With a user name,
-.B mkpasswd
-assigns a new password to the user.
-
-	mkpasswd don
-
-The passwords are randomly generated according to the flags below.
-
-.SH FLAGS
-The
-.B \-l
-flag defines the length of the password.  The default is 9.  
-The following example creates a 20 character password.
-
-	mkpasswd -l 20
-
-The
-.B \-d
-flag defines the minimum number of digits that must be in the password.
-The default is 2.  The following example creates a password with at least
-3 digits.
-
-	mkpasswd -d 3
-
-The
-.B \-c
-flag defines the minimum number of lowercase alphabetic characters that must be in the password.
-The default is 2.
-
-The
-.B \-C
-flag defines the minimum number of uppercase alphabetic characters that must be in the password.
-The default is 2.
-
-The
-.B \-s
-flag defines the minimum number of special characters that must be in the password.
-The default is 1.
-
-The
-.B \-p
-flag names a program to set the password.
-By default, /etc/yppasswd is used if present, otherwise /bin/passwd is used.
-
-The
-.B \-2
-flag causes characters to be chosen so that they alternate between
-right and left hands (qwerty-style), making it harder for anyone
-watching passwords being entered.  This can also make it easier for
-a password-guessing program.
-
-The
-.B \-v
-flag causes the password-setting interaction to be visible.
-By default, it is suppressed.
-
-.SH EXAMPLE
-The following example creates a 15-character password
-that contains at least 3 digits and 5 uppercase characters.
-
-	mkpasswd -l 15 -d 3 -C 5
-
-.SH SEE ALSO
-.I
-"Exploring Expect: A Tcl-Based Toolkit for Automating Interactive Programs"
-\fRby Don Libes,
-O'Reilly and Associates, January 1995.
+encrypts the given password with the
+.BR crypt (3)
+libc function, using the given salt.
+.SH OPTIONS
+.TP
+.BR \-S ", "\c
+.BI \-\-salt= STRING
+Use the
+.I STRING
+as salt. If it begins with
+.I $
+then it will be passed straight to
+.BR crypt (3)
+without any checks.
+.TP
+.BR \-R ", "\c
+.BI \-\-rounds= NUMBER
+Use
+.I NUMBER
+rounds. This argument is ignored if the method chosen
+does not support variable rounds. For the OpenBSD Blowfish method this is
+the logarithm of the number of rounds.
+The behavior is undefined if this option is used without
+.IR \-\-method .
+.TP
+.BR \-m ", "\c
+.BI \-\-method= TYPE
+Compute the password using the
+.I TYPE
+method.
+If
+.I TYPE
+is
+.I help
+then the list of available methods is printed.
+If
+.I TYPE
+begins and end with
+.I $
+characters then the string is passed to
+.IR crypt_gensalt (3)
+as-is.
+.TP
+.B -5
+Like
+.IR \-\-method=md5crypt .
+.TP
+.B \-P \c
+.IR NUM ", "\c
+.BI \-\-password-fd= NUM
+Read the password from file descriptor
+.I NUM
+instead of using
+.IR getpass (3).
+If the file descriptor is not connected to a tty then no other text
+than the hashed password is printed on stdout.
+.TP
+.BR \-s ", " \-\-stdin
+Like
+.IR \-\-password-fd=0 .
+.SH ENVIRONMENT
+.IP "MKPASSWD_OPTIONS"
+A list of options which will be evaluated before the ones specified on the
+command line.
+.SH BUGS
+If the
+.I \-\-stdin
+option is used then passwords containing some control
+characters may not be read correctly.
+.P
+This program suffers of a bad case of featuritis.
+.SH "SEE ALSO"
+.IR passwd (1),
+.IR passwd (5),
+.IR crypt (3),
+.IR crypt (5),
+.IR crypt_gensalt (3),
+.IR getpass (3).
 .SH AUTHOR
-Don Libes, National Institute of Standards and Technology
-
 .B mkpasswd
-is in the public domain.
-NIST and I would
-appreciate credit if this program or parts of it are used.
-
-
+and this man page were written by Marco d'Itri
+.RI < md@linux.it >
+and are licensed under the terms of the GNU General Public License,
+version 2 or higher.

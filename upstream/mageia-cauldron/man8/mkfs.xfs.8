@@ -67,11 +67,11 @@ SCSI disk, use:
 .PP
 The metadata log can be placed on another device to reduce the number
 of disk seeks.  To create a filesystem on the first partition on the
-first SCSI disk with a 10MiB log located on the first partition
+first SCSI disk with a 100MiB log located on the first partition
 on the second SCSI disk, use:
 .RS
 .HP
-.B mkfs.xfs\ \-l\ logdev=/dev/sdb1,size=10m /dev/sda1
+.B mkfs.xfs\ \-l\ logdev=/dev/sdb1,size=100m /dev/sda1
 .RE
 .PP
 Each of the
@@ -81,9 +81,9 @@ suboptions if multiple suboptions apply to the same option.
 Equivalently, each main option can be given multiple times with
 different suboptions.
 For example,
-.B \-l internal,size=10m
+.B \-l internal,size=100m
 and
-.B \-l internal \-l size=10m
+.B \-l internal \-l size=100m
 are equivalent.
 .PP
 In the descriptions below, sizes are given in sectors, bytes, blocks,
@@ -211,7 +211,7 @@ December 1901 to January 2038, and quota timers from January 1970 to February
 .IP
 By default,
 .B mkfs.xfs
-will not enable this feature.
+will enable this feature.
 If the option
 .B \-m crc=0
 is used, the large timestamp feature is not supported and is disabled.
@@ -264,7 +264,7 @@ This can be used to reduce mount times when the free inode btree is enabled.
 .IP
 By default,
 .B mkfs.xfs
-will not enable this option.
+will enable this option.
 This feature is only available for filesystems created with the (default)
 .B \-m finobt=1
 option set.
@@ -404,6 +404,8 @@ is required if
 .B \-d file[=1]
 is given. Otherwise, it is only needed if the filesystem should occupy
 less space than the size of the special file.
+
+The data section must be at least 300MB in size.
 .TP
 .BI sunit= value
 This is used to specify the stripe unit for a RAID device or a
@@ -456,13 +458,13 @@ is expressed as a multiplier of the stripe unit,
 usually the same as the number of stripe members in the logical
 volume configuration, or data disks in a RAID device.
 .IP
-When a filesystem is created on a logical volume device,
+When a filesystem is created on a block device,
 .B mkfs.xfs
-will automatically query the logical volume for appropriate
+will automatically query the block device for appropriate
 .B sunit
 and
 .B swidth
-values.
+values if the block device and the filesystem size would be larger than 1GB.
 .TP
 .BI noalign
 This option disables automatic geometry detection and creates the filesystem
@@ -640,6 +642,13 @@ space over time such that no free extents are large enough to
 accommodate a chunk of 64 inodes. Without this feature enabled, inode
 allocations can fail with out of space errors under severe fragmented
 free space conditions.
+.TP
+.BI nrext64[= value]
+Extend maximum values of inode data and attr fork extent counters from 2^31 -
+1 and 2^15 - 1 to 2^48 - 1 and 2^32 - 1 respectively. If the value is
+omitted, 1 is assumed. This feature is disabled by default. This feature is
+only available for filesystems formatted with -m crc=1.
+.TP
 .RE
 .PP
 .PD 0
@@ -695,6 +704,9 @@ suffix meaning multiplication by the filesystem block size, as
 described above. The overriding minimum value for size is 512 blocks.
 With some combinations of filesystem block size, inode size,
 and directory block size, the minimum log size is larger than 512 blocks.
+
+The log must be at least 64MB in size.
+The log cannot be more than 2GB in size.
 .TP
 .BI version= value
 This specifies the version of the log. The current default is 2,

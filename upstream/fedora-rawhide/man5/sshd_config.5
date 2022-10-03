@@ -697,36 +697,25 @@ gss-curve25519-sha256-
 .Ed
 This option only applies to connections using GSSAPI.
 .It Cm HostbasedAcceptedAlgorithms
+The default is handled system-wide by
+.Xr crypto-policies 7 .
+Information about defaults, how to modify the defaults and how to customize existing policies with sub-policies are present in manual page
+.Xr update-crypto-policies 8 .
+.Pp
 Specifies the signature algorithms that will be accepted for hostbased
 authentication as a list of comma-separated patterns.
 Alternately if the specified list begins with a
 .Sq +
 character, then the specified signature algorithms will be appended to
-the default set instead of replacing them.
+the built-in openssh default set instead of replacing them.
 If the specified list begins with a
 .Sq -
 character, then the specified signature algorithms (including wildcards)
-will be removed from the default set instead of replacing them.
+will be removed from the built-in openssh default set instead of replacing them.
 If the specified list begins with a
 .Sq ^
 character, then the specified signature algorithms will be placed at
-the head of the default set.
-The default for this option is:
-.Bd -literal -offset 3n
-ssh-ed25519-cert-v01@openssh.com,
-ecdsa-sha2-nistp256-cert-v01@openssh.com,
-ecdsa-sha2-nistp384-cert-v01@openssh.com,
-ecdsa-sha2-nistp521-cert-v01@openssh.com,
-sk-ssh-ed25519-cert-v01@openssh.com,
-sk-ecdsa-sha2-nistp256-cert-v01@openssh.com,
-rsa-sha2-512-cert-v01@openssh.com,
-rsa-sha2-256-cert-v01@openssh.com,
-ssh-ed25519,
-ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,
-sk-ssh-ed25519@openssh.com,
-sk-ecdsa-sha2-nistp256@openssh.com,
-rsa-sha2-512,rsa-sha2-256
-.Ed
+the head of the built-in openssh default set.
 .Pp
 The list of available signature algorithms may also be obtained using
 .Qq ssh -Q HostbasedAcceptedAlgorithms .
@@ -1292,10 +1281,6 @@ will refuse connection attempts with a probability of rate/100 (30%)
 if there are currently start (10) unauthenticated connections.
 The probability increases linearly and all connection attempts
 are refused if the number of unauthenticated connections reaches full (60).
-.It Cm RSAMinSize
-Provides a minimal bits requirement for RSA keys when used for signature and
-verification but not for the key generation. The default value is 1024 and
-can't be reduced.
 .It Cm ModuliFile
 Specifies the
 .Xr moduli 5
@@ -1615,6 +1600,16 @@ is
 .Cm default none ,
 which means that rekeying is performed after the cipher's default amount
 of data has been sent or received and no time based rekeying is done.
+.It Cm RequiredRSASize
+Specifies the minimum RSA key size (in bits) that
+.Xr sshd 8
+will accept.
+User and host-based authentication keys smaller than this limit will be
+refused.
+The default is
+.Cm 1024
+bits.
+Note that this limit may only be raised from the default.
 .It Cm RevokedKeys
 Specifies revoked public keys file, or
 .Cm none
@@ -1979,7 +1974,9 @@ This file should be writable by root only, but it is recommended
 .El
 .Sh SEE ALSO
 .Xr sftp-server 8 ,
-.Xr sshd 8
+.Xr sshd 8 ,
+.Xr crypto-policies 7 ,
+.Xr update-crypto-policies 8
 .Sh AUTHORS
 .An -nosplit
 OpenSSH is a derivative of the original and free

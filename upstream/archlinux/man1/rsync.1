@@ -1,4 +1,4 @@
-.TH "rsync" "1" "14 Aug 2022" "rsync 3.2.5" "User Commands"
+.TH "rsync" "1" "9 Sep 2022" "rsync 3.2.6" "User Commands"
 .\" prefix=/usr
 .P
 .SH "NAME"
@@ -237,6 +237,24 @@ rsync -aiv host1:dir1 ~/host1-files
 .P
 See the \fB\-\-trust-sender\fP option for additional details.
 .P
+CAUTION: it is not particularly safe to use rsync to copy files from a
+case-preserving filesystem to a case-ignoring filesystem.  If you must perform
+such a copy, you should either disable symlinks via \fB\-\-no-links\fP or enable the
+munging of symlinks via \fB\-\-munge-links\fP (and make sure you use the
+right local or remote option).  This will prevent rsync from doing potentially
+dangerous things if a symlink name overlaps with a file or directory. It does
+not, however, ensure that you get a full copy of all the files (since that may
+not be possible when the names overlap). A potentially better solution is to
+list all the source files and create a safe list of filenames that you pass to
+the \fB\-\-files-from\fP option.  Any files that conflict in name would need
+to be copied to different destination directories using more than one copy.
+.P
+While a copy of a case-ignoring filesystem to a case-ignoring filesystem can
+work out fairly well, if no \fB\-\-delete-during\fP or \fB\-\-delete-before\fP option is
+active, rsync can potentially update an existing file on the receiveing side
+without noticing that the upper-/lower-case of the filename should be changed
+to match the sender.
+.P
 .SH "ADVANCED USAGE"
 .P
 The syntax for requesting multiple files from a remote host is done by
@@ -247,9 +265,14 @@ the hostname omitted.  For instance, all these work:
 .nf
 rsync -aiv host:file1 :file2 host:file{3,4} /dest/
 rsync -aiv host::modname/file{1,2} host::modname/extra /dest/
-rsync -aiv host::modname/first ::modname/extra{1,2} /dest/
+rsync -aiv host::modname/first ::extra-file{1,2} /dest/
 .fi
 .RE
+.P
+Note that a daemon connection only supports accessing one module per copy
+command, so if the start of a follow-up path doesn't begin with the
+modname of the first path, it is assumed to be a path in the module (such as
+the extra-file1 & extra-file2 that are grabbed above).
 .P
 Really old versions of rsync (2.6.9 and before) only allowed specifying one
 remote-source arg, so some people have instead relied on the remote-shell
@@ -286,22 +309,25 @@ Using rsync in this way is the same as using it with a remote shell except
 that:
 .P
 .IP o
-you either use a double colon :: instead of a single colon to separate the
-hostname from the path, or you use an rsync:// URL.
+Use either double-colon syntax or rsync:// URL syntax instead of the
+single-colon (remote shell) syntax.
 .IP o
-the first word of the "path" is actually a module name.
+The first element of the "path" is actually a module name.
 .IP o
-the remote daemon may print a message of the day when you connect.
+Additional remote source args can use an abbreviated syntax that omits the
+hostname and/or the module name, as discussed in ADVANCED USAGE.
 .IP o
-if you specify no path name on the remote daemon then the list of accessible
-paths on the daemon will be shown.
+The remote daemon may print a "message of the day" when you connect.
 .IP o
-if you specify no local destination then a listing of the specified files on
-the remote daemon is provided.
+If you specify only the host (with no module or path) then a list of
+accessible modules on the daemon is output.
 .IP o
-you must not specify the \fB\-\-rsh\fP (\fB\-e\fP) option (since that overrides
-the daemon connection to use ssh\ \-\- see USING RSYNC-DAEMON FEATURES VIA A
-REMOTE-SHELL CONNECTION below).
+If you specify a remote source path but no destination, a listing of the
+matching files on the remote daemon is output.
+.IP o
+The \fB\-\-rsh\fP (\fB\-e\fP) option must be omitted to avoid changing the
+connection style from using a socket connection to USING RSYNC-DAEMON
+FEATURES VIA A REMOTE-SHELL CONNECTION.
 .P
 An example that copies all the files in a remote module named "src":
 .RS 4
@@ -541,7 +567,7 @@ has its own detailed description later in this manpage.
 --files-from=FILE        read list of source-file names from FILE
 --from0, -0              all *-from/filter files are delimited by 0s
 --old-args               disable the modern arg-protection idiom
---protect-args, -s       no space-splitting; wildcard chars only
+--secluded-args, -s      use the protocol to safely send the args
 --trust-sender           trust the remote sender's file list
 --copy-as=USER[:GROUP]   specify user & optional group for the copy
 --address=ADDRESS        bind address for outgoing socket to daemon
@@ -1868,6 +1894,10 @@ for the rsync transfer).
 .IP
 Starting with 3.1.0, rsync will skip the sender-side removal (and output an
 error) if the file's size or modify time has not stayed unchanged.
+.IP
+Starting with 3.2.6, a local rsync copy will ensure that the sender does
+not remove a file the receiver just verified, such as when the user
+accidentally makes the source and destination directory the same path.
 .IP "\fB\-\-delete\fP"
 This tells rsync to delete extraneous files from the receiving side (ones
 that aren't on the sending side), but only for the directories that are
@@ -1953,13 +1983,13 @@ rules that do not affect the receiver's deletions.
 .IP
 By default, an exclude or include has both a server-side effect (to "hide"
 and "show" files when building the server's file list) and a receiver-side
-effect (to "protect" and "risk" files when deletions are occuring).  Any
+effect (to "protect" and "risk" files when deletions are occurring).  Any
 rule that has no modifier to specify what sides it is executed on will be
 instead treated as if it were a server-side rule only, avoiding any
 "protect" effects of the rules.
 .IP
 A rule can still apply to both sides even with this option specified if the
-rule is given both the sender & receiver modifer letters (e.g., \fB\-f'\-sr\ foo'\fP).  Receiver-side protect/risk rules can also be explicitly specified
+rule is given both the sender & receiver modifier letters (e.g., \fB\-f'\-sr\ foo'\fP).  Receiver-side protect/risk rules can also be explicitly specified
 to limit the deletions.  This saves you from having to edit a bunch of
 \fB\-f'\-\ foo'\fP rules into \fB\-f'\-s\ foo'\fP (aka \fB\-f'H\ foo'\fP) rules (not to mention
 the corresponding includes).
@@ -2376,7 +2406,7 @@ rsync -a --files-from=:/path/file-list src:/ /tmp/copy
 This would copy all the files specified in the /path/file-list file that
 was located on the remote "src" host.
 .IP
-If the \fB\-\-iconv\fP and \fB\-\-protect-args\fP options are specified
+If the \fB\-\-iconv\fP and \fB\-\-secluded-args\fP options are specified
 and the \fB\-\-files-from\fP filenames are being sent from one host to another,
 the filenames will be translated from the sending host's charset to the
 receiving host's charset.
@@ -2421,36 +2451,44 @@ the file-list that you didn't request.  This side-effect is necessary
 because we can't know for sure what names to expect when the remote shell
 is interpreting the args.
 .IP
-This option conflicts with the \fB\-\-protect-args\fP option.
-.IP "\fB\-\-protect-args\fP, \fB\-s\fP"
-This option sends all filenames and most options to the remote rsync
-without allowing the remote shell to interpret them.  Wildcards are
-expanded on the remote host by rsync instead of the shell doing it.
+This option conflicts with the \fB\-\-secluded-args\fP option.
+.IP "\fB\-\-secluded-args\fP, \fB\-s\fP"
+This option sends all filenames and most options to the remote rsync via
+the protocol (not the remote shell command line) which avoids letting the
+remote shell modify them.  Wildcards are expanded on the remote host by
+rsync instead of a shell.
 .IP
-This is similar to the new-style backslash-escaping of args that was added
-in 3.2.4, but supports some extra features and doesn't rely on backslash
-escaping in the remote shell.
+This is similar to the default backslash-escaping of args that was added
+in 3.2.4 (see \fB\-\-old-args\fP) in that it prevents things like space
+splitting and unwanted special-character side-effects. However, it has the
+drawbacks of being incompatible with older rsync versions (prior to 3.0.0)
+and of being refused by restricted shells that want to be able to inspect
+all the option values for safety.
 .IP
-If you use this option with \fB\-\-iconv\fP, the args related to the
-remote side will also be translated from the local to the remote
-character-set.  The translation happens before wild-cards are expanded.
-See also the \fB\-\-files-from\fP option.
+This option is useful for those times that you need the argument's
+character set to be converted for the remote host, if the remote shell is
+incompatible with the default backslash-escpaing method, or there is some
+other reason that you want the majority of the options and arguments to
+bypass the command-line of the remote shell.
+.IP
+If you combine this option with \fB\-\-iconv\fP, the args related to the
+remote side will be translated from the local to the remote character-set.
+The translation happens before wild-cards are expanded.  See also the
+\fB\-\-files-from\fP option.
 .IP
 You may also control this setting via the \fBRSYNC_PROTECT_ARGS\fP
 environment variable.  If it has a non-zero value, this setting will be
 enabled by default, otherwise it will be disabled by default.  Either state
 is overridden by a manually specified positive or negative version of this
-option (note that \fB\-\-no-s\fP and \fB\-\-no-protect-args\fP are the negative
+option (note that \fB\-\-no-s\fP and \fB\-\-no-secluded-args\fP are the negative
 versions).  This environment variable is also superseded by a non-zero
 \fBRSYNC_OLD_ARGS\fP export.
 .IP
-You may need to disable this option when interacting with an older rsync
-(one prior to 3.0.0).
-.IP
 This option conflicts with the \fB\-\-old-args\fP option.
 .IP
-Note that this option is incompatible with the use of the restricted rsync
-script (\fBrrsync\fP) since it hides options from the script's inspection.
+This option used to be called \fB\-\-protect-args\fP (before 3.2.6) and that
+older name can still be used (though specifying it as \fB\-s\fP is always the
+easiest and most compatible choice).
 .IP "\fB\-\-trust-sender\fP"
 This option disables two extra validation checks that a local client
 performs on the file list generated by a remote sender.  This option should
@@ -2977,9 +3015,8 @@ Starting with rsync 3.2.4, the \fB\-\-usermap\fP option implies the
 \fB\-\-group\fP (\fB\-g\fP) option (since rsync needs to have those options
 enabled for the mapping options to work).
 .IP
-An older rsync client may need to use \fB\-\-protect-args\fP (\fB\-s\fP) to
-avoid a complaint about wildcard characters, but a modern rsync handles
-this automatically.
+An older rsync client may need to use \fB\-s\fP to avoid a complaint
+about wildcard characters, but a modern rsync handles this automatically.
 .IP "\fB\-\-chown=USER:GROUP\fP"
 This option forces all files to be owned by USER with group GROUP.  This is
 a simpler interface than using \fB\-\-usermap\fP & \fB\-\-groupmap\fP
@@ -2992,9 +3029,8 @@ If you specify "\fB\-\-chown=foo:bar\fP", this is exactly the same as specifying
 "\fB\-\-usermap=*:foo\ \-\-groupmap=*:bar\fP", only easier (and with the same
 implied \fB\-\-owner\fP and/or \fB\-\-group\fP options).
 .IP
-An older rsync client may need to use \fB\-\-protect-args\fP (\fB\-s\fP) to
-avoid a complaint about wildcard characters, but a modern rsync handles
-this automatically.
+An older rsync client may need to use \fB\-s\fP to avoid a complaint
+about wildcard characters, but a modern rsync handles this automatically.
 .IP "\fB\-\-timeout=SECONDS\fP"
 This option allows you to set a maximum I/O timeout in seconds.  If no data
 is transferred for the specified time then rsync will exit.  The default is
@@ -3726,7 +3762,7 @@ this option is site-specific, and can also be affected via the
 For a list of what charset names your local iconv library supports, you can
 run "\fBiconv\ \-\-list\fP".
 .IP
-If you specify the \fB\-\-protect-args\fP (\fB\-s\fP) option, rsync will
+If you specify the \fB\-\-secluded-args\fP (\fB\-s\fP) option, rsync will
 translate the filenames you specify on the command-line that are being sent
 to the remote host.  See also the \fB\-\-files-from\fP option.
 .IP
@@ -4799,15 +4835,15 @@ default. When this environment variable is set to a non-zero value, it
 supersedes the \fBRSYNC_PROTECT_ARGS\fP variable.
 .IP
 This variable is ignored if \fB\-\-old-args\fP, \fB\-\-no-old-args\fP, or
-\fB\-\-protect-args\fP is specified on the command line.
+\fB\-\-secluded-args\fP is specified on the command line.
 .IP
 First supported in 3.2.4.
 .IP "\fBRSYNC_PROTECT_ARGS\fP"
-Specify a non-zero numeric value if you want the \fB\-\-protect-args\fP
+Specify a non-zero numeric value if you want the \fB\-\-secluded-args\fP
 option to be enabled by default, or a zero value to make sure that it is
 disabled by default.
 .IP
-This variable is ignored if \fB\-\-protect-args\fP, \fB\-\-no-protect-args\fP,
+This variable is ignored if \fB\-\-secluded-args\fP, \fB\-\-no-secluded-args\fP,
 or \fB\-\-old-args\fP is specified on the command line.
 .IP
 First supported in 3.1.0.  Starting in 3.2.4, this variable is ignored if
@@ -4888,7 +4924,7 @@ Please report bugs! See the web site at https://rsync.samba.org/.
 .P
 .SH "VERSION"
 .P
-This manpage is current for version 3.2.5 of rsync.
+This manpage is current for version 3.2.6 of rsync.
 .P
 .SH "INTERNAL OPTIONS"
 .P
