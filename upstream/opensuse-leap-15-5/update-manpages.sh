@@ -23,7 +23,7 @@ mkdir man1 man2 man3 man4 man5 man6 man7 man7mp man8
 # Download HTML page for x86_64
 page=$(mktemp)
 cpio_archive=$(mktemp)
-wget --quiet -O "$page" "https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/x86_64/"
+wget --quiet -O "$page" "https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.5/repo/oss/x86_64/"
 
 # Process packages
 while read package; do
@@ -44,7 +44,7 @@ while read package; do
         perl -pe "s/ /\n/g" |
         tail -n1)
 
-  url="https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/x86_64/$url"
+  url="https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.5/repo/oss/x86_64/$url"
   wget --quiet --directory-prefix=tmp/downloads "$url"
 
 	# Update the manpages from the package
@@ -67,7 +67,7 @@ rm "$page" "$cpio_archive"
 # Download HTML page for noarch
 page=$(mktemp)
 cpio_archive=$(mktemp)
-wget --quiet -O "$page" "https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/noarch/"
+wget --quiet -O "$page" "https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.5/repo/oss/noarch/"
 
 # Process packages
 while read package; do
@@ -88,7 +88,7 @@ while read package; do
         perl -pe "s/ /\n/g" |
         tail -n1)
 
-  url="https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.4/repo/oss/noarch/$url"
+  url="https://ftp.gwdg.de/pub/opensuse/distribution/leap/15.5/repo/oss/noarch/$url"
   wget --quiet --directory-prefix=tmp/downloads "$url"
 
 	# Update the manpages from the package
