@@ -47,14 +47,36 @@ fi
 # fi
 
 # Create pot with po4a
-po4a-gettextize -f man \
+#po4a-gettextize -f man \
+#	--option groff_code=verbatim \
+#	--option generated \
+#	--option untranslated="a.RE,\|" \
+#	--option unknown_macros=untranslated \
+#	--master "$upstream_manpage" -M utf-8 |\
+#	# Reduce the location lines from the full path and line number
+#	# to the name of the distribution
+#	sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
+#	# Ensure the correct encoding is set
+#	sed -e "s/^\"Content-Type: text\/plain; charset=CHARSET\\\\n\"$/\"Content-Type: text\/plain; charset=UTF-8\\\\n\"/"
+
+tmp1=$(mktemp)
+
+po4a-updatepo -f man \
 	--option groff_code=verbatim \
 	--option generated \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
-	--master "$upstream_manpage" -M utf-8 |\
-	# Reduce the location lines from the full path and line number
-	# to the name of the distribution
-	sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
+	--master "$upstream_manpage" -M utf-8 \
+	-p $tmp1 | grep -v "po4a-updatepo is deprecated. The unified po4a(1) program is more convenient and less error prone."
+
+# Output header
+
+cat ./poheader
+
+# Reduce the location lines from the full path and line number
+# to the name of the distribution
+cat $tmp1 | sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
 	# Ensure the correct encoding is set
 	sed -e "s/^\"Content-Type: text\/plain; charset=CHARSET\\\\n\"$/\"Content-Type: text\/plain; charset=UTF-8\\\\n\"/"
+
+rm $tmp1
