@@ -28,7 +28,7 @@ mirror="https://ftp.fau.de/fedora/linux/development/37/Everything/x86_64/os/Pack
 while read package; do
 	mkdir -p tmp/downloads
 	page=$(mktemp)
-	group=$(echo $package| awk '{print(substr($1,1,1))}')
+	group=$(echo $package| awk '{print(tolower(substr($1,1,1)))}')
 
     # Download HTML page
 	wget --quiet -O "$page" "$mirror/$group/"
