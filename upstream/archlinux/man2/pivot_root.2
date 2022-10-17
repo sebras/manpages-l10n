@@ -2,31 +2,14 @@
 .\" A very few fragments remain from an earlier page written by
 .\" Werner Almesberger in 2000
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PIVOT_ROOT 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PIVOT_ROOT 2 2022-10-08 "Linux man-pages (unreleased)"
 .SH NAME
 pivot_root \- change the root mount
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
@@ -65,9 +48,9 @@ and thus it should be followed by a
 .PP
 The following restrictions apply:
 .IP \- 3
-.IR new_root
+.I new_root
 and
-.IR put_old
+.I put_old
 must be directories.
 .IP \-
 .I new_root
@@ -77,7 +60,7 @@ must not be on the same mount as the current root.
 .IP \-
 \fIput_old\fP must be at or underneath \fInew_root\fP;
 that is, adding some nonnegative
-number of "\fI/..\fP" prefixes to the pathname pointed to by
+number of "\fI/..\fP" suffixes to the pathname pointed to by
 .I put_old
 must yield the same directory as \fInew_root\fP.
 .IP \-
@@ -88,7 +71,7 @@ A path that is not already a mount point can be converted into one by
 bind mounting the path onto itself.
 .IP \-
 The propagation type of the parent mount of
-.IR new_root
+.I new_root
 and the parent mount of the current root directory must not be
 .BR MS_SHARED ;
 similarly, if
@@ -171,7 +154,7 @@ capability.
 .SH VERSIONS
 .BR pivot_root ()
 was introduced in Linux 2.3.41.
-.SH CONFORMING TO
+.SH STANDARDS
 .BR pivot_root ()
 is Linux-specific and hence is not portable.
 .SH NOTES
@@ -246,7 +229,7 @@ working directory refer to the new root mount point
 During the subsequent
 .BR umount ()
 call, resolution of
-.IR """."""
+.I """."""
 starts with
 .I new_root
 and then moves up the list of mounts stacked at
@@ -316,23 +299,23 @@ hello world
 .SS Program source
 \&
 .PP
+.\" SRC BEGIN (pivot_root.c)
 .EX
 /* pivot_root_demo.c */
 
 #define _GNU_SOURCE
+#include <err.h>
+#include <limits.h>
 #include <sched.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/syscall.h>
+#include <sys/mman.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
-#include <limits.h>
-#include <sys/mman.h>
-
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
-                        } while (0)
+#include <sys/syscall.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static int
 pivot_root(const char *new_root, const char *put_old)
@@ -345,10 +328,10 @@ pivot_root(const char *new_root, const char *put_old)
 static int              /* Startup function for cloned child */
 child(void *arg)
 {
-    char **args = arg;
-    char *new_root = args[0];
-    const char *put_old = "/oldrootfs";
-    char path[PATH_MAX];
+    char        path[PATH_MAX];
+    char        **args = arg;
+    char        *new_root = args[0];
+    const char  *put_old = "/oldrootfs";
 
     /* Ensure that \(aqnew_root\(aq and its parent mount don\(aqt have
        shared propagation (which would cause pivot_root() to
@@ -356,28 +339,28 @@ child(void *arg)
        events to the initial mount namespace. */
 
     if (mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL) == \-1)
-        errExit("mount\-MS_PRIVATE");
+        err(EXIT_FAILURE, "mount\-MS_PRIVATE");
 
     /* Ensure that \(aqnew_root\(aq is a mount point. */
 
     if (mount(new_root, new_root, NULL, MS_BIND, NULL) == \-1)
-        errExit("mount\-MS_BIND");
+        err(EXIT_FAILURE, "mount\-MS_BIND");
 
     /* Create directory to which old root will be pivoted. */
 
     snprintf(path, sizeof(path), "%s/%s", new_root, put_old);
     if (mkdir(path, 0777) == \-1)
-        errExit("mkdir");
+        err(EXIT_FAILURE, "mkdir");
 
     /* And pivot the root filesystem. */
 
     if (pivot_root(new_root, path) == \-1)
-        errExit("pivot_root");
+        err(EXIT_FAILURE, "pivot_root");
 
     /* Switch the current working directory to "/". */
 
     if (chdir("/") == \-1)
-        errExit("chdir");
+        err(EXIT_FAILURE, "chdir");
 
     /* Unmount old root and remove mount point. */
 
@@ -389,31 +372,34 @@ child(void *arg)
     /* Execute the command specified in argv[1]... */
 
     execv(args[1], &args[1]);
-    errExit("execv");
+    err(EXIT_FAILURE, "execv");
 }
 
 int
 main(int argc, char *argv[])
 {
+    char *stack;
+
     /* Create a child process in a new mount namespace. */
 
-    char *stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE,
-                       MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, \-1, 0);
+    stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE,
+                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, \-1, 0);
     if (stack == MAP_FAILED)
-        errExit("mmap");
+        err(EXIT_FAILURE, "mmap");
 
     if (clone(child, stack + STACK_SIZE,
-                CLONE_NEWNS | SIGCHLD, &argv[1]) == \-1)
-        errExit("clone");
+              CLONE_NEWNS | SIGCHLD, &argv[1]) == \-1)
+        err(EXIT_FAILURE, "clone");
 
     /* Parent falls through to here; wait for child. */
 
     if (wait(NULL) == \-1)
-        errExit("wait");
+        err(EXIT_FAILURE, "wait");
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR chdir (2),
 .BR chroot (2),
@@ -423,12 +409,3 @@ main(int argc, char *argv[])
 .BR mount_namespaces (7),
 .BR pivot_root (8),
 .BR switch_root (8)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

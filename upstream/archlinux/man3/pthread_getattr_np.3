@@ -1,39 +1,20 @@
 .\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PTHREAD_GETATTR_NP 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_GETATTR_NP 3 2022-09-13 "Linux man-pages (unreleased)"
 .SH NAME
 pthread_getattr_np \- get attributes of created thread
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
 .B #include <pthread.h>
 .PP
 .BI "int pthread_getattr_np(pthread_t " thread ", pthread_attr_t *" attr );
-.PP
-Compile and link with \fI\-pthread\fP.
 .fi
 .SH DESCRIPTION
 The
@@ -86,12 +67,12 @@ refers to the main thread, then
 can fail because of errors from various underlying calls:
 .BR fopen (3),
 if
-.IR /proc/self/maps
+.I /proc/self/maps
 can't be opened;
 and
 .BR getrlimit (2),
 if the
-.BR RLIMIT_STACK
+.B RLIMIT_STACK
 resource limit is not supported.
 .SH VERSIONS
 This function is available in glibc since version 2.2.3.
@@ -112,7 +93,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 This function is a nonstandard GNU extension;
 hence the suffix "_np" (nonportable) in the name.
 .SH EXAMPLES
@@ -195,16 +176,15 @@ Attributes of created thread:
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (pthread_getattr_np.c)
 .EX
 #define _GNU_SOURCE     /* To get pthread_getattr_np() declaration */
+#include <err.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
-
-#define handle_error_en(en, msg) \e
-        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 static void
 display_stack_related_attributes(pthread_attr_t *attr, char *prefix)
@@ -215,18 +195,18 @@ display_stack_related_attributes(pthread_attr_t *attr, char *prefix)
 
     s = pthread_attr_getguardsize(attr, &guard_size);
     if (s != 0)
-        handle_error_en(s, "pthread_attr_getguardsize");
+        errc(EXIT_FAILURE, s, "pthread_attr_getguardsize");
     printf("%sGuard size          = %zu bytes\en", prefix, guard_size);
 
     s = pthread_attr_getstack(attr, &stack_addr, &stack_size);
     if (s != 0)
-        handle_error_en(s, "pthread_attr_getstack");
+        errc(EXIT_FAILURE, s, "pthread_attr_getstack");
     printf("%sStack address       = %p", prefix, stack_addr);
     if (stack_size > 0)
         printf(" (EOS = %p)", (char *) stack_addr + stack_size);
     printf("\en");
     printf("%sStack size          = %#zx (%zu) bytes\en",
-            prefix, stack_size, stack_size);
+           prefix, stack_size, stack_size);
 }
 
 static void
@@ -237,13 +217,13 @@ display_thread_attributes(pthread_t thread, char *prefix)
 
     s = pthread_getattr_np(thread, &attr);
     if (s != 0)
-        handle_error_en(s, "pthread_getattr_np");
+        errc(EXIT_FAILURE, s, "pthread_getattr_np");
 
     display_stack_related_attributes(&attr, prefix);
 
     s = pthread_attr_destroy(&attr);
     if (s != 0)
-        handle_error_en(s, "pthread_attr_destroy");
+        errc(EXIT_FAILURE, s, "pthread_attr_destroy");
 }
 
 static void *           /* Start function for thread we create */
@@ -299,31 +279,31 @@ get_thread_attributes_from_cl(int argc, char *argv[],
 
         s = pthread_attr_init(attrp);
         if (s != 0)
-            handle_error_en(s, "pthread_attr_init");
+            errc(EXIT_FAILURE, s, "pthread_attr_init");
     }
 
     if (stack_size >= 0) {
         if (!allocate_stack) {
             s = pthread_attr_setstacksize(attrp, stack_size);
             if (s != 0)
-                handle_error_en(s, "pthread_attr_setstacksize");
+                errc(EXIT_FAILURE, s, "pthread_attr_setstacksize");
         } else {
             s = posix_memalign(&stack_addr, sysconf(_SC_PAGESIZE),
                                stack_size);
             if (s != 0)
-                handle_error_en(s, "posix_memalign");
+                errc(EXIT_FAILURE, s, "posix_memalign");
             printf("Allocated thread stack at %p\en\en", stack_addr);
 
             s = pthread_attr_setstack(attrp, stack_addr, stack_size);
             if (s != 0)
-                handle_error_en(s, "pthread_attr_setstacksize");
+                errc(EXIT_FAILURE, s, "pthread_attr_setstacksize");
         }
     }
 
     if (guard_size >= 0) {
         s = pthread_attr_setguardsize(attrp, guard_size);
         if (s != 0)
-            handle_error_en(s, "pthread_attr_setstacksize");
+            errc(EXIT_FAILURE, s, "pthread_attr_setstacksize");
     }
 
     return ret_attrp;
@@ -348,17 +328,18 @@ main(int argc, char *argv[])
 
     s = pthread_create(&thr, attrp, &thread_start, NULL);
     if (s != 0)
-        handle_error_en(s, "pthread_create");
+        errc(EXIT_FAILURE, s, "pthread_create");
 
     if (attrp != NULL) {
         s = pthread_attr_destroy(attrp);
         if (s != 0)
-            handle_error_en(s, "pthread_attr_destroy");
+            errc(EXIT_FAILURE, s, "pthread_attr_destroy");
     }
 
     pause();    /* Terminates when other thread calls exit() */
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .ad l
 .nh
@@ -375,12 +356,3 @@ main(int argc, char *argv[])
 .BR pthread_attr_init (3),
 .BR pthread_create (3),
 .BR pthreads (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

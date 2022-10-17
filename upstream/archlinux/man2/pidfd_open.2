@@ -1,30 +1,13 @@
 .\" Copyright (c) 2019 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PIDFD_OPEN 2 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH PIDFD_OPEN 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 pidfd_open \- obtain a file descriptor that refers to a process
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#include <sys/syscall.h>" "      /* Definition of " SYS_* " constants */"
@@ -58,7 +41,7 @@ If the process referred to by the file descriptor has not yet terminated,
 then an attempt to wait on the file descriptor using
 .BR waitid (2)
 will immediately return the error
-.BR EAGAIN
+.B EAGAIN
 rather than blocking.
 .SH RETURN VALUE
 On success,
@@ -80,7 +63,7 @@ is not valid.
 .B EMFILE
 The per-process limit on the number of open file descriptors has been reached
 (see the description of
-.BR RLIMIT_NOFILE
+.B RLIMIT_NOFILE
 in
 .BR getrlimit (2)).
 .TP
@@ -100,7 +83,7 @@ does not exist.
 .SH VERSIONS
 .BR pidfd_open ()
 first appeared in Linux 5.3.
-.SH CONFORMING TO
+.SH STANDARDS
 .BR pidfd_open ()
 is Linux specific.
 .SH NOTES
@@ -126,18 +109,18 @@ Note, however, that this is guaranteed only if the following
 conditions hold true:
 .IP \(bu 2
 the disposition of
-.BR SIGCHLD
+.B SIGCHLD
 has not been explicitly set to
-.BR SIG_IGN
+.B SIG_IGN
 (see
 .BR sigaction (2));
 .IP \(bu
 the
-.BR SA_NOCLDWAIT
+.B SA_NOCLDWAIT
 flag was not specified while establishing a handler for
-.BR SIGCHLD
+.B SIGCHLD
 or while setting the disposition of that signal to
-.BR SIG_DFL
+.B SIG_DFL
 (see
 .BR sigaction (2));
 and
@@ -152,7 +135,7 @@ then the child process (along with a PID file descriptor that refers to it)
 should instead be created using
 .BR clone (2)
 with the
-.BR CLONE_PIDFD
+.B CLONE_PIDFD
 flag.
 .\"
 .SS Use cases for PID file descriptors
@@ -161,7 +144,7 @@ A PID file descriptor returned by
 (or by
 .BR clone (2)
 with the
-.BR CLONE_PID
+.B CLONE_PID
 flag) can be used for the following purposes:
 .IP \(bu 2
 The
@@ -221,35 +204,31 @@ process whose PID is specified as its command-line argument.
 It then uses
 .BR poll (2)
 to monitor the file descriptor for process exit, as indicated by an
-.BR EPOLLIN
+.B EPOLLIN
 event.
 .\"
 .SS Program source
 \&
+.\" SRC BEGIN (pidfd_open.c)
 .EX
 #define _GNU_SOURCE
-#include <sys/types.h>
+#include <poll.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#include <poll.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#ifndef __NR_pidfd_open
-#define __NR_pidfd_open 434   /* System call # on most architectures */
-#endif
 
 static int
 pidfd_open(pid_t pid, unsigned int flags)
 {
-    return syscall(__NR_pidfd_open, pid, flags);
+    return syscall(SYS_pidfd_open, pid, flags);
 }
 
 int
 main(int argc, char *argv[])
 {
-    struct pollfd pollfd;
-    int pidfd, ready;
+    int            pidfd, ready;
+    struct pollfd  pollfd;
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <pid>\en", argv[0]);
@@ -272,12 +251,13 @@ main(int argc, char *argv[])
     }
 
     printf("Events (%#x): POLLIN is %sset\en", pollfd.revents,
-            (pollfd.revents & POLLIN) ? "" : "not ");
+           (pollfd.revents & POLLIN) ? "" : "not ");
 
     close(pidfd);
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR clone (2),
 .BR kill (2),
@@ -289,12 +269,3 @@ main(int argc, char *argv[])
 .BR setns (2),
 .BR waitid (2),
 .BR epoll (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

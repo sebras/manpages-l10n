@@ -3,26 +3,7 @@
 .\" with typesetting help from Daniel Quinlan (quinlan@yggdrasil.com).
 .\" and Copyright 2003, 2015 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-.\" This is free documentation; you can redistribute it and/or
-.\" modify it under the terms of the GNU General Public License as
-.\" published by the Free Software Foundation; either version 2 of
-.\" the License, or (at your option) any later version.
-.\"
-.\" The GNU General Public License's references to "object code"
-.\" and "executables" are to be interpreted as the output of any
-.\" document formatting or typesetting system, including
-.\" intermediate and printed output.
-.\"
-.\" This manual is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" Modified by David A. Wheeler <dwheeler@dwheeler.com> 2000-11-28.
 .\" Applied patch by Terran Melconian, aeb, 2001-12-14.
@@ -32,10 +13,13 @@
 .\" Modified by Walter Harms: dladdr, dlvsym
 .\" Modified by Petr Baudis <pasky@suse.cz>, 2008-12-04: dladdr caveat
 .\"
-.TH DLOPEN 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH DLOPEN 3 2022-09-12 "Linux man-pages (unreleased)"
 .SH NAME
 dlclose, dlopen, dlmopen \-
 open and close a shared object
+.SH LIBRARY
+Dynamic linking library
+.RI ( libdl ", " \-ldl )
 .SH SYNOPSIS
 .nf
 .B #include <dlfcn.h>
@@ -49,8 +33,6 @@ open and close a shared object
 .PP
 .BI "void *dlmopen(Lmid_t " lmid ", const char *" filename ", int " flags );
 .fi
-.PP
-Link with \fI\-ldl\fP.
 .SH DESCRIPTION
 .SS dlopen()
 The function
@@ -213,7 +195,7 @@ symbols in shared objects (and their dependencies)
 that were previously opened with
 .BR dlopen ()
 using the
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 flag;
 and definitions in the shared object itself
 (and any dependencies that were loaded for that object).
@@ -250,9 +232,9 @@ call that loads the same shared object with
 may force symbol resolution for a shared object earlier loaded with
 .BR RTLD_LAZY .
 Similarly, an object that was previously opened with
-.BR RTLD_LOCAL
+.B RTLD_LOCAL
 can be promoted to
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 in a subsequent
 .BR dlopen ().
 .PP
@@ -326,7 +308,7 @@ then the object is unloaded
 after first calling any destructors defined for the object.
 (Symbols in this object might be required in another object
 because this object was opened with the
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 flag and one of its symbols satisfied a relocation in another object.)
 .PP
 All shared objects that were automatically loaded when
@@ -389,7 +371,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001 describes
 .BR dlclose ()
 and
@@ -402,7 +384,7 @@ The
 .BR RTLD_NOLOAD ,
 .BR RTLD_NODELETE ,
 and
-.BR RTLD_DEEPBIND
+.B RTLD_DEEPBIND
 flags are GNU extensions;
 the first two of these flags are also present on Solaris.
 .SH NOTES
@@ -438,16 +420,16 @@ flag.
 The
 .BR dlmopen ()
 function also can be used to provide better isolation than the
-.BR RTLD_LOCAL
+.B RTLD_LOCAL
 flag.
 In particular, shared objects loaded with
-.BR RTLD_LOCAL
+.B RTLD_LOCAL
 may be promoted to
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 if they are dependencies of another shared object loaded with
 .BR RTLD_GLOBAL .
 Thus,
-.BR RTLD_LOCAL
+.B RTLD_LOCAL
 is insufficient to isolate a loaded shared object except in the (uncommon)
 case where one has explicit control over all shared object dependencies.
 .PP
@@ -485,7 +467,7 @@ A shared object may export multiple constructors and destructors,
 and priorities can be associated with each function
 to determine the order in which they are executed.
 See the
-.BR gcc
+.B gcc
 info pages (under "Function attributes")
 .\" info gcc "C Extensions" "Function attributes"
 for further information.
@@ -513,7 +495,7 @@ command-line option.
 Use of
 .B _init
 and
-.BR _fini
+.B _fini
 is now deprecated in favor of the aforementioned
 constructors and destructors,
 which among other advantages,
@@ -539,13 +521,13 @@ called when a shared object is unloaded.
 These functions are part of the dlopen API, derived from SunOS.
 .SH BUGS
 As at glibc 2.24, specifying the
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 flag when calling
 .BR dlmopen ()
 .\" dlerror(): "invalid mode"
 generates an error.
 Furthermore, specifying
-.BR RTLD_GLOBAL
+.B RTLD_GLOBAL
 when calling
 .BR dlopen ()
 results in a program crash
@@ -569,10 +551,12 @@ $ \fB./a.out\fP
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (dlopen.c)
 .EX
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dlfcn.h>
+
 #include <gnu/lib\-names.h>  /* Defines LIBM_SO (which will be a
                                string such as "libm.so.6") */
 int
@@ -622,6 +606,7 @@ main(void)
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR ld (1),
 .BR ldd (1),
@@ -636,12 +621,3 @@ main(void)
 .BR ldconfig (8)
 .PP
 gcc info pages, ld info pages
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

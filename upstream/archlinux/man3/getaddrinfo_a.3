@@ -2,35 +2,18 @@
 .\" and clean-ups and additions (C) Copyright 2010 Michael Kerrisk
 .\"                                 <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" References: http://people.redhat.com/drepper/asynchnl.pdf,
 .\"     http://www.imperialviolet.org/2005/06/01/asynchronous-dns-lookups-with-glibc.html
 .\"
-.TH GETADDRINFO_A 3 2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH GETADDRINFO_A 3 2022-09-15 "Linux man-pages (unreleased)"
 .SH NAME
 getaddrinfo_a, gai_suspend, gai_error, gai_cancel \- asynchronous
 network address and service translation
+.SH LIBRARY
+Asynchronous name lookup library
+.RI ( libanl ", " \-lanl )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
@@ -43,8 +26,6 @@ network address and service translation
 .PP
 .BI "int gai_error(struct gaicb *" req );
 .BI "int gai_cancel(struct gaicb *" req );
-.PP
-Link with \fI\-lanl\fP.
 .fi
 .SH DESCRIPTION
 The
@@ -141,10 +122,10 @@ The
 .I sevp\->sigev_notify
 field can have the following values:
 .TP
-.BR SIGEV_NONE
+.B SIGEV_NONE
 Don't provide any notification.
 .TP
-.BR SIGEV_SIGNAL
+.B SIGEV_SIGNAL
 When a look-up completes, generate the signal
 .I sigev_signo
 for the process.
@@ -160,7 +141,7 @@ structure will be set to
 .\" si_pid and si_uid are also set, to the values of the calling process,
 .\" which doesn't provide useful information, so we'll skip mentioning it.
 .TP
-.BR SIGEV_THREAD
+.B SIGEV_THREAD
 When a look-up completes, invoke
 .I sigev_notify_function
 as if it were the start function of a new thread.
@@ -169,11 +150,11 @@ See
 for details.
 .PP
 For
-.BR SIGEV_SIGNAL
+.B SIGEV_SIGNAL
 and
 .BR SIGEV_THREAD ,
 it may be useful to point
-.IR sevp\->sigev_value.sival_ptr
+.I sevp\->sigev_value.sival_ptr
 to
 .IR list .
 .PP
@@ -321,7 +302,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 These functions are GNU extensions;
 they first appeared in glibc in version 2.2.3.
 .SH NOTES
@@ -342,15 +323,16 @@ The program might be used like this:
 .PP
 .in +4n
 .EX
-$ \fB./a.out ftp.us.kernel.org enoent.linuxfoundation.org gnu.cz\fP
-ftp.us.kernel.org: 128.30.2.36
+$ \fB./a.out mirrors.kernel.org enoent.linuxfoundation.org gnu.org\fP
+mirrors.kernel.org: 139.178.88.99
 enoent.linuxfoundation.org: Name or service not known
-gnu.cz: 87.236.197.13
+gnu.org: 209.51.188.116
 .EE
 .in
 .PP
 Here is the program source code
 .PP
+.\" SRC BEGIN (sync.c)
 .EX
 #define _GNU_SOURCE
 #include <netdb.h>
@@ -371,7 +353,7 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < argc \- 1; i++) {
+    for (size_t i = 0; i < argc \- 1; i++) {
         reqs[i] = malloc(sizeof(*reqs[0]));
         if (reqs[i] == NULL) {
             perror("malloc");
@@ -388,15 +370,15 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < argc \- 1; i++) {
+    for (size_t i = 0; i < argc \- 1; i++) {
         printf("%s: ", reqs[i]\->ar_name);
         ret = gai_error(reqs[i]);
         if (ret == 0) {
             res = reqs[i]\->ar_result;
 
             ret = getnameinfo(res\->ai_addr, res\->ai_addrlen,
-                    host, sizeof(host),
-                    NULL, 0, NI_NUMERICHOST);
+                              host, sizeof(host),
+                              NULL, 0, NI_NUMERICHOST);
             if (ret != 0) {
                 fprintf(stderr, "getnameinfo() failed: %s\en",
                         gai_strerror(ret));
@@ -411,6 +393,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SS Asynchronous example
 This example shows a simple interactive
 .BR getaddrinfo_a ()
@@ -422,24 +405,25 @@ An example session might look like this:
 .in +4n
 .EX
 $ \fB./a.out\fP
-> a ftp.us.kernel.org enoent.linuxfoundation.org gnu.cz
+> a mirrors.kernel.org enoent.linuxfoundation.org gnu.org
 > c 2
-[2] gnu.cz: Request not canceled
+[2] gnu.org: Request not canceled
 > w 0 1
-[00] ftp.us.kernel.org: Finished
+[00] mirrors.kernel.org: Finished
 > l
-[00] ftp.us.kernel.org: 216.165.129.139
+[00] mirrors.kernel.org: 139.178.88.99
 [01] enoent.linuxfoundation.org: Processing request in progress
-[02] gnu.cz: 87.236.197.13
+[02] gnu.org: 209.51.188.116
 > l
-[00] ftp.us.kernel.org: 216.165.129.139
+[00] mirrors.kernel.org: 139.178.88.99
 [01] enoent.linuxfoundation.org: Name or service not known
-[02] gnu.cz: 87.236.197.13
+[02] gnu.org: 209.51.188.116
 .EE
 .in
 .PP
 The program source is as follows:
 .PP
+.\" SRC BEGIN (async.c)
 .EX
 #define _GNU_SOURCE
 #include <netdb.h>
@@ -448,7 +432,7 @@ The program source is as follows:
 #include <string.h>
 
 static struct gaicb **reqs = NULL;
-static int nreqs = 0;
+static size_t nreqs = 0;
 
 static char *
 getcmd(void)
@@ -469,7 +453,7 @@ getcmd(void)
 static void
 add_requests(void)
 {
-    int nreqs_base = nreqs;
+    size_t nreqs_base = nreqs;
     char *host;
     int ret;
 
@@ -497,7 +481,8 @@ static void
 wait_requests(void)
 {
     char *id;
-    int ret, n;
+    int ret;
+    size_t n;
     struct gaicb const **wait_reqs = calloc(nreqs, sizeof(*wait_reqs));
                 /* NULL elements are ignored by gai_suspend(). */
 
@@ -518,7 +503,7 @@ wait_requests(void)
         return;
     }
 
-    for (int i = 0; i < nreqs; i++) {
+    for (size_t i = 0; i < nreqs; i++) {
         if (wait_reqs[i] == NULL)
             continue;
 
@@ -526,7 +511,7 @@ wait_requests(void)
         if (ret == EAI_INPROGRESS)
             continue;
 
-        printf("[%02d] %s: %s\en", i, reqs[i]\->ar_name,
+        printf("[%02zu] %s: %s\en", i, reqs[i]\->ar_name,
                ret == 0 ? "Finished" : gai_strerror(ret));
     }
 }
@@ -536,7 +521,8 @@ static void
 cancel_requests(void)
 {
     char *id;
-    int ret, n;
+    int ret;
+    size_t n;
 
     while ((id = strtok(NULL, " ")) != NULL) {
         n = atoi(id);
@@ -560,8 +546,8 @@ list_requests(void)
     char host[NI_MAXHOST];
     struct addrinfo *res;
 
-    for (int i = 0; i < nreqs; i++) {
-        printf("[%02d] %s: ", i, reqs[i]\->ar_name);
+    for (size_t i = 0; i < nreqs; i++) {
+        printf("[%02zu] %s: ", i, reqs[i]\->ar_name);
         ret = gai_error(reqs[i]);
 
         if (!ret) {
@@ -583,7 +569,7 @@ list_requests(void)
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     char *cmdline;
     char *cmd;
@@ -616,6 +602,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR getaddrinfo (3),
 .BR inet (3),
@@ -623,12 +610,3 @@ main(int argc, char *argv[])
 .BR hostname (7),
 .BR ip (7),
 .BR sigevent (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

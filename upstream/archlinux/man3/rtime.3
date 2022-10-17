@@ -1,17 +1,18 @@
 .\" Copyright 2003 walter harms (walter.harms@informatik.uni-oldenburg.de)
 .\"
-.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
-.\" Distributed under GPL
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-1.0-or-later
 .\"
 .\" Modified 2003-04-04 Walter Harms
 .\" <walter.harms@informatik.uni-oldenburg.de>
 .\"
 .\" Slightly polished, aeb, 2003-04-06
 .\"
-.TH RTIME 3 2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH RTIME 3 2022-09-13 "Linux man-pages (unreleased)"
 .SH NAME
 rtime \- get time from a remote machine
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B "#include <rpc/auth_des.h>"
@@ -105,26 +106,29 @@ The program connects to a computer called "linux".
 Using "localhost" does not work.
 The result is the localtime of the computer "linux".
 .PP
+.\" SRC BEGIN (rtime.c)
 .EX
+#include <errno.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 #include <time.h>
+
 #include <rpc/auth_des.h>
-#include <netdb.h>
 
 static int use_tcp = 0;
-static char *servername = "linux";
+static const char servername[] = "linux";
 
 int
 main(void)
 {
-    struct sockaddr_in name;
-    struct rpc_timeval time1 = {0,0};
-    struct rpc_timeval timeout = {1,0};
-    struct hostent *hent;
-    int ret;
+    int                 ret;
+    time_t              t;
+    struct hostent      *hent;
+    struct rpc_timeval  time1 = {0, 0};
+    struct rpc_timeval  timeout = {1, 0};
+    struct sockaddr_in  name;
 
     memset(&name, 0, sizeof(name));
     sethostent(1);
@@ -135,24 +139,16 @@ main(void)
     if (ret < 0)
         perror("rtime error");
     else {
-        time_t t = time1.tv_sec;
+        t = time1.tv_sec;
         printf("%s\en", ctime(&t));
     }
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .\" .BR netdate (1),
 .BR ntpdate (1),
 .\" .BR rdate (1),
 .BR inetd (8)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

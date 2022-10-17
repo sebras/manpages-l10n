@@ -1,35 +1,18 @@
 .\" Copyright (C) 2006, 2019 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Additions from Richard Gooch <rgooch@atnf.CSIRO.AU> and aeb, 971207
 .\" 2006-03-13, mtk, Added ppoll() + various other rewordings
 .\" 2006-07-01, mtk, Added POLLRDHUP + various other wording and
 .\"	formatting changes.
 .\"
-.TH POLL 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH POLL 2 2022-10-08 "Linux man-pages (unreleased)"
 .SH NAME
 poll, ppoll \- wait for some event on a file descriptor
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <poll.h>
@@ -83,10 +66,9 @@ field returns zero.
 (This provides an easy way of ignoring a
 file descriptor for a single
 .BR poll ()
-call: simply negate the
+call: simply set the
 .I fd
-field.
-Note, however, that this technique can't be used to ignore file descriptor 0.)
+field to its bitwise complement.)
 .PP
 The field
 .I events
@@ -297,7 +279,7 @@ equivalent because whereas a negative
 value for
 .BR poll ()
 is interpreted as an infinite timeout, a negative value expressed in
-.IR *tmo_p
+.I *tmo_p
 results in an error from
 .BR ppoll ().
 .PP
@@ -324,16 +306,9 @@ The
 argument specifies an upper limit on the amount of time that
 .BR ppoll ()
 will block.
-This argument is a pointer to a structure of the following form:
-.PP
-.in +4n
-.EX
-struct timespec {
-    long    tv_sec;         /* seconds */
-    long    tv_nsec;        /* nanoseconds */
-};
-.EE
-.in
+This argument is a pointer to a
+.BR timespec (3)
+structure.
 .PP
 If
 .I tmo_p
@@ -349,7 +324,7 @@ whose
 .I revents
 fields have been set to a nonzero value (indicating an event or an error).
 A return value of zero indicates that the system call timed out
-before any file descriptors became read.
+before any file descriptors became ready.
 .PP
 On error, \-1 is returned, and
 .I errno
@@ -376,7 +351,7 @@ value.
 .B EINVAL
 .RB ( ppoll ())
 The timeout value expressed in
-.IR *ip
+.I *tmo_p
 is invalid (negative).
 .TP
 .B ENOMEM
@@ -397,7 +372,7 @@ system call was added to Linux in kernel 2.6.16.
 The
 .BR ppoll ()
 library call was added in glibc 2.4.
-.SH CONFORMING TO
+.SH STANDARDS
 .BR poll ()
 conforms to POSIX.1-2001 and POSIX.1-2008.
 .BR ppoll ()
@@ -412,7 +387,7 @@ The operation of
 and
 .BR ppoll ()
 is not affected by the
-.BR O_NONBLOCK
+.B O_NONBLOCK
 flag.
 .PP
 On some other UNIX systems,
@@ -432,7 +407,7 @@ and loop, just as with
 Some implementations define the nonstandard constant
 .B INFTIM
 with the value \-1 for use as a
-.IR timeout
+.I timeout
 for
 .BR poll ().
 This constant is not provided in glibc.
@@ -461,7 +436,7 @@ The raw
 system call has a fifth argument,
 .IR "size_t sigsetsize" ,
 which specifies the size in bytes of the
-.IR sigmask
+.I sigmask
 argument.
 The glibc
 .BR ppoll ()
@@ -493,7 +468,7 @@ field in a human-readable form;
 if the file descriptor is readable, reads some data from it,
 and displays that data on standard output; and
 .IP \(bu
-if the file descriptors was not readable,
+if the file descriptor was not readable,
 but some other event occurred (presumably
 .BR POLLHUP ),
 closes the file descriptor.
@@ -554,7 +529,7 @@ The program then consumed some of the available input.
 The second return from
 .BR poll ()
 also indicated
-.BR POLLIN
+.B POLLIN
 and
 .BR POLLHUP ;
 the program then consumed the last of the available input.
@@ -562,20 +537,20 @@ the program then consumed the last of the available input.
 On the final return,
 .BR poll ()
 indicated only
-.BR POLLHUP
+.B POLLHUP
 on the FIFO,
 at which point the file descriptor was closed and the program terminated.
 .\"
 .SS Program source
 \&
+.\" SRC BEGIN (poll_input.c)
 .EX
 /* poll_input.c
 
    Licensed under GNU General Public License v2 or later.
 */
-#include <poll.h>
 #include <fcntl.h>
-#include <sys/types.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -586,8 +561,11 @@ at which point the file descriptor was closed and the program terminated.
 int
 main(int argc, char *argv[])
 {
-    int nfds, num_open_fds;
-    struct pollfd *pfds;
+    int            ready;
+    char           buf[10];
+    nfds_t         num_open_fds, nfds;
+    ssize_t        s;
+    struct pollfd  *pfds;
 
     if (argc < 2) {
        fprintf(stderr, "Usage: %s file...\en", argv[0]);
@@ -599,9 +577,9 @@ main(int argc, char *argv[])
     if (pfds == NULL)
         errExit("malloc");
 
-    /* Open each file on command line, and add it \(aqpfds\(aq array. */
+    /* Open each file on command line, and add it to \(aqpfds\(aq array. */
 
-    for (int j = 0; j < nfds; j++) {
+    for (nfds_t j = 0; j < nfds; j++) {
         pfds[j].fd = open(argv[j + 1], O_RDONLY);
         if (pfds[j].fd == \-1)
             errExit("open");
@@ -615,8 +593,6 @@ main(int argc, char *argv[])
        open. */
 
     while (num_open_fds > 0) {
-        int ready;
-
         printf("About to poll()\en");
         ready = poll(pfds, nfds, \-1);
         if (ready == \-1)
@@ -626,21 +602,19 @@ main(int argc, char *argv[])
 
         /* Deal with array returned by poll(). */
 
-        for (int j = 0; j < nfds; j++) {
-            char buf[10];
-
+        for (nfds_t j = 0; j < nfds; j++) {
             if (pfds[j].revents != 0) {
                 printf("  fd=%d; events: %s%s%s\en", pfds[j].fd,
-                        (pfds[j].revents & POLLIN)  ? "POLLIN "  : "",
-                        (pfds[j].revents & POLLHUP) ? "POLLHUP " : "",
-                        (pfds[j].revents & POLLERR) ? "POLLERR " : "");
+                       (pfds[j].revents & POLLIN)  ? "POLLIN "  : "",
+                       (pfds[j].revents & POLLHUP) ? "POLLHUP " : "",
+                       (pfds[j].revents & POLLERR) ? "POLLERR " : "");
 
                 if (pfds[j].revents & POLLIN) {
-                    ssize_t s = read(pfds[j].fd, buf, sizeof(buf));
+                    s = read(pfds[j].fd, buf, sizeof(buf));
                     if (s == \-1)
                         errExit("read");
                     printf("    read %zd bytes: %.*s\en",
-                            s, (int) s, buf);
+                           s, (int) s, buf);
                 } else {                /* POLLERR | POLLHUP */
                     printf("    closing fd %d\en", pfds[j].fd);
                     if (close(pfds[j].fd) == \-1)
@@ -655,18 +629,11 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR restart_syscall (2),
 .BR select (2),
 .BR select_tut (2),
+.BR timespec (3),
 .BR epoll (7),
 .BR time (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

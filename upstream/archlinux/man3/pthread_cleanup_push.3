@@ -1,44 +1,25 @@
 .\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PTHREAD_CLEANUP_PUSH 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_CLEANUP_PUSH 3 2022-09-12 "Linux man-pages (unreleased)"
 .SH NAME
 pthread_cleanup_push, pthread_cleanup_pop \- push and pop
-thread cancellation clean-up handlers
+thread cancelation clean-up handlers
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .B #include <pthread.h>
 .PP
 .BI "void pthread_cleanup_push(void (*" routine ")(void *), void *" arg );
 .BI "void pthread_cleanup_pop(int " execute );
-.PP
-Compile and link with \fI\-pthread\fP.
 .fi
 .SH DESCRIPTION
 These functions manipulate the calling thread's stack of
-thread-cancellation clean-up handlers.
+thread-cancelation clean-up handlers.
 A clean-up handler is a function that is automatically executed
 when a thread is canceled (or in various other circumstances
 described below);
@@ -63,7 +44,7 @@ and optionally executes it if
 .I execute
 is nonzero.
 .PP
-A cancellation clean-up handler is popped from the stack
+A cancelation clean-up handler is popped from the stack
 and executed in the following circumstances:
 .IP 1. 3
 When a thread is canceled,
@@ -141,7 +122,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .SH NOTES
 On Linux, the
@@ -162,7 +143,7 @@ says that the effect of using
 .IR break ,
 .IR continue ,
 or
-.IR goto
+.I goto
 to prematurely leave a block bracketed
 .BR pthread_cleanup_push ()
 and
@@ -180,13 +161,13 @@ This loop increments a global variable,
 .IR cnt ,
 once each second.
 Depending on what command-line arguments are supplied,
-the main thread sends the other thread a cancellation request,
+the main thread sends the other thread a cancelation request,
 or sets a global variable that causes the other thread
 to exit its loop and terminate normally (by doing a
 .IR return ).
 .PP
 In the following shell session,
-the main thread sends a cancellation request to the other thread:
+the main thread sends a cancelation request to the other thread:
 .PP
 .in +4n
 .EX
@@ -201,7 +182,7 @@ Thread was canceled; cnt = 0
 .in
 .PP
 From the above, we see that the thread was canceled,
-and that the cancellation clean-up handler was called
+and that the cancelation clean-up handler was called
 and it reset the value of the global variable
 .I cnt
 to 0.
@@ -247,13 +228,14 @@ the clean-up handler was executed, because the argument given to
 was nonzero.
 .SS Program source
 \&
+.\" SRC BEGIN (pthread_cleanup_push.c)
 .EX
+#include <errno.h>
 #include <pthread.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <errno.h>
 
 #define handle_error_en(en, msg) \e
         do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -272,19 +254,19 @@ cleanup_handler(void *arg)
 static void *
 thread_start(void *arg)
 {
-    time_t start, curr;
+    time_t curr;
 
     printf("New thread started\en");
 
     pthread_cleanup_push(cleanup_handler, NULL);
 
-    curr = start = time(NULL);
+    curr = time(NULL);
 
     while (!done) {
-        pthread_testcancel();           /* A cancellation point */
+        pthread_testcancel();           /* A cancelation point */
         if (curr < time(NULL)) {
             curr = time(NULL);
-            printf("cnt = %d\en", cnt);  /* A cancellation point */
+            printf("cnt = %d\en", cnt);  /* A cancelation point */
             cnt++;
         }
     }
@@ -329,18 +311,10 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR pthread_cancel (3),
 .BR pthread_cleanup_push_defer_np (3),
 .BR pthread_setcancelstate (3),
 .BR pthread_testcancel (3),
 .BR pthreads (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

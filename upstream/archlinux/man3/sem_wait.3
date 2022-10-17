@@ -1,30 +1,13 @@
 .\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH SEM_WAIT 3 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH SEM_WAIT 3 2022-09-12 "Linux man-pages (unreleased)"
 .SH NAME
 sem_wait, sem_timedwait, sem_trywait \- lock a semaphore
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .B #include <semaphore.h>
@@ -34,8 +17,6 @@ sem_wait, sem_timedwait, sem_trywait \- lock a semaphore
 .BI "int sem_timedwait(sem_t *restrict " sem ,
 .BI "                  const struct timespec *restrict " abs_timeout );
 .fi
-.PP
-Link with \fI\-pthread\fP.
 .PP
 .RS -4
 Feature Test Macro Requirements for glibc (see
@@ -76,18 +57,10 @@ specifies a limit on the amount of time that the call
 should block if the decrement cannot be immediately performed.
 The
 .I abs_timeout
-argument points to a structure that specifies an absolute timeout
+argument points to a
+.BR timespec (3)
+structure that specifies an absolute timeout
 in seconds and nanoseconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC).
-This structure is defined as follows:
-.PP
-.in +4n
-.EX
-struct timespec {
-    time_t tv_sec;      /* Seconds */
-    long   tv_nsec;     /* Nanoseconds [0 .. 999999999] */
-};
-.EE
-.in
 .PP
 If the timeout has already expired by the time of the call,
 and the semaphore could not be locked immediately,
@@ -156,7 +129,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .SH EXAMPLES
 The (somewhat trivial) program shown below operates on an
@@ -190,15 +163,17 @@ sem_timedwait() timed out
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (sem_wait.c)
 .EX
-#include <unistd.h>
+#include <errno.h>
+#include <semaphore.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <semaphore.h>
 #include <time.h>
+#include <unistd.h>
+
 #include <assert.h>
-#include <errno.h>
-#include <signal.h>
 
 sem_t sem;
 
@@ -249,7 +224,7 @@ main(int argc, char *argv[])
 
     ts.tv_sec += atoi(argv[2]);
 
-    printf("main() about to call sem_timedwait()\en");
+    printf("%s() about to call sem_timedwait()\en", __func__);
     while ((s = sem_timedwait(&sem, &ts)) == \-1 && errno == EINTR)
         continue;       /* Restart if interrupted by handler. */
 
@@ -266,18 +241,11 @@ main(int argc, char *argv[])
     exit((s == 0) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR clock_gettime (2),
 .BR sem_getvalue (3),
 .BR sem_post (3),
+.BR timespec (3),
 .BR sem_overview (7),
 .BR time (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

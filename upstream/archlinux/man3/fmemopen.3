@@ -1,12 +1,13 @@
 .\" Copyright 2005, 2012, 2016 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
-.\" Distributed under the GPL.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-1.0-or-later
 .\"
-.TH FMEMOPEN 3 2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH FMEMOPEN 3 2022-09-13 "Linux man-pages (unreleased)"
 .SH NAME
 fmemopen \-  open memory as stream
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <stdio.h>
@@ -93,7 +94,7 @@ temporary buffer allocated by this call (but see
 If
 .I buf
 is not NULL, then it should point to a buffer of at least
-.I len
+.I size
 bytes allocated by the caller.
 .PP
 When a stream that has been opened for writing is flushed
@@ -130,7 +131,11 @@ buffer is flushed.
 Disabling buffering with the following call
 may be useful to detect errors at the time of an output operation:
 .PP
-    setbuf(stream, NULL);
+.in +4n
+.EX
+setbuf(stream, NULL);
+.EE
+.in
 .SH RETURN VALUE
 Upon successful completion,
 .BR fmemopen ()
@@ -160,13 +165,13 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2008.
 This function is not specified in POSIX.1-2001,
 and is not widely available on other systems.
 .PP
 POSIX.1-2008 specifies that \(aqb\(aq in
-.IR mode
+.I mode
 shall be ignored.
 However, Technical Corrigendum 1
 .\" http://austingroupbugs.net/view.php?id=396
@@ -206,7 +211,7 @@ character in
 Thus, for example, "wb+" has the desired effect, but "w+b" does not.
 This is inconsistent with the treatment of
 .\" http://sourceware.org/bugzilla/show_bug.cgi?id=12836
-.IR mode
+.I mode
 by
 .BR fopen (3).
 .PP
@@ -265,7 +270,7 @@ was performed on a stream created by
 the
 .I offset
 was
-.IR subtracted
+.I subtracted
 from the end-of-stream position, instead of being added.
 This bug is fixed in glibc 2.22.
 .PP
@@ -295,14 +300,13 @@ size=11; ptr=1 529 1849
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (fmemopen.c)
 .EX
 #define _GNU_SOURCE
-#include <string.h>
+#include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#define handle_error(msg) \e
-    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+#include <string.h>
 
 int
 main(int argc, char *argv[])
@@ -319,11 +323,11 @@ main(int argc, char *argv[])
 
     in = fmemopen(argv[1], strlen(argv[1]), "r");
     if (in == NULL)
-        handle_error("fmemopen");
+        err(EXIT_FAILURE, "fmemopen");
 
     out = open_memstream(&ptr, &size);
     if (out == NULL)
-        handle_error("open_memstream");
+        err(EXIT_FAILURE, "open_memstream");
 
     for (;;) {
         s = fscanf(in, "%d", &v);
@@ -332,7 +336,7 @@ main(int argc, char *argv[])
 
         s = fprintf(out, "%d ", v * v);
         if (s == \-1)
-            handle_error("fprintf");
+            err(EXIT_FAILURE, "fprintf");
     }
 
     fclose(in);
@@ -344,16 +348,8 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR fopen (3),
 .BR fopencookie (3),
 .BR open_memstream (3)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

@@ -1,28 +1,8 @@
 .\" Copyright (C) 2013, Heinrich Schuchardt <xypron.glpk@gmx.de>
 .\" and Copyright (C) 2014, Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of
-.\" this manual under the conditions for verbatim copying, provided that
-.\" the entire resulting derived work is distributed under the terms of
-.\" a permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume.
-.\" no responsibility for errors or omissions, or for damages resulting.
-.\" from the use of the information contained herein.  The author(s) may.
-.\" not have taken the same level of care in the production of this.
-.\" manual, which is licensed free of charge, as they might when working.
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.TH FANOTIFY 7 2021-08-27 "Linux" "Linux Programmer's Manual"
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
+.TH FANOTIFY 7 2022-09-09 "Linux man-pages (unreleased)"
 .SH NAME
 fanotify \- monitoring filesystem events
 .SH DESCRIPTION
@@ -138,16 +118,6 @@ until either a file event occurs or the call is interrupted by a signal
 (see
 .BR signal (7)).
 .PP
-The use of one of the flags
-.BR FAN_REPORT_FID ,
-.BR FAN_REPORT_DIR_FID
-in
-.BR fanotify_init (2)
-influences what data structures are returned to the event listener for each
-event.
-Events reported to a group initialized with one of these flags will
-use file handles to identify filesystem objects instead of file descriptors.
-.PP
 After a successful
 .BR read (2),
 the read buffer contains one or more of the following structures:
@@ -166,24 +136,131 @@ struct fanotify_event_metadata {
 .EE
 .in
 .PP
-In case of an fanotify group that identifies filesystem objects by file
-handles, you should also expect to receive one or more additional information
-records of the structure detailed below following the generic
+Information records are
+supplemental pieces of information that
+may be provided alongside the generic
+.I fanotify_event_metadata
+structure.
+The
+.I flags
+passed to
+.BR fanotify_init (2)
+have influence over the type of information records that
+may be returned for an event.
+For example,
+if a notification group is initialized with
+.B FAN_REPORT_FID
+or
+.BR FAN_REPORT_DIR_FID ,
+then event listeners should also expect to receive a
+.I fanotify_event_info_fid
+structure alongside the
+.I fanotify_event_metadata
+structure,
+whereby file handles are used to
+identify filesystem objects
+rather than file descriptors.
+Information records may also be stacked,
+meaning that using the various
+.B FAN_REPORT_*
+flags in conjunction with one another is supported.
+In such cases,
+multiple information records can be returned for an event
+alongside the generic
+.I fanotify_event_metadata
+structure.
+For example,
+if a notification group is initialized with
+.B FAN_REPORT_TARGET_FID
+and
+.BR FAN_REPORT_PIDFD ,
+then an event listener should expect to receive up to two
+.I fanotify_event_info_fid
+information records and one
+.I fanotify_event_info_pidfd
+information record alongside the generic
+.I fanotify_event_metadata
+structure.
+Importantly,
+fanotify provides no guarantee around
+the ordering of information records
+when a notification group is initialized with a
+stacked based configuration.
+Each information record has a nested structure of type
+.IR fanotify_event_info_header .
+It is imperative for event listeners to inspect the
+.I info_type
+field of this structure in order to
+determine the type of information record that
+had been received for a given event.
+.PP
+In cases where an fanotify group
+identifies filesystem objects by file handles,
+event listeners should also expect to
+receive one or more of the below
+information record objects alongside the generic
 .I fanotify_event_metadata
 structure within the read buffer:
 .PP
 .in +4n
 .EX
-struct fanotify_event_info_header {
-    __u8 info_type;
-    __u8 pad;
-    __u16 len;
-};
-
 struct fanotify_event_info_fid {
     struct fanotify_event_info_header hdr;
     __kernel_fsid_t fsid;
     unsigned char file_handle[0];
+};
+.EE
+.in
+.PP
+In cases where an fanotify group is initialized with
+.BR FAN_REPORT_PIDFD ,
+event listeners should expect to receive the below
+information record object alongside the generic
+.I fanotify_event_metadata
+structure within the read buffer:
+.PP
+.in +4n
+.EX
+struct fanotify_event_info_pidfd {
+        struct fanotify_event_info_header hdr;
+        __s32 pidfd;
+};
+.EE
+.in
+.PP
+In case of a
+.B FAN_FS_ERROR
+event,
+an additional information record describing the error that occurred
+is returned alongside the generic
+.I fanotify_event_metadata
+structure within the read buffer.
+This structure is defined as follows:
+.PP
+.in +4n
+.EX
+struct fanotify_event_info_error {
+    struct fanotify_event_info_header hdr;
+    __s32 error;
+    __u32 error_count;
+};
+.EE
+.in
+.PP
+All information records contain a nested structure of type
+.IR fanotify_event_info_header .
+This structure holds meta-information about the information record
+that may have been returned alongside the generic
+.I fanotify_event_metadata
+structure.
+This structure is defined as follows:
+.PP
+.in +4n
+.EX
+struct fanotify_event_info_header {
+	__u8 info_type;
+	__u8 pad;
+	__u16 len;
 };
 .EE
 .in
@@ -311,6 +388,12 @@ A child file or directory was deleted in a watched parent.
 .B FAN_DELETE_SELF
 A watched file or directory was deleted.
 .TP
+.B FAN_FS_ERROR
+A filesystem error was detected.
+.TP
+.B FAN_RENAME
+A file or directory has been moved to or from a watched parent directory.
+.TP
 .B FAN_MOVED_FROM
 A file or directory has been moved from a watched parent directory.
 .TP
@@ -336,9 +419,9 @@ A file or directory that was opened read-only
 was closed.
 .TP
 .B FAN_Q_OVERFLOW
-The event queue exceeded the limit of 16384 entries.
+The event queue exceeded the limit on number of events.
 This limit can be overridden by specifying the
-.BR FAN_UNLIMITED_QUEUE
+.B FAN_UNLIMITED_QUEUE
 flag when calling
 .BR fanotify_init (2).
 .TP
@@ -370,7 +453,11 @@ To check for any close event, the following bit mask may be used:
 A file was closed.
 This is a synonym for:
 .IP
-    FAN_CLOSE_WRITE | FAN_CLOSE_NOWRITE
+.in +4n
+.EX
+FAN_CLOSE_WRITE | FAN_CLOSE_NOWRITE
+.EE
+.in
 .PP
 To check for any move event, the following bit mask may be used:
 .TP
@@ -378,7 +465,11 @@ To check for any move event, the following bit mask may be used:
 A file or directory was moved.
 This is a synonym for:
 .IP
-    FAN_MOVED_FROM | FAN_MOVED_TO
+.in +4n
+.EX
+FAN_MOVED_FROM | FAN_MOVED_TO
+.EE
+.in
 .PP
 The following bits may appear in
 .I mask
@@ -393,9 +484,50 @@ See
 .BR fanotify_mark (2)
 for additional details.
 The
-.BR FAN_ONDIR
+.B FAN_ONDIR
 flag is reported in an event mask only if the fanotify group identifies
 filesystem objects by file handles.
+.PP
+Information records that are supplied alongside the generic
+.I fanotify_event_metadata
+structure will always contain a nested structure of type
+.IR fanotify_event_info_header .
+The fields of the
+.I fanotify_event_info_header
+are as follows:
+.TP
+.I info_type
+A unique integer value representing
+the type of information record object received for an event.
+The value of this field can be set to one of the following:
+.BR FAN_EVENT_INFO_TYPE_FID ,
+.BR FAN_EVENT_INFO_TYPE_DFID ,
+.BR FAN_EVENT_INFO_TYPE_DFID_NAME ,
+or
+.BR FAN_EVENT_INFO_TYPE_PIDFD .
+The value set for this field
+is dependent on the flags that have been supplied to
+.BR fanotify_init (2).
+Refer to the field details of each information record object type below
+to understand the different cases in which the
+.I info_type
+values can be set.
+.TP
+.I pad
+This field is currently not used by any information record object type
+and therefore is set to zero.
+.TP
+.I len
+The value of
+.I len
+is set to the size of the information record object,
+including the
+.IR fanotify_event_info_header .
+The total size of all additional information records
+is not expected to be larger than
+.RI ( event_len
+\-
+.IR metadata_len ).
 .PP
 The fields of the
 .I fanotify_event_info_fid
@@ -404,8 +536,6 @@ structure are as follows:
 .I hdr
 This is a structure of type
 .IR fanotify_event_info_header .
-It is a generic header that contains information used to describe an
-additional information record attached to the event.
 For example, when an fanotify file descriptor is created using
 .BR FAN_REPORT_FID ,
 a single information record is expected to be attached to the event with
@@ -413,7 +543,7 @@ a single information record is expected to be attached to the event with
 field value of
 .BR FAN_EVENT_INFO_TYPE_FID .
 When an fanotify file descriptor is created using the combination of
-.BR FAN_REPORT_FID
+.B FAN_REPORT_FID
 and
 .BR FAN_REPORT_DIR_FID ,
 there may be two information records attached to the event:
@@ -425,24 +555,16 @@ identifying a parent directory object, and one with
 .I info_type
 field value of
 .BR FAN_EVENT_INFO_TYPE_FID ,
-identifying a non-directory object.
-The
-.I fanotify_event_info_header
-contains a
-.I len
-field.
-The value of
-.I len
-is the size of the additional information record including the
-.IR fanotify_event_info_header
-itself.
-The total size of all additional information records is not expected
-to be bigger than
-(
-.IR event_len
-\-
-.IR metadata_len
-).
+identifying a child object.
+Note that for the directory entry modification events
+.BR FAN_CREATE ,
+.BR FAN_DELETE ,
+.BR FAN_MOVE ,
+and
+.BR FAN_RENAME ,
+an information record identifying the created/deleted/moved child object
+is reported only if an fanotify group was initialized with the flag
+.BR FAN_REPORT_TARGET_FID .
 .TP
 .I fsid
 This is a unique identifier of the filesystem containing the object
@@ -462,15 +584,6 @@ filesystem as returned by
 It can be used to uniquely identify a file on a filesystem and can be
 passed as an argument to
 .BR open_by_handle_at (2).
-Note that for the directory entry modification events
-.BR FAN_CREATE ,
-.BR FAN_DELETE ,
-and
-.BR FAN_MOVE ,
-the
-.IR file_handle
-identifies the modified directory and not the created/deleted/moved child
-object.
 If the value of
 .I info_type
 field is
@@ -488,14 +601,14 @@ if the value of
 field is
 .BR FAN_EVENT_INFO_TYPE_FID ,
 the
-.IR file_handle
+.I file_handle
 identifies the object correlated to the event.
 If the value of
 .I info_type
 field is
 .BR FAN_EVENT_INFO_TYPE_DFID ,
 the
-.IR file_handle
+.I file_handle
 identifies the directory object correlated to the event or the parent directory
 of a non-directory object correlated to the event.
 If the value of
@@ -503,12 +616,76 @@ If the value of
 field is
 .BR FAN_EVENT_INFO_TYPE_DFID_NAME ,
 the
-.IR file_handle
+.I file_handle
 identifies the same directory object that would be reported with
-.BR FAN_EVENT_INFO_TYPE_DFID
+.B FAN_EVENT_INFO_TYPE_DFID
 and the file handle is followed by a null terminated string that identifies the
 name of a directory entry in that directory, or '.' to identify the directory
 object itself.
+.PP
+The fields of the
+.I fanotify_event_info_pidfd
+structure are as follows:
+.TP
+.I hdr
+This is a structure of type
+.IR fanotify_event_info_header .
+When an fanotify group is initialized using
+.BR FAN_REPORT_PIDFD ,
+the
+.I info_type
+field value of the
+.I fanotify_event_info_header
+is set to
+.BR FAN_EVENT_INFO_TYPE_PIDFD .
+.TP
+.I pidfd
+This is a process file descriptor that refers to
+the process responsible for generating the event.
+The returned process file descriptor is no different from
+one which could be obtained manually if
+.BR pidfd_open (2)
+were to be called on
+.IR fanotify_event_metadata.pid .
+In the instance that an error is encountered during pidfd creation,
+one of two possible error types represented by
+a negative integer value may be returned in this
+.I pidfd
+field.
+In cases where
+the process responsible for generating the event
+has terminated prior to
+the event listener being able to
+read events from the notification queue,
+.B FAN_NOPIDFD
+is returned.
+The pidfd creation for an event is only performed at the time the
+events are read from the notification queue.
+All other possible pidfd creation failures are represented by
+.BR FAN_EPIDFD .
+Once the event listener has dealt with an event
+and the pidfd is no longer required,
+the pidfd should be closed via
+.BR close (2).
+.PP
+The fields of the
+.I fanotify_event_info_error
+structure are as follows:
+.TP
+.I hdr
+This is a structure of type
+.IR fanotify_event_info_header .
+The
+.I info_type
+field is set to
+.BR FAN_EVENT_INFO_TYPE_ERROR .
+.TP
+.I error
+Identifies the type of error that occurred.
+.TP
+.I error_count
+This is a counter of the number of errors suppressed
+since the last error was read.
 .PP
 The following macros are provided to iterate over a buffer containing
 fanotify event metadata returned by a
@@ -528,7 +705,7 @@ field of the first metadata structure in the buffer.
 This macro uses the length indicated in the
 .I event_len
 field of the metadata structure pointed to by
-.IR meta
+.I meta
 to calculate the address of the next metadata structure that follows
 .IR meta .
 .I len
@@ -539,7 +716,7 @@ and reduces
 .I len
 by the number of bytes in the metadata structure that
 has been skipped over (i.e., it subtracts
-.IR meta\->event_len
+.I meta\->event_len
 from
 .IR len ).
 .PP
@@ -587,7 +764,7 @@ to allow the file operation or
 to deny the file operation.
 .PP
 If access is denied, the requesting application call will receive an
-.BR EPERM
+.B EPERM
 error.
 Additionally, if the notification group has been created with the
 .B FAN_ENABLE_AUDIT
@@ -599,6 +776,36 @@ field.
 In that case, the audit subsystem will log information about the access
 decision to the audit logs.
 .\"
+.SS Monitoring filesystems for errors
+A single
+.B FAN_FS_ERROR
+event is stored per filesystem at once.
+Extra error messages are suppressed and accounted for in the
+.I error_count
+field of the existing
+.B FAN_FS_ERROR
+event record,
+but details about the errors are lost.
+.PP
+Errors reported by
+.B FAN_FS_ERROR
+are generic
+.I errno
+values,
+but not all kinds of error types are reported by all filesystems.
+.PP
+Errors not directly related to a file (i.e. super block corruption)
+are reported with an invalid
+.IR file_handle .
+For these errors, the
+.I file_handle
+will have the field
+.I handle_type
+set to
+.BR FILEID_INVALID ,
+and the handle buffer size set to
+.BR 0 .
+.\"
 .SS Closing the fanotify file descriptor
 When all file descriptors referring to the fanotify notification group are
 closed, the fanotify group is released and its resources
@@ -606,7 +813,7 @@ are freed for reuse by the kernel.
 Upon
 .BR close (2),
 outstanding permission events will be set to allowed.
-.SS /proc/[pid]/fdinfo
+.SS /proc interfaces
 The file
 .I /proc/[pid]/fdinfo/[fd]
 contains information about fanotify marks for file descriptor
@@ -616,6 +823,37 @@ of process
 See
 .BR proc (5)
 for details.
+.PP
+Since Linux 5.13,
+.\" commit 5b8fea65d197f408bb00b251c70d842826d6b70b
+the following interfaces can be used to control the amount of
+kernel resources consumed by fanotify:
+.TP
+.I /proc/sys/fs/fanotify/max_queued_events
+The value in this file is used when an application calls
+.BR fanotify_init (2)
+to set an upper limit on the number of events that can be
+queued to the corresponding fanotify group.
+Events in excess of this limit are dropped, but an
+.B FAN_Q_OVERFLOW
+event is always generated.
+Prior to Linux kernel 5.13,
+.\" commit 5b8fea65d197f408bb00b251c70d842826d6b70b
+the hardcoded limit was 16384 events.
+.TP
+.I /proc/sys/fs/fanotify/max_user_group
+This specifies an upper limit on the number of fanotify groups
+that can be created per real user ID.
+Prior to Linux kernel 5.13,
+.\" commit 5b8fea65d197f408bb00b251c70d842826d6b70b
+the hardcoded limit was 128 groups per user.
+.TP
+.I /proc/sys/fs/fanotify/max_user_marks
+This specifies an upper limit on the number of fanotify marks
+that can be created per real user ID.
+Prior to Linux kernel 5.13,
+.\" commit 5b8fea65d197f408bb00b251c70d842826d6b70b
+the hardcoded limit was 8192 marks per group (not per user).
 .SH ERRORS
 In addition to the usual errors for
 .BR read (2),
@@ -672,7 +910,7 @@ written.
 The fanotify API was introduced in version 2.6.36 of the Linux kernel and
 enabled in version 2.6.37.
 Fdinfo support was added in version 3.8.
-.SH CONFORMING TO
+.SH STANDARDS
 The fanotify API is Linux-specific.
 .SH NOTES
 The fanotify API is available only if the kernel was built with the
@@ -733,7 +971,7 @@ the following bugs exist:
 .IP * 3
 On Linux, a filesystem object may be accessible through multiple paths,
 for example, a part of a filesystem may be remounted using the
-.IR \-\-bind
+.I \-\-bind
 option of
 .BR mount (8).
 A listener that marked a mount will be notified only of events that were
@@ -1216,12 +1454,3 @@ main(int argc, char *argv[])
 .BR fanotify_init (2),
 .BR fanotify_mark (2),
 .BR inotify (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

@@ -1,11 +1,6 @@
 .\" Copyright (c) 1997 John S. Kallal (kallal@voicenet.com)
 .\"
-.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
-.\" This is free documentation; you can redistribute it and/or
-.\" modify it under the terms of the GNU General Public License as
-.\" published by the Free Software Foundation; either version 2 of
-.\" the License, or (at your option) any later version.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" Some changes by tytso and aeb.
 .\"
@@ -14,7 +9,7 @@
 .\" 2008-06-20, George Spelvin <linux@horizon.com>,
 .\"             Matt Mackall <mpm@selenic.com>
 .\"
-.TH RANDOM 4 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH RANDOM 4 2022-09-09 "Linux man-pages (unreleased)"
 .SH NAME
 random, urandom \- kernel random number source devices
 .SH SYNOPSIS
@@ -55,7 +50,7 @@ Reads from this device do not block (i.e., the CPU is not yielded),
 but can incur an appreciable delay when requesting large amounts of data.
 .PP
 When read during early boot time,
-.IR /dev/urandom
+.I /dev/urandom
 may return data prior to the entropy pool being initialized.
 .\" This is a real problem; see
 .\" commit 9b4d008787f864f17d008c9c15bbe8a0f7e2fc24
@@ -73,12 +68,17 @@ high quality randomness, and can afford indeterminate delays.
 .PP
 When the entropy pool is empty, reads from \fI/dev/random\fP will block
 until additional environmental noise is gathered.
-If
+Since Linux 5.6, the
+.B O_NONBLOCK
+flag is ignored as
+.I /dev/random
+will no longer block except during early boot process.
+In earlier versions, if
 .BR open (2)
 is called for
 .I /dev/random
 with the
-.BR O_NONBLOCK
+.B O_NONBLOCK
 flag, a subsequent
 .BR read (2)
 will not block if the requested number of bytes is not available.
@@ -110,12 +110,12 @@ Since Linux 3.16,
 a
 .BR read (2)
 from
-.IR /dev/urandom
+.I /dev/urandom
 will return at most 32\ MB.
 A
 .BR read (2)
 from
-.IR /dev/random
+.I /dev/random
 will return at most 512 bytes
 .\" SEC_XFER_SIZE in drivers/char/random.c
 (340 bytes on Linux kernels before version 2.6.12).
@@ -128,9 +128,9 @@ read from both files, but it will not make reads from
 \fI/dev/random\fP faster.
 .SS Usage
 The
-.IR /dev/random
+.I /dev/random
 interface is considered a legacy interface, and
-.IR /dev/urandom
+.I /dev/urandom
 is preferred and sufficient in all use cases, with the exception of
 applications which require randomness during early boot time; for
 these applications,
@@ -212,7 +212,7 @@ dd if=/dev/urandom of=$random_seed count=1 bs=$bytes
 .in
 .PP
 In the above examples, we assume Linux 2.6.0 or later, where
-.IR /proc/sys/kernel/random/poolsize
+.I /proc/sys/kernel/random/poolsize
 returns the size of the entropy pool in bits (see below).
 .\"
 .SS /proc interfaces
@@ -281,21 +281,21 @@ The
 capability is required for all requests except
 .BR RNDGETENTCNT .
 .TP
-.BR RNDGETENTCNT
+.B RNDGETENTCNT
 Retrieve the entropy count of the input pool, the contents will be the same
 as the
 .I entropy_avail
 file under proc.
 The result will be stored in the int pointed to by the argument.
 .TP
-.BR RNDADDTOENTCNT
+.B RNDADDTOENTCNT
 Increment or decrement the entropy count of the input pool
 by the value pointed to by the argument.
 .TP
-.BR RNDGETPOOL
+.B RNDGETPOOL
 Removed in Linux 2.6.9.
 .TP
-.BR RNDADDENTROPY
+.B RNDADDENTROPY
 Add some additional entropy to the input pool,
 incrementing the entropy count.
 This differs from writing to \fI/dev/random\fP or \fI/dev/urandom\fP,
@@ -345,12 +345,3 @@ may return data prior to the entropy pool being initialized.
 .BR random (7)
 .PP
 RFC\ 1750, "Randomness Recommendations for Security"
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

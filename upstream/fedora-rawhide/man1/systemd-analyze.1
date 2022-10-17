@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 251" "systemd-analyze"
+.TH "SYSTEMD\-ANALYZE" "1" "" "systemd 252" "systemd-analyze"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -55,6 +55,8 @@ systemd-analyze \- Analyze and debug system manager
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] cat\-config \fINAME\fR|\fIPATH\fR...
 .HP \w'\fBsystemd\-analyze\fR\ 'u
+\fBsystemd\-analyze\fR [OPTIONS...] compare\-versions \fIVERSION1\fR [\fIOP\fR] \fIVERSION2\fR
+.HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] verify [\fIFILE\fR...]
 .HP \w'\fBsystemd\-analyze\fR\ 'u
 \fBsystemd\-analyze\fR [OPTIONS...] security \fIUNIT\fR...
@@ -68,7 +70,7 @@ If no command is passed,
 is implied\&.
 .SS "systemd\-analyze time"
 .PP
-This command prints the time spent in the kernel before userspace has been reached, the time spent in the initial RAM disk (initrd) before normal system userspace has been reached, and the time normal system userspace took to initialize\&. Note that these measurements simply measure the time passed up to the point where all system services have been spawned, but not necessarily until they fully finished initialization or the disk is idle\&.
+This command prints the time spent in the kernel before userspace has been reached, the time spent in the initrd before normal system userspace has been reached, and the time normal system userspace took to initialize\&. Note that these measurements simply measure the time passed up to the point where all system services have been spawned, but not necessarily until they fully finished initialization or the disk is idle\&.
 .PP
 \fBExample\ \&1.\ \&Show how long the boot took\fR
 .sp
@@ -123,7 +125,7 @@ $ systemd\-analyze blame
 .SS "systemd\-analyze critical\-chain [\fIUNIT\fR\&.\&.\&.]"
 .PP
 This command prints a tree of the time\-critical chain of units (for each of the specified
-\fIUNIT\fRs or for the default target otherwise)\&. The time after the unit is active or started is printed after the "@" character\&. The time the unit takes to start is printed after the "+" character\&. Note that the output might be misleading as the initialization of services might depend on socket activation and because of the parallel execution of units\&. Also, similar to the
+\fIUNIT\fRs or for the default target otherwise)\&. The time after the unit is active or started is printed after the "@" character\&. The time the unit takes to start is printed after the "+" character\&. Note that the output might be misleading as the initialization of services might depend on socket activation and because of the parallel execution of units\&. Also, similarly to the
 \fBblame\fR
 command, this only takes into account the time units spent in
 "activating"
@@ -511,6 +513,69 @@ NAutoVTs=8
 .if n \{\
 .RE
 .\}
+.SS "systemd\-analyze compare\-versions \fIVERSION1\fR [\fIOP\fR] \fIVERSION2\fR"
+.PP
+This command has two distinct modes of operation, depending on whether the operator
+\fIOP\fR
+is specified\&.
+.PP
+In the first mode \(em when
+\fIOP\fR
+is not specified \(em it will compare the two version strings and print either
+"\fIVERSION1\fR < \fIVERSION2\fR", or
+"\fIVERSION1\fR == \fIVERSION2\fR", or
+"\fIVERSION1\fR > \fIVERSION2\fR"
+as appropriate\&.
+.PP
+The exit status is
+\fB0\fR
+if the versions are equal,
+\fB11\fR
+if the version of the right is smaller, and
+\fB12\fR
+if the version of the left is smaller\&. (This matches the convention used by
+\fBrpmdev\-vercmp\fR\&.)
+.PP
+In the second mode \(em when
+\fIOP\fR
+is specified \(em it will compare the two version strings using the operation
+\fIOP\fR
+and return
+\fB0\fR
+(success) if they condition is satisfied, and
+\fB1\fR
+(failure) otherwise\&.
+\fBOP\fR
+may be
+\fBlt\fR,
+\fBle\fR,
+\fBeq\fR,
+\fBne\fR,
+\fBge\fR,
+\fBgt\fR\&. In this mode, no output is printed\&. (This matches the convention used by
+\fBdpkg\fR(1)
+\fB\-\-compare\-versions\fR\&.)
+.PP
+\fBExample\ \&16.\ \&Compare versions of a package\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ systemd\-analyze compare\-versions systemd\-250~rc1\&.fc36\&.aarch64 systemd\-251\&.fc36\&.aarch64
+systemd\-250~rc1\&.fc36\&.aarch64 < systemd\-251\&.fc36\&.aarch64
+$ echo $?
+12
+
+$ systemd\-analyze compare\-versions 1 lt 2; echo $?
+0
+$ systemd\-analyze compare\-versions 1 ge 2; echo $?
+1
+        
+.fi
+.if n \{\
+.RE
+.\}
 .SS "systemd\-analyze verify \fIFILE\fR\&.\&.\&."
 .PP
 This command will load unit files and print warnings if any errors are detected\&. Files specified on the command line will be loaded, but also any other units referenced by them\&. A unit\*(Aqs name on disk can be overridden by specifying an alias after a colon; see below for an example\&. The full unit search path is formed by combining the directories for all command line arguments, and the usual unit load paths\&. The variable
@@ -568,7 +633,7 @@ commands listed in
 and similar which are not found in the system or not executable\&.
 .RE
 .PP
-\fBExample\ \&16.\ \&Misspelt directives\fR
+\fBExample\ \&17.\ \&Misspelt directives\fR
 .sp
 .if n \{\
 .RS 4
@@ -597,7 +662,7 @@ user\&.slice: man nosuchfile(1) command failed with code 16
 .RE
 .\}
 .PP
-\fBExample\ \&17.\ \&Missing service units\fR
+\fBExample\ \&18.\ \&Missing service units\fR
 .sp
 .if n \{\
 .RS 4
@@ -622,7 +687,7 @@ Service b@0\&.service not loaded, b\&.socket cannot be started\&.
 .RE
 .\}
 .PP
-\fBExample\ \&18.\ \&Aliasing a unit\fR
+\fBExample\ \&19.\ \&Aliasing a unit\fR
 .sp
 .if n \{\
 .RS 4
@@ -653,7 +718,7 @@ This command analyzes the security and sandboxing settings of one or more specif
 .PP
 Please note that many of the security and sandboxing settings individually can be circumvented \(em unless combined with others\&. For example, if a service retains the privilege to establish or undo mount points many of the sandboxing options can be undone by the service code itself\&. Due to that is essential that each service uses the most comprehensive and strict sandboxing and security settings possible\&. The tool will take into account some of these combinations and relationships between the settings, but not all\&. Also note that the security and sandboxing settings analyzed here only apply to the operations executed by the service code itself\&. If a service has access to an IPC system (such as D\-Bus) it might request operations from other services that are not subject to the same restrictions\&. Any comprehensive security and sandboxing analysis is hence incomplete if the IPC access policy is not validated too\&.
 .PP
-\fBExample\ \&19.\ \&Analyze systemd\-logind\&.service\fR
+\fBExample\ \&20.\ \&Analyze systemd\-logind\&.service\fR
 .sp
 .if n \{\
 .RS 4
@@ -677,7 +742,7 @@ This command will load the specified file(s), and if they are ELF objects (execu
 \m[blue]\fBPackaging Metadata\fR\m[]\&\s-2\u[1]\d\s+2
 documentation for more information\&.
 .PP
-\fBExample\ \&20.\ \&Table output\fR
+\fBExample\ \&21.\ \&Table output\fR
 .sp
 .if n \{\
 .RS 4
@@ -1283,7 +1348,18 @@ Do not pipe output into a pager\&.
 .RE
 .SH "EXIT STATUS"
 .PP
-On success, 0 is returned, a non\-zero failure code otherwise\&.
+For most commands, 0 is returned on success, and a non\-zero failure code otherwise\&.
+.PP
+With the verb
+\fBcompare\-versions\fR, in the two\-argument form,
+\fB12\fR,
+\fB0\fR,
+\fB11\fR
+is returned if the second version string is respectively larger, equal, or smaller to the first\&. In the three\-argument form,
+\fB0\fR
+or
+\fB1\fR
+if the condition is respectively true or false\&.
 .SH "ENVIRONMENT"
 .PP
 \fI$SYSTEMD_LOG_LEVEL\fR
@@ -1477,7 +1553,7 @@ and other conditions\&.
 .RE
 .SH "EXAMPLES"
 .PP
-\fBExample\ \&21.\ \&JSON Policy\fR
+\fBExample\ \&22.\ \&JSON Policy\fR
 .PP
 The JSON file passed as a path parameter to
 \fB\-\-security\-policy=\fR

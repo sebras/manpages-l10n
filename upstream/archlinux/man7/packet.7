@@ -9,7 +9,7 @@
 .\"
 .\" $Id: packet.7,v 1.13 2000/08/14 08:03:45 ak Exp $
 .\"
-.TH PACKET  7 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PACKET 7 2022-09-09 "Linux man-pages (unreleased)"
 .SH NAME
 packet \- packet interface on device level
 .SH SYNOPSIS
@@ -34,7 +34,7 @@ for raw packets including the link-level header or
 .B SOCK_DGRAM
 for cooked packets with the link-level header removed.
 The link-level header information is available in a common format in a
-.IR sockaddr_ll
+.I sockaddr_ll
 structure.
 .I protocol
 is the IEEE 802.3 protocol number in network byte order.
@@ -47,6 +47,14 @@ is set to
 then all protocols are received.
 All incoming packets of that protocol type will be passed to the packet
 socket before they are passed to the protocols implemented in the kernel.
+If
+.I protocol
+is set to zero,
+no packets are received.
+.BR bind (2)
+can optionally be called with a nonzero
+.I sll_protocol
+to start receiving packets for the protocols specified.
 .PP
 In order to create a packet socket, a process must have the
 .B CAP_NET_RAW
@@ -88,7 +96,7 @@ specifying an address in a
 .I struct sockaddr_ll
 to bind the packet socket to an interface.
 Fields used for binding are
-.IR sll_family
+.I sll_family
 (should be
 .BR AF_PACKET ),
 .IR sll_protocol ,
@@ -187,10 +195,10 @@ Packet socket options are configured by calling
 with level
 .BR SOL_PACKET .
 .TP
-.BR PACKET_ADD_MEMBERSHIP
+.B PACKET_ADD_MEMBERSHIP
 .PD 0
 .TP
-.BR PACKET_DROP_MEMBERSHIP
+.B PACKET_DROP_MEMBERSHIP
 .PD
 Packet sockets can be used to configure physical-layer multicasting
 and promiscuous mode.
@@ -299,20 +307,20 @@ modulo the number of sockets in the group, where a flow hash is a hash
 over network-layer address and optional transport-layer port fields.
 .IP *
 The load-balance mode
-.BR PACKET_FANOUT_LB
+.B PACKET_FANOUT_LB
 implements a round-robin algorithm.
 .IP *
-.BR PACKET_FANOUT_CPU
+.B PACKET_FANOUT_CPU
 selects the socket based on the CPU that the packet arrived on.
 .IP *
-.BR PACKET_FANOUT_ROLLOVER
+.B PACKET_FANOUT_ROLLOVER
 processes all data on a single socket, moving to the next when one
 becomes backlogged.
 .IP *
-.BR PACKET_FANOUT_RND
+.B PACKET_FANOUT_RND
 selects the socket using a pseudo-random number generator.
 .IP *
-.BR PACKET_FANOUT_QM
+.B PACKET_FANOUT_QM
 .\" commit 2d36097d26b5991d71a2cf4a20c1a158f0f1bfcd
 (available since Linux 3.14)
 selects the socket using the recorded queue_mapping of the received skb.
@@ -328,7 +336,7 @@ preserve order even in this case.
 Fanout mode and options are communicated in the second 16 bits of the
 integer option value.
 The flag
-.BR PACKET_FANOUT_FLAG_ROLLOVER
+.B PACKET_FANOUT_FLAG_ROLLOVER
 enables the roll over mechanism as a backup strategy: if the
 original fanout algorithm selects a backlogged socket, the packet
 rolls over to the next available one.
@@ -338,7 +346,7 @@ When a malformed packet is encountered on a transmit ring,
 the default is to reset its
 .I tp_status
 to
-.BR TP_STATUS_WRONG_FORMAT
+.B TP_STATUS_WRONG_FORMAT
 and abort the transmission immediately.
 The malformed packet blocks itself and subsequently enqueued packets from
 being sent.
@@ -349,7 +357,7 @@ reset to
 and the transmission process restarted via
 .BR send (2).
 However, if
-.BR PACKET_LOSS
+.B PACKET_LOSS
 is set, any malformed packet will be skipped, its
 .I tp_status
 reset to
@@ -361,7 +369,7 @@ By default, a packet receive ring writes packets immediately following the
 metadata structure and alignment padding.
 This integer option reserves additional headroom.
 .TP
-.BR PACKET_RX_RING
+.B PACKET_RX_RING
 Create a memory-mapped ring buffer for asynchronous packet reception.
 The packet socket reserves a contiguous region of application address
 space, lays it out into an array of packet slots and copies packets
@@ -395,7 +403,7 @@ ownership to the application.
 During normal operation, the new
 .I tp_status
 value has at least the
-.BR TP_STATUS_USER
+.B TP_STATUS_USER
 bit set to signal that a received packet has been stored.
 When the application has finished processing a packet, it transfers
 ownership of the slot back to the socket by setting
@@ -405,10 +413,10 @@ equal to
 .IP
 Packet sockets implement multiple variants of the packet ring.
 The implementation details are described in
-.IR Documentation/networking/packet_mmap.rst
+.I Documentation/networking/packet_mmap.rst
 in the Linux kernel source tree.
 .TP
-.BR PACKET_STATISTICS
+.B PACKET_STATISTICS
 Retrieve packet socket statistics in the form of a structure
 .IP
 .in +4n
@@ -431,19 +439,19 @@ By default, this is a software generated timestamp generated when the
 packet is copied into the ring.
 This integer option selects the type of timestamp.
 Besides the default, it support the two hardware formats described in
-.IR Documentation/networking/timestamping.rst
+.I Documentation/networking/timestamping.rst
 in the Linux kernel source tree.
 .TP
 .BR PACKET_TX_RING " (since Linux 2.6.31)"
 .\" commit 69e3c75f4d541a6eb151b3ef91f34033cb3ad6e1
 Create a memory-mapped ring buffer for packet transmission.
 This option is similar to
-.BR PACKET_RX_RING
+.B PACKET_RX_RING
 and takes the same arguments.
 The application writes packets into slots with
 .I tp_status
 equal to
-.BR TP_STATUS_AVAILABLE
+.B TP_STATUS_AVAILABLE
 and schedules them for transmission by changing
 .I tp_status
 to
@@ -466,13 +474,13 @@ On successful transmission, the socket resets
 to
 .BR TP_STATUS_AVAILABLE .
 It immediately aborts the transmission on error unless
-.BR PACKET_LOSS
+.B PACKET_LOSS
 is set.
 .TP
 .BR PACKET_VERSION " (with " PACKET_RX_RING "; since Linux 2.6.27)"
 .\" commit bbd6ef87c544d88c30e4b762b1b61ef267a7d279
 By default,
-.BR PACKET_RX_RING
+.B PACKET_RX_RING
 creates a packet receive ring of variant
 .BR TPACKET_V1 .
 To create another variant, configure the desired variant by setting this
@@ -584,7 +592,11 @@ Packet sockets are not subject to the input or output firewall chains.
 .SS Compatibility
 In Linux 2.0, the only way to get a packet socket was with the call:
 .PP
-    socket(AF_INET, SOCK_PACKET, protocol)
+.in +4n
+.EX
+socket(AF_INET, SOCK_PACKET, protocol)
+.EE
+.in
 .PP
 This is still supported, but deprecated and strongly discouraged.
 The main difference between the two methods is that
@@ -616,10 +628,9 @@ is the device name as a null-terminated string, for example, eth0.
 .PP
 This structure is obsolete and should not be used in new code.
 .SH BUGS
+.SS LLC header handling
 The IEEE 802.2/803.3 LLC handling could be considered as a bug.
-.PP
-Socket filters are not documented.
-.PP
+.SS MSG_TRUNC issues
 The
 .B MSG_TRUNC
 .BR recvmsg (2)
@@ -627,6 +638,37 @@ extension is an ugly hack and should be replaced by a control message.
 There is currently no way to get the original destination address of
 packets via
 .BR SOCK_DGRAM .
+.SS spkt_device device name truncation
+The
+.I spkt_device
+field of
+.I sockaddr_pkt
+has a size of 14 bytes,
+which is less than the constant
+.B IFNAMSIZ
+defined in
+.I <net/if.h>
+which is 16 bytes and describes the system limit for a network interface name.
+This means the names of network devices longer than 14 bytes
+will be truncated to fit into
+.IR spkt_device .
+All these lengths include the terminating null byte (\(aq\e0\(aq)).
+.PP
+Issues from this with old code typically show up with
+very long interface names used by the
+.B Predictable Network Interface Names
+feature enabled by default in many modern Linux distributions.
+.PP
+The preferred solution is to rewrite code to avoid
+.BR SOCK_PACKET .
+Possible user solutions are to disable
+.B Predictable Network Interface Names
+or to rename the interface to a name of at most 13 bytes,
+for example using the
+.BR ip (8)
+tool.
+.SS Documentation issues
+Socket filters are not documented.
 .\" .SH CREDITS
 .\" This man page was written by Andi Kleen with help from Matthew Wilcox.
 .\" AF_PACKET in Linux 2.2 was implemented
@@ -637,7 +679,8 @@ packets via
 .BR capabilities (7),
 .BR ip (7),
 .BR raw (7),
-.BR socket (7)
+.BR socket (7),
+.BR ip (8),
 .PP
 RFC\ 894 for the standard IP Ethernet encapsulation.
 RFC\ 1700 for the IEEE 802.3 IP encapsulation.
@@ -647,19 +690,10 @@ The
 include file for physical-layer protocols.
 .PP
 The Linux kernel source tree.
-.IR Documentation/networking/filter.rst
+.I Documentation/networking/filter.rst
 describes how to apply Berkeley Packet Filters to packet sockets.
-.IR tools/testing/selftests/net/psock_tpacket.c
+.I tools/testing/selftests/net/psock_tpacket.c
 contains example source code for all available versions of
-.BR PACKET_RX_RING
+.B PACKET_RX_RING
 and
 .BR PACKET_TX_RING .
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

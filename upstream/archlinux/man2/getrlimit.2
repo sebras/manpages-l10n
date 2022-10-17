@@ -1,27 +1,7 @@
 .\" Copyright (c) 1992 Drew Eckhardt, March 28, 1992
 .\" and Copyright (c) 2002, 2004, 2005, 2008, 2010 Michael Kerrisk
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Modified by Michael Haardt <michael@moria.de>
 .\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
@@ -61,9 +41,12 @@
 .\" 2008-05-07, mtk / Peter Zijlstra, Added description of RLIMIT_RTTIME
 .\" 2010-11-06, mtk: Added documentation of prlimit()
 .\"
-.TH GETRLIMIT 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH GETRLIMIT 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 getrlimit, setrlimit, prlimit \- get/set resource limits
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/resource.h>
@@ -259,26 +242,32 @@ This limit is enforced for
 .BR mq_open (3).
 Each message queue that the user creates counts (until it is removed)
 against this limit according to the formula:
+.RS 4
 .IP
-    Since Linux 3.5:
+Since Linux 3.5:
 .IP
+.in +4n
 .EX
-        bytes = attr.mq_maxmsg * sizeof(struct msg_msg) +
-                min(attr.mq_maxmsg, MQ_PRIO_MAX) *
-                      sizeof(struct posix_msg_tree_node)+
-                                /* For overhead */
-                attr.mq_maxmsg * attr.mq_msgsize;
-                                /* For message data */
+bytes = attr.mq_maxmsg * sizeof(struct msg_msg) +
+        MIN(attr.mq_maxmsg, MQ_PRIO_MAX) *
+              sizeof(struct posix_msg_tree_node)+
+                        /* For overhead */
+        attr.mq_maxmsg * attr.mq_msgsize;
+                        /* For message data */
 .EE
+.in
 .IP
-    Linux 3.4 and earlier:
+Linux 3.4 and earlier:
 .IP
+.in +4n
 .EX
-        bytes = attr.mq_maxmsg * sizeof(struct msg_msg *) +
-                                /* For overhead */
-                attr.mq_maxmsg * attr.mq_msgsize;
-                                /* For message data */
+bytes = attr.mq_maxmsg * sizeof(struct msg_msg *) +
+                        /* For overhead */
+        attr.mq_maxmsg * attr.mq_msgsize;
+                        /* For message data */
 .EE
+.in
+.RE
 .IP
 where
 .I attr
@@ -334,7 +323,7 @@ on BSD.)
 Since Linux 4.5,
 this limit also defines the maximum number of file descriptors that
 an unprivileged process (one without the
-.BR CAP_SYS_RESOURCE
+.B CAP_SYS_RESOURCE
 capability) may have "in flight" to other processes,
 by being passed across UNIX domain sockets.
 This limit applies to the
@@ -359,7 +348,8 @@ limit is not enforced for processes that have either the
 .B CAP_SYS_ADMIN
 or the
 .B CAP_SYS_RESOURCE
-capability.
+capability,
+or run with real user ID 0.
 .TP
 .B RLIMIT_RSS
 This is a limit (in bytes) on the process's resident set
@@ -467,15 +457,15 @@ and
 .BR getrlimit ().
 .PP
 If the
-.IR new_limit
-argument is a not NULL, then the
+.I new_limit
+argument is not NULL, then the
 .I rlimit
 structure to which it points is used to set new values for
 the soft and hard limits for
 .IR resource .
 If the
-.IR old_limit
-argument is a not NULL, then a successful call to
+.I old_limit
+argument is not NULL, then a successful call to
 .BR prlimit ()
 places the previous soft and hard limits for
 .I resource
@@ -535,7 +525,7 @@ capability is required to do this.
 The caller tried to increase the hard
 .B RLIMIT_NOFILE
 limit above the maximum defined by
-.IR /proc/sys/fs/nr_open
+.I /proc/sys/fs/nr_open
 (see
 .BR proc (5))
 .TP
@@ -572,7 +562,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 .BR getrlimit (),
 .BR setrlimit ():
 POSIX.1-2001, POSIX.1-2008, SVr4, 4.3BSD.
@@ -611,7 +601,7 @@ current consumption of that resource will succeed
 its consumption of the resource).
 .PP
 One can set the resource limits of the shell using the built-in
-.IR ulimit
+.I ulimit
 command
 .RI ( limit
 in
@@ -620,7 +610,7 @@ The shell's resource limits are inherited by the processes that
 it creates to execute commands.
 .PP
 Since Linux 2.6.24, the resource limits of any process can be inspected via
-.IR /proc/[pid]/limits ;
+.IR /proc/ pid /limits ;
 see
 .BR proc (5).
 .PP
@@ -687,7 +677,7 @@ Since Linux 2.6.12,
 .\" Subject: [PATCH 7/7] make RLIMIT_CPU/SIGXCPU per-process
 .\" Date: 2005-01-23 23:27:46 GMT
 if a process reaches its soft
-.BR RLIMIT_CPU
+.B RLIMIT_CPU
 limit and has a handler installed for
 .BR SIGXCPU ,
 then, in addition to invoking the signal handler,
@@ -698,13 +688,13 @@ at which point the process is killed.
 Other implementations
 .\" Tested Solaris 10, FreeBSD 9, OpenBSD 5.0
 do not change the
-.BR RLIMIT_CPU
+.B RLIMIT_CPU
 soft limit in this manner,
 and the Linux behavior is probably not standards conformant;
 portable applications should avoid relying on this Linux-specific behavior.
 .\" FIXME . https://bugzilla.kernel.org/show_bug.cgi?id=50951
 The Linux-specific
-.BR RLIMIT_RTTIME
+.B RLIMIT_RTTIME
 limit exhibits the same behavior when the soft limit is encountered.
 .PP
 Kernels before 2.4.22 did not diagnose the error
@@ -727,7 +717,7 @@ The glibc
 and
 .BR setrlimit ()
 wrapper functions use a 64-bit
-.IR rlim_t
+.I rlim_t
 data type, even on 32-bit platforms.
 However, the
 .I rlim_t
@@ -753,7 +743,7 @@ which specifies the maximum size to which a file can grow:
 to be useful, this limit must be represented using a type
 that is as wide as the type used to
 represent file offsets\(emthat is, as wide as a 64-bit
-.BR off_t
+.B off_t
 (assuming a program compiled with
 .IR _FILE_OFFSET_BITS=64 ).
 .PP
@@ -783,25 +773,23 @@ as wrapper functions that call
 The program below demonstrates the use of
 .BR prlimit ().
 .PP
+.\" SRC BEGIN (getrlimit.c)
 .EX
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
+#include <err.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/resource.h>
-
-#define errExit(msg) do { perror(msg); exit(EXIT_FAILURE); \e
-                        } while (0)
+#include <time.h>
 
 int
 main(int argc, char *argv[])
 {
-    struct rlimit old, new;
-    struct rlimit *newp;
-    pid_t pid;
+    pid_t          pid;
+    struct rlimit  old, new;
+    struct rlimit  *newp;
 
     if (!(argc == 2 || argc == 4)) {
         fprintf(stderr, "Usage: %s <pid> [<new\-soft\-limit> "
@@ -822,20 +810,21 @@ main(int argc, char *argv[])
        previous limit */
 
     if (prlimit(pid, RLIMIT_CPU, newp, &old) == \-1)
-        errExit("prlimit\-1");
+        err(EXIT_FAILURE, "prlimit\-1");
     printf("Previous limits: soft=%jd; hard=%jd\en",
-            (intmax_t) old.rlim_cur, (intmax_t) old.rlim_max);
+           (intmax_t) old.rlim_cur, (intmax_t) old.rlim_max);
 
     /* Retrieve and display new CPU time limit */
 
     if (prlimit(pid, RLIMIT_CPU, NULL, &old) == \-1)
-        errExit("prlimit\-2");
+        err(EXIT_FAILURE, "prlimit\-2");
     printf("New limits: soft=%jd; hard=%jd\en",
-            (intmax_t) old.rlim_cur, (intmax_t) old.rlim_max);
+           (intmax_t) old.rlim_cur, (intmax_t) old.rlim_max);
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR prlimit (1),
 .BR dup (2),
@@ -856,12 +845,3 @@ main(int argc, char *argv[])
 .BR cgroups (7),
 .BR credentials (7),
 .BR signal (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

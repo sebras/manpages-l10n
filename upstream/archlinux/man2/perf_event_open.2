@@ -1,32 +1,16 @@
 .\" Copyright (c) 2012, Vincent Weaver
 .\"
-.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-.\" This is free documentation; you can redistribute it and/or
-.\" modify it under the terms of the GNU General Public License as
-.\" published by the Free Software Foundation; either version 2 of
-.\" the License, or (at your option) any later version.
-.\"
-.\" The GNU General Public License's references to "object code"
-.\" and "executables" are to be interpreted as the output of any
-.\" document formatting or typesetting system, including
-.\" intermediate and printed output.
-.\"
-.\" This manual is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" This document is based on the perf_event.h header file, the
 .\" tools/perf/design.txt file, and a lot of bitter experience.
 .\"
-.TH PERF_EVENT_OPEN 2 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH PERF_EVENT_OPEN 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 perf_event_open \- set up performance monitoring
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#include <linux/perf_event.h>" "    /* Definition of " PERF_* " constants */"
@@ -165,7 +149,7 @@ at the same time as another thread calls
 then
 .BR execve (2).
 .TP
-.BR PERF_FLAG_FD_NO_GROUP
+.B PERF_FLAG_FD_NO_GROUP
 This flag tells the event to ignore the
 .I group_fd
 parameter except for the purpose of setting up output redirection
@@ -957,7 +941,7 @@ the time the counter is created (nor to any new children of
 existing children).
 .IP
 Inherit does not work for some combinations of
-.IR read_format
+.I read_format
 values, such as
 .BR PERF_FORMAT_GROUP .
 .TP
@@ -3070,9 +3054,9 @@ or
 .BR epoll (7).
 Alternatively, the overflow events can be captured via sa signal handler,
 by enabling I/O signaling on the file descriptor; see the discussion of the
-.BR F_SETOWN
+.B F_SETOWN
 and
-.BR F_SETSIG
+.B F_SETSIG
 operations in
 .BR fcntl (2).
 .PP
@@ -3261,7 +3245,7 @@ This allows pausing and resuming the event's ring-buffer.
 A paused ring-buffer does not prevent generation of samples,
 but simply discards them.
 The discarded samples are considered lost, and cause a
-.BR PERF_RECORD_LOST
+.B PERF_RECORD_LOST
 sample to be generated when possible.
 An overflow signal may still be triggered by the discarded sample
 even though the ring-buffer remains empty.
@@ -3640,7 +3624,7 @@ was introduced in Linux 2.6.31 but was called
 .BR perf_counter_open ().
 It was renamed in Linux 2.6.32.
 .\" commit cdd6c482c9ff9c55475ee7392ec8f672eddb7be6
-.SH CONFORMING TO
+.SH STANDARDS
 This
 .BR perf_event_open ()
 system call Linux-specific
@@ -3741,14 +3725,15 @@ The following is a short example that measures the total
 instruction count of a call to
 .BR printf (3).
 .PP
+.\" SRC BEGIN (perf_event_open.c)
 .EX
-#include <stdlib.h>
+#include <linux/perf_event.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <linux/perf_event.h>
-#include <asm/unistd.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 static long
 perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
@@ -3756,17 +3741,17 @@ perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
 {
     int ret;
 
-    ret = syscall(__NR_perf_event_open, hw_event, pid, cpu,
-                   group_fd, flags);
+    ret = syscall(SYS_perf_event_open, hw_event, pid, cpu,
+                  group_fd, flags);
     return ret;
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
-    struct perf_event_attr pe;
-    long long count;
-    int fd;
+    int                     fd;
+    long long               count;
+    struct perf_event_attr  pe;
 
     memset(&pe, 0, sizeof(pe));
     pe.type = PERF_TYPE_HARDWARE;
@@ -3795,6 +3780,7 @@ main(int argc, char *argv[])
     close(fd);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR perf (1),
 .BR fcntl (2),
@@ -3803,14 +3789,5 @@ main(int argc, char *argv[])
 .BR prctl (2),
 .BR read (2)
 .PP
-.IR Documentation/admin\-guide/perf\-security.rst
+.I Documentation/admin\-guide/perf\-security.rst
 in the kernel source tree
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

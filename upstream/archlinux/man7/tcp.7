@@ -93,7 +93,7 @@
 .\"	    commit cd8ae85299d54155702a56811b2e035e63064d3d
 .\"	    Author: Eric Dumazet <edumazet@google.com>
 .\"
-.TH TCP  7 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH TCP 7 2022-09-09 "Linux man-pages (unreleased)"
 .SH NAME
 tcp \- TCP protocol
 .SH SYNOPSIS
@@ -102,7 +102,7 @@ tcp \- TCP protocol
 .B #include <netinet/in.h>
 .B #include <netinet/tcp.h>
 .PP
-.B tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+.IB tcp_socket " = socket(AF_INET, SOCK_STREAM, 0);"
 .fi
 .SH DESCRIPTION
 This is an implementation of the TCP protocol defined in
@@ -423,6 +423,33 @@ option.
 .\" Since 2.4.0-test7
 Enable RFC\ 2883 TCP Duplicate SACK support.
 .TP
+.IR tcp_fastopen " (Bitmask; default: 0x1; since Linux 3.7)"
+Enables RFC\~7413 Fast Open support.
+The flag is used as a bitmap with the following values:
+.RS
+.TP
+.B 0x1
+Enables client side Fast Open support
+.TP
+.B 0x2
+Enables server side Fast Open support
+.TP
+.B 0x4
+Allows client side to transmit data in SYN without Fast Open option
+.TP
+.B 0x200
+Allows server side to accept SYN data without Fast Open option
+.TP
+.B 0x400
+Enables Fast Open on all listeners without
+.B TCP_FASTOPEN
+socket option
+.RE
+.TP
+.IR tcp_fastopen_key " (since Linux 3.7)"
+Set server side RFC\~7413 Fast Open key to generate Fast Open cookie
+when server side Fast Open support is enabled.
+.TP
 .IR tcp_ecn " (Integer; default: see below; since Linux 2.4)"
 .\" Since 2.4.0-test7
 Enable RFC\ 3168 Explicit Congestion Notification.
@@ -605,7 +632,11 @@ in
 .I include/net/tcp.h
 should be modified to keep
 .IP
-    TCP_SYNQ_HSIZE * 16 <= tcp_max_syn_backlog
+.in +4n
+.EX
+TCP_SYNQ_HSIZE * 16 <= tcp_max_syn_backlog
+.EE
+.in
 .IP
 and the kernel should be
 recompiled.
@@ -779,7 +810,11 @@ This is not used to limit the size of the receive buffer declared using
 on a socket.
 The default value is calculated using the formula
 .IP
-    max(87380, min(4\ MB, \fItcp_mem\fP[1]*PAGE_SIZE/128))
+.in +4n
+.EX
+max(87380, min(4\ MB, \fItcp_mem\fP[1]*PAGE_SIZE/128))
+.EE
+.in
 .IP
 (On Linux 2.4, the default is 87380*2 bytes,
 lowered to 87380 in low-memory systems).
@@ -984,7 +1019,11 @@ This is not used to limit the size of the send buffer declared using
 on a socket.
 The default value is calculated using the formula
 .IP
-    max(65536, min(4\ MB, \fItcp_mem\fP[1]*PAGE_SIZE/128))
+.in +4n
+.EX
+max(65536, min(4\ MB, \fItcp_mem\fP[1]*PAGE_SIZE/128))
+.EE
+.in
 .IP
 (On Linux 2.4, the default value is 128\ kB,
 lowered 64\ kB depending on low-memory systems.)
@@ -1026,13 +1065,13 @@ The argument for this option is a string.
 This option allows the caller to set the TCP congestion control
 algorithm to be used, on a per-socket basis.
 Unprivileged processes are restricted to choosing one of the algorithms in
-.IR tcp_allowed_congestion_control
+.I tcp_allowed_congestion_control
 (described above).
 Privileged processes
 .RB ( CAP_NET_ADMIN )
 can choose from any of the available congestion-control algorithms
 (see the description of
-.IR tcp_available_congestion_control
+.I tcp_available_congestion_control
 above).
 .TP
 .BR TCP_CORK " (since Linux 2.2)"
@@ -1157,11 +1196,11 @@ This option should not be used in code intended to be portable.
 .\" commit message.
 .\"
 This option takes an
-.IR "unsigned int"
+.I unsigned int
 as an argument.
 When the value is greater than 0,
 it specifies the maximum amount of time in milliseconds that transmitted
-data may remain unacknowledged, or bufferred data may remain untransmitted
+data may remain unacknowledged, or buffered data may remain untransmitted
 (due to zero window size) before TCP will forcibly close the
 corresponding connection and return
 .B ETIMEDOUT
@@ -1202,6 +1241,108 @@ Bound the size of the advertised window to this value.
 The kernel imposes a minimum size of SOCK_MIN_RCVBUF/2.
 This option should not be used in code intended to be
 portable.
+.TP
+.BR TCP_FASTOPEN " (since Linux 3.6)"
+This option enables Fast Open (RFC\~7413) on the listener socket.
+The value specifies the maximum length of pending SYNs
+(similar to the backlog argument in
+.BR listen (2)).
+Once enabled,
+the listener socket grants the TCP Fast Open cookie
+on incoming SYN with TCP Fast Open option.
+.IP
+More importantly it accepts the data in SYN with a valid Fast Open cookie
+and responds SYN-ACK acknowledging both the data and the SYN sequence.
+.BR accept (2)
+returns a socket that is available for read and write
+when the handshake has not completed yet.
+Thus the data exchange can commence before the handshake completes.
+This option requires enabling the server-side support on sysctl
+.I net.ipv4.tcp_fastopen
+(see above).
+For TCP Fast Open client-side support,
+see
+.BR send (2)
+.B MSG_FASTOPEN
+or
+.B TCP_FASTOPEN_CONNECT
+below.
+.TP
+.BR TCP_FASTOPEN_CONNECT " (since Linux 4.11)"
+This option enables an alternative way to perform Fast Open
+on the active side (client).
+When this option is enabled,
+.BR connect (2)
+would behave differently depending on
+if a Fast Open cookie is available for the destination.
+.IP
+If a cookie is not available (i.e. first contact to the destination),
+.BR connect (2)
+behaves as usual by sending a SYN immediately,
+except the SYN would include an empty Fast Open cookie option
+to solicit a cookie.
+.IP
+If a cookie is available,
+.BR connect (2)
+would return 0 immediately but the SYN transmission is deferred.
+A subsequent
+.BR write (2)
+or
+.BR sendmsg (2)
+would trigger a SYN with data plus cookie in the Fast Open option.
+In other words,
+the actual connect operation is deferred until data is supplied.
+.IP
+.B Note:
+While this option is designed for convenience,
+enabling it does change the behaviors and certain system calls might set
+different
+.I errno
+values.
+With cookie present,
+.BR write (2)
+or
+.BR sendmsg (2)
+must be called right after
+.BR connect (2)
+in order to send out SYN+data to complete 3WHS and establish connection.
+Calling
+.BR read (2)
+right after
+.BR connect (2)
+without
+.BR write (2)
+will cause the blocking socket to be blocked forever.
+.IP
+The application should either set
+.B TCP_FASTOPEN_CONNECT
+socket option before
+.BR write (2)
+or
+.BR sendmsg (2),
+or call
+.BR write (2)
+or
+.BR sendmsg (2)
+with
+.B MSG_FASTOPEN
+flag directly,
+instead of both on the same connection.
+.IP
+Here is the typical call flow with this new option:
+.IP
+.in +4n
+.EX
+s = socket();
+setsockopt(s, IPPROTO_TCP, TCP_FASTOPEN_CONNECT, 1, ...);
+connect(s);
+write(s); /* write() should always follow connect()
+           * in order to trigger SYN to go out. */
+read(s)/write(s);
+/* ... */
+close(s);
+.EE
+.in
 .SS Sockets API
 TCP provides limited support for out-of-band data,
 in the form of (a single byte of) urgent data.
@@ -1235,9 +1376,9 @@ argument of
 This flag causes the received bytes of data to be discarded,
 rather than passed back in a caller-supplied buffer.
 Since Linux 2.4.4,
-.BR MSG_TRUNC
+.B MSG_TRUNC
 also has this effect when used in conjunction with
-.BR MSG_OOB
+.B MSG_OOB
 to receive out-of-band data.
 .SS Ioctls
 The following
@@ -1404,12 +1545,3 @@ RFC\ 3168 for a description of Explicit Congestion Notification.
 RFC\ 2581 for TCP congestion control algorithms.
 .br
 RFC\ 2018 and RFC\ 2883 for SACK and extensions to SACK.
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

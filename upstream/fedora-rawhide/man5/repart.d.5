@@ -1,5 +1,5 @@
 '\" t
-.TH "REPART\&.D" "5" "" "systemd 251" "repart.d"
+.TH "REPART\&.D" "5" "" "systemd 252" "repart.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -372,7 +372,8 @@ The textual label to assign to the partition if none is assigned yet\&. Note tha
 .PP
 \fIUUID=\fR
 .RS 4
-The UUID to assign to the partition if none is assigned yet\&. Note that this setting is not used for matching\&. It is also not used when a UUID is already set for an existing partition\&. It is thus only used when a partition is newly created or when an existing one had a all\-zero UUID set\&. If not specified a UUID derived from the partition type is automatically used\&.
+The UUID to assign to the partition if none is assigned yet\&. Note that this setting is not used for matching\&. It is also not used when a UUID is already set for an existing partition\&. It is thus only used when a partition is newly created or when an existing one had a all\-zero UUID set\&. If set to
+"null", the UUID is set to all zeroes\&. If not specified a UUID derived from the partition type is automatically used\&.
 .RE
 .PP
 \fIPriority=\fR
@@ -398,8 +399,7 @@ with the same value in order to fixate the size to one value, in which case the 
 \fIPaddingWeight=\fR
 .RS 4
 Similar to
-\fIWeight=\fR
-but sets a weight for the free space after the partition (the "padding")\&. When distributing available space the weights of all partitions and all defined padding is summed, and then each partition and padding gets the fraction defined by its weight\&. Defaults to 0, i\&.e\&. by default no padding is applied\&.
+\fIWeight=\fR, but sets a weight for the free space after the partition (the "padding")\&. When distributing available space the weights of all partitions and all defined padding is summed, and then each partition and padding gets the fraction defined by its weight\&. Defaults to 0, i\&.e\&. by default no padding is applied\&.
 .sp
 Padding is useful if empty space shall be left for later additions or a safety margin at the end of the device or between partitions\&.
 .RE
@@ -474,16 +474,15 @@ or
 Takes a file system name, such as
 "ext4",
 "btrfs",
-"xfs"
-or
-"vfat", or the special value
+"xfs",
+"vfat",
+"squashfs", or the special value
 "swap"\&. If specified and the partition is newly created it is formatted with the specified file system (or as swap device)\&. The file system UUID and label are automatically derived from the partition UUID and label\&. If this option is used, the size allocation algorithm is slightly altered: the partition is created as least as big as required for the minimal file system of the specified type (or 4KiB if the minimal size is not known)\&.
 .sp
 This option has no effect if the partition already exists\&.
 .sp
-Similar to the behaviour of
-\fICopyBlocks=\fR
-the file system is formatted before the partition is created, ensuring that the partition only ever exists with a fully initialized file system\&.
+Similarly to the behaviour of
+\fICopyBlocks=\fR, the file system is formatted before the partition is created, ensuring that the partition only ever exists with a fully initialized file system\&.
 .sp
 This option cannot be combined with
 \fICopyBlocks=\fR\&.
@@ -590,6 +589,47 @@ are increased by the space necessary for the LUKS2 superblock (see above)\&.
 This option has no effect if the partition already exists\&.
 .RE
 .PP
+\fIVerity=\fR
+.RS 4
+Takes one of
+"off",
+"data",
+"hash"
+or
+"signature"\&. Defaults to
+"off"\&. If set to
+"off"
+or
+"data", the partition is populated with content as specified by
+\fICopyBlocks=\fR
+or
+\fICopyFiles=\fR\&. If set to
+"hash", the partition will be populated with verity hashes from the matching verity data partition\&. If set to
+"signature", The partition will be populated with a JSON object containing a signature of the verity root hash of the matching verity hash partition\&.
+.sp
+A matching verity partition is a partition with the same verity match key (as configured with
+\fIVerityMatchKey=\fR)\&.
+.sp
+If not explicitly configured, the data partition\*(Aqs UUID will be set to the first 128 bits of the verity root hash\&. Similarly, if not configured, the hash partition\*(Aqs UUID will be set to the final 128 bits of the verity root hash\&. The verity root hash itself will be included in the output of
+\fBsystemd\-repart\fR\&.
+.sp
+This option has no effect if the partition already exists\&.
+.sp
+Usage of this option in combination with
+\fIEncrypt=\fR
+is not supported\&.
+.sp
+For each unique
+\fIVerityMatchKey=\fR
+value, a single verity data partition ("Verity=data") and a single verity hash partition ("Verity=hash") must be defined\&.
+.RE
+.PP
+\fIVerityMatchKey=\fR
+.RS 4
+Takes a short, user\-chosen identifier string\&. This setting is used to find sibling verity partitions for the current verity partition\&. See the description for
+\fIVerity=\fR\&.
+.RE
+.PP
 \fIFactoryReset=\fR
 .RS 4
 Takes a boolean argument\&. If specified the partition is marked for removal during a factory reset operation\&. This functionality is useful to implement schemes where images can be reset into their original state by removing partitions and creating them anew\&. Defaults to off\&.
@@ -641,13 +681,27 @@ defaults to on for Verity partition types, and off for all others\&.
 \fIGrowFileSystem=\fR
 defaults to on for all partition types that support it, except if the partition is marked read\-only (and thus effectively, defaults to off for Verity partitions)\&.
 .RE
+.PP
+\fISplitName=\fR
+.RS 4
+Configures the suffix to append to split artifacts when the
+\fB\-\-split\fR
+option of
+\fBsystemd\-repart\fR
+is used\&. Simple specifier expansion is supported, see below\&. Defaults to
+"%t"\&. To disable split artifact generation for a partition, set
+\fISplitName=\fR
+to
+"\-"\&.
+.RE
 .SH "SPECIFIERS"
 .PP
 Specifiers may be used in the
 \fILabel=\fR,
 \fICopyBlocks=\fR,
 \fICopyFiles=\fR,
-\fIMakeDirectories=\fR
+\fIMakeDirectories=\fR,
+\fISplitName=\fR
 settings\&. The following expansions are understood:
 .sp
 .it 1 an-trap
@@ -788,6 +842,61 @@ Use "%%" in place of "%" to specify a single percent sign\&.
 T}
 .TE
 .sp 1
+.PP
+Additionally, for the
+\fISplitName=\fR
+setting, the following specifiers are also understood:
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.B Table\ \&3.\ \&Specifiers available
+.TS
+allbox tab(:);
+lB lB lB.
+T{
+Specifier
+T}:T{
+Meaning
+T}:T{
+Details
+T}
+.T&
+l l l
+l l l
+l l l
+l l l.
+T{
+"%T"
+T}:T{
+Partition Type UUID
+T}:T{
+The partition type UUID, as configured with \fIType=\fR
+T}
+T{
+"%t"
+T}:T{
+Partition Type Identifier
+T}:T{
+The partition type identifier corresponding to the partition type UUID
+T}
+T{
+"%U"
+T}:T{
+Partition UUID
+T}:T{
+The partition UUID, as configured with \fIUUID=\fR
+T}
+T{
+"%n"
+T}:T{
+Partition Number
+T}:T{
+The partition number assigned to the partition
+T}
+.TE
+.sp 1
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Grow the root partition to the full disk size at first boot\fR
@@ -880,6 +989,40 @@ The definitions above cover the "A" set of root partition (of a fixed 512M size)
 .nf
 # ln \-s 50\-root\&.conf /usr/lib/repart\&.d/70\-root\-b\&.conf
 # ln \-s 60\-root\-verity\&.conf /usr/lib/repart\&.d/80\-root\-verity\-b\&.conf
+.fi
+.if n \{\
+.RE
+.\}
+
+.PP
+\fBExample\ \&4.\ \&Create a data and verity partition from a OS tree\fR
+.PP
+Assuming we have an OS tree at /var/tmp/os\-tree that we want to package in a root partition together with a matching verity partition, we can do so as follows:
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+# 50\-root\&.conf
+[Partition]
+Type=root
+CopyFiles=/var/tmp/os\-tree
+Verity=data
+VerityMatchKey=root
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+.if n \{\
+.RS 4
+.\}
+.nf
+# 60\-root\-verity\&.conf
+[Partition]
+Type=root\-verity
+Verity=hash
+VerityMatchKey=root
 .fi
 .if n \{\
 .RE

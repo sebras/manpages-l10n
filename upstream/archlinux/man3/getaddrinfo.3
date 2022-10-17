@@ -3,27 +3,7 @@
 .\" A few pieces of an earlier version remain:
 .\" Copyright 2000, Sam Varshavchik <mrsam@courier-mta.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" References: RFC 2553
 .\"
@@ -41,10 +21,13 @@
 .\" FIXME . glibc's 2.9 NEWS file documents DCCP and UDP-lite support
 .\"           and is SCTP support now also there?
 .\"
-.TH GETADDRINFO 3 2021-08-27 "GNU" "Linux Programmer's Manual"
+.TH GETADDRINFO 3 2022-09-15 "Linux man-pages (unreleased)"
 .SH NAME
 getaddrinfo, freeaddrinfo, gai_strerror \- network address and
 service translation
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/types.h>
@@ -145,7 +128,7 @@ as follows:
 .I ai_family
 This field specifies the desired address family for the returned addresses.
 Valid values for this field include
-.BR AF_INET
+.B AF_INET
 and
 .BR AF_INET6 .
 The value
@@ -160,7 +143,7 @@ and
 .TP
 .I ai_socktype
 This field specifies the preferred socket type, for example
-.BR SOCK_STREAM
+.B SOCK_STREAM
 or
 .BR SOCK_DGRAM .
 Specifying 0 in this field indicates that socket addresses of any type
@@ -231,7 +214,7 @@ connections.
 The returned socket address will contain the "wildcard address"
 .RB ( INADDR_ANY
 for IPv4 addresses,
-.BR IN6ADDR_ANY_INIT
+.B IN6ADDR_ANY_INIT
 for IPv6 address).
 The wildcard address is used by applications (typically servers)
 that intend to accept connections on any of the host's network addresses.
@@ -256,7 +239,7 @@ is NULL,
 then the network address will be set to the loopback interface address
 .RB ( INADDR_LOOPBACK
 for IPv4 addresses,
-.BR IN6ADDR_LOOPBACK_INIT
+.B IN6ADDR_LOOPBACK_INIT
 for IPv6 address);
 this is used by applications that intend to communicate
 with peers running on the same host.
@@ -311,7 +294,7 @@ the linked list may have more than one
 .I addrinfo
 structure, including: the network host is multihomed, accessible
 over multiple protocols (e.g., both
-.BR AF_INET
+.B AF_INET
 and
 .BR AF_INET6 );
 or the same service is available from multiple socket types (one
@@ -325,7 +308,7 @@ The sorting function used within
 .BR getaddrinfo ()
 is defined in RFC\ 3484; the order can be tweaked for a particular
 system by editing
-.IR /etc/gai.conf
+.I /etc/gai.conf
 (available since glibc 2.5).
 .PP
 If
@@ -567,7 +550,7 @@ or the error could occur if
 was not NULL, and
 .I hints.ai_socktype
 was
-.BR SOCK_RAW
+.B SOCK_RAW
 (a socket type that does not support the concept of services).
 .TP
 .B EAI_SOCKTYPE
@@ -577,7 +560,7 @@ This could occur, for example, if
 and
 .I hints.ai_protocol
 are inconsistent (e.g.,
-.BR SOCK_DGRAM
+.B SOCK_DGRAM
 and
 .BR IPPROTO_TCP ,
 respectively).
@@ -614,7 +597,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 The
 .BR getaddrinfo ()
@@ -640,7 +623,7 @@ as NULL should cause
 .I ai_flags
 to be assumed as 0.
 The GNU C library instead assumes a value of
-.BR "(AI_V4MAPPED\ |\ AI_ADDRCONFIG)"
+.B (AI_V4MAPPED\~|\~AI_ADDRCONFIG)
 for this case,
 since this value is considered an improvement on the specification.
 .SH EXAMPLES
@@ -659,27 +642,28 @@ and
 The programs are an echo server and client for UDP datagrams.
 .SS Server program
 \&
+.\" SRC BEGIN (server.c)
 .EX
-#include <sys/types.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <netdb.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define BUF_SIZE 500
 
 int
 main(int argc, char *argv[])
 {
-    struct addrinfo hints;
-    struct addrinfo *result, *rp;
-    int sfd, s;
-    struct sockaddr_storage peer_addr;
-    socklen_t peer_addr_len;
-    ssize_t nread;
-    char buf[BUF_SIZE];
+    int                      sfd, s;
+    char                     buf[BUF_SIZE];
+    ssize_t                  nread;
+    socklen_t                peer_addrlen;
+    struct addrinfo          hints;
+    struct addrinfo          *result, *rp;
+    struct sockaddr_storage  peer_addr;
 
     if (argc != 2) {
         fprintf(stderr, "Usage: %s port\en", argv[0]);
@@ -708,7 +692,7 @@ main(int argc, char *argv[])
 
     for (rp = result; rp != NULL; rp = rp\->ai_next) {
         sfd = socket(rp\->ai_family, rp\->ai_socktype,
-                rp\->ai_protocol);
+                     rp\->ai_protocol);
         if (sfd == \-1)
             continue;
 
@@ -728,52 +712,55 @@ main(int argc, char *argv[])
     /* Read datagrams and echo them back to sender. */
 
     for (;;) {
-        peer_addr_len = sizeof(peer_addr);
+        peer_addrlen = sizeof(peer_addr);
         nread = recvfrom(sfd, buf, BUF_SIZE, 0,
-                (struct sockaddr *) &peer_addr, &peer_addr_len);
+                         (struct sockaddr *) &peer_addr, &peer_addrlen);
         if (nread == \-1)
             continue;               /* Ignore failed request */
 
         char host[NI_MAXHOST], service[NI_MAXSERV];
 
         s = getnameinfo((struct sockaddr *) &peer_addr,
-                        peer_addr_len, host, NI_MAXHOST,
+                        peer_addrlen, host, NI_MAXHOST,
                         service, NI_MAXSERV, NI_NUMERICSERV);
         if (s == 0)
             printf("Received %zd bytes from %s:%s\en",
-                    nread, host, service);
+                   nread, host, service);
         else
             fprintf(stderr, "getnameinfo: %s\en", gai_strerror(s));
 
-        if (sendto(sfd, buf, nread, 0,
-                    (struct sockaddr *) &peer_addr,
-                    peer_addr_len) != nread)
+        if (sendto(sfd, buf, nread, 0, (struct sockaddr *) &peer_addr,
+                   peer_addrlen) != nread)
+        {
             fprintf(stderr, "Error sending response\en");
+        }
     }
 }
 .EE
+.\" SRC END
 .SS Client program
 \&
+.\" SRC BEGIN (client.c)
 .EX
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define BUF_SIZE 500
 
 int
 main(int argc, char *argv[])
 {
-    struct addrinfo hints;
-    struct addrinfo *result, *rp;
-    int sfd, s;
-    size_t len;
-    ssize_t nread;
-    char buf[BUF_SIZE];
+    int              sfd, s;
+    char             buf[BUF_SIZE];
+    size_t           len;
+    ssize_t          nread;
+    struct addrinfo  hints;
+    struct addrinfo  *result, *rp;
 
     if (argc < 3) {
         fprintf(stderr, "Usage: %s host port msg...\en", argv[0]);
@@ -821,13 +808,13 @@ main(int argc, char *argv[])
     /* Send remaining command\-line arguments as separate
        datagrams, and read responses from server. */
 
-    for (int j = 3; j < argc; j++) {
+    for (size_t j = 3; j < argc; j++) {
         len = strlen(argv[j]) + 1;
                 /* +1 for terminating null byte */
 
         if (len > BUF_SIZE) {
             fprintf(stderr,
-                    "Ignoring long message in argument %d\en", j);
+                    "Ignoring long message in argument %zu\en", j);
             continue;
         }
 
@@ -848,6 +835,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .\" .BR getipnodebyaddr (3),
 .\" .BR getipnodebyname (3),
@@ -858,12 +846,3 @@ main(int argc, char *argv[])
 .BR gai.conf (5),
 .BR hostname (7),
 .BR ip (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

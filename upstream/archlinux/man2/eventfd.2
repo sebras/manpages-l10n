@@ -1,27 +1,16 @@
 .\" Copyright (C) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" starting from a version by Davide Libenzi <davidel@xmailserver.org>
 .\"
-.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
-.\" This program is free software; you can redistribute it and/or modify
-.\" it under the terms of the GNU General Public License as published by
-.\" the Free Software Foundation; either version 2 of the License, or
-.\" (at your option) any later version.
-.\"
-.\" This program is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" 2008-10-10, mtk: describe eventfd2(), and EFD_NONBLOCK and EFD_CLOEXEC
 .\"
-.TH EVENTFD 2 2021-03-22 Linux "Linux Programmer's Manual"
+.TH EVENTFD 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 eventfd \- create a file descriptor for event notification
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/eventfd.h>
@@ -45,7 +34,7 @@ returns a new file descriptor that can be used to refer to the
 eventfd object.
 .PP
 The following values may be bitwise ORed in
-.IR flags
+.I flags
 to change the behavior of
 .BR eventfd ():
 .TP
@@ -61,7 +50,7 @@ for reasons why this may be useful.
 .TP
 .BR EFD_NONBLOCK " (since Linux 2.6.27)"
 Set the
-.BR O_NONBLOCK
+.B O_NONBLOCK
 file status flag on the open file description (see
 .BR open (2))
 referred to by the new file descriptor.
@@ -99,19 +88,19 @@ The semantics of
 .BR read (2)
 depend on whether the eventfd counter currently has a nonzero value
 and whether the
-.BR EFD_SEMAPHORE
+.B EFD_SEMAPHORE
 flag was specified when creating the eventfd file descriptor:
 .RS
 .IP * 3
 If
-.BR EFD_SEMAPHORE
+.B EFD_SEMAPHORE
 was not specified and the eventfd counter has a nonzero value, then a
 .BR read (2)
 returns 8 bytes containing that value,
 and the counter's value is reset to zero.
 .IP *
 If
-.BR EFD_SEMAPHORE
+.B EFD_SEMAPHORE
 was specified and the eventfd counter has a nonzero value, then a
 .BR read (2)
 returns 8 bytes containing the value 1,
@@ -286,7 +275,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 .BR eventfd ()
 and
 .BR eventfd2 ()
@@ -325,7 +314,7 @@ or
 .PP
 The current value of an eventfd counter can be viewed
 via the entry for the corresponding file descriptor in the process's
-.IR /proc/[pid]/fdinfo
+.IR /proc/ pid /fdinfo
 directory.
 See
 .BR proc (5)
@@ -389,23 +378,21 @@ Parent read 28 (0x1c) from efd
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (eventfd.c)
 .EX
+#include <err.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
-#include <inttypes.h>           /* Definition of PRIu64 & PRIx64 */
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>             /* Definition of uint64_t */
-
-#define handle_error(msg) \e
-    do { perror(msg); exit(EXIT_FAILURE); } while (0)
 
 int
 main(int argc, char *argv[])
 {
-    int efd;
-    uint64_t u;
-    ssize_t s;
+    int       efd;
+    uint64_t  u;
+    ssize_t   s;
 
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <num>...\en", argv[0]);
@@ -414,17 +401,17 @@ main(int argc, char *argv[])
 
     efd = eventfd(0, 0);
     if (efd == \-1)
-        handle_error("eventfd");
+        err(EXIT_FAILURE, "eventfd");
 
     switch (fork()) {
     case 0:
-        for (int j = 1; j < argc; j++) {
+        for (size_t j = 1; j < argc; j++) {
             printf("Child writing %s to efd\en", argv[j]);
             u = strtoull(argv[j], NULL, 0);
                     /* strtoull() allows various bases */
             s = write(efd, &u, sizeof(uint64_t));
             if (s != sizeof(uint64_t))
-                handle_error("write");
+                err(EXIT_FAILURE, "write");
         }
         printf("Child completed write loop\en");
 
@@ -436,15 +423,16 @@ main(int argc, char *argv[])
         printf("Parent about to read\en");
         s = read(efd, &u, sizeof(uint64_t));
         if (s != sizeof(uint64_t))
-            handle_error("read");
+            err(EXIT_FAILURE, "read");
         printf("Parent read %"PRIu64" (%#"PRIx64") from efd\en", u, u);
         exit(EXIT_SUCCESS);
 
     case \-1:
-        handle_error("fork");
+        err(EXIT_FAILURE, "fork");
     }
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR futex (2),
 .BR pipe (2),
@@ -456,12 +444,3 @@ main(int argc, char *argv[])
 .BR write (2),
 .BR epoll (7),
 .BR sem_overview (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

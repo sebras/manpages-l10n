@@ -1,5 +1,5 @@
 '\" t
-.TH "CRYPTTAB" "5" "" "systemd 251" "crypttab"
+.TH "CRYPTTAB" "5" "" "systemd 252" "crypttab"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -184,7 +184,7 @@ option described below to use this mechanism\&.
 .sp -1
 .IP "  5." 4.2
 .\}
-Similar, the key may be acquired via a FIDO2 compatible hardware security token (which must implement the "hmac\-secret" extension)\&. In this case a (during enrollment) randomly generated key is stored on disk/removable media, acquired via
+Similarly, the key may be acquired via a FIDO2 compatible hardware security token (which must implement the "hmac\-secret" extension)\&. In this case a key generated randomly during enrollment is stored on disk/removable media, acquired via
 \fBAF_UNIX\fR, or stored in the LUKS2 JSON token metadata header\&. The random key is hashed via a keyed hash function (HMAC) on the FIDO2 token, using a secret key stored on the token that never leaves it\&. The resulting hash value is then used as key to unlock the encrypted volume\&. Use the
 \fBfido2\-device=\fR
 option described below to use this mechanism\&.
@@ -198,7 +198,7 @@ option described below to use this mechanism\&.
 .sp -1
 .IP "  6." 4.2
 .\}
-Similar, the key may be acquired via a TPM2 security chip\&. In this case a (during enrollment) randomly generated key \(em encrypted by an asymmetric key derived from the TPM2 chip\*(Aqs seed key \(em is stored on disk/removable media, acquired via
+Similarly, the key may be acquired via a TPM2 security chip\&. In this case a (during enrollment) randomly generated key \(em encrypted by an asymmetric key derived from the TPM2 chip\*(Aqs seed key \(em is stored on disk/removable media, acquired via
 \fBAF_UNIX\fR, or stored in the LUKS2 JSON token metadata header\&. Use the
 \fBtpm2\-device=\fR
 option described below to use this mechanism\&.
@@ -282,7 +282,7 @@ for possible values\&. The default is to try all key slots in sequential order\&
 .PP
 \fBkeyfile\-timeout=\fR
 .RS 4
-Specifies the timeout for the device on which the key file resides and falls back to a password if it could not be mounted\&. See
+Specifies the timeout for the device on which the key file resides or the device used as the key file, and falls back to a password if it could not be accessed\&. See
 \fBsystemd-cryptsetup-generator\fR(8)
 for key files on external devices\&.
 .RE
@@ -643,6 +643,21 @@ Takes a boolean argument, defaults to
 "false"\&. Controls whether TPM2 volume unlocking is bound to a PIN in addition to PCRs\&. Similarly, this option is only useful when TPM2 enrollment metadata is not available\&.
 .RE
 .PP
+\fBtpm2\-signature=\fR
+.RS 4
+Takes an absolute path to a TPM2 PCR JSON signature file, as produced by the
+\fBsystemd-measure\fR(1)
+tool\&. This permits locking LUKS2 volumes to any PCR values for which a valid signature matching a public key specified at key enrollment time can be provided\&. See
+\fBsystemd-cryptenroll\fR(1)
+for details on enrolling TPM2 PCR public keys\&. If this option is not specified but it is attempted to unlock a LUKS2 volume with a signed TPM2 PCR enrollment a suitable signature file
+tpm2\-pcr\-signature\&.json
+is searched for in
+/etc/systemd/,
+/run/systemd/,
+/usr/lib/systemd/
+(in this order)\&.
+.RE
+.PP
 \fBtoken\-timeout=\fR
 .RS 4
 Specifies how long to wait at most for configured security devices (i\&.e\&. FIDO2, PKCS#11, TPM2) to show up\&. Takes a time value in seconds (but other time units may be specified too, see
@@ -666,7 +681,7 @@ Specifies how long systemd should wait for a block device to show up before givi
 .PP
 \fBx\-initrd\&.attach\fR
 .RS 4
-Setup this encrypted block device in the initramfs, similarly to
+Setup this encrypted block device in the initrd, similarly to
 \fBsystemd.mount\fR(5)
 units marked with
 \fBx\-initrd\&.mount\fR\&.
@@ -676,7 +691,7 @@ Although it\*(Aqs not necessary to mark the mount entry for the root file system
 \fBx\-initrd\&.attach\fR
 is still recommended with the encrypted block device containing the root file system as otherwise systemd will attempt to detach the device during the regular system shutdown while it\*(Aqs still in use\&. With this option the device will still be detached but later after the root file system is unmounted\&.
 .sp
-All other encrypted block devices that contain file systems mounted in the initramfs should use this option\&.
+All other encrypted block devices that contain file systems mounted in the initrd should use this option\&.
 .RE
 .PP
 At early boot and when the system manager configuration is reloaded, this file is translated into native systemd units by
@@ -697,7 +712,7 @@ for details\&. The source socket name is chosen according the following format:
 .RS 4
 .\}
 .nf
-\fBNUL\fR \fIRANDOM\fR "/cryptsetup/" \fIVOLUME\fR
+\fBNUL\fR \fIRANDOM\fR /cryptsetup/ \fIVOLUME\fR
 .fi
 .if n \{\
 .RE
@@ -706,10 +721,8 @@ for details\&. The source socket name is chosen according the following format:
 In other words: a
 \fBNUL\fR
 byte (as required for abstract namespace sockets), followed by a random string (consisting of alphanumeric characters only), followed by the literal string
-"/cryptsetup/", followed by the name of the volume to acquire they key for\&. Example (for a volume
-"myvol"):
-.PP
-\fBExample\ \&1.\ \&\fR
+"/cryptsetup/", followed by the name of the volume to acquire they key for\&. For example, for the volume
+"myvol":
 .sp
 .if n \{\
 .RS 4
@@ -724,15 +737,12 @@ byte (as required for abstract namespace sockets), followed by a random string (
 Services listening on the
 \fBAF_UNIX\fR
 stream socket may query the source socket name with
-\fBgetpeername\fR(2), and use it to determine which key to send, allowing a single listening socket to serve keys for a multitude of volumes\&. If the PKCS#11 logic is used (see above) the socket source name is picked in identical fashion, except that the literal string
+\fBgetpeername\fR(2), and use this to determine which key to send, allowing a single listening socket to serve keys for multiple volumes\&. If the PKCS#11 logic is used (see above), the socket source name is picked in similar fashion, except that the literal string
 "/cryptsetup\-pkcs11/"
-is used (similar for FIDO2:
-"/cryptsetup\-fido2/"
-and TPM2:
-"/cryptsetup\-tpm2/")\&. This is done so that services providing key material know that not a secret key is requested but an encrypted key that will be decrypted via the PKCS#11/FIDO2/TPM2 logic to acquire the final secret key\&.
+is used\&. And similarly for FIDO2 ("/cryptsetup\-fido2/") and TPM2 ("/cryptsetup\-tpm2/")\&. A diffent path component is used so that services providing key material know that the secret key was not requested directly, but instead an encrypted key that will be decrypted via the PKCS#11/FIDO2/TPM2 logic to acquire the final secret key\&.
 .SH "EXAMPLES"
 .PP
-\fBExample\ \&2.\ \&/etc/crypttab example\fR
+\fBExample\ \&1.\ \&/etc/crypttab example\fR
 .PP
 Set up four encrypted block devices\&. One using LUKS for normal storage, another one for usage as a swap device and two TrueCrypt volumes\&. For the fourth device, the option string is interpreted as two options
 "cipher=xchacha12,aes\-adiantum\-plain64",
@@ -752,7 +762,7 @@ external   /dev/sda3       keyfile:LABEL=keydev keyfile\-timeout=10s,cipher=xcha
 .RE
 .\}
 .PP
-\fBExample\ \&3.\ \&Yubikey\-based PKCS#11 Volume Unlocking Example\fR
+\fBExample\ \&2.\ \&Yubikey\-based PKCS#11 Volume Unlocking Example\fR
 .PP
 The PKCS#11 logic allows hooking up any compatible security token that is capable of storing RSA decryption keys for unlocking an encrypted volume\&. Here\*(Aqs an example how to set up a Yubikey security token for this purpose on a LUKS2 volume, using
 \fBykmap\fR(1)
@@ -822,7 +832,7 @@ We use Yubikey key slot 9d, since that\*(Aqs apparently the keyslot to use for d
 \m[blue]\fBsee documentation\fR\m[]\&\s-2\u[2]\d\s+2\&.
 .RE
 .PP
-\fBExample\ \&4.\ \&FIDO2 Volume Unlocking Example\fR
+\fBExample\ \&3.\ \&FIDO2 Volume Unlocking Example\fR
 .PP
 The FIDO2 logic allows using any compatible FIDO2 security token that implements the
 "hmac\-secret"
@@ -850,7 +860,7 @@ sudo bash \-c \*(Aqecho "mytest /dev/sdXn \- fido2\-device=auto" >> /etc/cryptta
 .RE
 .\}
 .PP
-\fBExample\ \&5.\ \&TPM2 Volume Unlocking Example\fR
+\fBExample\ \&4.\ \&TPM2 Volume Unlocking Example\fR
 .PP
 The TPM2 logic allows using any TPM2 chip supported by the Linux kernel for unlocking an encrypted volume\&. Here\*(Aqs an example how to set up a TPM2 chip for this purpose for a LUKS2 volume, using
 \fBsystemd-cryptenroll\fR(1):

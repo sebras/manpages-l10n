@@ -1,40 +1,23 @@
 .\" Copyright (C) 2011 by Andi Kleen <andi@firstfloor.org>
 .\" and Copyright (c) 2011 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Syscall added in following commit
 .\"	commit a2e2725541fad72416326798c2d7fa4dafb7d337
 .\"	Author: Arnaldo Carvalho de Melo <acme@redhat.com>
 .\"	Date:   Mon Oct 12 23:40:10 2009 -0700
 .\"
-.TH RECVMMSG 2 2020-11-01 "Linux" "Linux Programmer's Manual"
+.TH RECVMMSG 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 recvmmsg \- receive multiple messages on a socket
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
-.BI "#include <sys/socket.h>"
+.B #include <sys/socket.h>
 .PP
 .BI "int recvmmsg(int " sockfd ", struct mmsghdr *" msgvec \
 ", unsigned int " vlen ","
@@ -133,7 +116,7 @@ and returns immediately.
 On return from
 .BR recvmmsg (),
 successive elements of
-.IR msgvec
+.I msgvec
 are updated to contain information about each received message:
 .I msg_len
 contains the size of the received message;
@@ -167,7 +150,7 @@ The
 .BR recvmmsg ()
 system call was added in Linux 2.6.33.
 Support in glibc was added in version 2.12.
-.SH CONFORMING TO
+.SH STANDARDS
 .BR recvmmsg ()
 is Linux-specific.
 .SH BUGS
@@ -223,13 +206,16 @@ can give the following output:
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (recvmmsg.c)
 .EX
 #define _GNU_SOURCE
-#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <time.h>
 
 int
 main(void)
@@ -237,12 +223,12 @@ main(void)
 #define VLEN 10
 #define BUFSIZE 200
 #define TIMEOUT 1
-    int sockfd, retval;
-    struct sockaddr_in addr;
-    struct mmsghdr msgs[VLEN];
-    struct iovec iovecs[VLEN];
-    char bufs[VLEN][BUFSIZE+1];
-    struct timespec timeout;
+    int                 sockfd, retval;
+    char                bufs[VLEN][BUFSIZE+1];
+    struct iovec        iovecs[VLEN];
+    struct mmsghdr      msgs[VLEN];
+    struct timespec     timeout;
+    struct sockaddr_in  addr;
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd == \-1) {
@@ -259,7 +245,7 @@ main(void)
     }
 
     memset(msgs, 0, sizeof(msgs));
-    for (int i = 0; i < VLEN; i++) {
+    for (size_t i = 0; i < VLEN; i++) {
         iovecs[i].iov_base         = bufs[i];
         iovecs[i].iov_len          = BUFSIZE;
         msgs[i].msg_hdr.msg_iov    = &iovecs[i];
@@ -276,13 +262,14 @@ main(void)
     }
 
     printf("%d messages received\en", retval);
-    for (int i = 0; i < retval; i++) {
+    for (size_t i = 0; i < retval; i++) {
         bufs[i][msgs[i].msg_len] = 0;
-        printf("%d %s", i+1, bufs[i]);
+        printf("%zu %s", i+1, bufs[i]);
     }
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR clock_gettime (2),
 .BR recvmsg (2),
@@ -290,12 +277,3 @@ main(void)
 .BR sendmsg (2),
 .BR socket (2),
 .BR socket (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

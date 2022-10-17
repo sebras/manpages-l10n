@@ -1,32 +1,15 @@
 .\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PTHREAD_SETSCHEDPARAM 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_SETSCHEDPARAM 3 2022-09-12 "Linux man-pages (unreleased)"
 .SH NAME
 pthread_setschedparam, pthread_getschedparam \- set/get
 scheduling policy and parameters of a thread
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .B #include <pthread.h>
@@ -35,8 +18,6 @@ scheduling policy and parameters of a thread
 .BI "                          const struct sched_param *" param );
 .BI "int pthread_getschedparam(pthread_t " thread ", int *restrict " policy ,
 .BI "                          struct sched_param *restrict " param );
-.PP
-Compile and link with \fI\-pthread\fP.
 .fi
 .SH DESCRIPTION
 The
@@ -156,7 +137,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .SH NOTES
 For a description of the permissions required to, and the effect of,
@@ -173,11 +154,11 @@ as well as the use of a number of other scheduling-related
 pthreads functions.
 .PP
 In the following run, the main thread sets its scheduling policy to
-.BR SCHED_FIFO
+.B SCHED_FIFO
 with a priority of 10,
 and initializes a thread attributes object with
 a scheduling policy attribute of
-.BR SCHED_RR
+.B SCHED_RR
 and a scheduling priority attribute of 20.
 The program then sets (using
 .BR pthread_attr_setinheritsched (3))
@@ -235,20 +216,21 @@ were taken from the creating thread,
 rather than the thread attributes object.
 .PP
 Note that if we had omitted the
-.IR "\-i\ i"
+.I \-i\~i
 option, the output would have been the same, since
-.BR PTHREAD_INHERIT_SCHED
+.B PTHREAD_INHERIT_SCHED
 is the default for the inherit scheduler attribute.
 .SS Program source
 \&
+.\" SRC BEGIN (pthreads_sched_test.c)
 .EX
 /* pthreads_sched_test.c */
 
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 
 #define handle_error_en(en, msg) \e
         do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -261,7 +243,7 @@ usage(char *prog_name, char *msg)
 
     fprintf(stderr, "Usage: %s [options]\en", prog_name);
     fprintf(stderr, "Options are:\en");
-#define fpe(msg) fprintf(stderr, "\et%s", msg);          /* Shorter */
+#define fpe(msg) fprintf(stderr, "\et%s", msg)          /* Shorter */
     fpe("\-a<policy><prio> Set scheduling policy and priority in\en");
     fpe("                 thread attributes object\en");
     fpe("                 <policy> can be\en");
@@ -291,11 +273,11 @@ static void
 display_sched_attr(int policy, struct sched_param *param)
 {
     printf("    policy=%s, priority=%d\en",
-            (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
-            (policy == SCHED_RR)    ? "SCHED_RR" :
-            (policy == SCHED_OTHER) ? "SCHED_OTHER" :
-            "???",
-            param\->sched_priority);
+           (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+           (policy == SCHED_RR)    ? "SCHED_RR" :
+           (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+           "???",
+           param\->sched_priority);
 }
 
 static void
@@ -347,9 +329,11 @@ main(int argc, char *argv[])
         }
     }
 
-    if (use_null_attrib &&
-            (inheritsched_str != NULL || attr_sched_str != NULL))
+    if (use_null_attrib
+        && (inheritsched_str != NULL || attr_sched_str != NULL))
+    {
         usage(argv[0], "Can\(aqt specify \-A with \-i or \-a\en");
+    }
 
     /* Optionally set scheduling attributes of main thread,
        and display the attributes. */
@@ -393,8 +377,7 @@ main(int argc, char *argv[])
 
     if (attr_sched_str != NULL) {
         if (!get_policy(attr_sched_str[0], &policy))
-            usage(argv[0],
-                    "Bad policy for \(aqattr\(aq (\-a)\en");
+            usage(argv[0], "Bad policy for \(aqattr\(aq (\-a)\en");
         param.sched_priority = strtol(&attr_sched_str[1], NULL, 0);
 
         s = pthread_attr_setschedpolicy(&attr, policy);
@@ -421,9 +404,9 @@ main(int argc, char *argv[])
 
         s = pthread_attr_getinheritsched(&attr, &inheritsched);
         printf("    inheritsched is %s\en",
-                (inheritsched == PTHREAD_INHERIT_SCHED)  ? "INHERIT" :
-                (inheritsched == PTHREAD_EXPLICIT_SCHED) ? "EXPLICIT" :
-                "???");
+               (inheritsched == PTHREAD_INHERIT_SCHED)  ? "INHERIT" :
+               (inheritsched == PTHREAD_EXPLICIT_SCHED) ? "EXPLICIT" :
+               "???");
         printf("\en");
     }
 
@@ -448,6 +431,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .ad l
 .nh
@@ -462,12 +446,3 @@ main(int argc, char *argv[])
 .BR pthread_setschedprio (3),
 .BR pthreads (7),
 .BR sched (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

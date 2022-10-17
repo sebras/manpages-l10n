@@ -1,32 +1,15 @@
 .\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PTHREAD_SETAFFINITY_NP 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_SETAFFINITY_NP 3 2022-09-15 "Linux man-pages (unreleased)"
 .SH NAME
 pthread_setaffinity_np, pthread_getaffinity_np \- set/get
 CPU affinity of a thread
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
@@ -36,8 +19,6 @@ CPU affinity of a thread
 .BI "                           const cpu_set_t *" cpuset );
 .BI "int pthread_getaffinity_np(pthread_t " thread ", size_t " cpusetsize ,
 .BI "                           cpu_set_t *" cpuset );
-.PP
-Compile and link with \fI\-pthread\fP.
 .fi
 .SH DESCRIPTION
 The
@@ -91,12 +72,12 @@ and permitted to the thread according to any restrictions that
 may be imposed by the "cpuset" mechanism described in
 .BR cpuset (7).
 .TP
-.BR EINVAL
+.B EINVAL
 .RB ( pthread_setaffinity_np ())
 .I cpuset
 specified a CPU that was outside the set supported by the kernel.
 (The kernel configuration option
-.BR CONFIG_NR_CPUS
+.B CONFIG_NR_CPUS
 defines the range of the set supported by the kernel data type
 .\" cpumask_t
 used to represent CPU sets.)
@@ -132,7 +113,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 These functions are nonstandard GNU extensions;
 hence the suffix "_np" (nonportable) in the names.
 .SH NOTES
@@ -174,18 +155,17 @@ and then calls
 .BR pthread_getaffinity_np ()
 to check the resulting CPU affinity mask of the thread.
 .PP
+.\" SRC BEGIN (pthread_setaffinity_np.c)
 .EX
 #define _GNU_SOURCE
+#include <err.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-
-#define handle_error_en(en, msg) \e
-        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     int s;
     cpu_set_t cpuset;
@@ -196,27 +176,28 @@ main(int argc, char *argv[])
     /* Set affinity mask to include CPUs 0 to 7. */
 
     CPU_ZERO(&cpuset);
-    for (int j = 0; j < 8; j++)
+    for (size_t j = 0; j < 8; j++)
         CPU_SET(j, &cpuset);
 
     s = pthread_setaffinity_np(thread, sizeof(cpuset), &cpuset);
     if (s != 0)
-        handle_error_en(s, "pthread_setaffinity_np");
+        errc(EXIT_FAILURE, s, "pthread_setaffinity_np");
 
     /* Check the actual affinity mask assigned to the thread. */
 
     s = pthread_getaffinity_np(thread, sizeof(cpuset), &cpuset);
     if (s != 0)
-        handle_error_en(s, "pthread_getaffinity_np");
+        errc(EXIT_FAILURE, s, "pthread_getaffinity_np");
 
     printf("Set returned by pthread_getaffinity_np() contained:\en");
-    for (int j = 0; j < CPU_SETSIZE; j++)
+    for (size_t j = 0; j < CPU_SETSIZE; j++)
         if (CPU_ISSET(j, &cpuset))
-            printf("    CPU %d\en", j);
+            printf("    CPU %zu\en", j);
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR sched_setaffinity (2),
 .BR CPU_SET (3),
@@ -226,12 +207,3 @@ main(int argc, char *argv[])
 .BR cpuset (7),
 .BR pthreads (7),
 .BR sched (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-BOOT" "7" "" "systemd 251" "systemd-boot"
+.TH "SYSTEMD\-BOOT" "7" "" "systemd 252" "systemd-boot"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -114,6 +114,17 @@ The EFI Shell binary, if installed\&.
 .\}
 A reboot into the UEFI firmware setup option, if supported by the firmware\&.
 .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Secure boot variables enrollement if the UEFI firmware is in setup\-mode and files are provided on the ESP\&.
+.RE
 .PP
 \fBsystemd\-boot\fR
 supports the following features:
@@ -200,6 +211,17 @@ The boot manager implements boot counting and automatic fallback to older, worki
 .IP \(bu 2.3
 .\}
 The boot manager optionally reads a random seed from the ESP partition, combines it with a \*(Aqsystem token\*(Aq stored in a persistent EFI variable and derives a random seed to use by the OS as entropy pool initialization, providing a full entropy pool during early boot\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The boot manager allows for secure boot variables to be enrolled if the UEFI firmware is in setup\-mode\&. Additionally, variables can be automatically enrolled if configured\&.
 .RE
 .PP
 \fBbootctl\fR(1)
@@ -316,14 +338,14 @@ In the editor, most keys simply insert themselves, but the following keys may be
 Navigate left/right
 .RE
 .PP
-Esc
+Esc, Ctrl+c
 .RS 4
 Abort the edit and quit the editor
 .RE
 .PP
 Ctrl+k
 .RS 4
-Clear the command line
+Clear the command line forwards
 .RE
 .PP
 Ctrl+w, Alt+Backspace
@@ -331,7 +353,7 @@ Ctrl+w, Alt+Backspace
 Delete word backwards
 .RE
 .PP
-Alt+d
+Ctrl+Del, Alt+d
 .RS 4
 Delete word forwards
 .RE
@@ -384,6 +406,15 @@ directory of the ESP\&. The files placed there must have an extension of the EFI
 \&.efi
 (e\&.g\&. for x86\-64 this means a suffix of
 x64\&.efi)\&. This may be used to automatically load file system drivers and similar, to extend the native firmware support\&.
+.PP
+Enrollment of Secure Boot variables can be performed manually or automatically if files are available under
+/keys/\fINAME\fR/{db,KEK,PK}\&.auth,
+\fINAME\fR
+being the display name for the set of variables in the menu\&. If one of the sets is named
+auto
+then it might be enrolled automatically depending on whether
+"secure\-boot\-enroll"
+is set to force or not\&.
 .SH "EFI VARIABLES"
 .PP
 The following EFI variables are defined, set and read by
@@ -490,7 +521,7 @@ A binary random seed
 may optionally pass to the OS\&. This is a volatile EFI variable that is hashed at boot from the combination of a random seed stored in the ESP (in
 /loader/random\-seed) and a "system token" persistently stored in the EFI variable
 \fILoaderSystemToken\fR
-(see below)\&. During early OS boot the system manager reads this variable and passes it to the OS kernel\*(Aqs random pool, crediting the full entropy it contains\&. This is an efficient way to ensure the system starts up with a fully initialized kernel random pool \(em as early as the initial RAM disk phase\&.
+(see below)\&. During early OS boot the system manager reads this variable and passes it to the OS kernel\*(Aqs random pool, crediting the full entropy it contains\&. This is an efficient way to ensure the system starts up with a fully initialized kernel random pool \(em as early as the initrd phase\&.
 \fBsystemd\-boot\fR
 reads the random seed from the ESP, combines it with the "system token", and both derives a new random seed to update in\-place the seed stored in the ESP, and the random seed to pass to the OS from it via SHA256 hashing in counter mode\&. This ensures that different physical systems that boot the same "golden" OS image \(em i\&.e\&. containing the same random seed file in the ESP \(em will still pass a different random seed to the OS\&. It is made sure the random seed stored in the ESP is fully overwritten before the OS is booted, to ensure different random seed data is used between subsequent boots\&.
 .sp

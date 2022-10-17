@@ -19,9 +19,12 @@
 .\" FIXME Do we need to add some text regarding Torvald Riegel's 2015-01-24 mail
 .\"       http://thread.gmane.org/gmane.linux.kernel/1703405/focus=1873242
 .\"
-.TH FUTEX 2 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH FUTEX 2 2022-09-15 "Linux man-pages (unreleased)"
 .SH NAME
 futex \- fast user-space locking
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .PP
@@ -158,7 +161,7 @@ integers that must be aligned on a four-byte boundary.
 The operation to perform on the futex is specified in the
 .I futex_op
 argument;
-.IR val
+.I val
 is a value whose meaning and purpose depends on
 .IR futex_op .
 .PP
@@ -173,7 +176,7 @@ Where one of these arguments is not required, it is ignored.
 For several blocking operations, the
 .I timeout
 argument is a pointer to a
-.IR timespec
+.I timespec
 structure that specifies a timeout for the operation.
 However,  notwithstanding the prototype shown above, for some operations,
 the least significant four bytes of this argument are instead
@@ -189,7 +192,7 @@ and in the remainder of this page, this argument is referred to as
 when interpreted in this fashion.
 .PP
 Where it is required, the
-.IR uaddr2
+.I uaddr2
 argument is a pointer to a second futex word that is employed
 by the operation.
 .PP
@@ -229,7 +232,7 @@ that are equivalents of all of the operations listed below,
 .\" except the obsolete FUTEX_FD, for which the "private" flag was
 .\" meaningless
 but with the
-.BR FUTEX_PRIVATE_FLAG
+.B FUTEX_PRIVATE_FLAG
 ORed into the constant value.
 Thus, there are
 .BR FUTEX_WAIT_PRIVATE ,
@@ -300,9 +303,9 @@ wake-ups.
 If another thread changed the value of the futex word after the
 calling thread decided to block based on the prior value,
 and if the other thread executed a
-.BR FUTEX_WAKE
+.B FUTEX_WAKE
 operation (or similar wake-up) after the value change and before this
-.BR FUTEX_WAIT
+.B FUTEX_WAIT
 operation, then the calling thread will observe the
 value change and will not start to sleep.
 .IP
@@ -313,11 +316,11 @@ timeout for the wait.
 (This interval will be rounded up to the system clock granularity,
 and is guaranteed not to expire early.)
 The timeout is by default measured according to the
-.BR CLOCK_MONOTONIC
+.B CLOCK_MONOTONIC
 clock, but, since Linux 4.5, the
-.BR CLOCK_REALTIME
+.B CLOCK_REALTIME
 clock can be selected by specifying
-.BR FUTEX_CLOCK_REALTIME
+.B FUTEX_CLOCK_REALTIME
 in
 .IR futex_op .
 If
@@ -327,19 +330,19 @@ is NULL, the call blocks indefinitely.
 .IR Note :
 for
 .BR FUTEX_WAIT ,
-.IR timeout
+.I timeout
 is interpreted as a
-.IR relative
+.I relative
 value.
 This differs from other futex operations, where
 .I timeout
 is interpreted as an absolute value.
 To obtain the equivalent of
-.BR FUTEX_WAIT
+.B FUTEX_WAIT
 with an absolute timeout, employ
-.BR FUTEX_WAIT_BITSET
+.B FUTEX_WAIT_BITSET
 with
-.IR val3
+.I val3
 specified as
 .BR FUTEX_BITSET_MATCH_ANY .
 .IP
@@ -374,7 +377,7 @@ on the futex word at the address
 Most commonly,
 .I val
 is specified as either 1 (wake up a single waiter) or
-.BR INT_MAX
+.B INT_MAX
 (wake up all waiters).
 No guarantee is provided about which waiters are awoken
 (e.g., a waiter with a higher scheduling priority is not guaranteed
@@ -408,7 +411,7 @@ the futex at
 .IR uaddr .
 The caller must close the returned file descriptor after use.
 When another process or thread performs a
-.BR FUTEX_WAKE
+.B FUTEX_WAKE
 on the futex word, the file descriptor indicates as being readable with
 .BR select (2),
 .BR poll (2),
@@ -440,7 +443,7 @@ from Linux 2.6.26 onward.
 .TP
 .BR FUTEX_REQUEUE " (since Linux 2.6.0)"
 This operation performs the same task as
-.BR FUTEX_CMP_REQUEUE
+.B FUTEX_CMP_REQUEUE
 (see below), except that no check is made using the value in
 .IR  val3 .
 (The argument
@@ -494,9 +497,9 @@ Typical values to specify for
 .I val
 are 0 or 1.
 (Specifying
-.BR INT_MAX
+.B INT_MAX
 is not useful, because it would make the
-.BR FUTEX_CMP_REQUEUE
+.B FUTEX_CMP_REQUEUE
 operation equivalent to
 .BR FUTEX_WAKE .)
 The limit value specified via
@@ -504,7 +507,7 @@ The limit value specified via
 is typically either 1 or
 .BR INT_MAX .
 (Specifying the argument as 0 is not useful, because it would make the
-.BR FUTEX_CMP_REQUEUE
+.B FUTEX_CMP_REQUEUE
 operation equivalent to
 .BR FUTEX_WAIT .)
 .IP
@@ -526,9 +529,9 @@ conditions, which allows race conditions to be avoided in certain use cases.
 .\"     Subject: Re: Add futex wrapper to glibc?
 .IP
 Both
-.BR FUTEX_REQUEUE
+.B FUTEX_REQUEUE
 and
-.BR FUTEX_CMP_REQUEUE
+.B FUTEX_CMP_REQUEUE
 can be used to avoid "thundering herd" wake-ups that could occur when using
 .B FUTEX_WAKE
 in cases where all of the waiters that are woken need to acquire
@@ -577,12 +580,12 @@ The most notable example is the implementation of
 which requires operations on two futexes,
 the one used to implement the mutex and the one used in the implementation
 of the wait queue associated with the condition variable.
-.BR FUTEX_WAKE_OP
+.B FUTEX_WAKE_OP
 allows such cases to be implemented without leading to
 high rates of contention and context switching.
 .IP
 The
-.BR FUTEX_WAKE_OP
+.B FUTEX_WAKE_OP
 operation is equivalent to executing the following code atomically
 and totally ordered with respect to other futex operations on
 any of the two supplied futex words:
@@ -598,12 +601,12 @@ if (oldval \fIcmp\fP \fIcmparg\fP)
 .in
 .IP
 In other words,
-.BR FUTEX_WAKE_OP
+.B FUTEX_WAKE_OP
 does the following:
 .RS
 .IP * 3
 saves the original value of the futex word at
-.IR uaddr2
+.I uaddr2
 and performs an operation to modify the value of the futex at
 .IR uaddr2 ;
 this is an atomic read-modify-write memory access (i.e., using atomic
@@ -678,7 +681,7 @@ FUTEX_OP_XOR        4  /* uaddr2 \(ha= oparg; */
 In addition, bitwise ORing the following value into
 .I op
 causes
-.IR "(1\ <<\ oparg)"
+.I (1\~<<\~oparg)
 to be used as the operand:
 .IP
 .in +4n
@@ -703,9 +706,9 @@ FUTEX_OP_CMP_GE     5  /* if (oldval >= cmparg) wake */
 .in
 .IP
 The return value of
-.BR FUTEX_WAKE_OP
+.B FUTEX_WAKE_OP
 is the sum of the number of waiters woken on the futex
-.IR uaddr
+.I uaddr
 plus the number of waiters woken on the futex
 .IR uaddr2 .
 .\"
@@ -715,14 +718,14 @@ plus the number of waiters woken on the futex
 .BR FUTEX_WAIT_BITSET " (since Linux 2.6.25)"
 .\" commit cd689985cf49f6ff5c8eddc48d98b9d581d9475d
 This operation is like
-.BR FUTEX_WAIT
+.B FUTEX_WAIT
 except that
 .I val3
 is used to provide a 32-bit bit mask to the kernel.
 This bit mask, in which at least one bit must be set,
 is stored in the kernel-internal state of the waiter.
 See the description of
-.BR FUTEX_WAKE_BITSET
+.B FUTEX_WAKE_BITSET
 for further details.
 .IP
 If
@@ -743,7 +746,7 @@ argument is ignored.
 .BR FUTEX_WAKE_BITSET " (since Linux 2.6.25)"
 .\" commit cd689985cf49f6ff5c8eddc48d98b9d581d9475d
 This operation is the same as
-.BR FUTEX_WAKE
+.B FUTEX_WAKE
 except that the
 .I val3
 argument is used to provide a 32-bit bit mask to the kernel.
@@ -759,9 +762,9 @@ All of the waiters for which the result of the AND is nonzero are woken up;
 the remaining waiters are left sleeping.
 .IP
 The effect of
-.BR FUTEX_WAIT_BITSET
+.B FUTEX_WAIT_BITSET
 and
-.BR FUTEX_WAKE_BITSET
+.B FUTEX_WAKE_BITSET
 is to allow selective wake-ups among multiple waiters that are blocked
 on the same futex.
 However, note that, depending on the use case,
@@ -790,26 +793,26 @@ The constant
 which corresponds to all 32 bits set in the bit mask, can be used as the
 .I val3
 argument for
-.BR FUTEX_WAIT_BITSET
+.B FUTEX_WAIT_BITSET
 and
 .BR FUTEX_WAKE_BITSET .
 Other than differences in the handling of the
 .I timeout
 argument, the
-.BR FUTEX_WAIT
+.B FUTEX_WAIT
 operation is equivalent to
-.BR FUTEX_WAIT_BITSET
+.B FUTEX_WAIT_BITSET
 with
-.IR val3
+.I val3
 specified as
 .BR FUTEX_BITSET_MATCH_ANY ;
 that is, allow a wake-up by any waker.
 The
-.BR FUTEX_WAKE
+.B FUTEX_WAKE
 operation is equivalent to
-.BR FUTEX_WAKE_BITSET
+.B FUTEX_WAKE_BITSET
 with
-.IR val3
+.I val3
 specified as
 .BR FUTEX_BITSET_MATCH_ANY ;
 that is, wake up any waiter(s).
@@ -887,10 +890,14 @@ then the
 .B FUTEX_WAITERS
 bit shall be set in the futex word's value; in other words, this value is:
 .IP
-    FUTEX_WAITERS | TID
+.in +4n
+.EX
+FUTEX_WAITERS | TID
+.EE
+.in
 .IP
 (Note that is invalid for a PI futex word to have no owner and
-.BR FUTEX_WAITERS
+.B FUTEX_WAITERS
 set.)
 .PP
 With this policy in place,
@@ -1068,16 +1075,16 @@ the enqueueing of the waiter is in descending priority order.
 .BR SCHED_DEADLINE ,
 .BR SCHED_FIFO ,
 and
-.BR SCHED_RR
+.B SCHED_RR
 scheduling policies in
 .BR sched (7).)
 The owner inherits either the waiter's CPU bandwidth
 (if the waiter is scheduled under the
-.BR SCHED_DEADLINE
+.B SCHED_DEADLINE
 policy) or the waiter's priority (if the waiter is scheduled under the
-.BR SCHED_RR
+.B SCHED_RR
 or
-.BR SCHED_FIFO
+.B SCHED_FIFO
 policy).
 .\" August 2015:
 .\"     mtk: If the realm is restricted purely to SCHED_OTHER (SCHED_NORMAL)
@@ -1096,7 +1103,7 @@ If
 .I timeout
 is not NULL, the structure it points to specifies
 an absolute timeout, measured against the
-.BR CLOCK_REALTIME
+.B CLOCK_REALTIME
 clock.
 .\" 2016-07-07 response from Thomas Gleixner on LKML:
 .\" From: Thomas Gleixner <tglx@linutronix.de>
@@ -1137,7 +1144,7 @@ except that the clock against which
 is measured is selectable.
 By default, the (absolute) timeout specified in
 .I timeout
-is measured againt the
+is measured against the
 .B CLOCK_MONOTONIC
 clock, but if the
 .B FUTEX_CLOCK_REALTIME
@@ -1186,7 +1193,7 @@ The
 .IR val ,
 .IR timeout ,
 and
-.IR val3
+.I val3
 arguments are ignored.
 .\"
 .\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1211,7 +1218,7 @@ The
 .IR val ,
 .IR timeout ,
 and
-.IR val3
+.I val3
 arguments are ignored.
 .\"
 .\""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -1272,7 +1279,7 @@ arguments serve the same purposes as for
 Wait on a non-PI futex at
 .I uaddr
 and potentially be requeued (via a
-.BR FUTEX_CMP_REQUEUE_PI
+.B FUTEX_CMP_REQUEUE_PI
 operation in another task) onto a PI futex at
 .IR uaddr2 .
 The wait operation on
@@ -1283,12 +1290,12 @@ is the same as for
 The waiter can be removed from the wait on
 .I uaddr
 without requeueing on
-.IR uaddr2
+.I uaddr2
 via a
-.BR FUTEX_WAKE
+.B FUTEX_WAKE
 operation in another task.
 In this case, the
-.BR FUTEX_WAIT_REQUEUE_PI
+.B FUTEX_WAIT_REQUEUE_PI
 operation fails with the error
 .BR EAGAIN .
 .IP
@@ -1305,18 +1312,18 @@ The
 argument is ignored.
 .IP
 The
-.BR FUTEX_WAIT_REQUEUE_PI
+.B FUTEX_WAIT_REQUEUE_PI
 and
-.BR FUTEX_CMP_REQUEUE_PI
+.B FUTEX_CMP_REQUEUE_PI
 were added to support a fairly specific use case:
 support for priority-inheritance-aware POSIX threads condition variables.
 The idea is that these operations should always be paired,
 in order to ensure that user space and the kernel remain in sync.
 Thus, in the
-.BR FUTEX_WAIT_REQUEUE_PI
+.B FUTEX_WAIT_REQUEUE_PI
 operation, the user-space application pre-specifies the target
 of the requeue that takes place in the
-.BR FUTEX_CMP_REQUEUE_PI
+.B FUTEX_CMP_REQUEUE_PI
 operation.
 .\"
 .\" Darren Hart notes that a patch to allow glibc to fully support
@@ -1489,7 +1496,7 @@ The futex word at
 .I uaddr
 is already locked by the caller.
 .TP
-.BR EDEADLK
+.B EDEADLK
 .\" FIXME . I see that kernel/locking/rtmutex.c uses EDEADLK in some
 .\"       places, and EDEADLOCK in others. On almost all architectures
 .\"       these constants are synonymous. Is there a reason that both
@@ -1741,7 +1748,7 @@ A four-argument system call with the semantics
 described in this page was introduced in Linux 2.5.40.
 A fifth argument was added in Linux 2.5.70,
 and a sixth argument was added in Linux 2.6.7.
-.SH CONFORMING TO
+.SH STANDARDS
 This system call is Linux-specific.
 .SH NOTES
 Several higher-level programming abstractions are implemented via futexes,
@@ -1760,7 +1767,7 @@ process and a child process use a pair of futexes located inside a
 shared anonymous mapping to synchronize access to a shared resource:
 the terminal.
 The two processes each write
-.IR nloops
+.I nloops
 (a command-line argument that defaults to 5 if omitted)
 messages to the terminal and employ a synchronization protocol
 that ensures that they alternate in writing messages.
@@ -1783,6 +1790,7 @@ Child  (18535) 4
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (futex.c)
 .EX
 /* futex_demo.c
 
@@ -1797,20 +1805,18 @@ Child  (18535) 4
    writing messages.
 */
 #define _GNU_SOURCE
-#include <stdio.h>
+#include <err.h>
 #include <errno.h>
+#include <linux/futex.h>
 #include <stdatomic.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
-#include <linux/futex.h>
 #include <sys/time.h>
-
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
-                        } while (0)
+#include <sys/wait.h>
+#include <unistd.h>
 
 static uint32_t *futex1, *futex2, *iaddr;
 
@@ -1828,7 +1834,8 @@ futex(uint32_t *uaddr, int futex_op, uint32_t val,
 static void
 fwait(uint32_t *futexp)
 {
-    long s;
+    long            s;
+    const uint32_t  one = 1;
 
     /* atomic_compare_exchange_strong(ptr, oldval, newval)
        atomically performs the equivalent of:
@@ -1841,7 +1848,6 @@ fwait(uint32_t *futexp)
     while (1) {
 
         /* Is the futex available? */
-        const uint32_t one = 1;
         if (atomic_compare_exchange_strong(futexp, &one, 0))
             break;      /* Yes */
 
@@ -1849,35 +1855,35 @@ fwait(uint32_t *futexp)
 
         s = futex(futexp, FUTEX_WAIT, 0, NULL, NULL, 0);
         if (s == \-1 && errno != EAGAIN)
-            errExit("futex\-FUTEX_WAIT");
+            err(EXIT_FAILURE, "futex\-FUTEX_WAIT");
     }
 }
 
 /* Release the futex pointed to by \(aqfutexp\(aq: if the futex currently
-   has the value 0, set its value to 1 and the wake any futex waiters,
+   has the value 0, set its value to 1 and then wake any futex waiters,
    so that if the peer is blocked in fwait(), it can proceed. */
 
 static void
 fpost(uint32_t *futexp)
 {
-    long s;
+    long            s;
+    const uint32_t  zero = 0;
 
     /* atomic_compare_exchange_strong() was described
        in comments above. */
 
-    const uint32_t zero = 0;
     if (atomic_compare_exchange_strong(futexp, &zero, 1)) {
         s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);
         if (s  == \-1)
-            errExit("futex\-FUTEX_WAKE");
+            err(EXIT_FAILURE, "futex\-FUTEX_WAKE");
     }
 }
 
 int
 main(int argc, char *argv[])
 {
-    pid_t childPid;
-    int nloops;
+    pid_t         childPid;
+    unsigned int  nloops;
 
     setbuf(stdout, NULL);
 
@@ -1889,9 +1895,9 @@ main(int argc, char *argv[])
        ones suffixed "_PRIVATE"). */
 
     iaddr = mmap(NULL, sizeof(*iaddr) * 2, PROT_READ | PROT_WRITE,
-                MAP_ANONYMOUS | MAP_SHARED, \-1, 0);
+                 MAP_ANONYMOUS | MAP_SHARED, \-1, 0);
     if (iaddr == MAP_FAILED)
-        errExit("mmap");
+        err(EXIT_FAILURE, "mmap");
 
     futex1 = &iaddr[0];
     futex2 = &iaddr[1];
@@ -1904,12 +1910,12 @@ main(int argc, char *argv[])
 
     childPid = fork();
     if (childPid == \-1)
-        errExit("fork");
+        err(EXIT_FAILURE, "fork");
 
     if (childPid == 0) {        /* Child */
-        for (int j = 0; j < nloops; j++) {
+        for (unsigned int j = 0; j < nloops; j++) {
             fwait(futex1);
-            printf("Child  (%jd) %d\en", (intmax_t) getpid(), j);
+            printf("Child  (%jd) %u\en", (intmax_t) getpid(), j);
             fpost(futex2);
         }
 
@@ -1918,9 +1924,9 @@ main(int argc, char *argv[])
 
     /* Parent falls through to here. */
 
-    for (int j = 0; j < nloops; j++) {
+    for (unsigned int j = 0; j < nloops; j++) {
         fwait(futex2);
-        printf("Parent (%jd) %d\en", (intmax_t) getpid(), j);
+        printf("Parent (%jd) %u\en", (intmax_t) getpid(), j);
         fpost(futex1);
     }
 
@@ -1929,6 +1935,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .ad l
 .BR get_robust_list (2),
@@ -1972,19 +1979,10 @@ Drepper, U., 2011. \fIFutexes Are Tricky\fP,
 .PP
 Futex example library, futex-*.tar.bz2 at
 .br
-.UR ftp://ftp.kernel.org\:/pub\:/linux\:/kernel\:/people\:/rusty/
+.UR https://mirrors.kernel.org\:/pub\:/linux\:/kernel\:/people\:/rusty/
 .UE
 .\"
 .\" FIXME(Torvald) We should probably refer to the glibc code here, in
 .\" particular the glibc-internal futex wrapper functions that are
 .\" WIP, and the generic pthread_mutex_t and perhaps condvar
 .\" implementations.
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

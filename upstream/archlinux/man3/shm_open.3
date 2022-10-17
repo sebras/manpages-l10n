@@ -1,30 +1,13 @@
 .\" Copyright (C) 2002, 2020 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH SHM_OPEN 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH SHM_OPEN 3 2022-09-15 "Linux man-pages (unreleased)"
 .SH NAME
 shm_open, shm_unlink \- create/open or unlink POSIX shared memory objects
+.SH LIBRARY
+Real-time library
+.RI ( librt ", " \-lrt )
 .SH SYNOPSIS
 .nf
 .B #include <sys/mman.h>
@@ -34,8 +17,6 @@ shm_open, shm_unlink \- create/open or unlink POSIX shared memory objects
 .BI "int shm_open(const char *" name ", int " oflag ", mode_t " mode );
 .BI "int shm_unlink(const char *" name );
 .fi
-.PP
-Link with \fI\-lrt\fP.
 .SH DESCRIPTION
 .BR shm_open ()
 creates and opens a new, or opens an existing, POSIX shared memory object.
@@ -59,7 +40,7 @@ For portable use,
 a shared memory object should be identified by a name of the form
 .IR /somename ;
 that is, a null-terminated string of up to
-.BI NAME_MAX
+.B NAME_MAX
 (i.e., 255) characters consisting of an initial slash,
 .\" glibc allows the initial slash to be omitted, and makes
 .\" multiple initial slashes equivalent to a single slash.
@@ -258,7 +239,7 @@ T}	Thread safety	MT-Safe locale
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .PP
 POSIX.1-2001 says that the group ownership of a newly created shared
@@ -308,13 +289,14 @@ Its primary purpose is to define a structure that will be imposed
 on the memory object that is shared between the two programs.
 .PP
 .in +4n
+.\" SRC BEGIN (pshm_ucase.h)
 .EX
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <semaphore.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
@@ -332,6 +314,7 @@ struct shmbuf {
     char   buf[BUF_SIZE];   /* Data being transferred */
 };
 .EE
+.\" SRC END
 .in
 .\"
 .SS Program source: pshm_ucase_bounce.c
@@ -349,29 +332,34 @@ in the memory by the "send" program and then posts the second semaphore
 to tell the "send" program that it may now access the shared memory.
 .PP
 .in +4n
+.\" SRC BEGIN (pshm_ucase_bounce.c)
 .EX
 /* pshm_ucase_bounce.c
 
    Licensed under GNU General Public License v2 or later.
 */
 #include <ctype.h>
+
 #include "pshm_ucase.h"
 
 int
 main(int argc, char *argv[])
 {
+    int            fd;
+    char           *shmpath;
+    struct shmbuf  *shmp;
+
     if (argc != 2) {
         fprintf(stderr, "Usage: %s /shm\-path\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    char *shmpath = argv[1];
+    shmpath = argv[1];
 
     /* Create shared memory object and set its size to the size
        of our structure. */
 
-    int fd = shm_open(shmpath, O_CREAT | O_EXCL | O_RDWR,
-                      S_IRUSR | S_IWUSR);
+    fd = shm_open(shmpath, O_CREAT | O_EXCL | O_RDWR, 0600);
     if (fd == \-1)
         errExit("shm_open");
 
@@ -380,9 +368,8 @@ main(int argc, char *argv[])
 
     /* Map the object into the caller\(aqs address space. */
 
-    struct shmbuf *shmp = mmap(NULL, sizeof(*shmp),
-                               PROT_READ | PROT_WRITE,
-                               MAP_SHARED, fd, 0);
+    *shmp = mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE,
+                 MAP_SHARED, fd, 0);
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
@@ -401,7 +388,7 @@ main(int argc, char *argv[])
 
     /* Convert data in shared memory into upper case. */
 
-    for (int j = 0; j < shmp\->cnt; j++)
+    for (size_t j = 0; j < shmp\->cnt; j++)
         shmp\->buf[j] = toupper((unsigned char) shmp\->buf[j]);
 
     /* Post \(aqsem2\(aq to tell the peer that it can now
@@ -419,6 +406,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .in
 .\"
 .SS Program source: pshm_ucase_send.c
@@ -437,25 +425,32 @@ the "send" program prints the contents of the shared memory
 on standard output.
 .PP
 .in +4n
+.\" SRC BEGIN (pshm_ucase_send.c)
 .EX
 /* pshm_ucase_send.c
 
    Licensed under GNU General Public License v2 or later.
 */
 #include <string.h>
+
 #include "pshm_ucase.h"
 
 int
 main(int argc, char *argv[])
 {
+    int            fd;
+    char           *shmpath, *string;
+    size_t         len;
+    struct shmbuf  *shmp;
+
     if (argc != 3) {
         fprintf(stderr, "Usage: %s /shm\-path string\en", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    char *shmpath = argv[1];
-    char *string = argv[2];
-    size_t len = strlen(string);
+    shmpath = argv[1];
+    string = argv[2];
+    len = strlen(string);
 
     if (len > BUF_SIZE) {
         fprintf(stderr, "String is too long\en");
@@ -465,13 +460,12 @@ main(int argc, char *argv[])
     /* Open the existing shared memory object and map it
        into the caller\(aqs address space. */
 
-    int fd = shm_open(shmpath, O_RDWR, 0);
+    fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == \-1)
         errExit("shm_open");
 
-    struct shmbuf *shmp = mmap(NULL, sizeof(*shmp),
-                               PROT_READ | PROT_WRITE,
-                               MAP_SHARED, fd, 0);
+    shmp = mmap(NULL, sizeof(*shmp), PROT_READ | PROT_WRITE,
+                MAP_SHARED, fd, 0);
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
@@ -499,6 +493,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .in
 .SH SEE ALSO
 .BR close (2),
@@ -512,12 +507,3 @@ main(int argc, char *argv[])
 .BR open (2),
 .BR umask (2),
 .BR shm_overview (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

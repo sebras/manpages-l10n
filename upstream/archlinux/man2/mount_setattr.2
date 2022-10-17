@@ -1,30 +1,13 @@
 .\" Copyright (c) 2021 by Christian Brauner <christian.brauner@ubuntu.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH MOUNT_SETATTR 2 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH MOUNT_SETATTR 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 mount_setattr \- change properties of a mount or mount tree
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 
@@ -309,7 +292,7 @@ field.
 The kernel will verify that
 .B MOUNT_ATTR__ATIME
 isn't partially set in
-.IR attr_clr
+.I attr_clr
 (i.e., either all bits in the
 .B MOUNT_ATTR__ATIME
 bit field are either set or clear), and that
@@ -429,6 +412,13 @@ The caller tried to change the mount to
 .BR MOUNT_ATTR_RDONLY ,
 but the mount still holds files open for writing.
 .TP
+.B EBUSY
+The caller tried to create an ID-mapped mount raising
+.B MOUNT_ATTR_IDMAP
+and specifying
+.I userns_fd
+but the mount still holds files open for writing.
+.TP
 .B EINVAL
 The pathname specified via the
 .I dirfd
@@ -536,7 +526,7 @@ a new peer group ID needs to be allocated for all mounts without a peer group
 ID set.
 This allocation failed because
 the kernel has run out of IDs.
-.\" Christian Bruner: i.e. someone has somehow managed to
+.\" Christian Brauner: i.e. someone has somehow managed to
 .\" allocate so many peer groups and managed to keep the kernel running
 .\" (???) that the ida has ran out of ids
 .\" Note that technically further error codes are possible that are
@@ -597,7 +587,7 @@ first appeared in Linux 5.12.
 .\" commit 7d6beb71da3cc033649d641e1e608713b8220290
 .\" commit 2a1867219c7b27f928e2545782b86daaf9ad50bd
 .\" commit 9caccd41541a6f7d6279928d9f971f6642c361af
-.SH CONFORMING TO
+.SH STANDARDS
 .BR mount_setattr ()
 is Linux-specific.
 .SH NOTES
@@ -642,26 +632,58 @@ The following conditions must be met in order to create an ID-mapped mount:
 .IP \(bu 3
 The caller must have the
 .B CAP_SYS_ADMIN
-capability in the initial user namespace.
-.IP \(bu
-The filesystem must be mounted in a mount namespace
-that is owned by the initial user namespace.
+capability in the user namespace the filesystem was mounted in.
+.\" commit bd303368b776eead1c29e6cdda82bde7128b82a7
+.\" Christian Brauner
+.\"     Note, currently no filesystems mountable in non-initial user namespaces
+.\"     support ID-mapped mounts.
 .IP \(bu
 The underlying filesystem must support ID-mapped mounts.
-Currently, the
-.BR xfs (5),
-.BR ext4 (5),
-and
-.B FAT
-filesystems support ID-mapped mounts
-with more filesystems being actively worked on.
+Currently, the following filesystems support ID-mapped mounts:
+.\" fs_flags = FS_ALLOW_IDMAP in kernel sources
+.PP
+.RS 3
+.PD 0
+.IP \(bu 3
+.BR xfs (5)
+(since Linux 5.12)
 .IP \(bu
+.BR ext4 (5)
+(since Linux 5.12)
+.IP \(bu
+.B FAT
+(since Linux 5.12)
+.IP \(bu
+.BR btrfs (5)
+(since Linux 5.15)
+.\" commit 5b9b26f5d0b88b74001dcfe4ab8a8f2f4e744112
+.IP \(bu
+.B ntfs3
+(since Linux 5.15)
+.\" commit 82cae269cfa953032fbb8980a7d554d60fb00b17
+.IP \(bu
+.B f2fs
+(since Linux 5.18)
+.\" commit 984fc4e76d63345499f01c0c198a4b44860cf027
+.IP \(bu
+.B erofs
+(since Linux 5.19)
+.\" commit 6c459b78d4793afbba6d864c466cc5cd2932459d
+.IP \(bu
+.B overlayfs
+(ID-mapped lower and upper layers supported since Linux 5.19)
+.PD
+.RE
+.IP \(bu 3
 The mount must not already be ID-mapped.
 This also implies that the ID mapping of a mount cannot be altered.
 .IP \(bu
 The mount must be a detached mount;
 that is,
 it must have been created by calling
+.IP \(bu
+The mount must not have any writers.
+.\" commit 1bbcd277a53e08d619ffeec56c5c9287f2bf42f
 .BR open_tree (2)
 with the
 .B OPEN_TREE_CLONE
@@ -875,13 +897,14 @@ with a structure which has every byte nonzero
 (to find the largest value which doesn't produce an error of
 .BR E2BIG ).
 .SH EXAMPLES
+.\" SRC BEGIN (mount_setattr.c)
 .EX
 /*
  * This program allows the caller to create a new detached mount
  * and set various properties on it.
  */
 #define _GNU_SOURCE
-#include <errno.h>
+#include <err.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <linux/mount.h>
@@ -916,65 +939,59 @@ move_mount(int from_dirfd, const char *from_pathname,
 }
 
 static const struct option longopts[] = {
-    {"map\-mount",       required_argument,  NULL,  'a'},
-    {"recursive",       no_argument,        NULL,  'b'},
-    {"read\-only",       no_argument,        NULL,  'c'},
-    {"block\-setid",     no_argument,        NULL,  'd'},
-    {"block\-devices",   no_argument,        NULL,  'e'},
-    {"block\-exec",      no_argument,        NULL,  'f'},
-    {"no\-access\-time",  no_argument,        NULL,  'g'},
+    {"map\-mount",       required_argument,  NULL,  \(aqa\(aq},
+    {"recursive",       no_argument,        NULL,  \(aqb\(aq},
+    {"read\-only",       no_argument,        NULL,  \(aqc\(aq},
+    {"block\-setid",     no_argument,        NULL,  \(aqd\(aq},
+    {"block\-devices",   no_argument,        NULL,  \(aqe\(aq},
+    {"block\-exec",      no_argument,        NULL,  \(aqf\(aq},
+    {"no\-access\-time",  no_argument,        NULL,  \(aqg\(aq},
     { NULL,             0,                  NULL,   0 },
 };
-
-#define exit_log(format, ...)  do           \e
-{                                           \e
-    fprintf(stderr, format, ##__VA_ARGS__); \e
-    exit(EXIT_FAILURE);                     \e
-} while (0)
 
 int
 main(int argc, char *argv[])
 {
-    struct mount_attr *attr = &(struct mount_attr){};
-    int fd_userns = \-1;
-    bool recursive = false;
-    int index = 0;
-    int ret;
+    int                fd_userns = \-1;
+    int                index = 0;
+    int                ret;
+    bool               recursive = false;
+    struct mount_attr  *attr = &(struct mount_attr){};
 
     while ((ret = getopt_long_only(argc, argv, "",
                                    longopts, &index)) != \-1) {
         switch (ret) {
-        case 'a':
+        case \(aqa\(aq:
             fd_userns = open(optarg, O_RDONLY | O_CLOEXEC);
             if (fd_userns == \-1)
-                exit_log("%m \- Failed top open %s\en", optarg);
+                err(EXIT_FAILURE, "open(%s)", optarg);
             break;
-        case 'b':
+        case \(aqb\(aq:
             recursive = true;
             break;
-        case 'c':
+        case \(aqc\(aq:
             attr\->attr_set |= MOUNT_ATTR_RDONLY;
             break;
-        case 'd':
+        case \(aqd\(aq:
             attr\->attr_set |= MOUNT_ATTR_NOSUID;
             break;
-        case 'e':
+        case \(aqe\(aq:
             attr\->attr_set |= MOUNT_ATTR_NODEV;
             break;
-        case 'f':
+        case \(aqf\(aq:
             attr\->attr_set |= MOUNT_ATTR_NOEXEC;
             break;
-        case 'g':
+        case \(aqg\(aq:
             attr\->attr_set |= MOUNT_ATTR_NOATIME;
             attr\->attr_clr |= MOUNT_ATTR__ATIME;
             break;
         default:
-            exit_log("Invalid argument specified");
+            errx(EXIT_FAILURE, "Invalid argument specified");
         }
     }
 
     if ((argc \- optind) < 2)
-        exit_log("Missing source or target mount point\en");
+        errx(EXIT_FAILURE, "Missing source or target mount point");
 
     const char *source = argv[optind];
     const char *target = argv[optind + 1];
@@ -998,7 +1015,7 @@ main(int argc, char *argv[])
                        OPEN_TREE_CLONE | OPEN_TREE_CLOEXEC |
                        AT_EMPTY_PATH | (recursive ? AT_RECURSIVE : 0));
     if (fd_tree == \-1)
-        exit_log("%m \- Failed to open %s\en", source);
+        err(EXIT_FAILURE, "open(%s)", source);
 
     if (fd_userns >= 0) {
         attr\->attr_set  |= MOUNT_ATTR_IDMAP;
@@ -1009,7 +1026,7 @@ main(int argc, char *argv[])
                         AT_EMPTY_PATH | (recursive ? AT_RECURSIVE : 0),
                         attr, sizeof(struct mount_attr));
     if (ret == \-1)
-        exit_log("%m \- Failed to change mount attributes\en");
+        err(EXIT_FAILURE, "mount_setattr");
 
     close(fd_userns);
 
@@ -1019,13 +1036,14 @@ main(int argc, char *argv[])
     ret = move_mount(fd_tree, "", \-1, target,
                      MOVE_MOUNT_F_EMPTY_PATH);
     if (ret == \-1)
-        exit_log("%m \- Failed to attach mount to %s\en", target);
+        err(EXIT_FAILURE, "move_mount() to %s", target);
 
     close(fd_tree);
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR newgidmap (1),
 .BR newuidmap (1),
@@ -1037,12 +1055,3 @@ main(int argc, char *argv[])
 .BR mount_namespaces (7),
 .BR user_namespaces (7),
 .BR xattr (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

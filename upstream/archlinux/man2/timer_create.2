@@ -1,31 +1,14 @@
 .\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH TIMER_CREATE 2 2021-03-22 Linux "Linux Programmer's Manual"
+.TH TIMER_CREATE 2 2022-09-17 "Linux man-pages (unreleased)"
 .SH NAME
 timer_create \- create a POSIX per-process timer
+.SH LIBRARY
+Real-time library
+.RI ( librt ", " \-lrt )
 .SH SYNOPSIS
 .nf
 .BR "#include <signal.h>" "           /* Definition of " SIGEV_* " constants */"
@@ -34,8 +17,6 @@ timer_create \- create a POSIX per-process timer
 .BI "int timer_create(clockid_t " clockid ", struct sigevent *restrict " sevp ,
 .BI "                 timer_t *restrict " timerid );
 .fi
-.PP
-Link with \fI\-lrt\fP.
 .PP
 .RS -4
 Feature Test Macro Requirements for glibc (see
@@ -86,12 +67,12 @@ Like
 .BR CLOCK_MONOTONIC ,
 this is a monotonically increasing clock.
 However, whereas the
-.BR CLOCK_MONOTONIC
+.B CLOCK_MONOTONIC
 clock does not measure the time while a system is suspended, the
-.BR CLOCK_BOOTTIME
+.B CLOCK_BOOTTIME
 clock does include the time during which the system is suspended.
 This is useful for applications that need to be suspend-aware.
-.BR CLOCK_REALTIME
+.B CLOCK_REALTIME
 is not suitable for such applications, since that clock is affected
 by discontinuous changes to the system clock.
 .TP
@@ -142,12 +123,12 @@ The
 .I sevp.sigev_notify
 field can have the following values:
 .TP
-.BR SIGEV_NONE
+.B SIGEV_NONE
 Don't asynchronously notify when the timer expires.
 Progress of the timer can be monitored using
 .BR timer_gettime (2).
 .TP
-.BR SIGEV_SIGNAL
+.B SIGEV_SIGNAL
 Upon timer expiration, generate the signal
 .I sigev_signo
 for the process.
@@ -165,7 +146,7 @@ at most one signal is queued to the process for a given timer; see
 .BR timer_getoverrun (2)
 for more details.
 .TP
-.BR SIGEV_THREAD
+.B SIGEV_THREAD
 Upon timer expiration, invoke
 .I sigev_notify_function
 as if it were the start function of a new thread.
@@ -180,7 +161,7 @@ but the signal is targeted at the thread whose ID is given in
 .IR sigev_notify_thread_id ,
 which must be a thread in the same process as the caller.
 The
-.IR sigev_notify_thread_id
+.I sigev_notify_thread_id
 field specifies a kernel thread ID, that is, the value returned by
 .BR clone (2)
 or
@@ -219,7 +200,7 @@ Clock ID,
 .IR sigev_notify ,
 .IR sigev_signo ,
 or
-.IR sigev_notify_thread_id
+.I sigev_notify_thread_id
 is invalid.
 .TP
 .B ENOMEM
@@ -233,15 +214,15 @@ The kernel does not support creating a timer against this
 .B EPERM
 .I clockid
 was
-.BR CLOCK_REALTIME_ALARM
+.B CLOCK_REALTIME_ALARM
 or
-.BR CLOCK_BOOTTIME_ALARM
+.B CLOCK_BOOTTIME_ALARM
 but the caller did not have the
-.BR CAP_WAKE_ALARM
+.B CAP_WAKE_ALARM
 capability.
 .SH VERSIONS
 This system call is available since Linux 2.6.
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .SH NOTES
 A program may create multiple interval timers using
@@ -256,7 +237,7 @@ The kernel preallocates a "queued real-time signal"
 for each timer created using
 .BR timer_create ().
 Consequently, the number of timers is limited by the
-.BR RLIMIT_SIGPENDING
+.B RLIMIT_SIGPENDING
 resource limit (see
 .BR setrlimit (2)).
 .PP
@@ -282,7 +263,7 @@ Return the overrun count for the last timer expiration.
 Disarm and delete a timer.
 .PP
 Since Linux 3.10, the
-.IR /proc/[pid]/timers
+.IR /proc/ pid /timers
 file can be used to list the POSIX timers for the process with PID
 .IR pid .
 See
@@ -293,7 +274,7 @@ Since Linux 4.10,
 .\" baa73d9e478ff32d62f3f9422822b59dd9a95a21
 support for POSIX timers is a configurable option that is enabled by default.
 Kernel support can be disabled via the
-.BR CONFIG_POSIX_TIMERS
+.B CONFIG_POSIX_TIMERS
 option.
 .\"
 .SS C library/kernel differences
@@ -302,7 +283,7 @@ Part of the implementation of the POSIX timers API is provided by glibc.
 In particular:
 .IP * 3
 Much of the functionality for
-.BR SIGEV_THREAD
+.B SIGEV_THREAD
 is implemented within glibc, rather than the kernel.
 (This is necessarily so,
 since the thread involved in handling the notification is one
@@ -311,7 +292,7 @@ Although the notification delivered to the process is via a thread,
 internally the NPTL implementation uses a
 .I sigev_notify
 value of
-.BR SIGEV_THREAD_ID
+.B SIGEV_THREAD_ID
 along with a real-time signal that is reserved by the implementation (see
 .BR nptl (7)).
 .IP *
@@ -370,13 +351,14 @@ Caught signal 34
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (timer_create.c)
 .EX
-#include <stdint.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <signal.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
@@ -387,8 +369,8 @@ Caught signal 34
 static void
 print_siginfo(siginfo_t *si)
 {
-    timer_t *tidp;
-    int or;
+    int      or;
+    timer_t  *tidp;
 
     tidp = si\->si_value.sival_ptr;
 
@@ -419,12 +401,12 @@ handler(int sig, siginfo_t *si, void *uc)
 int
 main(int argc, char *argv[])
 {
-    timer_t timerid;
-    struct sigevent sev;
-    struct itimerspec its;
-    long long freq_nanosecs;
-    sigset_t mask;
-    struct sigaction sa;
+    timer_t            timerid;
+    sigset_t           mask;
+    long long          freq_nanosecs;
+    struct sigevent    sev;
+    struct sigaction   sa;
+    struct itimerspec  its;
 
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <sleep\-secs> <freq\-nanosecs>\en",
@@ -486,6 +468,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .ad l
 .nh
@@ -501,12 +484,3 @@ main(int argc, char *argv[])
 .BR sigevent (7),
 .BR signal (7),
 .BR time (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.
