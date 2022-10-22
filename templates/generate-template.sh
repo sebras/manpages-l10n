@@ -44,16 +44,13 @@ fi
 tdir=$(mktemp -d)
 
 po4a-updatepo -f man \
+        --no-deprecation \
 	--option groff_code=verbatim \
 	--option generated \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
 	--master "$upstream_manpage" -M utf-8 \
-	-p $tdir/tmp.pot | grep -v "po4a-updatepo is deprecated. The unified po4a(1) program is more convenient and less error prone."
-
-# Output header
-
-cat ./poheader
+	-p $tdir/tmp.pot
 
 # Reduce the location lines from the full path and line number
 # to the name of the distribution
