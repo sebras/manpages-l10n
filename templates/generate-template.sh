@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright © 2019 Dr. Tobias Quathamer <toddy@debian.org>
+#           © 2022 Dr. Helge Kreutzmann <debian@helgefjell.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -39,27 +40,8 @@ if [ -z "$upstream_manpage" ]; then
 	exit 1
 fi
 
-# Determine if an encoding is specified,
-# otherwise fall back to ISO-8859-1
-# coding=$(grep "\-\*\- coding:" "$upstream_manpage" | sed -e "s/.*coding:\s\+\([^ ]\+\).*/\1/")
-# if [ -z "$coding" ]; then
-# 	coding="ISO-8859-1"
-# fi
-
-# Create pot with po4a
-#po4a-gettextize -f man \
-#	--option groff_code=verbatim \
-#	--option generated \
-#	--option untranslated="a.RE,\|" \
-#	--option unknown_macros=untranslated \
-#	--master "$upstream_manpage" -M utf-8 |\
-#	# Reduce the location lines from the full path and line number
-#	# to the name of the distribution
-#	sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
-#	# Ensure the correct encoding is set
-#	sed -e "s/^\"Content-Type: text\/plain; charset=CHARSET\\\\n\"$/\"Content-Type: text\/plain; charset=UTF-8\\\\n\"/"
-
-tmp1=$(mktemp)
+# Necessary, size 0 file of mktemp fails for UTF-8 characters, see Debian bug #1022216
+tdir=$(mktemp -d)
 
 po4a-updatepo -f man \
 	--option groff_code=verbatim \
@@ -67,7 +49,7 @@ po4a-updatepo -f man \
 	--option untranslated="a.RE,\|" \
 	--option unknown_macros=untranslated \
 	--master "$upstream_manpage" -M utf-8 \
-	-p $tmp1 | grep -v "po4a-updatepo is deprecated. The unified po4a(1) program is more convenient and less error prone."
+	-p $tdir/tmp.pot | grep -v "po4a-updatepo is deprecated. The unified po4a(1) program is more convenient and less error prone."
 
 # Output header
 
@@ -75,8 +57,8 @@ cat ./poheader
 
 # Reduce the location lines from the full path and line number
 # to the name of the distribution
-cat $tmp1 | sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
+cat $tdir/tmp.pot | sed -e "s,^#: ../upstream/\([^/]\+\)/man.*$,#: \1," |\
 	# Ensure the correct encoding is set
 	sed -e "s/^\"Content-Type: text\/plain; charset=CHARSET\\\\n\"$/\"Content-Type: text\/plain; charset=UTF-8\\\\n\"/"
 
-rm $tmp1
+rm -rf $tdir
