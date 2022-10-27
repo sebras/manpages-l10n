@@ -190,6 +190,7 @@ of Linux manpages. The list is sorted alphabetically.
 * Marc Poiroud <marci1@archlinux.fr>
 * Mattéo Rossillol‑‑Laruelle <beatussum@protonmail.com>
 * Michel Quercia <quercia AT cal DOT enst DOT fr>
+* Michel Robitaille <robitail@iro.umontreal.ca>
 * Montanes David <montanes.david@gmail.com>
 * Nicolas François <nicolas.francois@centraliens.net>
 * Nicolas Haller <nicolas@boiteameuh.org>
@@ -492,6 +493,7 @@ of Linux manpages. The list is sorted alphabetically.
 
 ## Ukrainian:
 
+* Andrij Mizyk <andm1zyk@proton.me>
 * Andrij Mizyk <andmizyk@gmail.com>
 * Andriy Rysin <arysin@gmail.com>
 * lxlalexlxl <lxlalexlxl@ukr.net>
