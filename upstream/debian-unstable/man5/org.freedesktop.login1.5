@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 251" "org.freedesktop.login1"
+.TH "ORG\&.FREEDESKTOP\&.LOGIN1" "5" "" "systemd 252" "org.freedesktop.login1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -242,6 +242,8 @@ node /org/freedesktop/login1 {
       readonly t SessionsMax = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t NCurrentSessions = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t StopIdleSessionUSec = \&.\&.\&.;
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -252,6 +254,7 @@ node /org/freedesktop/login1 {
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -861,7 +864,11 @@ node /org/freedesktop/login1/seat/seat0 {
 \fBTerminate()\fR
 and
 \fBActivateSession()\fR
-work similar to TerminateSeat(), ActivationSessionOnSeat() on the Manager object\&.
+work similarly to
+\fBTerminateSeat()\fR
+and
+\fBActivationSessionOnSeat()\fR
+on the Manager object\&.
 .PP
 \fBSwitchTo()\fR
 switches to the session on the virtual terminal
@@ -901,7 +908,7 @@ The
 \fIIdleHint\fR,
 \fIIdleSinceHint\fR, and
 \fIIdleSinceHintMonotonic\fR
-properties encode the idle state, similar to the ones exposed on the
+properties encode the idle state, similarly to the ones exposed on the
 Manager
 object, but specific for this seat\&.
 .SH "USER OBJECTS"
@@ -975,7 +982,7 @@ node /org/freedesktop/login1/user/_1000 {
 \fBTerminate()\fR
 and
 \fBKill()\fR
-work similar to the
+work similarly to the
 \fBTerminateUser()\fR
 and
 \fBKillUser()\fR
@@ -1040,7 +1047,7 @@ The
 \fIIdleHint\fR,
 \fIIdleSinceHint\fR, and
 \fIIdleSinceHintMonotonic\fR
-properties encode the idle hint state of the user, similar to the
+properties encode the idle hint state of the user, similarly to the
 Manager\*(Aqs properties, but specific for this user\&.
 .PP
 The
@@ -1066,6 +1073,7 @@ node /org/freedesktop/login1/session/1 {
       TakeControl(in  b force);
       ReleaseControl();
       SetType(in  s type);
+      SetDisplay(in  s display);
       TakeDevice(in  u major,
                  in  u minor,
                  out h fd,
@@ -1184,6 +1192,7 @@ node /org/freedesktop/login1/session/1 {
 
 
 
+
 .SS "Methods"
 .PP
 \fBTerminate()\fR,
@@ -1217,6 +1226,13 @@ has not been called, this method will fail\&. In addition, the session type will
 or closing the D\-Bus connection\&. This should help prevent a session from entering an inconsistent state, for example if the controller crashes\&. The only argument
 \fItype\fR
 is the new session type\&.
+.PP
+\fBSetDisplay()\fR
+allows the display name of the graphical session to be changed\&. This is useful if the display server is started as part of the session\&. It can only be called by session\*(Aqs current controller\&. If
+\fBTakeControl()\fR
+has not been called, this method will fail\&. The only argument
+\fIdisplay\fR
+is the new display name\&.
 .PP
 \fBTakeDevice()\fR
 allows a session controller to get a file descriptor for a specific device\&. Pass in the major and minor numbers of the character device and

@@ -1,5 +1,5 @@
 '\" t
-.TH "LOADER\&.CONF" "5" "" "systemd 251" "loader.conf"
+.TH "LOADER\&.CONF" "5" "" "systemd 252" "loader.conf"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -114,6 +114,13 @@ Windows Boot Manager
 T}
 .TE
 .sp 1
+Supported glob wildcard patterns are
+"?",
+"*", and
+"[\&...]"
+(including ranges)\&. Note that these patterns use the same syntax as
+\fBglob\fR(7), but do not support all features\&. In particular, set negation and named character classes are not supported\&. The matching is done case\-insensitively on the entry ID (as shown by
+\fBbootctl list\fR)\&.
 .RE
 .PP
 timeout
@@ -186,6 +193,81 @@ beep
 Takes a boolean argument\&. If timeout enabled beep every second, otherwise beep n times when n\-th entry in boot menu is selected (default disabled)\&. Currently, only x86 is supported, where it uses the PC speaker\&.
 .RE
 .PP
+secure\-boot\-enroll
+.RS 4
+Danger: this feature might soft\-brick your device if used improperly\&.
+.sp
+Takes one of
+"off",
+"manual"
+or
+"force"\&. Controls the enrollment of secure boot keys\&. If set to
+"off", no action whatsoever is taken\&. If set to
+"manual"
+(the default) and the UEFI firmware is in setup\-mode then entries to manually enroll Secure Boot variables are created in the boot menu\&. If set to
+"force", in addition, if a directory named
+/loader/keys/auto/
+exists on the ESP then the keys in that directory are enrolled automatically\&.
+.sp
+The different sets of variables can be set up under
+/loader/keys/\fINAME\fR
+where
+\fINAME\fR
+is the name that is going to be used as the name of the entry\&. This allows one to ship multiple sets of Secure Boot variables and choose which one to enroll at runtime\&.
+.sp
+Supported secure boot variables are one database for authorized images, one key exchange key (KEK) and one platform key (PK)\&. For more information, refer to the
+\m[blue]\fBUEFI specification\fR\m[]\&\s-2\u[2]\d\s+2, under Secure Boot and Driver Signing\&. Another resource that describe the interplay of the different variables is the
+\m[blue]\fBEDK2 documentation\fR\m[]\&\s-2\u[3]\d\s+2\&.
+.sp
+A complete set of UEFI variable includes
+db\&.auth,
+KEK\&.auth
+and
+PK\&.auth\&. Note that these files need to be authenticated UEFI variables\&. See below for an example of how to generate them from regular X\&.509 keys\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+uuid=$(systemd\-id128 new \-\-uuid)
+for key in PK KEK db; do
+  openssl req \-new \-x509 \-subj "/CN=${key}/" \-keyout "${key}\&.key" \-out "${key}\&.crt"
+  openssl x509 \-outform DER \-in "${key}\&.crt" \-out "${key}\&.cer"
+  cert\-to\-efi\-sig\-list \-g "${uuid}" "${key}\&.crt" "${key}\&.esl"
+done
+
+for key in MicWinProPCA2011_2011\-10\-19\&.crt MicCorUEFCA2011_2011\-06\-27\&.crt MicCorKEKCA2011_2011\-06\-24\&.crt; do
+  curl "https://www\&.microsoft\&.com/pkiops/certs/${key}" \-\-output "${key}"
+  sbsiglist \-\-owner 77fa9abd\-0359\-4d32\-bd60\-28f4e78f784b \-\-type x509 \-\-output "${key%crt}esl" "${key}"
+done
+
+# Optionally add Microsoft Windows Production CA 2011 (needed to boot into Windows)\&.
+cat MicWinProPCA2011_2011\-10\-19\&.esl >> db\&.esl
+
+# Optionally add Microsoft Corporation UEFI CA 2011 (for firmware drivers / option ROMs
+# and third\-party boot loaders (including shim)\&. This is highly recommended on real
+# hardware as not including this may soft\-brick your device (see next paragraph)\&.
+cat MicCorUEFCA2011_2011\-06\-27\&.esl >> db\&.esl
+
+# Optionally add Microsoft Corporation KEK CA 2011\&. Recommended if either of the
+# Microsoft keys is used as the official UEFI revocation database is signed with this
+# key\&. The revocation database can be updated with \fBfwupdmgr\fR(1)\&.
+cat MicCorKEKCA2011_2011\-06\-24\&.esl >> KEK\&.esl
+
+sign\-efi\-sig\-list \-c PK\&.crt \-k PK\&.key PK PK\&.esl PK\&.auth
+sign\-efi\-sig\-list \-c PK\&.crt \-k PK\&.key KEK KEK\&.esl KEK\&.auth
+sign\-efi\-sig\-list \-c KEK\&.crt \-k KEK\&.key db db\&.esl db\&.auth
+        
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This feature is considered dangerous because even if all the required files are signed with the keys being loaded, some files necessary for the system to function properly still won\*(Aqt be\&. This is especially the case with Option ROMs (e\&.g\&. for storage controllers or graphics cards)\&. See
+\m[blue]\fBSecure Boot and Option ROMs\fR\m[]\&\s-2\u[4]\d\s+2
+for more details\&.
+.RE
+.PP
 reboot\-for\-bitlocker
 .RS 4
 Caveat: This feature is experimental, and is likely to be changed (or removed in its current form) in a future version of systemd\&.
@@ -228,7 +310,7 @@ is not set\&. This mode is useful in environments where protection against OS im
 to initialize both the random seed file in the ESP and the system token EFI variable\&.
 .sp
 See
-\m[blue]\fBRandom Seeds\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fBRandom Seeds\fR\m[]\&\s-2\u[5]\d\s+2
 for further information\&.
 .RE
 .SH "EXAMPLE"
@@ -261,6 +343,21 @@ Boot Loader Specification
 \%https://systemd.io/BOOT_LOADER_SPECIFICATION
 .RE
 .IP " 2." 4
+UEFI specification
+.RS 4
+\%https://uefi.org/specifications
+.RE
+.IP " 3." 4
+EDK2 documentation
+.RS 4
+\%https://edk2-docs.gitbook.io/understanding-the-uefi-secure-boot-chain/secure_boot_chain_in_uefi/uefi_secure_boot
+.RE
+.IP " 4." 4
+Secure Boot and Option ROMs
+.RS 4
+\%https://github.com/Foxboron/sbctl/wiki/FAQ#option-rom
+.RE
+.IP " 5." 4
 Random Seeds
 .RS 4
 \%https://systemd.io/RANDOM_SEEDS

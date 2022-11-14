@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 251" "systemd-nspawn"
+.TH "SYSTEMD\-NSPAWN" "1" "" "systemd 252" "systemd-nspawn"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ will verify the existence of
 /usr/lib/os\-release
 or
 /etc/os\-release
-in the container tree before starting the container (see
+in the container tree before booting a container (see
 \fBos-release\fR(5))\&. It might be necessary to add this file to the container tree manually if the OS of the container is too old to contain this file out\-of\-the\-box\&.
 .PP
 \fBsystemd\-nspawn\fR
@@ -75,7 +75,7 @@ is provided to make this easy, taking the container name as instance identifier\
 \fBsystemd\-nspawn\fR
 is invoked by the template unit file than interactively on the command line\&. Most importantly the template unit file makes use of the
 \fB\-\-boot\fR
-which is not the default in case
+option which is not the default in case
 \fBsystemd\-nspawn\fR
 is invoked from the interactive command line\&. Further differences with the defaults are documented along with the various supported options below\&.
 .PP
@@ -102,7 +102,7 @@ and similar\&. These will not be visible outside of the container, and their con
 .PP
 Note that running two
 \fBsystemd\-nspawn\fR
-containers from the same directory tree will not make processes in them see each other\&. The PID namespace separation of the two containers is complete and the containers will share very few runtime objects except for the underlying file system\&. Use
+containers from the same directory tree will not make processes in them see each other\&. The PID namespace separation of the two containers is complete and the containers will share very few runtime objects except for the underlying file system\&. Rather use
 \fBmachinectl\fR(1)\*(Aqs
 \fBlogin\fR
 or
@@ -122,7 +122,7 @@ service that keeps track of running containers, and provides programming interfa
 .SH "OPTIONS"
 .PP
 If option
-\fB\-b\fR
+\fB\-\-boot\fR
 is specified, the arguments are used as arguments for the init program\&. Otherwise,
 \fICOMMAND\fR
 specifies the program to launch in the container, and the remaining arguments are used as arguments for this program\&. If
@@ -471,7 +471,7 @@ will be pivoted to the other directory\&. Both paths must be absolute, and are r
 .sp
 This is for containers which have several bootable directories in them; for example, several
 \m[blue]\fBOSTree\fR\m[]\&\s-2\u[4]\d\s+2
-deployments\&. It emulates the behavior of the boot loader and initial RAM disk which normally select which directory to mount as the root and start the container\*(Aqs PID 1 in\&.
+deployments\&. It emulates the behavior of the boot loader and the initrd which normally select which directory to mount as the root and start the container\*(Aqs PID 1 in\&.
 .RE
 .SS "Execution Options"
 .PP
@@ -647,7 +647,7 @@ isn\*(Aqt used\&.
 Set a unit property on the scope unit to register for the machine\&. This applies only if the machine is run in its own scope unit, i\&.e\&. if
 \fB\-\-keep\-unit\fR
 isn\*(Aqt used\&. Takes unit property assignments in the same format as
-\fBsystemctl set\-property\fR\&. This is useful to set memory limits and similar for container\&.
+\fBsystemctl set\-property\fR\&. This is useful to set memory limits and similar for the container\&.
 .RE
 .PP
 \fB\-\-register=\fR
@@ -750,7 +750,7 @@ If the parameter is
 .\}
 The special value
 "pick"
-turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner UID/GID of the root directory of the container\*(Aqs directory tree is read, and it is checked that no other container is currently using it\&. If this check is successful, the UID/GID range determined this way is used, similar to the behavior if
+turns on user namespacing\&. In this case the UID/GID range is automatically chosen\&. As first step, the file owner UID/GID of the root directory of the container\*(Aqs directory tree is read, and it is checked that no other container is currently using it\&. If this check is successful, the UID/GID range determined this way is used, similarly to the behavior if
 "yes"
 is specified\&. If the check is not successful (and thus the UID/GID range indicated in the root directory\*(Aqs file owner is already used elsewhere) a new \(en currently unused \(en UID/GID range of 65536 UIDs/GIDs is randomly chosen between the host UID/GIDs of 524288 and 1878982656, always starting at a multiple of 65536, and, if possible, consistently hashed from the machine name\&. This setting implies
 \fB\-\-private\-users\-ownership=auto\fR
@@ -1220,9 +1220,9 @@ file in the container is left as it is included in the image, and neither modifi
 If set to
 "copy\-host", the
 /etc/resolv\&.conf
-file from the host is copied into the container, unless the file exists already and is not a regular file (e\&.g\&. a symlink)\&. Similar, if
+file from the host is copied into the container, unless the file exists already and is not a regular file (e\&.g\&. a symlink)\&. Similarly, if
 "replace\-host"
-is used the file is copied, replacing any existing inode, including symlinks\&. Similar, if
+is used the file is copied, replacing any existing inode, including symlinks\&. Similarly, if
 "bind\-host"
 is used, the file is bind mounted from the host into the container\&.
 .sp
@@ -1379,7 +1379,7 @@ Bind mount a file or directory from the host into the container\&. Takes one of:
 "+"
 character\&. If so, the source path is taken relative to the image\*(Aqs root directory\&. This permits setting up bind mounts within the container image\&. The source path may be specified as empty string, in which case a temporary directory below the host\*(Aqs
 /var/tmp/
-directory is used\&. It is automatically removed when the container is shut down\&. The
+directory is used\&. It is automatically removed when the container is shut down\&. If the source path is not absolute, it is resolved relative to the current working directory\&. The
 \fB\-\-bind\-ro=\fR
 option creates read\-only bind mounts\&. Backslash escapes are interpreted, so
 "\e:"
@@ -1390,16 +1390,97 @@ Mount options are comma\-separated\&.
 and
 \fBnorbind\fR
 control whether to create a recursive or a regular bind mount\&. Defaults to "rbind"\&.
+\fBnoidmap\fR,
+\fBidmap\fR, and
+\fBrootidmap\fR
+control ID mapping\&.
+.sp
+Using
 \fBidmap\fR
-and
+or
+\fBrootidmap\fR
+requires support by the source filesystem for user/group ID mapped mounts\&. Defaults to "noidmap"\&. With
+\fBx\fR
+being the container\*(Aqs UID range offset,
+\fBy\fR
+being the length of the container\*(Aqs UID range, and
+\fBp\fR
+being the owner UID of the bind mount source inode on the host:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If
 \fBnoidmap\fR
-control if the bind mount should use filesystem id mappings\&. Using this option requires support by the source filesystem for id mappings\&. Defaults to "noidmap"\&.
+is used, any user
+\fBz\fR
+in the range
+\fB0 \&... y\fR
+seen from inside of the container is mapped to
+\fBx + z\fR
+in the
+\fBx \&... x + y\fR
+range on the host\&. All host users outside of that range are mapped to
+\fBnobody\fR
+inside the container\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If
+\fBidmap\fR
+is used, any user
+\fBz\fR
+in the UID range
+\fB0 \&... y\fR
+as seen from inside the container is mapped to the same
+\fBz\fR
+in the same
+\fB0 \&... y\fR
+range on the host\&. All host users outside of that range are mapped to
+\fBnobody\fR
+inside the container\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+If
+\fBrootidmap\fR
+is used, the user
+\fB0\fR
+seen from inside of the container is mapped to
+\fBp\fR
+on the host\&. All host users outside of that range are mapped to
+\fBnobody\fR
+inside the container\&.
+.RE
+.sp
+Whichever ID mapping option is used, the same mapping will be used for users and groups IDs\&. If
+\fBrootidmap\fR
+is used, the group owning the bind mounted directory will have no effect
 .sp
 Note that when this option is used in combination with
 \fB\-\-private\-users\fR, the resulting mount points will be owned by the
 \fBnobody\fR
 user\&. That\*(Aqs because the mount and its files and directories continue to be owned by the relevant host users and groups, which do not exist in the container, and thus show up under the wildcard UID 65534 (nobody)\&. If such bind mounts are created, it is recommended to make them read\-only, using
-\fB\-\-bind\-ro=\fR\&. Alternatively you can use the "idmap" mount option to map the filesystem ids\&.
+\fB\-\-bind\-ro=\fR\&. Alternatively you can use the "idmap" mount option to map the filesystem IDs\&.
 .RE
 .PP
 \fB\-\-bind\-user=\fR
@@ -1507,10 +1588,10 @@ is used\&. The directory is removed automatically when the container is shut dow
 "\-\-overlay=+/var::/var"
 in order to automatically overlay a writable temporary directory on a read\-only
 /var/
-directory\&.
+directory\&. If a source path is not absolute, it is resolved relative to the current working directory\&.
 .sp
 For details about overlay file systems, see
-\m[blue]\fBoverlayfs\&.txt\fR\m[]\&\s-2\u[5]\d\s+2\&. Note that the semantics of overlay file systems are substantially different from normal file systems, in particular regarding reported device and inode information\&. Device and inode information may change for a file while it is being written to, and processes might see out\-of\-date versions of files at times\&. Note that this switch automatically derives the
+\m[blue]\fBOverlay Filesystem\fR\m[]\&\s-2\u[5]\d\s+2\&. Note that the semantics of overlay file systems are substantially different from normal file systems, in particular regarding reported device and inode information\&. Device and inode information may change for a file while it is being written to, and processes might see out\-of\-date versions of files at times\&. Note that this switch automatically derives the
 "workdir="
 mount option for the overlay file system from the top\-level directory tree, making it a sibling of it\&. It is hence essential that the top\-level directory tree is not a mount point itself (since the working directory must be on the same file system as the top\-most directory tree)\&. Also note that the
 "lowerdir="
@@ -2026,9 +2107,9 @@ OSTree
 \%https://ostree.readthedocs.io/en/latest/
 .RE
 .IP " 5." 4
-overlayfs.txt
+Overlay Filesystem
 .RS 4
-\%https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt
+\%https://docs.kernel.org/filesystems/overlayfs.html
 .RE
 .IP " 6." 4
 Fedora

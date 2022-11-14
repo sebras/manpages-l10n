@@ -1,5 +1,5 @@
 '\" t
-.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 251" "org.freedesktop.systemd1"
+.TH "ORG\&.FREEDESKTOP\&.SYSTEMD1" "5" "" "systemd 252" "org.freedesktop.systemd1"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -159,7 +159,11 @@ node /org/freedesktop/systemd1 {
       Subscribe();
       Unsubscribe();
       Dump(out s output);
+      DumpUnitsMatchingPatterns(in  as patterns,
+                                out s output);
       DumpByFileDescriptor(out h fd);
+      DumpUnitsMatchingPatternsByFileDescriptor(in  as patterns,
+                                                out h fd);
       Reload();
       @org\&.freedesktop\&.DBus\&.Method\&.NoReply("true")
       Reexecute();
@@ -390,6 +394,12 @@ node /org/freedesktop/systemd1 {
       readonly s DefaultStandardOutput = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s DefaultStandardError = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s WatchdogDevice = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t WatchdogLastPingTimestamp = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
+      readonly t WatchdogLastPingTimestampMonotonic = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       @org\&.freedesktop\&.systemd1\&.Privileged("true")
       readwrite t RuntimeWatchdogUSec = \&.\&.\&.;
@@ -422,6 +432,8 @@ node /org/freedesktop/systemd1 {
       readonly t DefaultTimeoutStopUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly t DefaultTimeoutAbortUSec = \&.\&.\&.;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly t DefaultDeviceTimeoutUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly t DefaultRestartUSec = \&.\&.\&.;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
@@ -722,6 +734,12 @@ node /org/freedesktop/systemd1 {
 
 
 
+
+
+
+
+
+
 .SS "Methods"
 .PP
 Note that many of the methods exist twice: once on the
@@ -781,7 +799,7 @@ may be used to restart and/or reload a unit\&. These methods take similar argume
 .PP
 \fBEnqueueMarkedJobs()\fR
 creates reload/restart jobs for units which have been appropriately marked, see
-\fIMarks\fR
+\fIMarkers\fR
 property above\&. This is equivalent to calling
 \fBTryRestartUnit()\fR
 or
@@ -1030,15 +1048,16 @@ either closed their connection to the bus or invoked
 returns a text dump of the internal service manager state\&. This is a privileged, low\-level debugging interface only\&. The returned string is supposed to be readable exclusively by developers, and not programmatically\&. There\*(Aqs no interface stability on the returned string guaranteed, and new fields may be added any time, and old fields removed\&. The general structure may be rearranged drastically between releases\&. This is exposed by
 \fBsystemd-analyze\fR(1)\*(Aqs
 \fBdump\fR
-command\&. The
-\fBDumpByFileDescriptor()\fR
-method is identical to
-\fBDump()\fR
-but returns the data serialized into a file descriptor (the client should read the text data from it until hitting EOF)\&. Given the size limits on D\-Bus messages and the possibly large size of the returned string,
-\fBDumpByFileDescriptor()\fR
-is usually the preferable interface, since it ensures the data can be passed reliably from the service manager to the client\&. (Note though that
-\fBDumpByFileDescriptor()\fR
-cannot work when communicating with the service manager remotely, as file descriptors are strictly local to a system\&.)
+command\&. Similarly,
+\fBDumpUnitsMatchingPatterns()\fR
+returns the internal state of units whose names match the glob expressions specified in the
+\fIpatterns\fR
+argument\&. The
+\fBDumpByFileDescriptor()\fR/\fBDumpUnitsMatchingPatternsByFileDescriptor()\fR
+methods are identical to
+\fBDump()\fR/\fBDumpUnitsMatchingPatterns()\fR, but return data serialized into a file descriptor (the client should read the text data from it until hitting EOF)\&. Given the size limits on D\-Bus messages and the possibly large size of the returned strings,
+\fBDumpByFileDescriptor()\fR/\fBDumpUnitsMatchingPatternsByFileDescriptor()\fR
+are usually the preferred interface, since it ensures the data can be passed reliably from the service manager to the client\&. Note though that they cannot work when communicating with the service manager remotely, as file descriptors are strictly local to a system\&.
 .PP
 \fBReload()\fR
 may be invoked to reload all unit files\&.
@@ -1065,7 +1084,7 @@ manager object; see
 for more information\&.
 .PP
 \fBSwitchRoot()\fR
-may be used to transition to a new root directory\&. This is intended to be used by initial RAM disks\&. The method takes two arguments: the new root directory (which needs to be specified) and an init binary path (which may be left empty, in which case it is automatically searched for)\&. The state of the system manager will be serialized before the transition\&. After the transition, the manager binary on the main system is invoked and replaces the old PID 1\&. All state will then be deserialized\&.
+may be used to transition to a new root directory\&. This is intended to be used in the initrd, and also to transition from the host system into a shutdown initrd\&. The method takes two arguments: the new root directory (which needs to be specified) and an init binary path (which may be left empty, in which case it is automatically searched for)\&. The state of the system manager will be serialized before the transition\&. After the transition, the manager binary on the main system is invoked and replaces the old PID 1\&. All state will then be deserialized\&.
 .PP
 \fBSetEnvironment()\fR
 may be used to alter the environment block that is passed to all spawned processes\&. It takes a string array of environment variable assignments\&. Any previously set environment variables will be overridden\&.
@@ -1258,30 +1277,80 @@ The others:
 encodes the version string of the running systemd instance\&. Note that the version string is purely informational\&. It should not be parsed and one may not assume the version to be formatted in any particular way\&. We take the liberty to change the versioning scheme at any time and it is not part of the public API\&.
 .PP
 \fIFeatures\fR
-encodes the features that have been enabled and disabled for this build\&. Enabled options are prefixed with +, disabled options with \-\&.
+encodes the features that have been enabled and disabled for this build\&. Enabled options are prefixed with
+"+", disabled options with
+"\-"\&.
 .PP
 \fITainted\fR
-encodes a couple of taint flags as a colon\-separated list\&. When systemd detects it is running on a system with certain problems, it will set an appropriate taint flag\&. Taints may be used to lower the chance of bogus bug reports\&. The following taints are currently known:
-"split\-usr",
-"mtab\-not\-symlink",
-"cgroups\-missing",
-"local\-hwclock"\&.
+encodes taint flags as a colon\-separated list\&. When systemd detects it is running on a system with a certain problem, it will set an appropriate taint flag\&. Taints may be used to lower the chance of bogus bug reports\&. The following taints are currently known:
+.PP
 "split\-usr"
-is set if
+.RS 4
 /usr/
-is not pre\-mounted when systemd is first invoked\&. See
+was not available when systemd was first invoked\&. It must either be part of the root file system, or it must be mounted before
+\fBsystemd\fR
+is invoked\&. See
 \m[blue]\fBBooting Without /usr is Broken\fR\m[]\&\s-2\u[3]\d\s+2
 for details why this is bad\&.
-"mtab\-not\-symlink"
-indicates that
-/etc/mtab
-is not a symlink to
-/proc/self/mounts
-as required\&.
+.RE
+.PP
+"unmerged\-usr"
+.RS 4
+/bin,
+/sbin
+and
+/lib*
+are not symlinks to their counterparts under
+/usr/\&. For more information on this issue consult
+\m[blue]\fBThe Case for the /usr Merge\fR\m[]\&\s-2\u[4]\d\s+2\&.
+.RE
+.PP
 "cgroups\-missing"
-indicates that control groups have not been enabled in the kernel\&.
+.RS 4
+Support for cgroups is unavailable\&.
+.RE
+.PP
+"cgroupsv1"
+.RS 4
+The system is using the old cgroup hierarchy\&.
+.RE
+.PP
 "local\-hwclock"
-indicates that the local RTC is configured to be in local time rather than UTC\&.
+.RS 4
+The local hardware clock (RTC) is configured to be in local time rather than UTC\&.
+.RE
+.PP
+"support\-ended"
+.RS 4
+The system is running past the end of support declared by the vendor\&. See the description of
+\fISUPPORT_END=\fR
+in
+\fBos-release\fR(5)\&.
+.RE
+.PP
+"old\-kernel"
+.RS 4
+The system is running a kernel version that is older than the minimum supported by this version of systemd\&.
+.RE
+.PP
+"var\-run\-bad"
+.RS 4
+/run/
+does not exist or
+/var/run
+is not a symlink to
+/run/\&.
+.RE
+.PP
+"overflowuid\-not\-65534", "overflowgid\-not\-65534"
+.RS 4
+The kernel overflow UID or GID have a value other than 65534\&.
+.RE
+.PP
+"short\-uid\-range", "short\-gid\-range"
+.RS 4
+The UID or GID range assigned to the running systemd instance covers less than 0\&...65534\&.
+.RE
 .PP
 \fIFirmwareTimestamp\fR,
 \fIFirmwareTimestampMonotonic\fR,
@@ -1362,6 +1431,9 @@ contains the root control group path of this system manager\&. Note that the roo
 "/"!), so that it can be appended to
 /sys/fs/cgroup/systemd
 easily\&. This value will be set to the empty string for the host instance and some other string for container instances\&.
+.PP
+\fIAccessSELinuxContext\fR
+contains the SELinux context that is used to control access to the unit\&. It\*(Aqs read from the unit file when it is loaded and cached until the service manager is reloaded\&. This property contains an empty string if SELinux is not used or if no label could be read (for example because the unit is not backed by a file on disk)\&.
 .SS "Security"
 .PP
 Read access is generally granted to all clients\&. Additionally, for unprivileged clients, some operations are allowed through the polkit privilege system\&. Operations which modify unit state (\fBStartUnit()\fR,
@@ -1498,6 +1570,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s Description = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly s AccessSELinuxContext = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s LoadState = \*(Aq\&.\&.\&.\*(Aq;
       readonly s ActiveState = \*(Aq\&.\&.\&.\*(Aq;
       readonly s FreezerState = \*(Aq\&.\&.\&.\*(Aq;
@@ -1600,6 +1674,7 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
       readonly s CollectMode = \*(Aq\&.\&.\&.\*(Aq;
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("false")
       readonly as Refs = [\*(Aq\&.\&.\&.\*(Aq, \&.\&.\&.];
+      readonly a(ss) ActivationDetails = [\&.\&.\&.];
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -1610,6 +1685,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
 .if n \{\
 .RE
 .\}
+
+
 
 
 
@@ -1968,8 +2045,20 @@ contains a pair of strings\&. If the unit failed to load (as encoded in
 .PP
 \fITransient\fR
 contains a boolean that indicates whether the unit was created as a transient unit (i\&.e\&. via
-\fBCreateTransientUnit()\fR
+\fBStartTransientUnit()\fR
 on the manager object)\&.
+.PP
+\fIActivationDetails\fR
+contains a list of string pairs, key and value, that describe the event that caused the unit to be activated, if any\&. The key describes the information (e\&.g\&.:
+\fItrigger_unit\fR, with value
+\fIfoo\&.service\fR)\&. This is only filled in if the unit was triggered by a
+\fIPath\fR
+or
+\fITimer\fR
+unit, and it is only provided in a best effort fashion: it is not guaranteed to be set, and it is not guaranteed to be the only trigger\&. It is only guaranteed to be a valid trigger that caused the activation job to be enqueued and complete successfully\&. The key value pairs correspond (in lowercase) to the environment variables described in the
+"Environment Variables Set on Triggered Units"
+section in
+\fBsystemd.exec\fR(1)\&. Note that new key value pair may be added at any time in future versions\&. Existing entries will not be removed\&.
 .SS "Security"
 .PP
 Similarly to methods on the
@@ -6552,6 +6641,8 @@ node /org/freedesktop/systemd1/job/666 {
       @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
       readonly s JobType = \*(Aq\&.\&.\&.\*(Aq;
       readonly s State = \*(Aq\&.\&.\&.\*(Aq;
+      @org\&.freedesktop\&.DBus\&.Property\&.EmitsChangedSignal("const")
+      readonly a(ss) ActivationDetails = [\&.\&.\&.];
   };
   interface org\&.freedesktop\&.DBus\&.Peer { \&.\&.\&. };
   interface org\&.freedesktop\&.DBus\&.Introspectable { \&.\&.\&. };
@@ -6562,6 +6653,7 @@ node /org/freedesktop/systemd1/job/666 {
 .if n \{\
 .RE
 .\}
+
 
 
 
@@ -6599,6 +6691,11 @@ refers to the job\*(Aqs state and is one of
 "waiting"
 and
 "running"\&. The former indicates that a job is currently queued but has not begun to execute yet\&. The latter indicates that a job is currently being executed\&.
+.PP
+\fIActivationDetails\fR
+has the same content as the property of the same name under the
+\fIorg\&.freedesktop\&.systemd1\&.Unit\fR
+interface\&.
 .SH "EXAMPLES"
 .PP
 \fBExample\ \&1.\ \&Introspect org\&.freedesktop\&.systemd1\&.Manager on the bus\fR
@@ -6649,7 +6746,7 @@ $ gdbus introspect \-\-system \-\-dest org\&.freedesktop\&.systemd1 \e
 .SH "VERSIONING"
 .PP
 These D\-Bus interfaces follow
-\m[blue]\fBthe usual interface versioning guidelines\fR\m[]\&\s-2\u[4]\d\s+2\&.
+\m[blue]\fBthe usual interface versioning guidelines\fR\m[]\&\s-2\u[5]\d\s+2\&.
 .SH "NOTES"
 .IP " 1." 4
 polkit
@@ -6659,14 +6756,19 @@ polkit
 .IP " 2." 4
 New Control Group Interface
 .RS 4
-\%https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface/
+\%https://www.freedesktop.org/wiki/Software/systemd/ControlGroupInterface
 .RE
 .IP " 3." 4
 Booting Without /usr is Broken
 .RS 4
-\%http://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken
+\%https://www.freedesktop.org/wiki/Software/systemd/separate-usr-is-broken
 .RE
 .IP " 4." 4
+The Case for the /usr Merge
+.RS 4
+\%https://www.freedesktop.org/wiki/Software/systemd/TheCaseForTheUsrMerge
+.RE
+.IP " 5." 4
 the usual interface versioning guidelines
 .RS 4
 \%http://0pointer.de/blog/projects/versioning-dbus.html

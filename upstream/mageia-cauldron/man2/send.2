@@ -1,35 +1,7 @@
 .\" Copyright (c) 1983, 1991 The Regents of the University of California.
 .\" All rights reserved.
 .\"
-.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
-.\" Redistribution and use in source and binary forms, with or without
-.\" modification, are permitted provided that the following conditions
-.\" are met:
-.\" 1. Redistributions of source code must retain the above copyright
-.\"    notice, this list of conditions and the following disclaimer.
-.\" 2. Redistributions in binary form must reproduce the above copyright
-.\"    notice, this list of conditions and the following disclaimer in the
-.\"    documentation and/or other materials provided with the distribution.
-.\" 3. All advertising materials mentioning features or use of this software
-.\"    must display the following acknowledgement:
-.\"	This product includes software developed by the University of
-.\"	California, Berkeley and its contributors.
-.\" 4. Neither the name of the University nor the names of its contributors
-.\"    may be used to endorse or promote products derived from this software
-.\"    without specific prior written permission.
-.\"
-.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-.\" SUCH DAMAGE.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: BSD-4-Clause-UC
 .\"
 .\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
 .\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
@@ -37,9 +9,12 @@
 .\" Modified Oct 2003 by aeb
 .\" Modified 2004-07-01 by mtk
 .\"
-.TH SEND 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH SEND 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 send, sendto, sendmsg \- send a message on a socket
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/socket.h>
@@ -79,11 +54,19 @@ is equivalent to
 .BR write (2).
 Also, the following call
 .PP
-    send(sockfd, buf, len, flags);
+.in +4n
+.EX
+send(sockfd, buf, len, flags);
+.EE
+.in
 .PP
 is equivalent to
 .PP
-    sendto(sockfd, buf, len, flags, NULL, 0);
+.in +4n
+.EX
+sendto(sockfd, buf, len, flags, NULL, 0);
+.EE
+.in
 .PP
 The argument
 .I sockfd
@@ -252,6 +235,38 @@ data on sockets that support this notion (e.g., of type
 the underlying protocol must also support
 .I out-of-band
 data.
+.TP
+.BR MSG_FASTOPEN " (since Linux 3.7)"
+Attempts TCP Fast Open (RFC7413) and sends data in the SYN like a
+combination of
+.BR connect (2)
+and
+.BR write (2),
+by performing an implicit
+.BR connect (2)
+operation.
+It blocks until the data is buffered and the handshake has completed.
+For a non-blocking socket,
+it returns the number of bytes buffered and sent in the SYN packet.
+If the cookie is not available locally,
+it returns
+.BR EINPROGRESS ,
+and sends a SYN with a Fast Open cookie request automatically.
+The caller needs to write the data again when the socket is connected.
+On errors,
+it sets the same
+.I errno
+as
+.BR connect (2)
+if the handshake fails.
+This flag requires enabling TCP Fast Open client support on sysctl
+.IR net.ipv4.tcp_fastopen .
+.IP
+Refer to
+.B TCP_FASTOPEN_CONNECT
+socket option in
+.BR tcp (7)
+for an alternative approach.
 .SS sendmsg()
 The definition of the
 .I msghdr
@@ -422,7 +437,7 @@ will also receive a
 unless
 .B MSG_NOSIGNAL
 is set.
-.SH CONFORMING TO
+.SH STANDARDS
 4.4BSD, SVr4, POSIX.1-2001.
 These interfaces first appeared in 4.2BSD.
 .PP
@@ -487,12 +502,3 @@ is shown in
 .BR tcp (7),
 .BR udp (7),
 .BR unix (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

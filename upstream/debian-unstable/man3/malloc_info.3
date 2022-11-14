@@ -1,30 +1,13 @@
 .\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH MALLOC_INFO 3  2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH MALLOC_INFO 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 malloc_info \- export malloc state to a stream
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <malloc.h>
@@ -77,7 +60,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 This function is a GNU extension.
 .SH NOTES
 The memory-allocation information is provided as an XML string
@@ -182,18 +165,18 @@ glibc 2.13
 .EE
 .in
 .SS Program source
+.\" SRC BEGIN (malloc_info.c)
 .EX
-#include <unistd.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <malloc.h>
+#include <err.h>
 #include <errno.h>
+#include <malloc.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-static size_t blockSize;
-static int numThreads, numBlocks;
-
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
-                        } while (0)
+static size_t        blockSize;
+static size_t        numThreads;
+static unsigned int  numBlocks;
 
 static void *
 thread_func(void *arg)
@@ -203,9 +186,9 @@ thread_func(void *arg)
     /* The multiplier \(aq(2 + tn)\(aq ensures that each thread (including
        the main thread) allocates a different amount of memory. */
 
-    for (int j = 0; j < numBlocks; j++)
+    for (unsigned int j = 0; j < numBlocks; j++)
         if (malloc(blockSize * (2 + tn)) == NULL)
-            errExit("malloc\-thread");
+            err(EXIT_FAILURE, "malloc\-thread");
 
     sleep(100);         /* Sleep until main thread terminates. */
     return NULL;
@@ -214,7 +197,8 @@ thread_func(void *arg)
 int
 main(int argc, char *argv[])
 {
-    int sleepTime;
+    int        sleepTime;
+    pthread_t  *thr;
 
     if (argc < 4) {
         fprintf(stderr,
@@ -228,20 +212,20 @@ main(int argc, char *argv[])
     blockSize = atoi(argv[3]);
     sleepTime = (argc > 4) ? atoi(argv[4]) : 0;
 
-    pthread_t *thr = calloc(numThreads, sizeof(*thr));
+    thr = calloc(numThreads, sizeof(*thr));
     if (thr == NULL)
-        errExit("calloc");
+        err(EXIT_FAILURE, "calloc");
 
     printf("============ Before allocating blocks ============\en");
     malloc_info(0, stdout);
 
     /* Create threads that allocate different amounts of memory. */
 
-    for (int tn = 0; tn < numThreads; tn++) {
+    for (size_t tn = 0; tn < numThreads; tn++) {
         errno = pthread_create(&thr[tn], NULL, thread_func,
                                (void *) tn);
         if (errno != 0)
-            errExit("pthread_create");
+            err(EXIT_FAILURE, "pthread_create");
 
         /* If we add a sleep interval after the start\-up of each
            thread, the threads likely won\(aqt contend for malloc
@@ -254,9 +238,9 @@ main(int argc, char *argv[])
 
     /* The main thread also allocates some memory. */
 
-    for (int j = 0; j < numBlocks; j++)
+    for (unsigned int j = 0; j < numBlocks; j++)
         if (malloc(blockSize) == NULL)
-            errExit("malloc");
+            err(EXIT_FAILURE, "malloc");
 
     sleep(2);           /* Give all threads a chance to
                            complete allocations. */
@@ -267,18 +251,10 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR mallinfo (3),
 .BR malloc (3),
 .BR malloc_stats (3),
 .BR mallopt (3),
 .BR open_memstream (3)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

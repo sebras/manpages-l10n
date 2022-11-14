@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\&.UNIT" "5" "" "systemd 251" "systemd.unit"
+.TH "SYSTEMD\&.UNIT" "5" "" "systemd 252" "systemd.unit"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -361,13 +361,13 @@ For example, target units will complement all configured dependencies of type
 or
 \fIRequires=\fR
 with dependencies of type
-\fIAfter=\fR
-unless
-\fIDefaultDependencies=no\fR
-is set in the specified units\&. See
+\fIAfter=\fR\&. See
 \fBsystemd.target\fR(5)
-for details\&. Note that this behavior can be turned off by setting
-\fIDefaultDependencies=no\fR\&.
+for details\&. Note that this behavior can be opted out by setting
+\fIDefaultDependencies=no\fR
+in the specified units, or it can be selectively overridden via an explicit
+\fIBefore=\fR
+dependency\&.
 .SH "UNIT FILE LOAD PATH"
 .PP
 Unit files are loaded from a set of paths determined during compilation, described in the two tables below\&. Unit files found in directories listed earlier override files with the same name in directories lower in the list\&.
@@ -838,7 +838,7 @@ When used in conjunction with
 \fIAfter=\fR
 on the same unit the behaviour of
 \fIBindsTo=\fR
-is even stronger\&. In this case, the unit bound to strictly has to be in active state for this unit to also be in active state\&. This not only means a unit bound to another unit that suddenly enters inactive state, but also one that is bound to another unit that gets skipped due to a failed condition check (such as
+is even stronger\&. In this case, the unit bound to strictly has to be in active state for this unit to also be in active state\&. This not only means a unit bound to another unit that suddenly enters inactive state, but also one that is bound to another unit that gets skipped due to an unmet condition check (such as
 \fIConditionPathExists=\fR,
 \fIConditionPathIsSymbolicLink=\fR, \&... \(em see below) will be stopped, should it be running\&. Hence, in many cases it is best to combine
 \fIBindsTo=\fR
@@ -1298,7 +1298,7 @@ condition\&. If at least one triggering condition is defined for a unit, then th
 .PP
 The
 \fIAssertArchitecture=\fR,
-\fIAssertVirtualization=\fR, \&... options are similar to conditions but cause the start job to fail (instead of being skipped)\&. The failed check is logged\&. Units with failed conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means that when queried, the condition failure may or may not show up in the state of the unit\&.
+\fIAssertVirtualization=\fR, \&... options are similar to conditions but cause the start job to fail (instead of being skipped)\&. The failed check is logged\&. Units with unmet conditions are considered to be in a clean state and will be garbage collected if they are not referenced\&. This means that when queried, the condition failure may or may not show up in the state of the unit\&.
 .PP
 Note that neither assertion nor condition expressions result in unit state changes\&. Also note that both are checked at the time the job is to be executed, i\&.e\&. long after depending jobs and it itself were queued\&. Thus, neither condition nor assertion expressions are suitable for conditionalizing unit dependencies\&.
 .PP
@@ -1357,14 +1357,81 @@ is mapped to the architecture the system manager itself is compiled for\&. The t
 .PP
 \fIConditionFirmware=\fR
 .RS 4
-Check whether the system\*(Aqs firmware is of a certain type\&. Possible values are:
+Check whether the system\*(Aqs firmware is of a certain type\&. The following values are possible:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 "uefi"
-(for systems with EFI),
+matches systems with EFI\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
 "device\-tree"
-(for systems with a device tree) and
-"device\-tree\-compatible(xyz)"
-(for systems with a device tree that is compatible to
-"xyz")\&.
+matches systems with a device tree\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"device\-tree\-compatible(\fIvalue\fR)"
+matches systems with a device tree that is compatible with
+"value"\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+"smbios\-field(\fIfield\fR \fIoperator\fR \fIvalue\fR)"
+matches systems with a SMBIOS field containing a certain value\&.
+\fIfield\fR
+is the name of the SMBIOS field exposed as
+"sysfs"
+attribute file below
+/sys/class/dmi/id/\&.
+\fIoperator\fR
+is one of
+"<",
+"<=",
+">=",
+">",
+"==",
+"<>"
+for version comparisons,
+"="
+and
+"!="
+for literal string comparisons, or
+"$=",
+"!$="
+for shell\-style glob comparisons\&.
+\fIvalue\fR
+is the expected value of the SMBIOS field value (possibly containing shell style globs in case
+"$="/"!$="
+is used)\&.
+.RE
 .RE
 .PP
 \fIConditionVirtualization=\fR
@@ -1429,16 +1496,35 @@ is used instead (i\&.e\&.
 .RS 4
 \fIConditionKernelVersion=\fR
 may be used to check whether the kernel version (as reported by
-\fBuname \-r\fR) matches a certain expression (or if prefixed with the exclamation mark does not match it)\&. The argument must be a list of (potentially quoted) expressions\&. For each of the expressions, if it starts with one of
+\fBuname \-r\fR) matches a certain expression, or if prefixed with the exclamation mark, does not match\&. The argument must be a list of (potentially quoted) expressions\&. Each expression starts with one of
+"="
+or
+"!="
+for string comparisons,
 "<",
 "<=",
-"=",
-"!=",
+"==",
+"<>",
 ">=",
 ">"
-a relative version comparison is done, otherwise the specified string is matched with shell\-style globs\&.
+for version comparisons, or
+"$=",
+"!$="
+for a shell\-style glob match\&. If no operator is specified,
+"$="
+is implied\&.
 .sp
 Note that using the kernel version string is an unreliable way to determine which features are supported by a kernel, because of the widespread practice of backporting drivers, features, and fixes from newer upstream kernels into older versions provided by distributions\&. Hence, this check is inherently unportable and should not be used for units which may be used on different distributions\&.
+.RE
+.PP
+\fIConditionCredential=\fR
+.RS 4
+\fIConditionCredential=\fR
+may be used to check whether a credential by the specified name was passed into the service manager\&. See
+\m[blue]\fBSystem and Service Credentials\fR\m[]\&\s-2\u[2]\d\s+2
+for details about credentials\&. If used in services for the system service manager this may be used to conditionalize services based on system credentials passed in\&. If used in services for the per\-user service manager this may be used to conditionalize services based on credentials passed into the
+unit@\&.service
+service instance belonging to the user\&. The argument must be a valid credential name\&.
 .RE
 .PP
 \fIConditionEnvironment=\fR
@@ -1524,8 +1610,10 @@ should be used with other update mechanisms where such an immediate update does 
 .RS 4
 Takes a boolean argument\&. This condition may be used to conditionalize units on whether the system is booting up for the first time\&. This roughly means that
 /etc/
-is unpopulated (for details, see "First Boot Semantics" in
-\fBmachine-id\fR(5))\&. This may be used to populate
+was unpopulated when the system started booting (for details, see "First Boot Semantics" in
+\fBmachine-id\fR(5))\&. First boot is considered finished (this condition will evaluate as false) after the manager has finished the startup phase\&.
+.sp
+This condition may be used to populate
 /etc/
 on the first boot after factory reset, or when a new system instance boots up for the first time\&.
 .sp
@@ -1643,33 +1731,15 @@ but verifies that the service manager\*(Aqs real or effective group, or any of i
 \fIConditionControlGroupController=\fR
 .RS 4
 Check whether given cgroup controllers (e\&.g\&.
-"cpu") are available for use on the system or whether the legacy v1 cgroup or the modern v2 cgroup hierarchy is used\&.
+"cpu") are available for use on the system\&.
 .sp
 Multiple controllers may be passed with a space separating them; in this case the condition will only pass if all listed controllers are available for use\&. Controllers unknown to systemd are ignored\&. Valid controllers are
 "cpu",
-"cpuacct",
+"cpuset",
 "io",
-"blkio",
-"memory",
-"devices", and
+"memory", and
 "pids"\&. Even if available in the kernel, a particular controller may not be available if it was disabled on the kernel command line with
 \fIcgroup_disable=controller\fR\&.
-.sp
-Alternatively, two special strings
-"v1"
-and
-"v2"
-may be specified (without any controller names)\&.
-"v2"
-will pass if the unified v2 cgroup hierarchy is used, and
-"v1"
-will pass if the legacy v1 hierarchy or the hybrid hierarchy are used (see the discussion of
-\fIsystemd\&.unified_cgroup_hierarchy\fR
-and
-\fIsystemd\&.legacy_systemd_cgroup_controller\fR
-in
-\fBsystemd.service\fR(5)
-for more information)\&.
 .RE
 .PP
 \fIConditionMemory=\fR
@@ -1677,8 +1747,12 @@ for more information)\&.
 Verify that the specified amount of system memory is available to the current system\&. Takes a memory size in bytes as argument, optionally prefixed with a comparison operator
 "<",
 "<=",
-"=",
-"!=",
+"="
+(or
+"=="),
+"!="
+(or
+"<>"),
 ">=",
 ">"\&. On bare\-metal systems compares the amount of physical memory in the system with the specified size, adhering to the specified comparison operator\&. In containers compares the amount of memory assigned to the container instead\&.
 .RE
@@ -1688,8 +1762,12 @@ Verify that the specified amount of system memory is available to the current sy
 Verify that the specified number of CPUs is available to the current system\&. Takes a number of CPUs as argument, optionally prefixed with a comparison operator
 "<",
 "<=",
-"=",
-"!=",
+"="
+(or
+"=="),
+"!="
+(or
+"<>"),
 ">=",
 ">"\&. Compares the number of CPUs in the CPU affinity mask configured of the service manager itself with the specified number, adhering to the specified comparison operator\&. On physical systems the number of CPUs in the affinity mask of the service manager usually matches the number of physical CPUs, but in special and virtual environments might differ\&. In particular, in containers the affinity mask usually matches the number of CPUs assigned to the container and not the physically available ones\&.
 .RE
@@ -1763,17 +1841,23 @@ Verify that a specific
 pair is set in the host\*(Aqs
 \fBos-release\fR(5)\&.
 .sp
-Other than exact matching with
-"=", and
-"!=", relative comparisons are supported for versioned parameters (e\&.g\&.
-"VERSION_ID")\&. The comparator can be one of
+Other than exact string matching (with
+"="
+and
+"!="), relative comparisons are supported for versioned parameters (e\&.g\&.
+"VERSION_ID"; with
 "<",
 "<=",
-"=",
-"!=",
-">="
-and
-">"\&.
+"==",
+"<>",
+">=",
+">"), and shell\-style wildcard comparisons ("*",
+"?",
+"[]") are supported with the
+"$="
+(match) and
+"!$="
+(non\-match)\&.
 .RE
 .PP
 \fIConditionMemoryPressure=\fR, \fIConditionCPUPressure=\fR, \fIConditionIOPressure=\fR
@@ -1791,13 +1875,13 @@ and
 PSI will be checked first, and if not found
 "some"
 will be checked\&. For more details, see the documentation on
-\m[blue]\fBPSI (Pressure Stall Information)\fR\m[]\&\s-2\u[2]\d\s+2\&.
+\m[blue]\fBPSI (Pressure Stall Information)\fR\m[]\&\s-2\u[3]\d\s+2\&.
 .sp
 Optionally, the threshold value can be prefixed with the slice unit under which the pressure will be checked, followed by a
 ":"\&. If the slice unit is not specified, the overall system pressure will be measured, instead of a particular cgroup\*(Aqs\&.
 .RE
 .PP
-\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR, \fIAssertOSRelease=\fR, \fIAssertMemoryPressure=\fR, \fIAssertCPUPressure=\fR, \fIAssertIOPressure=\fR
+\fIAssertArchitecture=\fR, \fIAssertVirtualization=\fR, \fIAssertHost=\fR, \fIAssertKernelCommandLine=\fR, \fIAssertKernelVersion=\fR, \fIAssertCredential=\fR, \fIAssertEnvironment=\fR, \fIAssertSecurity=\fR, \fIAssertCapability=\fR, \fIAssertACPower=\fR, \fIAssertNeedsUpdate=\fR, \fIAssertFirstBoot=\fR, \fIAssertPathExists=\fR, \fIAssertPathExistsGlob=\fR, \fIAssertPathIsDirectory=\fR, \fIAssertPathIsSymbolicLink=\fR, \fIAssertPathIsMountPoint=\fR, \fIAssertPathIsReadWrite=\fR, \fIAssertPathIsEncrypted=\fR, \fIAssertDirectoryNotEmpty=\fR, \fIAssertFileNotEmpty=\fR, \fIAssertFileIsExecutable=\fR, \fIAssertUser=\fR, \fIAssertGroup=\fR, \fIAssertControlGroupController=\fR, \fIAssertMemory=\fR, \fIAssertCPUs=\fR, \fIAssertCPUFeature=\fR, \fIAssertOSRelease=\fR, \fIAssertMemoryPressure=\fR, \fIAssertCPUPressure=\fR, \fIAssertIOPressure=\fR
 .RS 4
 Similar to the
 \fIConditionArchitecture=\fR,
@@ -2302,7 +2386,7 @@ T{
 T}:T{
 User shell
 T}:T{
-This is the shell of the user running the service manager instance\&. In case of the system manager this resolves to "/bin/sh"\&.
+This is the shell of the user running the service manager instance\&.
 T}
 T{
 "%S"
@@ -2641,7 +2725,12 @@ Interface Portability and Stability Promise
 \%https://systemd.io/PORTABILITY_AND_STABILITY/
 .RE
 .IP " 2." 4
+System and Service Credentials
+.RS 4
+\%https://systemd.io/CREDENTIALS
+.RE
+.IP " 3." 4
 PSI (Pressure Stall Information)
 .RS 4
-\%https://www.kernel.org/doc/html/latest/accounting/psi.html
+\%https://docs.kernel.org/accounting/psi.html
 .RE

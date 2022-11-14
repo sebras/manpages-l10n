@@ -1,31 +1,14 @@
 .\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH PTHREAD_CREATE 3 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PTHREAD_CREATE 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 pthread_create \- create a new thread
+.SH LIBRARY
+POSIX threads library
+.RI ( libpthread ", " \-lpthread )
 .SH SYNOPSIS
 .nf
 .B #include <pthread.h>
@@ -35,15 +18,13 @@ pthread_create \- create a new thread
 .BI "                   void *(*" start_routine ")(void *),"
 .BI "                   void *restrict " arg );
 .fi
-.PP
-Compile and link with \fI\-pthread\fP.
 .SH DESCRIPTION
 The
 .BR pthread_create ()
 function starts a new thread in the calling process.
 The new thread starts execution by invoking
 .IR start_routine ();
-.IR arg
+.I arg
 is passed as the sole argument of
 .IR start_routine ().
 .PP
@@ -119,7 +100,7 @@ On success,
 .BR pthread_create ()
 returns 0;
 on error, it returns an error number, and the contents of
-.IR *thread
+.I *thread
 are undefined.
 .SH ERRORS
 .TP
@@ -130,7 +111,7 @@ Insufficient resources to create another thread.
 .\" NOTE! The following should match the description in fork(2)
 A system-imposed limit on the number of threads was encountered.
 There are a number of limits that may trigger this error: the
-.BR RLIMIT_NPROC
+.B RLIMIT_NPROC
 soft resource limit (set via
 .BR setrlimit (2)),
 which limits the number of processes and threads for a real user ID,
@@ -169,13 +150,13 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008.
 .SH NOTES
 See
 .BR pthread_self (3)
 for further information on the thread ID returned in
-.IR *thread
+.I *thread
 by
 .BR pthread_create ().
 Unless real-time scheduling policies are being employed,
@@ -205,9 +186,9 @@ was set to create the thread in a detached state (using
 .BR pthread_attr_setdetachstate (3)).
 .PP
 Under the NPTL threading implementation, if the
-.BR RLIMIT_STACK
+.B RLIMIT_STACK
 soft resource limit
-.IR "at the time the program started"
+.I at the time the program started
 has any value other than "unlimited",
 then it determines the default stack size of new threads.
 Using
@@ -217,7 +198,7 @@ the stack size attribute can be explicitly set in the
 argument used to create a thread,
 in order to obtain a stack size other than the default.
 If the
-.BR RLIMIT_STACK
+.B RLIMIT_STACK
 resource limit is set to "unlimited",
 a per-architecture value is used for the stack size.
 Here is the value for a few architectures:
@@ -283,14 +264,15 @@ Joined with thread 3; returned value was SERVUS
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (pthread_create.c)
 .EX
+#include <ctype.h>
+#include <errno.h>
 #include <pthread.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-#include <errno.h>
-#include <ctype.h>
 
 #define handle_error_en(en, msg) \e
         do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -314,7 +296,7 @@ thread_start(void *arg)
     char *uargv;
 
     printf("Thread %d: top of stack near %p; argv_string=%s\en",
-            tinfo\->thread_num, (void *) &tinfo, tinfo\->argv_string);
+           tinfo\->thread_num, (void *) &tinfo, tinfo\->argv_string);
 
     uargv = strdup(tinfo\->argv_string);
     if (uargv == NULL)
@@ -329,10 +311,12 @@ thread_start(void *arg)
 int
 main(int argc, char *argv[])
 {
-    int s, opt, num_threads;
-    pthread_attr_t attr;
-    ssize_t stack_size;
-    void *res;
+    int                 s, opt;
+    void                *res;
+    size_t              num_threads;
+    ssize_t             stack_size;
+    pthread_attr_t      attr;
+    struct thread_info  *tinfo;
 
     /* The "\-s" option specifies a stack size for our threads. */
 
@@ -366,13 +350,13 @@ main(int argc, char *argv[])
 
     /* Allocate memory for pthread_create() arguments. */
 
-    struct thread_info *tinfo = calloc(num_threads, sizeof(*tinfo));
+    tinfo = calloc(num_threads, sizeof(*tinfo));
     if (tinfo == NULL)
         handle_error("calloc");
 
     /* Create one thread for each command\-line argument. */
 
-    for (int tnum = 0; tnum < num_threads; tnum++) {
+    for (size_t tnum = 0; tnum < num_threads; tnum++) {
         tinfo[tnum].thread_num = tnum + 1;
         tinfo[tnum].argv_string = argv[optind + tnum];
 
@@ -394,13 +378,13 @@ main(int argc, char *argv[])
 
     /* Now join with each thread, and display its returned value. */
 
-    for (int tnum = 0; tnum < num_threads; tnum++) {
+    for (size_t tnum = 0; tnum < num_threads; tnum++) {
         s = pthread_join(tinfo[tnum].thread_id, &res);
         if (s != 0)
             handle_error_en(s, "pthread_join");
 
         printf("Joined with thread %d; returned value was %s\en",
-                tinfo[tnum].thread_num, (char *) res);
+               tinfo[tnum].thread_num, (char *) res);
         free(res);      /* Free memory allocated by thread */
     }
 
@@ -408,6 +392,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .ad l
 .nh
@@ -422,12 +407,3 @@ main(int argc, char *argv[])
 .BR pthread_self (3),
 .BR pthread_setattr_default_np (3),
 .BR pthreads (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

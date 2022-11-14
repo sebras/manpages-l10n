@@ -1,0 +1,74 @@
+.\" Copyright (c) 2020-2022 by Alejandro Colomar <colomar.6.4.3@gmail.com>
+.\" and Copyright (c) 2020 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
+.\"
+.\"
+.TH TIMESPEC 3type 2022-10-09 "Linux man-pages 6.01"
+.SH NAME
+timespec \- time in seconds and nanoseconds
+.SH LIBRARY
+Standard C library
+.RI ( libc )
+.SH SYNOPSIS
+.EX
+.B #include <time.h>
+.PP
+.B struct timespec {
+.BR "    time_t  tv_sec;" "   /* Seconds */"
+.BR "    long    tv_usec;" "  /* Nanoseconds [" 0 ", " 999999999 "] */"
+.B };
+.EE
+.SH DESCRIPTION
+Describes times in seconds and nanoseconds.
+.SH STANDARDS
+C11 and later;
+POSIX.1-2001 and later.
+.SH NOTES
+The following headers also provide this type:
+.IR <aio.h> ,
+.IR <mqueue.h> ,
+.IR <sched.h> ,
+.IR <signal.h> ,
+.IR <sys/select.h> ,
+and
+.IR <sys/stat.h> .
+.SH BUGS
+Under glibc,
+.I tv_nsec
+is the
+.I syscall
+long,
+though this affects only fringe architectures like X32,
+which is ILP32, but uses the LP64 AMD64 syscall ABI.
+In reality, the field ends up being defined as:
+.PP
+.in +4n
+.EX
+#if __x86_64__ && __ILP32__  /* == x32 */
+    long long  tv_nsec;
+#else
+    long       tv_nsec;
+#endif
+.EE
+.in
+.PP
+This is a long-standing and long-enshrined glibc bug
+.UR https://sourceware.org/bugzilla/show_bug.cgi?id=16437
+.I #16437
+.UE ,
+and an incompatible extension to the standards;
+however, as even a 32-bit
+.I long
+can hold the entire
+.I tv_nsec
+range,
+it's always safe to forcibly down-cast it to the standard type.
+.SH SEE ALSO
+.BR clock_gettime (2),
+.BR clock_nanosleep (2),
+.BR nanosleep (2),
+.BR timerfd_gettime (2),
+.BR timer_gettime (2),
+.BR time_t (3type),
+.BR timeval (3type)

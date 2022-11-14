@@ -1,39 +1,22 @@
 .\" Copyright (c) 2003, 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
-.\"
-.TH DL_ITERATE_PHDR 3 2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH DL_ITERATE_PHDR 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 dl_iterate_phdr \- walk through list of shared objects
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "         /* See feature_test_macros(7) */"
 .B #include <link.h>
 .PP
-.BI "int dl_iterate_phdr("
+.B int dl_iterate_phdr(
 .BI "          int (*" callback ")(struct dl_phdr_info *" info ,
-.BI "                          size_t " size ", void *" data "),"
-.BI "          void *" data ");"
+.BI "                          size_t " size ", void *" data ),
+.BI "          void *" data );
 .fi
 .SH DESCRIPTION
 The
@@ -175,7 +158,7 @@ addr == info\->dlpi_addr + info\->dlpi_phdr[x].p_vaddr;
 Possible values for
 .I p_type
 include the following (see
-.IR <elf.h>
+.I <elf.h>
 for further details):
 .PP
 .in +4n
@@ -218,7 +201,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 The
 .BR dl_iterate_phdr ()
 function is not specified in any standard.
@@ -231,18 +214,18 @@ On the BSDs and Solaris, the structure includes the fields
 .IR dlpi_name ,
 .IR dlpi_phdr ,
 and
-.IR dlpi_phnum
+.I dlpi_phnum
 in addition to other implementation-specific fields.
 .SH NOTES
 Future versions of the C library may add further fields to the
-.IR dl_phdr_info
+.I dl_phdr_info
 structure; in that event, the
 .I size
 argument provides a mechanism for the callback function to discover
 whether it is running on a system with added fields.
 .PP
 The first object visited by
-.IR callback
+.I callback
 is the main program.
 For the main program, the
 .I dlpi_name
@@ -301,12 +284,13 @@ Name: "/lib64/ld\-linux\-x86\-64.so.2" (7 segments)
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (dl_iterate_phdr.c)
 .EX
 #define _GNU_SOURCE
 #include <link.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static int
 callback(struct dl_phdr_info *info, size_t size, void *data)
@@ -317,7 +301,7 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
     printf("Name: \e"%s\e" (%d segments)\en", info\->dlpi_name,
                info\->dlpi_phnum);
 
-    for (int j = 0; j < info\->dlpi_phnum; j++) {
+    for (size_t j = 0; j < info\->dlpi_phnum; j++) {
         p_type = info\->dlpi_phdr[j].p_type;
         type =  (p_type == PT_LOAD) ? "PT_LOAD" :
                 (p_type == PT_DYNAMIC) ? "PT_DYNAMIC" :
@@ -330,7 +314,7 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
                 (p_type == PT_GNU_STACK) ? "PT_GNU_STACK" :
                 (p_type == PT_GNU_RELRO) ? "PT_GNU_RELRO" : NULL;
 
-        printf("    %2d: [%14p; memsz:%7jx] flags: %#jx; ", j,
+        printf("    %2zu: [%14p; memsz:%7jx] flags: %#jx; ", j,
                 (void *) (info\->dlpi_addr + info\->dlpi_phdr[j].p_vaddr),
                 (uintmax_t) info\->dlpi_phdr[j].p_memsz,
                 (uintmax_t) info\->dlpi_phdr[j].p_flags);
@@ -344,13 +328,14 @@ callback(struct dl_phdr_info *info, size_t size, void *data)
 }
 
 int
-main(int argc, char *argv[])
+main(void)
 {
     dl_iterate_phdr(callback, NULL);
 
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR ldd (1),
 .BR objdump (1),
@@ -362,12 +347,3 @@ main(int argc, char *argv[])
 .PP
 .IR "Executable and Linking Format Specification" ,
 available at various locations online.
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

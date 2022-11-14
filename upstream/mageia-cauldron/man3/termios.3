@@ -2,26 +2,7 @@
 .\" Fri Apr  2 11:32:09 MET DST 1993
 .\" Copyright (c) 2006-2015, Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-.\" This is free documentation; you can redistribute it and/or
-.\" modify it under the terms of the GNU General Public License as
-.\" published by the Free Software Foundation; either version 2 of
-.\" the License, or (at your option) any later version.
-.\"
-.\" The GNU General Public License's references to "object code"
-.\" and "executables" are to be interpreted as the output of any
-.\" document formatting or typesetting system, including
-.\" intermediate and printed output.
-.\"
-.\" This manual is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
 .\" Modified 1995-02-25 by Jim Van Zandt <jrv@vanzandt.mv.com>
@@ -37,11 +18,14 @@
 .\"     Enhanced the discussion of "raw" mode for cfmakeraw().
 .\"     Document CMSPAR.
 .\"
-.TH TERMIOS 3 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH TERMIOS 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 termios, tcgetattr, tcsetattr, tcsendbreak, tcdrain, tcflush, tcflow,
 cfmakeraw, cfgetospeed, cfgetispeed, cfsetispeed, cfsetospeed, cfsetspeed \-
 get and set terminal attributes, line control, get and set baud rate
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <termios.h>
@@ -203,7 +187,9 @@ Map CR to NL on output.
 Don't output CR at column 0.
 .TP
 .B ONLRET
-Don't output CR.
+The NL character is assumed to do the carriage-return function;
+the kernel's idea of the current column is set to 0
+after both NL and CR.
 .TP
 .B OFILL
 Send fill characters for a delay, rather than using a timed delay.
@@ -348,7 +334,12 @@ bits.
 .B _BSD_SOURCE
 or
 .BR _SVID_SOURCE ]
-(Not implemented on Linux.)
+(Not implemented in glibc, supported on Linux via
+.BR TCGET *
+and
+.BR TCSET *
+ioctls; see
+.BR ioctl_tty (2))
 .TP
 .B CMSPAR
 (not in POSIX)
@@ -924,60 +915,86 @@ pointed to by
 .BR cfsetospeed ()
 sets the output baud rate stored in the \fItermios\fP structure pointed
 to by \fItermios_p\fP to \fIspeed\fP, which must be one of these constants:
-.PP
-.nf
-.ft B
-	B0
-	B50
-	B75
-	B110
-	B134
-	B150
-	B200
-	B300
-	B600
-	B1200
-	B1800
-	B2400
-	B4800
-	B9600
-	B19200
-	B38400
-	B57600
-	B115200
-	B230400
-	B460800
-	B500000
-	B576000
-	B921600
-	B1000000
-	B1152000
-	B1500000
-	B2000000
-.ft P
-.fi
+.RS
+.TP
+.B B0
+.TQ
+.B B50
+.TQ
+.B B75
+.TQ
+.B B110
+.TQ
+.B B134
+.TQ
+.B B150
+.TQ
+.B B200
+.TQ
+.B B300
+.TQ
+.B B600
+.TQ
+.B B1200
+.TQ
+.B B1800
+.TQ
+.B B2400
+.TQ
+.B B4800
+.TQ
+.B B9600
+.TQ
+.B B19200
+.TQ
+.B B38400
+.TQ
+.B B57600
+.TQ
+.B B115200
+.TQ
+.B B230400
+.TQ
+.B B460800
+.TQ
+.B B500000
+.TQ
+.B B576000
+.TQ
+.B B921600
+.TQ
+.B B1000000
+.TQ
+.B B1152000
+.TQ
+.B B1500000
+.TQ
+.B B2000000
+.RE
 .PP
 These constants are additionally supported on the SPARC architecture:
-.PP
-.nf
-.ft B
-	B76800
-	B153600
-	B307200
-	B614400
-.ft P
-.fi
+.RS
+.TP
+.B B76800
+.TQ
+.B B153600
+.TQ
+.B B307200
+.TQ
+.B B614400
+.RE
 .PP
 These constants are additionally supported on non-SPARC architectures:
-.PP
-.nf
-.ft B
-	B2500000
-	B3000000
-	B3500000
-	B4000000
-.ft P
-.fi
+.RS
+.TP
+.B B2500000
+.TQ
+.B B3000000
+.TQ
+.B B3500000
+.TQ
+.B B4000000
+.RE
 .PP
 Due to differences between architectures, portable applications should check
 if a particular
@@ -987,7 +1004,9 @@ constant is defined prior to using it.
 The zero baud rate,
 .BR B0 ,
 is used to terminate the connection.
-If B0 is specified, the modem control lines shall no longer be asserted.
+If
+.B B0
+is specified, the modem control lines shall no longer be asserted.
 Normally, this will disconnect the line.
 .B CBAUDEX
 is a mask
@@ -1017,7 +1036,11 @@ which must be specified as one of the
 .BI B nnn
 constants listed above for
 .BR cfsetospeed ().
-If the input baud rate is set to zero, the input baud rate will be
+If the input baud rate is set to the literal constant
+.B 0
+(not the symbolic constant
+.BR B0 ),
+the input baud rate will be
 equal to the output baud rate.
 .PP
 .BR cfsetspeed ()
@@ -1089,7 +1112,7 @@ T}	Thread safety	MT-Safe
 .\" when the underlying kernel is a BSD kernel.
 .\" So, it is safety in Linux kernel.
 .hy
-.SH CONFORMING TO
+.SH STANDARDS
 .BR tcgetattr (),
 .BR tcsetattr (),
 .BR tcsendbreak (),
@@ -1110,7 +1133,7 @@ are nonstandard, but available on the BSDs.
 .SH NOTES
 UNIX\ V7 and several later systems have a list of baud rates
 where after the values
-.BR B0
+.B B0
 through
 .B B9600
 one finds the two constants
@@ -1162,13 +1185,7 @@ mask).
 .BR tty (1),
 .BR ioctl_console (2),
 .BR ioctl_tty (2),
+.BR cc_t (3type),
+.BR speed_t (3type),
+.BR tcflag_t (3type),
 .BR setserial (8)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

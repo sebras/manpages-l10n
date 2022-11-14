@@ -2,33 +2,17 @@
 .\" and Copyright (C) 2012 Mike Frysinger <vapier@gentoo.org>
 .\" and Copyright (C) 2012 Michael Kerrisk <mtk.man-pages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Commit fcf634098c00dd9cd247447368495f0b79be12d1
 .\"
-.TH PROCESS_VM_READV 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH PROCESS_VM_READV 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
-process_vm_readv, process_vm_writev \- transfer data between process address spaces
+process_vm_readv, process_vm_writev \-
+transfer data between process address spaces
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/uio.h>
@@ -60,7 +44,7 @@ Feature Test Macro Requirements for glibc (see
 .SH DESCRIPTION
 These system calls transfer data between the address space
 of the calling process ("the local process") and the process identified by
-.IR pid
+.I pid
 ("the remote process").
 The data moves directly between the address spaces of the two processes,
 without passing through kernel space.
@@ -69,24 +53,24 @@ The
 .BR process_vm_readv ()
 system call transfers data from the remote process to the local process.
 The data to be transferred is identified by
-.IR remote_iov
+.I remote_iov
 and
 .IR riovcnt :
-.IR remote_iov
+.I remote_iov
 is a pointer to an array describing address ranges in the process
 .IR pid ,
 and
-.IR riovcnt
+.I riovcnt
 specifies the number of elements in
 .IR remote_iov .
 The data is transferred to the locations specified by
-.IR local_iov
+.I local_iov
 and
 .IR liovcnt :
-.IR local_iov
+.I local_iov
 is a pointer to an array describing address ranges in the calling process,
 and
-.IR liovcnt
+.I liovcnt
 specifies the number of elements in
 .IR local_iov .
 .PP
@@ -100,7 +84,7 @@ Other than the direction of the transfer, the arguments
 .IR local_iov ,
 .IR riovcnt ,
 and
-.IR remote_iov
+.I remote_iov
 have the same meaning as for
 .BR process_vm_readv ().
 .PP
@@ -110,18 +94,8 @@ and
 .I remote_iov
 arguments point to an array of
 .I iovec
-structures, defined in
-.IR <sys/uio.h>
-as:
-.PP
-.in +4n
-.EX
-struct iovec {
-    void  *iov_base;    /* Starting address */
-    size_t iov_len;     /* Number of bytes to transfer */
-};
-.EE
-.in
+structures, described in
+.BR iovec (3type).
 .PP
 Buffers are processed in array order.
 This means that
@@ -165,7 +139,7 @@ The values specified in the
 and
 .I riovcnt
 arguments must be less than or equal to
-.BR IOV_MAX
+.B IOV_MAX
 (defined in
 .I <limits.h>
 or accessible via the call
@@ -174,7 +148,7 @@ or accessible via the call
 .\" as is done for readv()/writev()
 .PP
 The count arguments and
-.IR local_iov
+.I local_iov
 are checked before doing any transfers.
 If the counts are too big, or
 .I local_iov
@@ -278,7 +252,7 @@ exists.
 .SH VERSIONS
 These system calls were added in Linux 3.2.
 Support is provided in glibc since version 2.15.
-.SH CONFORMING TO
+.SH STANDARDS
 These system calls are nonstandard Linux extensions.
 .SH NOTES
 The data transfers performed by
@@ -303,18 +277,22 @@ and writes the first 10 bytes into
 and the second 10 bytes into
 .IR buf2 .
 .PP
+.\" SRC BEGIN (process_vm_readv.c)
 .EX
+#define _GNU_SOURCE
+#include <stdlib.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 
 int
 main(void)
 {
-    struct iovec local[2];
-    struct iovec remote[1];
-    char buf1[10];
-    char buf2[10];
-    ssize_t nread;
-    pid_t pid = 10;             /* PID of remote process */
+    char          buf1[10];
+    char          buf2[10];
+    pid_t         pid = 10;    /* PID of remote process */
+    ssize_t       nread;
+    struct iovec  local[2];
+    struct iovec  remote[1];
 
     local[0].iov_base = buf1;
     local[0].iov_len = 10;
@@ -325,20 +303,12 @@ main(void)
 
     nread = process_vm_readv(pid, local, 2, remote, 1, 0);
     if (nread != 20)
-        return 1;
-    else
-        return 0;
+        exit(EXIT_FAILURE);
+
+    exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR readv (2),
 .BR writev (2)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

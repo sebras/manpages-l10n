@@ -28,7 +28,7 @@
 .\" FIXME . Apr 08: The next POSIX revision has O_EXEC, O_SEARCH, and
 .\" O_TTYINIT.  Eventually these may need to be documented.  --mtk
 .\"
-.TH OPEN 2 2022-09-09 "Linux man-pages (unreleased)"
+.TH OPEN 2 2022-10-12 "Linux man-pages 6.01"
 .SH NAME
 open, openat, creat \- open and possibly create a file
 .SH LIBRARY
@@ -1732,21 +1732,51 @@ of user-space buffers and the file offset of I/Os.
 In Linux alignment
 restrictions vary by filesystem and kernel version and might be
 absent entirely.
-However there is currently no filesystem\-independent
-interface for an application to discover these restrictions for a given
-file or filesystem.
-Some filesystems provide their own interfaces
-for doing so, for example the
+The handling of misaligned
+.B O_DIRECT
+I/Os also varies;
+they can either fail with
+.B EINVAL
+or fall back to buffered I/O.
+.PP
+Since Linux 6.1,
+.B O_DIRECT
+support and alignment restrictions for a file can be queried using
+.BR statx (2),
+using the
+.B STATX_DIOALIGN
+flag.
+Support for
+.B STATX_DIOALIGN
+varies by filesystem;
+see
+.BR statx (2).
+.PP
+Some filesystems provide their own interfaces for querying
+.B O_DIRECT
+alignment restrictions,
+for example the
 .B XFS_IOC_DIOINFO
 operation in
 .BR xfsctl (3).
+.B STATX_DIOALIGN
+should be used instead when it is available.
 .PP
-Under Linux 2.4, transfer sizes, the alignment of the user buffer,
-and the file offset must all be multiples of the logical block size
-of the filesystem.
-Since Linux 2.6.0, alignment to the logical block size of the
-underlying storage (typically 512 bytes) suffices.
-The logical block size can be determined using the
+If none of the above is available,
+then direct I/O support and alignment restrictions
+can only be assumed from known characteristics of the filesystem,
+the individual file,
+the underlying storage device(s),
+and the kernel version.
+In Linux 2.4,
+most filesystems based on block devices require that
+the file offset and the length and memory address of all I/O segments
+be multiples of the filesystem block size
+(typically 4096 bytes).
+In Linux 2.6.0,
+this was relaxed to the logical block size of the block device
+(typically 512 bytes).
+A block device's logical block size can be determined using the
 .BR ioctl (2)
 .B BLKSSZGET
 operation or from the shell using the command:

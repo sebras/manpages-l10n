@@ -1,25 +1,14 @@
 .\" Copyright (C) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
 .\" starting from a version by Davide Libenzi <davidel@xmailserver.org>
 .\"
-.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
-.\" This program is free software; you can redistribute it and/or modify
-.\" it under the terms of the GNU General Public License as published by
-.\" the Free Software Foundation; either version 2 of the License, or
-.\" (at your option) any later version.
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
-.\" This program is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
-.\"
-.TH SIGNALFD 2 2021-03-22 Linux "Linux Programmer's Manual"
+.TH SIGNALFD 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 signalfd \- create a file descriptor for accepting signals
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/signalfd.h>
@@ -73,13 +62,13 @@ then it must specify a valid existing signalfd file descriptor, and
 is used to replace the signal set associated with that file descriptor.
 .PP
 Starting with Linux 2.6.27, the following values may be bitwise ORed in
-.IR flags
+.I flags
 to change the behavior of
 .BR signalfd ():
 .TP 14
 .B SFD_NONBLOCK
 Set the
-.BR O_NONBLOCK
+.B O_NONBLOCK
 file status flag on the open file description (see
 .BR open (2))
 referred to by the new file descriptor.
@@ -346,7 +335,7 @@ Working support is provided in glibc since version 2.8.
 The
 .BR signalfd4 ()
 system call (see NOTES) is available on Linux since kernel 2.6.27.
-.SH CONFORMING TO
+.SH STANDARDS
 .BR signalfd ()
 and
 .BR signalfd4 ()
@@ -376,7 +365,7 @@ are silently ignored.
 .PP
 The signal mask employed by a signalfd file descriptor can be viewed
 via the entry for the corresponding file descriptor in the process's
-.IR /proc/[pid]/fdinfo
+.IR /proc/ pid /fdinfo
 directory.
 See
 .BR proc (5)
@@ -385,10 +374,10 @@ for further details.
 .SS Limitations
 The signalfd mechanism can't be used to receive signals that
 are synchronously generated, such as the
-.BR SIGSEGV
+.B SIGSEGV
 signal that results from accessing an invalid memory address
 or the
-.BR SIGFPE
+.B SIGFPE
 signal that results from an arithmetic error.
 Such signals can be caught only via signal handler.
 .PP
@@ -471,23 +460,22 @@ $
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (signalfd.c)
 .EX
-#include <sys/signalfd.h>
+#include <err.h>
 #include <signal.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
-
-#define handle_error(msg) \e
-    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+#include <stdlib.h>
+#include <sys/signalfd.h>
+#include <unistd.h>
 
 int
-main(int argc, char *argv[])
+main(void)
 {
-    sigset_t mask;
-    int sfd;
-    struct signalfd_siginfo fdsi;
-    ssize_t s;
+    int                      sfd;
+    ssize_t                  s;
+    sigset_t                 mask;
+    struct signalfd_siginfo  fdsi;
 
     sigemptyset(&mask);
     sigaddset(&mask, SIGINT);
@@ -497,16 +485,16 @@ main(int argc, char *argv[])
        according to their default dispositions. */
 
     if (sigprocmask(SIG_BLOCK, &mask, NULL) == \-1)
-        handle_error("sigprocmask");
+        err(EXIT_FAILURE, "sigprocmask");
 
     sfd = signalfd(\-1, &mask, 0);
     if (sfd == \-1)
-        handle_error("signalfd");
+        err(EXIT_FAILURE, "signalfd");
 
     for (;;) {
         s = read(sfd, &fdsi, sizeof(fdsi));
         if (s != sizeof(fdsi))
-            handle_error("read");
+            err(EXIT_FAILURE, "read");
 
         if (fdsi.ssi_signo == SIGINT) {
             printf("Got SIGINT\en");
@@ -519,6 +507,7 @@ main(int argc, char *argv[])
     }
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR eventfd (2),
 .BR poll (2),
@@ -532,12 +521,3 @@ main(int argc, char *argv[])
 .BR sigwait (3),
 .BR epoll (7),
 .BR signal (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

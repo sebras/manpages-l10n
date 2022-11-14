@@ -1,13 +1,14 @@
 .\" Copyright (C) 2011, Eric Biederman <ebiederm@xmission.com>
 .\" and Copyright (C) 2011, 2012, Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(GPLv2_ONELINE)
-.\" Licensed under the GPLv2
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-only
 .\"
-.TH SETNS 2 2020-08-13 "Linux" "Linux Programmer's Manual"
+.TH SETNS 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 setns \- reassociate thread with a namespace
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .BR "#define _GNU_SOURCE" "             /* See feature_test_macros(7) */"
@@ -24,7 +25,7 @@ The
 argument is one of the following:
 .IP \(bu 2
 a file descriptor referring to one of the magic links in a
-.I /proc/[pid]/ns/
+.IR /proc/ pid /ns/
 directory (or a bind mount to such a link);
 .IP \(bu
 a PID file descriptor (see
@@ -38,7 +39,7 @@ argument is interpreted differently in each case.
 If
 .I fd
 refers to a
-.I /proc/[pid]/ns/
+.IR /proc/ pid /ns/
 link, then
 .BR setns ()
 reassociates the calling thread with the namespace associated with that link,
@@ -57,7 +58,7 @@ This argument can have
 .I one
 of the following values:
 .TP
-.BR 0
+.B 0
 Allow any type of namespace to be joined.
 .TP
 .BR CLONE_NEWCGROUP " (since Linux 4.6)"
@@ -101,10 +102,10 @@ what type of namespace is referred to by
 Specifying a nonzero value for
 .I nstype
 is useful if the caller does not know what type of namespace is referred to by
-.IR fd
+.I fd
 and wants to ensure that the namespace is of a particular type.
 (The caller might not know the type of the namespace referred to by
-.IR fd
+.I fd
 if the file descriptor was opened by another process and, for example,
 passed to the caller via a UNIX domain socket.)
 .\"
@@ -122,11 +123,11 @@ as the thread referred to by
 .IR fd .
 .PP
 The
-.IR nstype
+.I nstype
 argument is a bit mask specified by ORing together
 .I "one or more"
 of the
-.BR CLONE_NEW*
+.B CLONE_NEW*
 namespace constants listed above.
 The caller is moved into each of the target thread's namespaces
 that is specified in
@@ -186,9 +187,9 @@ Mount namespaces
 Changing the mount namespace requires that the caller possess both
 .B CAP_SYS_CHROOT
 and
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 capabilities in its own user namespace and
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 in the user namespace that owns the target mount namespace.
 .IP
 A process can't join a new mount namespace if it is sharing
@@ -306,13 +307,13 @@ The
 .BR setns ()
 system call first appeared in Linux in kernel 3.0;
 library support was added to glibc in version 2.14.
-.SH CONFORMING TO
+.SH STANDARDS
 The
 .BR setns ()
 system call is Linux-specific.
 .SH NOTES
 For further information on the
-.IR /proc/[pid]/ns/
+.IR /proc/ pid /ns/
 magic links, see
 .BR namespaces (7).
 .PP
@@ -324,7 +325,7 @@ can be changed using
 .SH EXAMPLES
 The program below takes two or more arguments.
 The first argument specifies the pathname of a namespace file in an existing
-.I /proc/[pid]/ns/
+.IR /proc/ pid /ns/
 directory.
 The remaining arguments specify a command and its arguments.
 The program opens the namespace file, joins that namespace using
@@ -335,7 +336,7 @@ The following shell session demonstrates the use of this program
 (compiled as a binary named
 .IR ns_exec )
 in conjunction with the
-.BR CLONE_NEWUTS
+.B CLONE_NEWUTS
 example program in the
 .BR clone (2)
 man page (complied as a binary named
@@ -376,16 +377,15 @@ bizarro
 .EE
 .in
 .SS Program source
+.\" SRC BEGIN (setns.c)
 .EX
 #define _GNU_SOURCE
+#include <err.h>
 #include <fcntl.h>
 #include <sched.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
-
-#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
-                        } while (0)
+#include <stdlib.h>
+#include <unistd.h>
 
 int
 main(int argc, char *argv[])
@@ -403,15 +403,16 @@ main(int argc, char *argv[])
 
     fd = open(argv[1], O_RDONLY | O_CLOEXEC);
     if (fd == \-1)
-        errExit("open");
+        err(EXIT_FAILURE, "open");
 
     if (setns(fd, 0) == \-1)       /* Join that namespace */
-        errExit("setns");
+        err(EXIT_FAILURE, "setns");
 
     execvp(argv[2], &argv[2]);    /* Execute a command in namespace */
-    errExit("execvp");
+    err(EXIT_FAILURE, "execvp");
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR nsenter (1),
 .BR clone (2),
@@ -420,12 +421,3 @@ main(int argc, char *argv[])
 .BR vfork (2),
 .BR namespaces (7),
 .BR unix (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

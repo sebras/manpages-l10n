@@ -2,27 +2,7 @@
 .\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
 .\"     <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" References consulted:
 .\"     Linux libc source code
@@ -32,9 +12,12 @@
 .\" Modified 1995-08-14 by Arnt Gulbrandsen <agulbra@troll.no>
 .\" Modified 2002-07-27 by Walter Harms
 .\" 	(walter.harms@informatik.uni-oldenburg.de)
-.TH POW 3  2021-03-22 "" "Linux Programmer's Manual"
+.TH POW 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 pow, powf, powl \- power functions
+.SH LIBRARY
+Math library
+.RI ( libm ", " \-lm )
 .SH SYNOPSIS
 .nf
 .B #include <math.h>
@@ -43,8 +26,6 @@ pow, powf, powl \- power functions
 .BI "float powf(float " x ", float " y );
 .BI "long double powl(long double " x ", long double " y );
 .fi
-.PP
-Link with \fI\-lm\fP.
 .PP
 .RS -4
 Feature Test Macro Requirements for glibc (see
@@ -70,14 +51,6 @@ On success, these functions return the value of
 to the power of
 .IR y .
 .PP
-If
-.I x
-is a finite value less than 0, and
-.I y
-is a finite noninteger, a domain error occurs,
-.\" The domain error is generated at least as far back as glibc 2.4
-and a NaN is returned.
-.PP
 If the result overflows,
 a range error occurs,
 .\" The range error is generated at least as far back as glibc 2.4
@@ -90,133 +63,12 @@ respectively, with the mathematically correct sign.
 .PP
 If result underflows, and is not representable,
 a range error occurs,
-and 0.0 is returned.
+and 0.0 with the appropriate sign is returned.
 .\" POSIX.1 does not specify the sign of the zero,
 .\" but http://sources.redhat.com/bugzilla/show_bug.cgi?id=2678
 .\" points out that the zero has the wrong sign in some cases.
 .PP
-Except as specified below, if
-.I x
-or
-.I y
-is a NaN, the result is a NaN.
-.PP
-If
-.I x
-is +1, the result is 1.0 (even if
-.I y
-is a NaN).
-.PP
-If
-.I y
-is 0, the result is 1.0 (even if
-.I x
-is a NaN).
-.PP
-If
-.I x
-is +0 (\-0),
-and
-.I y
-is an odd integer greater than 0,
-the result is +0 (\-0).
-.PP
-If
-.I x
-is 0,
-and
-.I y
-greater than 0 and not an odd integer,
-the result is +0.
-.PP
-If
-.I x
-is \-1,
-and
-.I y
-is positive infinity or negative infinity,
-the result is 1.0.
-.PP
-If the absolute value of
-.I x
-is less than 1,
-and
-.I y
-is negative infinity,
-the result is positive infinity.
-.PP
-If the absolute value of
-.I x
-is greater than 1,
-and
-.I y
-is negative infinity,
-the result is +0.
-.PP
-If the absolute value of
-.I x
-is less than 1,
-and
-.I y
-is positive infinity,
-the result is +0.
-.PP
-If the absolute value of
-.I x
-is greater than 1,
-and
-.I y
-is positive infinity,
-the result is positive infinity.
-.PP
-If
-.I x
-is negative infinity,
-and
-.I y
-is an odd integer less than 0,
-the result is \-0.
-.PP
-If
-.I x
-is negative infinity,
-and
-.I y
-less than 0 and not an odd integer,
-the result is +0.
-.PP
-If
-.I x
-is negative infinity,
-and
-.I y
-is an odd integer greater than 0,
-the result is negative infinity.
-.PP
-If
-.I x
-is negative infinity,
-and
-.I y
-greater than 0 and not an odd integer,
-the result is positive infinity.
-.PP
-If
-.I x
-is positive infinity,
-and
-.I y
-less than 0,
-the result is +0.
-.PP
-If
-.I x
-is positive infinity,
-and
-.I y
-greater than 0,
-the result is positive infinity.
-.PP
+.\" pow(\(+-0, <0 [[odd]]) = HUGE_VAL*
 If
 .I x
 is +0 or \-0,
@@ -232,6 +84,7 @@ is returned,
 with the same sign as
 .IR x .
 .PP
+.\" pow(\(+-0, <0 [[!odd]]) = HUGE_VAL*
 If
 .I x
 is +0 or \-0,
@@ -245,6 +98,153 @@ a pole error occurs and
 or
 .RB + HUGE_VALL ,
 is returned.
+.PP
+.\" pow(\(+-0, >0 [[odd]]) = \(+-0
+If
+.I x
+is +0 (\-0),
+and
+.I y
+is an odd integer greater than 0,
+the result is +0 (\-0).
+.PP
+.\" pow(\(+-0, >0 [[!odd]]) = +0
+If
+.I x
+is 0,
+and
+.I y
+greater than 0 and not an odd integer,
+the result is +0.
+.PP
+.\" pow(-1, \(+-INFINITY) = 1.0
+If
+.I x
+is \-1,
+and
+.I y
+is positive infinity or negative infinity,
+the result is 1.0.
+.PP
+.\" pow(+1, y) = 1.0
+If
+.I x
+is +1, the result is 1.0 (even if
+.I y
+is a NaN).
+.PP
+.\" pow(x, \(+-0) = 1.0
+If
+.I y
+is 0, the result is 1.0 (even if
+.I x
+is a NaN).
+.PP
+.\" pow(<0, y) = NaN
+If
+.I x
+is a finite value less than 0, and
+.I y
+is a finite noninteger, a domain error occurs,
+.\" The domain error is generated at least as far back as glibc 2.4
+and a NaN is returned.
+.PP
+.\" pow(|x|<1, -INFINITY) = INFINITY
+If the absolute value of
+.I x
+is less than 1,
+and
+.I y
+is negative infinity,
+the result is positive infinity.
+.PP
+.\" pow(|x|>1, -INFINITY) = +0
+If the absolute value of
+.I x
+is greater than 1,
+and
+.I y
+is negative infinity,
+the result is +0.
+.PP
+.\" pow(|x|<1, INFINITY) = +0
+If the absolute value of
+.I x
+is less than 1,
+and
+.I y
+is positive infinity,
+the result is +0.
+.PP
+.\" pow(|x|>1, INFINITY) = INFINITY
+If the absolute value of
+.I x
+is greater than 1,
+and
+.I y
+is positive infinity,
+the result is positive infinity.
+.PP
+.\" pow(-INFINITY, <0 [[odd]]) = -0
+If
+.I x
+is negative infinity,
+and
+.I y
+is an odd integer less than 0,
+the result is \-0.
+.PP
+.\" pow(-INFINITY, <0 [[!odd]]) = +0
+If
+.I x
+is negative infinity,
+and
+.I y
+less than 0 and not an odd integer,
+the result is +0.
+.PP
+.\" pow(-INFINITY, >0 [[odd]]) = -INFINITY
+If
+.I x
+is negative infinity,
+and
+.I y
+is an odd integer greater than 0,
+the result is negative infinity.
+.PP
+.\" pow(-INFINITY, >0 [[!odd]]) = INFINITY
+If
+.I x
+is negative infinity,
+and
+.I y
+greater than 0 and not an odd integer,
+the result is positive infinity.
+.PP
+.\" pow(INFINITY, <0) = +0
+If
+.I x
+is positive infinity,
+and
+.I y
+less than 0,
+the result is +0.
+.PP
+.\" pow(INFINITY, >0) = INFINITY
+If
+.I x
+is positive infinity,
+and
+.I y
+greater than 0,
+the result is positive infinity.
+.PP
+.\" pow(NaN, y) or pow(x, NaN) = NaN
+Except as specified above, if
+.I x
+or
+.I y
+is a NaN, the result is a NaN.
 .SH ERRORS
 .\" FIXME . review status of this error
 .\" longstanding bug report for glibc:
@@ -284,7 +284,7 @@ is raised.
 Pole error: \fIx\fP is zero, and \fIy\fP is negative
 .I errno
 is set to
-.BR ERANGE
+.B ERANGE
 (but see BUGS).
 A divide-by-zero floating-point exception
 .RB ( FE_DIVBYZERO )
@@ -324,7 +324,7 @@ T}	Thread safety	MT-Safe
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 C99, POSIX.1-2001, POSIX.1-2008.
 .PP
 The variant returning
@@ -361,7 +361,7 @@ In glibc 2.9 and earlier,
 when a pole error occurs,
 .I errno
 is set to
-.BR EDOM
+.B EDOM
 instead of the POSIX-mandated
 .BR ERANGE .
 Since version 2.10,
@@ -381,12 +381,3 @@ in addition to the overflow or underflow exception.
 .BR cbrt (3),
 .BR cpow (3),
 .BR sqrt (3)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

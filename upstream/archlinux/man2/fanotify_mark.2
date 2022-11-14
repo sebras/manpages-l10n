@@ -1,7 +1,7 @@
 .\" Copyright (C) 2013,  Heinrich Schuchardt <xypron.glpk@gmx.de>
 .\"
 .\" SPDX-License-Identifier: Linux-man-pages-copyleft
-.TH FANOTIFY_MARK 2 2022-09-09 "Linux man-pages (unreleased)"
+.TH FANOTIFY_MARK 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 fanotify_mark \- add, remove, or modify an fanotify mark on a filesystem
 object
@@ -146,12 +146,130 @@ capability.
 The events in
 .I mask
 shall be added to or removed from the ignore mask.
+Note that the flags
+.BR FAN_ONDIR ,
+and
+.B FAN_EVENT_ON_CHILD
+have no effect when provided with this flag.
+The effect of setting the flags
+.BR FAN_ONDIR ,
+and
+.B FAN_EVENT_ON_CHILD
+in the mark mask
+on the events that are set in the ignore mask
+is undefined and depends on the Linux kernel version.
+Specifically, prior to Linux 5.9,
+.\" commit 497b0c5a7c0688c1b100a9c2e267337f677c198e
+setting a mark mask on a file
+and a mark with ignore mask on its parent directory
+would not result in ignoring events on the file,
+regardless of the
+.B FAN_EVENT_ON_CHILD
+flag in the parent directory's mark mask.
+When the ignore mask is updated with the
+.B FAN_MARK_IGNORED_MASK
+flag
+on a mark that was previously updated with the
+.B FAN_MARK_IGNORE
+flag,
+the update fails with
+.B EEXIST
+error.
+.TP
+.BR FAN_MARK_IGNORE " (since Linux 6.0)"
+.\" commit e252f2ed1c8c6c3884ab5dd34e003ed21f1fe6e0
+This flag has a similar effect as setting the
+.B FAN_MARK_IGNORED_MASK
+flag.
+The events in
+.I mask
+shall be added to or removed from the ignore mask.
+Unlike the
+.B FAN_MARK_IGNORED_MASK
+flag,
+this flag also has the effect that the
+.BR FAN_ONDIR ,
+and
+.B FAN_EVENT_ON_CHILD
+flags take effect on the ignore mask.
+Specifically, unless the
+.B FAN_ONDIR
+flag is set with
+.BR FAN_MARK_IGNORE ,
+events on directories will not be ignored.
+If the flag
+.B FAN_EVENT_ON_CHILD
+is set with
+.BR FAN_MARK_IGNORE ,
+events on children will be ignored.
+For example,
+a mark on a directory with combination of
+a mask with
+.B FAN_CREATE
+event
+and
+.B FAN_ONDIR
+flag
+and an ignore mask with
+.B FAN_CREATE
+event
+and without
+.B FAN_ONDIR
+flag,
+will result in getting only
+the events for creation of sub-directories.
+When using the
+.B FAN_MARK_IGNORE
+flag to add to an ignore mask
+of a mount,
+filesystem,
+or directory inode mark,
+the
+.B FAN_MARK_IGNORED_SURV_MODIFY
+flag must be specified.
+Failure to do so will results with
+.B EINVAL
+or
+.B EISDIR
+error.
 .TP
 .B FAN_MARK_IGNORED_SURV_MODIFY
 The ignore mask shall survive modify events.
 If this flag is not set,
 the ignore mask is cleared when a modify event occurs
-for the ignored file or directory.
+on the marked object.
+Omitting this flag is typically used to suppress events
+(e.g.,
+.BR FAN_OPEN )
+for a specific file,
+until that specific file's content has been modified.
+It is far less useful to suppress events
+on an entire filesystem,
+or mount,
+or on all files inside a directory,
+until some file's content has been modified.
+For this reason,
+the
+.B FAN_MARK_IGNORE
+flag requires the
+.B FAN_MARK_IGNORED_SURV_MODIFY
+flag on a mount,
+filesystem,
+or directory inode mark.
+This flag cannot be removed from a mark once set.
+When the ignore mask is updated without this flag
+on a mark that was previously updated with the
+.B FAN_MARK_IGNORE
+and
+.B FAN_MARK_IGNORED_SURV_MODIFY
+flags,
+the update fails with
+.B EEXIST
+error.
+.TP
+.B FAN_MARK_IGNORE_SURV
+This is a synonym for
+.RB ( FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY ).
 .TP
 .BR FAN_MARK_EVICTABLE " (since Linux 5.19)"
 .\" commit 5f9d3bd520261fd7a850818c71809fd580e0f30c
@@ -462,6 +580,32 @@ and the user attempted to update the mark with
 .B FAN_MARK_EVICTABLE
 flag.
 .TP
+.B EEXIST
+The filesystem object indicated by
+.I dirfd
+and
+.I pathname
+has a mark that was updated with the
+.B FAN_MARK_IGNORE
+flag,
+and the user attempted to update the mark with
+.B FAN_MARK_IGNORED_MASK
+flag.
+.TP
+.B EEXIST
+The filesystem object indicated by
+.I dirfd
+and
+.I pathname
+has a mark that was updated with the
+.B FAN_MARK_IGNORE
+and
+.B FAN_MARK_IGNORED_SURV_MODIFY
+flags,
+and the user attempted to update the mark only with
+.B FAN_MARK_IGNORE
+flag.
+.TP
 .B EINVAL
 An invalid value was passed in
 .I flags
@@ -487,8 +631,33 @@ but one or more event types specified in the
 .I mask
 require it.
 .TP
+.B EINVAL
+.I flags
+contains
+.BR FAN_MARK_IGNORE ,
+and either
+.B FAN_MARK_MOUNT
+or
+.BR FAN_MARK_FILESYSTEM ,
+but does not contain
+.BR FAN_MARK_IGNORED_SURV_MODIFY .
+.TP
+.B EISDIR
+.I flags
+contains
+.BR FAN_MARK_IGNORE ,
+but does not contain
+.BR FAN_MARK_IGNORED_SURV_MODIFY ,
+and
+.I dirfd
+and
+.I pathname
+specify a directory.
+.TP
 .B ENODEV
 The filesystem object indicated by
+.I dirfd
+and
 .I pathname
 is not associated with a filesystem that supports
 .I fsid
@@ -550,8 +719,12 @@ and
 do not specify a directory.
 .TP
 .B ENOTDIR
-The fanotify group was initialized with flag
+.I flags
+contains
+.BR FAN_MARK_IGNORE ,
+or the fanotify group was initialized with flag
 .BR FAN_REPORT_TARGET_FID ,
+and
 .I mask
 contains directory entry modification events
 (e.g.,

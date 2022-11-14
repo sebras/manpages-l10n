@@ -17,7 +17,7 @@
 .\"     address that can appear in the sockaddr_un structure: pathname,
 .\"     unnamed, and abstract.
 .\"
-.TH UNIX  7 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH UNIX 7 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 unix \- sockets for local interprocess communication
 .SH SYNOPSIS
@@ -75,7 +75,7 @@ field always contains
 .BR AF_UNIX .
 On Linux,
 .I sun_path
-is 108 bytes in size; see also NOTES, below.
+is 108 bytes in size; see also BUGS, below.
 .PP
 Various systems calls (for example,
 .BR bind (2),
@@ -105,7 +105,11 @@ When the address of a pathname socket is returned
 (by one of the system calls noted above),
 its length is
 .IP
-    offsetof(struct sockaddr_un, sun_path) + strlen(sun_path) + 1
+.in +4n
+.EX
+offsetof(struct sockaddr_un, sun_path) + strlen(sun_path) + 1
+.EE
+.in
 .IP
 and
 .I sun_path
@@ -141,11 +145,11 @@ should not be inspected.
 .IR abstract :
 an abstract socket address is distinguished (from a pathname socket)
 by the fact that
-.IR sun_path[0]
+.I sun_path[0]
 is a null byte (\(aq\e0\(aq).
 The socket's address in this namespace is given by the additional
 bytes in
-.IR sun_path
+.I sun_path
 that are covered by the specified length of the address structure.
 (Null bytes in the name have no special significance.)
 The name has no connection with filesystem pathnames.
@@ -153,10 +157,10 @@ When the address of an abstract socket is returned,
 the returned
 .I addrlen
 is greater than
-.IR "sizeof(sa_family_t)"
+.I sizeof(sa_family_t)
 (i.e., greater than 2), and the name of the socket is contained in
 the first
-.IR "(addrlen \- sizeof(sa_family_t))"
+.I (addrlen \- sizeof(sa_family_t))
 bytes of
 .IR sun_path .
 .SS Pathname sockets
@@ -177,9 +181,11 @@ argument that describes the enclosing
 .I sockaddr_un
 structure should have a value of at least:
 .IP
-.nf
-    offsetof(struct sockaddr_un, sun_path)+strlen(addr.sun_path)+1
-.fi
+.in +4n
+.EX
+offsetof(struct sockaddr_un, sun_path)+strlen(addr.sun_path)+1
+.EE
+.in
 .IP
 or, more simply,
 .I addrlen
@@ -303,7 +309,7 @@ is an integer boolean flag.
 .B SO_PASSSEC
 Enables receiving of the SELinux security label of the peer socket
 in an ancillary message of type
-.BR SCM_SECURITY
+.B SCM_SECURITY
 (see below).
 .IP
 The value given as an argument to
@@ -321,7 +327,7 @@ support for UNIX domain stream sockets was added
 .\" commit 37a9a8df8ce9de6ea73349c9ac8bdf6ba4ec4f70
 in Linux 4.2.
 .TP
-.BR SO_PEEK_OFF
+.B SO_PEEK_OFF
 See
 .BR socket (7).
 .TP
@@ -371,7 +377,7 @@ to
 and returns the required length via
 .IR optlen .
 The caller should allocate at least
-.BR NAME_MAX
+.B NAME_MAX
 bytes for the buffer initially, although this is not guaranteed
 to be sufficient.
 Resizing the buffer to the returned length
@@ -403,7 +409,7 @@ as
 .IR sizeof(sa_family_t) ,
 .\" i.e., sizeof(short)
 or the
-.BR SO_PASSCRED
+.B SO_PASSCRED
 socket option was specified for a socket that was
 not explicitly bound to an address,
 then the socket is autobound to an abstract address.
@@ -505,13 +511,13 @@ the excess file descriptors are automatically closed
 in the receiving process.
 .IP
 The kernel constant
-.BR SCM_MAX_FD
+.B SCM_MAX_FD
 defines a limit on the number of file descriptors in the array.
 Attempting to send an array larger than this limit causes
 .BR sendmsg (2)
 to fail with the error
 .BR EINVAL .
-.BR SCM_MAX_FD
+.B SCM_MAX_FD
 has the value 253
 (or 255 in kernels
 .\" commit bba14de98753cb6599a2dae0e520714b2153522d
@@ -567,7 +573,7 @@ of the peer socket.
 The received ancillary data is a null-terminated string containing
 the security context.
 The receiver should allocate at least
-.BR NAME_MAX
+.B NAME_MAX
 bytes in the data portion of the ancillary message for this data.
 .IP
 To receive the security context, the
@@ -616,7 +622,7 @@ The next call will receive the remaining four bytes of data.
 If the space allocated for receiving incoming ancillary data is too small
 then the ancillary data is truncated to the number of headers
 that will fit in the supplied buffer (or, in the case of an
-.BR SCM_RIGHTS
+.B SCM_RIGHTS
 file descriptor list, the list of file descriptors may be truncated).
 If no buffer is provided for incoming ancillary data (i.e., the
 .I msg_control
@@ -627,7 +633,7 @@ structure supplied to
 is NULL),
 then the incoming ancillary data is discarded.
 In both of these cases, the
-.BR MSG_CTRUNC
+.B MSG_CTRUNC
 flag will be set in the
 .I msg.msg_flags
 value returned by
@@ -721,6 +727,9 @@ invalid state for the applied operation.
 called on an already connected socket or a target address was
 specified on a connected socket.
 .TP
+.B ENFILE
+The system-wide limit on the total number of open files has been reached.
+.TP
 .B ENOENT
 The pathname in the remote address specified to
 .BR connect (2)
@@ -780,7 +789,7 @@ above).
 It occurs if the number of "in-flight" file descriptors exceeds the
 .B RLIMIT_NOFILE
 resource limit and the caller does not have the
-.BR CAP_SYS_RESOURCE
+.B CAP_SYS_RESOURCE
 capability.
 An in-flight file descriptor is one that has been sent using
 .BR sendmsg (2)
@@ -817,7 +826,7 @@ at any time and will be finally removed from the filesystem when the last
 reference to it is closed.
 .PP
 To pass file descriptors or credentials over a
-.BR SOCK_STREAM
+.B SOCK_STREAM
 socket, you must
 send or receive at least one byte of nonancillary data in the same
 .BR sendmsg (2)
@@ -865,10 +874,14 @@ there is no null terminator in
 .PP
 Applications that retrieve socket addresses can (portably) code
 to handle the possibility that there is no null terminator in
-.IR sun_path
+.I sun_path
 by respecting the fact that the number of valid bytes in the pathname is:
 .PP
-    strnlen(addr.sun_path, addrlen \- offsetof(sockaddr_un, sun_path))
+.in +4n
+.EX
+strnlen(addr.sun_path, addrlen \- offsetof(sockaddr_un, sun_path))
+.EE
+.in
 .\" The following patch to amend kernel behavior was rejected:
 .\" http://thread.gmane.org/gmane.linux.kernel.api/2437
 .\" Subject: [patch] Fix handling of overlength pathname in AF_UNIX sun_path
@@ -1141,7 +1154,7 @@ main(int argc, char *argv[])
 
     /* Send arguments. */
 
-    for (int i = 1; i < argc; ++i) {
+    for (size_t i = 1; i < argc; ++i) {
         ret = write(data_socket, argv[i], strlen(argv[i]) + 1);
         if (ret == \-1) {
             perror("write");
@@ -1196,12 +1209,3 @@ and
 .BR credentials (7),
 .BR socket (7),
 .BR udp (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

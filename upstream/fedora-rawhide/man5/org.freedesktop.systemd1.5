@@ -159,7 +159,11 @@ node /org/freedesktop/systemd1 {
       Subscribe();
       Unsubscribe();
       Dump(out s output);
+      DumpUnitsMatchingPatterns(in  as patterns,
+                                out s output);
       DumpByFileDescriptor(out h fd);
+      DumpUnitsMatchingPatternsByFileDescriptor(in  as patterns,
+                                                out h fd);
       Reload();
       @org\&.freedesktop\&.DBus\&.Method\&.NoReply("true")
       Reexecute();
@@ -734,6 +738,8 @@ node /org/freedesktop/systemd1 {
 
 
 
+
+
 .SS "Methods"
 .PP
 Note that many of the methods exist twice: once on the
@@ -793,7 +799,7 @@ may be used to restart and/or reload a unit\&. These methods take similar argume
 .PP
 \fBEnqueueMarkedJobs()\fR
 creates reload/restart jobs for units which have been appropriately marked, see
-\fIMarks\fR
+\fIMarkers\fR
 property above\&. This is equivalent to calling
 \fBTryRestartUnit()\fR
 or
@@ -1042,15 +1048,16 @@ either closed their connection to the bus or invoked
 returns a text dump of the internal service manager state\&. This is a privileged, low\-level debugging interface only\&. The returned string is supposed to be readable exclusively by developers, and not programmatically\&. There\*(Aqs no interface stability on the returned string guaranteed, and new fields may be added any time, and old fields removed\&. The general structure may be rearranged drastically between releases\&. This is exposed by
 \fBsystemd-analyze\fR(1)\*(Aqs
 \fBdump\fR
-command\&. The
-\fBDumpByFileDescriptor()\fR
-method is identical to
-\fBDump()\fR
-but returns the data serialized into a file descriptor (the client should read the text data from it until hitting EOF)\&. Given the size limits on D\-Bus messages and the possibly large size of the returned string,
-\fBDumpByFileDescriptor()\fR
-is usually the preferable interface, since it ensures the data can be passed reliably from the service manager to the client\&. (Note though that
-\fBDumpByFileDescriptor()\fR
-cannot work when communicating with the service manager remotely, as file descriptors are strictly local to a system\&.)
+command\&. Similarly,
+\fBDumpUnitsMatchingPatterns()\fR
+returns the internal state of units whose names match the glob expressions specified in the
+\fIpatterns\fR
+argument\&. The
+\fBDumpByFileDescriptor()\fR/\fBDumpUnitsMatchingPatternsByFileDescriptor()\fR
+methods are identical to
+\fBDump()\fR/\fBDumpUnitsMatchingPatterns()\fR, but return data serialized into a file descriptor (the client should read the text data from it until hitting EOF)\&. Given the size limits on D\-Bus messages and the possibly large size of the returned strings,
+\fBDumpByFileDescriptor()\fR/\fBDumpUnitsMatchingPatternsByFileDescriptor()\fR
+are usually the preferred interface, since it ensures the data can be passed reliably from the service manager to the client\&. Note though that they cannot work when communicating with the service manager remotely, as file descriptors are strictly local to a system\&.
 .PP
 \fBReload()\fR
 may be invoked to reload all unit files\&.
@@ -2038,7 +2045,7 @@ contains a pair of strings\&. If the unit failed to load (as encoded in
 .PP
 \fITransient\fR
 contains a boolean that indicates whether the unit was created as a transient unit (i\&.e\&. via
-\fBCreateTransientUnit()\fR
+\fBStartTransientUnit()\fR
 on the manager object)\&.
 .PP
 \fIActivationDetails\fR

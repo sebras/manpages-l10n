@@ -1,26 +1,6 @@
 .\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" References consulted:
 .\"     Linux libc source code
@@ -34,9 +14,12 @@
 .\" 2005-11-22 mtk, added Glibc Notes covering optional 'flag' and
 .\"           'width' components of conversion specifications.
 .\"
-.TH STRFTIME 3  2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH STRFTIME 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 strftime \- format date and time
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <time.h>
@@ -44,6 +27,11 @@ strftime \- format date and time
 .BI "size_t strftime(char *restrict " s ", size_t " max ,
 .BI "                const char *restrict " format ,
 .BI "                const struct tm *restrict " tm );
+.PP
+.BI "size_t strftime_l(char *restrict " s ", size_t " max ,
+.BI "                const char *restrict " format ,
+.BI "                const struct tm *restrict " tm ,
+.BI "                locale_t " locale );
 .fi
 .SH DESCRIPTION
 The
@@ -336,7 +324,7 @@ See also
 and
 .BR %W .
 (Calculated from
-.IR tm_yday
+.I tm_yday
 and
 .IR tm_wday .)
 .TP
@@ -366,7 +354,7 @@ See also
 The week number of the current year as a decimal number,
 range 00 to 53, starting with the first Monday as the first day of week 01.
 (Calculated from
-.IR tm_yday
+.I tm_yday
 and
 .IR tm_wday .)
 .TP
@@ -417,7 +405,8 @@ conversion specification.)
 The year as a decimal number including the century.
 (The
 .B %EY
-conversion specification corresponds to the full alternative year representation.)
+conversion specification corresponds to
+the full alternative year representation.)
 (Calculated from
 .IR tm_year )
 .TP
@@ -487,6 +476,17 @@ as an argument to a
 One example of such alternative forms is the Japanese era calendar scheme in the
 .B ja_JP
 glibc locale.
+.PP
+.BR strftime_l ()
+is equivalent to
+.BR strftime (),
+except it uses the specified
+.I locale
+instead of the current locale.
+The behaviour is undefined if
+.I locale
+is invalid or
+.BR LC_GLOBAL_LOCALE .
 .SH RETURN VALUE
 Provided that the result string,
 including the terminating null byte, does not exceed
@@ -532,14 +532,22 @@ lbx lb lb
 l l l.
 Interface	Attribute	Value
 T{
-.BR strftime ()
+.BR strftime (),
+.BR strftime_l ()
 T}	Thread safety	MT-Safe env locale
 .TE
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
+.BR strftime ():
 SVr4, C89, C99.
+.PD 0
+.PP
+.PD
+.BR strftime_l ():
+POSIX.1-2008.
+.PP
 .\" FIXME strftime() is in POSIX.1-2001 and POSIX.1-2008, but the details
 .\" in the standards changed across versions. Investigate and
 .\" write up.
@@ -570,7 +578,7 @@ included a double leap second
 .BR %G ,
 .BR %g ,
 and
-.BR %V
+.B %V
 yield values calculated from the week-based year defined by the
 ISO\ 8601 standard.
 In this system, weeks start on a Monday, and are numbered from 01,
@@ -684,11 +692,11 @@ my_strftime(char *s, size_t max, const char *fmt,
 Nowadays,
 .BR gcc (1)
 provides the
-.IR \-Wno\-format\-y2k
+.I \-Wno\-format\-y2k
 option to prevent the warning,
 so that the above workaround is no longer required.
 .SH EXAMPLES
-.BR "RFC\ 2822-compliant date format"
+.B RFC\~2822-compliant date format
 (with an English locale for %a and %b)
 .PP
 .in +4n
@@ -697,7 +705,7 @@ so that the above workaround is no longer required.
 .EE
 .in
 .PP
-.BR "RFC\ 822-compliant date format"
+.B RFC\~822-compliant date format
 (with an English locale for %a and %b)
 .PP
 .in +4n
@@ -725,10 +733,11 @@ Result string is "   11"
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (strftime.c)
 .EX
-#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int
 main(int argc, char *argv[])
@@ -753,6 +762,7 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR date (1),
 .BR time (2),
@@ -761,12 +771,3 @@ main(int argc, char *argv[])
 .BR setlocale (3),
 .BR sprintf (3),
 .BR strptime (3)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

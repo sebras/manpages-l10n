@@ -1,5 +1,5 @@
 '\" t
-.TH "SYSTEMD\-DISSECT" "1" "" "systemd 251" "systemd-dissect"
+.TH "SYSTEMD\-DISSECT" "1" "" "systemd 252" "systemd-dissect"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -20,12 +20,14 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-systemd-dissect \- Dissect file system OS images
+systemd-dissect \- Dissect Discoverable Disk Images (DDIs)
 .SH "SYNOPSIS"
 .HP \w'\fBsystemd\-dissect\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB\fIIMAGE\fR\fR\ 'u
 \fBsystemd\-dissect \fR\fB[OPTIONS...]\fR\fB \fR\fB\fIIMAGE\fR\fR
 .HP \w'\fBsystemd\-dissect\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB\fB\-\-mount\fR\fR\fB\ \fR\fB\fIIMAGE\fR\fR\fB\ \fR\fB\fIPATH\fR\fR\ 'u
 \fBsystemd\-dissect \fR\fB[OPTIONS...]\fR\fB \fR\fB\fB\-\-mount\fR\fR\fB \fR\fB\fIIMAGE\fR\fR\fB \fR\fB\fIPATH\fR\fR
+.HP \w'\fBsystemd\-dissect\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB\fB\-\-umount\fR\fR\fB\ \fR\fB\fIPATH\fR\fR\ 'u
+\fBsystemd\-dissect \fR\fB[OPTIONS...]\fR\fB \fR\fB\fB\-\-umount\fR\fR\fB \fR\fB\fIPATH\fR\fR
 .HP \w'\fBsystemd\-dissect\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB\fB\-\-copy\-from\fR\fR\fB\ \fR\fB\fIIMAGE\fR\fR\fB\ \fR\fB\fIPATH\fR\fR\fB\ \fR\fB[\fITARGET\fR]\fR\ 'u
 \fBsystemd\-dissect \fR\fB[OPTIONS...]\fR\fB \fR\fB\fB\-\-copy\-from\fR\fR\fB \fR\fB\fIIMAGE\fR\fR\fB \fR\fB\fIPATH\fR\fR\fB \fR\fB[\fITARGET\fR]\fR
 .HP \w'\fBsystemd\-dissect\ \fR\fB[OPTIONS...]\fR\fB\ \fR\fB\fB\-\-copy\-to\fR\fR\fB\ \fR\fB\fIIMAGE\fR\fR\fB\ \fR\fB[\fISOURCE\fR]\fR\fB\ \fR\fB\fIPATH\fR\fR\ 'u
@@ -33,7 +35,7 @@ systemd-dissect \- Dissect file system OS images
 .SH "DESCRIPTION"
 .PP
 \fBsystemd\-dissect\fR
-is a tool for introspecting and interacting with file system OS disk images\&. It supports four different operations:
+is a tool for introspecting and interacting with file system OS disk images, specifically Discoverable Disk Images (DDIs)\&. It supports five different operations:
 .sp
 .RS 4
 .ie n \{\
@@ -66,6 +68,17 @@ Mount an OS image to a local directory\&. In this mode it will dissect the OS im
 .el \{\
 .sp -1
 .IP "  3." 4.2
+.\}
+Unmount an OS image from a local directory\&. In this mode it will recursively unmount the mounted partitions and remove the underlying loop device, including all the partition sub\-devices\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  4." 4.2
 .\}
 Copy files and directories in and out of an OS image\&.
 .RE
@@ -128,10 +141,9 @@ Mount the specified OS image to the specified directory\&. This will dissect the
 \m[blue]\fBDiscoverable Partitions Specification\fR\m[]\&\s-2\u[1]\d\s+2
 multiple nested mounts are established\&. This command expects two arguments: a path to an image file and a path to a directory where to mount the image\&.
 .sp
-To unmount an OS image mounted like this use
-\fBumount\fR(8)\*(Aqs
-\fB\-R\fR
-switch (for recursive operation), so that the OS image and all nested partition mounts are unmounted\&.
+To unmount an OS image mounted like this use the
+\fB\-\-umount\fR
+operation\&.
 .sp
 When the OS image contains LUKS encrypted or Verity integrity protected file systems appropriate volumes are automatically set up and marked for automatic disassembly when the image is unmounted\&.
 .sp
@@ -146,6 +158,19 @@ implementation in automatic fixing mode, unless explicitly turned off (\fB\-\-fs
 .RS 4
 This is a shortcut for
 \fB\-\-mount \-\-mkdir\fR\&.
+.RE
+.PP
+\fB\-\-umount\fR, \fB\-u\fR
+.RS 4
+Unmount an OS image from the specified directory\&. This command expects one argument: a directory where an OS image was mounted\&.
+.sp
+All mounted partitions will be recursively unmounted, and the underlying loop device will be removed, along with all it\*(Aqs partition sub\-devices\&.
+.RE
+.PP
+\fB\-U\fR
+.RS 4
+This is a shortcut for
+\fB\-\-umount \-\-rmdir\fR\&.
 .RE
 .PP
 \fB\-\-copy\-from\fR, \fB\-x\fR
@@ -276,6 +301,13 @@ option is not passed\&.
 If combined with
 \fB\-\-mount\fR
 the directory to mount the OS image to is created if it is missing\&. Note that the directory is not automatically removed when the disk image is unmounted again\&.
+.RE
+.PP
+\fB\-\-rmdir\fR
+.RS 4
+If combined with
+\fB\-\-umount\fR
+the specified directory where the OS image is mounted is removed after unmounting the OS image\&.
 .RE
 .PP
 \fB\-\-discard=\fR

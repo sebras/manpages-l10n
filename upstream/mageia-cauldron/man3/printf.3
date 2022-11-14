@@ -6,35 +6,19 @@
 .\" converted for Linux by faith@cs.unc.edu, updated by
 .\" Helmut.Geyer@iwr.uni-heidelberg.de, agulbra@troll.no and Bruno Haible.
 .\"
-.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-.\" This is free documentation; you can redistribute it and/or
-.\" modify it under the terms of the GNU General Public License as
-.\" published by the Free Software Foundation; either version 2 of
-.\" the License, or (at your option) any later version.
-.\"
-.\" The GNU General Public License's references to "object code"
-.\" and "executables" are to be interpreted as the output of any
-.\" document formatting or typesetting system, including
-.\" intermediate and printed output.
-.\"
-.\" This manual is distributed in the hope that it will be useful,
-.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
-.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-.\" GNU General Public License for more details.
-.\"
-.\" You should have received a copy of the GNU General Public
-.\" License along with this manual; if not, see
-.\" <http://www.gnu.org/licenses/>.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-2.0-or-later
 .\"
 .\" 1999-11-25 aeb - Rewritten, using SUSv2 and C99.
 .\" 2000-07-26 jsm28@hermes.cam.ac.uk - three small fixes
 .\" 2000-10-16 jsm28@hermes.cam.ac.uk - more fixes
 .\"
-.TH PRINTF 3  2021-03-22 "GNU" "Linux Programmer's Manual"
+.TH PRINTF 3 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 printf, fprintf, dprintf, sprintf, snprintf, vprintf, vfprintf, vdprintf,
 vsprintf, vsnprintf \- formatted output conversion
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <stdio.h>
@@ -48,8 +32,6 @@ vsprintf, vsnprintf \- formatted output conversion
 .BI "            const char *restrict " format ", ...);"
 .BI "int snprintf(char *restrict " str ", size_t " size ,
 .BI "            const char *restrict " format ", ...);"
-.PP
-.B #include <stdarg.h>
 .PP
 .BI "int vprintf(const char *restrict " format ", va_list " ap );
 .BI "int vfprintf(FILE *restrict " stream ,
@@ -301,6 +283,17 @@ and
 .B G
 conversions, trailing zeros are not removed from the result as they would
 otherwise be.
+For
+.BR m ,
+if
+.I errno
+contains a valid error code,
+the output of
+.I strerrorname_np(errno)
+is printed;
+otherwise, the value stored in
+.I errno
+is printed as a decimal number.
 For other conversions, the result is undefined.
 .TP
 .B \&0
@@ -387,6 +380,11 @@ Note that many versions of
 cannot parse this option and will issue a warning.
 (SUSv2 did not
 include \fI%\(aqF\fP, but SUSv3 added it.)
+Note also that the default locale of a C program is "C"
+whose locale information indicates no thousands' grouping character.
+Therefore, without a prior call to
+.BR setlocale (3),
+no thousands' grouping characters will be printed.
 .PP
 glibc 2.2 adds one further flag character.
 .TP
@@ -503,6 +501,17 @@ argument, or a following
 conversion corresponds to a pointer to
 .I wchar_t
 argument.
+On a following
+.BR a ,
+.BR A ,
+.BR e ,
+.BR E ,
+.BR f ,
+.BR F ,
+.BR g ,
+or
+.B G
+conversion, this length modifier is ignored (C99; not in SUSv2).
 .TP
 .B ll
 (ell-ell).
@@ -562,7 +571,7 @@ argument.
 .TP
 .B Z
 A nonstandard synonym for
-.BR z
+.B z
 that predates the appearance of
 .BR z .
 Do not use in new code.
@@ -612,11 +621,11 @@ As a nonstandard extension, the GNU implementations treats
 and
 .B L
 as synonyms, so that one can, for example, write
-.BR llg
+.B llg
 (as a synonym for the standards-compliant
 .BR Lg )
 and
-.BR Ld
+.B Ld
 (as a synonym for the standards compliant
 .BR lld ).
 Such usage is nonportable.
@@ -853,7 +862,10 @@ any flags, a field width, or a precision.
 .B m
 (Glibc extension; supported by uClibc and musl.)
 Print output of
-.IR strerror(errno) .
+.I strerror(errno)
+(or
+.I strerrorname_np(errno)
+in the alternate form).
 No argument is required.
 .TP
 .B %
@@ -882,6 +894,46 @@ or more means that the output was truncated.
 (See also below under NOTES.)
 .PP
 If an output error is encountered, a negative value is returned.
+.SH VERSIONS
+.\" Linux libc4 knows about the five C standard flags.
+.\" It knows about the length modifiers \fBh\fP, \fBl\fP, \fBL\fP,
+.\" and the conversions
+.\" \fBc\fP, \fBd\fP, \fBe\fP, \fBE\fP, \fBf\fP, \fBF\fP,
+.\" \fBg\fP, \fBG\fP, \fBi\fP, \fBn\fP, \fBo\fP, \fBp\fP,
+.\" \fBs\fP, \fBu\fP, \fBx\fP, and \fBX\fP,
+.\" where \fBF\fP is a synonym for \fBf\fP.
+.\" Additionally, it accepts \fBD\fP, \fBO\fP, and \fBU\fP as synonyms
+.\" for \fBld\fP, \fBlo\fP, and \fBlu\fP.
+.\" (This is bad, and caused serious bugs later, when
+.\" support for \fB%D\fP disappeared.)
+.\" No locale-dependent radix character,
+.\" no thousands' separator, no NaN or infinity, no "%m$" and "*m$".
+.\" .PP
+.\" Linux libc5 knows about the five C standard flags and the \(aq flag,
+.\" locale, "%m$" and "*m$".
+.\" It knows about the length modifiers \fBh\fP, \fBl\fP, \fBL\fP,
+.\" \fBZ\fP, and \fBq\fP, but accepts \fBL\fP and \fBq\fP
+.\" both for \fIlong double\fP and for \fIlong long\fP (this is a bug).
+.\" It no longer recognizes \fBF\fP, \fBD\fP, \fBO\fP, and \fBU\fP,
+.\" but adds the conversion character
+.\" .BR m ,
+.\" which outputs
+.\" .IR strerror(errno) .
+.\" .PP
+.\" glibc 2.0 adds conversion characters \fBC\fP and \fBS\fP.
+.\" .PP
+glibc 2.1 adds length modifiers \fBhh\fP, \fBj\fP, \fBt\fP, and \fBz\fP
+and conversion characters \fBa\fP and \fBA\fP.
+.PP
+glibc 2.2 adds the conversion character \fBF\fP with C99 semantics,
+and the flag character \fBI\fP.
+.PP
+glibc 2.35 gives a meaning to the alternate form
+.RB ( # )
+of the
+.B m
+conversion specifier, that is
+.IR %#m .
 .SH ATTRIBUTES
 For an explanation of the terms used in this section, see
 .BR attributes (7).
@@ -906,7 +958,7 @@ T}	Thread safety	MT-Safe locale
 .hy
 .ad
 .sp 1
-.SH CONFORMING TO
+.SH STANDARDS
 .BR fprintf (),
 .BR printf (),
 .BR sprintf (),
@@ -941,43 +993,14 @@ the output string has been large enough.
 POSIX.1-2001 and later align their specification of
 .BR snprintf ()
 with C99.
-.\" .PP
-.\" Linux libc4 knows about the five C standard flags.
-.\" It knows about the length modifiers \fBh\fP, \fBl\fP, \fBL\fP,
-.\" and the conversions
-.\" \fBc\fP, \fBd\fP, \fBe\fP, \fBE\fP, \fBf\fP, \fBF\fP,
-.\" \fBg\fP, \fBG\fP, \fBi\fP, \fBn\fP, \fBo\fP, \fBp\fP,
-.\" \fBs\fP, \fBu\fP, \fBx\fP, and \fBX\fP,
-.\" where \fBF\fP is a synonym for \fBf\fP.
-.\" Additionally, it accepts \fBD\fP, \fBO\fP, and \fBU\fP as synonyms
-.\" for \fBld\fP, \fBlo\fP, and \fBlu\fP.
-.\" (This is bad, and caused serious bugs later, when
-.\" support for \fB%D\fP disappeared.)
-.\" No locale-dependent radix character,
-.\" no thousands' separator, no NaN or infinity, no "%m$" and "*m$".
-.\" .PP
-.\" Linux libc5 knows about the five C standard flags and the \(aq flag,
-.\" locale, "%m$" and "*m$".
-.\" It knows about the length modifiers \fBh\fP, \fBl\fP, \fBL\fP,
-.\" \fBZ\fP, and \fBq\fP, but accepts \fBL\fP and \fBq\fP
-.\" both for \fIlong double\fP and for \fIlong long\fP (this is a bug).
-.\" It no longer recognizes \fBF\fP, \fBD\fP, \fBO\fP, and \fBU\fP,
-.\" but adds the conversion character
-.\" .BR m ,
-.\" which outputs
-.\" .IR strerror(errno) .
-.\" .PP
-.\" glibc 2.0 adds conversion characters \fBC\fP and \fBS\fP.
-.PP
-glibc 2.1 adds length modifiers \fBhh\fP, \fBj\fP, \fBt\fP, and \fBz\fP
-and conversion characters \fBa\fP and \fBA\fP.
-.PP
-glibc 2.2 adds the conversion character \fBF\fP with C99 semantics,
-and the flag character \fBI\fP.
 .SH NOTES
 Some programs imprudently rely on code such as the following
 .PP
-    sprintf(buf, "%s some further text", buf);
+.in +4n
+.EX
+sprintf(buf, "%s some further text", buf);
+.EE
+.in
 .PP
 to append text to
 .IR buf .
@@ -1188,12 +1211,3 @@ error instead of being handled gracefully.
 .BR wcrtomb (3),
 .BR wprintf (3),
 .BR locale (5)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

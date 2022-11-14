@@ -1,27 +1,7 @@
 .\" Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
 .\" and Copyright 2015 Bill Pemberton <wfp5p@worldbroken.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Modified Tue Oct 22 16:40:11 1996 by Eric S. Raymond <esr@thyrsus.com>
 .\" Modified Mon Jul 10 21:09:59 2000 by aeb
@@ -37,9 +17,12 @@
 .\"	Language and formatting clean-ups
 .\"	Added notes on /proc files
 .\"
-.TH MSGOP 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH MSGOP 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 msgrcv, msgsnd \- System V message queue operations
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/msg.h>
@@ -210,7 +193,7 @@ set to
 Unless
 .B MSG_COPY
 is specified in
-.IR msgflg
+.I msgflg
 (see below),
 the
 .I msgtyp
@@ -270,14 +253,14 @@ the call fails immediately with the error
 Because they alter the meaning of
 .I msgtyp
 in orthogonal ways,
-.BR MSG_COPY
+.B MSG_COPY
 and
-.BR MSG_EXCEPT
+.B MSG_EXCEPT
 may not both be specified in
 .IR msgflg .
 .IP
 The
-.BR MSG_COPY
+.B MSG_COPY
 flag was added for the implementation of
 the kernel checkpoint-restore facility and
 is available only if the kernel was built with the
@@ -437,7 +420,7 @@ but not
 .BR EINVAL " (since Linux 3.14)"
 .I msgflg
 specified both
-.BR MSG_COPY
+.B MSG_COPY
 and
 .BR MSG_EXCEPT .
 .TP
@@ -466,7 +449,7 @@ were specified in
 .IR msgflg ,
 and this kernel was configured without
 .BR CONFIG_CHECKPOINT_RESTORE .
-.SH CONFORMING TO
+.SH STANDARDS
 POSIX.1-2001, POSIX.1-2008, SVr4.
 .PP
 The
@@ -521,7 +504,7 @@ In Linux 3.13 and earlier,
 if
 .BR msgrcv ()
 was called with the
-.BR MSG_COPY
+.B MSG_COPY
 flag, but without
 .BR IPC_NOWAIT ,
 and the message queue contained less than
@@ -575,16 +558,15 @@ message received: a message at Wed Mar  4 16:25:45 2015
 .in
 .SS Program source
 \&
+.\" SRC BEGIN (msgop.c)
 .EX
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <time.h>
+#include <unistd.h>
 
 struct msgbuf {
     long mtype;
@@ -609,17 +591,18 @@ usage(char *prog_name, char *msg)
 static void
 send_msg(int qid, int msgtype)
 {
-    struct msgbuf msg;
-    time_t t;
+    time_t         t;
+    struct msgbuf  msg;
 
     msg.mtype = msgtype;
 
     time(&t);
     snprintf(msg.mtext, sizeof(msg.mtext), "a message at %s",
-            ctime(&t));
+             ctime(&t));
 
     if (msgsnd(qid, &msg, sizeof(msg.mtext),
-                IPC_NOWAIT) == \-1) {
+               IPC_NOWAIT) == \-1)
+    {
         perror("msgsnd error");
         exit(EXIT_FAILURE);
     }
@@ -638,17 +621,18 @@ get_msg(int qid, int msgtype)
             exit(EXIT_FAILURE);
         }
         printf("No message available for msgrcv()\en");
-    } else
+    } else {
         printf("message received: %s\en", msg.mtext);
+    }
 }
 
 int
 main(int argc, char *argv[])
 {
-    int qid, opt;
-    int mode = 0;               /* 1 = send, 2 = receive */
-    int msgtype = 1;
-    int msgkey = 1234;
+    int  qid, opt;
+    int  mode = 0;               /* 1 = send, 2 = receive */
+    int  msgtype = 1;
+    int  msgkey = 1234;
 
     while ((opt = getopt(argc, argv, "srt:k:")) != \-1) {
         switch (opt) {
@@ -689,18 +673,10 @@ main(int argc, char *argv[])
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR msgctl (2),
 .BR msgget (2),
 .BR capabilities (7),
 .BR mq_overview (7),
 .BR sysvipc (7)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

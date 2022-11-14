@@ -2,7 +2,7 @@
 .\"
 .\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
-.TH FEATURE_TEST_MACROS 7 2022-09-09 "Linux man-pages (unreleased)"
+.TH FEATURE_TEST_MACROS 7 2022-10-14 "Linux man-pages 6.01"
 .SH NAME
 feature_test_macros \- feature test macros
 .SH DESCRIPTION
@@ -412,6 +412,17 @@ large files with only a recompilation being required.)
 64-bit systems naturally permit file sizes greater than 2 Gigabytes,
 and on those systems this macro has no effect.
 .TP
+.B _TIME_BITS
+Defining this macro with the value 64
+changes the width of
+.BR time_t (3type)
+to 64-bit which allows handling of timestamps beyond
+2038.
+It is closely related to
+.B _FILE_OFFSET_BITS
+and depending on implementation, may require it set.
+This macro is available as of glibc 2.34.
+.TP
 .BR _BSD_SOURCE " (deprecated since glibc 2.20)"
 Defining this macro with any value causes header files to expose
 BSD-derived definitions.
@@ -634,9 +645,25 @@ and result in compiler warnings;
 other checks take place at run time,
 and result in a run-time error if the check fails.
 .IP
+With
+.B _FORTIFY_SOURCE
+set to 3, additional checking is added to intercept
+some function calls used with an argument of variable size
+where the compiler can deduce an upper bound for its value.
+For example, a program where
+.BR malloc (3)'s
+size argument is variable
+can now be fortified.
+.IP
 Use of this macro requires compiler support, available with
 .BR gcc (1)
 since version 4.0.
+.IP
+Use of
+.B _FORTIFY_SOURCE
+set to 3 requires
+.BR gcc (1)
+version 12.0 or later.
 .SS Default definitions, implicit definitions, and combining definitions
 If no feature test macros are explicitly defined,
 then the following feature test macros are defined by default:
@@ -852,6 +879,10 @@ main(int argc, char *argv[])
 
 #ifdef _FILE_OFFSET_BITS
     printf("_FILE_OFFSET_BITS defined: %d\en", _FILE_OFFSET_BITS);
+#endif
+
+#ifdef _TIME_BITS
+    printf("_TIME_BITS defined: %d\en", _TIME_BITS);
 #endif
 
 #ifdef _BSD_SOURCE

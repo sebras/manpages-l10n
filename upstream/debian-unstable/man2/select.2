@@ -3,27 +3,7 @@
 .\"     copyright (C) 2001 Paul Sheer,
 .\"     copyright (C) 2006, 2019 Michael Kerrisk <mtk.manpages@gmail.com>
 .\"
-.\" %%%LICENSE_START(VERBATIM)
-.\" Permission is granted to make and distribute verbatim copies of this
-.\" manual provided the copyright notice and this permission notice are
-.\" preserved on all copies.
-.\"
-.\" Permission is granted to copy and distribute modified versions of this
-.\" manual under the conditions for verbatim copying, provided that the
-.\" entire resulting derived work is distributed under the terms of a
-.\" permission notice identical to this one.
-.\"
-.\" Since the Linux kernel and libraries are constantly changing, this
-.\" manual page may be incorrect or out-of-date.  The author(s) assume no
-.\" responsibility for errors or omissions, or for damages resulting from
-.\" the use of the information contained herein.  The author(s) may not
-.\" have taken the same level of care in the production of this manual,
-.\" which is licensed free of charge, as they might when working
-.\" professionally.
-.\"
-.\" Formatted or processed versions of this manual, if unaccompanied by
-.\" the source, must acknowledge the copyright and authors of this work.
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: Linux-man-pages-copyleft
 .\"
 .\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
 .\" Modified 1995-05-18 by Jim Van Zandt <jrv@vanzandt.mv.com>
@@ -37,13 +17,18 @@
 .\" 2005-03-11, mtk, modified pselect() text (it is now a system
 .\"     call in 2.6.16.
 .\"
-.TH SELECT 2 2021-03-22 "Linux" "Linux Programmer's Manual"
+.TH SELECT 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
-select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO \-
+select, pselect, FD_CLR, FD_ISSET, FD_SET, FD_ZERO, fd_set \-
 synchronous I/O multiplexing
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/select.h>
+.PP
+.BR typedef " /* ... */ " fd_set;
 .PP
 .BI "int select(int " nfds ", fd_set *restrict " readfds ,
 .BI "           fd_set *restrict " writefds ", fd_set *restrict " exceptfds ,
@@ -73,7 +58,7 @@ Feature Test Macro Requirements for glibc (see
 .BR "WARNING" :
 .BR select ()
 can monitor only file descriptors numbers that are less than
-.BR FD_SETSIZE
+.B FD_SETSIZE
 (1024)\(eman unreasonably low limit for many modern applications\(emand
 this limitation will not change.
 All modern applications should instead use
@@ -92,6 +77,14 @@ perform a corresponding I/O operation (e.g.,
 or a sufficiently small
 .BR write (2))
 without blocking.
+.\"
+.SS fd_set
+A structure type that can represent a set of file descriptors.
+According to POSIX,
+the maximum number of file descriptors in an
+.I fd_set
+structure is the value of the macro
+.BR FD_SETSIZE .
 .\"
 .SS File descriptor sets
 The principal arguments of
@@ -353,16 +346,9 @@ struct timeval {
 .PP
 The corresponding argument for
 .BR pselect ()
-has the following type:
-.PP
-.in +4n
-.EX
-struct timespec {
-    time_t      tv_sec;         /* seconds */
-    long        tv_nsec;        /* nanoseconds */
-};
-.EE
-.in
+is a
+.BR timespec (3)
+structure.
 .PP
 On Linux,
 .BR select ()
@@ -421,7 +407,7 @@ A signal was caught; see
 .B EINVAL
 .I nfds
 is negative or exceeds the
-.BR RLIMIT_NOFILE
+.B RLIMIT_NOFILE
 resource limit (see
 .BR getrlimit (2)).
 .TP
@@ -438,7 +424,7 @@ was added to Linux in kernel 2.6.16.
 Prior to this,
 .BR pselect ()
 was emulated in glibc (but see BUGS).
-.SH CONFORMING TO
+.SH STANDARDS
 .BR select ()
 conforms to POSIX.1-2001, POSIX.1-2008, and
 4.4BSD
@@ -453,7 +439,15 @@ sets the timeout variable before returning, but the BSD variant does not.
 .BR pselect ()
 is defined in POSIX.1g, and in
 POSIX.1-2001 and POSIX.1-2008.
+.PP
+.B fd_set
+is defined in POSIX.1-2001 and later.
 .SH NOTES
+The following header also provides the
+.I fd_set
+type:
+.IR <sys/time.h> .
+.PP
 An
 .I fd_set
 is a fixed size buffer.
@@ -476,7 +470,7 @@ The operation of
 and
 .BR pselect ()
 is not affected by the
-.BR O_NONBLOCK
+.B O_NONBLOCK
 flag.
 .PP
 On some other UNIX systems,
@@ -553,7 +547,7 @@ On some UNIX systems,
 .BR select ()
 unblocks and returns, with an indication that the file descriptor is ready
 (a subsequent I/O operation will likely fail with an error,
-unless another process reopens file descriptor between the time
+unless another process reopens the file descriptor between the time
 .BR select ()
 returned and the I/O operation is performed).
 On Linux (and some other systems),
@@ -567,7 +561,7 @@ The Linux kernel allows file descriptor sets of arbitrary size,
 determining the length of the sets to be checked from the value of
 .IR nfds .
 However, in the glibc implementation, the
-.IR fd_set
+.I fd_set
 type is fixed in size.
 See also BUGS.
 .PP
@@ -640,9 +634,9 @@ advertised via the constant
 on the range of file descriptors that can be specified
 in a file descriptor set.
 The Linux kernel imposes no fixed limit, but the glibc implementation makes
-.IR fd_set
+.I fd_set
 a fixed-size type, with
-.BR FD_SETSIZE
+.B FD_SETSIZE
 defined as 1024, and the
 .BR FD_* ()
 macros operating according to that limit.
@@ -715,6 +709,7 @@ but the glibc wrapper hides this behavior by internally copying the
 .I timeout
 to a local variable and passing that variable to the system call.
 .SH EXAMPLES
+.\" SRC BEGIN (select.c)
 .EX
 #include <stdio.h>
 #include <stdlib.h>
@@ -723,9 +718,9 @@ to a local variable and passing that variable to the system call.
 int
 main(void)
 {
-    fd_set rfds;
-    struct timeval tv;
-    int retval;
+    int             retval;
+    fd_set          rfds;
+    struct timeval  tv;
 
     /* Watch stdin (fd 0) to see when it has input. */
 
@@ -751,6 +746,7 @@ main(void)
     exit(EXIT_SUCCESS);
 }
 .EE
+.\" SRC END
 .SH SEE ALSO
 .BR accept (2),
 .BR connect (2),
@@ -761,17 +757,9 @@ main(void)
 .BR send (2),
 .BR sigprocmask (2),
 .BR write (2),
+.BR timespec (3),
 .BR epoll (7),
 .BR time (7)
 .PP
 For a tutorial with discussion and examples, see
 .BR select_tut (2).
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

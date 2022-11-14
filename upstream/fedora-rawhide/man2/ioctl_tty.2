@@ -1,18 +1,21 @@
 .\" Copyright 2002 Walter Harms <walter.harms@informatik.uni-oldenburg.de>
 .\" and Andries Brouwer <aeb@cwi.nl>.
 .\"
-.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
-.\" Distributed under GPL
-.\" %%%LICENSE_END
+.\" SPDX-License-Identifier: GPL-1.0-or-later
 .\"
-.TH IOCTL_TTY 2 2021-08-27 "Linux" "Linux Programmer's Manual"
+.TH IOCTL_TTY 2 2022-10-09 "Linux man-pages 6.01"
 .SH NAME
 ioctl_tty \- ioctls for terminals and serial lines
+.SH LIBRARY
+Standard C library
+.RI ( libc ", " \-lc )
 .SH SYNOPSIS
 .nf
 .B #include <sys/ioctl.h>
-.BR "#include <termios.h>" "      /* Definition of " CLOCAL ", and"
-.BR    "                             TC*" { FLUSH , ON , OFF "} constants */"
+.BR "#include <asm/termbits.h>" "   /* Definition of " "struct termios" ,
+.BR    "                               struct termios2" ", and"
+.BR    "                               Bnnn" ", " BOTHER ", " CBAUD ", " CLOCAL ,
+.BR    "                               TC*" { FLUSH , ON , OFF "} and other constants */"
 .PP
 .BI "int ioctl(int " fd ", int " cmd ", ...);"
 .fi
@@ -31,11 +34,24 @@ makes for nonportable programs.
 Use the POSIX interface described in
 .BR termios (3)
 whenever possible.
+.PP
+Please note that
+.B struct termios
+from
+.I <asm/termbits.h>
+is different and incompatible with
+.B struct termios
+from
+.IR <termios.h> .
+These ioctl calls require
+.B struct termios
+from
+.IR <asm/termbits.h> .
 .SS Get and set terminal attributes
 .TP
 .B TCGETS
 Argument:
-.BI "struct termios *" argp
+.BI "struct termios\~*" argp
 .IP
 Equivalent to
 .IR "tcgetattr(fd, argp)" .
@@ -44,7 +60,7 @@ Get the current serial port settings.
 .TP
 .B TCSETS
 Argument:
-.BI "const struct termios *" argp
+.BI "const struct termios\~*" argp
 .IP
 Equivalent to
 .IR "tcsetattr(fd, TCSANOW, argp)" .
@@ -53,7 +69,7 @@ Set the current serial port settings.
 .TP
 .B TCSETSW
 Argument:
-.BI "const struct termios *" argp
+.BI "const struct termios\~*" argp
 .IP
 Equivalent to
 .IR "tcsetattr(fd, TCSADRAIN, argp)" .
@@ -63,7 +79,7 @@ set the current serial port settings.
 .TP
 .B TCSETSF
 Argument:
-.BI "const struct termios *" argp
+.BI "const struct termios\~*" argp
 .IP
 Equivalent to
 .IR "tcsetattr(fd, TCSAFLUSH, argp)" .
@@ -80,9 +96,9 @@ are just like
 .BR TCSETSW ,
 .BR TCSETSF ,
 except that they take a
-.I "struct termios2\ *"
+.I "struct termios2\~*"
 instead of a
-.IR "struct termios\ *" .
+.IR "struct termios\~*" .
 If the structure member
 .B c_cflag
 contains the flag
@@ -109,9 +125,9 @@ The following four ioctls are just like
 .BR TCSETSW ,
 .BR TCSETSF ,
 except that they take a
-.I "struct termio\ *"
+.I "struct termio\~*"
 instead of a
-.IR "struct termios\ *" .
+.IR "struct termios\~*" .
 .RS
 .TS
 lb l.
@@ -132,7 +148,7 @@ locked value.
 .TP
 .B TIOCGLCKTRMIOS
 Argument:
-.BI "struct termios *" argp
+.BI "struct termios\~*" argp
 .IP
 Gets the locking status of the
 .I termios
@@ -140,13 +156,13 @@ structure of the terminal.
 .TP
 .B TIOCSLCKTRMIOS
 Argument:
-.BI "const struct termios *" argp
+.BI "const struct termios\~*" argp
 .IP
 Sets the locking status of the
 .I termios
 structure of the terminal.
 Only a process with the
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 capability can do this.
 .SS Get and set window size
 Window sizes are kept in the kernel, but not used by the kernel
@@ -156,13 +172,13 @@ for example, by loading a new font).
 .TP
 .B TIOCGWINSZ
 Argument:
-.BI "struct winsize *" argp
+.BI "struct winsize\~*" argp
 .IP
 Get window size.
 .TP
 .B TIOCSWINSZ
 Argument:
-.BI "const struct winsize *" argp
+.BI "const struct winsize\~*" argp
 .IP
 Set window size.
 .PP
@@ -234,13 +250,13 @@ when the driver does not support breaks.
 .TP
 .B TIOCSBRK
 Argument:
-.BI "void"
+.B void
 .IP
 Turn break on, that is, start sending zero bits.
 .TP
 .B TIOCCBRK
 Argument:
-.BI "void"
+.B void
 .IP
 Turn break off, that is, stop sending zero bits.
 .SS Software flow control
@@ -261,22 +277,22 @@ for the argument values
 .BR TCION .
 .SS Buffer count and flushing
 .TP
-.BI FIONREAD
+.B FIONREAD
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Get the number of bytes in the input buffer.
 .TP
 .B TIOCINQ
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Same as
 .BR FIONREAD .
 .TP
 .B TIOCOUTQ
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Get the number of bytes in the output buffer.
 .TP
@@ -297,14 +313,14 @@ for the argument values
 .TP
 .B TIOCSTI
 Argument:
-.BI "const char *" argp
+.BI "const char\~*" argp
 .IP
 Insert the given byte in the input queue.
 .SS Redirecting console output
 .TP
 .B TIOCCONS
 Argument:
-.BI "void"
+.B void
 .IP
 Redirect output that would have gone to
 .I /dev/console
@@ -315,7 +331,7 @@ If that was a pseudoterminal master, send it to the slave.
 In Linux before version 2.6.10,
 anybody can do this as long as the output was not redirected yet;
 since version 2.6.10, only a process with the
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 capability may do this.
 If output was redirected already, then
 .B EBUSY
@@ -343,7 +359,7 @@ If this terminal is already the controlling terminal
 of a different session group, then the ioctl fails with
 .BR EPERM ,
 unless the caller has the
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 capability and
 .I arg
 equals 1, in which case the terminal is stolen, and all processes that had
@@ -351,7 +367,7 @@ it as controlling terminal lose it.
 .TP
 .B TIOCNOTTY
 Argument:
-.BI "void"
+.B void
 .IP
 If the given terminal was the controlling terminal of the calling process,
 give up this controlling terminal.
@@ -366,7 +382,7 @@ and all processes in the current session lose their controlling terminal.
 .TP
 .B TIOCGPGRP
 Argument:
-.BI "pid_t *" argp
+.BI "pid_t\~*" argp
 .IP
 When successful, equivalent to
 .IR "*argp = tcgetpgrp(fd)" .
@@ -375,7 +391,7 @@ Get the process group ID of the foreground process group on this terminal.
 .TP
 .B TIOCSPGRP
 Argument:
-.BI "const pid_t *" argp
+.BI "const pid_t\~*" argp
 .IP
 Equivalent to
 .IR "tcsetpgrp(fd, *argp)" .
@@ -384,7 +400,10 @@ Set the foreground process group ID of this terminal.
 .TP
 .B TIOCGSID
 Argument:
-.BI "pid_t *" argp
+.BI "pid_t\~*" argp
+.IP
+When successful, equivalent to
+.IR "*argp = tcgetsid(fd)" .
 .IP
 Get the session ID of the given terminal.
 This fails with the error
@@ -396,7 +415,7 @@ Strange.
 .TP
 .B TIOCEXCL
 Argument:
-.BI "void"
+.B void
 .IP
 Put the terminal into exclusive mode.
 No further
@@ -405,12 +424,12 @@ operations on the terminal are permitted.
 (They fail with
 .BR EBUSY ,
 except for a process with the
-.BR CAP_SYS_ADMIN
+.B CAP_SYS_ADMIN
 capability.)
 .TP
 .B TIOCGEXCL
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 (since Linux 3.8)
 If the terminal is currently in exclusive mode,
@@ -421,27 +440,27 @@ otherwise, place zero in
 .TP
 .B TIOCNXCL
 Argument:
-.BI "void"
+.B void
 .IP
 Disable exclusive mode.
 .SS Line discipline
 .TP
 .B TIOCGETD
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Get the line discipline of the terminal.
 .TP
 .B TIOCSETD
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 Set the line discipline of the terminal.
 .SS Pseudoterminal ioctls
 .TP
 .B TIOCPKT
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 Enable (when
 .RI * argp
@@ -502,7 +521,7 @@ locally \fB\(haS\fP/\fB\(haQ\fP flow-controlled remote login.
 .TP
 .B TIOCGPKT
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 (since Linux 3.8)
 Return the current packet mode setting in the integer pointed to by
@@ -510,19 +529,19 @@ Return the current packet mode setting in the integer pointed to by
 .TP
 .B TIOCSPTLCK
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Set (if
-.IR *argp
+.I *argp
 is nonzero) or remove (if
-.IR *argp
+.I *argp
 is zero) the lock on the pseudoterminal slave device.
 (See also
 .BR unlockpt (3).)
 .TP
 .B TIOCGPTLCK
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 (since Linux 3.8)
 Place the current lock state of the pseudoterminal slave device
@@ -569,25 +588,25 @@ have not been implemented under Linux.
 .TP
 .B TIOCMGET
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 Get the status of modem bits.
 .TP
 .B TIOCMSET
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 Set the status of modem bits.
 .TP
 .B TIOCMBIC
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 Clear the indicated modem bits.
 .TP
 .B TIOCMBIS
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 Set the indicated modem bits.
 .PP
@@ -627,7 +646,7 @@ to see which bit has changed.
 .TP
 .B TIOCGICOUNT
 Argument:
-.BI "struct serial_icounter_struct *" argp
+.BI "struct serial_icounter_struct\~*" argp
 .IP
 Get counts of input serial line interrupts (DCD, RI, DSR, CTS).
 The counts are written to the
@@ -641,7 +660,7 @@ RI, where only 0->1 transitions are counted.
 .TP
 .B TIOCGSOFTCAR
 Argument:
-.BI "int *" argp
+.BI "int\~*" argp
 .IP
 ("Get software carrier flag")
 Get the status of the CLOCAL flag in the c_cflag field of the
@@ -650,7 +669,7 @@ structure.
 .TP
 .B TIOCSSOFTCAR
 Argument:
-.BI "const int *" argp
+.BI "const int\~*" argp
 .IP
 ("Set software carrier flag")
 Set the CLOCAL flag in the
@@ -683,7 +702,7 @@ ioctl, see
 .TP
 .B TIOCTTYGSTRUCT
 Argument:
-.BI "struct tty_struct *" argp
+.BI "struct tty_struct\~*" argp
 .IP
 Get the
 .I tty_struct
@@ -732,11 +751,12 @@ Insufficient permission.
 .SH EXAMPLES
 Check the condition of DTR on the serial port.
 .PP
+.\" SRC BEGIN (tiocmget.c)
 .EX
-#include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 int
 main(void)
@@ -752,8 +772,110 @@ main(void)
     close(fd);
 }
 .EE
+.\" SRC END
+.PP
+Get or set arbitrary baudrate on the serial port.
+.PP
+.\" SRC BEGIN (tcgets.c)
+.EX
+/* SPDX-License-Identifier: GPL-2.0-or-later */
+
+#include <asm/termbits.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+#if !defined BOTHER
+    fprintf(stderr, "BOTHER is unsupported\en");
+    /* Program may fallback to TCGETS/TCSETS with Bnnn constants */
+    exit(EXIT_FAILURE);
+#else
+    /* Declare tio structure, its type depends on supported ioctl */
+# if defined TCGETS2
+    struct termios2 tio;
+# else
+    struct termios tio;
+# endif
+    int fd, rc;
+
+    if (argc != 2 && argc != 3 && argc != 4) {
+        fprintf(stderr, "Usage: %s device [output [input] ]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd = open(argv[1], O_RDWR | O_NONBLOCK | O_NOCTTY);
+    if (fd < 0) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Get the current serial port settings via supported ioctl */
+# if defined TCGETS2
+    rc = ioctl(fd, TCGETS2, &tio);
+# else
+    rc = ioctl(fd, TCGETS, &tio);
+# endif
+    if (rc) {
+        perror("TCGETS");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Change baud rate when more arguments were provided */
+    if (argc == 3 || argc == 4) {
+        /* Clear the current output baud rate and fill a new value */
+        tio.c_cflag &= \(tiCBAUD;
+        tio.c_cflag |= BOTHER;
+        tio.c_ospeed = atoi(argv[2]);
+
+        /* Clear the current input baud rate and fill a new value */
+        tio.c_cflag &= \(ti(CBAUD << IBSHIFT);
+        tio.c_cflag |= BOTHER << IBSHIFT;
+        /* When 4th argument is not provided reuse output baud rate */
+        tio.c_ispeed = (argc == 4) ? atoi(argv[3]) : atoi(argv[2]);
+
+        /* Set new serial port settings via supported ioctl */
+# if defined TCSETS2
+        rc = ioctl(fd, TCSETS2, &tio);
+# else
+        rc = ioctl(fd, TCSETS, &tio);
+# endif
+        if (rc) {
+            perror("TCSETS");
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+
+        /* And get new values which were really configured */
+# if defined TCGETS2
+        rc = ioctl(fd, TCGETS2, &tio);
+# else
+        rc = ioctl(fd, TCGETS, &tio);
+# endif
+        if (rc) {
+            perror("TCGETS");
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    close(fd);
+
+    printf("output baud rate: %u\en", tio.c_ospeed);
+    printf("input baud rate: %u\en", tio.c_ispeed);
+
+    exit(EXIT_SUCCESS);
+#endif
+}
+.EE
+.\" SRC END
 .SH SEE ALSO
-.BR ldattach (1),
+.BR ldattach (8),
 .BR ioctl (2),
 .BR ioctl_console (2),
 .BR termios (3),
@@ -772,12 +894,3 @@ main(void)
 .\" TIOCSERGETMULTI		struct serial_multiport_struct *
 .\" TIOCSERSETMULTI		const struct serial_multiport_struct *
 .\" TIOCGSERIAL, TIOCSSERIAL (see above)
-.SH COLOPHON
-This page is part of release 5.13 of the Linux
-.I man-pages
-project.
-A description of the project,
-information about reporting bugs,
-and the latest version of this page,
-can be found at
-\%https://www.kernel.org/doc/man\-pages/.

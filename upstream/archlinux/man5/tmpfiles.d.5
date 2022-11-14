@@ -1,5 +1,5 @@
 '\" t
-.TH "TMPFILES\&.D" "5" "" "systemd 251" "tmpfiles.d"
+.TH "TMPFILES\&.D" "5" "" "systemd 252" "tmpfiles.d"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -167,7 +167,7 @@ Fields may contain C\-style escapes\&. With the exception of the seventh field (
 "\ex20")\&.
 .SS "Type"
 .PP
-The type consists of a single letter and optionally an exclamation mark ("!") minus sign ("\-"), and/or equals sign ("=")\&.
+The type consists of a single letter and optionally one or emore modifier characters: a plus sign ("+"), exclamation mark ("!"), minus sign ("\-"), equals sign ("="), tilde character ("~") and/or caret ("^")\&.
 .PP
 The following line types are understood:
 .PP
@@ -376,9 +376,9 @@ Set Linux file/directory attributes\&. Lines of this type accept shell\-style gl
 The format of the argument field is
 \fI[+\-=][aAcCdDeijPsStTu]\fR\&. The prefix
 \fI+\fR
-(the default one) causes the attribute(s) to be added;
+(the default one) causes the attributes to be added;
 \fI\-\fR
-causes the attribute(s) to be removed;
+causes the attributes to be removed;
 \fI=\fR
 causes the attributes to be set exactly as the following letters\&. The letters
 "aAcCdDeijPsStTu"
@@ -418,6 +418,7 @@ Same as
 and
 \fIa+\fR, but recursive\&. Does not follow symlinks\&.
 .RE
+.SS "Type Modifiers"
 .PP
 If the exclamation mark ("!") is used, this line is only safe to execute during boot, and can break a running system\&. Lines without the exclamation mark are presumed to be safe to execute at any time, e\&.g\&. on package upgrades\&.
 \fBsystemd\-tmpfiles\fR
@@ -463,6 +464,28 @@ w\- /proc/sys/vm/swappiness \- \- \- \- 10
 .PP
 If the equals sign ("=") is used, the file types of existing objects in the specified path are checked, and removed if they do not match\&. This includes any implicitly created parent directories (which can be either directories or directory symlinks)\&. For example, if there is a FIFO in place of one of the parent path components it will be replaced with a directory\&.
 .PP
+If the tilde character ("~") is used, the argument (i\&.e\&. 6th) column is
+\m[blue]\fBBase64 decoded\fR\m[]\&\s-2\u[1]\d\s+2
+before use\&. This modifier is only supported on line types that can write file contents, i\&.e\&.
+\fIf\fR,
+\fIf+\fR,
+\fIw\fR,
+\fI+\fR\&. This is useful for writing arbitrary binary data (including newlines and NUL bytes) to files\&. Note that if this switch is used, the argument is not subject to specifier expansion, neither before nor after Base64 decoding\&.
+.PP
+If the caret character ("^") is used, the argument (i\&.e\&. 6th) column takes a service credential name to read the argument data from\&. See
+\m[blue]\fBSystem and Service Credentials\fR\m[]\&\s-2\u[2]\d\s+2
+for details about the credentials concept\&. This modifier is only supported on line types that can write file contents, i\&.e\&.
+\fIf\fR,
+\fIf+\fR,
+\fIw\fR,
+\fIw+\fR\&. This is useful for writing arbitrary files with contents sourced from elsewhere, including from VM or container managers further up\&. If the specified credential is not set for the
+\fBsystemd\-tmpfiles\fR
+service, the line is silently skipped\&. If
+"^"
+and
+"~"
+are combined Base64 decoding is applied to the credential contents\&.
+.PP
 Note that for all line types that result in creation of any kind of file node (i\&.e\&.
 \fIf\fR/\fIF\fR,
 \fId\fR/\fID\fR/\fIv\fR/\fIq\fR/\fIQ\fR,
@@ -495,6 +518,9 @@ lines\&.
 Optionally, if prefixed with
 "~", the access mode is masked based on the already set access bits for existing file or directories: if the existing file has all executable bits unset, all executable bits are removed from the new access mode, too\&. Similarly, if all read bits are removed from the old access mode, they will be removed from the new access mode too, and if all write bits are removed, they will be removed from the new access mode too\&. In addition, the sticky/SUID/SGID bit is removed unless applied to a directory\&. This functionality is particularly useful in conjunction with
 \fIZ\fR\&.
+.PP
+Optionally, if prefixed with
+":", the configured access mode is only used when creating new inodes\&. If the inode the line refers to already exists, its access mode is left in place unmodified\&.
 .SS "User, Group"
 .PP
 The user and group to use for this file or directory\&. This may either be a numeric ID or a user/group name\&. If omitted or when set to
@@ -515,8 +541,11 @@ lines, when omitted or when set to
 lines\&.
 .PP
 This field should generally only reference system users/groups, i\&.e\&. users/groups that are guaranteed to be resolvable during early boot\&. If this field references users/groups that only become resolveable during later boot (i\&.e\&. after NIS, LDAP or a similar networked directory service become available), execution of the operations declared by the line will likely fail\&. Also see
-\m[blue]\fBNotes on Resolvability of User and Group Names\fR\m[]\&\s-2\u[1]\d\s+2
+\m[blue]\fBNotes on Resolvability of User and Group Names\fR\m[]\&\s-2\u[3]\d\s+2
 for more information on requirements on system user/group definitions\&.
+.PP
+Optionally, if prefixed with
+":", the configured user/group information is only used when creating new inodes\&. If the inode the line refers to already exists, its user/group is left in place unmodified\&.
 .SS "Age"
 .PP
 The date field, when set, is used to decide what files to delete when cleaning\&. If a file or directory is older than the current time minus the age field, it is deleted\&. The field format is a series of integers each followed by one of the following suffixes for the respective time units:
@@ -932,6 +961,21 @@ e! /var/cache/krb5rcache \- \- \- 0
 Any files and subdirectories in
 /var/cache/krb5rcache/
 will be removed on boot\&. The directory will not be created\&.
+.PP
+\fBExample\ \&6.\ \&Provision SSH public key access for root user via Credentials in QEMU\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\-smbios type=11,value=io\&.systemd\&.credential\&.binary:tmpfiles\&.extra=$(echo "f~ /root/\&.ssh/authorized_keys 700 root root \- $(ssh\-add \-L | base64 \-w 0)" | base64 \-w 0)
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+By passing this line to QEMU, the public key of the current user will be encoded in base64, added to a tmpfiles\&.d line that tells systemd\-tmpfiles to decode it into
+/root/\&.ssh/authorized_keys, encode that line itself in base64 and pass it as a Credential that will be picked up by systemd from SMBIOS on boot\&.
 .SH "/RUN/ AND /VAR/RUN/"
 .PP
 /var/run/
@@ -957,6 +1001,16 @@ is used\&.
 \fBbtrfs-qgroup\fR(8)
 .SH "NOTES"
 .IP " 1." 4
+Base64 decoded
+.RS 4
+\%https://www.rfc-editor.org/rfc/rfc4648.html
+.RE
+.IP " 2." 4
+System and Service Credentials
+.RS 4
+\%https://systemd.io/CREDENTIALS
+.RE
+.IP " 3." 4
 Notes on Resolvability of User and Group Names
 .RS 4
 \%https://systemd.io/UIDS-GIDS/#notes-on-resolvability-of-user-and-group-names
