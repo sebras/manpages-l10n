@@ -1,5 +1,10 @@
 # Changelog for manpages-l10n
 
+## Version 4.16.0
+*Thu Nov 24 21:18:00 CET 2022*
+
+* Updated many translations
+
 ## Version 4.15.0
 *Tue Aug 09 20:02:00 CEST 2022*
 
