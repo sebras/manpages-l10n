@@ -17,9 +17,7 @@ together so that they don't appear later as translatable files.
 
 To get an overview which man pages are available from the supported packages,
 but are still untranslated, the files
-upstream/*distribution_name*/untranslated.txt will be created. For historical
-reasons, this works only for German, but one happy day we'll find a solution for
-all languages ;)
+upstream/*distribution_name*/untranslated.txt will be created.
 
 
 ## Creating the templates
